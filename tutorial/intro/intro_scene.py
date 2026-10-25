@@ -38,6 +38,7 @@ INSTITUTE_SHORT = "Nachhaltige Gebäudesysteme"
 INSTITUTE_PARENT = "Institut für Entwerfen und Konstruieren"
 UNIVERSITY = "Leibniz Universität Hannover"
 INSTITUTE_URL = "Prof. Dr.-Ing. Philipp Geyer"
+PROFESSOR_NAME = "Geyer P"
 # endregion
 
 # region Geometry
@@ -179,15 +180,14 @@ class NGSIntro(Scene):
         topic_de: Main on-screen topic title (German).
         topic_explain_de: One short sentence explaining the video.
         series_de: Optional series / part label (e.g. ``Kühllast · Teil 1``).
-        credit_title_de: Role label of the animation credit (shown after the professor's name line).
-        credits_de: Names credited for the animation, appended below the professor's name in the same size.
+        credits_de: Co-authors of the animation. With credits the professor's line becomes a paper-style byline
+            ``Geyer P, Ghandeharioun N, …`` — names written on the card in citation style like on a scientific paper.
         hold_seconds: Extra hold after all elements are on screen.
     """
 
     topic_de = "Thema der Lektion"
     topic_explain_de = "Kurze Erklärung des Videothemas."
     series_de = ""
-    credit_title_de = ""
     credits_de: tuple[str, ...] = ()
     hold_seconds = 1.8
 
@@ -212,13 +212,13 @@ class NGSIntro(Scene):
         rule = _diamond_rule()
         parent = Text(INSTITUTE_PARENT, font_size=19, color=P_MUTED)
         institute = Text(INSTITUTE_SHORT, font_size=31, color=P_CYAN)
-        url = Text(INSTITUTE_URL, font_size=18, color=P_TEAL)
+        url = (
+            Text(", ".join((PROFESSOR_NAME, *self.credits_de)), font_size=20, color=P_WHITE)
+            if self.credits_de
+            else Text(INSTITUTE_URL, font_size=18, color=P_TEAL)
+        )
 
         identity = VGroup(university, rule, parent, institute, url)
-        credit = None
-        if self.credits_de:
-            credit = Text(f"{self.credit_title_de}: {'  ·  '.join(self.credits_de)}", font_size=14, color=P_TEAL)
-            identity.add(credit)
         identity.arrange(DOWN, buff=0.3)
         # endregion
 
@@ -290,7 +290,6 @@ class NGSIntro(Scene):
                 FadeIn(parent, shift=UP * 0.16, run_time=1.0, rate_func=ease_out_cubic),
                 FadeIn(institute, shift=UP * 0.16, run_time=1.0, rate_func=ease_out_cubic),
                 FadeIn(url, shift=UP * 0.16, run_time=1.0, rate_func=ease_out_cubic),
-                *([FadeIn(credit, shift=UP * 0.16, run_time=1.0, rate_func=ease_out_cubic)] if credit else []),
                 lag_ratio=0.42,
             )
         )
@@ -332,8 +331,7 @@ class Demo_Intro_PhysikalischeGrundlagen(NGSIntro):
     topic_de = "Physikalische Grundlagen"
     topic_explain_de = "Energie, Leistung, Wärme und Luft im Gebäude."
     series_de = "Gebäudeenergie · Grundlagen"
-    credit_title_de = "Konzeption & Produktion der Animation"
-    credits_de = ("Niloufar Ghandeharioun", "Ueli Saluz")
+    credits_de = ("Ghandeharioun N", "Saluz U")
 
 
 class Demo_Intro_Lueftung(NGSIntro):
@@ -342,8 +340,7 @@ class Demo_Intro_Lueftung(NGSIntro):
     topic_de = "Lüftung"
     topic_explain_de = "Luftmenge, Wärmestrom der Luft und Wärmerückgewinnung — im Winter wie im Sommer."
     series_de = "Gebäudeenergie · Lüftung"
-    credit_title_de = "Konzeption & Produktion der Animation"
-    credits_de = ("Niloufar Ghandeharioun", "Ueli Saluz")
+    credits_de = ("Ghandeharioun N", "Saluz U")
 
 
 class Demo_Intro_Energiebilanz(NGSIntro):
@@ -371,7 +368,7 @@ class Intro_InternalGains(NGSIntro):
 
 
 class Intro_TransmissionHumidity(NGSIntro):
-    """💧 Intro for Cooling part 3 — Transmission & Feuchte."""
+    """💧 Intro for Cooling part 3 — Transmission & Lüftungslast."""
 
     topic_de = "Transmission und Lüftungslast"
     topic_explain_de = "Wärmeleitung durch die Hülle und die sommerliche Last der Lüftung."

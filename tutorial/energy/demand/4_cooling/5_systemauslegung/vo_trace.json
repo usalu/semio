@@ -1,0 +1,56 @@
+{
+  "beats": {
+    "Beat2_VolumeFlowEquation": {
+      "formula": {
+        "start": 6.367,
+        "window": 8.4
+      },
+      "rho": {
+        "start": 14.783,
+        "window": 7.368
+      },
+      "cp": {
+        "start": 22.417,
+        "window": 10.152
+      },
+      "dth": {
+        "start": 32.833,
+        "window": 8.448
+      },
+      "qvr": {
+        "start": 41.533,
+        "window": 6.864
+      }
+    },
+    "Beat3_IsolateAirflow": {
+      "intro": {
+        "start": 0.0,
+        "window": 5.616
+      },
+      "substitute": {
+        "start": 10.617,
+        "window": 15.72
+      },
+      "qvr": {
+        "start": 26.35,
+        "window": 7.608
+      },
+      "qstr": {
+        "start": 34.217,
+        "window": 8.808
+      },
+      "rho": {
+        "start": 43.283,
+        "window": 7.704
+      },
+      "dth": {
+        "start": 51.25,
+        "window": 5.952
+      },
+      "result": {
+        "start": 57.467,
+        "window": 4.656
+      }
+    }
+  }
+}

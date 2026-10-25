@@ -10,12 +10,11 @@ Companion to [SKILL.md](SKILL.md). Load only when generating or extending scenes
 |------|------|
 | `tutorial/manim_fonts.py` | Body font (cached in `tutorial/.manim_font_cache` — see below), fixed type scale (`TITLE_FONT_SIZE`…`CAPTION_FONT_SIZE`), shared `BODY_LINE_SPACING` / `centered_body_text`, `apply_scene_style`, `scene_title`, `beat_subtitle` |
 | `tutorial/manim_visuals.py` | Palette (single source, includes `P_DEEP_DARK`), pedagogy helpers, formula panel (`equation_row`/`formula_panel`/`highlight_param`), caption bar (`caption_bar`/`swap_caption`), narration timing (`narration_seconds`/`narration_text`/`subtitle_text`/`hold_for`) |
-| `tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py` | Best beat-split example |
-| `tutorial/energy/demand/Cooling/3_transmission_humidity/generate_audio.py` | Imports `NARRATION` from `scene_3.py` → TTS |
-| `tutorial/energy/demand/Cooling/3_transmission_humidity/build_full_video.py` | Render → mux → compose |
+| `tutorial/energy/demand/4_cooling/3_transmission_humidity/scene_3.py` | Best beat-split example |
+| `tutorial/energy/demand/4_cooling/3_transmission_humidity/generate_audio.py` | Imports `NARRATION` from `scene_3.py` → TTS |
+| `tutorial/energy/demand/4_cooling/3_transmission_humidity/build_full_video.py` | Render → mux → compose |
 | `tutorial/intro/intro_scene.py` | Reusable NGS/IEK/LUH intro card (`NGSIntro`) |
-| `tutorial/energy/demand/Heating/1_introduction/scene_1.py` | First Heating topic on the five-rule template, with German subtitles |
-| `tutorial/energy/demand/Heating/{conduction,convection,final_calculation,internal_heat_gain,solar_heat_gain}/merged_scenes*.py` | Remaining legacy Heating topics — `SceneN` + `Full*Video`, not yet migrated |
+| `tutorial/energy/demand/3_heating/1_introduction/scene_1.py` | First Heating topic on the five-rule template, with German subtitles |
 | `tutorial/pyproject.toml` | `manim`, `gtts`, `openai` |
 
 ### Now I Get It (pipeline source of truth)
@@ -213,7 +212,7 @@ import sys
 from pathlib import Path
 
 NOWIGETIT = Path("/Users/niloufarghandehariyoon/Nowgetit/NowIGetIt")
-SEMIO = Path(__file__).resolve().parents[5]  # tutorial/energy/demand/<Cat>/<N_topic>/this_file.py → semio/
+SEMIO = Path(__file__).resolve().parents[5]  # tutorial/energy/demand/<N_series>/<N_topic>/this_file.py → semio/
 sys.path.insert(0, str(NOWIGETIT))
 
 from backend.pipeline.compose import compose_final_video, mux_scene_audio
@@ -272,7 +271,7 @@ Adjust `SEMIO` / `parents[N]` so `.venv/bin/manim` resolves. Prefer workspace `.
 
 ## Anti-patterns
 
-- `Write()` on anything other than the title — small labels animated with `Write()` after another mobject's `Create()` earlier in the same beat have rendered with corrupted, ghosted trailing characters (reproduced and fixed in `Heating/1_introduction/scene_1.py`). Use `FadeIn()` for subtitles, callouts, and every other label.
+- `Write()` on anything other than the title — small labels animated with `Write()` after another mobject's `Create()` earlier in the same beat have rendered with corrupted, ghosted trailing characters (reproduced and fixed in `3_heating/1_introduction/scene_1.py`). Use `FadeIn()` for subtitles, callouts, and every other label.
 - A simultaneous `FadeOut(old_text), FadeIn(new_text)` cross-fade between two *different* strings — the two render overlapping mid-transition, reading as doubled/ghosted text. `swap_caption()` already does this correctly (sequential fade-out-then-in); don't hand-roll a simultaneous version elsewhere.
 - A directional arrow (`CurvedArrow`, `GrowArrow`) standing in for two things merging or exchanging state — a gradient `Rectangle` (`fill_color=[color_a, color_b]`) widening across the shared boundary reads more clearly and is the established fix for the Beat1 warm/cold transition.
 - `MathTex` / LaTeX dependency — including the indirect route: `DecimalNumber` defaults to `mob_class=MathTex`, so `Axes(..., include_numbers=True)` / `axes.add_coordinates()` drag LaTeX in. Hand-place axis labels as `Text` at `axes.c2p(...)`.
@@ -289,4 +288,4 @@ Adjust `SEMIO` / `parents[N]` so `.venv/bin/manim` resolves. Prefer workspace `.
 - German VO by default when on-screen is already German (double load) — keep VO English unless asked
 - `sys.path` to `tutorial/energy` expecting `backend` (missing) — use NowIGetIt path
 - Quality flags in `manim-sideview.commandLineArgs` — put quality in `manim.cfg`
-- Mixing Heating `add_sound` master Scene with Cooling external mux in the same topic (see `2_internal_gains/merged_scenes.py`)
+- Mixing an `add_sound` master Scene with the external mux in the same topic

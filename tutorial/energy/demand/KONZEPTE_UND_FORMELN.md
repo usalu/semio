@@ -37,10 +37,10 @@ flowchart TB
 | # | Video | Ordner | Normen (Auswahl) |
 |---|-------|--------|------------------|
 | 0 | Physikalische Grundlagen | `1_physical_fundamentals/` | DIN EN 12831, DIN V 18599, DIN EN 14511, VDI 4650, DIN EN 410, DIN 4108-2/-3, DIN EN ISO 13786, DIN 1946-6 |
-| L1–L6 | Lüftung (6 Kapitel) | `Ventilation/` | DIN EN 12831-1, DIN V 18599, DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2 |
-| H1–H5 | Heizwärmebedarf (5 Module) | `Heating/` | DIN EN ISO 6946, DIN EN 12831, DIN V 18599 |
-| HF | Heizwärmebedarf — Bilanz | `Heating/final_calculation/` | DIN V 18599 |
-| C1–C6 | Kühllast (6 Teile) | `Cooling/` | DIN V 18599, VDI 2078 (implizit) |
+| L1–L6 | Lüftung (6 Kapitel) | `2_ventilation/` | DIN EN 12831-1, DIN V 18599, DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2 |
+| H1–H5 | Heizwärmebedarf (5 Module) | `3_heating/` | DIN EN ISO 6946, DIN EN 12831, DIN V 18599 |
+| HF | Heizwärmebedarf — Bilanz | `3_heating/6_final_calculation/` | DIN V 18599 |
+| C1–C6 | Kühllast (6 Teile) | `4_cooling/` | DIN V 18599, VDI 2078 (implizit) |
 
 ---
 
@@ -150,7 +150,7 @@ Die Größen der Gebäudeenergie konkret und visuell verstehen — immer am Baut
 ## L · Lüftung — Luftmenge, Wärmestrom der Luft, natürlich und mechanisch
 
 **Titel:** Lüftung  
-**Dateien:** `Ventilation/1_warum_lueften/` … `Ventilation/6_uebergabe/` · **6 Kapitel, 22 Beats** (Reihenfolge: `VENTILATION_PLAYLIST` in `Ventilation/full_ventilation_video.py`)
+**Dateien:** `2_ventilation/1_warum_lueften/` … `2_ventilation/6_uebergabe/` · **6 Kapitel, 22 Beats** (Reihenfolge: `VENTILATION_PLAYLIST` in `2_ventilation/full_ventilation_video.py`)
 
 ### Lernziel
 
@@ -209,7 +209,7 @@ Lüftung wird **einmal und jahreszeitenneutral** erklärt, weil sie Heizung und 
 
 ## Heizung · Modul 1 — Die Grundlagen der Bauphysik
 
-**Datei:** `Heating/1_introduction/scene_1.py`
+**Datei:** `3_heating/1_introduction/scene_1.py`
 
 ### Lernziel
 
@@ -220,7 +220,7 @@ Die drei Wärmeübertragungsmechanismen an derselben Gebäudewand verstehen und 
 | Begriff | Definition |
 |---------|------------|
 | **Wärmeleitung (Q̇_k)** | Energie wandert durch festes Material; Moleküle bleiben am Platz |
-| **Konvektion (Q̇_c)** | **Bewegte Luft** trägt Wärme: am Heizkörper erwärmt, an der kalten Wand abgekühlt; außen nimmt der Wind sie mit |
+| **Konvektion (Q̇_c)** | **Bewegte Luft** trägt Wärme: eine geschlossene Luftwalze, am Heizkörper erwärmt, an der kalten Außenwand abgekühlt; außen nimmt der Wind sie mit. Den Luftaustausch mit außen erklärt das Lüftungsvideo |
 | **Strahlung (Q̇_r)** | Infrarotwellen von Fläche zu Fläche, **kein Medium** nötig (Heizkörper → Wand, Außenwand → Nachthimmel) |
 | **Δθ** | Temperaturdifferenz — einziger Antrieb des Wärmestroms (warm → kalt) |
 | **Wärmedurchlasswiderstand R** | Bremswirkung einer Schicht [m²·K/W] |
@@ -248,7 +248,7 @@ Die drei Wärmeübertragungsmechanismen an derselben Gebäudewand verstehen und 
 
 ## Heizung · Modul 2 — Wärmeleitung (Transmission)
 
-**Datei:** `Heating/2_conduction/scene_2.py`
+**Datei:** `3_heating/2_conduction/scene_2.py`
 
 ### Lernziel
 
@@ -293,45 +293,31 @@ Vom makroskopischen Temperaturgradienten zum mikroskopischen Molekülschwingen �
 
 ---
 
-## Heizung · Modul 3 — Konvektion / Lüftung
+## Heizung · Modul 3 — Lüftung im Winter
 
-**Datei:** `Heating/3_convection/scene_3.py`
+**Datei:** `3_heating/3_convection/scene_3.py` · **1 Beat** (`Beat1_LueftungImWinter`)
 
 ### Lernziel
 
-Lüftungswärmeverluste durch Luftwechsel quantifizieren; Rolle von Volumen, Luftwechselrate, spezifischer Wärmekapazität und Wärmerückgewinnung.
-
-### Kernbegriffe
-
-| Begriff | Definition |
-|---------|------------|
-| **Bruttovolumen V_e** | Volumen aus den Außenmaßen, inklusive Wände und Decken [m³] |
-| **Nettovolumen V** | Beheiztes Luftvolumen ohne Konstruktion, pauschal ≈ 0,76 · V_e [m³] |
-| **Luftwechselrate n** | [1/h] — wie oft das Luftvolumen pro Stunde ausgetauscht wird (Lager ≈ 0 · Wohnung 0,5 · Klassenzimmer ≈ 4 · OP-Saal ≈ 20) |
-| **c_Luft** | Volumenbezogene Wärmekapazität ρ · c_p ≈ 1,2 · 1 005 J/(m³·K) ≈ 0,34 Wh/(m³·K) |
-| **η_WRG** | Wirkungsgrad der Wärmerückgewinnung |
-| **Stoß- vs. Kipplüftung** | Kurz weit öffnen tauscht die Luft in Minuten; gekippt kühlt Laibung und Heizkörper heizt nach draußen |
+Die Lüftungswärmeverluste aus dem Lüftungsvideo (`2_ventilation/`) mit einer kurzen Erinnerung in die Heizlast einsetzen: V̇ = V · n, c_Luft und das winterliche Δθ ergeben Φ_V, das neben dem Transmissionsverlust aus Modul 2 steht. Luftmenge, Stoß- und Kipplüftung, Wärmerückgewinnung und Anlagenvergleich werden dort erklärt.
 
 ### Formeln
 
 | Formel | Bedeutung |
 |--------|-----------|
-| **V** | Innenvolumen des Gebäudes |
-| **n** | Luftwechselrate [h⁻¹] |
-| **Φ_V = V · n · c_Luft · Δθ** | Lüftungswärmeverlust ohne WRG [W] |
-| **Φ_V = V · n · (1 − η_WRG) · c_Luft · Δθ** | mit Wärmerückgewinnung |
+| **Φ_V = V · n · c_Luft · Δθ** | Lüftungswärmeverlust ohne WRG; 440 · 0,5 · 0,34 · 20 ≈ 1 500 W |
+| **Φ_V = V · n · (1 − η_WRG) · c_Luft · Δθ** | mit Wärmerückgewinnung η_WRG = 0,8: ≈ 300 W |
 
 ### Merksätze
 
-- Undichte Gebäudehülle = permanenter **Wärmeverlust-Konvektionskreislauf**.
-- Mechanische Lüftung mit WRG kann den Lüftungsverlust drastisch senken.
-- Beispiel 50 m³ Raum, Δθ = 20 K: Stoßlüften ≈ 340 Wh pro Luftwechsel, Kipplüftung ≈ 780 Wh für dieselbe Frischluft.
+- Φ_T ≈ 2 300 W plus Φ_V ≈ 1 500 W ergibt 3 800 W; mit WRG bleiben 2 600 W.
+- Die Bausteine V, n, c_Luft, Δθ und η_WRG stammen aus dem Lüftungsvideo (Kapitel 2, 3 und 5).
 
 ---
 
 ## Heizung · Modul 4 — Interne Wärmegewinne
 
-**Datei:** `Heating/4_internal_heat_gain/scene_4.py`
+**Datei:** `3_heating/4_internal_heat_gain/scene_4.py`
 
 ### Lernziel
 
@@ -363,7 +349,7 @@ Personen, Geräte und Beleuchtung als Wärmequellen im Winter (Gewinn) erfassen.
 
 ## Heizung · Modul 5 — Solarer Wärmegewinn
 
-**Datei:** `Heating/5_solar_heat_gain/scene_5.py`
+**Datei:** `3_heating/5_solar_heat_gain/scene_5.py`
 
 ### Lernziel
 
@@ -396,7 +382,7 @@ Solare Einstrahlung durch transparente Bauteile, g-Wert, Verschattung, Speicherm
 
 ## Heizung · Final Calculation — Heizwärmebedarf
 
-**Datei:** `Heating/final_calculation/merged_scenes.py`
+**Datei:** `3_heating/6_final_calculation/scene_6.py`
 
 ### Lernziel
 
@@ -430,7 +416,7 @@ Alle Verlust- und Gewinnpfade in **einer Bilanz** zusammenführen → Jahres-Hei
 
 ## Kühlung · Teil 1 — Heizlast vs. Kühllast
 
-**Datei:** `Cooling/1_heating_vs_cooling/scene_1.py`
+**Datei:** `4_cooling/1_heating_vs_cooling/scene_1.py`
 
 ### Lernziel
 
@@ -453,11 +439,11 @@ Dieselben Gewinnequellen (Sonne, Personen, Geräte) **saisonal unterschiedlich**
 
 ## Kühlung · Teil 2 — Interne Wärmegewinne
 
-**Datei:** `Cooling/2_internal_gains/scene_2.py`
+**Datei:** `4_cooling/2_internal_gains/scene_2.py`
 
 ### Lernziel
 
-Interne Lasten detailliert aufschlüsseln; sensible vs. latente Anteile bei Personen.
+Interne Lasten detailliert aufschlüsseln. Sensible und latente Wärme erklärt das Lüftungsvideo (Kapitel 3); hier nennt Teil 2 nur, dass Personen beides abgeben.
 
 ### Formeln
 
@@ -467,7 +453,6 @@ Interne Lasten detailliert aufschlüsseln; sensible vs. latente Anteile bei Pers
 | **Q̇_Geräte = P_el · f_N** | Gerätelast (Leistung × Nutzungsfaktor) |
 | **Q̇_Licht = P_Licht · f_g** | Beleuchtungslast |
 | **Q̇_i = Q̇_Pers + Q̇_Geräte + Q̇_Licht** | Gesamte interne Last |
-| **Q̇_ges = Q̇_sens + Q̇_lat** | Sensible + latente Kühlung |
 
 ### Körperwärme nach Aktivität (q̇_p-Skala)
 
@@ -489,27 +474,25 @@ Interne Lasten detailliert aufschlüsseln; sensible vs. latente Anteile bei Pers
 ### Merksätze
 
 - Hörsaal mit 100 Personen: **~10 kW** interne Wärme — massive Sommerlast.
-- Latente Last = Feuchte (Schwitzen, Atmung) — braucht **Entfeuchtung**, nicht nur Kühlung.
+- Latente Last = Feuchte (Schwitzen, Atmung) — braucht **Entfeuchtung**, nicht nur Kühlung (Lüftungsvideo, Kapitel 3).
 - f_g (Beleuchtung) analog zu f_N: Anteil der **gleichzeitig betriebenen** Leuchten (2 Leuchten, 1 aus → f_g = 0,5).
 
 ---
 
-## Kühlung · Teil 3 — Transmission & Feuchte
+## Kühlung · Teil 3 — Transmission & Lüftungslast
 
-**Datei:** `Cooling/3_transmission_humidity/scene_3.py`
+**Datei:** `4_cooling/3_transmission_humidity/scene_3.py` · **3 Beats** (Opake Bauteile · Phasenverschiebung · Lüftungslast im Sommer)
 
 ### Lernziel
 
-Sommerliche Transmissionslast (mit ΔT_eq für solare Aufheizung) und latente Lasten durch Feuchte.
+Sommerliche Transmissionslast (mit ΔT_eq für solare Aufheizung, Zeitverzögerung) und — als kurze Erinnerung, ohne Herleitung — die Lüftungslast aus dem Lüftungsvideo (450 W sensibel + 810 W latent) neben der Transmission im Lastbalken.
 
 ### Formeln
 
 | Formel | Bedeutung |
 |--------|-----------|
 | **Q̇_T = U · A · ΔT_eq** | Transmissionskühllast (opake Bauteile, Sommer) |
-| **Q̇_L = Q̇_sens + Q̇_lat** | Gesamte Lüftungs-/Infiltrationslast |
-| **Q̇_sens = ρ_a · c_p,a · ΔΘ · q_v,R** | Sensible Lüftungslast |
-| **Q̇_lat = ρ_a · r · Δx · q_v,R** | Latente Lüftungslast (Feuchte) |
+| **Q̇_L = Q̇_V,sens + Q̇_V,lat** | Lüftungslast aus dem Lüftungsvideo (Kapitel 3); 450 W + 810 W ≈ 1 260 W |
 
 ### Kernbegriffe
 
@@ -517,13 +500,17 @@ Sommerliche Transmissionslast (mit ΔT_eq für solare Aufheizung) und latente La
 |---------|------------|
 | **ΔT_eq** | Äquivalente Temperaturdifferenz (solare Oberflächenaufheizung) |
 | **Zeitverzögerung** | Schwere Wände puffern — Last kommt **verspätet** |
-| **q_v,R** | Volumenstrom der Raumluft [m³/s] |
+
+### Merksätze
+
+- Luftmenge, c_Luft, Δx und Rückgewinnung werden im Lüftungsvideo (Kapitel 2, 3, 5) erklärt; hier steht die Last neben der Transmission.
+- Ein Plattentauscher gewinnt nur sensible Wärme zurück (450 → 90 W); die latente Last bleibt und braucht Entfeuchtung.
 
 ---
 
 ## Kühlung · Teil 4 — Solarstrahlung
 
-**Datei:** `Cooling/4_solar_radiation/scene_4.py`
+**Datei:** `4_cooling/4_solar_radiation/scene_4.py`
 
 ### Lernziel
 
@@ -552,60 +539,40 @@ Solare Kühllast durch Fenster: Einstrahlung, Rahmen, Verschattung, Verglasung.
 
 ## Kühlung · Teil 5 — Systemauslegung
 
-**Datei:** `Cooling/5_systemauslegung/scene_5.py`
+**Datei:** `4_cooling/5_systemauslegung/scene_5.py` · **2 Beats** (Volumenstrom-Gleichung · Luftstrom isolieren)
 
 ### Lernziel
 
-Von der Kühllast zum erforderlichen **Luftvolumenstrom** und **Kanalquerschnitt**.
+Von der Kühllast zum erforderlichen **Luftvolumenstrom** — und der Vergleich mit dem hygienischen Volumenstrom aus dem Lüftungsvideo. Der Kanalquerschnitt folgt mit derselben Methode wie dort (Kapitel 5), nur größer.
 
 ### Formeln
 
 | Formel | Bedeutung |
 |--------|-----------|
 | **Q̇_V = ρ_a · c_p,a · Δθ · q_v,R** | Volumenstrom-Kühlleistung |
-| **q_v,R = Q̇_S,tr / (ρ_a · c_p,a · Δθ)** | Erforderlicher Volumenstrom aus solarer Last |
-| **q_v,R = v_m · A** | Kontinuität |
-| **A = q_v,R / v_m** | Kanalquerschnitt |
-| **r = √(A / π)** | Rohrradius bei rundem Kanal |
+| **q_v,R = Q̇_S,tr / (ρ_a · c_p,a · Δθ)** | Erforderlicher Volumenstrom aus solarer Last (≈ 0,126 m³/s bei Q̇_S,tr ≈ 1 060 W, Δθ = 7 K) |
+| **A = q_v,R / v_m** | Kanalquerschnitt: 0,0505 m² gegenüber 0,0244 m² beim hygienischen Volumenstrom |
 
 ### Merksätze
 
 - Erst **Last isolieren** (solar getrennt von intern), dann Volumenstrom dimensionieren.
-- Kanaldurchmesser wächst mit **√(Volumenstrom)** — doppelter Durchsatz braucht nicht doppelten Radius.
+- Die Kühllast braucht etwa **das Doppelte** des hygienischen Volumenstroms (0,126 gegenüber 0,061 m³/s).
 
 ---
 
-## Kühlung · Teil 6 — Lüftungssysteme
+## Kühlung · Teil 6 — Sommerstrategie
 
-**Datei:** `Cooling/6_lueftungssysteme/scene_6.py`
+**Datei:** `4_cooling/6_sommerstrategie/scene_6.py` · **3 Beats** (Last zuerst senken · Sorptionsgestützte Kühlung · Komfortstrategie)
 
 ### Lernziel
 
-Strategie: Last senken → frei lüften, solange die Außenluft kühler ist → RLT als Reserve. Das ist sommerlicher Wärmeschutz (DIN 4108-2), kein Passivhaus-Kriterium — ein Passivhaus braucht Zu-/Abluft mit WRG als Hygiene-Luftwechsel.
-
-### Kernbegriffe
-
-| Begriff | Definition |
-|---------|------------|
-| **Querlüftung** | Zwei Öffnungen — effektive Fläche A_eff aus beiden Querschnitten |
-| **Auftriebslüftung** | Δp = h · g · (ρ_a − ρ_i) — Höhendifferenz erzeugt Druck |
-| **Nachtlüftung** | Speichermasse nachts abkühlen |
-| **WRG / KRG** | Wärme- bzw. Kälterückgewinnung im Sommer |
-| **η (WRG)** | (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL) — Temperaturänderungsgrad |
-
-### Formeln
-
-| Formel | Bedeutung |
-|--------|-----------|
-| **1/A_eff² = 1/A_1² + 1/A_2²** | Serienschaltung zweier Öffnungen |
-| **Δp = h · g · (ρ_a − ρ_i)** | Auftriebsdruck |
-| **η = (θ_ZUL − θ_AUL) / (θ_ABL − θ_AUL)** | Temperaturänderungsgrad (Beispiel: 5 K / 6 K ≈ 0,8) |
+Strategie: Last senken → frei lüften, solange die Außenluft kühler ist → Maschinen als Reserve. Das ist sommerlicher Wärmeschutz (DIN 4108-2). Fenster-, Quer-, Auftriebs- und Nachtlüftung sowie die mechanischen Systeme und die Wärmerückgewinnung stehen im Lüftungsvideo (Kapitel 4 und 5).
 
 ### Strategie (3 Stufen)
 
 1. **Hülle + Sonnenschutz** — Last senken (~45 %)
-2. **Natürliche Lüftung** — kostenlos nutzen (~35 %)
-3. **RLT als Reserve** — nur für den Rest der Kühllast (~20 %)
+2. **Natürliche Lüftung** — kostenlos nutzen (~35 %), Kapitel 4 des Lüftungsvideos
+3. **RLT als Reserve** — nur für den Rest der Kühllast (~20 %), Kapitel 5 des Lüftungsvideos
 
 ### Sorptionsgestützte Kühlung (DEC)
 
@@ -618,9 +585,10 @@ Kühlen allein mit Stoffeigenschaften — ohne Kältemaschine:
 
 **Nachteil (mikrobiell):** krasse Temperatur- und Feuchtewechsel setzen Keime im Gerät unter Selektionsdruck — resistente Stämme überleben bevorzugt. Hygiene/Wartung einplanen.
 
-### Passivhaus-Widerspruch
+### Merksätze
 
-Natürliche Fensterlüftung und Passivhaus widersprechen sich: Wärmerückgewinnung braucht **beide Ströme in der Anlage** — ein offenes Fenster hat η = 0 (Lüftungswärmeverluste gehen vollständig verloren). Wer WRG braucht, gibt die freie Lüftung als Hauptluftweg auf; sommerliche Nachtlüftung bleibt als Ergänzung.
+- **Komfort zuerst, Außenluft zweitens, Maschinen zuletzt.**
+- Ein Passivhaus braucht Zu-/Abluft mit WRG; ein offenes Fenster hat η = 0 — die sommerliche Nachtlüftung bleibt als Ergänzung.
 
 ---
 

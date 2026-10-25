@@ -1,0 +1,7 @@
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/intro_scene/480p15/Demo_Intro_Lueftung.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/full_ventilation_video/480p15/Ventilation_01_WarumLueften.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/full_ventilation_video/480p15/Ventilation_02_Luftmenge.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/full_ventilation_video/480p15/Ventilation_03_WaermestromLuft.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/full_ventilation_video/480p15/Ventilation_04_NatuerlicheLueftung.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/full_ventilation_video/480p15/Ventilation_05_MechanischeLueftung.mp4'
+file '/Users/niloufarghandehariyoon/Developer/semio/tutorial/energy/demand/2_ventilation/media/videos/full_ventilation_video/480p15/Ventilation_06_Uebergabe.mp4'

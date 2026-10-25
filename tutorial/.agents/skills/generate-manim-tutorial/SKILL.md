@@ -22,9 +22,9 @@ Turn a user description into a Cooling-style Manim topic folder: scenes + narrat
 5. **German on-screen subtitles.** Every clause's German translation lives right there in `NARRATION` (the third tuple element) and is shown via `caption_bar(text_de)` / `swap_caption(self, old, text_de)` from `manim_visuals.py` — one fixed bottom-edge boxed slot, always German, never the spoken English, always `CAPTION_FONT_SIZE` (no auto-shrink), always center-aligned lines with the shared vertical gap from `centered_body_text`. It sits in its own reserved zone below `formula_panel()`, so the two fixed slots never overlap; nothing else may be placed in either zone.
 
 **Canonical style sources (read when unsure):**
-- `tutorial/energy/demand/Cooling/3_transmission_humidity/scene_3.py`
-- `tutorial/energy/demand/Cooling/3_transmission_humidity/generate_audio.py`
-- `tutorial/energy/demand/Cooling/3_transmission_humidity/build_full_video.py`
+- `tutorial/energy/demand/4_cooling/3_transmission_humidity/scene_3.py`
+- `tutorial/energy/demand/4_cooling/3_transmission_humidity/generate_audio.py`
+- `tutorial/energy/demand/4_cooling/3_transmission_humidity/build_full_video.py`
 - `tutorial/manim_fonts.py` / `tutorial/manim_visuals.py` — the template's actual implementation, not just its description
 - Now I Get It prompts: `~/Nowgetit/NowIGetIt/backend/pipeline/{planner,scene_generator,tts,compose}.py`
 
@@ -33,7 +33,7 @@ For palette, templates, and file stubs see [reference.md](reference.md).
 ## When Invoked
 
 1. Parse the user's description into a **scene plan** (beats), each with its `NARRATION` clauses (English VO + German subtitle per clause).
-2. Create or extend a topic folder under `tutorial/energy/demand/{Heating|Cooling}/`.
+2. Create or extend a topic folder under `tutorial/energy/demand/<N_series>/`.
 3. Write Manim code, narrations, and pipeline scripts using the five rules above.
 4. Prefer editing existing scene files when extending a topic; otherwise add a new numbered topic folder.
 
@@ -81,7 +81,7 @@ Visual devices (pick one per beat): `house_section` | `particle_flow` | `equatio
 ### 2. Topic folder layout
 
 ```
-tutorial/energy/demand/Cooling/<N_topic>/
+tutorial/energy/demand/4_cooling/<N_topic>/
   scene_N.py              # shared palette + helpers + Beat* Scene classes, each carrying its own NARRATION
   generate_audio.py       # imports NARRATION from scene_N.py → beat_N_audio.mp3|.wav
   build_full_video.py     # manim -qh → mux → compose
@@ -90,17 +90,17 @@ tutorial/energy/demand/Cooling/<N_topic>/
   rendered/               # HQ outputs (gitignored if project does so)
 ```
 
-Heating legacy may still use `merged_scenes.py` + `Full*Video` + `add_sound`. **New work uses the Cooling trio above.** Do not mix both patterns in one topic — `Cooling/2_internal_gains/merged_scenes.py` is a known example of this drift (legacy `SceneN` classes and a monolithic `FullHiddenHeatVideo` sitting inside a Cooling-numbered folder, pipeline-generated and never migrated). Do not copy its pattern for new work; migrating it to the four-rule template is a separate future pass, not something to fix incidentally while touching something else.
+Every topic uses the `scene_N.py` + `generate_audio.py` + `build_full_video.py` trio above; do not mix in `merged_scenes.py` / `add_sound` masters.
 
 ### 3. Manim hard rules (Community Edition)
 
 1. `from manim import *` — CE only (`Create`, not `ShowCreation`).
 2. Plain `Scene` only — no `MovingCameraScene` / `ThreeDScene`.
-3. **Always `Text(...)`** for titles, labels, equations — never `MathTex` / `Tex` / `TexText`. No exceptions; every topic folder is now on `equation_row()`. The trap that remains is indirect: CE's `DecimalNumber` defaults to `mob_class=MathTex`, so `Axes(..., include_numbers=True)` and `axes.add_coordinates()` pull LaTeX back in — hand-place tick labels as `Text` positioned with `axes.c2p(...)` instead (see `6_lueftungssysteme/scene_6.py`'s `Beat5_Nachtlueftung`).
+3. **Always `Text(...)`** for titles, labels, equations — never `MathTex` / `Tex` / `TexText`. No exceptions; every topic folder is now on `equation_row()`. The trap that remains is indirect: CE's `DecimalNumber` defaults to `mob_class=MathTex`, so `Axes(..., include_numbers=True)` and `axes.add_coordinates()` pull LaTeX back in — hand-place tick labels as `Text` positioned with `axes.c2p(...)` instead (see `2_ventilation/4_natuerliche_lueftung/scene_4.py`'s `Beat5_Nachtlueftung`).
 4. Palette: `from manim_visuals import P_DEEP_DARK, P_WHITE, P_CYAN, P_TEAL, P_ORANGE, P_YELLOW, P_RED, P_BLUE, P_GREEN` — import it, never copy-paste the hex block into the scene file (copies drift: some existing files are missing `P_GREEN`, one invented an unshared `P_MUTED`).
 5. First line of every `construct()`: `apply_scene_style(self)`. Do not set `self.camera.background_color` and call `apply_body_font()` as two separate hand-typed steps.
 6. Title: `scene_title(text)` + `play_scene_title(self, title)` — top-center, `TITLE_FONT_SIZE`, `TITLE_EDGE_BUFF`. Animate on the topic's first beat only; later beats `self.add(title)` the same text so it's present without a repeated intro. Never a raw `Text(...).to_edge(UP)` bypass, never `to_corner`.
-7. **`Write()` is for the title only.** For any other `Text` — subtitles, callout labels, door/wall/material labels — use `FadeIn()`. `Write()` on a small label that follows another mobject's `Create()`/animation earlier in the same beat has produced corrupted, ghosted trailing characters (reproduced in `Heating/1_introduction/scene_1.py`'s party-scene labels: `Write()` left "warm)" and "kalt)" doubled/garbled even at rest, while `FadeIn()` on the identical `Text` rendered clean). The one proven-safe `Write()` call is the title's, as the scene's first animation with nothing preceding it — do not generalize from it.
+7. **`Write()` is for the title only.** For any other `Text` — subtitles, callout labels, door/wall/material labels — use `FadeIn()`. `Write()` on a small label that follows another mobject's `Create()`/animation earlier in the same beat has produced corrupted, ghosted trailing characters (reproduced in `3_heating/1_introduction/scene_1.py`'s party-scene labels: `Write()` left "warm)" and "kalt)" doubled/garbled even at rest, while `FadeIn()` on the identical `Text` rendered clean). The one proven-safe `Write()` call is the title's, as the scene's first animation with nothing preceding it — do not generalize from it.
 8. All other `font_size=` values come from `manim_fonts`: `SUBTITLE_FONT_SIZE` (20) for beat subtitles, `BODY_FONT_SIZE` (16) for standard labels, `LABEL_FONT_SIZE` (14) for small callouts, `FORMULA_FONT_SIZE` (26) for the formula panel. Do not pick a font size by eye.
 9. Layout: build near `ORIGIN` with `arrange`/`next_to`, then place the group. No overlapping text/arrows. At most one dense formula box visible at a time — and it is always the one from `formula_panel()`.
 10. Prefer real motion (`Create`, `GrowArrow`, `LaggedStart`, `Transform`, `ValueTracker`) over FadeIn-and-wait posters — but see rule 7 for `Text` specifically.
@@ -174,13 +174,3 @@ Before finishing:
 - [ ] Class names in `build_full_video.py` match `scene_N.py`
 - [ ] Final `self.wait(0.5)` on each Scene
 - [ ] No new pattern invented when Cooling already covers it
-
-## Heating vs Cooling
-
-| | Cooling (default for new work) | Heating (legacy) |
-|--|-------------------------------|------------------|
-| Scenes | `scene_N.py` + `Beat*` classes, each with `NARRATION` | Often `merged_scenes.py` + `SceneN` |
-| Audio | External mux via `build_full_video.py`, text imported from `scene_N.py` | Often `Full*Video` + `add_sound`, narration untracked |
-| When | Always for new Cooling topics; preferred for new Heating too | Only when extending an existing Heating chapter in-place |
-
-`Cooling/2_internal_gains/merged_scenes.py` currently follows the Heating column despite living under `Cooling/` — a known gap, not a pattern to copy.

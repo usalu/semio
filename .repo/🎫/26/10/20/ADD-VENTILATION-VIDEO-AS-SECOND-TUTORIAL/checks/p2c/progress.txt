@@ -1,0 +1,4 @@
+[DEBUG] done Beat2_VolumeFlowEquation:        3 lines
+[DEBUG] done Beat3_IsolateAirflow:        7 lines
+[DEBUG] done Beat3_LueftungslastImSommer:        0 lines
+[DEBUG] ALL DONE

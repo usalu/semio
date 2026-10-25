@@ -467,11 +467,15 @@ def animate_flows(
     scene.remove(dots, *dots)
 
 
+_FLOW_PHASE: dict = {}
+
+
 def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: float = 2.4, streak: bool = True):
     """💨 The particle stream of ``animate_flows`` as one animation — for ``hold_for(during=…)`` and mixed plays.
 
     ``streams`` are ``(paths, colour)`` or ``(paths, colour, colour_end)``; particles are added when the
-    animation starts and removed when it ends.
+    animation starts and removed when it ends. The phase of a stream (identified by its path objects) is carried
+    over to the next animation on the same paths, so consecutive plays continue the flow instead of restarting it.
     """
     from manim import Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup, interpolate_color, linear
 
@@ -491,9 +495,14 @@ def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: fl
                 dots.add(particle)
                 meta.append((path, w / waves, start_c, end_c))
 
+    all_paths = [path for entry in streams for path in entry[0]]
+    key = (tuple(id(path) for path in all_paths), waves)
+    phase = {"start": 0.0}
+
     def update(group, alpha):
+        base = phase["start"] + alpha * cycles
         for particle, (path, offset, start_c, end_c) in zip(group, meta):
-            t = (alpha * cycles + offset) % 1.0
+            t = (base + offset) % 1.0
             particle.move_to(path.point_from_proportion(t))
             fade = min(1.0, t / 0.08, (1.0 - t) / 0.10)
             fill = interpolate_color(start_c, end_c, t)
@@ -505,7 +514,16 @@ def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: fl
             else:
                 particle.set_fill(fill, opacity=max(0.0, fade))
 
-    return UpdateFromAlphaFunc(dots, update, remover=True, rate_func=linear)
+    class _Flow(UpdateFromAlphaFunc):
+        def begin(self):
+            phase["start"] = _FLOW_PHASE.get(key, (all_paths, 0.0))[1]
+            super().begin()
+
+        def finish(self):
+            _FLOW_PHASE[key] = (all_paths, (phase["start"] + cycles) % 1.0)
+            super().finish()
+
+    return _Flow(dots, update, remover=True, rate_func=linear)
 
 
 def animate_haze(
@@ -614,6 +632,18 @@ def bind_meter(gauge: dict, tracker) -> dict:
     set_meter(gauge, tracker.get_value())
     gauge["fill"].add_updater(lambda m: set_meter(gauge, tracker.get_value()))
     return gauge
+
+
+def recolor_meter(gauge: dict, color: str, **kwargs):
+    """🎨 Animation that tints a bound ``meter`` fill without freezing its height.
+
+    ``fill.animate.set_fill`` interpolates the whole shape towards a snapshot taken at play time, which fights the
+    ``bind_meter`` updater and pins the bar until the animation ends. This only interpolates the colour.
+    """
+    from manim import ManimColor, UpdateFromAlphaFunc, interpolate_color
+
+    fill, start, end = gauge["fill"], gauge["fill"].get_fill_color(), ManimColor(color)
+    return UpdateFromAlphaFunc(fill, lambda m, a: m.set_fill(interpolate_color(start, end, a), opacity=0.85), **kwargs)
 
 
 def chip(text: str, color: str = P_TEAL, *, font_size: int | None = None):
@@ -1893,7 +1923,7 @@ def swap_caption(scene, old, text_de: str, *, run_time: float = 0.35, **kwargs):
 
     Fades out then in — not a simultaneous cross-fade. Two different
     sentences blended mid-transition render as doubled, overlapping text
-    (reproduced while verifying ``Heating/1_introduction/scene_1.py``); a
+    (reproduced while verifying ``3_heating/1_introduction/scene_1.py``); a
     sequential fade never overlaps two different strings on screen at once.
 
     Records ``scene._vo_caption_t0`` when the new caption is fully on screen so

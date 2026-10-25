@@ -53,7 +53,7 @@ _FONT_CACHE_PATH = _Path(__file__).resolve().parent / ".manim_font_cache"
 # Applied once, by wrapping ``Text.__init__``, so it covers every path with no
 # per-scene edits: ``body_text()`` and the shared helpers below, the bare
 # ``Text(...)`` calls still scattered through the Heating ``scene_*.py`` files,
-# and the legacy ``final_calculation/merged_scenes.py``. A scene that sizes a
+# and ``6_final_calculation/scene_6.py``. A scene that sizes a
 # ``Text`` by an explicit ``width=``/``height=`` box is left untouched (scaling
 # it afterwards would fight that box).
 _KERNING_SAFE_FONT_SIZE: float = 60.0

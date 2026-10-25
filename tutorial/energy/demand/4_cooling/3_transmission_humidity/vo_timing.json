@@ -1,0 +1,18 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_TransmissionOpaque": {
+      "intro": 8.904,
+      "sun": 6.264,
+      "formula": 7.2,
+      "u": 7.968,
+      "a": 4.848,
+      "dt": 7.968
+    },
+    "Beat2_TimeLag": {
+      "intro": 5.952,
+      "clock": 8.016,
+      "peak": 7.32
+    }
+  }
+}

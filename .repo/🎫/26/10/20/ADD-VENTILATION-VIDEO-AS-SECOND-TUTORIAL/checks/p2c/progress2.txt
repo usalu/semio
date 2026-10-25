@@ -1,0 +1,7 @@
+[DEBUG] done Beat1_LastZuerstSenken:        0 lines
+[DEBUG] done Beat3_IsolateAirflow:        0 lines
+[DEBUG] done Beat2_VolumeFlowEquation:        8 lines
+[DEBUG] done Beat3_KomfortStrategie:        0 lines
+[DEBUG] done Beat2_SorptionsKuehlung:        0 lines
+[DEBUG] done Beat3_LueftungslastImSommer:        0 lines
+[DEBUG] ALL DONE
