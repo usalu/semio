@@ -1,0 +1,33 @@
+{
+  "source": "subtitle",
+  "beats": {
+    "Beat1_SolarIrradiance": {
+      "intro": 6.864,
+      "irradiance": 7.368,
+      "chart": 6.96
+    },
+    "Beat2_FrameFactor": {
+      "intro": 4.368,
+      "frame": 8.064,
+      "aeff": 7.752
+    },
+    "Beat3_ShadingFactor": {
+      "intro": 6.408,
+      "ismax": 10.512,
+      "unshaded": 7.656,
+      "raffstore": 6.36,
+      "reduced": 6.96
+    },
+    "Beat4_GlassTransmittance": {
+      "intro": 4.704,
+      "gtot": 5.304,
+      "parts": 8.712,
+      "meaning": 5.76
+    },
+    "Beat5_SolarCoolingLoad": {
+      "intro": 7.152,
+      "result": 7.512,
+      "meaning": 5.76
+    }
+  }
+}

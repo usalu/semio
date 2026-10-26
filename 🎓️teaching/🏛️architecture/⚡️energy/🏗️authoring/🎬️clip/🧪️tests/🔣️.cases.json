@@ -1,0 +1,239 @@
+{
+  "curriculum": {
+    "ids": [
+      "physical_fundamentals",
+      "ventilation",
+      "heating",
+      "cooling",
+      "energy_balance"
+    ],
+    "chapter_counts": [
+      1,
+      6,
+      6,
+      6,
+      7
+    ],
+    "intro_count": 5,
+    "segment_counts": [
+      [
+        8
+      ],
+      [
+        3,
+        3,
+        4,
+        6,
+        4,
+        2
+      ],
+      [
+        9,
+        6,
+        1,
+        5,
+        8,
+        6
+      ],
+      [
+        3,
+        5,
+        3,
+        5,
+        2,
+        3
+      ],
+      [
+        4,
+        4,
+        4,
+        4,
+        4,
+        3,
+        3
+      ]
+    ],
+    "render_segment_count": 117,
+    "logical_clip_count": 31,
+    "first_segment_ordinals": [
+      1,
+      10,
+      33,
+      69,
+      91
+    ]
+  },
+  "intro_asset_changed": {
+    "before": "original authored asset",
+    "after": "updated authored asset",
+    "reusable_before": true,
+    "reusable_after": false
+  },
+  "interrupted_quality_switch": {
+    "previous_quality": "-ql",
+    "target_quality": "-qh",
+    "completed_clip_reusable": true,
+    "pending_clip_reusable": false
+  },
+  "manim_command": [
+    "<active-python>",
+    "-m",
+    "manim"
+  ],
+  "render_cache_publication": [
+    {
+      "id": "interrupted_forced_rerender",
+      "cached_bytes": 1200,
+      "replacement_bytes": 1400,
+      "source_before": "original authored intro",
+      "source_after": null,
+      "interrupted": true,
+      "reusable_before": true,
+      "reusable_after": false
+    },
+    {
+      "id": "authored_source_changed_during_render",
+      "cached_bytes": 1200,
+      "replacement_bytes": 1400,
+      "source_before": "original authored intro",
+      "source_after": "concurrently updated authored intro",
+      "interrupted": false,
+      "reusable_before": true,
+      "reusable_after": false
+    }
+  ],
+  "process_cancellation": {
+    "roles": [
+      "child",
+      "grandchild"
+    ],
+    "ready_timeout": 20,
+    "shutdown_timeout": 5,
+    "expected_running_after": [
+      false,
+      false
+    ]
+  },
+  "cli_encoding": {
+    "encoding": "cp1252",
+    "help_symbol": "▶️",
+    "invalid_video": "▶️",
+    "invalid_exit": 2
+  },
+  "command_exit_codes": [
+    0,
+    7
+  ],
+  "render_scheduling": {
+    "jobs": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "workers": 2,
+    "failed_job": 1,
+    "completed": [
+      0,
+      2,
+      3,
+      4
+    ],
+    "queued_after_cancellation": [
+      2,
+      3,
+      4
+    ]
+  },
+  "segment_integration": {
+    "frames_per_segment": 3,
+    "chapter_frames": 6,
+    "movie_frames": 9,
+    "dominant_channels": [
+      1,
+      0,
+      2
+    ]
+  },
+  "non_reusable_segment_render": {
+    "quality": "-ql",
+    "force": false,
+    "sidecars": [
+      "missing",
+      "mismatched"
+    ],
+    "required_flag": "--disable_caching"
+  },
+  "text_cache_preparation": {
+    "files": [
+      {
+        "path": "media/t/valid.svg",
+        "content": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"20\" height=\"20\"><rect width=\"20\" height=\"20\"/></svg>",
+        "keep": true
+      },
+      {
+        "path": "media/t/empty.svg",
+        "content": "",
+        "keep": false
+      },
+      {
+        "path": "media/t/truncated.svg",
+        "content": "<svg xmlns=\"http://www.w3.org/2000/svg\"><g>",
+        "keep": false
+      },
+      {
+        "path": "media/t/cache.txt",
+        "content": "",
+        "keep": true
+      },
+      {
+        "path": "media/t/nested/broken.svg",
+        "content": "<svg>",
+        "keep": true
+      },
+      {
+        "path": "authored/source.svg",
+        "content": "<svg>",
+        "keep": true
+      }
+    ],
+    "file_link": "media/t/linked.svg",
+    "directory_link": "linked-media/t"
+  },
+  "canonical_paths": {
+    "runtime": "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️",
+    "fonts": "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️",
+    "visuals": "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️",
+    "kind_leaf": "🐍️.py",
+    "intro_pdf": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🏰️institution/📕️.pdf",
+    "timing": "⏱️timing/🔣️.json"
+  },
+  "trace_facets": {
+    "records": [
+      {
+        "beat": "First",
+        "clause": "a",
+        "start": 0,
+        "window": 1.5
+      },
+      {
+        "beat": "Second",
+        "clause": "b",
+        "start": 0.2,
+        "window": 2.5
+      }
+    ],
+    "collision": {
+      "beat": "SharedBeat",
+      "owners": [
+        "first",
+        "second"
+      ],
+      "windows": [
+        1,
+        2
+      ]
+    }
+  }
+}

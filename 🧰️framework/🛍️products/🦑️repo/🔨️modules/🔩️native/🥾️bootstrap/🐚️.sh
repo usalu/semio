@@ -256,10 +256,10 @@ linux_package_manager() {
 
 linux_toolchain_packages() {
   case "$1" in
-  apt-get) printf '%s\n' build-essential pkg-config uuid-dev curl ca-certificates git unzip xz-utils libicu-dev procps lldb lsof ;;
-  dnf) printf '%s\n' gcc gcc-c++ make pkgconf-pkg-config libuuid-devel curl ca-certificates git unzip xz tar libicu procps-ng findutils lldb lsof ;;
-  pacman) printf '%s\n' base-devel pkgconf util-linux-libs curl ca-certificates git unzip xz icu procps-ng lldb lsof ;;
-  zypper) printf '%s\n' gcc gcc-c++ make pkg-config libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps lldb python3-lldb lsof ;;
+  apt-get) printf '%s\n' build-essential pkg-config libpango1.0-dev libcairo2-dev fonts-liberation fonts-dejavu-extra uuid-dev curl ca-certificates git unzip xz-utils libicu-dev procps lldb lsof ;;
+  dnf) printf '%s\n' gcc gcc-c++ make pkgconf-pkg-config pango-devel cairo-devel liberation-serif-fonts dejavu-serif-fonts libuuid-devel curl ca-certificates git unzip xz tar libicu procps-ng findutils lldb lsof ;;
+  pacman) printf '%s\n' base-devel pkgconf pango cairo ttf-liberation ttf-dejavu util-linux-libs curl ca-certificates git unzip xz icu procps-ng lldb lsof ;;
+  zypper) printf '%s\n' gcc gcc-c++ make pkg-config pango-devel cairo-devel liberation-fonts dejavu-fonts libuuid-devel curl ca-certificates git unzip xz tar libicu-devel procps lldb python3-lldb lsof ;;
   esac
 }
 
@@ -290,9 +290,10 @@ ensure_native_toolchain() {
   Darwin)
     xcode-select -p >/dev/null 2>&1 || log "Xcode Command Line Tools are missing; run xcode-select --install and rerun setup."
     if command -v brew >/dev/null 2>&1; then
-      brew install pkg-config || log "Homebrew could not install pkg-config."
+      brew install pkg-config cairo pango || log "Homebrew could not install pkg-config, Cairo and Pango."
+      brew install --cask font-dejavu || log "Homebrew could not install DejaVu mathematical fonts."
     else
-      log "Homebrew not available; install pkg-config before running native C++ builds (CMake and Ninja are provisioned by the repository)."
+      log "Homebrew not available; install pkg-config, Cairo, Pango and DejaVu fonts before running native C++ builds (CMake and Ninja are provisioned by the repository)."
     fi
     export CMAKE_PRESET="${CMAKE_PRESET:-macos}"
     ;;

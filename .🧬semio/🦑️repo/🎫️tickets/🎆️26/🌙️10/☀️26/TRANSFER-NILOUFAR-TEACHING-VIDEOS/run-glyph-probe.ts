@@ -1,0 +1,13 @@
+import { spawn } from "node:child_process";
+import { createWriteStream } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const ticket = dirname(fileURLToPath(import.meta.url));
+const generated = join(ticket, "🗑️generated");
+const log = createWriteStream(join(generated, "glyph-probe.log"));
+let tail = "";
+const child = spawn(join(generated, "v/Scripts/python.exe"), [join(ticket, process.argv[2] || "glyph-probe.py"), "C:/git/semio/🎓️teaching", join(generated, process.argv[3] || "glyph-probe")], { env: { ...process.env, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEACHING_OUTPUT_ROOT: join(generated, "glyph-probe"), SEMIO_TEACHING_CACHE_DIR: join(generated, "fonts") }, windowsHide: true });
+for (const stream of [child.stdout, child.stderr]) stream.on("data", chunk => { log.write(chunk); tail = (tail + chunk.toString()).slice(-3000); });
+process.on("SIGINT", () => child.kill("SIGINT"));
+child.on("error", error => { console.error("[DEBUG]", error); process.exitCode = 1; });
+child.on("exit", code => { log.end(); console.log(tail); process.exitCode = code ?? 1; });

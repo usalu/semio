@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "scene": "RecoveryFixture",
+  "fps": 15,
+  "resolution": [
+    320,
+    180
+  ],
+  "animation_durations": [
+    0.1,
+    0.17
+  ],
+  "resume_animation": 2,
+  "narration": [
+    [
+      "line",
+      "One short narration clause.",
+      "Ein kurzer Satz."
+    ]
+  ],
+  "updater_speed": 2
+}

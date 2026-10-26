@@ -1,0 +1,2080 @@
+{
+  "title": "Transfer Niloufar Teaching Videos",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Transfer all teaching videos and required assets from existing Niloufar WIP worktree to C:/git/semio Ueli WIP checkout as staged changes. Preserve concurrent unrelated changes. Validate every video renders end to end. Actual fleet GPT 6.1 Sol: main xhigh, execution high, audits low; MCP model allowlist only accepts codex.",
+  "summary": "Completed user taxonomy correction:114 canonical emoji/kind-only product files under the five teaching energy clip topics and shared authoring owner;141superseded paths absent;27redundant configs removed. Registered42parent-aware kinds/10rosters plus2member updates. Preserved611authored callable bodies,11timing/trace files and PDF. Fixed deterministic low-resolution Pango text-canvas/cache defect;32tests pass with one Windows capability skip. Fresh full117raw/31logical/5movie render passes both decoders on all153artifacts:37920frames at320x180/5fps,7584s;351ordered samples and provenance checks pass. Shared/index/reference/visual audits pass with unrelated work preserved. Finalizer stages closed metadata/evidence; generated artifacts removed after all commands end. See taxonomy-summary.md.",
+  "goal": "updatedtutorials",
+  "sessions": [
+    "eca29641-67b8-48a1-80a4-0db20530806e",
+    "3890a12c-8786-4ebc-923e-ca618d29e77a"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-26 01:37:46",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Transfer all teaching videos and required assets from existing Niloufar WIP worktree to C:/git/semio Ueli WIP checkout as staged changes. Preserve concurrent unrelated changes. Validate every video renders end to end. Actual fleet GPT 6.1 Sol: main xhigh, execution high, audits low; MCP model allowlist only accepts codex.",
+      "llm": "codex",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 05:15:35",
+      "author": "ueli",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "7b2365ac08c46994aa8ac098d5014f72a453f043",
+      "summary": "Transferred all 131 canonical Niloufar teaching-video sources into Ueli WIP with portable schema-driven tools and glyph fallback. All five corrected 480p15 movies fully rendered: 117 raw units, 31 logical clips, 113285 frames. Full PyAV/FFmpeg decode, exact source/order/provenance checks, sampled visual QA and fresh 27-test suite passed (one native capability skip). All 144 product paths staged with unrelated work preserved; retained audit inputs and reports document verification. Generated media/logs/caches are removed at final housekeeping. See summary.md.",
+      "files": [
+        {
+          "path": ".devcontainer/Dockerfile"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Animation Progress.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Parallel Rendering.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Portable Video Runtime.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Segment Rendering.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/audit-render-provenance.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/bootstrap-launcher.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/bootstrap.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/cache-fix.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/cancellation.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/check-shared-stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/compare-segments.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/coordination-state.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-arrow-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-balance-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-execution.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-render.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-status.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-visual-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-visual-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/dependency-scan.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/dependency.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-assembly-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-report-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-runtime-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-transfer-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-visual-details.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-visual-previews.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-after.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-all.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-coverage.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/heating-processes.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/index-audit.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-animations.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-chapters.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-clips.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-rational.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/isolate-render-text.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/make-previews.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/media-progress.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/minimal-font-test.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/minimal-font-test.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/monitor.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/native-fonts.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/native-prerequisites.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/observe-stage.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/parallel-monitor.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/path-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/path-audit.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/peek-progress.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline-checks.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline-review.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/plan-segments.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/prepare-segment-cache.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/prevent-cache.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/provenance-rebase.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/provision-ffprobe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/publish-videos.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/recovery-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/recovery-scene.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/recovery.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-execution.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-metrics.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-replacements.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-status.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/repair-render-text.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/retention-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/retry-stage.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/reuse-render-text.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-glyph-probe.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-glyph-tests.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-heating.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-recovery.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/section-build-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/section-smoke.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/segment-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/segment-plan-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/shared-edits.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/shared-stage.tests.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/shared-stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/smoke-pipelines.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/source-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/source-integrity.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/source-integrity.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/stage-files.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/staging-coherence.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-cache-fix.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-recovery.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-section-build.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test_native_prerequisites.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test_pipeline.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/transfer.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/transfer.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verification-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verify-contract.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verify-dependency.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verify-videos.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/video-counterpart.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/video-tools.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/visual-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/visual-movies.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/watch-pending.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/watch-renders.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/🎫️ticket.json"
+        },
+        {
+          "path": "🎓️teaching/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/full_ventilation_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/6_final_calculation/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/6_final_calculation/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/full_heating_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/full_cooling_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/scene_7.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/full_energy_balance_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/KONZEPTE_UND_FORMELN.md"
+        },
+        {
+          "path": "🎓️teaching/glyph_fallback.tests.json"
+        },
+        {
+          "path": "🎓️teaching/intro/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/intro/intro_scene.py"
+        },
+        {
+          "path": "🎓️teaching/intro/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/intro/welfenschloss (1).pdf"
+        },
+        {
+          "path": "🎓️teaching/manim_fonts.py"
+        },
+        {
+          "path": "🎓️teaching/manim_visuals.py"
+        },
+        {
+          "path": "🎓️teaching/pyproject.toml"
+        },
+        {
+          "path": "🎓️teaching/render_videos.py"
+        },
+        {
+          "path": "🎓️teaching/test_manim_fonts.py"
+        },
+        {
+          "path": "🎓️teaching/test_video_runtime.py"
+        },
+        {
+          "path": "🎓️teaching/tts_pipeline.py"
+        },
+        {
+          "path": "🎓️teaching/uv.lock"
+        },
+        {
+          "path": "🎓️teaching/video_manifest.json"
+        },
+        {
+          "path": "🎓️teaching/video_manifest.schema.json"
+        },
+        {
+          "path": "🎓️teaching/video_runtime.py"
+        },
+        {
+          "path": "🎓️teaching/video_runtime.tests.json"
+        },
+        {
+          "path": "🎓️teaching/📜️script.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-26 08:44:01",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Correct the transferred teaching-video folders and files to the current emoji taxonomy tree. Update every import, path, manifest, fixture and documentation reference, restage the corrected source paths and validate rendering from the final taxonomy layout. Preserve concurrent unrelated work.",
+      "llm": "codex",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 10:34:52",
+      "author": "ueli",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "7b2365ac08c46994aa8ac098d5014f72a453f043",
+      "summary": "Completed user taxonomy correction:114 canonical emoji/kind-only product files under the five teaching energy clip topics and shared authoring owner;141superseded paths absent;27redundant configs removed. Registered42parent-aware kinds/10rosters plus2member updates. Preserved611authored callable bodies,11timing/trace files and PDF. Fixed deterministic low-resolution Pango text-canvas/cache defect;32tests pass with one Windows capability skip. Fresh full117raw/31logical/5movie render passes both decoders on all153artifacts:37920frames at320x180/5fps,7584s;351ordered samples and provenance checks pass. Shared/index/reference/visual audits pass with unrelated work preserved. Finalizer stages closed metadata/evidence; generated artifacts removed after all commands end. See taxonomy-summary.md.",
+      "files": [
+        {
+          "path": ".devcontainer/Dockerfile"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Animation Progress.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Parallel Rendering.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Portable Video Runtime.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/Segment Rendering.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/audit-render-provenance.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/audit-taxonomy-index.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/audit-taxonomy-references.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/audit-taxonomy-source.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/bootstrap-launcher.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/bootstrap.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/cache-fix.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/cancellation.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/capture-taxonomy-pipelines.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/check-shared-stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/check-taxonomy-fixed-stopped.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/check-taxonomy-render-stopped.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/compare-segments.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/coordination-state.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-arrow-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-balance-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-execution.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-render.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-status.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-visual-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/corrected-visual-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/dependency-scan.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/dependency.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-assembly-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-report-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-runtime-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-transfer-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-visual-details.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/final-visual-previews.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/finish-taxonomy.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-after.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-all.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-coverage.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/glyph-probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/heating-processes.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/index-audit.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-animations.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-chapters.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-clips.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inspect-rational.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/inventory-taxonomy-fixed.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/isolate-render-text.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/make-previews.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/media-progress.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/minimal-font-test.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/minimal-font-test.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/monitor.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/native-fonts.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/native-prerequisites.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/observe-stage.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/parallel-monitor.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/path-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/path-audit.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/peek-progress.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline-checks.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline-review.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/pipeline.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/plan-segments.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/prepare-segment-cache.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/prevent-cache.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/probe-taxonomy-glyphs.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/probe-text-canvas-floor.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/probe-text-canvas.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/provenance-rebase.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/provision-ffprobe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/publish-videos.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/recovery-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/recovery-scene.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/recovery.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-execution.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-metrics.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-replacements.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/render-status.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/repair-render-text.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/retention-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/retry-stage.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/reuse-render-text.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-glyph-probe.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-glyph-tests.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-heating.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run-recovery.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/run.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/section-build-cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/section-smoke.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/segment-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/segment-plan-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/shared-edits.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/shared-stage.tests.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/shared-stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/smoke-pipelines.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/source-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/source-integrity.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/source-integrity.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/stage-files.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/stage-taxonomy.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/staging-coherence.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/stop-taxonomy-render.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-assembly-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-baseline.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-bootstrap.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-check.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-environment.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-final-report-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-finalization.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-finalizer-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-font-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-index-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-layout.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-paths.cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-pipeline.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-pipelines.tests.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-reference-plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-render-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-render-fixed.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-render.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-runtime.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-shared-stage.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-source-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-staging.cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-test.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-verifier-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/taxonomy-verify.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-cache-fix.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-recovery.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-section-build.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-taxonomy-layout.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test-taxonomy-pipelines.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test_native_prerequisites.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test_pipeline.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/test_verification_profile.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/text-canvas-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/transfer.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/transfer.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verification-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verification-profile.cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verify-contract.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verify-dependency.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/verify-videos.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/video-counterpart.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/video-tools.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/visual-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/visual-movies.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/watch-pending.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/watch-renders.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/TRANSFER-NILOUFAR-TEACHING-VIDEOS/🎫️ticket.json"
+        },
+        {
+          "path": "🎓️teaching/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/1_physical_fundamentals/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/2_ventilation/full_ventilation_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/1_introduction/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/2_conduction/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/3_convection/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/6_final_calculation/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/6_final_calculation/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/3_heating/full_heating_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/vo_timing.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/full_cooling_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/4_cooling/vo_trace.json"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/scene_1.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/scene_2.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/scene_3.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/scene_4.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/scene_5.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/scene_6.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/build_full_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/scene_7.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/README.md"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/5_energy_balance/full_energy_balance_video.py"
+        },
+        {
+          "path": "🎓️teaching/energy/demand/KONZEPTE_UND_FORMELN.md"
+        },
+        {
+          "path": "🎓️teaching/glyph_fallback.tests.json"
+        },
+        {
+          "path": "🎓️teaching/intro/generate_audio.py"
+        },
+        {
+          "path": "🎓️teaching/intro/intro_scene.py"
+        },
+        {
+          "path": "🎓️teaching/intro/manim.cfg"
+        },
+        {
+          "path": "🎓️teaching/intro/welfenschloss (1).pdf"
+        },
+        {
+          "path": "🎓️teaching/manim_fonts.py"
+        },
+        {
+          "path": "🎓️teaching/manim_visuals.py"
+        },
+        {
+          "path": "🎓️teaching/pyproject.toml"
+        },
+        {
+          "path": "🎓️teaching/render_videos.py"
+        },
+        {
+          "path": "🎓️teaching/test_manim_fonts.py"
+        },
+        {
+          "path": "🎓️teaching/test_video_runtime.py"
+        },
+        {
+          "path": "🎓️teaching/tts_pipeline.py"
+        },
+        {
+          "path": "🎓️teaching/uv.lock"
+        },
+        {
+          "path": "🎓️teaching/video_manifest.json"
+        },
+        {
+          "path": "🎓️teaching/video_manifest.schema.json"
+        },
+        {
+          "path": "🎓️teaching/video_runtime.py"
+        },
+        {
+          "path": "🎓️teaching/video_runtime.tests.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🏰️institution/📕️.pdf"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/pyproject.toml"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/uv.lock"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/📜️script.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh"
+        }
+      ]
+    }
+  ]
+}

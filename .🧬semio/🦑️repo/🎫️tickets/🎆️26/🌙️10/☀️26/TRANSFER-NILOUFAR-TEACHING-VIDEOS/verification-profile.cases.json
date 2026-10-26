@@ -1,0 +1,44 @@
+{
+  "profiles": [
+    {
+      "arguments": [],
+      "width": 854,
+      "height": 480,
+      "fps": 15,
+      "suffix": "480p15"
+    },
+    {
+      "arguments": [
+        "--width",
+        "320",
+        "--height",
+        "180",
+        "--fps",
+        "5"
+      ],
+      "width": 320,
+      "height": 180,
+      "fps": 5,
+      "suffix": "320x180p5"
+    }
+  ],
+  "invalid": [
+    [
+      "--width",
+      "0"
+    ],
+    [
+      "--height",
+      "181"
+    ],
+    [
+      "--fps",
+      "0"
+    ]
+  ],
+  "artifact_counts": {
+    "raw": 117,
+    "logical": 31,
+    "movies": 5
+  }
+}

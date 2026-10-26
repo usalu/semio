@@ -1,0 +1,11 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync, readdirSync } from "node:fs";
+import { join, relative } from "node:path";
+const plan=JSON.parse(readFileSync(join(import.meta.dir,"taxonomy-paths.cases.json"),"utf8"));
+const git=(args:string[])=>{const p=spawnSync("git",args,{encoding:"utf8",maxBuffer:32*1024*1024,windowsHide:true});if(p.status)throw new Error(p.stderr);return p.stdout;};
+const oldPaths=plan.moves.map((x:any)=>x.old), removed=new Set<string>();
+for(let i=0;i<oldPaths.length;i+=40)for(const path of git(["ls-files","-z","--",...oldPaths.slice(i,i+40)]).split(String.fromCharCode(0)).filter(Boolean))removed.add(path);
+const paths:string[]=[...removed,...plan.moves.filter((x:any)=>x.new).map((x:any)=>x.new)];
+if(process.argv.includes("--ticket"))for(const entry of readdirSync(import.meta.dir,{withFileTypes:true}))if(entry.isFile()&&!entry.name.startsWith("📌️"))paths.push(relative(process.cwd(),join(import.meta.dir,entry.name)).replaceAll("\\","/"));
+for(let i=0;i<paths.length;i+=40)git(["add","--all","--",...paths.slice(i,i+40)]);
+console.log("[DEBUG] Staged canonical sources and removed "+removed.size+" old index coordinates; explicit paths "+paths.length);

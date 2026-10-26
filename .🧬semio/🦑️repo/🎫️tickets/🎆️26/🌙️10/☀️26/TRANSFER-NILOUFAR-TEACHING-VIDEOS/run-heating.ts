@@ -1,0 +1,15 @@
+import { spawn } from "node:child_process";
+import { createWriteStream } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const ticket = dirname(fileURLToPath(import.meta.url));
+const generated = join(ticket, "🗑️generated");
+const log = createWriteStream(join(generated, "heating.log"));
+const python = join(generated, "v/Scripts/python.exe");
+const output = join(generated, "videos");
+const child = spawn(python, ["C:/git/semio/🎓️teaching/render_videos.py", "--video", "heating", "--output-root", output, "--quality", "l", "--no-play"], { env: { ...process.env, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEACHING_CACHE_DIR: join(generated, "fonts"), SEMIO_TEACHING_OUTPUT_ROOT: output }, windowsHide: true });
+for (const stream of [child.stdout, child.stderr]) stream.on("data", chunk => log.write(chunk));
+process.on("SIGINT", () => child.kill("SIGINT"));
+child.on("error", error => { console.error("[DEBUG]", error); process.exitCode = 1; });
+child.on("exit", code => { log.end(); console.log("[DEBUG] Heating render finished with status", code); process.exitCode = code ?? 1; });
+console.log("[DEBUG] Heating complete video render started; log:", join(generated, "heating.log"));

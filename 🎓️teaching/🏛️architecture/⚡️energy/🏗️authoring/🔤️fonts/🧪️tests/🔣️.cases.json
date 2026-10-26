@@ -1,0 +1,66 @@
+{
+  "body_font": "Georgia",
+  "required_symbols": "%+<=>|~°±²³·×÷ΔΣΦΨηθλμπρτφχψϑ…₂←↑→↓⇒−√∞∮≈≠≤≥",
+  "missing_in_georgia": "ϑ←↑→↓⇒∮",
+  "plain_samples": [
+    "Größe Wärme Lüftung ÄÖÜ äöü ß",
+    "berechnet",
+    "Temperatur 20 °C",
+    "H−"
+  ],
+  "affected_samples": [
+    "ϑ",
+    "berechnet  →",
+    "← Lüftung · Kapitel 3:",
+    "↓ Volumenstrom",
+    "ϑ ← ↑ → ↓ ⇒ ∮"
+  ],
+  "font_candidates": [
+    "Cambria Math",
+    "DejaVu Math TeX Gyre",
+    "STIX Two Math",
+    "STIXGeneral",
+    "Noto Sans Math",
+    "Apple Symbols",
+    "Segoe UI Symbol",
+    "DejaVu Serif",
+    "FreeSerif"
+  ],
+  "text_canvas": {
+    "minimum_width": 854,
+    "output": [
+      320,
+      180
+    ],
+    "unchanged_profiles": [
+      [
+        854,
+        480
+      ],
+      [
+        1920,
+        1080
+      ]
+    ],
+    "samples": [
+      {
+        "text": "erst beide Ströme geführt → Filter, Feuchte, Wärmerückgewinnung möglich",
+        "font_size": 22,
+        "glyphs": 63
+      },
+      {
+        "text": "volle Lüftungsverlust von 1500 W bleibt, η",
+        "font_size": 24,
+        "glyphs": 36
+      },
+      {
+        "text": "Nur der Anteil 1 − η bleibt als Verlust: bei η",
+        "font_size": 24,
+        "glyphs": 36
+      }
+    ],
+    "minimum_height": 480,
+    "cache_domain": "text-canvas:",
+    "cache_hex_length": 16
+  }
+}

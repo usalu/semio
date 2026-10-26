@@ -1,0 +1,32 @@
+{
+  "required_teaching_files": [
+    "glyph_fallback.tests.json",
+    "test_manim_fonts.py"
+  ],
+  "counts": {
+    "transferred": 131,
+    "staged_teaching": 141,
+    "videos": 5,
+    "chapters": 26,
+    "beats": 112,
+    "intros": 5
+  },
+  "readme_phrases": [
+    "112 authored beats",
+    "26 chapters",
+    "--jobs",
+    "Cambria Math",
+    "DejaVu Math TeX Gyre"
+  ],
+  "shared_paths": [
+    ".devcontainer/Dockerfile",
+    "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh",
+    "🎓️teaching/README.md"
+  ],
+  "preservation_scenarios": [
+    "replace_existing_middle_section",
+    "append_missing_section",
+    "native_patch_alternatives",
+    "idempotent_native_patches"
+  ]
+}

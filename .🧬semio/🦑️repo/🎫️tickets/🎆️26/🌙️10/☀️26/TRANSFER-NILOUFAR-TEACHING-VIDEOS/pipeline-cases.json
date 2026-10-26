@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "forbidden": [
+    "/Users/",
+    "backend.pipeline",
+    ".venv\" / \"bin\" / \"manim\"",
+    "SEMIO_ROOT / \"tutorial\""
+  ],
+  "narration": [
+    {
+      "clauses": [
+        [
+          "intro",
+          "First English",
+          "Erster Satz."
+        ],
+        [
+          "pause",
+          "",
+          ""
+        ],
+        [
+          "end",
+          "Last English",
+          "Letzter Satz."
+        ]
+      ],
+      "expected": "Erster Satz. Letzter Satz."
+    }
+  ],
+  "skipped": {
+    "text": "Optional speech",
+    "path": "speech.mp3",
+    "expected": [
+      null,
+      true
+    ]
+  },
+  "wave": {
+    "sample_rate": 24000,
+    "channels": 1,
+    "sample_width": 2,
+    "frames": 6000,
+    "seconds": 0.25
+  },
+  "mux": [
+    {
+      "id": "silent",
+      "video_seconds": 0.6,
+      "audio_seconds": null,
+      "expected_seconds": 0.6
+    },
+    {
+      "id": "narrated",
+      "video_seconds": 0.6,
+      "audio_seconds": 1,
+      "expected_seconds": 1.15
+    }
+  ],
+  "render_policy": {
+    "required_argument": "--disable_caching",
+    "audio_generator_count": 26,
+    "trace_generator_count": 20
+  }
+}

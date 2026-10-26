@@ -1,0 +1,1462 @@
+"""🔥 Heating Module 2 — Transmission (opaque envelope).
+
+Six beats on the generate-manim-tutorial template: two bricks reaching
+equilibrium, the R-value read off a stretching insulation slab, the U-value as
+watts through one square metre that tiles into a wall, a watt comparison of
+three wall standards against everyday devices, the envelope sum with animated
+heat flows, and thermal bridges from the "walls as paper" abstraction. Every
+formula is typeset with ``math_panel`` / ``math_label``, every shown value is
+counted from zero and read from the drawing.
+
+https://www.din.de/de/mitwirken/normenausschuesse/nabau/veroeffentlichungen/wdc-beuth:din21:283203567
+"""
+
+import importlib
+import sys
+from pathlib import Path
+
+_WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
+if str(_WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_WORKSPACE_ROOT))
+
+
+import numpy as np
+from manim import *
+
+from pathlib import Path as _Path
+import sys as _sys
+
+
+_manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+apply_scene_style = _manim_module.apply_scene_style
+scene_title = _manim_module.scene_title
+play_scene_title = _manim_module.play_scene_title
+beat_subtitle = _manim_module.beat_subtitle
+BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
+body_text = _manim_module.body_text
+BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
+LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+_manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+PASTEL_PURPLE = _manim_module.PASTEL_PURPLE
+PASTEL_WHITE = _manim_module.PASTEL_WHITE
+PASTEL_CYAN = _manim_module.PASTEL_CYAN
+PASTEL_TEAL = _manim_module.PASTEL_TEAL
+PASTEL_ORANGE = _manim_module.PASTEL_ORANGE
+PASTEL_YELLOW = _manim_module.PASTEL_YELLOW
+PASTEL_RED = _manim_module.PASTEL_RED
+PASTEL_BLUE = _manim_module.PASTEL_BLUE
+PASTEL_GREEN = _manim_module.PASTEL_GREEN
+math_label = _manim_module.math_label
+math_readout = _manim_module.math_readout
+math_panel = _manim_module.math_panel
+de_num = _manim_module.de_num
+highlight_param = _manim_module.highlight_param
+dim_arrow = _manim_module.dim_arrow
+flow_animation = _manim_module.flow_animation
+flow_guides = _manim_module.flow_guides
+ripples = _manim_module.ripples
+house_section = _manim_module.house_section
+window_glyph = _manim_module.window_glyph
+radiator = _manim_module.radiator
+person_glyph = _manim_module.person_glyph
+thermometer_glyph = _manim_module.thermometer_glyph
+caption_bar = _manim_module.caption_bar
+swap_caption = _manim_module.swap_caption
+hold_for = _manim_module.hold_for
+subtitle_text = _manim_module.subtitle_text
+set_vo_language = _manim_module.set_vo_language
+
+# 🗣️ Timing follows German captions (reading floor in hold_for).
+set_vo_language("de")
+
+# 🏔️ Persistent topic title — Write once on Beat1, self.add() on later beats.
+TITLE_DE = "Modul 2: Transmission"
+
+
+#region Shared numbers
+#region Wall build-ups
+R_SI, R_SE = 0.13, 0.04
+LAMBDA_INSULATION = 0.035
+DT_DESIGN = 20.0
+WALL_AREA = 25.0
+BRICK = PASTEL_RED
+PLASTER = "#CFC8BA"
+INSULATION = PASTEL_YELLOW
+
+
+def _wall_layers(insulation_d: float) -> list[tuple[str, float, float, str]]:
+    """🧱 Layers of the 1960 brick wall from inside to outside, optionally with an ETICS insulation layer."""
+    layers = [("Innenputz", 0.015, 0.70, PLASTER), ("Vollziegel", 0.365, 0.75, BRICK)]
+    if insulation_d > 0:
+        layers.append(("Dämmung", insulation_d, LAMBDA_INSULATION, INSULATION))
+    layers.append(("Außenputz", 0.02, 0.87, PLASTER))
+    return layers
+
+
+def _r_total(layers) -> float:
+    """➕ R_ges = R_si + Σ d/λ + R_se (DIN EN ISO 6946)."""
+    return R_SI + sum(d / lam for _n, d, lam, _c in layers) + R_SE
+
+
+def _u_value(layers) -> float:
+    """🔁 U-value rounded to the two decimals shown on screen."""
+    return round(1.0 / _r_total(layers), 2)
+
+
+WALLS = [
+    ("Ungedämmt (Ziegel 1960)", _wall_layers(0.0)),
+    (r"Gedämmt (12 cm)", _wall_layers(0.12)),
+    (r"Hochgedämmt (30 cm)", _wall_layers(0.30)),
+]
+U_INSULATED = _u_value(WALLS[1][1])
+R_INSULATED = round(_r_total(WALLS[1][1]), 2)
+D_INSULATED = round(sum(d for _n, d, _l, _c in WALLS[1][1]), 2)
+#endregion
+
+#region Envelope of the example house
+ENVELOPE = [
+    ("Dach", 89.0, 0.20, 20.0, PASTEL_ORANGE),
+    ("Außenwand", 209.0, 0.24, 20.0, PASTEL_RED),
+    ("Fenster", 30.0, 1.10, 20.0, PASTEL_CYAN),
+    ("Haustür", 2.0, 1.30, 20.0, PASTEL_YELLOW),
+    ("Boden", 80.0, 0.30, 10.0, PASTEL_GREEN),
+]
+ENVELOPE_AREA = sum(a for _n, a, _u, _t, _c in ENVELOPE)
+PHI_T = sum(a * u * t for _n, a, u, t, _c in ENVELOPE)
+H_T = PHI_T / DT_DESIGN
+#endregion
+
+#region Thermal bridge example
+CORNER_D, CORNER_LEG, CORNER_H, PSI_E = 0.40, 2.0, 6.0, -0.08
+BALCONY_PSI, BALCONY_L = 0.5, 8.0
+DU_WB = (0.10, 0.05)
+#endregion
+#endregion
+
+
+#region Beat helpers
+def _din_ref(text: str):
+    """📖 Standards citation for the beat, pinned to the empty top-right corner.
+
+    Part 2 rests on the same norms Module 1's conduction beats cite, so this
+    mirrors ``_din_ref`` in ``1_introduction/scene_1.py`` exactly (same size,
+    colour, opacity, corner): DIN EN ISO 6946 for the R- and U-value of a
+    building component, DIN EN ISO 13789 for the envelope-wide transmission
+    coefficient, DIN 4108-2 for the envelope insulation requirement the
+    air-pocket beat is really about. Dim so it reads as a footnote, never
+    competing with the diagram. The formula panel sits on the bottom edge, so
+    this corner is clear in every beat.
+    """
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref.set_opacity(0.72)
+    ref.to_corner(UR, buff=0.30)
+    return ref
+
+
+#region Formula panel morphs
+def _formula_zone(mob):
+    """🏷️ Mark a flying copy as formula content so the layout guard treats it like the panel."""
+    for part in mob.get_family():
+        part._layout_zone = "formula"
+    return mob
+
+
+def _fly_into(scene, panel, sources: dict, *, run_time: float = 1.2):
+    """🧲 Copies of drawn values fly into their empty panel slots, then the rest of the formula and its box appear."""
+    row, box, items = panel
+    targets = [items[key] for key in sources]
+    rest = VGroup(*[m for m in row.submobjects if all(m is not t for t in targets)])
+    copies = {key: _formula_zone(src.copy().clear_updaters()) for key, src in sources.items()}
+    scene.play(*[copies[key].animate.move_to(items[key]) for key in sources], run_time=run_time * 0.6)
+    scene.play(*[FadeTransform(copies[key], items[key]) for key in sources], FadeIn(rest), Create(box),
+               run_time=run_time * 0.4)
+
+
+def _drop_panel(scene, panel, *, run_time: float = 0.4):
+    """🧹 Clear the formula panel before the next one is filled."""
+    scene.play(FadeOut(panel[0]), FadeOut(panel[1]), run_time=run_time)
+#endregion
+
+
+#region Geometry glyphs
+def _flow_lines(segments):
+    """➡️ Straight tracks for heat particles — one ``Line`` per ``(start, end)``."""
+    return VGroup(*[Line(np.array(a, dtype=float), np.array(b, dtype=float)) for a, b in segments])
+
+
+def _span(a, b, color: str = PASTEL_ORANGE):
+    """📏 Measured span with end ticks that tolerates zero length while it is drawn out."""
+    a, b = np.array(a, dtype=float), np.array(b, dtype=float)
+    v = b - a
+    length = float(np.linalg.norm(v))
+    n = np.array([-v[1], v[0], 0.0]) / length if length > 1e-6 else np.array([0.0, 1.0, 0.0])
+    end = b if length > 1e-4 else a + np.array([1e-4, 0.0, 0.0])
+    tick = 0.12
+    return VGroup(
+        Line(a, end, color=color, stroke_width=3),
+        Line(a - n * tick, a + n * tick, color=color, stroke_width=2),
+        Line(b - n * tick, b + n * tick, color=color, stroke_width=2),
+    )
+
+
+def _temp_color(theta: float):
+    """🌡️ Block colour from its temperature: blue at 0 °C, violet at 20 °C, red at 40 °C."""
+    t = float(np.clip(theta / 40.0, 0.0, 1.0))
+    if t < 0.5:
+        return interpolate_color(ManimColor(PASTEL_BLUE), ManimColor(PASTEL_PURPLE), t * 2)
+    return interpolate_color(ManimColor(PASTEL_PURPLE), ManimColor(PASTEL_RED), (t - 0.5) * 2)
+
+
+def _brick_block(center, *, w: float = 2.5, h: float = 2.2):
+    """🧱 Masonry block — fill for the temperature colour, staggered mortar joints on top."""
+    body = Rectangle(width=w, height=h, stroke_color=PASTEL_WHITE, stroke_width=2, fill_opacity=0.85)
+    courses = 4
+    ch = h / courses
+    joints = VGroup(*[
+        Line(np.array([-w / 2, -h / 2 + k * ch, 0.0]), np.array([w / 2, -h / 2 + k * ch, 0.0]))
+        for k in range(1, courses)
+    ])
+    for k in range(courses):
+        for x in ((-w / 4, w / 4) if k % 2 == 0 else (0.0,)):
+            joints.add(Line(np.array([x, -h / 2 + k * ch, 0.0]), np.array([x, -h / 2 + (k + 1) * ch, 0.0])))
+    joints.set_stroke("#0B0C10", width=2.2, opacity=0.5)
+    return VGroup(body, joints).move_to(center)
+
+
+def _slab(origin, side: float, depth, color: str = INSULATION):
+    """🟨 Oblique 1 m × 1 m wall tile — front face is the area, the receding edge is the thickness d."""
+    o = np.array(origin, dtype=float)
+    dv = np.array(depth, dtype=float)
+    r, u = RIGHT * side, UP * side
+    front = Polygon(o, o + r, o + r + u, o + u, color=PASTEL_WHITE, stroke_width=2.2, fill_color=color, fill_opacity=0.45)
+    top = Polygon(o + u, o + r + u, o + r + u + dv, o + u + dv, color=PASTEL_WHITE, stroke_width=2.2,
+                  fill_color=color, fill_opacity=0.3)
+    side_face = Polygon(o + r, o + r + dv, o + r + u + dv, o + r + u, color=PASTEL_WHITE, stroke_width=2.2,
+                        fill_color=color, fill_opacity=0.18)
+    return VGroup(front, top, side_face)
+
+
+def _toaster(color: str = PASTEL_ORANGE, fill: float = 0.0):
+    """🍞 Line-art toaster whose body is filled to ``fill`` — 0,7 means seventy percent of one toaster's watts."""
+    body = RoundedRectangle(width=1.15, height=0.74, corner_radius=0.13, color=color, stroke_width=1.8)
+    level = Rectangle(width=1.03, height=max(0.01, 0.62 * fill), stroke_width=0, fill_color=color, fill_opacity=0.4)
+    level.move_to(body.get_bottom() + UP * (0.06 + level.height / 2))
+    slots = VGroup(*[Line(LEFT * 0.17, RIGHT * 0.17, color=color, stroke_width=2.2).move_to(body.get_top() + DOWN * 0.13 + RIGHT * dx)
+                     for dx in (-0.24, 0.24)])
+    lever = Line(body.get_right() + UP * 0.12, body.get_right() + UP * 0.12 + RIGHT * 0.14, color=color, stroke_width=1.8)
+    feet = VGroup(*[Line(body.get_bottom() + RIGHT * dx, body.get_bottom() + RIGHT * dx + DOWN * 0.07, color=color, stroke_width=1.8)
+                    for dx in (-0.4, 0.4)])
+    return VGroup(level, body, slots, lever, feet)
+
+
+def _tealight(color: str = PASTEL_ORANGE):
+    """🕯️ Line-art tealight — aluminium cup, wick and flame."""
+    cup = RoundedRectangle(width=0.56, height=0.2, corner_radius=0.05, color=PASTEL_WHITE, stroke_width=1.6)
+    wick = Line(cup.get_top(), cup.get_top() + UP * 0.08, color=PASTEL_WHITE, stroke_width=1.4)
+    flame = Ellipse(width=0.16, height=0.34, color=color, stroke_width=1.4, fill_color=PASTEL_YELLOW, fill_opacity=0.7)
+    flame.next_to(wick, UP, buff=0.0)
+    return VGroup(cup, wick, flame)
+
+
+def _devices(kind: str, count: int, fill: float = 1.0):
+    """🔌 Row of everyday power references matching one wall's heat flow."""
+    if kind == "toaster":
+        return VGroup(_toaster(PASTEL_ORANGE, fill)).scale(1.15)
+    if kind == "person":
+        return VGroup(*[person_glyph(ORIGIN, PASTEL_RED, 2.0) for _ in range(count)]).arrange(RIGHT, buff=0.3)
+    return VGroup(*[_tealight(PASTEL_ORANGE) for _ in range(count)]).arrange(RIGHT, buff=0.3).scale(1.25)
+
+
+def _emitters(kind: str, row) -> list:
+    """🎯 Points a device row gives its heat off from — toaster slots, a person's chest, tealight flames."""
+    if kind == "toaster":
+        return [slot.get_center() + UP * 0.06 for slot in row[0][2]]
+    if kind == "person":
+        return [p.get_center() + UP * p.height * 0.18 for p in row]
+    return [t[2].get_top() for t in row]
+
+
+def _envelope_house(center, scale: float, col: dict) -> dict:
+    """🏠 Physical Fundamentals section house with a front door in the right wall, each envelope element in its colour."""
+    h = house_section(center, scale)
+    br, tr, t = h["bottom_right"], h["top_right"], 0.08 * scale
+    door_top = br[1] + 0.62 * scale
+    h["wall_right"].put_start_and_end_on(np.array([br[0], door_top, 0.0]), tr)
+    h["walls"][5][3].put_start_and_end_on(np.array([br[0] - t, door_top, 0.0]), tr + LEFT * t)
+    door = window_glyph(br[0], br[1], door_top, depth=0.5 * scale, color=col["Haustür"])
+    door["sash"].remove(door["sash"][1])
+    for w in h["windows"]:
+        w["sash"].set_color(col["Fenster"])
+    h["roof"].set_stroke(col["Dach"])
+    VGroup(*h["walls"][:4], h["walls"][5]).set_stroke(col["Außenwand"])
+    floor = VGroup(h["floor"], h["group"][1]).set_stroke(col["Boden"])
+    parts = {"Dach": h["roof"], "Außenwand": VGroup(*h["walls"][:4], h["walls"][5]),
+             "Fenster": VGroup(*[w["sash"] for w in h["windows"]]), "Haustür": door["sash"], "Boden": floor}
+    return {**h, "door": door, "door_top": door_top, "parts": parts, "group": VGroup(h["group"], door["group"])}
+#endregion
+
+
+#region Heat motion
+def _cycles(rt: float, period: float, waves: int) -> float:
+    """🔂 Whole particle spacings per play, so back-to-back flow plays hand over without a jump."""
+    return round(rt * waves / period) / waves
+
+
+def _heat_flow(streams, rt: float, *, period: float = 2.0, waves: int = 4, radius: float = 0.07):
+    """🔥 Conducted heat as particles drifting warm → cold along tracks, one crossing every ``period`` seconds."""
+    return flow_animation(streams, waves=waves, radius=radius, cycles=_cycles(rt, period, waves))
+
+
+def _warmth(centers, rt: float, *, r_max: float = 0.4, color=PASTEL_ORANGE, facing=None, period: float = 1.4):
+    """♨️ Long-wave heat ripples off warm points with a steady ring spacing across plays."""
+    return ripples(centers, r_max=r_max, rings=2, color=color, facing=facing, cycles=_cycles(rt, period, 2))
+#endregion
+#endregion
+
+
+class Beat1_MakroUndMikro(Scene):
+    NARRATION = [
+        ("macro",
+         "Two bricks of one wall: heat flows from the 40 degree stone into the 0 degree stone until both are equally warm.",
+         "Zwei Ziegel einer Wand: Wärme fließt vom 40 °C warmen in den 0 °C kalten Stein, bis beide gleich warm sind."),
+        ("equilibrium",
+         "At 20 degrees they reach thermal equilibrium — the net flow has stopped.",
+         "Bei 20 °C ist das thermische Gleichgewicht erreicht — der Nettostrom ist null."),
+        ("micro",
+         "Zoom in: a lattice of molecules. Heat is just kinetic vibration hopping neighbor to neighbor.",
+         "Hereinzoomen: ein Molekülgitter. Wärme ist nur kinetische Schwingung von Nachbar zu Nachbar."),
+        ("insulation",
+         "An insulation layer full of air pockets breaks that chain — conduction nearly stops.",
+         "Eine Dämmschicht mit Lufteinschlüssen unterbricht die Kette — die Leitung stoppt fast."),
+        ("blocked",
+         "Small trapped air pockets slow conduction. Large cavities can convect; DIN 4108 still requires a minimum envelope resistance.",
+         "Kleine Luftporen bremsen die Leitung, große Hohlräume können konvektieren — DIN 4108 verlangt trotzdem einen Mindestwärmeschutz."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+
+        title = scene_title(TITLE_DE)
+        play_scene_title(self, title)
+        subtitle = beat_subtitle("Makroskopisch und mikroskopisch", title)
+        din = _din_ref("DIN 4108-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(self.NARRATION, "macro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        t_left, t_right = ValueTracker(40.0), ValueTracker(0.0)
+        left_block = _brick_block(LEFT * 1.25 + UP * 0.15)
+        right_block = _brick_block(RIGHT * 1.25 + UP * 0.15)
+        left_block[0].add_updater(lambda m: m.set_fill(_temp_color(t_left.get_value()), opacity=0.85))
+        right_block[0].add_updater(lambda m: m.set_fill(_temp_color(t_right.get_value()), opacity=0.85))
+        left_read = math_readout(lambda: rf"\theta_{{1}} = {de_num(t_left.get_value())}\,\mathrm{{°C}}",
+                                 np.array([-1.25, 1.55, 0.0]), color=PASTEL_WHITE, edge="center")
+        right_read = math_readout(lambda: rf"\theta_{{2}} = {de_num(t_right.get_value())}\,\mathrm{{°C}}",
+                                  np.array([1.25, 1.55, 0.0]), color=PASTEL_WHITE, edge="center")
+        wall_note = body_text("Zwei Ziegel im selben Mauerwerk", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL)
+        wall_note.move_to(DOWN * 1.3)
+        therms = []
+        for x, trk, color in ((-3.2, t_left, PASTEL_RED), (3.2, t_right, PASTEL_BLUE)):
+            th = thermometer_glyph(np.array([x, -0.7, 0.0]), height=1.75, color=color, level=trk.get_value() / 40.0)
+            th["level"].add_updater(lambda m, trk=trk: m.set_value(trk.get_value() / 40.0))
+            therms.append(th)
+
+        self.play(
+            FadeIn(left_block, shift=RIGHT * 0.3),
+            FadeIn(right_block, shift=LEFT * 0.3),
+            FadeIn(left_read), FadeIn(right_read), FadeIn(wall_note),
+            *[FadeIn(th["group"]) for th in therms],
+            run_time=1.2,
+        )
+        self.add(*[th["level"] for th in therms], *[th["column"] for th in therms])
+        heat_paths = _flow_lines([((-2.2, y, 0.0), (2.2, y, 0.0)) for y in np.linspace(-0.6, 0.9, 4)])
+        hold_for(self, self.NARRATION, "macro", used=1.2 + 0.35, during=lambda rt: [
+            _heat_flow([(heat_paths, PASTEL_YELLOW, PASTEL_WHITE)], rt, period=2.0, waves=4, radius=0.09),
+            t_left.animate.set_value(20.0), t_right.animate.set_value(20.0),
+        ])
+
+        left_block[0].clear_updaters()
+        right_block[0].clear_updaters()
+        left_read.clear_updaters()
+        right_read.clear_updaters()
+        eq_label = math_label(r"\text{Gleichgewicht:}\;\theta = 20\,\mathrm{°C}", np.array([0.0, 1.55, 0.0]), color=PASTEL_WHITE)
+        merged_outline = Rectangle(
+            width=5.0, height=2.2, stroke_color=PASTEL_WHITE, stroke_width=2, fill_opacity=0,
+        ).move_to(UP * 0.15)
+        exchange = [_flow_lines([((-2.2, y, 0.0), (2.2, y, 0.0)) for y in (-0.45, 0.55)]),
+                    _flow_lines([((2.2, y, 0.0), (-2.2, y, 0.0)) for y in (0.05, 0.95)])]
+
+        def balanced(rt):
+            return [_heat_flow([(p, PASTEL_WHITE) for p in exchange], rt, period=2.6, waves=2, radius=0.07)]
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "equilibrium"))
+        self.play(
+            left_block[0].animate.set_stroke(width=0),
+            right_block[0].animate.set_stroke(width=0),
+            FadeIn(merged_outline),
+            ReplacementTransform(VGroup(left_read, right_read), eq_label),
+            *balanced(1.5),
+            run_time=1.5,
+        )
+        hold_for(self, self.NARRATION, "equilibrium", during=balanced)
+
+        micro_sub = beat_subtitle("Mikroskopisches Gitter & Wärmebarriere", title)
+        self.play(
+            FadeOut(left_block), FadeOut(right_block), FadeOut(eq_label), FadeOut(merged_outline), FadeOut(wall_note),
+            *[FadeOut(VGroup(th["group"], th["column"])) for th in therms],
+            ReplacementTransform(subtitle, micro_sub),
+            run_time=1.0,
+        )
+        subtitle = micro_sub
+
+        num_rows, num_cols = 7, 12
+        start_x, start_y = -4.2, 1.15
+        dx, dy = 0.65, 0.38
+        insulation_x = 0.68
+
+        dots = []
+        dots_group = VGroup()
+        phases = {}
+        for r in range(num_rows):
+            for c in range(num_cols):
+                pos = np.array([start_x + c * dx, start_y - r * dy, 0.0])
+                dot = Dot(point=pos, radius=0.08, color=PASTEL_BLUE)
+                dot.init_pos = pos.copy()
+                dot.is_hot = False
+                dots.append(dot)
+                dots_group.add(dot)
+                phases[dot] = (r * 1.3 + c * 2.7)
+
+        time_tracker = ValueTracker(0)
+        time_tracker.add_updater(lambda m, dt: m.increment_value(dt))
+        self.add(time_tracker)
+
+        for dot in dots:
+            def make_updater(d):
+                p = phases[d]
+
+                def updater(mob):
+                    t = time_tracker.get_value()
+                    amp, freq = (0.07, 24.0) if d.is_hot else (0.012, 8.0)
+                    offset = np.array([
+                        amp * np.sin(freq * t + p),
+                        amp * np.cos(freq * t * 1.3 + p * 0.7),
+                        0.0,
+                    ])
+                    mob.move_to(d.init_pos + offset)
+                return updater
+
+            dot.add_updater(make_updater(dot))
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "micro"))
+        self.play(FadeIn(dots_group), run_time=1.0)
+        hold_for(self, self.NARRATION, "micro")
+
+        barrier_rect = Rectangle(
+            width=0.45, height=num_rows * dy + 0.25,
+            fill_color=PASTEL_YELLOW, fill_opacity=0.2,
+            stroke_color=PASTEL_YELLOW, stroke_width=2,
+        ).move_to(np.array([insulation_x, start_y - (num_rows - 1) * dy / 2, 0.0]))
+        air_gaps = VGroup(*[
+            Circle(radius=0.07, fill_color="#0B0C10", fill_opacity=1.0, stroke_color=PASTEL_YELLOW, stroke_width=1.5)
+            .move_to(np.array([insulation_x, y_c, 0.0]))
+            for y_c in np.linspace(barrier_rect.get_bottom()[1] + 0.25, barrier_rect.get_top()[1] - 0.25, 5)
+        ])
+        ins_text = Text("Dämmschicht (DIN 4108)", font_size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
+        ins_text.next_to(barrier_rect, UP, buff=0.12)
+        insulation_barrier = VGroup(barrier_rect, air_gaps, ins_text)
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "insulation"))
+        self.play(Create(insulation_barrier), run_time=1.1)
+
+        sweep_x = ValueTracker(start_x - 0.5)
+        sweep_line = Line(
+            np.array([start_x - 0.5, start_y + 0.25, 0.0]),
+            np.array([start_x - 0.5, start_y - (num_rows - 1) * dy - 0.2, 0.0]),
+            color=PASTEL_ORANGE, stroke_width=5,
+        )
+        sweep_line.add_updater(lambda m: m.set_x(sweep_x.get_value()))
+        self.add(sweep_line)
+
+        def heat_propagation_updater(dt):
+            x_val = sweep_x.get_value()
+            for d in dots:
+                if d.init_pos[0] <= x_val and d.init_pos[0] < insulation_x - 0.25 and not d.is_hot:
+                    d.is_hot = True
+                    d.set_color(PASTEL_ORANGE)
+
+        self.add_updater(heat_propagation_updater)
+        self.play(sweep_x.animate.set_value(insulation_x - 0.22), run_time=3.6, rate_func=linear)
+        self.remove_updater(heat_propagation_updater)
+        sweep_line.clear_updaters()
+        hold_for(self, self.NARRATION, "insulation")
+
+        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "blocked"))
+        hold_for(self, self.NARRATION, "blocked")
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+
+
+class Beat2_RWert(Scene):
+    NARRATION = [
+        ("intro",
+         "Zoom back out: that insulating slab has a thermal resistance R.",
+         "Herauszoomen: diese Dämmplatte hat einen Wärmedurchlasswiderstand R."),
+        ("formula",
+         "R equals thickness d over conductivity lambda — unit square-meter kelvin per watt.",
+         "R ist Dicke d geteilt durch Leitfähigkeit Lambda — Einheit Quadratmeter Kelvin pro Watt."),
+        ("d",
+         "d is the layer thickness in meters — here 0.07 meters, so R is 2.0.",
+         "d ist die Schichtdicke in Metern — hier 0,07 m, also R gleich 2,0."),
+        ("lam",
+         "Lambda is thermal conductivity in watts per meter and kelvin, from DIN 4108: 0.035 for this insulation.",
+         "Lambda ist die Wärmeleitfähigkeit in Watt pro Meter und Kelvin, nach DIN 4108: 0,035 für diese Dämmung."),
+        ("stretch",
+         "Double the thickness to 0.14 meters and R doubles to 4.0 — resistance scales linearly with d.",
+         "Verdoppelt man die Dicke auf 0,14 m, verdoppelt sich R auf 4,0 — der Widerstand skaliert linear mit d."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+        N = self.NARRATION
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Wärmedurchlasswiderstand R", title)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(N, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        left_x, w0, d0 = -2.2, 1.5, 0.07
+        scale = w0 / d0
+        slab_c = np.array([left_x + w0 / 2, 0.55, 0.0])
+        grid_dots = VGroup(*[
+            Dot(point=[x * 0.35, y * 0.35, 0], radius=0.07, color=PASTEL_CYAN)
+            for x in range(-2, 3) for y in range(-2, 3)
+        ]).move_to(slab_c)
+
+        self.play(FadeIn(grid_dots, lag_ratio=0.03), run_time=1.2)
+        hold_for(self, N, "intro", used=1.2 + 0.3)
+
+        rect = Rectangle(
+            width=w0, height=1.9, color=PASTEL_YELLOW,
+            fill_color=INSULATION, fill_opacity=0.4,
+        ).move_to(slab_c)
+        rect_label = body_text("Dämmung", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(rect.get_center())
+        lam_label = math_label(r"\lambda = 0{,}035\,\mathrm{W/(m\,K)}", color=PASTEL_CYAN)
+        lam_label.next_to(rect, LEFT, buff=0.35)
+
+        def slab_heat(rt):
+            x0, x1, yc = rect.get_left()[0] + 0.06, rect.get_right()[0] - 0.06, rect.get_center()[1]
+            paths = _flow_lines([((x0, yc + dy, 0.0), (x1, yc + dy, 0.0)) for dy in (-0.72, -0.4, 0.4, 0.72)])
+            return [_heat_flow([(paths, PASTEL_RED, PASTEL_BLUE)], rt, period=1.8 * rect.width / w0, waves=3, radius=0.075)]
+
+        self.play(ReplacementTransform(grid_dots, rect), FadeIn(rect_label), FadeIn(lam_label), run_time=1.6)
+
+        panel = math_panel([
+            ("r", "R", PASTEL_TEAL), (None, "=", PASTEL_WHITE),
+            ("frac", rf"\frac{{\textcolor{{{PASTEL_ORANGE}}}{{d}}}}{{\textcolor{{{PASTEL_CYAN}}}{{\lambda}}}}", PASTEL_WHITE),
+            (None, r"\;[\mathrm{m^{2}\,K/W}]", PASTEL_WHITE),
+        ])
+        row, box, items = panel
+        frac = items["frac"][0]
+        caption = swap_caption(self, caption, subtitle_text(N, "formula"))
+        self.play(FadeIn(row), Create(box), *slab_heat(1.0), run_time=1.0)
+        hold_for(self, N, "formula", during=slab_heat)
+
+        meas = ValueTracker(0.0)
+        y_dim = rect.get_bottom()[1] - 0.25
+
+        def d_now() -> float:
+            return meas.get_value() / scale
+
+        d_span = always_redraw(lambda: _span((left_x, y_dim, 0.0), (left_x + meas.get_value(), y_dim, 0.0)))
+        d_read = math_readout(lambda: rf"d = {de_num(d_now(), 2)}\,\mathrm{{m}}",
+                              lambda: np.array([left_x + max(meas.get_value(), 1.0) / 2, y_dim - 0.45, 0.0]),
+                              color=PASTEL_ORANGE, edge="center")
+        r_read = math_readout(
+            lambda: (rf"R = \frac{{d}}{{\lambda}} = \frac{{{de_num(d_now(), 2)}}}{{0{{,}}035}}"
+                     rf" = {de_num(d_now() / LAMBDA_INSULATION, 1)}\,\mathrm{{m^{{2}}K/W}}"),
+            np.array([left_x, rect.get_top()[1] + 0.42, 0.0]), color=PASTEL_YELLOW, edge="left")
+        ring_d = highlight_param({"d": frac[0]}, "d", color=PASTEL_ORANGE)
+        self.add(d_span, d_read, r_read)
+        caption = swap_caption(self, caption, subtitle_text(N, "d"))
+        self.play(meas.animate.set_value(w0), Create(ring_d), *slab_heat(1.6), run_time=1.6)
+        hold_for(self, N, "d", during=slab_heat)
+
+        ring_l = highlight_param({"lam": frac[2]}, "lam", color=PASTEL_CYAN)
+        caption = swap_caption(self, caption, subtitle_text(N, "lam"))
+        self.play(FadeOut(ring_d), Create(ring_l), Indicate(lam_label, color=PASTEL_CYAN), *slab_heat(0.8), run_time=0.8)
+        hold_for(self, N, "lam", during=slab_heat)
+
+        width = ValueTracker(w0)
+        rect.add_updater(lambda m: m.stretch_to_fit_width(width.get_value()).align_to(np.array([left_x, 0.0, 0.0]), LEFT))
+        rect_label.add_updater(lambda t: t.move_to(rect.get_center()))
+        caption = swap_caption(self, caption, subtitle_text(N, "stretch"))
+        self.play(FadeOut(ring_l), width.animate.set_value(2 * w0), meas.animate.set_value(2 * w0), run_time=3.2, rate_func=smooth)
+        rect.clear_updaters()
+        rect_label.clear_updaters()
+        r_read.clear_updaters()
+
+        highlight_box = SurroundingRectangle(r_read, color=PASTEL_YELLOW, buff=0.08)
+        double_text = math_label(r"2 \times d \;\Rightarrow\; 2 \times R", color=PASTEL_GREEN)
+        double_text.next_to(rect, RIGHT, buff=0.35)
+        self.play(Create(highlight_box), FadeIn(double_text), *slab_heat(1.0), run_time=1.0)
+        hold_for(self, N, "stretch", during=slab_heat)
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+
+
+class Beat3_UWertUndGradient(Scene):
+    NARRATION = [
+        ("u_intro",
+         "Flip resistance and you get the U-value — heat flow per area and kelvin.",
+         "Den Widerstand umdrehen ergibt den U-Wert — Wärmestrom pro Fläche und Kelvin."),
+        ("u_formula",
+         "U equals one over R, in watts per square meter and kelvin.",
+         "U ist eins durch R, in Watt pro Quadratmeter und Kelvin."),
+        ("tile",
+         "U is the heat flow through exactly one square meter of wall for one kelvin of difference.",
+         "U ist der Wärmestrom durch genau einen Quadratmeter Wand bei einem Kelvin Unterschied."),
+        ("thick",
+         "The thickness is already inside U through R equals d over lambda — so U is normalised to one square meter.",
+         "Die Dicke steckt schon in U, über R gleich d durch Lambda — deshalb ist U auf 1 m² normiert."),
+        ("area",
+         "A real wall is many such square meters. Each one carries U — together that is U times A.",
+         "Eine echte Wand besteht aus vielen solchen Quadratmetern. Jeder trägt U — zusammen ergibt das U mal A."),
+        ("profile",
+         "Through the wall, temperature drops from indoors to outdoors — that gap is delta theta.",
+         "Durch die Wand fällt die Temperatur von innen nach außen — diese Lücke ist Delta-Theta."),
+        ("steeper",
+         "A steeper gradient means a larger driving force and a higher heat flow.",
+         "Ein steilerer Gradient heißt größere Triebkraft und höherer Wärmestrom."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+        N = self.NARRATION
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("U-Wert und Temperaturgradient", title)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(N, "u_intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        #region U = 1/R
+        r_lbl = math_label(r"R", np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=PASTEL_TEAL)
+        self.play(FadeIn(r_lbl), run_time=0.7)
+        hold_for(self, N, "u_intro", used=0.7 + 0.3)
+
+        p_u = math_panel([
+            ("u", "U", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
+            ("frac", rf"\frac{{1}}{{\textcolor{{{PASTEL_TEAL}}}{{R}}}}", PASTEL_WHITE),
+            (None, r"\;[\mathrm{W/(m^{2}\,K)}]", PASTEL_WHITE),
+        ])
+        caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
+        _fly_into(self, p_u, {"frac": r_lbl}, run_time=1.0)
+        ring = highlight_param(p_u[2], "u", color=PASTEL_ORANGE)
+        self.play(FadeOut(r_lbl), Create(ring), run_time=0.6)
+        hold_for(self, N, "u_formula")
+        self.play(FadeOut(ring), run_time=0.2)
+        #endregion
+
+        #region One square metre tile carries U
+        side = 1.8
+        depth = np.array([0.95, 0.55, 0.0]) * (D_INSULATED / 0.52)
+        o = np.array([-1.3, -0.85, 0.0])
+        tile = _slab(o, side, depth)
+        w_dim = dim_arrow(o + DOWN * 0.25, o + RIGHT * side + DOWN * 0.25, color=PASTEL_WHITE)
+        w_lbl = math_label(r"1\,\mathrm{m}", o + RIGHT * side / 2 + DOWN * 0.62, size=LABEL_FONT_SIZE)
+        h_dim = dim_arrow(o + LEFT * 0.25, o + LEFT * 0.25 + UP * side, color=PASTEL_WHITE)
+        h_lbl = math_label(r"1\,\mathrm{m}", o + LEFT * 0.38 + UP * (side / 2 - 0.07), size=LABEL_FONT_SIZE, edge="right")
+        top_right = o + RIGHT * side + UP * side
+        d_dim = dim_arrow(top_right + UP * 0.12 + LEFT * 0.12, top_right + depth + UP * 0.12 + LEFT * 0.12, color=PASTEL_ORANGE)
+        d_lbl = math_label("d", top_right + depth + RIGHT * 0.15 + DOWN * 0.05, size=BODY_FONT_SIZE,
+                           color=PASTEL_ORANGE, edge="left")
+        dims = VGroup(w_dim, w_lbl, h_dim, h_lbl, d_dim, d_lbl)
+        u_tile = math_label("U", size=FORMULA_FONT_SIZE, color=PASTEL_ORANGE).move_to(o + (RIGHT + UP) * side / 2)
+
+        self.play(Create(tile), run_time=0.9)
+        self.play(LaggedStart(*[GrowFromCenter(m) for m in dims], lag_ratio=0.12), run_time=0.9)
+        self.play(TransformFromCopy(p_u[2]["u"], u_tile), run_time=0.9)
+        starts = [o + RIGHT * side * fx + UP * side * fy for fx, fy in ((0.6, 0.1), (0.85, 0.3), (0.12, 0.66), (0.32, 0.86))]
+        tile_paths = _flow_lines([(p - depth * 0.3, p + depth * 1.0) for p in starts])
+
+        def tile_heat(rt):
+            return [_heat_flow([(tile_paths, PASTEL_RED, PASTEL_BLUE)], rt, period=2.0, waves=3, radius=0.09)]
+
+        caption = swap_caption(self, caption, subtitle_text(N, "tile"))
+        hold_for(self, N, "tile", during=tile_heat)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "thick"))
+        d_copy = d_lbl.copy()
+        self.play(Indicate(d_dim, color=PASTEL_ORANGE), d_copy.animate.move_to(u_tile).scale(0.6).set_opacity(0), *tile_heat(1.2), run_time=1.2)
+        self.remove(d_copy)
+        self.play(Indicate(u_tile, color=PASTEL_ORANGE, scale_factor=1.3), *tile_heat(0.6), run_time=0.6)
+        hold_for(self, N, "thick", during=tile_heat)
+        #endregion
+
+        #region Many square metres make the area A
+        cols = 5
+        cell = 0.6
+        g_center = np.array([-0.4, 0.85, 0.0])
+        g_origin = g_center + LEFT * cell * cols / 2 + DOWN * cell * cols / 2
+        tiles = VGroup()
+        for r in range(cols):
+            for c in range(cols):
+                sq = Square(side_length=cell * 0.94, color=PASTEL_WHITE, stroke_width=1.5, fill_color=INSULATION, fill_opacity=0.45)
+                sq.move_to(g_origin + RIGHT * cell * (c + 0.5) + UP * cell * (cols - r - 0.5))
+                tag = math_label("U", size=16, color=PASTEL_ORANGE).move_to(sq.get_center())
+                tiles.add(VGroup(sq, tag))
+        gx0, gx1 = g_origin[0], g_origin[0] + cell * cols
+        gy0, gy1 = g_origin[1], g_origin[1] + cell * cols
+        gw_dim = dim_arrow((gx0, gy0 - 0.22, 0.0), (gx1, gy0 - 0.22, 0.0), color=PASTEL_WHITE)
+        gw_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([(gx0 + gx1) / 2, gy0 - 0.52, 0.0]), size=LABEL_FONT_SIZE)
+        gh_dim = dim_arrow((gx0 - 0.22, gy0, 0.0), (gx0 - 0.22, gy1, 0.0), color=PASTEL_WHITE)
+        gh_lbl = math_label(rf"{cols}\,\mathrm{{m}}", np.array([gx0 - 0.38, (gy0 + gy1) / 2 - 0.07, 0.0]),
+                            size=LABEL_FONT_SIZE, edge="right")
+        a_frame = SurroundingRectangle(VGroup(*[t[0] for t in tiles]), color=PASTEL_CYAN, buff=0.06, stroke_width=3)
+        a_lbl = math_label("A", size=FORMULA_FONT_SIZE, color=PASTEL_CYAN).next_to(a_frame, RIGHT, buff=0.35)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "area"))
+        self.play(FadeOut(dims), FadeOut(u_tile), ReplacementTransform(tile, tiles[0]), run_time=1.0)
+        self.play(LaggedStart(*[TransformFromCopy(tiles[0], t) for t in tiles[1:]], lag_ratio=0.08),
+                  run_time=2.4, rate_func=linear)
+        self.play(GrowFromCenter(gw_dim), FadeIn(gw_lbl), GrowFromCenter(gh_dim), FadeIn(gh_lbl), run_time=0.7)
+        self.play(Create(a_frame), FadeIn(a_lbl, shift=LEFT * 0.1), run_time=0.8)
+        _drop_panel(self, p_u)
+        p_h = math_panel([
+            ("h", "H", PASTEL_YELLOW), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("a", "A", PASTEL_CYAN), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
+        ])
+        _fly_into(self, p_h, {"u": tiles[12][1], "a": a_lbl}, run_time=1.2)
+        hold_for(self, N, "area")
+        #endregion
+
+        #region Temperature profile adds delta theta
+        self.play(FadeOut(VGroup(tiles, gw_dim, gw_lbl, gh_dim, gh_lbl, a_frame, a_lbl)), run_time=0.6)
+        axes = Axes(
+            x_range=[0, 3, 1], y_range=[-25, 30, 10],
+            x_length=5.2, y_length=3.0,
+            axis_config={"include_numbers": False, "color": GREY},
+        ).move_to(np.array([-0.6, 0.45, 0.0]))
+        x_labels = VGroup(*[
+            body_text(text, font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(axes.c2p(x, -25) + DOWN * 0.25)
+            for x, text in ((0.5, "Innen"), (1.5, "Wand"), (2.5, "Außen"))
+        ])
+        wall_band = Rectangle(width=axes.c2p(2.0, 0)[0] - axes.c2p(1.0, 0)[0], height=3.0, stroke_width=0,
+                              fill_color=INSULATION, fill_opacity=0.18).move_to(axes.c2p(1.5, 2.5))
+        t_in_lbl = math_label(r"20\,\mathrm{°C}", axes.c2p(0, 20) + LEFT * 0.15 + DOWN * 0.07, size=LABEL_FONT_SIZE,
+                              color=PASTEL_RED, edge="right")
+        t_out = ValueTracker(20.0)
+
+        def profile():
+            p_in, p_w1 = axes.c2p(0.5, 20), axes.c2p(1.0, 20)
+            p_w2, p_out = axes.c2p(2.0, t_out.get_value()), axes.c2p(2.5, t_out.get_value())
+            return VGroup(
+                Line(p_in, p_w1, color=PASTEL_RED, stroke_width=3),
+                Line(p_w1, p_w2, color=PASTEL_YELLOW, stroke_width=3),
+                Line(p_w2, p_out, color=PASTEL_BLUE, stroke_width=3),
+                Dot(p_in, color=PASTEL_RED, radius=0.07), Dot(p_out, color=PASTEL_BLUE, radius=0.07),
+            )
+
+        prof = always_redraw(profile)
+        span_x = axes.get_right()[0] + 0.3
+        dt_span = always_redraw(lambda: _span((span_x, axes.c2p(0, 20)[1], 0.0), (span_x, axes.c2p(0, t_out.get_value())[1], 0.0),
+                                              color=PASTEL_YELLOW))
+        t_out_lbl = math_readout(lambda: rf"{de_num(t_out.get_value())}\,\mathrm{{°C}}",
+                                 lambda: axes.c2p(2.5, t_out.get_value()) + DOWN * 0.38, size=LABEL_FONT_SIZE,
+                                 color=PASTEL_BLUE, edge="center")
+        dt_lbl = always_redraw(lambda: math_label(r"\Delta\theta", size=FORMULA_FONT_SIZE, color=PASTEL_YELLOW).move_to(
+            np.array([span_x + 0.45, (axes.c2p(0, 20)[1] + axes.c2p(0, t_out.get_value())[1]) / 2, 0.0])))
+        band_paths = _flow_lines([(axes.c2p(0.55, y), axes.c2p(2.1, y)) for y in (-17.5, -21.5)])
+
+        def band_heat(rt):
+            drive = max(0.2, (20.0 - t_out.get_value()) / 25.0)
+            return [_heat_flow([(band_paths, PASTEL_RED, PASTEL_BLUE)], rt, period=2.4 / drive, waves=3, radius=0.075)]
+
+        self.play(Create(axes), FadeIn(wall_band), FadeIn(x_labels), FadeIn(t_in_lbl), run_time=1.0)
+        self.add(prof, t_out_lbl, dt_span, dt_lbl)
+        caption = swap_caption(self, caption, subtitle_text(N, "profile"))
+        self.play(t_out.animate.set_value(-5.0), run_time=2.0)
+        _drop_panel(self, p_h)
+        p_q = math_panel([
+            ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("a", "A", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"\Delta\theta", PASTEL_YELLOW),
+            (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+        ])
+        _fly_into(self, p_q, {"dt": dt_lbl.copy().clear_updaters()}, run_time=1.0)
+        hold_for(self, N, "profile", during=band_heat)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "steeper"))
+        self.play(t_out.animate.set_value(-15.0), *band_heat(1.5), run_time=1.5)
+        ring = highlight_param(p_q[2], "dt", color=PASTEL_YELLOW)
+        self.play(Create(ring), *band_heat(0.4), run_time=0.4)
+        hold_for(self, N, "steeper", during=band_heat)
+        #endregion
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+
+
+class Beat4_WattVergleich(Scene):
+    NARRATION = [
+        ("intro",
+         "From the last video: a tealight gives about 30 watts, a resting person about 100 watts, a toaster about 1000 watts.",
+         "Aus dem letzten Video: Ein Teelicht leistet rund 30 W, ein ruhender Mensch rund 100 W, ein Toaster rund 1 000 W."),
+        ("walls",
+         "The same 25 square meter wall at 20 degrees inside and 0 outside — uninsulated, with 12 and with 30 centimeters of insulation.",
+         "Dieselbe Wand mit 25 m², innen 20 °C, außen 0 °C — ungedämmt, mit 12 cm und mit 30 cm Dämmung."),
+        ("u",
+         "Every layer adds its resistance d over lambda. That gives U-values of 1.43, 0.24 and 0.11.",
+         "Jede Schicht addiert ihren Widerstand d durch Lambda. Das ergibt U-Werte von 1,43, 0,24 und 0,11."),
+        ("q",
+         "Times 25 square meters and 20 kelvin: about 715, 120 and 55 watts flow through the wall.",
+         "Mal 25 m² und 20 K fließen rund 715 W, 120 W und 55 W durch die Wand."),
+        ("compare",
+         "The uninsulated wall loses as much as 0.7 toasters, the insulated one about one resting person, the highly insulated one two tealights.",
+         "Die ungedämmte Wand verliert so viel wie 0,7 Toaster, die gedämmte etwa einen ruhenden Menschen, die hochgedämmte zwei Teelichter."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+        N = self.NARRATION
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Wie viel Watt gehen durch die Wand?", title)
+        din = _din_ref("DIN EN ISO 6946")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(N, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        xs = (-4.5, 0.0, 4.5)
+        refs = [("toaster", 1000.0, r"\text{Toaster} \approx 1\,000\,\mathrm{W}", PASTEL_ORANGE),
+                ("person", 100.0, r"\text{Mensch in Ruhe} \approx 100\,\mathrm{W}", PASTEL_RED),
+                ("tealight", 30.0, r"\text{Teelicht} \approx 30\,\mathrm{W}", PASTEL_ORANGE)]
+        intro, intro_heat = VGroup(), []
+        for x, (kind, _w, tex, color) in zip(xs, refs):
+            glyph = _devices(kind, 1).move_to(np.array([x, 0.7, 0.0]))
+            label = math_label(tex, np.array([x, -0.35, 0.0]), color=color)
+            intro.add(VGroup(glyph, label))
+            intro_heat += _emitters(kind, glyph)
+        self.play(LaggedStart(*[FadeIn(g, shift=UP * 0.2) for g in intro], lag_ratio=0.25), run_time=1.4)
+        hold_for(self, N, "intro", used=1.4 + 0.3, during=lambda rt: [_warmth(intro_heat, rt, r_max=0.4)])
+
+        #region Three walls drawn to scale
+        scale = 3.0
+        y0, wall_h = 0.0, 1.45
+        legend = math_label(r"\text{innen}\;20\,\mathrm{°C} \;\to\; A = 25\,\mathrm{m^{2}} \;\to\; \text{außen}\;0\,\mathrm{°C}",
+                            np.array([0.0, 2.15, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL)
+        sections, titles, data = [], VGroup(), []
+        for x, (name, layers) in zip(xs, WALLS):
+            total = sum(d for _n, d, _l, _c in layers)
+            cursor = x - total * scale / 2
+            rects = VGroup()
+            for _n, d, _l, color in layers:
+                rect = Rectangle(width=d * scale, height=wall_h, stroke_color=PASTEL_WHITE, stroke_width=1.2,
+                                 fill_color=color, fill_opacity=0.45)
+                rect.move_to(np.array([cursor + d * scale / 2, y0 + wall_h / 2, 0.0]))
+                rects.add(rect)
+                cursor += d * scale
+            sections.append(rects)
+            titles.add(body_text(name, font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(np.array([x, 1.75, 0.0])))
+            r_tot = _r_total(layers)
+            u = _u_value(layers)
+            data.append({"x": x, "layers": layers, "r": r_tot, "u": u, "q": u * WALL_AREA * DT_DESIGN,
+                         "left": x - total * scale / 2, "right": x + total * scale / 2})
+        caption = swap_caption(self, caption, subtitle_text(N, "walls"))
+        self.play(FadeOut(intro), FadeIn(legend), FadeIn(titles), run_time=0.7)
+        r_trk = [ValueTracker(0.0) for _ in data]
+        r_reads = [
+            math_readout(lambda t=t: rf"R_{{\mathrm{{ges}}}} = {de_num(t.get_value(), 2)}\,\mathrm{{m^{{2}}K/W}}",
+                         np.array([d["x"], -0.45, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW, edge="center")
+            for t, d in zip(r_trk, data)
+        ]
+        self.add(*r_reads)
+        self.play(
+            *[LaggedStart(*[GrowFromEdge(rect, LEFT) for rect in rects], lag_ratio=0.6) for rects in sections],
+            *[t.animate.set_value(d["r"]) for t, d in zip(r_trk, data)],
+            run_time=2.4,
+        )
+        hold_for(self, N, "walls")
+        #endregion
+
+        #region U from the layers
+        caption = swap_caption(self, caption, subtitle_text(N, "u"))
+        p_r = math_panel([
+            ("r", r"R_{\mathrm{ges}}", PASTEL_YELLOW), (None, "=", PASTEL_WHITE), (None, r"R_{\mathrm{si}}", PASTEL_WHITE),
+            (None, "+", PASTEL_WHITE), ("sum", r"\Sigma\,\frac{d}{\lambda}", PASTEL_ORANGE), (None, "+", PASTEL_WHITE),
+            (None, r"R_{\mathrm{se}}", PASTEL_WHITE), (None, r"\quad", PASTEL_WHITE),
+            ("u", r"U = \frac{1}{R_{\mathrm{ges}}}", PASTEL_ORANGE),
+        ])
+        self.play(FadeIn(p_r[0]), Create(p_r[1]), run_time=0.8)
+        u_trk = [ValueTracker(0.0) for _ in data]
+        u_reads = [
+            math_readout(lambda t=t: rf"U = {de_num(t.get_value(), 2)}\,\mathrm{{W/(m^{{2}}K)}}",
+                         np.array([d["x"], -0.95, 0.0]), color=PASTEL_ORANGE, edge="center")
+            for t, d in zip(u_trk, data)
+        ]
+        self.add(*u_reads)
+        self.play(*[t.animate.set_value(d["u"]) for t, d in zip(u_trk, data)], run_time=1.6)
+        hold_for(self, N, "u")
+        #endregion
+
+        #region Heat flow through each wall
+        caption = swap_caption(self, caption, subtitle_text(N, "q"))
+        _drop_panel(self, p_r)
+        p_q = math_panel([
+            ("q", r"\dot{Q}", PASTEL_RED), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE),
+            ("a", r"25\,\mathrm{m^{2}}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE), ("dt", r"20\,\mathrm{K}", PASTEL_BLUE),
+        ])
+        _fly_into(self, p_q, {"u": u_reads[0]}, run_time=1.0)
+        q_trk = [ValueTracker(0.0) for _ in data]
+        q_reads = [
+            math_readout(lambda t=t: rf"\dot{{Q}} = {de_num(t.get_value())}\,\mathrm{{W}}",
+                         np.array([d["x"], -1.45, 0.0]), color=PASTEL_RED, edge="center")
+            for t, d in zip(q_trk, data)
+        ]
+        self.add(*q_reads)
+        streams = []
+        for d in data:
+            n_paths = max(1, int(round(d["q"] / 55.0)))
+            ys = np.linspace(y0 + 0.12, y0 + wall_h - 0.12, n_paths) if n_paths > 1 else [y0 + wall_h / 2]
+            paths = _flow_lines([((d["left"] - 0.55, y, 0.0), (d["right"] + 0.55, y, 0.0)) for y in ys])
+            streams.append((paths, PASTEL_RED, PASTEL_BLUE))
+
+        def wall_heat(rt):
+            return [_heat_flow(streams, rt, period=2.0, waves=3, radius=0.085)]
+
+        self.play(*wall_heat(3.6), *[t.animate.set_value(d["q"]) for t, d in zip(q_trk, data)], run_time=3.6)
+        hold_for(self, N, "q", during=wall_heat)
+        #endregion
+
+        #region Same watts as everyday devices
+        caption = swap_caption(self, caption, subtitle_text(N, "compare"))
+        for read in (*r_reads, *q_reads):
+            read.clear_updaters()
+        kinds = [("toaster", 1000.0, "Toaster", PASTEL_ORANGE), ("person", 100.0, "Mensch in Ruhe", PASTEL_RED),
+                 ("tealight", 30.0, "Teelicht", PASTEL_ORANGE)]
+        devices, hints, device_heat = VGroup(), VGroup(), []
+        for d, (kind, watts, name, color) in zip(data, kinds):
+            ratio = d["q"] / watts
+            glyph = _devices(kind, max(1, int(round(ratio))), fill=min(1.0, ratio)).move_to(np.array([d["x"], y0 + wall_h / 2, 0.0]))
+            devices.add(glyph)
+            device_heat += _emitters(kind, glyph)
+            hints.add(math_label(rf"\approx {de_num(ratio, 1)} \times \text{{{name}}}\;({de_num(watts)}\,\mathrm{{W}})",
+                                 np.array([d["x"], -0.45, 0.0]), size=LABEL_FONT_SIZE, color=color))
+
+        def device_warmth(rt):
+            return [_warmth(device_heat, rt, r_max=0.32)]
+
+        self.play(*[ReplacementTransform(sec, dev) for sec, dev in zip(sections, devices)],
+                  *[FadeOut(r) for r in r_reads], run_time=1.4)
+        self.play(*[FadeIn(h, shift=UP * 0.1) for h in hints], *device_warmth(0.6), run_time=0.6)
+        self.play(*[Indicate(h, color=PASTEL_YELLOW) for h in hints], *device_warmth(0.8), run_time=0.8)
+        hold_for(self, N, "compare", during=device_warmth)
+        #endregion
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+
+
+class Beat5_Gebaeudehuelle(Scene):
+    NARRATION = [
+        ("intro",
+         "For the whole building, add every envelope piece: roof, walls, windows, door, floor.",
+         "Für das ganze Gebäude addieren wir jedes Hüllteil: Dach, Außenwand, Fenster, Haustür, Boden."),
+        ("formula",
+         "Transmission heat loss is the sum of U-i times A-i times delta theta i — in watts, per DIN EN 12831-1 and DIN EN ISO 13789.",
+         "Der Transmissionswärmeverlust ist die Summe aus U-i mal A-i mal Delta-Theta-i — in Watt, nach DIN EN 12831-1 und DIN EN ISO 13789."),
+        ("paths",
+         "Each pathway leaks on its own: the 209 square meter wall loses most, the windows follow with their high U-value.",
+         "Jeder Pfad leckt für sich: die Außenwand mit 209 m² verliert am meisten, die Fenster folgen mit ihrem hohen U-Wert."),
+        ("ground",
+         "The floor borders soil at about 10 degrees, so only 10 kelvin drive the flow there.",
+         "Der Boden grenzt an Erdreich mit rund 10 °C — dort treiben nur 10 K den Wärmestrom."),
+        ("outro",
+         "Together that is about 2311 watts of transmission heat loss. Heat bridges come on top — that is next.",
+         "Zusammen sind das rund 2 311 W Transmissionswärmeverlust. Dazu kommen noch die Wärmebrücken."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+        N = self.NARRATION
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Die thermische Gebäudehülle", title)
+        din = _din_ref("DIN EN ISO 13789")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(N, "intro"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        #region House section, coloured by element
+        col = {name: color for name, _a, _u, _t, color in ENVELOPE}
+        hs = _envelope_house(np.array([-4.75, 0.1, 0.0]), 0.75, col)
+        house = hs["parts"]
+        bl, br, tl, tr, roof_peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
+        eave_l, eave_r = hs["roof"][0].get_start(), hs["roof"][0].get_end()
+        heater = radiator(np.array([br[0] - 0.55, bl[1] + 0.24, 0.0]), PASTEL_RED).scale(0.55)
+
+        def room_warmth(rt):
+            return [_warmth([heater.get_top() + UP * 0.04], rt, r_max=0.38, color=PASTEL_RED)]
+
+        def roof_normal(a, b):
+            u = (b - a) / np.linalg.norm(b - a)
+            nrm = np.array([-u[1], u[0], 0.0])
+            return nrm if nrm[1] > 0 else -nrm
+
+        y_level = bl[1] + hs["w_height"] / 2
+        anchors = {
+            "Dach": [((eave_l + roof_peak) / 2, roof_normal(eave_l, roof_peak)), ((roof_peak + eave_r) / 2, roof_normal(roof_peak, eave_r))],
+            "Außenwand": [((bl[0], y_level, 0.0), LEFT), ((br[0], (y_level + tr[1]) / 2, 0.0), RIGHT),
+                          ((br[0], (hs["door_top"] + y_level) / 2, 0.0), RIGHT)],
+            "Fenster": [(w["center"], LEFT) for w in hs["windows"]],
+            "Haustür": [((br[0], (bl[1] + hs["door_top"]) / 2, 0.0), RIGHT)],
+            "Boden": [((bl[0] + br[0]) / 2 * RIGHT + bl[1] * UP + DOWN * 0.1, DOWN)],
+        }
+        loss_paths, loss_guides, loss_waves = {}, {}, {}
+        for name, a, u, dt, color in ENVELOPE:
+            phi = a * u * dt / len(anchors[name])
+            loss_paths[name] = _flow_lines([(np.array(p) - np.array(d) * 0.08, np.array(p) + np.array(d) * 0.62) for p, d in anchors[name]])
+            loss_guides[name] = flow_guides(loss_paths[name], color, opacity=0.35, width=1.2 + 3.0 * phi / 334.0)
+            loss_waves[name] = max(1, round(5 * phi / 334.0))
+        leaking = []
+
+        def losses(rt):
+            return [_heat_flow([(loss_paths[n], col[n])], rt, period=1.4, waves=loss_waves[n], radius=0.065) for n in leaking]
+
+        self.play(Create(hs["group"]), run_time=1.6)
+        self.play(FadeIn(heater), *room_warmth(0.6), run_time=0.6)
+        hold_for(self, N, "intro", used=2.2 + 0.3, during=room_warmth)
+        #endregion
+
+        #region Formula
+        panel = math_panel([
+            ("phi", r"\Phi_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), (None, r"\Sigma\,(", PASTEL_WHITE),
+            ("u", r"U_{i}", PASTEL_ORANGE), (None, r"\cdot", PASTEL_WHITE), ("a", r"A_{i}", PASTEL_CYAN), (None, r"\cdot", PASTEL_WHITE),
+            ("dt", r"\Delta\theta_{i}", PASTEL_BLUE), (None, ")", PASTEL_WHITE), (None, r"\;[\mathrm{W}]", PASTEL_WHITE),
+        ], buff=0.13)
+        row, box, items = panel
+        caption = swap_caption(self, caption, subtitle_text(N, "formula"))
+        self.play(FadeIn(row), Create(box), *room_warmth(1.0), run_time=1.0)
+        hold_for(self, N, "formula", during=room_warmth)
+        #endregion
+
+        #region Element table
+        x_name, x_a, x_u, x_t, x_phi, x_bar = -2.55, -0.55, 0.65, 1.75, 3.4, 3.6
+        bar_k = 0.00138
+        y_head, y_rows = 2.2, [1.45, 0.92, 0.39, -0.14, -0.67]
+        heads = VGroup(
+            body_text("Bauteil", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL).move_to(np.array([x_name, y_head, 0.0]), aligned_edge=LEFT),
+            math_label(r"A_{i}\;[\mathrm{m^{2}}]", np.array([x_a, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN),
+            math_label(r"U_{i}", np.array([x_u, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE),
+            math_label(r"\Delta\theta_{i}\;[\mathrm{K}]", np.array([x_t, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_BLUE),
+            math_label(r"\Phi_{i}\;[\mathrm{W}]", np.array([x_phi, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, edge="right"),
+        )
+        u_unit = math_label(r"[\mathrm{W/(m^{2}K)}]", np.array([x_u, y_head - 0.42, 0.0]), size=14, color=PASTEL_ORANGE)
+        rule = Line(np.array([x_name, y_head - 0.55, 0.0]), np.array([x_bar + 1.5, y_head - 0.55, 0.0]),
+                    color=PASTEL_TEAL, stroke_width=1.2)
+        self.play(FadeIn(heads), FadeIn(u_unit), Create(rule), run_time=0.6)
+
+        rows, bars, fracs = [], [], []
+        for (name, a, u, dt, color), y in zip(ENVELOPE, y_rows):
+            f = ValueTracker(0.0)
+            fracs.append(f)
+            label = body_text(name, font_size=LABEL_FONT_SIZE, color=color).move_to(np.array([x_name, y, 0.0]), aligned_edge=LEFT)
+            b = y - 0.07
+            reads = VGroup(
+                math_readout(lambda f=f, a=a: de_num(f.get_value() * a), np.array([x_a, b, 0.0]), size=LABEL_FONT_SIZE,
+                             color=PASTEL_CYAN, edge="center"),
+                math_readout(lambda f=f, u=u: de_num(f.get_value() * u, 2), np.array([x_u, b, 0.0]), size=LABEL_FONT_SIZE,
+                             color=PASTEL_ORANGE, edge="center"),
+                math_readout(lambda f=f, dt=dt: de_num(f.get_value() * dt), np.array([x_t, b, 0.0]), size=LABEL_FONT_SIZE,
+                             color=PASTEL_BLUE, edge="center"),
+                math_readout(lambda f=f, a=a, u=u, dt=dt: de_num(f.get_value() ** 3 * a * u * dt), np.array([x_phi, b, 0.0]),
+                             size=LABEL_FONT_SIZE, color=PASTEL_WHITE, edge="right"),
+            )
+            bar = always_redraw(lambda f=f, a=a, u=u, dt=dt, y=y, color=color: Rectangle(
+                width=max(0.001, bar_k * f.get_value() ** 3 * a * u * dt), height=0.26, stroke_width=0,
+                fill_color=color, fill_opacity=0.8).move_to(np.array([x_bar, y, 0.0]), aligned_edge=LEFT))
+            rows.append((label, reads))
+            bars.append(bar)
+
+        def heat(rt):
+            return room_warmth(rt) + losses(rt)
+
+        def element_step(i: int, run_time: float = 2.0):
+            name, *_rest, color = ENVELOPE[i]
+            label, reads = rows[i]
+            glow = house[name].copy().set_stroke(width=4.5)
+            self.play(FadeIn(label), FadeIn(glow), *heat(0.3), run_time=0.3)
+            self.add(reads, bars[i])
+            leaking.append(name)
+            self.play(LaggedStart(*[Create(g) for g in loss_guides[name]], lag_ratio=0.15),
+                      fracs[i].animate.set_value(1.0), *heat(run_time), run_time=run_time)
+            self.play(FadeOut(glow), *heat(0.3), run_time=0.3)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "paths"))
+        for i in range(4):
+            element_step(i)
+        hold_for(self, N, "paths", during=heat)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "ground"))
+        ring = highlight_param(items, "dt", color=PASTEL_BLUE)
+        self.play(Create(ring), *heat(0.3), run_time=0.3)
+        element_step(4)
+        hold_for(self, N, "ground", during=heat)
+        self.play(FadeOut(ring), *heat(0.3), run_time=0.3)
+        #endregion
+
+        #region Stack into the total
+        caption = swap_caption(self, caption, subtitle_text(N, "outro"))
+        for bar in bars:
+            bar.clear_updaters()
+        for _label, reads in rows:
+            for read in reads:
+                read.clear_updaters()
+        y_sum = -1.22
+        sum_rule = Line(np.array([x_name, y_sum + 0.3, 0.0]), np.array([x_bar + 1.5, y_sum + 0.3, 0.0]), color=PASTEL_TEAL, stroke_width=1.2)
+        total = ValueTracker(0.0)
+        sum_label = body_text("Summe", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(np.array([x_name, y_sum, 0.0]), aligned_edge=LEFT)
+        sum_a = math_label(de_num(ENVELOPE_AREA), np.array([x_a, y_sum - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN)
+        sum_phi = math_readout(lambda: de_num(total.get_value()), np.array([x_phi, y_sum - 0.07, 0.0]), size=LABEL_FONT_SIZE,
+                               color=PASTEL_YELLOW, edge="right")
+        stack_x, stack_base = 5.95, -1.45
+        segs, cursor = VGroup(), stack_base
+        for (name, a, u, dt, color) in ENVELOPE:
+            h = bar_k * a * u * dt
+            segs.add(Rectangle(width=0.5, height=h, stroke_width=1, stroke_color=PASTEL_WHITE, fill_color=color, fill_opacity=0.8)
+                     .move_to(np.array([stack_x, cursor + h / 2, 0.0])))
+            cursor += h
+        stack_lbl = math_label(r"\Phi_{\mathrm{T}}", np.array([stack_x, cursor + 0.2, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_YELLOW)
+        self.play(Create(sum_rule), FadeIn(sum_label), FadeIn(sum_a), *heat(0.5), run_time=0.5)
+        self.add(sum_phi)
+        self.play(LaggedStart(*[TransformFromCopy(b, s) for b, s in zip(bars, segs)], lag_ratio=0.3),
+                  total.animate.set_value(PHI_T), *heat(2.6), run_time=2.6)
+        sum_phi.clear_updaters()
+        self.play(FadeIn(stack_lbl), Indicate(sum_phi, color=PASTEL_YELLOW), *heat(0.6), run_time=0.6)
+        hold_for(self, N, "outro", during=heat)
+        #endregion
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)
+
+
+class Beat6_Waermebruecken(Scene):
+    NARRATION = [
+        ("paper",
+         "For the calculation every wall becomes a sheet of paper without thickness — an area with a U-value.",
+         "Für die Rechnung wird jede Wand zu einem Blatt Papier ohne Dicke — eine Fläche mit U-Wert."),
+        ("choice",
+         "So one must decide where that sheet lies: outside, in the middle or inside.",
+         "Man muss entscheiden, wo das Blatt liegt: außen, in der Mitte oder innen."),
+        ("outer",
+         "With outside dimensions the corner square counts twice — too much area. Psi turns negative, a deduction of 0.48 watts per kelvin.",
+         "Mit Außenmaßen zählt das Eckquadrat doppelt — zu viel Fläche. Psi wird negativ, ein Abschlag von 0,48 W/K."),
+        ("inner",
+         "With inside dimensions the corner is missing — too little area. Psi turns positive, a surcharge of 0.67 watts per kelvin.",
+         "Mit Innenmaßen fehlt die Ecke — zu wenig Fläche. Psi wird positiv, ein Zuschlag von 0,67 W/K."),
+        ("diff",
+         "The difference is exactly the corner: U times two d, so 0.19 watts per meter and kelvin.",
+         "Der Unterschied ist genau die Ecke: U mal zwei d, also 0,19 W pro Meter und Kelvin."),
+        ("balcony",
+         "Real bridges appear where material pierces the insulation: a continuous balcony slab, 0.5 times 8 meters, adds 4 watts per kelvin.",
+         "Echte Wärmebrücken entstehen, wo Material die Dämmung durchstößt: eine Balkonplatte mit 0,5 mal 8 m ergibt 4 W/K Zuschlag."),
+        ("methods",
+         "In detail, every psi times its length is added: four outer corners and the balcony slab give about 2.1 watts per kelvin here.",
+         "Genau gerechnet addiert man jedes Psi mal Länge: vier Außenecken und die Balkonplatte ergeben hier rund 2,1 W/K."),
+        ("pauschal",
+         "As a flat rate, delta U WB is added on the whole envelope: 0.10 without proof, 0.05 with details per DIN 4108 supplement 2.",
+         "Pauschal kommt Delta-U-WB auf die ganze Hülle: 0,10 ohne Nachweis, 0,05 mit Details nach DIN 4108 Beiblatt 2."),
+        ("result",
+         "On 410 square meters that adds 41 or 20.5 watts per kelvin to 115.6.",
+         "Auf 410 m² sind das 41 oder 20,5 W/K zusätzlich zu 115,6 W/K."),
+    ]
+
+    def construct(self):
+        apply_scene_style(self)
+        N = self.NARRATION
+
+        title = scene_title(TITLE_DE)
+        self.add(title)
+        subtitle = beat_subtitle("Wärmebrücken", title)
+        din = _din_ref("DIN 4108 Bbl. 2 · DIN V 18599-2")
+        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
+
+        caption = caption_bar(subtitle_text(N, "paper"))
+        self.play(FadeIn(caption), run_time=0.3)
+
+        #region Plan of an external corner
+        s = 1.8
+        D, L = CORNER_D * s, CORNER_LEG * s
+        O = np.array([-6.0, -1.45, 0.0])
+        corner = Polygon(O, O + RIGHT * L, O + RIGHT * L + UP * D, O + RIGHT * D + UP * D, O + RIGHT * D + UP * L, O + UP * L,
+                         color=PASTEL_WHITE, stroke_width=2, fill_color=BRICK, fill_opacity=0.6)
+        inside_lbl = body_text("innen", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(O + np.array([2.0, 1.7, 0.0]))
+        outside_lbl = body_text("außen", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(O + np.array([-0.55, 2.6, 0.0]))
+        t_dim = dim_arrow(O + UP * (L + 0.2), O + UP * (L + 0.2) + RIGHT * D, color=PASTEL_ORANGE)
+        t_lbl = math_label(rf"d = {de_num(CORNER_D, 2)}\,\mathrm{{m}}", O + UP * (L + 0.2) + RIGHT * (D + 0.18) + DOWN * 0.07,
+                           size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="left")
+        u_tag = math_label(rf"U = {de_num(U_INSULATED, 2)}\,\mathrm{{W/(m^{{2}}K)}}", O + np.array([2.0, 1.2, 0.0]),
+                           size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+        self.play(DrawBorderThenFill(corner), FadeIn(inside_lbl), FadeIn(outside_lbl), run_time=1.2)
+        self.play(GrowFromCenter(t_dim), FadeIn(t_lbl), FadeIn(u_tag), run_time=0.6)
+
+        def paper(off: float, color: str):
+            p = O + RIGHT * off + UP * off
+            return VMobject(color=color, stroke_width=4).set_points_as_corners([O + RIGHT * L + UP * off, p, O + RIGHT * off + UP * L])
+
+        offsets = {"e": 0.0, "a": D / 2, "i": D}
+        colors = {"e": PASTEL_BLUE, "a": PASTEL_YELLOW, "i": PASTEL_RED}
+        lines = {k: paper(v, colors[k]) for k, v in offsets.items()}
+        legs = np.linspace(D + 0.4, L - 0.35, 4)
+        corner_paths = _flow_lines([(O + RIGHT * x + UP * (D + 0.14), O + RIGHT * x + UP * 0.03) for x in legs] +
+                                   [(O + UP * y + RIGHT * (D + 0.14), O + UP * y + RIGHT * 0.03) for y in legs])
+
+        def corner_heat(rt):
+            return [_heat_flow([(corner_paths, PASTEL_ORANGE, PASTEL_BLUE)], rt, period=1.6, waves=2, radius=0.065)]
+
+        self.play(corner.animate.set_fill(opacity=0.22), ReplacementTransform(corner.copy(), lines["a"]), *corner_heat(1.4),
+                  run_time=1.4)
+        hold_for(self, N, "paper", used=1.2 + 0.6 + 1.4 + 0.3, during=corner_heat)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "choice"))
+        tags = VGroup(*[
+            body_text(text, font_size=LABEL_FONT_SIZE, color=colors[k]).move_to(O + RIGHT * (L + 0.15) + UP * offsets[k], aligned_edge=LEFT)
+            for k, text in (("e", "außen"), ("a", "Mitte"), ("i", "innen"))
+        ])
+        self.play(TransformFromCopy(lines["a"], lines["e"]), TransformFromCopy(lines["a"], lines["i"]), FadeIn(tags),
+                  *corner_heat(1.2), run_time=1.2)
+        hold_for(self, N, "choice", during=corner_heat)
+        #endregion
+
+        #region Counted lengths against the real corner loss
+        lengths = {k: 2 * (CORNER_LEG - off / s) for k, off in offsets.items()}
+        hu = {k: U_INSULATED * l * CORNER_H for k, l in lengths.items()}
+        real = hu["e"] + PSI_E * CORNER_H
+        psi = {k: (real - v) / CORNER_H for k, v in hu.items()}
+        x_name, x_l, x_bar, k_bar = -1.2, 1.0, 1.8, 0.556
+        y_rows = {"e": 1.35, "a": 0.75, "i": 0.15}
+        names = {"e": "Außenmaß", "a": "Achsmaß", "i": "Innenmaß"}
+        heads = VGroup(
+            math_label(r"l\;[\mathrm{m}]", np.array([x_l, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL, edge="center"),
+            math_label(rf"U \cdot l \cdot h\;[\mathrm{{W/K}}],\; h = {de_num(CORNER_H)}\,\mathrm{{m}}",
+                       np.array([x_bar, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL, edge="left"),
+        )
+        grow = {k: ValueTracker(0.0) for k in offsets}
+
+        def row_parts(k: str):
+            y = y_rows[k]
+            name = body_text(names[k], font_size=LABEL_FONT_SIZE, color=colors[k]).move_to(np.array([x_name, y, 0.0]), aligned_edge=LEFT)
+            l_read = math_readout(lambda: de_num(grow[k].get_value() * lengths[k], 2), np.array([x_l, y - 0.07, 0.0]),
+                                  size=LABEL_FONT_SIZE, color=colors[k], edge="center")
+            bar = always_redraw(lambda: Rectangle(width=max(0.001, k_bar * grow[k].get_value() * hu[k]), height=0.3, stroke_width=0,
+                                                  fill_color=colors[k], fill_opacity=0.75).move_to(np.array([x_bar, y, 0.0]), aligned_edge=LEFT))
+            v_read = math_readout(lambda: de_num(grow[k].get_value() * hu[k], 2),
+                                  lambda: np.array([x_bar + k_bar * grow[k].get_value() * hu[k] + 0.12, y - 0.07, 0.0]),
+                                  size=LABEL_FONT_SIZE, color=PASTEL_WHITE, edge="left")
+            return name, VGroup(l_read, bar, v_read)
+
+        def strips(k: str):
+            off = offsets[k]
+            a = Rectangle(width=L - off, height=D, stroke_width=0, fill_color=colors[k], fill_opacity=0.35)
+            a.move_to(O + RIGHT * (off + (L - off) / 2) + UP * D / 2)
+            b = Rectangle(width=D, height=L - off, stroke_width=0, fill_color=colors[k], fill_opacity=0.35)
+            b.move_to(O + RIGHT * D / 2 + UP * (off + (L - off) / 2))
+            return VGroup(a, b)
+
+        def fade_lines(keep: str):
+            return [lines[k].animate.set_stroke(opacity=1.0 if k == keep else 0.25) for k in lines] + \
+                   [tags[i].animate.set_opacity(1.0 if k == keep else 0.35) for i, k in enumerate(("e", "a", "i"))]
+
+        real_x = x_bar + k_bar * real
+        real_line = VGroup(*[DashedLine(np.array([real_x, a, 0.0]), np.array([real_x, b, 0.0]), color=PASTEL_GREEN, stroke_width=2.5)
+                             for a, b in ((1.7, y_rows["i"] + 0.2), (y_rows["i"] - 0.2, -0.15))])
+        real_lbl = math_label(rf"\text{{tatsächlich}}\;{de_num(real, 2)}\,\mathrm{{W/K}}", np.array([real_x + 0.4, -0.45, 0.0]),
+                              size=LABEL_FONT_SIZE, color=PASTEL_GREEN, edge="center")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "outer"))
+        self.play(FadeOut(VGroup(u_tag)), *fade_lines("e"), FadeIn(heads), *corner_heat(0.6), run_time=0.6)
+        st_e = strips("e")
+        twice = math_label(r"2\times", O + RIGHT * D / 4 + UP * (D / 4 - 0.05), size=LABEL_FONT_SIZE - 4, color=PASTEL_WHITE)
+        name_e, parts_e = row_parts("e")
+        self.play(FadeIn(st_e), FadeIn(name_e), *corner_heat(0.6), run_time=0.6)
+        self.add(parts_e)
+        self.play(grow["e"].animate.set_value(1.0), FadeIn(twice), *corner_heat(1.4), run_time=1.4)
+        self.play(Create(real_line), FadeIn(real_lbl), *corner_heat(0.8), run_time=0.8)
+        psi_e = math_label(rf"\Psi_{{\mathrm{{e}}}} = {de_num(real - hu['e'], 2)}\,\mathrm{{W/K}} \,/\, {de_num(CORNER_H)}\,\mathrm{{m}}"
+                           rf" = {de_num(psi['e'], 3)}\,\mathrm{{W/(m\,K)}}", np.array([x_name, -0.95, 0.0]),
+                           size=LABEL_FONT_SIZE, color=colors["e"], edge="left")
+        cut_e = Arrow(np.array([x_bar + k_bar * hu["e"], y_rows["e"] + 0.3, 0.0]), np.array([real_x, y_rows["e"] + 0.3, 0.0]),
+                      buff=0, color=PASTEL_RED, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
+        self.play(GrowArrow(cut_e), FadeIn(psi_e, shift=RIGHT * 0.1), *corner_heat(0.8), run_time=0.8)
+        hold_for(self, N, "outer", during=corner_heat)
+
+        caption = swap_caption(self, caption, subtitle_text(N, "inner"))
+        st_i = strips("i")
+        gap = DashedVMobject(Square(side_length=D, color=PASTEL_WHITE, stroke_width=2).move_to(O + RIGHT * D / 2 + UP * D / 2), num_dashes=16)
+        name_a, parts_a = row_parts("a")
+        name_i, parts_i = row_parts("i")
+        self.play(FadeOut(st_e), FadeOut(twice), *fade_lines("i"), *corner_heat(0.5), run_time=0.5)
+        self.play(FadeIn(st_i), Create(gap), FadeIn(name_a), FadeIn(name_i), *corner_heat(0.6), run_time=0.6)
+        self.add(parts_a, parts_i)
+        self.play(grow["a"].animate.set_value(1.0), grow["i"].animate.set_value(1.0), *corner_heat(1.4), run_time=1.4)
+        add_i = Arrow(np.array([x_bar + k_bar * hu["i"], y_rows["i"] - 0.3, 0.0]), np.array([real_x, y_rows["i"] - 0.3, 0.0]),
+                      buff=0, color=PASTEL_GREEN, stroke_width=5, max_tip_length_to_length_ratio=0.6, tip_length=0.16)
+        psi_i = math_label(rf"\Psi_{{\mathrm{{i}}}} = +{de_num(real - hu['i'], 2)}\,\mathrm{{W/K}} \,/\, {de_num(CORNER_H)}\,\mathrm{{m}}"
+                           rf" = +{de_num(psi['i'], 3)}\,\mathrm{{W/(m\,K)}}", np.array([x_name, -1.4, 0.0]),
+                           size=LABEL_FONT_SIZE, color=colors["i"], edge="left")
+        self.play(GrowArrow(add_i), FadeIn(psi_i, shift=RIGHT * 0.1), *corner_heat(0.8), run_time=0.8)
+        hold_for(self, N, "inner", during=corner_heat)
+        #endregion
+
+        #region Difference read off the drawing
+        caption = swap_caption(self, caption, subtitle_text(N, "diff"))
+        for _n, parts in ((name_e, parts_e), (name_a, parts_a), (name_i, parts_i)):
+            for m in parts:
+                m.clear_updaters()
+        ext_a = _span(O + RIGHT * 0.0 + DOWN * 0.22, O + RIGHT * D + DOWN * 0.22, color=PASTEL_ORANGE)
+        ext_b = _span(O + LEFT * 0.22, O + LEFT * 0.22 + UP * D, color=PASTEL_ORANGE)
+        ext_lbl = math_label(r"2\,d", O + LEFT * 0.45 + UP * (D / 2 - 0.07), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="right")
+        self.play(FadeOut(st_i), FadeOut(gap), *[l.animate.set_stroke(opacity=1.0) for l in lines.values()],
+                  *[t.animate.set_opacity(1.0) for t in tags], *corner_heat(0.5), run_time=0.5)
+        self.play(GrowFromCenter(ext_a), GrowFromCenter(ext_b), FadeIn(ext_lbl), *corner_heat(0.8), run_time=0.8)
+        p_diff = math_panel([
+            ("psi", r"\Psi_{\mathrm{i}} - \Psi_{\mathrm{e}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("u", "U", PASTEL_WHITE),
+            (None, r"\cdot", PASTEL_WHITE), ("d", r"2\,d", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
+            (None, rf"{de_num(U_INSULATED, 2)} \cdot {de_num(2 * CORNER_D, 2)}", PASTEL_WHITE), (None, "=", PASTEL_WHITE),
+            (None, rf"{de_num(U_INSULATED * 2 * CORNER_D, 2)}\,\mathrm{{W/(m\,K)}}", PASTEL_YELLOW),
+        ])
+        _fly_into(self, p_diff, {"d": ext_lbl}, run_time=1.2)
+        hold_for(self, N, "diff", during=corner_heat)
+        #endregion
+
+        #region Material bridge: balcony slab
+        caption = swap_caption(self, caption, subtitle_text(N, "balcony"))
+        plan = VGroup(corner, lines["e"], lines["a"], lines["i"], tags, inside_lbl, outside_lbl, t_dim, t_lbl,
+                      ext_a, ext_b, ext_lbl, heads, name_e, name_a, name_i, parts_e, parts_a, parts_i,
+                      real_line, real_lbl, cut_e, add_i, psi_e, psi_i)
+        self.play(FadeOut(plan), FadeOut(p_diff[0]), FadeOut(p_diff[1]), run_time=0.6)
+        wx0, wx1, wy0, wy1 = -4.6, -3.4, -1.3, 1.9
+        brick = Rectangle(width=0.75, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=BRICK, fill_opacity=0.45)
+        brick.move_to(np.array([wx0 + 0.375, (wy0 + wy1) / 2, 0.0]))
+        ins = Rectangle(width=0.45, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=INSULATION, fill_opacity=0.45)
+        ins.move_to(np.array([wx1 - 0.225, (wy0 + wy1) / 2, 0.0]))
+        slab = Rectangle(width=4.6, height=0.28, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color="#9AA3AD", fill_opacity=0.9)
+        slab.move_to(np.array([-4.1, 0.35, 0.0]))
+        sec_in = body_text("innen", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(np.array([-5.6, 1.5, 0.0]))
+        sec_out = body_text("außen", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(np.array([-2.5, 1.5, 0.0]))
+        slab_lbl = body_text("Balkonplatte", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(np.array([-2.55, -0.05, 0.0]))
+        self.play(FadeIn(brick), FadeIn(ins), FadeIn(slab), FadeIn(sec_in), FadeIn(sec_out), FadeIn(slab_lbl), run_time=0.8)
+        wall_paths = _flow_lines([((wx0 - 0.5, y, 0.0), (wx1 + 0.6, y, 0.0)) for y in (-0.8, 1.3)])
+        slab_paths = _flow_lines([((wx0 - 0.5, y, 0.0), (-1.9, y, 0.0)) for y in np.linspace(0.27, 0.43, 5)])
+        l_trk = ValueTracker(0.0)
+        bx0, by = 0.6, 1.2
+        strip = always_redraw(lambda: Rectangle(width=max(0.001, 0.62 * l_trk.get_value()), height=0.32, stroke_width=1.2,
+                                                stroke_color=PASTEL_WHITE, fill_color="#9AA3AD", fill_opacity=0.8)
+                              .move_to(np.array([bx0, by, 0.0]), aligned_edge=LEFT))
+        strip_lbl = body_text("Balkon, Draufsicht", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL).move_to(np.array([bx0, by + 0.45, 0.0]), aligned_edge=LEFT)
+        l_span = always_redraw(lambda: _span((bx0, by - 0.35, 0.0), (bx0 + 0.62 * l_trk.get_value(), by - 0.35, 0.0), color=PASTEL_ORANGE))
+        l_read = math_readout(lambda: rf"l = {de_num(l_trk.get_value(), 1)}\,\mathrm{{m}}",
+                              lambda: np.array([bx0 + 0.31 * max(l_trk.get_value(), 2.0), by - 0.78, 0.0]),
+                              size=LABEL_FONT_SIZE, color=PASTEL_ORANGE, edge="center")
+        chi_read = math_readout(lambda: rf"\Psi \cdot l = {de_num(BALCONY_PSI, 1)}\,\mathrm{{W/(m\,K)}} \cdot "
+                                        rf"{de_num(l_trk.get_value(), 1)}\,\mathrm{{m}} = {de_num(BALCONY_PSI * l_trk.get_value(), 1)}\,\mathrm{{W/K}}",
+                                np.array([bx0, -0.6, 0.0]), color=PASTEL_YELLOW, edge="left")
+        slab_top = slab.get_top()[1]
+        bridge_spots = [np.array([x, slab_top + 0.02, 0.0]) for x in (-2.95, -2.2)]
+
+        def bridge_heat(rt):
+            return [_heat_flow([(slab_paths, PASTEL_ORANGE, PASTEL_BLUE), (wall_paths, PASTEL_ORANGE, PASTEL_BLUE)], rt,
+                               period=1.9, waves=4, radius=0.065),
+                    _warmth(bridge_spots, rt, r_max=0.38, color=PASTEL_ORANGE)]
+
+        self.play(FadeIn(strip_lbl), *bridge_heat(0.3), run_time=0.3)
+        self.add(strip, l_span, l_read, chi_read)
+        self.play(l_trk.animate.set_value(BALCONY_L), *bridge_heat(3.0), run_time=3.0)
+        hold_for(self, N, "balcony", during=bridge_heat)
+        #endregion
+
+        #region Detailed versus flat-rate method
+        caption = swap_caption(self, caption, subtitle_text(N, "methods"))
+        for m in (strip, l_span, l_read, chi_read):
+            m.clear_updaters()
+        n_corners = 4
+        corner_sum = n_corners * CORNER_H * PSI_E
+        psi_sum = corner_sum + BALCONY_PSI * BALCONY_L
+        sum_line = math_label(rf"\Sigma\,\Psi_{{k}}\,l_{{k}} = {n_corners} \cdot {de_num(CORNER_H)}\,\mathrm{{m}} \cdot ({de_num(PSI_E, 3)})"
+                              rf" + {de_num(BALCONY_PSI * BALCONY_L, 1)} = {de_num(psi_sum, 1)}\,\mathrm{{W/K}}",
+                              np.array([0.0, 1.9, 0.0]), color=PASTEL_YELLOW)
+        self.play(FadeOut(VGroup(brick, ins, slab, sec_in, sec_out, slab_lbl, strip, strip_lbl, l_span, l_read)),
+                  ReplacementTransform(chi_read, sum_line), run_time=0.9)
+        p_det = math_panel([
+            ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
+            (None, "+", PASTEL_WHITE), ("psi", r"\Sigma\,\Psi_{k}\,l_{k}", PASTEL_YELLOW), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
+        ])
+        _fly_into(self, p_det, {"psi": sum_line}, run_time=1.2)
+        base_y, k_h = -0.72, 0.018
+        cols_x = (-5.1, -1.7, 1.7, 5.1)
+        adds = (0.0, psi_sum, DU_WB[0] * ENVELOPE_AREA, DU_WB[1] * ENVELOPE_AREA)
+        heads_b = [r"\text{ohne Wärmebrücken}", r"+\,\Sigma\,\Psi_{k}\,l_{k}",
+                   rf"+\,{de_num(DU_WB[0], 2)} \cdot A", rf"+\,{de_num(DU_WB[1], 2)} \cdot A"]
+        notes_b = ["", "detailliert", "pauschal, ohne Nachweis", "pauschal, DIN 4108 Bbl. 2"]
+        grow_b = [ValueTracker(0.0) for _ in cols_x]
+        add_b = [ValueTracker(0.0) for _ in cols_x]
+        labels_b = VGroup(*[math_label(tex, np.array([x, base_y - 0.3, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
+                            for x, tex in zip(cols_x, heads_b)])
+        notes_vg = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE - 2, color=PASTEL_TEAL).move_to(np.array([x, base_y - 0.62, 0.0]))
+                            for x, t in zip(cols_x, notes_b) if t])
+
+        def col_height(i: int) -> float:
+            return k_h * (H_T * grow_b[i].get_value() + adds[i] * add_b[i].get_value())
+
+        base_bars = [always_redraw(lambda i=i, x=x: Rectangle(width=1.1, height=max(0.001, k_h * H_T * grow_b[i].get_value()),
+                                                              stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.75)
+                                   .move_to(np.array([x, base_y, 0.0]), aligned_edge=DOWN)) for i, x in enumerate(cols_x)]
+        add_bars = [always_redraw(lambda i=i, x=x: Rectangle(width=1.1, height=max(0.001, k_h * adds[i] * add_b[i].get_value()),
+                                                             stroke_width=0, fill_color=PASTEL_YELLOW, fill_opacity=0.85)
+                                  .move_to(np.array([x, base_y + k_h * H_T * grow_b[i].get_value(), 0.0]), aligned_edge=DOWN))
+                    for i, x in enumerate(cols_x) if adds[i] > 0]
+        tops = [math_readout(lambda i=i: rf"{de_num(H_T * grow_b[i].get_value(), 1)}"
+                                         + (rf" + {de_num(adds[i] * add_b[i].get_value(), 1)}" if adds[i] > 0 else "")
+                                         + r"\,\mathrm{W/K}",
+                             lambda i=i, x=x: np.array([x, base_y + col_height(i) + 0.18, 0.0]),
+                             size=LABEL_FONT_SIZE, color=PASTEL_WHITE, edge="center")
+                for i, x in enumerate(cols_x)]
+        self.play(FadeOut(sum_line), FadeIn(labels_b[:2]), FadeIn(notes_vg[0]), run_time=0.5)
+        self.add(base_bars[0], base_bars[1], add_bars[0], tops[0], tops[1])
+        self.play(grow_b[0].animate.set_value(1.0), grow_b[1].animate.set_value(1.0), run_time=1.2)
+        self.play(add_b[1].animate.set_value(1.0), run_time=0.8)
+        hold_for(self, N, "methods")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "pauschal"))
+        p_flat = math_panel([
+            ("h", r"H_{\mathrm{T}}", PASTEL_WHITE), (None, "=", PASTEL_WHITE), ("ua", r"\Sigma\,U_{i}A_{i}", PASTEL_ORANGE),
+            (None, "+", PASTEL_WHITE), ("du", r"\Delta U_{\mathrm{WB}} \cdot A", PASTEL_YELLOW), (None, r"\;[\mathrm{W/K}]", PASTEL_WHITE),
+        ])
+        self.play(ReplacementTransform(p_det[0], p_flat[0]), ReplacementTransform(p_det[1], p_flat[1]),
+                  FadeIn(labels_b[2:]), FadeIn(notes_vg[1:]), run_time=0.9)
+        self.add(base_bars[2], base_bars[3], add_bars[1], add_bars[2], tops[2], tops[3])
+        self.play(grow_b[2].animate.set_value(1.0), grow_b[3].animate.set_value(1.0), run_time=1.2)
+        hold_for(self, N, "pauschal")
+
+        caption = swap_caption(self, caption, subtitle_text(N, "result"))
+        ring = highlight_param(p_flat[2], "du", color=PASTEL_YELLOW)
+        self.play(add_b[2].animate.set_value(1.0), add_b[3].animate.set_value(1.0), Create(ring), run_time=1.6)
+        hold_for(self, N, "result")
+        #endregion
+
+        self.play(FadeOut(caption), run_time=0.3)
+        self.wait(0.5)

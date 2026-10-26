@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Teaching Video Curriculum",
+  "type": "object",
+  "required": [
+    "videos"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "videos": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "script",
+          "intro",
+          "playlist",
+          "chapters",
+          "output"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z_]+$"
+          },
+          "script": {
+            "type": "string",
+            "pattern": "^🏛️architecture/⚡️energy/[^/]+/🎬️clip/🐍️\\.py$"
+          },
+          "intro": {
+            "$ref": "#/$defs/segment"
+          },
+          "playlist": {
+            "type": "string"
+          },
+          "chapters": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/$defs/chapter"
+            }
+          },
+          "output": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "segment": {
+      "type": "object",
+      "required": [
+        "script",
+        "scene"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "script": {
+          "type": "string",
+          "pattern": "^🏛️architecture/⚡️energy/[^\\\\]+/🐍️\\.py$"
+        },
+        "scene": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+        }
+      }
+    },
+    "chapter": {
+      "type": "object",
+      "required": [
+        "scene",
+        "segments"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "scene": {
+          "type": "string",
+          "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+        },
+        "segments": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/segment"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "cases": [
+    {
+      "id": "unrelated-kind-survives",
+      "extraKind": {
+        "emoji": "🧿️",
+        "slugPattern": "^concurrent$",
+        "allowEmojiOnly": false
+      }
+    },
+    {
+      "id": "concurrent-members-survive",
+      "extraMember": "🧿️concurrent"
+    },
+    {
+      "id": "idempotent-owned-rules",
+      "repeat": true
+    }
+  ]
+}

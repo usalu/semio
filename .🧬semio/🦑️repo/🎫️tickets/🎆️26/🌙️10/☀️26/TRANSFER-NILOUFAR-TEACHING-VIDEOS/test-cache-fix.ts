@@ -1,0 +1,10 @@
+import { spawn } from "node:child_process";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const ticket = dirname(fileURLToPath(import.meta.url));
+const generated = join(ticket, "🗑️generated");
+const test = "C:/git/semio/🎓️teaching/test_video_runtime.py";
+const child = spawn(join(generated, "v/Scripts/python.exe"), [test, ...process.argv.slice(2)], { stdio: "inherit", env: { ...process.env, PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEACHING_OUTPUT_ROOT: join(generated, "cache-test"), SEMIO_TEACHING_CACHE_DIR: join(generated, "fonts"), SEMIO_TEST_MANIM: "1" }, windowsHide: true });
+process.on("SIGINT", () => child.kill("SIGINT"));
+child.on("error", error => { console.error("[DEBUG]", error); process.exitCode = 1; });
+child.on("exit", code => { process.exitCode = code ?? 1; });

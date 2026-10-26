@@ -1,0 +1,19 @@
+[project]
+name = "teaching-videos"
+version = "0.1.0"
+description = "Complete building-energy teaching video sources and portable render tools"
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "manim==0.22.0",
+    "numpy==2.5.4",
+    "imageio-ffmpeg==0.6.0",
+]
+
+[tool.uv]
+package = false
+
+[tool.uv.workspace]
+members = []
+
+[dependency-groups]
+test = ["fonttools==4.63.0"]

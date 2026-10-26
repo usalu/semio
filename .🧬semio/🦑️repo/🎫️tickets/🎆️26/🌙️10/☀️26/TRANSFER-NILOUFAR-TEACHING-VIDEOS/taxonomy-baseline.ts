@@ -1,0 +1,20 @@
+import { spawnSync } from "node:child_process";
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { join, resolve } from "node:path";
+const output=join(import.meta.dir,"🗑️generated/taxonomy-baseline");
+mkdirSync(output,{recursive:true});
+function git(args:string[]){const p=spawnSync("git",args,{encoding:null,maxBuffer:64*1024*1024,windowsHide:true,env:{...process.env,GIT_OPTIONAL_LOCKS:"0"}});if(p.status)throw new Error(p.stderr.toString());return p.stdout;}
+const indexPath=resolve(git(["rev-parse","--git-path","index"]).toString().trim());
+const original=readFileSync(indexPath);
+writeFileSync(join(output,"index.bin"),original,{flag:"wx"});
+const tracked=git(["ls-files","--stage","-z"]);
+writeFileSync(join(output,"index-entries.z"),tracked);
+writeFileSync(join(output,"staged-name-status.z"),git(["diff","--cached","--name-status","-z"]));
+writeFileSync(join(output,"staged-stat.txt"),git(["diff","--cached","--stat"]));
+writeFileSync(join(output,"status.z"),git(["status","--porcelain=v1","-z","--untracked-files=no"]));
+const current=readFileSync(indexPath);
+if(!original.equals(current))throw new Error("Concurrent index change observed during baseline capture");
+const summary={created:new Date().toISOString(),indexPath,indexSha256:createHash("sha256").update(original).digest("hex"),indexBytes:original.length,entries:tracked.toString().split("\0").filter(Boolean).length,head:git(["rev-parse","HEAD"]).toString().trim()};
+writeFileSync(join(output,"baseline.json"),JSON.stringify(summary,null,2)+"\n");
+console.log("[DEBUG] "+JSON.stringify(summary));

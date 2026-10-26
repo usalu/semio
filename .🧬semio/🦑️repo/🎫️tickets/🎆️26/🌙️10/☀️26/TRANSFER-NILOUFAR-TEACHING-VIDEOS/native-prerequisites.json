@@ -1,0 +1,41 @@
+{
+  "docker": [
+    "libpango1.0-dev",
+    "libcairo2-dev",
+    "fonts-dejavu-extra"
+  ],
+  "packages": {
+    "apt-get": [
+      "libpango1.0-dev",
+      "libcairo2-dev",
+      "fonts-liberation",
+      "fonts-dejavu-extra"
+    ],
+    "dnf": [
+      "pango-devel",
+      "cairo-devel",
+      "liberation-serif-fonts",
+      "dejavu-serif-fonts"
+    ],
+    "pacman": [
+      "pango",
+      "cairo",
+      "ttf-liberation",
+      "ttf-dejavu"
+    ],
+    "zypper": [
+      "pango-devel",
+      "cairo-devel",
+      "liberation-fonts",
+      "dejavu-fonts"
+    ]
+  },
+  "homebrew": [
+    "pkg-config",
+    "cairo",
+    "pango"
+  ],
+  "homebrew_fonts": [
+    "font-dejavu"
+  ]
+}

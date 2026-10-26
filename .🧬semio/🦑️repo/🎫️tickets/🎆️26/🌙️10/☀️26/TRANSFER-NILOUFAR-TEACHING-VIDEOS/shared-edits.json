@@ -1,0 +1,52 @@
+{
+  ".devcontainer/Dockerfile": [
+    [
+      "    libpango-1.0-0 \\\n",
+      "    libpango-1.0-0 \\\n    libpango1.0-dev \\\n"
+    ],
+    [
+      "    libcairo2 \\\n",
+      "    libcairo2 \\\n    libcairo2-dev \\\n"
+    ],
+    [
+      "    fonts-liberation \\\n",
+      "    fonts-liberation \\\n    fonts-dejavu-extra \\\n"
+    ]
+  ],
+  "🧰️framework/🛍️products/🦑️repo/🔨️modules/🔩️native/🥾️bootstrap/🐚️.sh": [
+    [
+      "build-essential pkg-config uuid-dev",
+      "build-essential pkg-config libpango1.0-dev libcairo2-dev fonts-liberation fonts-dejavu-extra uuid-dev",
+      "build-essential pkg-config libpango1.0-dev libcairo2-dev uuid-dev",
+      "build-essential pkg-config libpango1.0-dev libcairo2-dev fonts-liberation uuid-dev"
+    ],
+    [
+      "gcc gcc-c++ make pkgconf-pkg-config libuuid-devel",
+      "gcc gcc-c++ make pkgconf-pkg-config pango-devel cairo-devel liberation-serif-fonts dejavu-serif-fonts libuuid-devel",
+      "gcc gcc-c++ make pkgconf-pkg-config pango-devel cairo-devel libuuid-devel",
+      "gcc gcc-c++ make pkgconf-pkg-config pango-devel cairo-devel liberation-serif-fonts libuuid-devel"
+    ],
+    [
+      "base-devel pkgconf util-linux-libs",
+      "base-devel pkgconf pango cairo ttf-liberation ttf-dejavu util-linux-libs",
+      "base-devel pkgconf pango cairo util-linux-libs",
+      "base-devel pkgconf pango cairo ttf-liberation util-linux-libs"
+    ],
+    [
+      "gcc gcc-c++ make pkg-config libuuid-devel",
+      "gcc gcc-c++ make pkg-config pango-devel cairo-devel liberation-fonts dejavu-fonts libuuid-devel",
+      "gcc gcc-c++ make pkg-config pango-devel cairo-devel libuuid-devel",
+      "gcc gcc-c++ make pkg-config pango-devel cairo-devel liberation-fonts libuuid-devel"
+    ],
+    [
+      "brew install pkg-config || log \"Homebrew could not install pkg-config.\"",
+      "brew install pkg-config cairo pango || log \"Homebrew could not install pkg-config, Cairo and Pango.\"\n      brew install --cask font-dejavu || log \"Homebrew could not install DejaVu mathematical fonts.\"",
+      "brew install pkg-config cairo pango || log \"Homebrew could not install pkg-config, Cairo and Pango.\""
+    ],
+    [
+      "Homebrew not available; install pkg-config before running native C++ builds",
+      "Homebrew not available; install pkg-config, Cairo, Pango and DejaVu fonts before running native C++ builds",
+      "Homebrew not available; install pkg-config, Cairo and Pango before running native C++ builds"
+    ]
+  ]
+}

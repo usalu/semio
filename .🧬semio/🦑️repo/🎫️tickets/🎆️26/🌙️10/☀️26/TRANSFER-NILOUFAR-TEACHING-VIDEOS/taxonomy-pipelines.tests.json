@@ -1,0 +1,397 @@
+{
+  "counts": {
+    "lesson": 5,
+    "composition": 25,
+    "speech": 26
+  },
+  "workspace_marker": "🧰️framework",
+  "forbidden": [
+    "from scene_",
+    "from manim_visuals",
+    "from video_runtime",
+    "from tts_pipeline",
+    "manim_fonts.py",
+    "sys.modules["
+  ],
+  "modules": [
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py",
+      "kind": "lesson",
+      "protected": {
+        "PHYSICAL_FUNDAMENTALS_PLAYLIST": "3e2b10280e398919a1ab2a68eb0fe4cd54bd0c9f1f260edb3d1a4e419c26f3d5",
+        "PhysicalFundamentals_FullSection": "bcae1fb35b14eaf2d77c5c7c9f1a87d09e9491cef1bccfbe9afc3cd0fc8d2cc2",
+        "FullPhysicalFundamentalsVideo": "e8b347a0a584df5734f4c59d40c1ae2f411ac33764cd58cc9c79aa877faefbee"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "9dec56c008cfc99959e1dc1625e5d259bed68f48a71b90e968f27a3d815805de"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "f7ef96381247e5a65a7c74beb00e79a9d96f3b39b6abc44ac5c2bcf558039763"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "1360055707f876fe65ba0e8c94fe1202b8713d75c5125aedd6912a271631b034"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "862e1429f793358a6c6326a74727a63a782d24d74d3159619c5ecd86510039a1"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "9fead431f3bb1419f77373ad422446ad89031a2aea00afa7052135e6c9e02a44"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "62e9cf768e36da1365b6772b141e8c21f0c0c85085b82eeeb00055a73f8aecec"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py",
+      "kind": "lesson",
+      "protected": {
+        "VENTILATION_PLAYLIST": "3ba8fea6ce85015bcb29ff383209be69712dca6ce50dbc0c6b7cfa8e6f0fadba",
+        "_VentilationSection": "e2ca32c222ca67066a2778e356dd94a8dfdaffceb7ed027591448309282aec4d",
+        "Ventilation_01_WarumLueften": "fe720814f1b93c44ed6a73c0fef74edb48bf5a1ce3ccfc5b7f4dc5ea635a07e3",
+        "Ventilation_02_Luftmenge": "69cb2419beac0b5be001a84f09cf01999289ce60dae3febcb0c75e6d6b0c4f94",
+        "Ventilation_03_WaermestromLuft": "eadfaa3acfddf7a3c0b76b219dab00b83f2df503e87289971e16c173b8430019",
+        "Ventilation_04_NatuerlicheLueftung": "0de0f91aa3ab64e29c462e0ded27fbddfb825eb699da74a97081ac29b68b0f41",
+        "Ventilation_05_MechanischeLueftung": "00059df69087c99350b7542a7d90c86bd5adc9ca2a95e06ed74bdecaefaa508b",
+        "Ventilation_06_Uebergabe": "bffcd05110b38c98dbff28021c9d0684014332b9098a399c98cecb7579f5feff",
+        "FullVentilationVideo": "755ac37ec045ba56f121b65fb30fbc3cc32035a8011d861747e5b9145fb1041d"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "d551ce09d06d783c60112534cd1a3d53033b8d7453372c3e1ef9571a422c91c7"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "b7d1b1f5066467230949e8591bebb998c0502d078030a96a4c9715facb1786aa"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "0c644a72fda6fceae086292d4e68bdcb5f054a89f54f1e446d189e5cbca7fd36"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "2cd3a81622cd765f30ccbe20539823521b18b26f700e86d98f47e566975e9fff"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "599c2208278d2107858f2ca0313912f7e774c6caf428ab899154acacb0b359f2"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py",
+      "kind": "lesson",
+      "protected": {
+        "HEATING_PLAYLIST": "b0481b6c6d9de6ef306dce89b31c7274e51cfabb6dfa9abedaf15186b8b83e82",
+        "_HeatingSection": "fff70b457fd2a0e5a772258f9fff6651ece6aab275f28be98701e622917074c4",
+        "Heating_01_Introduction": "a572a591db86b481816c636402c795405c6cb60c0afec9176e3bae1d45b2a526",
+        "Heating_02_Conduction": "f25e483c8bb1e0e3dd750e2d2cb02b68f5f08189b281f39b32dfffeceaf03bef",
+        "Heating_03_Convection": "2642c35758cd82e9ae5b32da00cfe9da03d6c9f03331d8fc1c422ebce796e654",
+        "Heating_04_InternalGains": "77daa850c37eb10a3c302478840dd26ba242757a301ac9bd7885e6fc3de3f505",
+        "Heating_05_Solar": "baebac00895e4b1fbafc3532d3636fbbc526e25e97eac12189c7c4d3b5c57778",
+        "Heating_06_FinalCalculation": "37124cebec53575dd6ab2dac8b46f77e3569477b8f6d24638f38391b7436d258",
+        "FullHeatingDemandVideo": "821afb2b4a0bf4fd4d64f10e6d6fcafec5a151993a468f147f7190f39d0e010e"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "cc76005125c33001fed9102297dc78bdcc37cb5303d09d3db5547505f9a35c11"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "af8228864b6aa7197e7ca25de9b46c7661b879e9b5bf290a4b8575300f529fc9"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "536dfbcce4919f6efbf0220f763193151935cc66ff15007704c3a0ac7e6a2ade"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "2e8909294a13e31344ded4289abb3feb3b62d7637ef80709039c40521e382b75"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "0e9318d2448b6228b51d062b3b9f7580be62cf5f541faffbb3eef1a6cda2b743"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "fffc9ea072c4335f344e521f6a4a35290a0deef6220f1dd0195d656afb18f07b"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py",
+      "kind": "lesson",
+      "protected": {
+        "COOLING_PLAYLIST": "77ff3777c474bd775436f5fb6d4448781d2813b563d5542223ce0431818fec5b",
+        "_CoolingSection": "90310a8b01a6f7e5ba53945b10cc1ba91cf16f328d00c8cad7322c97a03556bd",
+        "Cooling_01_HeatingVsCooling": "29db7f81c8429daf124b64d62d3582129ffb937dc6faaa4fd175f9d5a43b5541",
+        "Cooling_02_InternalGains": "e8d1895403fa9876d3d29a82a11b9641cd7aca9136b6843e5ee2ffa1224d299b",
+        "Cooling_03_TransmissionHumidity": "7b451f0743091d08d34206e89442c5f0780d60885149ab6f0e15e753b2dc901d",
+        "Cooling_04_SolarRadiation": "78986b6660620c301e707606b028ed05f0ef3677f3a46703521fca6ad6463840",
+        "Cooling_05_Systemauslegung": "c6cc8b0b681f18652bbee5671811e854a0830dd38daeb2639bf703c4a5284085",
+        "Cooling_06_Sommerstrategie": "044637c65fccf26749cd217a4ce3b998f6d42dd68969690d712541d0e35d8fa5",
+        "FullCoolingDemandVideo": "5497255603b0a668f1bdd420d8cacc2063b25be7d545d78b178142eb1d0f2a46"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "504e788c442a750b3ed5400fb9046405df14e3c87bd390bb3734cd9cc5f55703"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "33becbe85614fb4dc04c3cd4a0351edded6f6edfbfe161a7f17a7d3b445f021b"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "7ecf610d7b13984e3dc340d1ff1546ca59e113c4c3977b487325aae17361e38f"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "0f81f469fdb70e649685435591989bac8ff5e8b21d3c461c528c3512686aa4c3"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "a5ee25e85743ac6e7d09f96b693b1b278c17e742f6d1c477368bb08f6e294407"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "d22500d0871cecb6577e047975fd877aed1c63a9767a86ec98c4c8b8070dc98d"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🏗️composition/🐍️.py",
+      "kind": "composition",
+      "protected": {}
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "BEATS": "3920b5650a1d8189e1b7194b080e89f595143b8e78c3279f5b46d1627c9f9d40"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py",
+      "kind": "lesson",
+      "protected": {
+        "ENERGY_BALANCE_PLAYLIST": "32608754a74ec6c1447994742dad26abc851bb4f2a06f7306033e146072e326f",
+        "_EnergyBalanceChapter": "30d54632528ffaa22134f0efe3a1e11558160e0510be9c0d45057c6ddfb72fbf",
+        "EnergyBalance_01_Energiebilanz": "b562c08d3a44ee6896f4856bc27cf5531d9a4b065be4fa8d2f9b3a236a3d3b3e",
+        "EnergyBalance_02_RegelwerkKlima": "ea50472629e094f25cbde5528d135a7a53b6981d3e4ad01c48082fb2e1b040c2",
+        "EnergyBalance_03_BedarfVsLeistung": "736b1dc21c6af3aa0c1d2df0f98852a07d745babfe4b6c5dc9bf0ffc4b70e9c8",
+        "EnergyBalance_04_NutzZuEndenergie": "cc9f2e5e094ce2f8dfb7dbfb52c37bdf9cc3bbb2040da1a9d2777a97e8a4c603",
+        "EnergyBalance_05_Primaerenergie": "4d55e491be3d570d24cebeec13af311fb5343fcd8a7cc99c6e6c9dd925250403",
+        "EnergyBalance_06_Energieausweis": "37861c53ad06b62d7ce567a1d51b6f72e41aea18cb197fd78cae18beb45692fd",
+        "EnergyBalance_07_TheorieVsPraxis": "38466d65931e46f0470755127a54ee5919a932ccadb1dc16426f3210472510db",
+        "FullEnergyBalanceVideo": "de2508e2887eee165bfd06b6ef6c5ec1dc76fd3da79dda0a782d5f7a04014766"
+      }
+    },
+    {
+      "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🔊️speech/🐍️.py",
+      "kind": "speech",
+      "protected": {
+        "NARRATIONS": "beffa43ba589238cf76b07c3836dc26c693cbc93db3a67096b416c55479452eb"
+      }
+    }
+  ],
+  "trace_owner_cases": [
+    "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🔊️speech/🐍️.py",
+    "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🔊️speech/🐍️.py"
+  ]
+}

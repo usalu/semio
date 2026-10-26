@@ -1,0 +1,18 @@
+import { spawn } from "node:child_process";
+import { mkdir } from "node:fs/promises";
+import { createWriteStream } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const ticket = dirname(fileURLToPath(import.meta.url));
+const generated = join(ticket, "🗑️generated");
+await mkdir(generated, { recursive: true });
+const python = process.argv[2] || join(generated, "v/Scripts/python.exe");
+const command = process.argv[3] || join(ticket, "test_pipeline.py");
+const args = process.argv.length > 4 ? process.argv.slice(4) : ["C:/git/semio"];
+const log = createWriteStream(join(generated, "pipeline-checks.log"));
+let tail = "";
+const child = spawn(python, [command, ...args], { env: { ...process.env, PYTHONUTF8: "1", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEACHING_OUTPUT_ROOT: join(generated, "r") }, windowsHide: true });
+for (const stream of [child.stdout, child.stderr]) stream.on("data", chunk => { log.write(chunk); tail = (tail + chunk.toString()).slice(-1800); });
+process.on("SIGINT", () => child.kill("SIGINT"));
+child.on("error", error => { console.error("[DEBUG]", error); process.exitCode = 1; });
+child.on("exit", code => { log.end(); console.log(tail); process.exitCode = code ?? 1; });

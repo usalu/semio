@@ -1,0 +1,643 @@
+{
+  "$schema": "../🏗️authoring/🎬️clip/🧬️schema/🔣️.schema.json",
+  "videos": [
+    {
+      "id": "physical_fundamentals",
+      "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py",
+      "playlist": "PHYSICAL_FUNDAMENTALS_PLAYLIST",
+      "intro": {
+        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
+        "scene": "Demo_Intro_PhysikalischeGrundlagen"
+      },
+      "chapters": [
+        {
+          "scene": "PhysicalFundamentals_FullSection",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat1_EnergieImAlltag"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat2_Leistung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat3_Energieerhaltung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat4_Waermepumpe"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat5_Strahlung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat6_ThermischeMasse"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat7_SensibelLatent"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat8_Zusammenfassung"
+            }
+          ]
+        }
+      ],
+      "output": "Full_Physical_Fundamentals"
+    },
+    {
+      "id": "ventilation",
+      "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py",
+      "playlist": "VENTILATION_PLAYLIST",
+      "intro": {
+        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
+        "scene": "Demo_Intro_Lueftung"
+      },
+      "chapters": [
+        {
+          "scene": "Ventilation_01_WarumLueften",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
+              "scene": "Beat1_Lueftungsbedarf"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
+              "scene": "Beat2_Lueftungsweg"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
+              "scene": "Beat3_Fahrplan"
+            }
+          ]
+        },
+        {
+          "scene": "Ventilation_02_Luftmenge",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py",
+              "scene": "Beat1_Innenvolumen"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py",
+              "scene": "Beat2_Luftwechselrate"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py",
+              "scene": "Beat3_Volumenstrom"
+            }
+          ]
+        },
+        {
+          "scene": "Ventilation_03_WaermestromLuft",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+              "scene": "Beat1_Luftwaerme"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+              "scene": "Beat2_SensibleWaerme"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+              "scene": "Beat3_LatenteLast"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+              "scene": "Beat4_WinterUndSommer"
+            }
+          ]
+        },
+        {
+          "scene": "Ventilation_04_NatuerlicheLueftung",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+              "scene": "Beat1_Fensterregeln"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+              "scene": "Beat2_StossOderKipp"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+              "scene": "Beat3_Querlueftung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+              "scene": "Beat4_Auftrieb"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+              "scene": "Beat5_Nachtlueftung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+              "scene": "Beat6_GrenzenDerFreienLueftung"
+            }
+          ]
+        },
+        {
+          "scene": "Ventilation_05_MechanischeLueftung",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+              "scene": "Beat1_Grundtypen"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+              "scene": "Beat2_Waermerueckgewinnung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+              "scene": "Beat3_Anlagenvergleich"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+              "scene": "Beat4_Kanalquerschnitt"
+            }
+          ]
+        },
+        {
+          "scene": "Ventilation_06_Uebergabe",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py",
+              "scene": "Beat1_Zusammenfassung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py",
+              "scene": "Beat2_UebergabeHeizungKuehlung"
+            }
+          ]
+        }
+      ],
+      "output": "Full_Ventilation"
+    },
+    {
+      "id": "heating",
+      "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py",
+      "playlist": "HEATING_PLAYLIST",
+      "intro": {
+        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
+        "scene": "Demo_Intro_Heizlast"
+      },
+      "chapters": [
+        {
+          "scene": "Heating_01_Introduction",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat1_DreiWegeDerWaerme"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat2_Waermeleitung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat3_Konvektion"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat4_Strahlung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat5_Zusammenfassung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat6_VonWegenZuZahlen"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat7_Waermedurchlasswiderstand"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat8_UWert"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat9_WaermestromFormel"
+            }
+          ]
+        },
+        {
+          "scene": "Heating_02_Conduction",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+              "scene": "Beat1_MakroUndMikro"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+              "scene": "Beat2_RWert"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+              "scene": "Beat3_UWertUndGradient"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+              "scene": "Beat4_WattVergleich"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+              "scene": "Beat5_Gebaeudehuelle"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+              "scene": "Beat6_Waermebruecken"
+            }
+          ]
+        },
+        {
+          "scene": "Heating_03_Convection",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py",
+              "scene": "Beat1_LueftungImWinter"
+            }
+          ]
+        },
+        {
+          "scene": "Heating_04_InternalGains",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat1_WinterInterneGewinne"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat2_PersonenPhiP"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat3_GeraetePhiE"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat4_BeleuchtungPhiL"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat5_SummeUndDichte"
+            }
+          ]
+        },
+        {
+          "scene": "Heating_05_Solar",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat1_VerlustZuGewinn"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat2_BestrahlungUndFlaeche"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat3_GWert"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat4_SaisonaleWinkel"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat5_Verschattung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat6_Waermespeicherung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat7_SpeichermasseFormel"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat8_Hauptgleichung"
+            }
+          ]
+        },
+        {
+          "scene": "Heating_06_FinalCalculation",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "ReviewingHeatLosses"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "Scene2"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "ReviewingHeatGains"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "Scene4"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "UltimateEnergyBalance"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "AnlagenVerluste"
+            }
+          ]
+        }
+      ],
+      "output": "Full_Heating_Demand"
+    },
+    {
+      "id": "cooling",
+      "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py",
+      "playlist": "COOLING_PLAYLIST",
+      "intro": {
+        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
+        "scene": "Demo_Intro_Kuehllast"
+      },
+      "chapters": [
+        {
+          "scene": "Cooling_01_HeatingVsCooling",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
+              "scene": "Beat1_WinterGains"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
+              "scene": "Beat2_SummerOverheat"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
+              "scene": "Beat3_CoolingSystem"
+            }
+          ]
+        },
+        {
+          "scene": "Cooling_02_InternalGains",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat1_OfficeRoom"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat2_HumanFactor"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat3_DevicesLighting"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat4_CumulativeLoad"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py",
+              "scene": "Beat5_Mitigation"
+            }
+          ]
+        },
+        {
+          "scene": "Cooling_03_TransmissionHumidity",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+              "scene": "Beat1_TransmissionOpaque"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+              "scene": "Beat2_TimeLag"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+              "scene": "Beat3_LueftungslastImSommer"
+            }
+          ]
+        },
+        {
+          "scene": "Cooling_04_SolarRadiation",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+              "scene": "Beat1_SolarIrradiance"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+              "scene": "Beat2_FrameFactor"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+              "scene": "Beat3_ShadingFactor"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+              "scene": "Beat4_GlassTransmittance"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+              "scene": "Beat5_SolarCoolingLoad"
+            }
+          ]
+        },
+        {
+          "scene": "Cooling_05_Systemauslegung",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+              "scene": "Beat2_VolumeFlowEquation"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+              "scene": "Beat3_IsolateAirflow"
+            }
+          ]
+        },
+        {
+          "scene": "Cooling_06_Sommerstrategie",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+              "scene": "Beat1_LastZuerstSenken"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+              "scene": "Beat2_SorptionsKuehlung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+              "scene": "Beat3_KomfortStrategie"
+            }
+          ]
+        }
+      ],
+      "output": "Full_Cooling_Demand"
+    },
+    {
+      "id": "energy_balance",
+      "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py",
+      "playlist": "ENERGY_BALANCE_PLAYLIST",
+      "intro": {
+        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
+        "scene": "Demo_Intro_Energiebilanz"
+      },
+      "chapters": [
+        {
+          "scene": "EnergyBalance_01_Energiebilanz",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
+              "scene": "Beat1_Bilanzgrenze"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
+              "scene": "Beat2_Verlustseite"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
+              "scene": "Beat3_Gewinnseite"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
+              "scene": "Beat4_WinterUndSommer"
+            }
+          ]
+        },
+        {
+          "scene": "EnergyBalance_02_RegelwerkKlima",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py",
+              "scene": "Beat1_GEGundNormen"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py",
+              "scene": "Beat2_Monatsbilanz"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py",
+              "scene": "Beat3_Klimadaten"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py",
+              "scene": "Beat4_Gradtagszahl"
+            }
+          ]
+        },
+        {
+          "scene": "EnergyBalance_03_BedarfVsLeistung",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py",
+              "scene": "Beat1_LeistungUndEnergie"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py",
+              "scene": "Beat2_Normheizlast"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py",
+              "scene": "Beat3_Jahresdauerlinie"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py",
+              "scene": "Beat4_RichtigAuslegen"
+            }
+          ]
+        },
+        {
+          "scene": "EnergyBalance_04_NutzZuEndenergie",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
+              "scene": "Beat1_Verlustkette"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
+              "scene": "Beat2_UebergabeVerteilungSpeicherung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
+              "scene": "Beat3_Erzeugung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
+              "scene": "Beat4_Anlagenaufwandszahl"
+            }
+          ]
+        },
+        {
+          "scene": "EnergyBalance_05_Primaerenergie",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py",
+              "scene": "Beat1_DreiBilanzgrenzen"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py",
+              "scene": "Beat2_Primaerenergiefaktor"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py",
+              "scene": "Beat3_Rechenbeispiel"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py",
+              "scene": "Beat4_Referenzgebaeude"
+            }
+          ]
+        },
+        {
+          "scene": "EnergyBalance_06_Energieausweis",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py",
+              "scene": "Beat1_BedarfVsVerbrauch"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py",
+              "scene": "Beat2_DieSkala"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py",
+              "scene": "Beat3_PflichtangabenUndFolgen"
+            }
+          ]
+        },
+        {
+          "scene": "EnergyBalance_07_TheorieVsPraxis",
+          "segments": [
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py",
+              "scene": "Beat1_BerechnungVsAbrechnung"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py",
+              "scene": "Beat2_HydraulischerAbgleich"
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py",
+              "scene": "Beat3_SerienAbschluss"
+            }
+          ]
+        }
+      ],
+      "output": "Full_EnergyBalance"
+    }
+  ]
+}

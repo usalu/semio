@@ -1,0 +1,11 @@
+import { execFile } from "node:child_process";
+import { writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+const runTool = promisify(execFile);
+const ticket = dirname(fileURLToPath(import.meta.url));
+const command = "Get-CimInstance Win32_Process -Filter \"Name = 'python.exe'\" | Where-Object { ($_.CommandLine -like '*render_videos.py*' -and $_.CommandLine -like '*heating*') -or $_.CommandLine -like '*full_heating_video.py*' } | Select-Object ProcessId, ParentProcessId, CommandLine | ConvertTo-Json -Compress";
+const output = (await runTool("powershell", ["-NoProfile", "-Command", command], { encoding: "utf8" })).stdout;
+await writeFile(join(ticket, "🗑️generated/heating-processes.json"), output);
+console.log("[DEBUG] Heating process inventory:", output);

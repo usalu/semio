@@ -8665,6 +8665,439 @@
       "emoji": "⚖️",
       "slugPattern": "^policy$",
       "allowEmojiOnly": false
+    },
+    "teaching-authoring": {
+      "emoji": "🏗️",
+      "slugPattern": "^authoring$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-authoring-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-authoring"
+      ]
+    },
+    "teaching-energy-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-concepts": {
+      "emoji": "📖️",
+      "slugPattern": "^concepts$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy"
+      ]
+    },
+    "teaching-authoring-visuals": {
+      "emoji": "🎨️",
+      "slugPattern": "^visuals$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-authoring"
+      ]
+    },
+    "teaching-clip-runtime": {
+      "emoji": "⚙️",
+      "slugPattern": "^runtime$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-authoring-clip"
+      ]
+    },
+    "teaching-clip-render": {
+      "emoji": "🖌️",
+      "slugPattern": "^render$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-authoring-clip"
+      ]
+    },
+    "teaching-clip-intro": {
+      "emoji": "👋️",
+      "slugPattern": "^intro$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-energy-clip"
+      ]
+    },
+    "teaching-clip-institution": {
+      "emoji": "🏰️",
+      "slugPattern": "^institution$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-clip-intro"
+      ]
+    },
+    "teaching-physics-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-physics"
+      ]
+    },
+    "teaching-clip-chapter-fundamentals": {
+      "emoji": "🧲️",
+      "slugPattern": "^fundamentals$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-physics-clip",
+        "teaching-heating-clip"
+      ]
+    },
+    "teaching-ventilation-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation"
+      ]
+    },
+    "teaching-clip-chapter-need": {
+      "emoji": "❓️",
+      "slugPattern": "^need$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation-clip"
+      ]
+    },
+    "teaching-clip-chapter-volume": {
+      "emoji": "📦️",
+      "slugPattern": "^volume$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation-clip"
+      ]
+    },
+    "teaching-clip-chapter-heat-flow": {
+      "emoji": "🌡️",
+      "slugPattern": "^heat-flow$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation-clip"
+      ]
+    },
+    "teaching-clip-chapter-natural": {
+      "emoji": "🪟️",
+      "slugPattern": "^natural$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation-clip"
+      ]
+    },
+    "teaching-clip-chapter-mechanical": {
+      "emoji": "⚙️",
+      "slugPattern": "^mechanical$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation-clip"
+      ]
+    },
+    "teaching-clip-chapter-handoff": {
+      "emoji": "🤝️",
+      "slugPattern": "^handoff$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-ventilation-clip"
+      ]
+    },
+    "teaching-heating-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-heating"
+      ]
+    },
+    "teaching-clip-chapter-conduction": {
+      "emoji": "🧱️",
+      "slugPattern": "^conduction$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-heating-clip"
+      ]
+    },
+    "teaching-clip-chapter-convection": {
+      "emoji": "🌬️",
+      "slugPattern": "^convection$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-heating-clip"
+      ]
+    },
+    "teaching-clip-chapter-internal-gains": {
+      "emoji": "👥️",
+      "slugPattern": "^internal-gains$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-heating-clip",
+        "teaching-cooling-clip"
+      ]
+    },
+    "teaching-clip-chapter-solar-gains": {
+      "emoji": "☀️",
+      "slugPattern": "^solar-gains$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-heating-clip"
+      ]
+    },
+    "teaching-clip-chapter-calculation": {
+      "emoji": "🧮️",
+      "slugPattern": "^calculation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-heating-clip"
+      ]
+    },
+    "teaching-cooling-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-cooling"
+      ]
+    },
+    "teaching-clip-chapter-heating-comparison": {
+      "emoji": "⚖️",
+      "slugPattern": "^heating-comparison$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-cooling-clip"
+      ]
+    },
+    "teaching-clip-chapter-transmission-humidity": {
+      "emoji": "💧️",
+      "slugPattern": "^transmission-humidity$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-cooling-clip"
+      ]
+    },
+    "teaching-clip-chapter-solar-radiation": {
+      "emoji": "☀️",
+      "slugPattern": "^solar-radiation$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-cooling-clip"
+      ]
+    },
+    "teaching-clip-chapter-system-sizing": {
+      "emoji": "📐️",
+      "slugPattern": "^system-sizing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-cooling-clip"
+      ]
+    },
+    "teaching-clip-chapter-summer-strategy": {
+      "emoji": "🌤️",
+      "slugPattern": "^summer-strategy$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-cooling-clip"
+      ]
+    },
+    "teaching-demand-clip": {
+      "emoji": "🎬️",
+      "slugPattern": "^clip$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand"
+      ]
+    },
+    "teaching-clip-chapter-recap": {
+      "emoji": "🔁️",
+      "slugPattern": "^recap$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-chapter-regulations": {
+      "emoji": "⚖️",
+      "slugPattern": "^regulations$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-chapter-demand-power": {
+      "emoji": "⚡️",
+      "slugPattern": "^demand-power$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-chapter-system-losses": {
+      "emoji": "♨️",
+      "slugPattern": "^system-losses$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-chapter-primary-energy": {
+      "emoji": "🏭️",
+      "slugPattern": "^primary-energy$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-chapter-certificate": {
+      "emoji": "🏷️",
+      "slugPattern": "^certificate$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-chapter-practice": {
+      "emoji": "🧪️",
+      "slugPattern": "^practice$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-demand-clip"
+      ]
+    },
+    "teaching-clip-composition": {
+      "emoji": "🏗️",
+      "slugPattern": "^composition$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-clip-chapter-fundamentals",
+        "teaching-clip-chapter-need",
+        "teaching-clip-chapter-volume",
+        "teaching-clip-chapter-heat-flow",
+        "teaching-clip-chapter-natural",
+        "teaching-clip-chapter-mechanical",
+        "teaching-clip-chapter-handoff",
+        "teaching-clip-chapter-conduction",
+        "teaching-clip-chapter-convection",
+        "teaching-clip-chapter-internal-gains",
+        "teaching-clip-chapter-solar-gains",
+        "teaching-clip-chapter-calculation",
+        "teaching-clip-chapter-heating-comparison",
+        "teaching-clip-chapter-transmission-humidity",
+        "teaching-clip-chapter-solar-radiation",
+        "teaching-clip-chapter-system-sizing",
+        "teaching-clip-chapter-summer-strategy",
+        "teaching-clip-chapter-recap",
+        "teaching-clip-chapter-regulations",
+        "teaching-clip-chapter-demand-power",
+        "teaching-clip-chapter-system-losses",
+        "teaching-clip-chapter-primary-energy",
+        "teaching-clip-chapter-certificate",
+        "teaching-clip-chapter-practice"
+      ]
+    },
+    "teaching-clip-speech": {
+      "emoji": "🔊️",
+      "slugPattern": "^speech$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-authoring",
+        "teaching-clip-intro",
+        "teaching-clip-chapter-fundamentals",
+        "teaching-clip-chapter-need",
+        "teaching-clip-chapter-volume",
+        "teaching-clip-chapter-heat-flow",
+        "teaching-clip-chapter-natural",
+        "teaching-clip-chapter-mechanical",
+        "teaching-clip-chapter-handoff",
+        "teaching-clip-chapter-conduction",
+        "teaching-clip-chapter-convection",
+        "teaching-clip-chapter-internal-gains",
+        "teaching-clip-chapter-solar-gains",
+        "teaching-clip-chapter-calculation",
+        "teaching-clip-chapter-heating-comparison",
+        "teaching-clip-chapter-transmission-humidity",
+        "teaching-clip-chapter-solar-radiation",
+        "teaching-clip-chapter-system-sizing",
+        "teaching-clip-chapter-summer-strategy",
+        "teaching-clip-chapter-recap",
+        "teaching-clip-chapter-regulations",
+        "teaching-clip-chapter-demand-power",
+        "teaching-clip-chapter-system-losses",
+        "teaching-clip-chapter-primary-energy",
+        "teaching-clip-chapter-certificate",
+        "teaching-clip-chapter-practice"
+      ]
+    },
+    "teaching-clip-timing": {
+      "emoji": "⏱️",
+      "slugPattern": "^timing$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-clip-chapter-fundamentals",
+        "teaching-clip-chapter-need",
+        "teaching-clip-chapter-volume",
+        "teaching-clip-chapter-heat-flow",
+        "teaching-clip-chapter-natural",
+        "teaching-clip-chapter-mechanical",
+        "teaching-clip-chapter-handoff",
+        "teaching-clip-chapter-conduction",
+        "teaching-clip-chapter-convection",
+        "teaching-clip-chapter-internal-gains",
+        "teaching-clip-chapter-solar-gains",
+        "teaching-clip-chapter-calculation",
+        "teaching-clip-chapter-heating-comparison",
+        "teaching-clip-chapter-transmission-humidity",
+        "teaching-clip-chapter-solar-radiation",
+        "teaching-clip-chapter-system-sizing",
+        "teaching-clip-chapter-summer-strategy",
+        "teaching-clip-chapter-recap",
+        "teaching-clip-chapter-regulations",
+        "teaching-clip-chapter-demand-power",
+        "teaching-clip-chapter-system-losses",
+        "teaching-clip-chapter-primary-energy",
+        "teaching-clip-chapter-certificate",
+        "teaching-clip-chapter-practice"
+      ]
+    },
+    "teaching-clip-trace": {
+      "emoji": "📍️",
+      "slugPattern": "^trace$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-clip-chapter-fundamentals",
+        "teaching-clip-chapter-need",
+        "teaching-clip-chapter-volume",
+        "teaching-clip-chapter-heat-flow",
+        "teaching-clip-chapter-natural",
+        "teaching-clip-chapter-mechanical",
+        "teaching-clip-chapter-handoff",
+        "teaching-clip-chapter-conduction",
+        "teaching-clip-chapter-convection",
+        "teaching-clip-chapter-internal-gains",
+        "teaching-clip-chapter-solar-gains",
+        "teaching-clip-chapter-calculation",
+        "teaching-clip-chapter-heating-comparison",
+        "teaching-clip-chapter-transmission-humidity",
+        "teaching-clip-chapter-solar-radiation",
+        "teaching-clip-chapter-system-sizing",
+        "teaching-clip-chapter-summer-strategy",
+        "teaching-clip-chapter-recap",
+        "teaching-clip-chapter-regulations",
+        "teaching-clip-chapter-demand-power",
+        "teaching-clip-chapter-system-losses",
+        "teaching-clip-chapter-primary-energy",
+        "teaching-clip-chapter-certificate",
+        "teaching-clip-chapter-practice",
+        "teaching-cooling-clip"
+      ]
     }
   },
   "_semanticDirectoryMemberKindsComment": "🧷️ Member kinds resolve a directory below their ownerKindIds (nearest context first): exact memberNames always win, otherwise the optional anchored memberSlugPattern admits any RGI emoji followed by a matching slug. Two pattern rows that match at the same nearest owner distance are directory-kind-ambiguous; scope their ownerKindIds apart instead of listing names. Structural semanticDirectoryKinds still win over both.",
@@ -13180,7 +13613,10 @@
         "🔥️heating",
         "❄️cooling",
         "📊️demand",
-        "🌬️ventilation"
+        "🌬️ventilation",
+        "🎬️clip",
+        "🏗️authoring",
+        "📖️concepts"
       ],
       "source": "registry"
     },
@@ -13193,7 +13629,8 @@
         "teaching-ventilation"
       ],
       "memberNames": [
-        "❓️quiz"
+        "❓️quiz",
+        "🎬️clip"
       ],
       "source": "registry"
     },
@@ -17518,6 +17955,152 @@
       "memberNames": [
         "4️⃣1.4",
         "7️⃣1.7"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-physics-clip": {
+      "ownerKindIds": [
+        "teaching-physics-clip"
+      ],
+      "memberNames": [
+        "🧲️fundamentals"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-ventilation-clip": {
+      "ownerKindIds": [
+        "teaching-ventilation-clip"
+      ],
+      "memberNames": [
+        "❓️need",
+        "📦️volume",
+        "🌡️heat-flow",
+        "🪟️natural",
+        "⚙️mechanical",
+        "🤝️handoff"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-heating-clip": {
+      "ownerKindIds": [
+        "teaching-heating-clip"
+      ],
+      "memberNames": [
+        "🧲️fundamentals",
+        "🧱️conduction",
+        "🌬️convection",
+        "👥️internal-gains",
+        "☀️solar-gains",
+        "🧮️calculation"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-cooling-clip": {
+      "ownerKindIds": [
+        "teaching-cooling-clip"
+      ],
+      "memberNames": [
+        "⚖️heating-comparison",
+        "👥️internal-gains",
+        "💧️transmission-humidity",
+        "☀️solar-radiation",
+        "📐️system-sizing",
+        "🌤️summer-strategy",
+        "📍️trace"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-demand-clip": {
+      "ownerKindIds": [
+        "teaching-demand-clip"
+      ],
+      "memberNames": [
+        "🔁️recap",
+        "⚖️regulations",
+        "⚡️demand-power",
+        "♨️system-losses",
+        "🏭️primary-energy",
+        "🏷️certificate",
+        "🧪️practice"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-authoring": {
+      "ownerKindIds": [
+        "teaching-authoring"
+      ],
+      "memberNames": [
+        "🎬️clip",
+        "🔤️fonts",
+        "🎨️visuals",
+        "🔊️speech",
+        "📦️packages"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-authoring-clip": {
+      "ownerKindIds": [
+        "teaching-authoring-clip"
+      ],
+      "memberNames": [
+        "⚙️runtime",
+        "🖌️render",
+        "🧬️schema",
+        "🧪️tests"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-energy-clip": {
+      "ownerKindIds": [
+        "teaching-energy-clip"
+      ],
+      "memberNames": [
+        "👋️intro"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-clip-intro": {
+      "ownerKindIds": [
+        "teaching-clip-intro"
+      ],
+      "memberNames": [
+        "🔊️speech",
+        "🏰️institution"
+      ],
+      "source": "registry"
+    },
+    "members-of-teaching-clip-chapters": {
+      "ownerKindIds": [
+        "teaching-clip-chapter-fundamentals",
+        "teaching-clip-chapter-need",
+        "teaching-clip-chapter-volume",
+        "teaching-clip-chapter-heat-flow",
+        "teaching-clip-chapter-natural",
+        "teaching-clip-chapter-mechanical",
+        "teaching-clip-chapter-handoff",
+        "teaching-clip-chapter-conduction",
+        "teaching-clip-chapter-convection",
+        "teaching-clip-chapter-internal-gains",
+        "teaching-clip-chapter-solar-gains",
+        "teaching-clip-chapter-calculation",
+        "teaching-clip-chapter-heating-comparison",
+        "teaching-clip-chapter-transmission-humidity",
+        "teaching-clip-chapter-solar-radiation",
+        "teaching-clip-chapter-system-sizing",
+        "teaching-clip-chapter-summer-strategy",
+        "teaching-clip-chapter-recap",
+        "teaching-clip-chapter-regulations",
+        "teaching-clip-chapter-demand-power",
+        "teaching-clip-chapter-system-losses",
+        "teaching-clip-chapter-primary-energy",
+        "teaching-clip-chapter-certificate",
+        "teaching-clip-chapter-practice"
+      ],
+      "memberNames": [
+        "🏗️composition",
+        "🔊️speech",
+        "⏱️timing",
+        "📍️trace"
       ],
       "source": "registry"
     }

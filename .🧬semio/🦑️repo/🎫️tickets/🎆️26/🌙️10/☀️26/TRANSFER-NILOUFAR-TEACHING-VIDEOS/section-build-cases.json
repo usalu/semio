@@ -1,0 +1,308 @@
+[
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+    "names": [
+      "Beat1_EnergieImAlltag",
+      "Beat2_Leistung",
+      "Beat3_Energieerhaltung",
+      "Beat4_Waermepumpe",
+      "Beat5_Strahlung",
+      "Beat6_ThermischeMasse",
+      "Beat7_SensibelLatent",
+      "Beat8_Zusammenfassung"
+    ],
+    "output": "Full_Physical_Fundamentals_1080p60.mp4",
+    "intro": true
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py",
+    "names": [
+      "Beat1_Lueftungsbedarf",
+      "Beat2_Lueftungsweg",
+      "Beat3_Fahrplan"
+    ],
+    "output": "Full_Ventilation_Chapter1_Warum_Lueften.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py",
+    "names": [
+      "Beat1_Innenvolumen",
+      "Beat2_Luftwechselrate",
+      "Beat3_Volumenstrom"
+    ],
+    "output": "Full_Chapter2_Luftmenge.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+    "names": [
+      "Beat1_Luftwaerme",
+      "Beat2_SensibleWaerme",
+      "Beat3_LatenteLast",
+      "Beat4_WinterUndSommer"
+    ],
+    "output": "Full_Chapter3_Waermestrom_Luft.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "names": [
+      "Beat1_Fensterregeln",
+      "Beat2_StossOderKipp",
+      "Beat3_Querlueftung",
+      "Beat4_Auftrieb",
+      "Beat5_Nachtlueftung",
+      "Beat6_GrenzenDerFreienLueftung"
+    ],
+    "output": "Full_Chapter4_Natuerliche_Lueftung.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "names": [
+      "Beat1_Grundtypen",
+      "Beat2_Waermerueckgewinnung",
+      "Beat3_Anlagenvergleich",
+      "Beat4_Kanalquerschnitt"
+    ],
+    "output": "Full_Chapter5_Mechanische_Lueftung.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py",
+    "names": [
+      "Beat1_Zusammenfassung",
+      "Beat2_UebergabeHeizungKuehlung"
+    ],
+    "output": "Full_Ventilation_Chapter6_Uebergabe.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+    "names": [
+      "Beat1_DreiWegeDerWaerme",
+      "Beat2_Waermeleitung",
+      "Beat3_Konvektion",
+      "Beat4_Strahlung",
+      "Beat5_Zusammenfassung",
+      "Beat6_VonWegenZuZahlen",
+      "Beat7_Waermedurchlasswiderstand",
+      "Beat8_UWert",
+      "Beat9_WaermestromFormel"
+    ],
+    "output": "Full_Modul1_Einfuehrung.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py",
+    "names": [
+      "Beat1_MakroUndMikro",
+      "Beat2_RWert",
+      "Beat3_UWertUndGradient",
+      "Beat4_WattVergleich",
+      "Beat5_Gebaeudehuelle",
+      "Beat6_Waermebruecken"
+    ],
+    "output": "Full_Modul2_Waermeleitung.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py",
+    "names": [
+      "Beat1_LueftungImWinter"
+    ],
+    "output": "Full_Modul3_LueftungImWinter.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py",
+    "names": [
+      "Beat1_WinterInterneGewinne",
+      "Beat2_PersonenPhiP",
+      "Beat3_GeraetePhiE",
+      "Beat4_BeleuchtungPhiL",
+      "Beat5_SummeUndDichte"
+    ],
+    "output": "Full_Modul4_InterneGewinne.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "names": [
+      "Beat1_VerlustZuGewinn",
+      "Beat2_BestrahlungUndFlaeche",
+      "Beat3_GWert",
+      "Beat4_SaisonaleWinkel",
+      "Beat5_Verschattung",
+      "Beat6_Waermespeicherung",
+      "Beat7_SpeichermasseFormel",
+      "Beat8_Hauptgleichung"
+    ],
+    "output": "Full_Modul5_SolarerWaermegewinn.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py",
+    "names": [
+      "Beat1_WinterGains",
+      "Beat2_SummerOverheat",
+      "Beat3_CoolingSystem"
+    ],
+    "output": "Full_Cooling_01_HeatingVsCooling_1080p60.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py",
+    "names": [
+      "Beat1_OfficeRoom",
+      "Beat2_HumanFactor",
+      "Beat3_DevicesLighting",
+      "Beat4_CumulativeLoad",
+      "Beat5_Mitigation"
+    ],
+    "output": "Full_Scene2_Internal_Gains.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+    "names": [
+      "Beat1_TransmissionOpaque",
+      "Beat2_TimeLag",
+      "Beat3_LueftungslastImSommer"
+    ],
+    "output": "Full_Scene3_Transmission_Humidity.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+    "names": [
+      "Beat1_SolarIrradiance",
+      "Beat2_FrameFactor",
+      "Beat3_ShadingFactor",
+      "Beat4_GlassTransmittance",
+      "Beat5_SolarCoolingLoad"
+    ],
+    "output": "Full_Scene4_Solar_Radiation.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+    "names": [
+      "Beat2_VolumeFlowEquation",
+      "Beat3_IsolateAirflow"
+    ],
+    "output": "Full_Cooling_05_Systemauslegung_1080p60.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "names": [
+      "Beat1_LastZuerstSenken",
+      "Beat2_SorptionsKuehlung",
+      "Beat3_KomfortStrategie"
+    ],
+    "output": "Full_Scene6_Sommerstrategie.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py",
+    "names": [
+      "Beat1_Bilanzgrenze",
+      "Beat2_Verlustseite",
+      "Beat3_Gewinnseite",
+      "Beat4_WinterUndSommer"
+    ],
+    "output": "Full_Chapter1_Recap_Heizen_Kuehlen.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py",
+    "names": [
+      "Beat1_GEGundNormen",
+      "Beat2_Monatsbilanz",
+      "Beat3_Klimadaten",
+      "Beat4_Gradtagszahl"
+    ],
+    "output": "Full_Chapter2_Regulatory_Framework.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py",
+    "names": [
+      "Beat1_LeistungUndEnergie",
+      "Beat2_Normheizlast",
+      "Beat3_Jahresdauerlinie",
+      "Beat4_RichtigAuslegen"
+    ],
+    "output": "Full_Chapter3_Bedarf_vs_Leistung.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
+    "names": [
+      "Beat1_Verlustkette",
+      "Beat2_UebergabeVerteilungSpeicherung",
+      "Beat3_Erzeugung",
+      "Beat4_Anlagenaufwandszahl"
+    ],
+    "output": "Full_Chapter4_System_Losses.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py",
+    "names": [
+      "Beat1_DreiBilanzgrenzen",
+      "Beat2_Primaerenergiefaktor",
+      "Beat3_Rechenbeispiel",
+      "Beat4_Referenzgebaeude"
+    ],
+    "output": "Full_Chapter5_Primary_Energy.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py",
+    "names": [
+      "Beat1_BedarfVsVerbrauch",
+      "Beat2_DieSkala",
+      "Beat3_PflichtangabenUndFolgen"
+    ],
+    "output": "Full_Chapter6_Energieausweis.mp4",
+    "intro": false
+  },
+  {
+    "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🏗️composition/🐍️.py",
+    "scene": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py",
+    "names": [
+      "Beat1_BerechnungVsAbrechnung",
+      "Beat2_HydraulischerAbgleich",
+      "Beat3_SerienAbschluss"
+    ],
+    "output": "Full_Chapter7_Praxis_vs_Theorie.mp4",
+    "intro": false
+  }
+]

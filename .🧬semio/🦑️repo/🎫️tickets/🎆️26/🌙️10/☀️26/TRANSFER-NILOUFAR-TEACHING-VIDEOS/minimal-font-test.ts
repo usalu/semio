@@ -1,0 +1,18 @@
+import { spawn } from "node:child_process";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+const ticket = dirname(fileURLToPath(import.meta.url));
+const generated = join(ticket, "🗑️generated");
+const output = join(generated, "minimal-font-test");
+mkdirSync(output, { recursive: true });
+const env = { ...process.env, UV_CACHE_DIR: join(generated, "uv"), UV_PROJECT_ENVIRONMENT: join(generated, "s"), PYTHONUTF8: "1", PYTHONIOENCODING: "utf-8", PYTHONDONTWRITEBYTECODE: "1", SEMIO_TEACHING_OUTPUT_ROOT: output, SEMIO_TEACHING_CACHE_DIR: join(output, "fonts"), TEMP: output, TMP: output };
+delete env.SEMIO_FONTTOOLS_TEST_PATH;
+delete env.PYTHONPATH;
+const check = "import importlib.metadata as m,json,os,sys,unittest; print('[DEBUG] '+json.dumps({'executable':sys.executable,'prefix':sys.prefix,'fonttools':m.version('fonttools'),'manim':m.version('manim'),'fonttools_path_override':os.environ.get('SEMIO_FONTTOOLS_TEST_PATH'),'sys_path':sys.path},ensure_ascii=False)); sys.path.insert(0,'C:/git/semio/🎓️teaching'); suite=unittest.defaultTestLoader.loadTestsFromName('test_manim_fonts'); result=unittest.TextTestRunner(verbosity=2).run(suite); sys.exit(0 if result.wasSuccessful() and result.testsRun==7 and not result.skipped else 1)";
+const args = ["run", "--project", "C:/git/semio/🎓️teaching", "--python", "3.12", "--group", "test", "--frozen", "python", "-c", check];
+const child = spawn(process.argv[2] || "uv", args, { env, windowsHide: true });
+let log = "";
+for (const stream of [child.stdout, child.stderr]) stream.on("data", chunk => { const text = chunk.toString(); log += text; process.stdout.write(text); });
+child.on("error", error => { console.error("[DEBUG]", error.message); process.exitCode = 1; });
+child.on("exit", code => { writeFileSync(join(output, "test.log"), log); process.exitCode = code ?? 1; });

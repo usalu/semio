@@ -1,0 +1,14 @@
+import { spawn } from "node:child_process";
+import { createWriteStream, mkdirSync } from "node:fs";
+import { join } from "node:path";
+const generated=join(import.meta.dir,"🗑️generated");
+const output=join(generated,"taxonomy-render");mkdirSync(output,{recursive:true});
+const log=createWriteStream(join(output,"controller.log"),{flags:"a"});
+const script="C:/git/semio/🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py";
+const args=[script,"--quality","l","--fps","5","--resolution","320,180","--jobs","14","--force","--output-root",output,"--no-play"];
+const child=spawn(join(generated,"v/Scripts/python.exe"),args,{env:{...process.env,PYTHONUTF8:"1",PYTHONIOENCODING:"utf-8",PYTHONDONTWRITEBYTECODE:"1",SEMIO_TEACHING_OUTPUT_ROOT:output,SEMIO_TEACHING_CACHE_DIR:join(generated,"fonts")},windowsHide:true});
+let tail="";for(const stream of [child.stdout,child.stderr])stream.on("data",chunk=>{log.write(chunk);tail=(tail+chunk.toString()).slice(-2500);for(const line of chunk.toString().split(/[\r\n]+/))if(line.startsWith("[segment]")||line.startsWith("[video]")||line.startsWith("[compose]")||line.startsWith("[DEBUG]")||line.includes("Traceback")||line.includes("Error:"))console.log(line);});
+for(const signal of ["SIGINT","SIGTERM"] as const)process.on(signal,()=>{if(child.pid)spawn("taskkill",["/PID",String(child.pid),"/T","/F"],{stdio:"ignore",windowsHide:true});});
+child.on("error",error=>{console.error("[DEBUG]",error);process.exitCode=1;});
+child.on("close",code=>{log.end();console.log("[DEBUG] taxonomy render exit",code,"PID",child.pid);if(code)console.log(tail);process.exitCode=code??1;});
+console.log("[DEBUG] Stable taxonomy render launched PID",child.pid,"jobs14; all117 units");

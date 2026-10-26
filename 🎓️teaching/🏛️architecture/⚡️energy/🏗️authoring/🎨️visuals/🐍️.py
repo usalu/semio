@@ -1,0 +1,2462 @@
+"""🎨 Shared Manim helpers for Cooling/Heating tutorials.
+
+Palette, pedagogy visuals, the dedicated formula panel, and narration timing —
+the single source every scene imports from instead of re-declaring its own.
+Radiation = waves, convection = air streams, watt values get everyday anchors,
+formula symbols appear by morphing physical objects (never as orphan text),
+and every formula lives in the one boxed panel with its parameters highlighted
+in the order the narration explains them.
+"""
+
+from __future__ import annotations
+
+import importlib
+import sys
+from pathlib import Path
+
+_WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
+if str(_WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_WORKSPACE_ROOT))
+
+import numpy as np
+
+#region Palette
+# The single source of truth — scenes import these, never copy-paste the block.
+P_DEEP_DARK = "#0B0C10"
+P_WHITE = "#E0E6ED"
+P_CYAN = "#66FCF1"
+P_TEAL = "#45A29E"
+P_ORANGE = "#FFAAA5"
+P_YELLOW = "#FFE66D"
+P_RED = "#FF6B6B"
+P_BLUE = "#4D96FF"
+P_GREEN = "#CAFFBF"
+#endregion
+
+
+#region Pastel palette
+# Soft companions of the base palette for series that want a calm, harmonious
+# look (Heating). Same hue roles as the base names — warm, cold, sun, air — at
+# lower saturation, so one meaning keeps one colour across every scene.
+PASTEL_WHITE = "#FFFFFF"
+PASTEL_RED = "#EFA9A3"
+PASTEL_ORANGE = "#F3C49F"
+PASTEL_YELLOW = "#F2DFA2"
+PASTEL_GREEN = "#B9DCB3"
+PASTEL_TEAL = "#93C6BC"
+PASTEL_CYAN = "#AED9DF"
+PASTEL_BLUE = "#A9C3E6"
+PASTEL_PURPLE = "#C8B8E2"
+PASTEL_PINK = "#F0BCD0"
+PASTEL_GREY = "#9AA2AC"
+#endregion
+
+
+#region Layout zones
+# Three fixed horizontal bands every beat respects, top to bottom: the title
+# block, free content, then formula_panel and caption_bar. Beats run their
+# scaffold through fit_band() so a label can never drift into a reserved zone —
+# which is what stops the "text printed on the room outline" class of bug that
+# hand-tuned per-beat coordinates kept reintroducing.
+SAFE_TOP = 2.58
+# A two-line caption_bar (center-aligned, fixed CAPTION_LINE_BUFF) reaches up to
+# y ≈ -2.66, so the floor clears the taller of the two cases rather than
+# whichever caption happens to be on screen.
+SAFE_BOTTOM = -2.60
+SAFE_BOTTOM_FORMULA = -1.66
+SAFE_LEFT = -6.80
+SAFE_RIGHT = 6.80
+
+
+def fit_band(group, *, top: float = SAFE_TOP, bottom: float = SAFE_BOTTOM):
+    """📏 Pull a scaffold back inside the free band — a no-op when it already fits."""
+    from manim import DOWN, UP
+
+    band = top - bottom
+    if group.height > band:
+        group.scale(band / group.height)
+    if group.width > (SAFE_RIGHT - SAFE_LEFT):
+        group.scale((SAFE_RIGHT - SAFE_LEFT) / group.width)
+    overshoot = group.get_top()[1] - top
+    if overshoot > 0:
+        group.shift(DOWN * overshoot)
+    undershoot = bottom - group.get_bottom()[1]
+    if undershoot > 0:
+        group.shift(UP * undershoot)
+    return group
+#endregion
+
+
+#region Radiation waves
+def radiation_wave(
+    origin,
+    *,
+    x_offset: float = 0.0,
+    height: float = 0.85,
+    color: str = P_ORANGE,
+    stroke_width: float = 2.0,
+    opacity: float = 0.85,
+    cycles: float = 2.2,
+):
+    """〰️ Sine-shaped radiation plume rising (or falling if ``height`` < 0) from ``origin``."""
+    from manim import VMobject
+
+    n = 28
+    pts = []
+    for i in range(n):
+        t = i / (n - 1)
+        y = t * height
+        x = x_offset + 0.055 * np.sin(t * (2 * np.pi) * cycles)
+        pts.append(np.array(origin, dtype=float) + np.array([x, y, 0.0]))
+    wave = VMobject(color=color, stroke_width=stroke_width, stroke_opacity=opacity)
+    wave.set_points_smoothly(pts)
+    return wave
+
+
+def radiation_waves(
+    origin,
+    *,
+    n: int = 4,
+    color: str = P_ORANGE,
+    height: float = 0.95,
+    x_spread: float = 0.28,
+    stroke_width: float = 2.0,
+):
+    """〰️ Bundle of radiation plumes for Strahlung."""
+    from manim import VGroup
+
+    if n <= 1:
+        offsets = [0.0]
+    else:
+        offsets = np.linspace(-x_spread / 2, x_spread / 2, n)
+    return VGroup(*[
+        radiation_wave(origin, x_offset=float(x), height=height, color=color, stroke_width=stroke_width)
+        for x in offsets
+    ])
+
+
+def solar_wave_ray(start, end, *, color: str = P_YELLOW, stroke_width: float = 2.4, amp: float = 0.07, cycles: float = 3.0):
+    """☀️ Wavy solar radiation segment from sun toward a surface (not a straight line)."""
+    from manim import VMobject
+
+    start = np.array(start, dtype=float)
+    end = np.array(end, dtype=float)
+    direction = end - start
+    length = float(np.linalg.norm(direction[:2]))
+    if length < 1e-6:
+        length = 1.0
+    unit = direction / length
+    normal = np.array([-unit[1], unit[0], 0.0])
+    n = 36
+    pts = []
+    for i in range(n):
+        t = i / (n - 1)
+        pts.append(start + unit * (t * length) + normal * (amp * np.sin(t * (2 * np.pi) * cycles)))
+    ray = VMobject(color=color, stroke_width=stroke_width, stroke_opacity=0.9)
+    ray.set_points_smoothly(pts)
+    return ray
+
+
+def radiation_ray(start, end, *, color: str = P_YELLOW, stroke_width: float = 2.4):
+    """📏 Straight radiation ray with round caps — clean, parallel lines instead of a wave."""
+    from manim import CapStyleType, Line
+
+    return Line(np.array(start, dtype=float), np.array(end, dtype=float), color=color,
+                stroke_width=stroke_width, stroke_opacity=0.9).set_cap_style(CapStyleType.ROUND)
+#endregion
+
+
+#region Convection air stream
+def convection_stream(
+    start,
+    end,
+    *,
+    color: str = P_CYAN,
+    stroke_width: float = 2.4,
+    bend: float = 0.35,
+    n_ribbons: int = 3,
+    spread: float = 0.18,
+):
+    """🌬️ Curved air-stream ribbons for Konvektion / Zuluft (not particle dots alone)."""
+    from manim import VGroup, VMobject
+
+    start = np.array(start, dtype=float)
+    end = np.array(end, dtype=float)
+    mid = (start + end) / 2 + np.array([0.0, bend, 0.0])
+    direction = end - start
+    length = float(np.linalg.norm(direction[:2])) or 1.0
+    normal = np.array([-direction[1], direction[0], 0.0]) / length
+
+    ribbons = VGroup()
+    if n_ribbons <= 1:
+        offsets = [0.0]
+    else:
+        offsets = np.linspace(-spread / 2, spread / 2, n_ribbons)
+    for off in offsets:
+        shift = normal * float(off)
+        pts = [start + shift, mid + shift, end + shift]
+        ribbon = VMobject(color=color, stroke_width=stroke_width, stroke_opacity=0.85)
+        ribbon.set_points_as_corners(pts)
+        ribbon.make_smooth()
+        ribbons.add(ribbon)
+    return ribbons
+#endregion
+
+
+#region Respiration split
+def respiration_parts(mouth_pos, *, scale: float = 1.0):
+    """🫁 Atmung as sensible breath plume + latent moisture droplets."""
+    from manim import Dot, DOWN, RIGHT, UP, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    mouth = np.array(mouth_pos, dtype=float)
+    sens_waves = radiation_waves(
+        mouth + np.array([0.15 * scale, 0.05 * scale, 0.0]),
+        n=3,
+        color=P_RED,
+        height=0.55 * scale,
+        x_spread=0.2 * scale,
+        stroke_width=1.8,
+    )
+    sens_label = body_text("fühlbar", font_size=LABEL_FONT_SIZE, color=P_RED)
+    sens_label.next_to(sens_waves, UP, buff=0.08)
+
+    droplets = VGroup(*[
+        Dot(
+            mouth + np.array([0.35 * scale + 0.12 * i, 0.12 * scale - 0.08 * (i % 2), 0.0]),
+            radius=0.045 * scale,
+            color=P_BLUE,
+            fill_opacity=0.9,
+        )
+        for i in range(4)
+    ])
+    lat_label = body_text("latent", font_size=LABEL_FONT_SIZE, color=P_BLUE)
+    lat_label.next_to(droplets, RIGHT, buff=0.1)
+
+    return {
+        "sensible": sens_waves,
+        "sensible_label": sens_label,
+        "latent": droplets,
+        "latent_label": lat_label,
+        "group": VGroup(sens_waves, sens_label, droplets, lat_label),
+    }
+#endregion
+
+
+#region Watt anchors
+_WATT_DEVICES: dict[str, tuple[str, int, str]] = {
+    "laptop": ("Laptop", 60, P_CYAN),
+    "bulb": ("Glühbirne", 100, P_YELLOW),
+    "toaster": ("Toaster", 1000, P_ORANGE),
+    "vacuum": ("Staubsauger", 1400, P_TEAL),
+    "heater": ("Heizgerät", 2000, P_RED),
+}
+
+
+def _device_glyph(kind: str, color: str):
+    """🔌 Tiny line-art stand-in for an everyday watt reference."""
+    from manim import DOWN, LEFT, Line, RIGHT, Circle, Rectangle, RoundedRectangle, UP, VGroup
+
+    if kind == "laptop":
+        base = Rectangle(width=0.55, height=0.08, color=color, stroke_width=2)
+        screen = Rectangle(width=0.5, height=0.32, color=color, stroke_width=2)
+        screen.next_to(base, UP, buff=0)
+        return VGroup(base, screen)
+    if kind == "bulb":
+        glass = Circle(radius=0.16, color=color, stroke_width=2)
+        base = Rectangle(width=0.12, height=0.1, color=color, stroke_width=2)
+        base.next_to(glass, DOWN, buff=0)
+        return VGroup(glass, base)
+    if kind == "toaster":
+        body = RoundedRectangle(width=0.55, height=0.38, corner_radius=0.06, color=color, stroke_width=2)
+        slot1 = Line(UP * 0.08 + LEFT * 0.12, UP * 0.08 + RIGHT * 0.12, color=color, stroke_width=2).move_to(body.get_center() + UP * 0.06 + LEFT * 0.1)
+        slot2 = slot1.copy().shift(RIGHT * 0.2)
+        return VGroup(body, slot1, slot2)
+    if kind == "vacuum":
+        body = RoundedRectangle(width=0.42, height=0.32, corner_radius=0.08, color=color, stroke_width=2)
+        hose = Line(body.get_right(), body.get_right() + RIGHT * 0.35 + UP * 0.15, color=color, stroke_width=2.5)
+        return VGroup(body, hose)
+    body = RoundedRectangle(width=0.45, height=0.5, corner_radius=0.06, color=color, stroke_width=2)
+    fins = VGroup(*[
+        Line(LEFT * 0.12 + UP * (0.12 - 0.1 * i), RIGHT * 0.12 + UP * (0.12 - 0.1 * i), color=color, stroke_width=1.5)
+        for i in range(3)
+    ]).move_to(body.get_center())
+    return VGroup(body, fins)
+
+
+def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = None, color: str | None = None,
+                row: bool = False):
+    """🔌 Badge that grounds a power number against a familiar device — stacked, or in one ``row`` for wide gaps."""
+    from manim import DOWN, RIGHT, RoundedRectangle, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    name, device_w, device_color = _WATT_DEVICES.get(compare, _WATT_DEVICES["laptop"])
+    color = color or device_color
+    ratio = watts / device_w if device_w else 0.0
+    if ratio >= 0.85 and ratio <= 1.15:
+        compare_line = f"≈ 1× {name} ({device_w} W)"
+    elif ratio < 1:
+        compare_line = f"≈ {ratio:.1f}× {name} ({device_w} W)".replace(".", ",")
+    else:
+        compare_line = f"≈ {ratio:.0f}× {name} ({device_w} W)"
+
+    glyph = _device_glyph(compare if compare in _WATT_DEVICES else "laptop", color)
+    value = body_text(
+        f"{int(watts) if watts == int(watts) else watts} W",
+        font_size=FORMULA_FONT_SIZE,
+        color=color,
+    )
+    hint = body_text(compare_line, font_size=LABEL_FONT_SIZE, color=P_WHITE)
+    head = body_text(title, font_size=LABEL_FONT_SIZE, color=P_TEAL) if title else None
+    body_parts = [p for p in (head, value, glyph, hint) if p is not None]
+    body = VGroup(*body_parts).arrange(RIGHT, buff=0.32) if row else VGroup(*body_parts).arrange(DOWN, buff=0.12)
+    frame = RoundedRectangle(
+        width=max(2.8, body.width + 0.45),
+        height=body.height + 0.35,
+        corner_radius=0.12,
+        color=color,
+        stroke_width=2,
+        fill_color="#0B0C10",
+        fill_opacity=0.92,
+    )
+    body.move_to(frame.get_center())
+    return VGroup(frame, body)
+#endregion
+
+
+#region Particle flow
+# A drawn streamline says "air could move here"; only moving particles say
+# "air is moving now". Anything showing an exchange of air uses these.
+def smooth_path(points):
+    """〰️ Smooth polyline through ``points`` — the track particles travel along."""
+    from manim import TipableVMobject
+
+    path = TipableVMobject()
+    path.set_points_smoothly([np.array(p, dtype=float) for p in points])
+    return path
+
+
+def flow_guides(paths, color, *, opacity: float = 0.25, width: float = 2.0, tips: bool = True):
+    """🧭 Faint tipped streamlines so the route stays readable between particles."""
+    from manim import VGroup
+
+    lines = VGroup()
+    for path in paths:
+        guide = path.copy().set_stroke(color=color, width=width, opacity=opacity)
+        guide.set_fill(opacity=0)
+        if tips:
+            guide.add_tip(tip_length=0.17, tip_width=0.14)
+            guide.tip.set_fill(color=color, opacity=opacity + 0.3)
+            guide.tip.set_stroke(width=0)
+        lines.add(guide)
+    return lines
+
+
+def animate_flow(
+    scene, paths, color, *, run_time: float = 3.2, waves: int = 3, radius: float = 0.075,
+    cycles: float = 2.0, color_end=None, extra=None, streak: bool = True, closed: bool = False,
+):
+    """💨 Continuous particle stream along ``paths`` — particles fade in and out at the ends.
+
+    ``waves`` particles per path are spread evenly along it and looped ``cycles``
+    times, so the stream reads as continuous rather than as one object crossing.
+    With ``streak=True`` each particle is a short ellipse aimed along the path —
+    that reads as moving air, not as bouncing dots.
+    ``closed`` keeps opacity on a loop so the seam does not blink.
+    """
+    animate_flows(
+        scene,
+        [(paths, color, color_end)],
+        run_time=run_time,
+        waves=waves,
+        radius=radius,
+        cycles=cycles,
+        extra=extra,
+        streak=streak,
+        closed=closed,
+    )
+
+
+def animate_flows(
+    scene,
+    streams,
+    *,
+    run_time: float = 3.2,
+    waves: int = 5,
+    radius: float = 0.065,
+    cycles: float = 2.4,
+    extra=None,
+    streak: bool = True,
+    closed: bool = False,
+):
+    """💨 Several coloured streams at once — e.g. warm exhaust + cold intake exchanging.
+
+    ``streams`` is ``(paths, color)``, ``(paths, color, color_end)``,
+    ``(paths, color, color_end, closed)``, then optional ``cycles``,
+    ``color_by`` (``"t"`` along the path or ``"y"`` by height) and ``cool``
+    (shift the fill toward cold as the play progresses).
+    """
+    from manim import (
+        Dot, Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup,
+        interpolate_color, linear,
+    )
+
+    dots = VGroup()
+    meta = []
+    for entry in streams:
+        paths, color = entry[0], entry[1]
+        color_end = entry[2] if len(entry) > 2 else None
+        stream_closed = entry[3] if len(entry) > 3 else closed
+        stream_cycles = entry[4] if len(entry) > 4 else cycles
+        color_by = entry[5] if len(entry) > 5 else "t"
+        cool = entry[6] if len(entry) > 6 else False
+        start_c = ManimColor(color)
+        end_c = ManimColor(color_end) if color_end else start_c
+        cold_c = ManimColor(P_BLUE)
+        for path in paths:
+            y_bot = float(path.get_bottom()[1])
+            y_top = float(path.get_top()[1])
+            y_span = max(1e-6, y_top - y_bot)
+            for w in range(waves):
+                if streak:
+                    particle = Ellipse(
+                        width=radius * 2.8,
+                        height=radius * 1.15,
+                        color=color,
+                        stroke_width=0,
+                        fill_opacity=0.0,
+                    )
+                else:
+                    particle = Dot(radius=radius, color=color, stroke_width=0)
+                    particle.set_fill(color, opacity=0.0)
+                particle.move_to(path.point_from_proportion(0.0))
+                dots.add(particle)
+                meta.append((
+                    path, w / waves, start_c, end_c, streak, stream_closed,
+                    stream_cycles, color_by, y_bot, y_span, cool, cold_c,
+                ))
+
+    def update(group, alpha):
+        for particle, (
+            path, offset, start_c, end_c, is_streak, is_closed,
+            stream_cycles, color_by, y_bot, y_span, cool, cold_c,
+        ) in zip(group, meta):
+            t = (alpha * stream_cycles + offset) % 1.0
+            pos = path.point_from_proportion(t)
+            particle.move_to(pos)
+            fade = 1.0 if is_closed else min(1.0, t / 0.08, (1.0 - t) / 0.10)
+            if color_by == "y":
+                u = float(np.clip((pos[1] - y_bot) / y_span, 0.0, 1.0))
+                fill = interpolate_color(start_c, end_c, u)
+            else:
+                fill = interpolate_color(start_c, end_c, t)
+            if cool:
+                fill = interpolate_color(fill, cold_c, 0.55 * alpha)
+            if is_streak:
+                eps = 0.02
+                if is_closed:
+                    t0 = (t - eps) % 1.0
+                    t1 = (t + eps) % 1.0
+                else:
+                    t0 = max(0.0, t - eps)
+                    t1 = min(1.0, t + eps)
+                tangent = path.point_from_proportion(t1) - path.point_from_proportion(t0)
+                angle = float(np.arctan2(tangent[1], tangent[0]))
+                particle.set_fill(fill, opacity=max(0.0, fade * 0.92))
+                particle.set_angle(angle)
+            else:
+                particle.set_fill(fill, opacity=max(0.0, fade))
+
+    scene.add(dots)
+    anims = [UpdateFromAlphaFunc(dots, update)]
+    if extra:
+        anims.extend(extra)
+    scene.play(*anims, run_time=run_time, rate_func=linear)
+    scene.remove(dots, *dots)
+
+
+_FLOW_PHASE: dict = {}
+
+
+def flow_animation(streams, *, waves: int = 5, radius: float = 0.065, cycles: float = 2.4, streak: bool = True):
+    """💨 The particle stream of ``animate_flows`` as one animation — for ``hold_for(during=…)`` and mixed plays.
+
+    ``streams`` are ``(paths, colour)`` or ``(paths, colour, colour_end)``; particles are added when the
+    animation starts and removed when it ends. The phase of a stream (identified by its path objects) is carried
+    over to the next animation on the same paths, so consecutive plays continue the flow instead of restarting it.
+    """
+    from manim import Ellipse, ManimColor, UpdateFromAlphaFunc, VGroup, interpolate_color, linear
+
+    dots, meta = VGroup(), []
+    for entry in streams:
+        paths, color = entry[0], entry[1]
+        start_c = ManimColor(color)
+        end_c = ManimColor(entry[2]) if len(entry) > 2 and entry[2] else start_c
+        for path in paths:
+            for w in range(waves):
+                particle = Ellipse(width=radius * 2.8, height=radius * 1.15, color=color, stroke_width=0,
+                                   fill_opacity=0.0) if streak else None
+                if particle is None:
+                    from manim import Dot
+                    particle = Dot(radius=radius, color=color, stroke_width=0).set_fill(color, opacity=0.0)
+                particle.move_to(path.point_from_proportion(0.0))
+                dots.add(particle)
+                meta.append((path, w / waves, start_c, end_c))
+
+    all_paths = [path for entry in streams for path in entry[0]]
+    key = (tuple(id(path) for path in all_paths), waves)
+    phase = {"start": 0.0}
+
+    def update(group, alpha):
+        base = phase["start"] + alpha * cycles
+        for particle, (path, offset, start_c, end_c) in zip(group, meta):
+            t = (base + offset) % 1.0
+            particle.move_to(path.point_from_proportion(t))
+            fade = min(1.0, t / 0.08, (1.0 - t) / 0.10)
+            fill = interpolate_color(start_c, end_c, t)
+            if streak:
+                t0, t1 = max(0.0, t - 0.02), min(1.0, t + 0.02)
+                tangent = path.point_from_proportion(t1) - path.point_from_proportion(t0)
+                particle.set_angle(float(np.arctan2(tangent[1], tangent[0])))
+                particle.set_fill(fill, opacity=max(0.0, fade * 0.92))
+            else:
+                particle.set_fill(fill, opacity=max(0.0, fade))
+
+    class _Flow(UpdateFromAlphaFunc):
+        def begin(self):
+            phase["start"] = _FLOW_PHASE.get(key, (all_paths, 0.0))[1]
+            super().begin()
+
+        def finish(self):
+            _FLOW_PHASE[key] = (all_paths, (phase["start"] + cycles) % 1.0)
+            super().finish()
+
+    return _Flow(dots, update, remover=True, rate_func=linear)
+
+
+def animate_haze(
+    scene,
+    *,
+    x0: float,
+    x1: float,
+    y0: float,
+    y1: float,
+    run_time: float = 3.0,
+    n: int = 48,
+    color: str = P_ORANGE,
+    color_end: str = "#E8D5C4",
+    cycles: float = 1.6,
+    extra=None,
+    seed: int = 7,
+):
+    """🌫️ Free-floating heat/air haze — soft puffs with buoyancy wobble, no path rails.
+
+    Use this when particles-on-streamlines would read as beads on a wire. Each puff
+    drifts ``x0→x1`` with a gentle sine lift and fades at both ends.
+    """
+    from manim import Dot, ManimColor, TAU, UpdateFromAlphaFunc, VGroup, interpolate_color, linear
+
+    rng = np.random.default_rng(seed)
+    puffs = VGroup()
+    meta = []
+    start_c = ManimColor(color)
+    end_c = ManimColor(color_end)
+    for _ in range(n):
+        radius = float(rng.uniform(0.055, 0.13))
+        puff = Dot(radius=radius, color=color, stroke_width=0)
+        puff.set_fill(color, opacity=0.0)
+        puffs.add(puff)
+        meta.append({
+            "phase": float(rng.uniform(0.0, 1.0)),
+            "y_base": float(rng.uniform(y0, y1)),
+            "amp": float(rng.uniform(0.06, 0.22)),
+            "speed": float(rng.uniform(0.75, 1.25)),
+            "wobble": float(rng.uniform(1.2, 2.4)),
+        })
+
+    def update(group, alpha):
+        for puff, m in zip(group, meta):
+            t = (alpha * cycles * m["speed"] + m["phase"]) % 1.0
+            x = x0 + t * (x1 - x0)
+            y = m["y_base"] + m["amp"] * np.sin(t * TAU * m["wobble"] + m["phase"] * TAU)
+            puff.move_to(np.array([x, y, 0.0]))
+            fade = min(1.0, t / 0.10, (1.0 - t) / 0.14) * 0.78
+            puff.set_fill(interpolate_color(start_c, end_c, t), opacity=max(0.0, fade))
+
+    scene.add(puffs)
+    anims = [UpdateFromAlphaFunc(puffs, update)]
+    if extra:
+        anims.extend(extra)
+    scene.play(*anims, run_time=run_time, rate_func=linear)
+    scene.remove(puffs, *puffs)
+#endregion
+
+
+#region Gauges and annotation primitives
+def meter(label: str, *, length: float = 2.3, thickness: float = 0.52,
+          color: str = P_CYAN, vertical: bool = True) -> dict:
+    """📊 Track + fill gauge — ``set_meter`` drives the fill from a ``ValueTracker``.
+
+    Turns an invisible quantity (air change rate, driving pressure, remaining
+    load, heat flow) into a bar the viewer watches move, instead of a number
+    that silently swaps. Returns a dict so the fill stays addressable.
+    """
+    from manim import Rectangle, UP, VGroup
+
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    w, h = (thickness, length) if vertical else (length, thickness)
+    track = Rectangle(
+        width=w, height=h, color=P_WHITE, stroke_width=2,
+        fill_color=P_DEEP_DARK, fill_opacity=1.0,
+    )
+    fill = Rectangle(
+        width=w - 0.08, height=h - 0.08, stroke_width=0,
+        fill_color=color, fill_opacity=0.85,
+    ).move_to(track.get_center())
+    cap = body_text(label, font_size=LABEL_FONT_SIZE, color=color).next_to(track, UP, buff=0.14)
+    return {
+        "track": track, "fill": fill, "label": cap, "vertical": vertical,
+        "span": length - 0.08, "group": VGroup(track, fill, cap),
+    }
+
+
+def set_meter(gauge: dict, frac: float) -> None:
+    """📈 Resize a ``meter`` fill to ``frac`` of its track, anchored at the base."""
+    from manim import RIGHT, UP
+
+    span = max(0.004, float(frac) * gauge["span"])
+    fill, track = gauge["fill"], gauge["track"]
+    if gauge["vertical"]:
+        fill.stretch_to_fit_height(span)
+        fill.move_to(track.get_bottom() + UP * (span / 2 + 0.04))
+    else:
+        fill.stretch_to_fit_width(span)
+        fill.move_to(track.get_left() + RIGHT * (span / 2 + 0.04))
+
+
+def bind_meter(gauge: dict, tracker) -> dict:
+    """🔗 Let a ``ValueTracker`` drive a ``meter`` fill every frame."""
+    set_meter(gauge, tracker.get_value())
+    gauge["fill"].add_updater(lambda m: set_meter(gauge, tracker.get_value()))
+    return gauge
+
+
+def recolor_meter(gauge: dict, color: str, **kwargs):
+    """🎨 Animation that tints a bound ``meter`` fill without freezing its height.
+
+    ``fill.animate.set_fill`` interpolates the whole shape towards a snapshot taken at play time, which fights the
+    ``bind_meter`` updater and pins the bar until the animation ends. This only interpolates the colour.
+    """
+    from manim import ManimColor, UpdateFromAlphaFunc, interpolate_color
+
+    fill, start, end = gauge["fill"], gauge["fill"].get_fill_color(), ManimColor(color)
+    return UpdateFromAlphaFunc(fill, lambda m, a: m.set_fill(interpolate_color(start, end, a), opacity=0.85), **kwargs)
+
+
+def chip(text: str, color: str = P_TEAL, *, font_size: int | None = None):
+    """🔖 Single-line boxed label — flow-chart node and inline annotation."""
+    from manim import SurroundingRectangle, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    if font_size is None:
+        font_size = BODY_FONT_SIZE
+
+    label = body_text(text, font_size=font_size, color=color)
+    box = SurroundingRectangle(label, color=color, corner_radius=0.1, buff=0.14, stroke_width=1.8)
+    return VGroup(box, label)
+
+
+def dim_chip(boxed, opacity: float) -> list:
+    """🌑 Fade a ``chip`` — box stroke and label fill only.
+
+    Never routes through ``set_opacity``: that would give the box a fill it
+    never had, so restoring to 1.0 turns the outline into a solid block. Play
+    this *before* any ``Indicate`` on the same mobject — ``Indicate`` snapshots
+    the starting state and restores it, silently undoing a same-play change.
+    """
+    return [boxed[0].animate.set_stroke(opacity=opacity),
+            boxed[1].animate.set_fill(opacity=opacity)]
+
+
+def cross_mark(color: str = P_RED, size: float = 0.13):
+    """✖️ Negation mark drawn from lines — no glyph coverage to depend on."""
+    from manim import DOWN, LEFT, Line, RIGHT, UP, VGroup
+
+    return VGroup(
+        Line(LEFT * size + DOWN * size, RIGHT * size + UP * size, color=color, stroke_width=3),
+        Line(LEFT * size + UP * size, RIGHT * size + DOWN * size, color=color, stroke_width=3),
+    )
+
+
+def dim_arrow(start, end, color: str = P_YELLOW):
+    """📐 Dimension line with end ticks — reads as a measured span, not a stray line."""
+    from manim import DoubleArrow, LEFT, Line, RIGHT, VGroup
+
+    shaft = DoubleArrow(
+        np.array(start, dtype=float), np.array(end, dtype=float),
+        buff=0, color=color, stroke_width=3,
+        max_tip_length_to_length_ratio=0.07, tip_length=0.16,
+    )
+    ticks = VGroup(*[
+        Line(np.array(p, dtype=float) + LEFT * 0.13, np.array(p, dtype=float) + RIGHT * 0.13,
+             color=color, stroke_width=2)
+        for p in (start, end)
+    ])
+    return VGroup(shaft, ticks)
+#endregion
+
+
+#region Scene glyphs
+# The object vocabulary of the Physical Fundamentals video — house, room,
+# person, lamp, sun, rays, heat ripples, particle flow — shared so every series
+# draws the same things the same way.
+
+#region Particle flow with variable speed
+def color_ramp(stops):
+    """🎨 Piecewise colour ramp over ``u`` in [0, 1] — ``stops`` are ``(u, colour)``."""
+    from manim import ManimColor, interpolate_color
+
+    us = [s[0] for s in stops]
+    cols = [ManimColor(s[1]) for s in stops]
+
+    def color_at(u: float):
+        u = float(np.clip(u, 0.0, 1.0))
+        for i in range(len(us) - 1):
+            if us[i] <= u <= us[i + 1]:
+                f = (u - us[i]) / max(1e-9, us[i + 1] - us[i])
+                return interpolate_color(cols[i], cols[i + 1], f)
+        return cols[-1]
+
+    return color_at
+
+
+def paced_flow(scene, streams, *, run_time: float = 3.0, waves: int = 6, cycles: float = 2.0,
+               radius: float = 0.055, extra=None):
+    """🌀 Particles whose speed follows ``speed(i, u)`` along each path — continuity made visible.
+
+    ``streams`` holds ``(paths, colour, speed, colour_fn, closed)``, optionally followed by a per-stream particle
+    count; ``speed``, ``colour_fn`` and ``closed`` may be ``None``/``False``.
+    """
+    from manim import Dot, UpdateFromAlphaFunc, VGroup, linear
+
+    us = np.linspace(0.0, 1.0, 241)
+    dots, meta = VGroup(), []
+    for paths, color, speed, color_fn, closed, *count in streams:
+        n = count[0] if count else waves
+        for i, path in enumerate(paths):
+            g = np.array([max(1e-3, speed(i, u)) if speed else 1.0 for u in us])
+            tau = np.concatenate([[0.0], np.cumsum(0.5 * (1.0 / g[1:] + 1.0 / g[:-1]) * np.diff(us))])
+            tau /= tau[-1]
+            for w in range(n):
+                dot = Dot(radius=radius, color=color, stroke_width=0)
+                dot.set_fill(color, opacity=0.0)
+                dot.move_to(path.point_from_proportion(0.0))
+                dots.add(dot)
+                meta.append((path, tau, (w / n + 0.37 * i / n) % 1.0, color, color_fn, closed))
+
+    def update(group, alpha):
+        for dot, (path, tau, offset, color, color_fn, closed) in zip(group, meta):
+            t = (alpha * cycles + offset) % 1.0
+            u = float(np.interp(t, tau, us))
+            dot.move_to(path.point_from_proportion(u))
+            fade = 1.0 if closed else min(1.0, t / 0.06, (1.0 - t) / 0.08)
+            dot.set_fill(color_fn(u) if color_fn else color, opacity=max(0.0, fade))
+
+    scene.add(dots)
+    scene.play(UpdateFromAlphaFunc(dots, update), *(extra or []), run_time=run_time, rate_func=linear)
+    scene.remove(dots)
+#endregion
+
+
+#region Light beams and wave packets
+def beam(start, end, color=P_YELLOW, opacity: float = 0.85, width: float = 2.4):
+    """━ Straight light beam — sunlight arrives as parallel rays."""
+    from manim import Line
+
+    return Line(np.array(start, dtype=float), np.array(end, dtype=float), color=color, stroke_width=width,
+                stroke_opacity=opacity)
+
+
+def mirror(direction, surface_angle: float):
+    """🪞 Reflect a ray direction off a flat surface tilted by ``surface_angle`` radians."""
+    u = np.array([np.cos(surface_angle), np.sin(surface_angle), 0.0])
+    n = np.array([-u[1], u[0], 0.0])
+    return direction - 2.0 * float(np.dot(direction, n)) * n
+
+
+def sun_rays(sun_c, glass_x: float, ys, land_y: float, *, gap: float = 0.5):
+    """☀️ Parallel straight sun rays aimed through a glazing at ``glass_x`` — bright outside, dimmer past the glass.
+
+    Every ray shares the direction from the sun to the middle hit, starts ``gap`` clear of the sun's centre and
+    lands on the surface at ``land_y``.
+    """
+    from manim import VGroup
+
+    sun_c = np.array(sun_c, dtype=float)
+    hits = [np.array([glass_x, y, 0.0]) for y in ys]
+    aim = np.mean(hits, axis=0) - sun_c
+    aim /= np.linalg.norm(aim)
+    starts = [h - aim * (float(np.dot(h - sun_c, aim)) - gap) for h in hits]
+    lands = [h + aim * (land_y - h[1]) / aim[1] for h in hits]
+    out = VGroup(*[radiation_ray(s, h) for s, h in zip(starts, hits)])
+    inside = VGroup(*[radiation_ray(h, p, stroke_width=2.0).set_stroke(opacity=0.5) for h, p in zip(hits, lands)])
+    return {"out": out, "in": inside, "group": VGroup(out, inside), "starts": starts, "hits": hits, "lands": lands}
+
+
+def shine(rays, *, lag: float = 0.2):
+    """🔦 Draw each ray from the sun to the glass, then on through it."""
+    from manim import Create, LaggedStart, Succession, linear
+
+    return LaggedStart(*[Succession(Create(o, rate_func=linear), Create(i, rate_func=linear))
+                         for o, i in zip(rays["out"], rays["in"])], lag_ratio=lag)
+
+
+def ripples(centers, *, r_max: float = 0.8, rings: int = 3, cycles: float = 2.0, color=P_RED, down: bool = False,
+            facing: float | None = None):
+    """🌡️ Diffuse long-wave emission — half-rings spread from warm surface points in every direction and fade.
+
+    ``down`` emits from a ceiling into the room below instead of from a floor into the room above;
+    ``facing`` (radians, 0 = right) points the half-rings off any wall or roof slope.
+    """
+    from manim import PI, Arc, UpdateFromAlphaFunc, VGroup, linear
+
+    centers = [np.array(c, dtype=float) for c in centers]
+    start = (facing - PI / 2) if facing is not None else (PI if down else 0.0)
+    arcs = VGroup(*[Arc(radius=0.05, start_angle=start, angle=PI, arc_center=c, color=color, stroke_width=2)
+                    for c in centers for _ in range(rings)])
+
+    def update(group, alpha):
+        ramp = min(1.0, alpha * 8, (1.0 - alpha) * 8)
+        for i, arc in enumerate(group):
+            u = (alpha * cycles + (i % rings) / rings) % 1.0
+            arc.become(Arc(radius=0.05 + r_max * u, start_angle=start, angle=PI, arc_center=centers[i // rings],
+                           color=color, stroke_width=2, stroke_opacity=0.65 * (1.0 - u) * ramp))
+
+    return UpdateFromAlphaFunc(arcs, update, remover=True, rate_func=linear)
+
+
+def pulse_flashes(paths, color, *, repeats: int = 2, width: float = 5.0):
+    """⚡ The light-pulse animation of ``beam_pulses`` without playing it — for ``hold_for(during=…)``."""
+    from manim import LaggedStart, ShowPassingFlash, VMobject
+
+    lines = []
+    for corners in paths:
+        line = VMobject(color=color, stroke_width=width)
+        line.set_points_as_corners([np.array(c, dtype=float) for c in corners])
+        lines.append(line)
+    flashes = [ShowPassingFlash(line.copy(), time_width=0.35) for _ in range(repeats) for line in lines]
+    return LaggedStart(*flashes, lag_ratio=0.6 / len(lines))
+
+
+def beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4, width: float = 5.0, extra=None):
+    """⚡ Bright pulses running along beam lines — the light itself travels, no extra glyphs."""
+    scene.play(pulse_flashes(paths, color, repeats=repeats, width=width), *(extra or []), run_time=run_time)
+#endregion
+
+
+#region Buildings
+def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN):
+    """🪟 Window set into a line wall — reveal ticks at sill and lintel, a glazed sash seen edge-on in the wall line.
+
+    The sash is built face-on and turned 90° about its vertical hinge, so ``open_window`` swings it into the
+    room in true projection instead of sliding a rectangle around.
+    """
+    from manim import PI, UP, Line, Rectangle, VGroup
+
+    reveal = VGroup(*[Line(np.array([x - 0.1, y, 0.0]), np.array([x + 0.1, y, 0.0]), color=P_WHITE, stroke_width=1.6)
+                      for y in (sill, lintel)])
+    mid = (sill + lintel) / 2
+    frame = Rectangle(width=depth, height=lintel - sill - 0.04, color=color, stroke_width=1.6)
+    frame.set_fill(color, opacity=0.14)
+    bars = VGroup(Line(frame.get_left(), frame.get_right(), color=color, stroke_width=1.1),
+                  Line(frame.get_top(), frame.get_bottom(), color=color, stroke_width=1.1))
+    sash = VGroup(frame, bars).move_to(np.array([x + depth / 2, mid, 0.0]))
+    hinge = np.array([x, mid, 0.0])
+    sash.rotate(PI / 2, axis=UP, about_point=hinge)
+    return {"x": x, "sill": sill, "lintel": lintel, "center": hinge, "hinge": hinge, "sash": sash,
+            "reveal": reveal, "group": VGroup(reveal, sash)}
+
+
+def open_window(window, *, run_time: float = 0.9):
+    """🚪 Turn the sash open into the room about its hinge."""
+    from manim import PI, UP, Rotate
+
+    return Rotate(window["sash"], angle=-PI / 2, axis=UP, about_point=window["hinge"], run_time=run_time)
+
+
+def house_section(center=None, scale: float = 1.0):
+    """🏠 Two-storey section — wall thickness, eaves, and glazed openings in the left wall."""
+    from manim import DOWN, LEFT, ORIGIN, RIGHT, UP, Line, VGroup, VMobject
+
+    center = ORIGIN if center is None else np.array(center, dtype=float)
+    s = scale
+    w_width, w_height, t, sw = 3.6 * s, 2.4 * s, 0.08 * s, 1.7
+    bottom_left = center + LEFT * (w_width / 2) + DOWN * (w_height / 2)
+    bottom_right = center + RIGHT * (w_width / 2) + DOWN * (w_height / 2)
+    top_left = center + LEFT * (w_width / 2) + UP * (w_height / 2)
+    top_right = center + RIGHT * (w_width / 2) + UP * (w_height / 2)
+    roof_peak = center + UP * (w_height / 2 + 1.1 * s)
+    floor_line = Line(bottom_left + LEFT * 0.55 * s, bottom_right + RIGHT * 0.55 * s, color=P_TEAL, stroke_width=2.2)
+    hatches = VGroup(*[
+        Line(p, p + (DOWN * 0.1 + LEFT * 0.07) * s, color=P_TEAL, stroke_width=1.1)
+        for p in [floor_line.point_from_proportion(u) for u in np.linspace(0.08, 0.92, 9)]
+    ])
+    level_1 = Line(bottom_left + UP * (w_height / 2), bottom_right + UP * (w_height / 2), color=P_WHITE, stroke_width=1.5)
+    w_h = 0.5 * s
+    cuts = (
+        (0.0, w_height / 4 - w_h / 2),
+        (w_height / 4 + w_h / 2, 3 * w_height / 4 - w_h / 2),
+        (3 * w_height / 4 + w_h / 2, w_height),
+    )
+    wall_left_1 = Line(bottom_left, bottom_left + UP * cuts[0][1], color=P_WHITE, stroke_width=sw)
+    wall_left_2 = Line(bottom_left + UP * cuts[1][0], bottom_left + UP * cuts[1][1], color=P_WHITE, stroke_width=sw)
+    wall_left_3 = Line(bottom_left + UP * cuts[2][0], top_left, color=P_WHITE, stroke_width=sw)
+    wall_right = Line(bottom_right, top_right, color=P_WHITE, stroke_width=sw)
+    inner = VGroup(*[
+        Line(bottom_left + RIGHT * t + UP * a, bottom_left + RIGHT * t + UP * b, color=P_WHITE, stroke_width=1.3)
+        for a, b in cuts
+    ], Line(bottom_right + LEFT * t, top_right + LEFT * t, color=P_WHITE, stroke_width=1.3))
+    eave_l, eave_r = top_left + LEFT * 0.26 * s, top_right + RIGHT * 0.26 * s
+    roof = VGroup(
+        VMobject(color=P_WHITE, stroke_width=sw).set_points_as_corners([eave_l, roof_peak, eave_r]),
+        VMobject(color=P_WHITE, stroke_width=1.3).set_points_as_corners([
+            top_left + RIGHT * t + DOWN * 0.05 * s, roof_peak + DOWN * 0.12 * s, top_right + LEFT * t + DOWN * 0.05 * s,
+        ]),
+    )
+    walls = VGroup(wall_left_1, wall_left_2, wall_left_3, wall_right, level_1, inner)
+    windows = [window_glyph(bottom_left[0], bottom_left[1] + f * w_height - w_h / 2,
+                            bottom_left[1] + f * w_height + w_h / 2, depth=0.42 * s)
+               for f in (0.25, 0.75)]
+    window_group = VGroup(*[w["group"] for w in windows])
+    return {
+        "center": center, "floor": floor_line, "walls": walls, "roof": roof, "windows": windows,
+        "window_group": window_group, "level_1": level_1, "wall_right": wall_right,
+        "bottom_left": bottom_left, "bottom_right": bottom_right, "top_left": top_left, "top_right": top_right,
+        "roof_peak": roof_peak, "w_width": w_width, "w_height": w_height,
+        "group": VGroup(floor_line, hatches, walls, roof, window_group),
+    }
+
+
+def room_section(center, *, w: float = 5.0, h: float = 2.5, wall: float = 0.2, slab: float = 0.26,
+                 window=(0.30, 0.88)):
+    """🏛️ One-room section — floor and ceiling slabs, a glazed left wall, a solid right wall."""
+    from manim import Rectangle, VGroup
+
+    cx, cy = float(center[0]), float(center[1])
+    x_l, x_r = cx - w / 2, cx + w / 2
+    y_f, y_c = cy - h / 2, cy + h / 2
+    style = dict(color=P_WHITE, stroke_width=2, fill_color=P_WHITE, fill_opacity=0.14)
+    floor = Rectangle(width=w + 2 * wall, height=slab, **style).move_to(np.array([cx, y_f - slab / 2, 0.0]))
+    ceiling = Rectangle(width=w + 2 * wall, height=slab, **style).move_to(np.array([cx, y_c + slab / 2, 0.0]))
+    lo, hi = y_f + window[0] * h, y_f + window[1] * h
+    gx = x_l - wall / 2
+    wall_lo = Rectangle(width=wall, height=lo - y_f, **style).move_to(np.array([gx, (y_f + lo) / 2, 0.0]))
+    wall_hi = Rectangle(width=wall, height=y_c - hi, **style).move_to(np.array([gx, (hi + y_c) / 2, 0.0]))
+    glass = Rectangle(width=0.1, height=hi - lo, color=P_CYAN, stroke_width=2.5, fill_color=P_CYAN,
+                      fill_opacity=0.15).move_to(np.array([gx, (lo + hi) / 2, 0.0]))
+    wall_r = Rectangle(width=wall, height=h, **style).move_to(np.array([x_r + wall / 2, cy, 0.0]))
+    air = Rectangle(width=w, height=h, stroke_width=0, fill_color=P_RED, fill_opacity=0.0)
+    air.move_to(np.array([cx, cy, 0.0]))
+    shell = VGroup(floor, ceiling, wall_lo, wall_hi, wall_r)
+    return {
+        "floor": floor, "ceiling": ceiling, "wall_lo": wall_lo, "wall_hi": wall_hi, "wall_r": wall_r,
+        "glass": glass, "air": air, "shell": shell, "group": VGroup(air, shell, glass),
+        "x_l": x_l, "x_r": x_r, "y_f": y_f, "y_c": y_c, "win_lo": lo, "win_hi": hi, "glass_x": gx,
+        "center": np.array([cx, cy, 0.0]), "w": w, "h": h, "slab": slab,
+    }
+
+
+def radiator(center, color=P_RED):
+    """♨️ Panel radiator in elevation — casing, fins, feet."""
+    from manim import DOWN, LEFT, RIGHT, UP, Line, Rectangle, VGroup
+
+    sw = 1.5
+    body = Rectangle(width=0.92, height=0.5, color=color, stroke_width=sw)
+    grille = Line(body.get_corner(np.array([-1, 1, 0])) + DOWN * 0.08 + RIGHT * 0.06,
+                  body.get_corner(np.array([1, 1, 0])) + DOWN * 0.08 + LEFT * 0.06, color=color, stroke_width=1.1)
+    fins = VGroup(*[
+        Line(body.get_top() + DOWN * 0.14, body.get_bottom() + UP * 0.08, color=color, stroke_width=1.1).shift(RIGHT * dx)
+        for dx in np.linspace(-0.34, 0.34, 7)
+    ])
+    feet = VGroup(*[
+        Line(body.get_bottom() + RIGHT * dx, body.get_bottom() + RIGHT * dx + DOWN * 0.07, color=color, stroke_width=sw)
+        for dx in (-0.32, 0.32)
+    ])
+    return VGroup(body, grille, fins, feet).move_to(center)
+#endregion
+
+
+#region Everyday objects
+def sun_glyph(pos, color=P_YELLOW):
+    """☀️ Compact sun — core, glow, ring and twelve burst lines."""
+    from manim import TAU, Circle, Dot, Line, VGroup
+
+    pos = np.array(pos, dtype=float)
+    core = Dot(pos, radius=0.45, color=color)
+    glow = Dot(pos, radius=0.7, color=color, fill_opacity=0.35)
+    ring = Circle(radius=0.85, color=color, stroke_width=2, stroke_opacity=0.6).move_to(pos)
+    burst = VGroup(*[
+        Line(pos + 0.55 * np.array([np.cos(a), np.sin(a), 0.0]), pos + 0.9 * np.array([np.cos(a), np.sin(a), 0.0]),
+             color=color, stroke_width=2)
+        for a in np.linspace(0, TAU, 12, endpoint=False)
+    ])
+    return VGroup(glow, core, ring, burst)
+
+
+def moon_glyph(pos, color=P_WHITE):
+    """🌙 Crescent for night-time beats."""
+    from manim import Circle, VGroup
+
+    disc = Circle(radius=0.24, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0).move_to(pos)
+    bite = Circle(radius=0.22, color=P_DEEP_DARK, fill_color=P_DEEP_DARK, fill_opacity=1.0, stroke_width=0)
+    bite.move_to(np.array(pos) + np.array([0.12, 0.08, 0.0]))
+    return VGroup(disc, bite)
+
+
+def person_glyph(pos, color=P_ORANGE, scale=1.0):
+    """🧍 Standing figure in elevation — head, torso and limbs, no face."""
+    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
+
+    sw = 1.55
+    head = Circle(radius=0.05, color=color, stroke_width=sw).shift(UP * 0.29)
+    neck = Line(head.get_bottom(), head.get_bottom() + DOWN * 0.025, color=color, stroke_width=sw)
+    sy, hy = head.get_bottom()[1] - 0.04, head.get_bottom()[1] - 0.2
+    shoulder = Line(LEFT * 0.1 + UP * sy, RIGHT * 0.1 + UP * sy, color=color, stroke_width=sw)
+    torso = VGroup(
+        Line(LEFT * 0.1 + UP * sy, LEFT * 0.065 + UP * hy, color=color, stroke_width=sw),
+        Line(RIGHT * 0.1 + UP * sy, RIGHT * 0.065 + UP * hy, color=color, stroke_width=sw),
+    )
+    arms = VGroup(
+        Line(LEFT * 0.1 + UP * sy, LEFT * 0.145 + UP * (hy + 0.02), color=color, stroke_width=sw),
+        Line(RIGHT * 0.1 + UP * sy, RIGHT * 0.145 + UP * (hy + 0.02), color=color, stroke_width=sw),
+    )
+    foot = hy - 0.3
+    legs = VGroup(
+        Line(LEFT * 0.035 + UP * hy, LEFT * 0.05 + UP * foot, color=color, stroke_width=sw),
+        Line(RIGHT * 0.035 + UP * hy, RIGHT * 0.05 + UP * foot, color=color, stroke_width=sw),
+    )
+    feet = VGroup(
+        Line(LEFT * 0.05 + UP * foot, LEFT * 0.015 + UP * foot, color=color, stroke_width=sw),
+        Line(RIGHT * 0.05 + UP * foot, RIGHT * 0.09 + UP * foot, color=color, stroke_width=sw),
+    )
+    fig = VGroup(head, neck, shoulder, torso, arms, legs, feet)
+    fig.scale(0.66 / fig.height)
+    return fig.scale(scale).move_to(pos)
+
+
+def seated_person_glyph(pos, color=P_ORANGE, scale=1.0, chair_color=P_WHITE):
+    """🪑 Seated figure in side elevation, facing right — the ``person_glyph`` line style on a thin chair.
+
+    ``pos`` is where the seat meets the floor; ``head``, ``mouth`` and ``lap`` are returned for heat and breath.
+    """
+    from manim import Circle, Line, VGroup
+
+    sw = 1.55
+
+    def L(a, b, c=color, w=sw):
+        return Line(np.array([a[0], a[1], 0.0]), np.array([b[0], b[1], 0.0]), color=c, stroke_width=w)
+
+    head = Circle(radius=0.05, color=color, stroke_width=sw).move_to(np.array([0.0, 0.305, 0.0]))
+    body = VGroup(
+        head, L((0.0, 0.255), (0.0, 0.23)),
+        L((-0.035, 0.215), (-0.045, 0.035)), L((0.035, 0.215), (0.03, 0.035)),
+        L((0.0, 0.035), (0.2, 0.035)), L((0.2, 0.035), (0.21, -0.195)), L((0.21, -0.195), (0.26, -0.195)),
+        L((0.02, 0.195), (0.1, 0.085)), L((0.1, 0.085), (0.22, 0.105)),
+    )
+    chair = VGroup(
+        L((-0.09, 0.0), (0.17, 0.0), chair_color, 1.3), L((-0.09, 0.0), (-0.11, 0.24), chair_color, 1.3),
+        L((0.04, 0.0), (0.04, -0.195), chair_color, 1.3), L((-0.06, -0.195), (0.14, -0.195), chair_color, 1.3),
+    )
+    group = VGroup(chair, body)
+    group.scale(scale, about_point=np.array([0.04, -0.195, 0.0]))
+    group.shift(np.array(pos, dtype=float) - np.array([0.04, -0.195, 0.0]))
+    return {"group": group, "figure": body, "chair": chair, "head": head,
+            "mouth": head.get_center() + np.array([head.width / 2, -head.height * 0.15, 0.0]),
+            "chest": (body[2].get_center() + body[3].get_center()) / 2}
+
+
+def cloud_glyph(content, *, pad=(0.42, 0.36), bump: float = 0.5, color=P_WHITE):
+    """☁️ Puffy speech cloud around ``content`` — one closed outline of outward arcs laid on an ellipse."""
+    from manim import PI, TAU, ArcBetweenPoints, VMobject
+
+    a, b = content.width / 2 + pad[0], content.height / 2 + pad[1]
+    c = content.get_center()
+    n = max(8, int(round(np.pi * (3 * (a + b) - np.sqrt((3 * a + b) * (a + 3 * b))) / bump)))
+    pts = [c + np.array([a * np.cos(t), b * np.sin(t), 0.0]) for t in np.linspace(0, TAU, n, endpoint=False) + PI / n]
+    outline = VMobject(color=color, stroke_width=2.2)
+    for p, q in zip(pts, pts[1:] + pts[:1]):
+        outline.append_points(ArcBetweenPoints(p, q, angle=0.8 * PI).points)
+    return outline.set_fill(P_DEEP_DARK, opacity=0.9)
+
+
+def cloud_trail(cloud, target, *, n: int = 3, color=P_WHITE):
+    """💭 Shrinking puffs that lead from the cloud's rim down to a speaker."""
+    from manim import LEFT, UP, Circle, VGroup, interpolate
+
+    start = cloud.get_bottom() + LEFT * cloud.width * 0.22 + UP * 0.04
+    end = np.array(target, dtype=float)
+    return VGroup(*[
+        Circle(radius=0.15 - 0.04 * k, color=color, stroke_width=2.0).set_fill(P_DEEP_DARK, opacity=0.9)
+        .move_to(interpolate(start, end, (k + 1) / (n + 1)))
+        for k in range(n)
+    ])
+
+
+def clock_glyph(center, r: float = 0.42, color=P_CYAN):
+    """🕐 Analogue dial — a full turn of the hand is one hour."""
+    from manim import TAU, UP, Circle, Line, VGroup
+
+    c = np.array(center, dtype=float)
+    face = Circle(radius=r, color=P_WHITE, stroke_width=2.5).move_to(c)
+    ticks = VGroup(*[
+        Line(c + (r - 0.08) * np.array([np.cos(a), np.sin(a), 0.0]), c + r * np.array([np.cos(a), np.sin(a), 0.0]),
+             color=P_WHITE, stroke_width=1.6)
+        for a in np.linspace(0, TAU, 12, endpoint=False)
+    ])
+    hand = Line(c, c + UP * r * 0.78, color=color, stroke_width=3)
+    return {"face": face, "hand": hand, "center": c, "group": VGroup(face, ticks, hand)}
+
+
+def thermometer_glyph(bottom, *, height: float = 1.6, color=P_RED, level: float = 0.0):
+    """🌡️ Bulb thermometer whose column follows a 0–1 ``level`` tracker."""
+    from manim import UP, Circle, Rectangle, RoundedRectangle, ValueTracker, VGroup, always_redraw
+
+    b = np.array(bottom, dtype=float)
+    tube = RoundedRectangle(width=0.2, height=height, corner_radius=0.1, color=P_WHITE, stroke_width=2)
+    tube.move_to(b + UP * height / 2)
+    bulb = Circle(radius=0.15, color=P_WHITE, stroke_width=2, fill_color=color, fill_opacity=0.9).move_to(b)
+    tracker = ValueTracker(level)
+
+    def column():
+        h = max(0.02, (height - 0.12) * float(np.clip(tracker.get_value(), 0.0, 1.0)))
+        return Rectangle(width=0.1, height=h, stroke_width=0, fill_color=color, fill_opacity=0.9).move_to(
+            b + UP * (h / 2 + 0.05))
+
+    return {"group": VGroup(tube, bulb), "column": always_redraw(column), "level": tracker,
+            "top": b + UP * height}
+
+
+def energy_tank(center, *, height: float = 2.2, width: float = 0.9, color=P_YELLOW, level: float = 1.0):
+    """🔋 Energy as a tank — the fill is the energy still in it."""
+    from manim import UP, Rectangle, RoundedRectangle, ValueTracker, VGroup, always_redraw
+
+    c = np.array(center, dtype=float)
+    frame = RoundedRectangle(width=width, height=height, corner_radius=0.1, color=P_WHITE, stroke_width=2.5)
+    frame.move_to(c)
+    cap = RoundedRectangle(width=width * 0.4, height=0.12, corner_radius=0.04, color=P_WHITE, stroke_width=2.5,
+                           fill_color=P_WHITE, fill_opacity=0.6)
+    cap.next_to(frame, UP, buff=0)
+    tracker = ValueTracker(level)
+    inner = height - 0.12
+    base = frame.get_bottom() + UP * 0.06
+
+    def fill():
+        h = max(0.002, inner * float(np.clip(tracker.get_value(), 0.0, 1.0)))
+        return Rectangle(width=width - 0.12, height=h, stroke_width=0, fill_color=color, fill_opacity=0.7).move_to(
+            base + UP * h / 2)
+
+    return {"frame": frame, "cap": cap, "level": tracker, "fill": always_redraw(fill),
+            "group": VGroup(frame, cap), "center": c, "height": height, "width": width}
+
+
+def lamp_glyph(anchor, drop: float = 0.55, scale: float = 1.0):
+    """💡 Pendant lamp — cable, conical shade, bulb; ``scale`` shrinks the shade and bulb, not the cable drop."""
+    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
+
+    a = np.array(anchor, dtype=float)
+    cable = Line(a, a + DOWN * drop, color=P_WHITE, stroke_width=1.4)
+    top = a + DOWN * drop
+    h, w, tip = 0.2 * scale, 0.22 * scale, 0.05 * scale
+    shade = VGroup(
+        Line(top + LEFT * tip, top + DOWN * h + LEFT * w, color=P_WHITE, stroke_width=1.5),
+        Line(top + RIGHT * tip, top + DOWN * h + RIGHT * w, color=P_WHITE, stroke_width=1.5),
+        Line(top + DOWN * h + LEFT * w, top + DOWN * h + RIGHT * w, color=P_WHITE, stroke_width=1.5),
+    )
+    bulb = Circle(radius=0.09 * scale, color=P_YELLOW, stroke_width=1.5).move_to(top + DOWN * 0.32 * scale)
+    filament = Line(bulb.get_center() + (UP * 0.03 + LEFT * 0.025) * scale, bulb.get_center() + (DOWN * 0.03 + RIGHT * 0.025) * scale,
+                    color=P_YELLOW, stroke_width=1.1)
+    return {"cable": cable, "bulb": bulb, "group": VGroup(cable, shade, bulb, filament)}
+
+
+def droplets(center, n: int = 6, spread=(0.5, 0.6), seed: int = 3, color=P_BLUE):
+    """💧 Scattered condensate droplets."""
+    from manim import Ellipse, VGroup
+
+    rng = np.random.default_rng(seed)
+    c = np.array(center, dtype=float)
+    return VGroup(*[
+        Ellipse(width=0.07, height=0.1, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0).move_to(
+            c + np.array([rng.uniform(-spread[0], spread[0]), rng.uniform(-spread[1], spread[1]), 0.0]))
+        for _ in range(n)
+    ])
+#endregion
+#endregion
+
+
+#region Layout scaffolding
+# Placement primitives every beat composes instead of hand-typing coordinates.
+# One frame size for a whole card row, callout labels dodged apart before they
+# are drawn, notes on the one band reserved between the beat subtitle and the
+# free content area, and axes that hand back a normalized-coordinate mapper.
+# Hand-tuned per-beat coordinates are what produced the overlapping-label class
+# of bug that the layout guard at the bottom of this file now catches.
+
+# ``beat_subtitle`` bottoms out near y ≈ 2.68, so a note centred on NOTE_BAND_Y
+# clears it, and any scaffold kept below CONTENT_TOP clears the note.
+NOTE_BAND_Y: float = 2.30
+CONTENT_TOP: float = 1.98
+NOTE_MAX_WIDTH: float = 11.0
+
+
+def note_line(text: str, *, color: str = P_TEAL, font_size: int | None = None, y: float = NOTE_BAND_Y):
+    """🏷️ One-line aside on the reserved band under the beat subtitle."""
+    from manim import UP
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    centered_body_text = _manim_module.centered_body_text
+
+    if font_size is None:
+        font_size = LABEL_FONT_SIZE
+    note = centered_body_text(text, font_size=font_size, color=color, max_width=NOTE_MAX_WIDTH)
+    from manim import VGroup as _VGroup
+
+    if isinstance(note, _VGroup):
+        import warnings
+
+        # The band holds one line; a second one spills up against the beat
+        # subtitle. Same contract caption_bar enforces for its two lines.
+        warnings.warn(f"note_line wrapped to {len(note.submobjects)} lines; shorten it: {text!r}", stacklevel=2)
+    note.move_to(UP * y)
+    note.set_x(0)
+    return note
+
+
+def stat_card(
+    caption: str,
+    value: str,
+    *,
+    color: str = P_TEAL,
+    value_color: str | None = None,
+    caption_color: str | None = None,
+    caption_size: int | None = None,
+    value_size: int | None = None,
+    width: float | None = None,
+    height: float | None = None,
+):
+    """🪧 Framed caption-over-value block — the one label shape for a named quantity.
+
+    Two stacked lines inside a rounded frame: a dim caption naming the thing and
+    a coloured value. Passing ``width``/``height`` forces a fixed frame so a row
+    of cards lines up — which is what ``card_grid`` does. Filled with the same
+    translucent backdrop as ``caption_bar`` so a curve or gridline sitting behind
+    the card never bleeds through the text.
+    """
+    from manim import DOWN, RoundedRectangle, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    caption_size = caption_size or LABEL_FONT_SIZE
+    value_size = value_size or BODY_FONT_SIZE
+    caption_color = caption_color or P_TEAL
+    value_color = value_color or color
+
+    lines = []
+    if caption:
+        lines.append(body_text(caption, font_size=caption_size, color=caption_color))
+    if value:
+        lines.append(body_text(value, font_size=value_size, color=value_color))
+    body = VGroup(*lines).arrange(DOWN, buff=0.07)
+    frame = RoundedRectangle(
+        width=width if width is not None else body.width + 0.36,
+        height=height if height is not None else body.height + 0.30,
+        corner_radius=0.1, color=color, stroke_width=1.8,
+        fill_color=P_DEEP_DARK, fill_opacity=0.82,
+    )
+    body.move_to(frame.get_center())
+    return VGroup(frame, body)
+
+
+def card_grid(entries, *, rows: int = 1, cols: int | None = None, color: str = P_TEAL,
+              buff: float = 0.22, **card_kwargs):
+    """🗂️ Grid of ``stat_card``s that all share one frame size.
+
+    ``entries`` are ``(caption, value)`` or ``(caption, value, accent_colour)``.
+    Measuring every body first and then forcing one width/height is what keeps a
+    row from looking ragged and stops a long caption widening one card into its
+    neighbour.
+    """
+    from manim import VGroup
+
+    prepared = []
+    for entry in entries:
+        caption, value, *rest = entry
+        accent = rest[0] if rest and rest[0] else color
+        prepared.append((caption, value, accent))
+
+    probes = [stat_card(c, v, color=a, **card_kwargs) for c, v, a in prepared]
+    card_w = max(p.width for p in probes)
+    card_h = max(p.height for p in probes)
+    cards = VGroup(*[
+        stat_card(c, v, color=a, width=card_w, height=card_h, **card_kwargs)
+        for c, v, a in prepared
+    ])
+    if cols is None:
+        cols = -(-len(cards) // max(1, rows))
+    cards.arrange_in_grid(rows=rows, cols=cols, buff=(buff, buff))
+    return cards
+
+
+def side_labels(anchors, *, x: float, font_size: int | None = None, min_gap: float = 0.40,
+                pad: float = 0.12, leader: bool = True, align: str = "left",
+                top: float = SAFE_TOP, bottom: float = SAFE_BOTTOM):
+    """🏷️ Callout column whose labels are dodged apart before anything is drawn.
+
+    ``anchors`` are ``(point, text, colour)``. Each label starts at its anchor's
+    height, then a single top-down pass pushes the column apart until no two
+    labels are closer than half their heights plus ``pad`` — the deterministic
+    replacement for nudging a stack of ``next_to`` calls by hand. Returns
+    ``(labels, leaders)``; leaders are thin lines back to the anchors.
+    """
+    from manim import LEFT, Line, RIGHT, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    if font_size is None:
+        font_size = LABEL_FONT_SIZE
+
+    labels = [body_text(text, font_size=font_size, color=colour) for _p, text, colour in anchors]
+    ys = [float(np.array(point, dtype=float)[1]) for point, _t, _c in anchors]
+
+    order = sorted(range(len(labels)), key=lambda i: -ys[i])
+    for rank in range(1, len(order)):
+        above, current = order[rank - 1], order[rank]
+        needed = (labels[above].height + labels[current].height) / 2 + pad
+        needed = max(needed, min_gap)
+        if ys[current] > ys[above] - needed:
+            ys[current] = ys[above] - needed
+
+    if order:
+        lowest = order[-1]
+        under = (bottom + labels[lowest].height / 2) - ys[lowest]
+        if under > 0:
+            ys = [y + under for y in ys]
+        highest = order[0]
+        over = ys[highest] - (top - labels[highest].height / 2)
+        if over > 0:
+            ys = [y - over for y in ys]
+
+    leaders = VGroup()
+    for label, y, (point, _t, colour) in zip(labels, ys, anchors):
+        label.move_to(np.array([x, y, 0.0]))
+        if align == "left":
+            label.align_to(np.array([x, y, 0.0]), LEFT)
+        elif align == "right":
+            label.align_to(np.array([x, y, 0.0]), RIGHT)
+        if leader:
+            start = label.get_left() + LEFT * 0.10 if align == "left" else label.get_right() + RIGHT * 0.10
+            leaders.add(Line(start, np.array(point, dtype=float), color=colour,
+                             stroke_width=1.4, stroke_opacity=0.55))
+    return VGroup(*labels), leaders
+
+
+def stacked_bar(segments, *, base, width: float = 1.0, unit: float = 1.0, opacity: float = 0.78):
+    """📊 Value segments stacked upward from ``base`` — one rectangle per ``(label, value, colour)``.
+
+    The shape the whole energy cascade is told with: every quantity is an area
+    the viewer can compare by eye instead of a number that silently swaps.
+    Returns the rectangles, each segment's mid-point (ready for ``side_labels``),
+    the stack top, and the summed value.
+    """
+    from manim import Rectangle, UP, VGroup
+
+    base = np.array(base, dtype=float)
+    bars = VGroup()
+    anchors = []
+    cursor = 0.0
+    total = 0.0
+    for _label, value, colour in segments:
+        height = max(0.02, float(value) * unit)
+        rect = Rectangle(
+            width=width, height=height, color=colour,
+            fill_color=colour, fill_opacity=opacity, stroke_width=1.2,
+        )
+        rect.move_to(base + UP * (cursor + height / 2))
+        bars.add(rect)
+        anchors.append(rect.get_center())
+        cursor += height
+        total += float(value)
+    return {
+        "bars": bars, "anchors": anchors, "top": base + UP * cursor,
+        "total": total, "height": cursor, "base": base,
+        "labels": [label for label, _v, _c in segments],
+    }
+
+
+def labeled_axes(origin, *, x_len: float, y_len: float, x_label: str | None = None,
+                 y_label: str | None = None, color: str = P_WHITE, stroke_width: float = 2.0):
+    """📐 Manual axis cross plus a normalized-coordinate mapper.
+
+    Never ``Axes(include_numbers=True)`` — that pulls in a LaTeX pipeline this
+    project deliberately avoids. ``pt(fx, fy)`` maps the unit square onto the
+    axes so curves and areas are written in fractions, not screen coordinates.
+    """
+    from manim import DOWN, LEFT, Line, PI, RIGHT, UP, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    origin = np.array(origin, dtype=float)
+    x_axis = Line(origin, origin + RIGHT * x_len, color=color, stroke_width=stroke_width)
+    y_axis = Line(origin, origin + UP * y_len, color=color, stroke_width=stroke_width)
+    group = VGroup(x_axis, y_axis)
+
+    x_text = y_text = None
+    if x_label:
+        x_text = body_text(x_label, font_size=LABEL_FONT_SIZE, color=color)
+        x_text.next_to(x_axis, DOWN, buff=0.14)
+        group.add(x_text)
+    if y_label:
+        y_text = body_text(y_label, font_size=LABEL_FONT_SIZE, color=color)
+        y_text.rotate(PI / 2)
+        y_text.next_to(y_axis, LEFT, buff=0.14)
+        group.add(y_text)
+
+    def pt(fx: float, fy: float):
+        return origin + RIGHT * (float(fx) * x_len) + UP * (float(fy) * y_len)
+
+    return {"x_axis": x_axis, "y_axis": y_axis, "x_label": x_text, "y_label": y_text,
+            "group": group, "origin": origin, "x_len": x_len, "y_len": y_len, "pt": pt}
+#endregion
+
+
+#region Formula morph helpers
+def symbol_token(text: str, *, color: str = P_WHITE, font_size: int = 28):
+    """🔤 Formula variable ready to receive a ``ReplacementTransform`` from a physical object."""
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    body_text = _manim_module.body_text
+
+    return body_text(text, font_size=font_size, color=color)
+#endregion
+
+
+#region Formula panel
+# The one dedicated formula slot every academic scene shares — bottom-center,
+# boxed, Text-only fragments so a specific parameter can be ringed on cue.
+# Never MathTex, never a raw equation string sliced by character index.
+# Sits above the caption bar (see below) — the two never overlap by design.
+FORMULA_PANEL_EDGE_BUFF = 1.7
+
+
+def equation_row(parts, *, font_size: int | None = None, color: str = P_WHITE, buff: float = 0.15):
+    """🧮 Build a Text-only equation from named fragments.
+
+    ``parts`` is a list of ``(key, text, part_color)`` triples — ``key`` is
+    ``None`` for glue tokens (``"="``, spacing) and a short slug (``"u"``,
+    ``"area"``, ``"dt"``) for anything ``highlight_param`` needs to ring later.
+    Returns ``(row, items)`` where ``items`` maps key → the fragment mobject.
+    """
+    from manim import VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+    body_text = _manim_module.body_text
+
+    if font_size is None:
+        font_size = FORMULA_FONT_SIZE
+
+    from manim import Rectangle
+
+    items: dict[str, object] = {}
+    mobjs = []
+    for key, text, part_color in parts:
+        if not text.strip():
+            # Pango cannot lay out a whitespace-only string — Text(" ") raises
+            # IndexError deep inside Manim. A blank spacer gives the same visual
+            # gap, stays out of the layout guard's text pass, and cannot crash.
+            mobjs.append(Rectangle(width=max(0.08, len(text) * 0.11), height=0.01,
+                                   stroke_width=0, fill_opacity=0))
+            continue
+        mobj = body_text(text, font_size=font_size, color=part_color or color)
+        mobjs.append(mobj)
+        if key:
+            items[key] = mobj
+    row = VGroup(*mobjs).arrange(buff=buff)
+    return row, items
+
+
+def formula_panel(row, *, color: str = P_TEAL, edge_buff: float = FORMULA_PANEL_EDGE_BUFF):
+    """📐 Place an equation row in the one fixed formula position and box it.
+
+    Same spot, same box, every scene — so viewers learn where to look.
+    """
+    from manim import DOWN, SurroundingRectangle
+
+    row.to_edge(DOWN, buff=edge_buff)
+    row.set_x(0)
+    for fragment in row.get_family():
+        fragment._layout_zone = "formula"
+    box = SurroundingRectangle(row, color=color, buff=0.22, corner_radius=0.1, stroke_width=2)
+    box._layout_zone = "formula_box"
+    return row, box
+
+
+def highlight_param(items: dict, key: str, *, color: str = P_ORANGE):
+    """🔦 Ring for one named formula fragment — play it while the narration names that parameter."""
+    from manim import SurroundingRectangle
+
+    ring = SurroundingRectangle(items[key], color=color, buff=0.08, stroke_width=3, corner_radius=0.05)
+    ring._layout_zone = getattr(items[key], "_layout_zone", "")
+    return ring
+#endregion
+
+
+#region Math typesetting
+# Formulas and units set from a LaTeX subset — real sub-/superscripts, stacked
+# fractions, dot accents, italic variables and upright units — assembled from
+# ``Text`` glyph runs aligned on a shared baseline. No TeX distribution is
+# needed on any platform, and the face matches every other label.
+#
+# Supported: ``x_{i}``, ``x^{2}``, ``\frac{a}{b}``, ``\dot{Q}``, ``\mathrm{kWh}``,
+# ``\text{mit Leerzeichen}``, ``\textcolor{#HEX}{…}``, spaces ``\, \; \quad \!``,
+# ``{,}`` for a decimal comma, and the symbols in ``_MATH_SYMBOLS``.
+_MATH_SCRIPT_SCALE = 0.66
+_MATH_FRAC_SCALE = 0.86
+_MATH_SYMBOLS = {
+    "cdot": "·", "approx": "≈", "times": "×", "to": "→", "Rightarrow": "⇒", "uparrow": "↑",
+    "pm": "±", "le": "≤", "ge": "≥",
+    "Delta": "Δ", "Sigma": "Σ", "eta": "η", "varphi": "φ", "phi": "φ", "rho": "ρ",
+    "lambda": "λ", "theta": "θ", "vartheta": "ϑ", "mu": "μ", "infty": "∞", "%": "%",
+    "Phi": "Φ", "Psi": "Ψ", "psi": "ψ", "chi": "χ", "ldots": "…", "oint": "∮",
+    "pi": "π",
+}
+_MATH_SPACES = {",": 0.17, ";": 0.28, "quad": 1.0, "!": -0.08}
+_MATH_RELATIONS = frozenset("=≈+−·×→⇒≤≥±<>")
+_MATH_METRICS: dict[float, dict[str, float]] = {}
+
+
+def _math_metrics(size: float) -> dict[str, float]:
+    """📏 Cap height and math-axis height for one font size, measured once."""
+    if size not in _MATH_METRICS:
+        _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+        body_text = _manim_module.body_text
+
+        probe = body_text("H−", font_size=size, color=P_WHITE)
+        cap = probe[0].height
+        axis = probe[1].get_center()[1] - probe[0].get_bottom()[1]
+        _MATH_METRICS[size] = {"cap": cap, "axis": axis, "em": cap / 0.69}
+    return _MATH_METRICS[size]
+
+
+def _math_parse(src: str):
+    """🌳 Parse the LaTeX subset into ``(kind, …)`` nodes."""
+    pos = 0
+
+    def read_group_src() -> str:
+        nonlocal pos
+        while pos < len(src) and src[pos] == " ":
+            pos += 1
+        if pos < len(src) and src[pos] == "{":
+            depth, start = 0, pos
+            while pos < len(src):
+                if src[pos] == "{":
+                    depth += 1
+                elif src[pos] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        pos += 1
+                        return src[start + 1:pos - 1]
+                pos += 1
+            raise ValueError(f"unbalanced braces in {src!r}")
+        if pos < len(src) and src[pos] == "\\":
+            start = pos
+            pos += 1
+            while pos < len(src) and src[pos].isalpha():
+                pos += 1
+            return src[start:pos] if pos > start + 1 else src[start:pos + 1]
+        ch = src[pos]
+        pos += 1
+        return ch
+
+    def sub(text: str, *, upright: bool, color, keep_spaces: bool):
+        return _math_parse_items(text, upright=upright, color=color, keep_spaces=keep_spaces)
+
+    def parse(*, upright: bool, color, keep_spaces: bool):
+        nonlocal pos
+        items: list = []
+        while pos < len(src):
+            ch = src[pos]
+            if ch in "_^":
+                pos += 1
+                script = sub(read_group_src(), upright=upright, color=color, keep_spaces=False)
+                base = items.pop() if items else ("group", [])
+                if base[0] == "scripts":
+                    base = list(base)
+                    base[2 if ch == "_" else 3] = script
+                    items.append(tuple(base))
+                else:
+                    items.append(("scripts", base, script if ch == "_" else None, script if ch == "^" else None))
+                continue
+            if ch == "{":
+                items.append(("group", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces)))
+                continue
+            if ch == "\\":
+                pos += 1
+                if pos < len(src) and not src[pos].isalpha():
+                    sym = src[pos]
+                    pos += 1
+                    items.append(("space", _MATH_SPACES[sym]) if sym in _MATH_SPACES else ("char", sym, False, color))
+                    continue
+                start = pos
+                while pos < len(src) and src[pos].isalpha():
+                    pos += 1
+                cmd = src[start:pos]
+                if cmd == "frac":
+                    num = sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces)
+                    den = sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces)
+                    items.append(("frac", num, den, color))
+                elif cmd == "dot":
+                    items.append(("dot", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces), color))
+                elif cmd == "sqrt":
+                    items.append(("sqrt", sub(read_group_src(), upright=upright, color=color, keep_spaces=keep_spaces), color))
+                elif cmd == "mathrm":
+                    items.append(("group", sub(read_group_src(), upright=True, color=color, keep_spaces=False)))
+                elif cmd == "text":
+                    items.append(("group", sub(read_group_src(), upright=True, color=color, keep_spaces=True)))
+                elif cmd == "textcolor":
+                    new_color = read_group_src()
+                    items.append(("group", sub(read_group_src(), upright=upright, color=new_color, keep_spaces=keep_spaces)))
+                elif cmd in _MATH_SPACES:
+                    items.append(("space", _MATH_SPACES[cmd]))
+                elif cmd in _MATH_SYMBOLS:
+                    items.append(("char", _MATH_SYMBOLS[cmd], False, color))
+                else:
+                    raise ValueError(f"unsupported math command \\{cmd} in {src!r}")
+                continue
+            pos += 1
+            if ch == " ":
+                if keep_spaces:
+                    items.append(("space", 0.26))
+                continue
+            if ch == "-":
+                ch = "−"
+            items.append(("char", ch, not upright and ch.isascii() and ch.isalpha(), color))
+        return items
+
+    return parse
+
+
+def _math_parse_items(src: str, *, upright: bool = False, color=None, keep_spaces: bool = False) -> list:
+    return _math_parse(src)(upright=upright, color=color, keep_spaces=keep_spaces)
+
+
+def _math_merge_runs(items: list) -> list:
+    """🔗 Fuse neighbouring same-style characters into one kerned run; a script base absorbs its run."""
+    def is_run_char(item) -> bool:
+        return item[0] == "char" and item[1] not in _MATH_RELATIONS
+
+    merged: list = []
+    for item in items:
+        if item[0] == "scripts" and item[1][0] == "char" and is_run_char(item[1]):
+            text, italic, color = item[1][1], item[1][2], item[1][3]
+            while merged and merged[-1][0] == "run" and merged[-1][2] == italic and merged[-1][3] == color:
+                text = merged.pop()[1] + text
+            item = ("scripts", ("run", text, italic, color), item[2], item[3])
+        if is_run_char(item):
+            if merged and merged[-1][0] == "run" and merged[-1][2] == item[2] and merged[-1][3] == item[3]:
+                merged[-1] = ("run", merged[-1][1] + item[1], item[2], item[3])
+            else:
+                merged.append(("run", item[1], item[2], item[3]))
+            continue
+        merged.append(item)
+    return merged
+
+
+def _math_box(content, baseline_left):
+    """📦 Wrap mobjects with an invisible baseline marker so parents can align on it."""
+    from manim import VectorizedPoint, VGroup
+
+    marker = VectorizedPoint(np.array(baseline_left, dtype=float))
+    box = VGroup(*content, marker)
+    box.base = marker
+    return box
+
+
+def _math_baseline(box) -> float:
+    return float(box.base.get_center()[1])
+
+
+def _math_render(items: list, size: float, color: str):
+    """🧱 Lay out a node list on one baseline at ``y = 0``."""
+    from manim import Dot, ITALIC, Line, RIGHT, UP, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    body_text = _manim_module.body_text
+
+    m = _math_metrics(size)
+    cap, em = m["cap"], m["em"]
+    boxes: list = []
+    gaps: list[float] = []
+    pending_gap = 0.0
+
+    for item in _math_merge_runs(items):
+        kind = item[0]
+        if kind == "space":
+            pending_gap += item[1] * em
+            continue
+        if kind == "char":
+            glyph_color = item[3] or color
+            probe = body_text("H" + item[1], font_size=size, color=glyph_color)
+            base_y = probe[0].get_bottom()[1]
+            probe.remove(probe[0])
+            probe.text = item[1]
+            box = _math_box([probe], [probe.get_left()[0], base_y, 0.0])
+            relation = item[1] in _MATH_RELATIONS and bool(boxes)
+            pad = 0.24 * em if relation else 0.0
+            gaps.append(pending_gap + (pad if boxes else 0.0))
+            boxes.append(box)
+            pending_gap = pad
+            continue
+        if kind == "run":
+            glyph_color = item[3] or color
+            extra = {"slant": ITALIC} if item[2] else {}
+            probe = body_text("H" + item[1], font_size=size, color=glyph_color, **extra)
+            base_y = probe[0].get_bottom()[1]
+            probe.remove(probe[0])
+            probe.text = item[1]
+            box = _math_box([probe], [probe.get_left()[0], base_y, 0.0])
+        elif kind == "group":
+            box = _math_render(item[1], size, color)
+        elif kind == "frac":
+            frac_color = item[3] or color
+            num = _math_render(item[1], size * _MATH_FRAC_SCALE, frac_color)
+            den = _math_render(item[2], size * _MATH_FRAC_SCALE, frac_color)
+            width = max(num.width, den.width) + 0.16 * cap
+            thick = max(1.2, size / 14.0)
+            bar = Line(np.array([0.0, m["axis"], 0.0]), np.array([width, m["axis"], 0.0]),
+                       color=frac_color, stroke_width=thick)
+            num.move_to(np.array([width / 2, 0.0, 0.0]), coor_mask=np.array([1, 0, 0]))
+            num.shift(UP * (m["axis"] + 0.20 * cap - num.get_bottom()[1]))
+            den.move_to(np.array([width / 2, 0.0, 0.0]), coor_mask=np.array([1, 0, 0]))
+            den.shift(UP * (m["axis"] - 0.22 * cap - den.get_top()[1]))
+            box = _math_box([num, bar, den], [0.0, 0.0, 0.0])
+            gaps.append(pending_gap + (0.08 * em if boxes else 0.0))
+            boxes.append(box)
+            pending_gap = 0.08 * em
+            continue
+        elif kind == "dot":
+            dot_color = item[2] or color
+            inner = _math_render(item[1], size, color)
+            accent = Dot(radius=max(0.018, 0.09 * cap), color=dot_color)
+            accent.move_to(np.array([inner.get_center()[0] + 0.06 * cap, inner.get_top()[1] + 0.22 * cap, 0.0]))
+            box = _math_box([inner, accent], [inner.get_left()[0], _math_baseline(inner), 0.0])
+        elif kind == "sqrt":
+            s_color = item[2] or color
+            inner = _math_render(item[1], size, color)
+            probe = body_text("H√", font_size=size, color=s_color)
+            probe.remove(probe[0])
+            probe.text = "√"
+            rad = probe
+            pad = 0.8 * cap
+            top_y = inner.get_top()[1] + pad
+            bot_y = min(float(inner.get_bottom()[1]), 0.0) - 0.02 * cap
+            rad.stretch_to_fit_height(top_y - bot_y)
+            rad.shift(np.array([-rad.get_left()[0], (top_y + bot_y) / 2 - rad.get_center()[1], 0.0]))
+            inner.shift(RIGHT * (rad.get_right()[0] + 0.8 * cap - inner.get_left()[0]))
+            thick = max(1.2, size / 14.0)
+            bar = Line(
+                np.array([rad.get_right()[0] - 0.015, top_y, 0.0]),
+                np.array([inner.get_right()[0] + 0.05 * cap, top_y, 0.0]),
+                color=s_color, stroke_width=thick,
+            )
+            box = _math_box([rad, inner, bar], [0.0, _math_baseline(inner), 0.0])
+        elif kind == "scripts":
+            base = _math_render([item[1]], size, color)
+            bl = _math_baseline(base)
+            x0 = base.get_right()[0] + 0.05 * cap
+            parts = [base]
+            sup_bottom = None
+            if item[3] is not None:
+                sup = _math_render(item[3], size * _MATH_SCRIPT_SCALE, color)
+                lift = max(0.62 * cap, base.get_top()[1] - bl - 0.45 * cap)
+                sup.shift(np.array([x0 - sup.get_left()[0], bl + lift - _math_baseline(sup), 0.0]))
+                sup_bottom = sup.get_bottom()[1]
+                parts.append(sup)
+            if item[2] is not None:
+                sb = _math_render(item[2], size * _MATH_SCRIPT_SCALE, color)
+                drop = 0.34 * cap
+                sb.shift(np.array([x0 - sb.get_left()[0], bl - drop - _math_baseline(sb), 0.0]))
+                if sup_bottom is not None and sb.get_top()[1] > sup_bottom - 0.12 * cap:
+                    sb.shift(UP * (sup_bottom - 0.12 * cap - sb.get_top()[1]))
+                parts.append(sb)
+            box = _math_box(parts, [base.get_left()[0], bl, 0.0])
+        else:
+            raise ValueError(f"unknown math node {kind!r}")
+        gaps.append(pending_gap + (0.03 * cap if boxes and kind == "run" else 0.0))
+        boxes.append(box)
+        pending_gap = 0.0
+
+    cursor = 0.0
+    for box, gap in zip(boxes, gaps):
+        box.shift(np.array([cursor + gap - box.get_left()[0], -_math_baseline(box), 0.0]))
+        cursor = box.get_right()[0]
+    return _math_box(boxes or [VGroup()], [0.0, 0.0, 0.0])
+
+
+def math_text(src: str, *, font_size: float | None = None, color: str = P_WHITE):
+    """∑ Typeset a LaTeX-subset formula or unit with real indices, exponents and fractions."""
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
+
+    return _math_render(_math_parse_items(src), float(font_size or BODY_FONT_SIZE), color)
+
+
+def math_row(parts, *, font_size: int | None = None, color: str = P_WHITE, buff: float = 0.15):
+    """🧮 ``equation_row`` for typeset fragments — ``(key, latex, colour)`` parts on one shared baseline."""
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
+
+    size = float(font_size or FORMULA_FONT_SIZE)
+    items: dict[str, object] = {}
+    boxes = []
+    for key, src, part_color in parts:
+        box = math_text(src, font_size=size, color=part_color or color)
+        boxes.append(box)
+        if key:
+            items[key] = box
+    cursor = 0.0
+    for box in boxes:
+        box.shift(np.array([cursor - box.get_left()[0], -_math_baseline(box), 0.0]))
+        cursor = box.get_right()[0] + buff
+    return _math_box(boxes, [0.0, 0.0, 0.0]), items
+#endregion
+
+
+#region Typeset readouts
+# Labels, live numbers and formula panels on top of ``math_text``. A readout is
+# redrawn every frame from the tracker or geometry it belongs to, so a value
+# counts up from zero while its drawing grows instead of swapping in finished.
+PANEL_MAX_WIDTH: float = 11.6
+
+
+def de_num(value: float, digits: int = 0) -> str:
+    """🔢 German number for ``math_text`` — decimal comma, thin-space thousands."""
+    return f"{value:,.{digits}f}".replace(",", r"\,").replace(".", "{,}")
+
+
+def place_math(mob, at, edge: str = "center"):
+    """📌 Sit a typeset box on a baseline point; ``edge`` picks which side lands on ``at``."""
+    at = np.array(at, dtype=float)
+    x = {"left": mob.get_left()[0], "right": mob.get_right()[0], "center": mob.get_center()[0]}[edge]
+    mob.shift(np.array([at[0] - x, at[1] - mob.base.get_center()[1], 0.0]))
+    return mob
+
+
+def math_label(src: str, at=None, *, size: float | None = None, color: str = P_WHITE, edge: str = "center"):
+    """🏷️ Typeset label, optionally placed on a baseline point."""
+    mob = math_text(src, font_size=size, color=color)
+    return place_math(mob, at, edge) if at is not None else mob
+
+
+def math_readout(fn, at, *, size: float | None = None, color: str = P_WHITE, edge: str = "left"):
+    """📟 Live typeset label redrawn every frame from ``fn()``.
+
+    https://docs.manim.community/en/stable/reference/manim.animation.updaters.mobject_update_utils.html
+    """
+    from manim import always_redraw
+
+    return always_redraw(lambda: math_label(fn(), np.array(at() if callable(at) else at, dtype=float),
+                                            size=size, color=color, edge=edge))
+
+
+def math_panel(parts, *, color: str = P_TEAL, size: float | None = None,
+               edge_buff: float = FORMULA_PANEL_EDGE_BUFF, buff: float = 0.18):
+    """🧮 Typeset formula in the fixed bottom panel, shrunk only when it would overrun the frame."""
+    row, items = math_row(parts, font_size=size, buff=buff)
+    if row.width > PANEL_MAX_WIDTH:
+        row.scale(PANEL_MAX_WIDTH / row.width)
+    row, box = formula_panel(row, color=color, edge_buff=edge_buff)
+    return row, box, items
+#endregion
+
+
+#region Caption bar (German subtitles)
+# The one dedicated subtitle slot — fixed bottom edge, boxed for legibility,
+# sitting below formula_panel so the two fixed zones never collide.
+# Always CAPTION_FONT_SIZE, always center-aligned lines — never auto-shrink
+# (that made long clauses look tiny next to short ones and undid hand-breaks).
+CAPTION_EDGE_BUFF = 0.35
+CAPTION_MAX_WIDTH = 11.5
+CAPTION_LINE_BUFF = 0.10
+# Two lines is what SAFE_BOTTOM was measured against; a third reaches y ≈ -2.1 and
+# starts colliding with beat content, so it is a text problem, not a layout one.
+CAPTION_MAX_LINES = 2
+
+
+def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WHITE):
+    """💬 German subtitle line, fixed at the very bottom, boxed for legibility against any backdrop.
+
+    Always ``CAPTION_FONT_SIZE`` — never shrink. Word-wraps to ``CAPTION_MAX_WIDTH``
+    (and honours hand ``\\n``) so long clauses stay on-screen, center-aligned, with
+    a fixed vertical gap between lines.
+    """
+    from manim import DOWN, RoundedRectangle, VGroup
+    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    CAPTION_FONT_SIZE = _manim_module.CAPTION_FONT_SIZE
+    centered_body_text = _manim_module.centered_body_text
+
+    if font_size is None:
+        font_size = CAPTION_FONT_SIZE
+
+    label = centered_body_text(
+        text_de,
+        font_size=font_size,
+        color=color,
+        line_buff=CAPTION_LINE_BUFF,
+        max_width=CAPTION_MAX_WIDTH,
+    )
+    # centered_body_text returns a bare Text for one line and a VGroup of Texts for
+    # several — counting submobjects on the single-line case would count glyphs.
+    from manim import VGroup as _VGroup
+
+    n_lines = len(label.submobjects) if isinstance(label, _VGroup) else 1
+    if n_lines > CAPTION_MAX_LINES:
+        raise ValueError(
+            f"caption_bar wrapped to {n_lines} lines (max {CAPTION_MAX_LINES}); "
+            f"split or shorten the German clause: {text_de!r}"
+        )
+    bg = RoundedRectangle(
+        width=label.width + 0.5,
+        height=label.height + 0.3,
+        corner_radius=0.08,
+        fill_color=P_DEEP_DARK,
+        fill_opacity=0.78,
+        stroke_width=0,
+    )
+    bg.move_to(label.get_center())
+    bg._layout_zone = "caption_box"
+    group = VGroup(bg, label)
+    group.to_edge(DOWN, buff=CAPTION_EDGE_BUFF)
+    group.set_x(0)
+    for line in label.get_family():
+        line._layout_zone = "caption"
+    return group
+
+
+def swap_caption(scene, old, text_de: str, *, run_time: float = 0.35, **kwargs):
+    """💬 Swap the on-screen caption to the next clause's German subtitle; returns the new one.
+
+    Fades out then in — not a simultaneous cross-fade. Two different
+    sentences blended mid-transition render as doubled, overlapping text
+    (reproduced while verifying ``3_heating/1_introduction/scene_1.py``); a
+    sequential fade never overlaps two different strings on screen at once.
+
+    Records ``scene._vo_caption_t0`` when the new caption is fully on screen so
+    ``hold_for`` times speech from the real subtitle appearance, not from an
+    inflated ``used=`` that backdates into the previous clause.
+    """
+    from manim import FadeIn, FadeOut
+
+    new = caption_bar(text_de, **kwargs)
+    half = run_time / 2
+    scene.play(FadeOut(old), run_time=half)
+    scene.play(FadeIn(new), run_time=half)
+    scene._vo_caption_t0 = _scene_time(scene)
+    return new
+#endregion
+
+
+#region Narration timing
+# Every Beat embeds its own narration as an ordered list of
+# (section_key, narration_en, subtitle_de) clauses — one list drives the TTS
+# text, the on-screen German subtitle, AND exactly how many seconds each
+# section needs. No hand-typed "hold this many seconds" guesses, no separate
+# subtitle file that can drift out of sync with what's spoken.
+NARRATION_WPS: float = 2.5  # spoken words per second, English VO
+SUBTITLE_WPS: float = 2.2  # German subtitle VO (Gemini TTS)
+# Educational on-screen reading is slower than TTS speech — full-series
+# renders are often watched without muxed audio, so hold budgets must leave
+# enough time to finish the German caption, not only to hear it.
+SUBTITLE_READING_WPS: float = 1.6
+SUBTITLE_MIN_SECONDS: float = 1.5  # floor for any non-empty caption
+
+Clause = tuple[str, str, str]  # (section_key, narration_en, subtitle_de)
+_VO_LANGUAGE: str = "en"  # "en" | "de" — which clause field estimates timing when no manifest
+_VO_TIMING: dict[str, dict[str, float]] = {}
+
+
+def set_vo_language(lang: str) -> None:
+    """🗣️ Switch timing estimates to German subtitles (``de``) or English narration (``en``)."""
+    global _VO_LANGUAGE
+    if lang not in {"en", "de"}:
+        raise ValueError(f"unsupported vo language: {lang!r}")
+    _VO_LANGUAGE = lang
+
+
+def load_vo_timing(manifest_path) -> None:
+    """📋 Load measured per-clause durations from ``generate_audio.py`` (``vo_timing.json``).
+
+    Merges into the global table so a full-series import of many scene modules
+    keeps every beat's timings instead of the last file winning.
+    """
+    global _VO_TIMING
+    from pathlib import Path
+    import json
+
+    path = Path(manifest_path)
+    if not path.is_file():
+        return
+    data = json.loads(path.read_text(encoding="utf-8"))
+    beats = data.get("beats") if isinstance(data, dict) else None
+    if not isinstance(beats, dict):
+        return
+    for beat, timings in beats.items():
+        if not isinstance(timings, dict):
+            continue
+        bucket = _VO_TIMING.setdefault(str(beat), {})
+        for k, v in timings.items():
+            bucket[str(k)] = float(v)
+
+
+def narration_seconds(narration: list[Clause], key: str | None = None) -> float:
+    """⏱️ Estimated spoken seconds for one clause (``key``) or the whole narration."""
+    if _VO_LANGUAGE == "de":
+        words = sum(
+            len(text_de.split()) for section, _, text_de in narration
+            if text_de.strip() and (key is None or section == key)
+        )
+        return round(words / SUBTITLE_WPS, 2)
+    words = sum(len(text_en.split()) for section, text_en, _ in narration if key is None or section == key)
+    return round(words / NARRATION_WPS, 2)
+
+
+def narration_text(narration: list[Clause], key: str | None = None) -> str:
+    """📝 Join clauses' English text — legacy English VO string."""
+    return " ".join(text_en for section, text_en, _ in narration if key is None or section == key)
+
+
+def subtitle_narration_text(narration: list[Clause], key: str | None = None) -> str:
+    """📝 Join clauses' German subtitles — default VO when subtitles are on screen."""
+    return " ".join(
+        text_de for section, _, text_de in narration
+        if text_de.strip() and (key is None or section == key)
+    )
+
+
+def subtitle_text(narration: list[Clause], key: str) -> str:
+    """💬 The German subtitle for one clause — what ``caption_bar()`` displays while it plays."""
+    for section, _, text_de in narration:
+        if section == key:
+            return text_de
+    raise KeyError(key)
+
+
+def subtitle_read_seconds(narration: list[Clause], key: str | None = None) -> float:
+    """📖 Minimum on-screen seconds to comfortably read the German subtitle(s)."""
+    words = sum(
+        len(text_de.split()) for section, _, text_de in narration
+        if text_de.strip() and (key is None or section == key)
+    )
+    if words <= 0:
+        return 0.0
+    return round(max(words / SUBTITLE_READING_WPS, SUBTITLE_MIN_SECONDS), 2)
+
+
+def hold_for(scene, narration: list[Clause], key: str, *, used: float = 0.0, min_wait: float = 0.3,
+             during=None) -> float:
+    """⏸️ Wait as long as this clause needs on screen, minus time already visible.
+
+    ``during(run_time)`` may return animations that fill the remaining time instead
+    of a frozen wait — heat keeps rippling, light keeps pulsing while the subtitle
+    is read.
+
+    Prefers ``scene._vo_caption_t0`` (set by ``swap_caption``) so speech lines up
+    with the subtitle that is actually on screen. The ``used`` argument remains
+    as a fallback for the first caption of a beat (before any swap).
+
+    The budget is the maximum of measured TTS length (when ``vo_timing.json`` is
+    loaded), the language WPS estimate, and a German subtitle reading floor.
+    """
+    beat_id = vo_beat_id(scene)
+    measured = _VO_TIMING.get(beat_id, {}).get(key)
+    estimated = narration_seconds(narration, key)
+    read_need = subtitle_read_seconds(narration, key)
+    budget = max(measured or 0.0, estimated, read_need)
+    spent = getattr(scene, "_vo_spent", {})
+    now = _scene_time(scene)
+    t0 = getattr(scene, "_vo_caption_t0", None)
+    if t0 is None:
+        t0 = max(0.0, now - used)
+        scene._vo_caption_t0 = t0
+    visible = max(0.0, now - t0)
+    charged = max(visible, spent.get(key, 0.0))
+    remaining = max(min_wait, budget - charged)
+    spent[key] = charged + remaining
+    scene._vo_spent = spent
+    _trace_clause(scene, key, start=t0, used=visible, remaining=remaining)
+    check_layout(scene, key)
+    anims = during(remaining) if during is not None else None
+    if anims:
+        scene.play(*anims, run_time=remaining)
+    else:
+        scene.wait(remaining)
+    return remaining
+#endregion
+
+
+#region VO trace
+# The voiceover can only line up with the subtitles if we know when each
+# subtitle actually appears in the rendered clip. ``used`` is by construction
+# the seconds spent since this clause's caption faded in, so the clause starts
+# at ``renderer.time - used``. Rendering with VO_TRACE=1 writes those marks to
+# vo_trace.json next to the scene file; generate_audio.py --align then places
+# each clause's speech at exactly that timestamp.
+_VO_TRACE_ENABLED: bool = bool(__import__("os").environ.get("VO_TRACE"))
+_VO_TRACE: dict[str, dict[str, dict[str, float]]] = {}
+_VO_TRACE_PATHS: dict[str, str] = {}
+
+
+def vo_beat_id(scene) -> str:
+    """🏷️ Which beat's narration this scene is currently playing.
+
+    The full-video runner replays every beat through one host ``Scene``, so the
+    class name alone would merge all beats into a single timing bucket.
+    """
+    return getattr(scene, "vo_beat_id", None) or scene.__class__.__name__
+
+
+def begin_vo_beat(scene, beat_id: str) -> None:
+    """🎬 Point the host scene at ``beat_id``'s timings and clear the previous beat's spend."""
+    scene.vo_beat_id = beat_id
+    scene._vo_spent = {}
+    scene._vo_caption_t0 = None
+
+
+def _scene_time(scene) -> float:
+    renderer = getattr(scene, "renderer", None)
+    return float(getattr(renderer, "time", 0.0) or 0.0)
+
+
+def _trace_clause(scene, key: str, *, start: float, used: float, remaining: float) -> None:
+    if not _VO_TRACE_ENABLED:
+        return
+    import sys as _sys
+
+    beat_id = vo_beat_id(scene)
+    now = _scene_time(scene)
+    marks = _VO_TRACE.setdefault(beat_id, {})
+    # Caption clock start; never claim overlap with an earlier clause window.
+    if marks:
+        prev_end = max(
+            (float(m.get("start", 0.0)) + float(m.get("window", 0.0)) for m in marks.values()),
+            default=0.0,
+        )
+        start = max(start, prev_end)
+    mark = marks.get(key)
+    if mark is None:
+        marks[key] = {"start": round(max(0.0, start), 3), "window": round(used + remaining, 3)}
+    else:
+        mark["window"] = round(now + remaining - mark["start"], 3)
+    module = _sys.modules.get(scene.__class__.__module__)
+    scene_file = getattr(module, "__file__", None)
+    if scene_file:
+        _VO_TRACE_PATHS[beat_id] = scene_file
+
+
+def _dump_vo_trace() -> None:
+    if not _VO_TRACE:
+        return
+    import json
+    from pathlib import Path
+
+    for beat_id, marks in _VO_TRACE.items():
+        scene_file = _VO_TRACE_PATHS.get(beat_id)
+        if not scene_file:
+            continue
+        owner = Path(scene_file).resolve().parent
+        output = __import__("os").environ.get("SEMIO_TEACHING_OUTPUT_ROOT")
+        from hashlib import sha256
+
+        identity = sha256(owner.relative_to(_WORKSPACE_ROOT).as_posix().encode()).hexdigest()[:10]
+        path = (Path(output) / "trace" / identity / beat_id / "🔣️.json") if output else owner / "📍️trace" / "🔣️.json"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        payload = {"beats": {}}
+        if path.is_file():
+            try:
+                existing = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(existing.get("beats"), dict):
+                    payload["beats"] = existing["beats"]
+            except Exception:  # noqa: BLE001
+                pass
+        payload["beats"][beat_id] = marks
+        path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+__import__("atexit").register(_dump_vo_trace)
+#endregion
+
+
+#region Layout guard
+# Text that overlaps other text, or text that has walked off the frame, is
+# always a bug — never an intentional composition. ``hold_for`` runs this check
+# at every clause boundary (the settled state of a beat) when the environment
+# sets ``LAYOUT_CHECK=1``, so one render prints every offending pair instead of
+# leaving them to be spotted by eye in a finished video.
+FRAME_X_LIMIT: float = 7.05
+FRAME_Y_LIMIT: float = 3.95
+# Caption lines are exempt by zone, so two labels must keep a visible gap.
+_OVERLAP_INSET: float = -0.02
+_LAYOUT_CHECK_ENABLED: bool = bool(__import__("os").environ.get("LAYOUT_CHECK"))
+
+
+def _visible_texts(scene) -> list:
+    """🔍 Every on-screen ``Text`` mobject, glyph submobjects excluded."""
+    from manim import Text
+
+    found = []
+    for mob in scene.mobjects:
+        for sub in mob.get_family():
+            if not isinstance(sub, Text):
+                continue
+            if sub.width <= 0.01 or sub.get_fill_opacity() < 0.05:
+                continue
+            found.append(sub)
+    return found
+
+
+def _box(mob) -> tuple[float, float, float, float]:
+    return (mob.get_left()[0], mob.get_right()[0], mob.get_bottom()[1], mob.get_top()[1])
+
+
+# The two fixed bottom zones, measured from FORMULA_PANEL_EDGE_BUFF and
+# CAPTION_EDGE_BUFF. Beat content that reaches into either reads as touching the
+# panel border even when no two glyphs technically overlap — the near-miss the
+# pairwise test is too forgiving to catch.
+FORMULA_BAND = (-2.80, -1.84)
+CAPTION_BAND = (-4.00, -2.62)
+
+
+def _zone(mob) -> str:
+    return getattr(mob, "_layout_zone", "")
+
+
+def _in_band(box, band) -> bool:
+    _l, _r, bottom, top = box
+    return top > band[0] and bottom < band[1]
+
+
+_SAMPLE_STEP: float = 0.04
+# A fixed-zone frame may hold its own text, but cuts through any other label.
+_OWN_FRAME: dict[str, str] = {"formula_box": "formula", "caption_box": "caption"}
+_FIXED_ZONES = frozenset({"formula", "formula_box", "caption", "caption_box"})
+_TEXT_HIT_INSET: float = 0.0
+_FILL_HIT_OPACITY: float = 0.25
+_STROKE_HIT_OPACITY: float = 0.15
+
+
+def _label_roots(scene):
+    """🌳 Map every family member to its label root (outermost math box or ``Text``) and flag glyphs.
+
+    Returns ``(roots, glyph_ids)``: parts of one typeset label never collide with
+    each other, and the glyph outlines inside a ``Text`` are text, not graphics.
+    """
+    from manim import Text
+
+    roots: dict[int, int] = {}
+    glyph_ids: set[int] = set()
+
+    def walk(mob, root, in_text):
+        if root is None and (hasattr(mob, "base") or isinstance(mob, Text)):
+            root = id(mob)
+        if root is not None:
+            roots.setdefault(id(mob), root)
+        if in_text:
+            glyph_ids.add(id(mob))
+        for sub in mob.submobjects:
+            walk(sub, root, in_text or isinstance(mob, Text))
+
+    for mob in scene.mobjects:
+        walk(mob, None, False)
+    return roots, glyph_ids
+
+
+def _stroke_samples(mob) -> np.ndarray:
+    """〰️ Points every ``_SAMPLE_STEP`` along a mobject's own bezier path."""
+    pts = mob.points
+    if len(pts) < 4:
+        return np.zeros((0, 3))
+    curves = pts[: len(pts) // 4 * 4].reshape(-1, 4, 3)
+    t = np.linspace(0.0, 1.0, 9)[:, None]
+    basis = np.stack([(1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t ** 2, t ** 3], axis=1)[..., 0]
+    poly = np.einsum("tk,ckd->ctd", basis, curves).reshape(-1, 3)
+    seg = np.linalg.norm(np.diff(poly, axis=0), axis=1)
+    total = float(seg.sum())
+    if total <= 1e-6:
+        return poly[:1]
+    cum = np.concatenate([[0.0], np.cumsum(seg)])
+    s = np.linspace(0.0, total, max(2, int(total / _SAMPLE_STEP) + 1))
+    return np.stack([np.interp(s, cum, poly[:, k]) for k in range(3)], axis=1)
+
+
+def _visible_graphics(scene, roots, glyph_ids):
+    """🎨 Drawn shapes with a visible stroke or fill — never glyphs."""
+    from manim import VMobject
+
+    found = []
+    for mob in scene.mobjects:
+        for sub in mob.get_family():
+            if id(sub) in glyph_ids or not isinstance(sub, VMobject) or len(sub.points) < 4:
+                continue
+            stroke = sub.get_stroke_opacity() if sub.get_stroke_width() > 0.3 else 0.0
+            fill = sub.get_fill_opacity()
+            if stroke < _STROKE_HIT_OPACITY and fill < _FILL_HIT_OPACITY:
+                continue
+            found.append((sub, stroke, fill, roots.get(id(sub))))
+    return found
+
+
+def _describe(mob) -> str:
+    return f"{type(mob).__name__}@({mob.get_center()[0]:.2f},{mob.get_center()[1]:.2f})"
+
+
+def layout_conflicts(scene) -> list[str]:
+    """🚧 Overlapping, off-frame, or reserved-zone text in the current frame.
+
+    Besides text-on-text it flags a line or outline running *through* a label
+    and a filled object (bulb, dot, block) sitting partly under a label — a
+    backdrop that fully contains the label is fine.
+    """
+    texts = _visible_texts(scene)
+    roots, glyph_ids = _label_roots(scene)
+    issues: list[str] = []
+    caption_lines = [m for m in texts if _zone(m) == "caption"]
+    if len(caption_lines) > CAPTION_MAX_LINES:
+        issues.append(f"caption has {len(caption_lines)} lines (max {CAPTION_MAX_LINES}) "
+                      f"{getattr(caption_lines[0], 'text', '?')!r}")
+    panel_on_screen = any(_zone(m) == "formula" for m in texts)
+    for mob in texts:
+        zone = _zone(mob)
+        if zone:
+            continue
+        box = _box(mob)
+        if panel_on_screen and _in_band(box, FORMULA_BAND):
+            issues.append(
+                f"in formula zone {getattr(mob, 'text', '?')!r} "
+                f"@({mob.get_center()[0]:.2f},{mob.get_center()[1]:.2f})"
+            )
+        if _in_band(box, CAPTION_BAND):
+            issues.append(
+                f"in caption zone {getattr(mob, 'text', '?')!r} "
+                f"@({mob.get_center()[0]:.2f},{mob.get_center()[1]:.2f})"
+            )
+    for mob in texts:
+        left, right, bottom, top = _box(mob)
+        if left < -FRAME_X_LIMIT or right > FRAME_X_LIMIT or bottom < -FRAME_Y_LIMIT or top > FRAME_Y_LIMIT:
+            issues.append(f"off-frame {getattr(mob, 'text', '?')!r} at x[{left:.2f},{right:.2f}] y[{bottom:.2f},{top:.2f}]")
+    for i, first in enumerate(texts):
+        a_l, a_r, a_b, a_t = _box(first)
+        for second in texts[i + 1:]:
+            if roots.get(id(first)) == roots.get(id(second)) and roots.get(id(first)) is not None:
+                continue
+            if _zone(first) == "caption" and _zone(second) == "caption":
+                continue
+            b_l, b_r, b_b, b_t = _box(second)
+            dx = min(a_r, b_r) - max(a_l, b_l) - 2 * _OVERLAP_INSET
+            dy = min(a_t, b_t) - max(a_b, b_b) - 2 * _OVERLAP_INSET
+            if dx > 0 and dy > 0:
+                issues.append(
+                    f"overlap {getattr(first, 'text', '?')!r} @({first.get_center()[0]:.2f},{first.get_center()[1]:.2f}) × "
+                    f"{getattr(second, 'text', '?')!r} @({second.get_center()[0]:.2f},{second.get_center()[1]:.2f}) "
+                    f"by {dx:.2f}×{dy:.2f} units"
+                )
+    graphics = _visible_graphics(scene, roots, glyph_ids)
+    if not graphics:
+        return issues
+    g_boxes = np.array([_box(g) for g, *_ in graphics])
+    frames = [(g, b) for (g, *_), b in zip(graphics, g_boxes) if _zone(g) in _OWN_FRAME]
+    for frame, (f_l, f_r, f_b, f_t) in frames:
+        for (g, *_), (g_l, g_r, g_b, g_t) in zip(graphics, g_boxes):
+            if _zone(g) in _FIXED_ZONES:
+                continue
+            if g_r > f_l and g_l < f_r and g_t > f_b and g_b < f_t:
+                issues.append(f"object touches {_zone(frame)} × {_describe(g)}")
+    if not texts:
+        return issues
+    samples: dict[int, np.ndarray] = {}
+    for text in texts:
+        t_root = roots.get(id(text))
+        l, r, b, t = _box(text)
+        l, r, b, t = l + _TEXT_HIT_INSET, r - _TEXT_HIT_INSET, b + _TEXT_HIT_INSET, t - _TEXT_HIT_INSET
+        if r <= l or t <= b:
+            continue
+        near = np.nonzero(
+            (g_boxes[:, 1] >= l) & (g_boxes[:, 0] <= r) & (g_boxes[:, 3] >= b) & (g_boxes[:, 2] <= t)
+        )[0]
+        name = getattr(text, "text", "?")
+        where = f"@({text.get_center()[0]:.2f},{text.get_center()[1]:.2f})"
+        for k in near:
+            g, stroke, fill, g_root = graphics[k]
+            if g_root is not None and g_root == t_root:
+                continue
+            if _OWN_FRAME.get(_zone(g)) == _zone(text):
+                continue
+            g_l, g_r, g_b, g_t = g_boxes[k]
+            contains = g_l <= l and g_r >= r and g_b <= b and g_t >= t
+            if fill >= _FILL_HIT_OPACITY and not contains:
+                issues.append(f"object under {name!r} {where} × {_describe(g)}")
+                continue
+            if stroke < _STROKE_HIT_OPACITY:
+                continue
+            if k not in samples:
+                samples[k] = _stroke_samples(g)
+            pts = samples[k]
+            if len(pts) and ((pts[:, 0] > l) & (pts[:, 0] < r) & (pts[:, 1] > b) & (pts[:, 1] < t)).any():
+                issues.append(f"line through {name!r} {where} × {_describe(g)}")
+    return issues
+
+
+def check_layout(scene, label: str = "") -> list[str]:
+    """🚨 Print this frame's collisions once each, stamped with the scene time — only when ``LAYOUT_CHECK=1``."""
+    if not _LAYOUT_CHECK_ENABLED:
+        return []
+    issues = layout_conflicts(scene)
+    seen = scene.__dict__.setdefault("_layout_seen", set())
+    for issue in issues:
+        key = (vo_beat_id(scene), issue.split(" × ")[0].split(" @")[0], issue.split(" × ")[-1].split("@")[0])
+        if key in seen:
+            continue
+        seen.add(key)
+        print(f"[LAYOUT] {vo_beat_id(scene)} t={_scene_time(scene):.1f}s {label}: {issue}")
+    return issues
+
+
+def _install_play_probe() -> None:
+    """🔬 With ``LAYOUT_CHECK=1`` every ``Scene.play`` ends with a layout check, not only clause holds."""
+    from manim import Scene
+
+    if getattr(Scene.play, "_layout_probe", False):
+        return
+    original = Scene.play
+
+    def play(self, *args, **kwargs):
+        result = original(self, *args, **kwargs)
+        check_layout(self, "play")
+        return result
+
+    play._layout_probe = True
+    Scene.play = play
+
+
+if _LAYOUT_CHECK_ENABLED:
+    _install_play_probe()
+#endregion

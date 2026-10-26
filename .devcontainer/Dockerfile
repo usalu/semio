@@ -51,9 +51,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libgbm1 \
     libasound2t64 \
     libpango-1.0-0 \
+    libpango1.0-dev \
     libcairo2 \
+    libcairo2-dev \
     libatspi2.0-0 \
     fonts-liberation \
+    fonts-dejavu-extra \
     libappindicator3-1 \
     libu2f-udev \
     libvulkan1 \

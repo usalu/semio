@@ -1,0 +1,724 @@
+{
+  "authoring": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring",
+  "energy": "🎓️teaching/🏛️architecture/⚡️energy",
+  "lessons": [
+    {
+      "source": "1_physical_fundamentals",
+      "topic": "🧲️physics",
+      "chapters": {
+        "": "🧲️fundamentals"
+      }
+    },
+    {
+      "source": "2_ventilation",
+      "topic": "🌬️ventilation",
+      "chapters": {
+        "1_warum_lueften": "❓️need",
+        "2_luftmenge": "📦️volume",
+        "3_waermestrom_luft": "🌡️heat-flow",
+        "4_natuerliche_lueftung": "🪟️natural",
+        "5_mechanische_lueftung": "⚙️mechanical",
+        "6_uebergabe": "🤝️handoff"
+      }
+    },
+    {
+      "source": "3_heating",
+      "topic": "🔥️heating",
+      "chapters": {
+        "1_introduction": "🧲️fundamentals",
+        "2_conduction": "🧱️conduction",
+        "3_convection": "🌬️convection",
+        "4_internal_heat_gain": "👥️internal-gains",
+        "5_solar_heat_gain": "☀️solar-gains",
+        "6_final_calculation": "🧮️calculation"
+      }
+    },
+    {
+      "source": "4_cooling",
+      "topic": "❄️cooling",
+      "chapters": {
+        "1_heating_vs_cooling": "⚖️heating-comparison",
+        "2_internal_gains": "👥️internal-gains",
+        "3_transmission_humidity": "💧️transmission-humidity",
+        "4_solar_radiation": "☀️solar-radiation",
+        "5_systemauslegung": "📐️system-sizing",
+        "6_sommerstrategie": "🌤️summer-strategy"
+      }
+    },
+    {
+      "source": "5_energy_balance",
+      "topic": "📊️demand",
+      "chapters": {
+        "1_recap_heizen_kuehlen": "🔁️recap",
+        "2_regulatory_framework": "⚖️regulations",
+        "3_bedarf_vs_leistung": "⚡️demand-power",
+        "4_system_losses": "♨️system-losses",
+        "5_primary_energy": "🏭️primary-energy",
+        "6_energieausweis": "🏷️certificate",
+        "7_praxis_vs_theorie": "🧪️practice"
+      }
+    }
+  ],
+  "moves": [
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/full_physical_fundamentals_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/scene_1.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/1_physical_fundamentals/vo_trace.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/📍️trace/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/1_warum_lueften/scene_1.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/2_luftmenge/scene_2.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/3_waermestrom_luft/scene_3.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/4_natuerliche_lueftung/scene_4.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/5_mechanische_lueftung/scene_5.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/6_uebergabe/scene_6.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/full_ventilation_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/2_ventilation/README.md",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/1_introduction/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/1_introduction/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/1_introduction/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/1_introduction/scene_1.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/2_conduction/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/2_conduction/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/2_conduction/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/2_conduction/scene_2.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/3_convection/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/3_convection/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/3_convection/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/3_convection/scene_3.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/4_internal_heat_gain/scene_4.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/5_solar_heat_gain/scene_5.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/6_final_calculation/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/6_final_calculation/scene_6.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/full_heating_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/3_heating/README.md",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/scene_1.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/1_heating_vs_cooling/vo_trace.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/📍️trace/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/scene_2.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/2_internal_gains/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/scene_3.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/3_transmission_humidity/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/scene_4.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/4_solar_radiation/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/scene_5.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/5_systemauslegung/vo_trace.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/📍️trace/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/scene_6.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/6_sommerstrategie/vo_timing.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/⏱️timing/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/full_cooling_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/README.md",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/4_cooling/vo_trace.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📍️trace/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/1_recap_heizen_kuehlen/scene_1.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/2_regulatory_framework/scene_2.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/3_bedarf_vs_leistung/scene_3.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/4_system_losses/scene_4.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/5_primary_energy/scene_5.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/6_energieausweis/scene_6.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/build_full_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🏗️composition/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/7_praxis_vs_theorie/scene_7.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/full_energy_balance_video.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/5_energy_balance/README.md",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md"
+    },
+    {
+      "old": "🎓️teaching/energy/demand/KONZEPTE_UND_FORMELN.md",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md"
+    },
+    {
+      "old": "🎓️teaching/intro/generate_audio.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/intro/intro_scene.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/intro/manim.cfg",
+      "new": null,
+      "reason": "Redundant preview defaults replaced by explicit runtime settings"
+    },
+    {
+      "old": "🎓️teaching/intro/welfenschloss (1).pdf",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🏰️institution/📕️.pdf"
+    },
+    {
+      "old": "🎓️teaching/manim_fonts.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/manim_visuals.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/pyproject.toml",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/pyproject.toml"
+    },
+    {
+      "old": "🎓️teaching/tts_pipeline.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/video_runtime.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/render_videos.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/test_video_runtime.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+    },
+    {
+      "old": "🎓️teaching/video_manifest.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+    },
+    {
+      "old": "🎓️teaching/video_manifest.schema.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧬️schema/🔣️.schema.json"
+    },
+    {
+      "old": "🎓️teaching/video_runtime.tests.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json"
+    },
+    {
+      "old": "🎓️teaching/📜️script.ts",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+    },
+    {
+      "old": "🎓️teaching/uv.lock",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python/uv.lock"
+    },
+    {
+      "old": "🎓️teaching/glyph_fallback.tests.json",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🔣️.cases.json"
+    },
+    {
+      "old": "🎓️teaching/test_manim_fonts.py",
+      "new": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/🐍️.py"
+    }
+  ],
+  "registry": {
+    "path": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
+    "kindIds": [
+      "teaching-authoring",
+      "teaching-authoring-clip",
+      "teaching-energy-clip",
+      "teaching-concepts",
+      "teaching-authoring-visuals",
+      "teaching-clip-runtime",
+      "teaching-clip-render",
+      "teaching-clip-intro",
+      "teaching-clip-institution",
+      "teaching-physics-clip",
+      "teaching-clip-chapter-fundamentals",
+      "teaching-ventilation-clip",
+      "teaching-clip-chapter-need",
+      "teaching-clip-chapter-volume",
+      "teaching-clip-chapter-heat-flow",
+      "teaching-clip-chapter-natural",
+      "teaching-clip-chapter-mechanical",
+      "teaching-clip-chapter-handoff",
+      "teaching-heating-clip",
+      "teaching-clip-chapter-conduction",
+      "teaching-clip-chapter-convection",
+      "teaching-clip-chapter-internal-gains",
+      "teaching-clip-chapter-solar-gains",
+      "teaching-clip-chapter-calculation",
+      "teaching-cooling-clip",
+      "teaching-clip-chapter-heating-comparison",
+      "teaching-clip-chapter-transmission-humidity",
+      "teaching-clip-chapter-solar-radiation",
+      "teaching-clip-chapter-system-sizing",
+      "teaching-clip-chapter-summer-strategy",
+      "teaching-demand-clip",
+      "teaching-clip-chapter-recap",
+      "teaching-clip-chapter-regulations",
+      "teaching-clip-chapter-demand-power",
+      "teaching-clip-chapter-system-losses",
+      "teaching-clip-chapter-primary-energy",
+      "teaching-clip-chapter-certificate",
+      "teaching-clip-chapter-practice",
+      "teaching-clip-composition",
+      "teaching-clip-speech",
+      "teaching-clip-timing",
+      "teaching-clip-trace"
+    ],
+    "memberIds": [
+      "members-of-teaching-physics-clip",
+      "members-of-teaching-ventilation-clip",
+      "members-of-teaching-heating-clip",
+      "members-of-teaching-cooling-clip",
+      "members-of-teaching-demand-clip",
+      "members-of-teaching-authoring",
+      "members-of-teaching-authoring-clip",
+      "members-of-teaching-energy-clip",
+      "members-of-teaching-clip-intro",
+      "members-of-teaching-clip-chapters"
+    ],
+    "memberAdditions": {
+      "members-of-teaching-energy": [
+        "🎬️clip",
+        "🏗️authoring",
+        "📖️concepts"
+      ],
+      "members-of-teaching-topics": [
+        "🎬️clip"
+      ]
+    }
+  }
+}
