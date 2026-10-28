@@ -1,0 +1,7 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/population.rs');s=p.read_text(encoding='utf-8');s=s.replace('rule: Some(rule.label.into()), entity_id: id }','rule: Some(rule.label.into()), entity_id: id,offset:Some(rule.expression.offset),attribute:None }');s=s.replace('rule: Some(rule.into()), entity_id: id }','rule: Some(rule.into()), entity_id: id,offset:None,attribute:None }');s=s.replace('owner: None, rule: None, entity_id: None }','owner: failure.owner, rule: None, entity_id: failure.entity_id,offset:failure.offset,attribute:failure.attribute }');p.write_text(s,encoding='utf-8',newline='\n')
+p=Path('.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️21/COMPLETE-IFC-4X3-ARTIFACT-EDITING-AND-INTERCHANGE/native-expression-cases.ts');s=p.read_text(encoding='utf-8');s+='''
+const manifest=await Bun.file(resolve(base,'../../🧪️fixtures/official/cases.json')).json();
+await writeFile(resolve(base,'official-cases.rs'),'//! 🧪 Unchanged normative example source references share the permanent oracle manifest.\\nstatic OFFICIAL_CASES:&[(&str,&str,usize)]=&['+manifest.cases.map((row:any)=>`(${JSON.stringify(row.file)},include_str!(${JSON.stringify('../../🧪️fixtures/official/'+row.file)}),${row.entities})`).join(',')+'];\\n');
+console.log('[DEBUG] native official fixture references',manifest.cases.length);
+''';p.write_text(s,encoding='utf-8',newline='\n')

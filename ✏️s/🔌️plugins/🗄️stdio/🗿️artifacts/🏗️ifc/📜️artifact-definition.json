@@ -4,7 +4,8 @@
   "artifact": "ifc",
   "directory": "🏗️ifc",
   "dependencies": [
-    "s.stdio.txt"
+    "s.stdio.txt",
+    "s.stdio.gltf"
   ],
   "standards": [
     {
@@ -26,6 +27,20 @@
       "redistribution_status": "unknown",
       "clauses_or_features": [],
       "status": "unverified"
+    },
+    {
+      "id": "s.stdio.ifc.standard.4x3",
+      "revision": "4x3",
+      "normative_source": "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/IFC4X3_ADD2.exp",
+      "publication_date": null,
+      "source_checksum": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+      "redistribution_status": "unknown",
+      "clauses_or_features": [
+        "IFC4X3_ADD2 declarations",
+        "structural EXPRESS domains and bounded TypeScript EXPRESS population evaluation",
+        "native EXPRESS execution written but unverified; complete MVD conformance not established"
+      ],
+      "status": "declared"
     }
   ],
   "profiles": [
@@ -40,9 +55,22 @@
       "standard": "s.stdio.ifc.standard.4",
       "profile": "any",
       "status": "unimplemented"
+    },
+    {
+      "id": "s.stdio.ifc.standard.4x3.profile.any",
+      "standard": "s.stdio.ifc.standard.4x3",
+      "profile": "any",
+      "status": "declared"
     }
   ],
   "source_dialects": [
+    {
+      "id": "s.stdio.ifc.standard.4x3.dialect.source",
+      "standard": "s.stdio.ifc.standard.4x3",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "declared"
+    },
     {
       "id": "s.stdio.ifc.standard.2x3.dialect.source",
       "standard": "s.stdio.ifc.standard.2x3",
@@ -63,9 +91,13 @@
       "id": "s.stdio.ifc.standard.2x3.representation.document",
       "standard": "s.stdio.ifc.standard.2x3",
       "representation": "document",
-      "mimes": ["application/x-ifc"],
-      "extensions": [".ifc"],
-      "is_binary": true,
+      "mimes": [
+        "application/x-ifc"
+      ],
+      "extensions": [
+        ".ifc"
+      ],
+      "is_binary": false,
       "aliases": [],
       "neutral": true,
       "status": "declared"
@@ -80,7 +112,22 @@
       "extensions": [
         ".ifc"
       ],
-      "is_binary": true,
+      "is_binary": false,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.ifc.standard.4x3.representation.document",
+      "standard": "s.stdio.ifc.standard.4x3",
+      "representation": "document",
+      "mimes": [
+        "application/x-ifc"
+      ],
+      "extensions": [
+        ".ifc"
+      ],
+      "is_binary": false,
       "aliases": [],
       "neutral": true,
       "status": "declared"
@@ -120,6 +167,55 @@
     }
   ],
   "runtime_capabilities": [
+    {
+      "id": "s.stdio.ifc.standard.4x3.codec.codec-ifc-4x3-document-extension-ifc.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:17:s.stdio.ifc@4x3/*:ifc|codec:s.stdio.ifc@4x3/*",
+      "claims": [
+        { "namespace": "codec", "value": "s.stdio.ifc@4x3/*" },
+        { "namespace": "codec-extension", "value": "17:s.stdio.ifc@4x3/*:ifc" }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.export-ifc-4x3-to-fem.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:composition-route:17:s.stdio.ifc@4x3/*15:s.fem.fem3d@1/*",
+      "claims": [
+        { "namespace": "composition-route", "value": "17:s.stdio.ifc@4x3/*15:s.fem.fem3d@1/*" }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.export-ifc-4x3-to-bim.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:composition-route:17:s.stdio.ifc@4x3/*15:s.bim.model@1/*",
+      "claims": [
+        { "namespace": "composition-route", "value": "17:s.stdio.ifc@4x3/*15:s.bim.model@1/*" }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.export-ifc-4x3-to-gltf.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:composition-route:17:s.stdio.ifc@4x3/*18:s.stdio.gltf@2.0/*",
+      "claims": [
+        { "namespace": "composition-route", "value": "17:s.stdio.ifc@4x3/*18:s.stdio.gltf@2.0/*" }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.export-ifc-4x3-to-txt.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:composition-route:17:s.stdio.ifc@4x3/*19:s.stdio.txt@utf-8/*",
+      "claims": [
+        { "namespace": "composition-route", "value": "17:s.stdio.ifc@4x3/*19:s.stdio.txt@utf-8/*" }
+      ]
+    },
+    {
+      "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-4x3.v1",
+      "category": "composer",
+      "descriptor": "runtime-capability:composer:dialect:s.stdio.ifc@4x3/*",
+      "claims": [
+        { "namespace": "dialect", "value": "s.stdio.ifc@4x3/*" }
+      ]
+    },
     {
       "id": "s.stdio.ifc.composer.dialect-s-stdio-ifc-2x3-cobie.v1",
       "category": "composer",
@@ -306,7 +402,8 @@
     "clauses_or_features": [],
     "profiles": [
       "s.stdio.ifc.standard.2x3.profile.any",
-      "s.stdio.ifc.standard.4.profile.any"
+      "s.stdio.ifc.standard.4.profile.any",
+      "s.stdio.ifc.standard.4x3.profile.any"
     ],
     "registered_code_points": [],
     "read": "unimplemented",

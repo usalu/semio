@@ -11,3 +11,18 @@ use semio_framework_plugin_reactor_turn as turn;
 #[cfg(test)]
 #[path="../../../../../⚛️reactor/🔄️turn/📥️receiving/📦️completed/🧪️tests/🦀️.rs"]
 pub mod tests;
+#[cfg(test)]
+#[path="../../../../../⚛️reactor/🔄️turn/📥️receiving/staged-tests.rs"]
+mod staged_request_tests;
+#[cfg(test)]
+#[path="../../../../../⚛️reactor/🔄️turn/📥️receiving/auxiliary-tests.rs"]
+mod staged_auxiliary_tests;
+#[cfg(test)]
+#[path="../../../../../⚛️reactor/🏃️runtime/🧰️ops/🖥️surface-render/staged-tests.rs"]
+mod staged_context_tests;
+#[cfg(test)]
+#[path="../../../../../⚛️reactor/🪟️surfaces/🧪️tests/context-cursor.rs"]
+mod context_cursor_tests;
+#[cfg(test)]
+#[path="../../../../../📜️declaration/👁️view/staged-source-tests.rs"]
+mod staged_source_tests;

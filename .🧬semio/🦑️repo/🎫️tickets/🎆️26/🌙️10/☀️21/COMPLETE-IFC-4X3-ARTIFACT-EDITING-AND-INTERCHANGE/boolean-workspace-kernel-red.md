@@ -1,0 +1,9 @@
+# Actual Public Workspace Producer Red
+
+Six closed source-neutral programs exercise the real shared producer on empty, preserving copy, disjoint empty intersection, overlapping difference, disconnected union and actual halfspace paths. Unchanged production58-source baseline is hash-verified. Final actual61test result is10pass/51fail/87Bun assertions586ms: schema1, six uncapped real producers independently agree with actual Manifold geometry, and three empty tiny-grant routes pass. The51 failures expose the newly proposed maxIntermediateValues admission/capture, limit validation and usedValues/peakValues observations not yet implemented by the old producer. This is honest new-feature absence, not a claim of51 defects in an existing declared budget API.
+
+New three source inputs remain unregistered. The suite covers sync/step/async real entry points, once-before-observer capture, invalid policy refusal, borrowed inputs unchanged, peak-1/peak and retirement observations. Owned nested-operand builder/transfer, all allocation frontiers, source cancellation and metadata bounds remain additional requirements from boolean-workspace-producer-contract.md.
+
+Initial61 run was8pass53fail due two test-oracle construction mistakes: no-argument Manifold constructor is unsupported, and a zero-size cube returns InvalidConstruction. Both raw failed attempts remain separate. Correct test oracle uses the library's declared static union([]) to construct a valid empty solid; all6 raw geometry oracles then pass. A bounded-turn protocol check uses explicit exception rather than inflating Bun expect counts for every private yield. Final actual strict11consumers under unchanged compiler options exits0/empty. No actual geometry algorithm, admitted API or capacity enforcement was edited to make this red.
+
+All root readers terminal; kernel allocation integration, IFC adapter, native proof and full IFC4x3/all-MVD remain incomplete.

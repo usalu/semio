@@ -1,0 +1,40 @@
+{
+  "upstream": "https://github.com/veraPDF/veraPDF-corpus",
+  "license": "https://creativecommons.org/licenses/by/4.0/",
+  "sourceUnmodified": true,
+  "fixtures": [
+    {
+      "file": "implementation-limit.pdf",
+      "source": "https://raw.githubusercontent.com/veraPDF/veraPDF-corpus/bb75f4f0073d9350dfd058c0162a367e6fadf25e/PDF_A-1b/6.1%20File%20structure/6.1.12%20Implementation%20limits/veraPDF%20test%20suite%206-1-12-t08-pass-b.pdf",
+      "original": "PDF_A-1b/6.1 File structure/6.1.12 Implementation limits/veraPDF test suite 6-1-12-t08-pass-b.pdf",
+      "revision": "bb75f4f0073d9350dfd058c0162a367e6fadf25e",
+      "sha256": "29530ad013f87f3d7ed88006243795ee1d98d17d95a9dc6e32ca3bdd21d21d46",
+      "bytes": 3772,
+      "scope": "PDF/A-1b 6.1.12 t08 passing witness",
+      "license": "CC-BY-4.0",
+      "attribution": "veraPDF Consortium, veraPDF test corpus"
+    },
+    {
+      "file": "file-trailer.pdf",
+      "source": "https://raw.githubusercontent.com/veraPDF/veraPDF-corpus/bb75f4f0073d9350dfd058c0162a367e6fadf25e/PDF_A-1b/6.1%20File%20structure/6.1.3%20File%20trailer/veraPDF%20test%20suite%206-1-3-t01-pass-a.pdf",
+      "original": "PDF_A-1b/6.1 File structure/6.1.3 File trailer/veraPDF test suite 6-1-3-t01-pass-a.pdf",
+      "revision": "bb75f4f0073d9350dfd058c0162a367e6fadf25e",
+      "sha256": "36892ae1bc41bb215893a678d0a9fb6db39daa7edda23867cee1760110aa9d89",
+      "bytes": 5923,
+      "scope": "PDF/A-1b 6.1.3 t01 passing witness",
+      "license": "CC-BY-4.0",
+      "attribution": "veraPDF Consortium, veraPDF test corpus"
+    },
+    {
+      "file": "text-state-negative.pdf",
+      "source": "https://raw.githubusercontent.com/veraPDF/veraPDF-corpus/bb75f4f0073d9350dfd058c0162a367e6fadf25e/ISO%2032000-1/veraPDF%20test%20suite%206-8-3-3-t01-fail-a.pdf",
+      "original": "ISO 32000-1/veraPDF test suite 6-8-3-3-t01-fail-a.pdf",
+      "revision": "bb75f4f0073d9350dfd058c0162a367e6fadf25e",
+      "sha256": "b19edaa377e6a8240a4437205ac4d145f01f03e7dd3efa315e3f0c4bbb116d42",
+      "bytes": 9709,
+      "scope": "ISO 32000-1 negative rule witness; not a valid-PDF compliance proof",
+      "license": "CC-BY-4.0",
+      "attribution": "veraPDF Consortium, veraPDF test corpus"
+    }
+  ]
+}

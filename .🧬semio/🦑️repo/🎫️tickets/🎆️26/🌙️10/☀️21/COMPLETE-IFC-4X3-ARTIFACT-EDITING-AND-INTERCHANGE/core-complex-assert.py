@@ -1,0 +1,12 @@
+from pathlib import Path
+R=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any')
+p=R/'🧬️schema/🔺️diff/🟦️.ts';s=p.read_text(encoding='utf-8').replace('IfcSnapshot, IfcEntity, IfcValue','IfcSnapshot, IfcEntity, IfcValue, IfcComplexType');s=s.replace('const rootStep=Symbol("IFC root cursor");','const rootStep=Symbol("IFC root cursor");\nconst complexParts=(entity:IfcEntity):IfcComplexType[]=>{if(!Array.isArray(entity.complex))fail("invalidValue","IFC4x3 complex constituents require an array");return entity.complex as IfcComplexType[];};')
+s=s.replace('const entity=snapshot.entities[i]!;for(let j=0;j<entity.args.length;j++)yield entity.args[j]!;for(let j=0;j<entity.complex.length;j++){const part=entity.complex[j]!;', 'const entity=snapshot.entities[i]!,complex=complexParts(entity);for(let j=0;j<entity.args.length;j++)yield entity.args[j]!;for(let j=0;j<complex.length;j++){const part=complex[j]!;')
+s=s.replace('const entity=snapshot.entities[i]!;if(entity.args.length>valueLimit||entity.complex.length>valueLimit)', 'const entity=snapshot.entities[i]!,complex=complexParts(entity);if(entity.args.length>valueLimit||complex.length>valueLimit)')
+s=s.replace('for(let j=0;j<entity.complex.length;j++){if(entity.complex[j]!.args.length>valueLimit)', 'for(let j=0;j<complex.length;j++){if(complex[j]!.args.length>valueLimit)')
+s=s.replace('identifierSteps(entity.complex[j]!.name,phase)', 'identifierSteps(complex[j]!.name,phase)').replace('total:entity.complex.length','total:complex.length').replace('tick(phase,j+1,entity.complex.length)','tick(phase,j+1,complex.length)')
+s=s.replace('for(const part of addition.entity.complex)', 'for(const part of complexParts(addition.entity))')
+s=s.replace('yield* names(item.entity.complex,options);added.add', 'yield* names(complexParts(item.entity),options);added.add')
+p.write_text(s,encoding='utf-8',newline='\n')
+p=R/'🧬️schema/🧬️mutations/🟦️.ts';s=p.read_text(encoding='utf-8').replace('complex:target!.entity.complex};break;', 'complex:target!.entity.complex!};break;');p.write_text(s,encoding='utf-8',newline='\n')
+p=R/'🧪️tests/🧬️editing/🟦️.ts';s=p.read_text(encoding='utf-8').replace('after.entities[0]!.complex[0]!', 'after.entities[0]!.complex![0]!');p.write_text(s,encoding='utf-8',newline='\n')

@@ -1,0 +1,13 @@
+{
+  "font": "⌨️share-tech-mono/🏛️latin/📖️regular",
+  "fallback": "😀️noto-emoji/🌿️nature/📖️regular",
+  "size": 12,
+  "lineHeight": 16,
+  "cases": [
+    {"name": "Three Columns", "text": "one two three", "regions": [{"width":45,"height":16,"origin":[0,0]},{"width":45,"height":16,"origin":[100,10]},{"width":45,"height":16,"origin":[200,20]}], "pauses": [[4,1,0],[8,2,1]], "lines": [{"text":"one ","start":0,"end":4,"origin":[0,0],"region":0},{"text":"two ","start":4,"end":8,"origin":[100,10],"region":1},{"text":"three","start":8,"end":13,"origin":[200,20],"region":2}]},
+    {"name": "Different Next Width", "text": "one two three", "regions": [{"width":45,"height":16,"origin":[0,0]},{"width":100,"height":16,"origin":[100,10]}], "pauses": [[4,1,0]], "lines": [{"text":"one ","start":0,"end":4,"origin":[0,0],"region":0},{"text":"two three","start":4,"end":13,"origin":[100,10],"region":1}]},
+    {"name": "Hard Break UTF-8 Consumption", "text": "Aé\r\n🌍\nZ", "regions": [{"width":100,"height":16,"origin":[0,0]},{"width":100,"height":16,"origin":[100,10]},{"width":100,"height":16,"origin":[200,20]}], "pauses": [[5,1,0],[10,2,1]], "lines": [{"text":"Aé","start":0,"end":3,"origin":[0,0],"region":0},{"text":"🌍","start":5,"end":9,"origin":[100,10],"region":1},{"text":"Z","start":10,"end":11,"origin":[200,20],"region":2}]},
+    {"name": "Short Region Consumes Nothing", "text": "one two three", "regions": [{"width":45,"height":8,"origin":[0,0]},{"width":45,"height":16,"origin":[100,10]},{"width":100,"height":16,"origin":[200,20]}], "pauses": [[0,0,0],[4,1,1]], "lines": [{"text":"one ","start":0,"end":4,"origin":[100,10],"region":1},{"text":"two three","start":4,"end":13,"origin":[200,20],"region":2}]},
+    {"name": "Explicit Overset Prefix", "text": "one two three", "regions": [{"width":45,"height":16,"origin":[0,0]}], "pauses": [[4,1,0]], "lines": [{"text":"one ","start":0,"end":4,"origin":[0,0],"region":0}]}
+  ]
+}

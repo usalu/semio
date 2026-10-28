@@ -1,0 +1,33 @@
+{
+  "oracle": "jsdom@24.1.3 XML DOM parser",
+  "scope": "Root namespace, viewBox and structural element counts; this is not a rendering equivalence assertion.",
+  "cases": [
+    {
+      "file": "coords-trans-02-t.svg",
+      "root": "svg",
+      "namespace": "http://www.w3.org/2000/svg",
+      "viewBox": "0 0 480 360",
+      "rectangles": 11,
+      "texts": 3,
+      "transforms": 6
+    },
+    {
+      "file": "painting-fill-01-t.svg",
+      "root": "svg",
+      "namespace": "http://www.w3.org/2000/svg",
+      "viewBox": "0 0 480 360",
+      "rectangles": 3,
+      "texts": 4,
+      "transforms": 0
+    },
+    {
+      "file": "text-text-01-b.svg",
+      "root": "svg",
+      "namespace": "http://www.w3.org/2000/svg",
+      "viewBox": "0 0 160 120",
+      "rectangles": 1,
+      "texts": 27,
+      "transforms": 3
+    }
+  ]
+}

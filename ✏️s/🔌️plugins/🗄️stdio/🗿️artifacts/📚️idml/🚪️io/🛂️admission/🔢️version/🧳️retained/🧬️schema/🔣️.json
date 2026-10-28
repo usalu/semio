@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Retained IDML Decoded Version Field",
+  "type": "object",
+  "description": "Genuine immutable original member-byte lease, admitted raw version span/decoded length, separately quoted contiguous String reservation, bounded XML numeric-reference reads and ASCII append, fixed-header typed field take, original source and partial String retirement.",
+  "properties": {
+    "state": {
+      "enum": [
+        "source",
+        "reserve",
+        "decode",
+        "ready",
+        "taken",
+        "closing",
+        "empty"
+      ]
+    },
+    "maximumWork": {
+      "const": 1024
+    },
+    "copyPerWork": {
+      "const": 64
+    },
+    "fixedCopyAllowance": {
+      "const": 256
+    }
+  },
+  "required": [
+    "state"
+  ]
+}

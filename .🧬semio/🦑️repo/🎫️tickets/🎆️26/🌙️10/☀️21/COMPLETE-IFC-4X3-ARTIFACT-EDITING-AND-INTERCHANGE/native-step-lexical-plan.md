@@ -1,0 +1,7 @@
+# Native STEP Lexical Parity and Owned Source Work
+
+The shared Part 21 native lexer explicitly refuses ISO 8859 pages B–I and does not implement the new neutral print/control cases. The IFC4x3 wrapper still delegates each record (up to 8 MiB) to the synchronous reference parser, constructs isolated wrapper strings and source-token arrays, and has no retained lexical state inside those calls. A checkpoint around such a call is not controlled inner work.
+
+First add a closed language-neutral alphabet contract with pinned official Unicode mapping provenance, all nine page selectors and defined/undefined shifted characters. Use compiled owned constants in Rust and owned metadata in TypeScript, compare an independent decoder and actual IFC reader. Add the existing source-offset/print-control/numeric neutral cases to native test input before implementation. No original fixture rewriting or external runtime library is allowed.
+
+Then unify native print-control/alphabet behavior and original offsets. The actual native import/export path must ultimately use original retained source/receiver and physical work frontiers instead of cumulative parser/helper clones; study existing typed decode/encode controls and source-owned capture before choosing the producer interface. Reference grammar fixes alone do not establish native runtime or physical ownership completion. Preserve concurrent generic IFC pack owner work in the interchange worker and details/template command changes.

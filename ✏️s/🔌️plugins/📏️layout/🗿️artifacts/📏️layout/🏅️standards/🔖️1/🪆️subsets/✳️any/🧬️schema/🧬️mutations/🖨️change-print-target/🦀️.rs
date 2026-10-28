@@ -1,6 +1,5 @@
 //! 🖨️ `change-print-target` — sets the document's `print_target` scalar (`None` clears it).
 
-
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

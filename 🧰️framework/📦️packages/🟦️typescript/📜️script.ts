@@ -444,6 +444,30 @@ class TestScript extends BundleScript {
   }
 }
 
+/** 📝️ Executes neutral staged-form schemas, exact edits and source query custody. */
+class StagedFormScript extends BundleScript {
+  async run(args:string[]):Promise<void>{
+    if(args.length)throw new Error("test-staged-form accepts no arguments");
+    await runOwnedCommand(process.execPath,["test",...[
+      "../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/🧪️.test.ts",
+      "../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/wire.test.ts",
+      "../../🔨️modules/🛂️manifest/🧮️arg-schema/📝️staging/refresh.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🧺️handle-ui-intake/lease.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🛡️intents/🧪️.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🛡️intents/page.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/🪟️window-panes/📝️staged-args/🛡️intents/owned.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎛️control-port/control.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🗣️Interpreter/🎛️control-port/body.test.ts",
+      "../../🔨️modules/🖱️ui/🧱️elements/📝️Field/🔗️association/association.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/📝️source-revision/🧪️.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/📝️source-revision/work.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/📝️source-revision/registry.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/📝️source-revision/document.test.ts",
+      "../../🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🛠️ShellHelpers/📝️source-revision/ingestion.test.ts",
+    ].map(path=>fileURLToPath(new URL(path,import.meta.url)))],this.root,"framework:staged-form",cmdBudgetMs(process.env));
+  }
+}
+
 /** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -460,6 +484,6 @@ class InstallationIdentityScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
+const router = new ScriptRouter(import.meta.dirname).register("test", TestScript).register("test-staged-form", StagedFormScript).register("typecheck", TypecheckScript).register("installation-identity-check", InstallationIdentityScript).register("test-script-boundary", ScriptBoundaryScript).register("test-artifact-reference", ArtifactReferenceScript).register("test-io-ports", IoPortsScript).register("test-source-text", SourceTextScript).register("test-document-scope", DocumentScopeScript).register("test-polygon-mesh", PolygonMeshScript).register("test-sdk-surface", SdkSurfaceScript).register("test-module-package-surface", ModulePackageSurfaceScript).register("window-utility-check", WindowUtilityScript);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, defaultCommand: "test" }));

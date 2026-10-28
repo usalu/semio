@@ -1,0 +1,11 @@
+# Constant Details Capacity Peer Review
+
+Read-only freshsource staticreview; nativeexecutionunclaimed. All IFC-local IfcDetailsProfile implementations located: IFC4profile, IFC4x3profile andtestHeaderProfile; eachprovidesrequired MAXIMUM_ATTRIBUTES. Realprofiles bind owncatalogpublicconstants IFC4_MAXIMUM_ATTRIBUTES/IFC4X3_MAXIMUM_ATTRIBUTES=21. No missingimplementationfoundinIFCtree.
+
+Shared details_work_capacity now uses only C::MAXIMUM_ATTRIBUTES, preserving formula for_invertible_items(attributes.saturating_mul(2).saturating_add(3)):21→45invertibleitems→90rows. No catalogquery ormetadataallocation in thishelper. Actual factoryextent code remains snapshot_edit_is_admitted(...).then(|| snapshot_edit_work_capacity().work_items()); limits/actualforwardinversepublicationchecks remainseparate andunchangedbythispatch.
+
+NeutralDetails capacity.json recordsbothstandards21,largestIfcTaskTimeRecurring,45items90rows. Nativecatalogtests andTScomparison areclaimedauthored/executedbyparent; thispeer didnotduplicateTSsuite. TestHeaderProfile catalog() panics, retained_capacity_never_materializes_the_entity_catalog invokes capacityhelper successfullybysourcedesign. Exactscope: thisisa helperregression, notanactualfactoryextentinvocation; callingitextenttestwouldoverstatewhatwasauthored.
+
+Remainingexistingcoldpaths areexplicit: actualsnapshot_edit_extent firstcalls admission, and shared details_edit_is_admitted calls normalized_reference_edit beforegenericadmission; context-sensitiveattribute/referencepaths maystillcall C::catalog. Typedprovider/render/domaincursor alsoinitcatalogasdocumentedinifc-native-cold-catalog-audit.md. Therefore factorycapacityqueryitselfisallocation-freefromcatalog, butthispatchdoesnotproveeveryfactoryadmission/extentpathcold-free. Thisisnotaregression/newblocker; itmatchesnarrowpatchscope.
+
+No obviousnativeassociatedconstvisibility/typeissueorformula/limitmovementfound. Native5filesgrammarclean remainsnotcompile/executionproof.

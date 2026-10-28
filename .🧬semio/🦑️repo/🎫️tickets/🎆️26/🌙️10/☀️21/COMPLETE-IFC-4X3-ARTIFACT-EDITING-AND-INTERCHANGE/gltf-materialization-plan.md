@@ -1,0 +1,5 @@
+# Cooperative glTF Import Materialization
+
+The loaded source now completes private custody before accessor work. A separate frontier remains after accessor return: full position transformation, index extraction/default creation, validation, reflected winding reversal, and nested IFC value construction ran synchronous map/some/loops. Add closed language-neutral phase/cancellation cases first, then process positions, explicit or implicit indices, and triangle emission in original admitted batches. Preserve world-transform arithmetic, exact orientation, one-based IFC indices, complete official outputs and central publication semantics. Fuse position transform with point-value emission and reflected triangle choice with emission rather than adding extra complete passes. The complete unsupported candidate remains local until every original-context checkpoint succeeds.
+
+This work scopes import materialization only. Export index/buffer births and JSON codec frontiers are documented independently in gltf-export-json-frontier-audit.md. Native output and publication gates remain unchanged.

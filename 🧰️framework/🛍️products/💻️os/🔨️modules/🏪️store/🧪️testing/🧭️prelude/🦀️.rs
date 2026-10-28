@@ -57,7 +57,7 @@ pub use replay::{fold_effective_edit, retire_shared_projection, admit_replacemen
 pub use semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority;
 pub use semio_framework_os_store_composition::composition_group::{GroupOwnsError, GroupOwnsPreparation, GroupOwnsStep};
 pub use protocol::codec::HistoryReadLimits;
-pub use semio_framework_os_store_member_open_store::{admit_member_input_buffer, InitialMemberStoreOpen, ProducedMemberSnapshotOpen};
+pub use semio_framework_os_store_member_open_store::{admit_member_input_buffer, InitialMemberStoreOpen};
 pub use semio_framework_os_store_space_member::factory::MemberOpenDeclaration;
 pub use semio_framework_os_store_member_open::{MemberOpenDiagnostic, MemberOpenInputStep, MemberOpenOperation, MemberOpenProgress, MemberOpenRequest};
 pub use semio_framework_os_store_member_open::source_admission::MemberOpenSourceAdmission;
@@ -111,7 +111,7 @@ pub mod member_open {
     pub use semio_framework_os_store_member_open_store::InitialMemberStoreOpen;
     pub use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenOperation;
     pub use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenStep;
-    pub use semio_framework_os_store_member_open_store::ProducedMemberSnapshotOpen;
+    pub use semio_framework_os_store_member_open_store::OriginalRecordMemberSnapshotOpen;
     pub use semio_framework_os_store_space_member::lifted_operation::UnsupportedMemberFactoryOpen;
     pub use semio_framework_os_store_space_member::lifted_operation::UnsupportedMemberSnapshotOpen;
 }
@@ -132,18 +132,18 @@ pub mod serialization {
     pub use semio_framework_os_store_space_history::lifted_serialization::*;
 }
 
-/// 🧲️ The physical receiving authority an ordinary store test lends to bounded store steps: every step runs inside one fresh
-/// native decode turn whose construction recipient funds each quoted demand from the one fixed grant and accepts only receipts that fit it.
+/// 🧲️ Each ordinary store step resumes the same original decoder and recipient under the fixed test grant.
 pub struct FixtureStoreReceiving {
     grant: RetainedCloneGrant,
+    receipt:Option<semio_framework_value_native_owned::native_decoding::NativeDetachedRetirementDecodeContinuation>,
+    recipient:semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient,
+    cancelled:bool,
 }
 
 struct FixtureStoreConstruction(RetainedCloneGrant);
 
 impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructionRecipient for FixtureStoreConstruction {
-    fn grant(&mut self, _: semio_framework_value::RetirementDemand) -> Result<RetainedCloneGrant, ValueError> {
-        Ok(self.0)
-    }
+    fn grant(&mut self,demand:semio_framework_value::RetirementDemand)->Result<RetainedCloneGrant,ValueError>{if !semio_framework_value::retained_clone::retained_clone_grant_admits(self.0,demand){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original fixture construction demand exceeds its exact grant"))}Ok(self.0)}
 
     fn accept(&mut self, grant: RetainedCloneGrant, progress: RetainedCloneProgress) -> Result<(), ValueError> {
         assert!(progress.fits(grant), "a store step spent more than the fixture receiving grant");
@@ -151,17 +151,11 @@ impl semio_framework_value_native_owned::native_decoding::NativeDecodeConstructi
     }
 }
 
-impl FixtureStoreReceiving {
-    pub fn new(grant: RetainedCloneGrant) -> Self {
-        Self { grant }
-    }
-
-    pub fn receive<R>(&mut self, operation: impl FnOnce(&mut semio_framework_value::NativeDecodeControl<'_>) -> R) -> R {
-        let mut observer = |_: semio_framework_value::NativeDecodeProgress| true;
-        let mut control = semio_framework_value::NativeDecodeControl::new(1 << 30, &mut observer);
-        let mut construction = FixtureStoreConstruction(self.grant);
-        control.with_construction_recipient(&mut construction, |control| Ok::<R, ValueError>(operation(control))).expect("a fixture receiving turn owns no earlier construction recipient")
-    }
+impl FixtureStoreReceiving{
+ pub fn new(grant:RetainedCloneGrant)->Self{let mut observer=|_|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut observer);control.install_retirement_recipient(&mut recipient).unwrap();let(receipt,_)=control.pause_with_retirement().unwrap().detach();Self{grant,receipt:Some(receipt),recipient,cancelled:false}}
+ pub fn cancel(&mut self){self.cancelled=true}
+ pub fn receive<R>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->R)->R{let mut continuation=self.receipt.take().unwrap().bind(&mut self.recipient).map_err(|(e,_)|e).unwrap();let cancelled=self.cancelled;let mut observer=|_|!cancelled;let mut construction=FixtureStoreConstruction(self.grant);let result=continuation.decode(&mut observer,|c|c.with_construction_recipient(&mut construction,|c|Ok::<R,ValueError>(operation(c))));let(receipt,_)=continuation.detach();self.receipt=Some(receipt);result.expect("fixture receives through its same original decoder and recipient")}
+ pub fn retire<R>(&mut self,grant:RetainedCloneGrant,operation:impl FnOnce(&mut semio_framework_value::OriginalRetirementCloseLoan<'_>)->Result<R,ValueError>)->Result<R,ValueError>{let mut continuation=self.receipt.take().unwrap().bind(&mut self.recipient).map_err(|(e,_)|e).unwrap();let cancelled=self.cancelled;let mut observer=|_|!cancelled;let result=continuation.retire(grant,&mut observer,|o|o.with_original_close(operation));let(receipt,_)=continuation.detach();self.receipt=Some(receipt);result}
 }
 
 pub mod owned_schema_decode {
@@ -193,4 +187,9 @@ pub mod member_owned_batch {
 pub mod replay {
     pub use semio_framework_os_store_replay::*;
     pub use semio_framework_os_store_ledger::lifted_replay::*;
+}
+
+#[cfg(test)]mod original_receiving_fixture_tests{
+ use super::*;
+ #[test]fn fixture_resumes_original_ledger_and_recipient_through_cancelled_cleanup(){let g=physical_test_close_grant();let mut source=FixtureStoreReceiving::new(g);let(ledger,recipient)=source.receive(|c|{c.admit_turn_capacity(g.maximum_capacity_bytes).unwrap();c.charge(32).unwrap();(c.ledger_identity(),c.retirement_recipient_identity())});source.receive(|c|{assert_eq!(c.ledger_identity(),ledger);assert_eq!(c.retirement_recipient_identity(),recipient);assert_eq!(c.owned_bytes(),32)});source.cancel();source.retire(RetainedCloneGrant{maximum_capacity_bytes:3,..g},|o|{assert_eq!(o.ledger_identity(),ledger);assert_eq!(o.retirement_recipient_identity(),recipient);o.charge(1)?;o.charge(2)?;assert!(o.charge(1).is_err());Ok(())}).unwrap();assert_eq!(source.receipt.as_ref().unwrap().owned_bytes(),35);}
 }

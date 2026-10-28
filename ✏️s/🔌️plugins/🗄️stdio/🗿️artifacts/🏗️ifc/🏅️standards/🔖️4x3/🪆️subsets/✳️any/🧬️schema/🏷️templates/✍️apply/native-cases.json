@@ -1,0 +1,612 @@
+{
+  "oracle": {
+    "name": "IfcOpenShell",
+    "version": "0.8.3",
+    "equivalentPopulations": 15,
+    "expressValidations": 30
+  },
+  "cases": [
+    {
+      "name": "00",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTIONREQUEST('0000000000000000000001',$,'selected target',$,$,$,.NOTDEFINED.,$,$);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_ActionRequest",
+        "target": "1",
+        "entries": [
+          {
+            "name": "RequestSourceLabel",
+            "kind": "P_SINGLEVALUE",
+            "value": {
+              "kind": "string",
+              "value": "retained"
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTIONREQUEST('0000000000000000000001',$,'selected target',$,$,$,.NOTDEFINED.,$,$);\n#100=IFCPROPERTYSINGLEVALUE('RequestSourceLabel',$,IFCLABEL('retained'),$);\n#101=IFCPROPERTYSET('0000000000000000000101',$,'Pset_ActionRequest',$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "01",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATOR('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#11=IFCIRREGULARTIMESERIESVALUE('2026-10-21T12:00:00',(IFCREAL(1.)));\n#12=IFCIRREGULARTIMESERIES('Position',$,'2026-10-21T12:00:00','2026-10-21T13:00:00',.CONTINUOUS.,.MEASURED.,$,$,(#11));\n#13=IFCDOCUMENTREFERENCE('https://example.org/series',$,'Series specification',$,$);\n#14=IFCEXTERNALREFERENCERELATIONSHIP($,$,#13,(#12));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_ActuatorPHistory",
+        "target": "1",
+        "entries": [
+          {
+            "name": "PositionHistory",
+            "kind": "P_REFERENCEVALUE",
+            "value": {
+              "kind": "reference",
+              "value": "12"
+            }
+          }
+        ],
+        "performance": {
+          "lifeCyclePhase": "OPERATION",
+          "predefinedType": "NOTDEFINED"
+        },
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          },
+          {
+            "key": "performance",
+            "id": "103",
+            "guid": "0000000000000000000103"
+          },
+          {
+            "key": "control",
+            "id": "104",
+            "guid": "0000000000000000000104"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATOR('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#11=IFCIRREGULARTIMESERIESVALUE('2026-10-21T12:00:00',(IFCREAL(1.)));\n#12=IFCIRREGULARTIMESERIES('Position',$,'2026-10-21T12:00:00','2026-10-21T13:00:00',.CONTINUOUS.,.MEASURED.,$,$,(#11));\n#13=IFCDOCUMENTREFERENCE('https://example.org/series',$,'Series specification',$,$);\n#14=IFCEXTERNALREFERENCERELATIONSHIP($,$,#13,(#12));\n#100=IFCPROPERTYREFERENCEVALUE('PositionHistory',$,$,#12);\n#101=IFCPROPERTYSET('0000000000000000000101',$,'Pset_ActuatorPHistory',$,(#100));\n#103=IFCPERFORMANCEHISTORY('0000000000000000000103',$,$,$,$,$,'OPERATION',.NOTDEFINED.);\n#104=IFCRELASSIGNSTOCONTROL('0000000000000000000104',$,$,$,(#1),$,#103);\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#103),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "02",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATORTYPE('0000000000000000000001',$,'selected target',$,$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_ActuatorTypeCommon",
+        "target": "1",
+        "entries": [
+          {
+            "name": "Reference",
+            "kind": "P_SINGLEVALUE",
+            "value": {
+              "kind": "string",
+              "value": "retained"
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATORTYPE('0000000000000000000001',$,'selected target',$,$,(#101),$,$,$,.NOTDEFINED.);\n#100=IFCPROPERTYSINGLEVALUE('Reference',$,IFCIDENTIFIER('retained'),$);\n#101=IFCPROPERTYSET('0000000000000000000101',$,'Pset_ActuatorTypeCommon',$,(#100));\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "03",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCMATERIAL('Steel',$,$);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_MaterialCombustion",
+        "target": "1",
+        "entries": [
+          {
+            "name": "SpecificHeatCapacity",
+            "kind": "P_SINGLEVALUE",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCMATERIAL('Steel',$,$);\n#100=IFCPROPERTYSINGLEVALUE('SpecificHeatCapacity',$,IFCSPECIFICHEATCAPACITYMEASURE(1.),$);\n#101=IFCMATERIALPROPERTIES('Pset_MaterialCombustion',$,(#100),#1);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "04",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#14);\n#11=IFCCARTESIANPOINT((0.,0.));\n#12=IFCCARTESIANPOINT((1.,0.));\n#13=IFCCARTESIANPOINT((0.,1.));\n#14=IFCPOLYLINE((#11,#12,#13,#11));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_ProfileArbitraryDoubleT",
+        "target": "1",
+        "entries": [
+          {
+            "name": "OverallWidth",
+            "kind": "P_SINGLEVALUE",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#14);\n#11=IFCCARTESIANPOINT((0.,0.));\n#12=IFCCARTESIANPOINT((1.,0.));\n#13=IFCCARTESIANPOINT((0.,1.));\n#14=IFCPOLYLINE((#11,#12,#13,#11));\n#100=IFCPROPERTYSINGLEVALUE('OverallWidth',$,IFCPOSITIVELENGTHMEASURE(1.),$);\n#101=IFCPROFILEPROPERTIES('Pset_ProfileArbitraryDoubleT',$,(#100),#1);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "05",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATOR('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Qto_ActuatorBaseQuantities",
+        "target": "1",
+        "entries": [
+          {
+            "name": "GrossWeight",
+            "kind": "Q_WEIGHT",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATOR('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCQUANTITYWEIGHT('GrossWeight',$,$,1.,$);\n#101=IFCELEMENTQUANTITY('0000000000000000000101',$,'Qto_ActuatorBaseQuantities',$,$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "06",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCGEOTECHNICALSTRATUM('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Qto_ArealStratumBaseQuantities",
+        "target": "1",
+        "entries": [
+          {
+            "name": "Area",
+            "kind": "Q_AREA",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCGEOTECHNICALSTRATUM('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCQUANTITYAREA('Area',$,$,1.,$);\n#101=IFCELEMENTQUANTITY('0000000000000000000101',$,'Qto_ArealStratumBaseQuantities',$,$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "07",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATOR('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_ActuatorTypeCommon",
+        "target": "1",
+        "entries": [
+          {
+            "name": "ActuatorStatus",
+            "kind": "P_ENUMERATEDVALUE",
+            "values": [
+              {
+                "kind": "string",
+                "value": "DEMOLISH"
+              }
+            ]
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "enum:0",
+            "id": "101"
+          },
+          {
+            "key": "set",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          },
+          {
+            "key": "relation",
+            "id": "103",
+            "guid": "0000000000000000000103"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTUATOR('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#101=IFCPROPERTYENUMERATION('PEnum_ElementStatus',(IFCLABEL('DEMOLISH'),IFCLABEL('EXISTING'),IFCLABEL('NEW'),IFCLABEL('TEMPORARY'),IFCLABEL('OTHER'),IFCLABEL('NOTKNOWN'),IFCLABEL('UNSET')),$);\n#100=IFCPROPERTYENUMERATEDVALUE('ActuatorStatus',$,(IFCLABEL('DEMOLISH')),#101);\n#102=IFCPROPERTYSET('0000000000000000000102',$,'Pset_ActuatorTypeCommon',$,(#100));\n#103=IFCRELDEFINESBYPROPERTIES('0000000000000000000103',$,$,$,(#1),#102);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "08",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTOR('0000000000000000000001',$,'selected target',$,$,#11);\n#11=IFCPERSON($,'Architect',$,$,$,$,$,$);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_Address",
+        "target": "1",
+        "entries": [
+          {
+            "name": "AddressLines",
+            "kind": "P_LISTVALUE",
+            "values": [
+              {
+                "kind": "string",
+                "value": "line one"
+              },
+              {
+                "kind": "string",
+                "value": "line two"
+              }
+            ]
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCACTOR('0000000000000000000001',$,'selected target',$,$,#11);\n#11=IFCPERSON($,'Architect',$,$,$,$,$,$);\n#100=IFCPROPERTYLISTVALUE('AddressLines',$,(IFCLABEL('line one'),IFCLABEL('line two')),$);\n#101=IFCPROPERTYSET('0000000000000000000101',$,'Pset_Address',$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "09",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCAIRTERMINALBOX('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_AirTerminalBoxTypeCommon",
+        "target": "1",
+        "entries": [
+          {
+            "name": "AirFlowRateRange",
+            "kind": "P_BOUNDEDVALUE",
+            "lower": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            },
+            "upper": {
+              "kind": "real",
+              "value": {
+                "bits": "4611686018427387904"
+              }
+            },
+            "setPoint": {
+              "kind": "real",
+              "value": {
+                "bits": "4609434218613702656"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCAIRTERMINALBOX('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCPROPERTYBOUNDEDVALUE('AirFlowRateRange',$,IFCVOLUMETRICFLOWRATEMEASURE(2.),IFCVOLUMETRICFLOWRATEMEASURE(1.),$,IFCVOLUMETRICFLOWRATEMEASURE(1.5));\n#101=IFCPROPERTYSET('0000000000000000000101',$,'Pset_AirTerminalBoxTypeCommon',$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "10",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCAIRTERMINAL('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Pset_AirTerminalPHistory",
+        "target": "1",
+        "entries": [
+          {
+            "name": "InductionRatio",
+            "kind": "P_TABLEVALUE",
+            "defining": [
+              {
+                "kind": "real",
+                "value": {
+                  "bits": "4607182418800017408"
+                }
+              },
+              {
+                "kind": "real",
+                "value": {
+                  "bits": "4611686018427387904"
+                }
+              }
+            ],
+            "defined": [
+              {
+                "kind": "real",
+                "value": {
+                  "bits": "4613937818241073152"
+                }
+              },
+              {
+                "kind": "real",
+                "value": {
+                  "bits": "4616189618054758400"
+                }
+              }
+            ],
+            "interpolation": "LINEAR",
+            "expression": "x"
+          }
+        ],
+        "performance": {
+          "lifeCyclePhase": "OPERATION",
+          "predefinedType": "NOTDEFINED"
+        },
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          },
+          {
+            "key": "performance",
+            "id": "103",
+            "guid": "0000000000000000000103"
+          },
+          {
+            "key": "control",
+            "id": "104",
+            "guid": "0000000000000000000104"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCAIRTERMINAL('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCPROPERTYTABLEVALUE('InductionRatio',$,(IFCREAL(1.),IFCREAL(2.)),(IFCLENGTHMEASURE(3.),IFCLENGTHMEASURE(4.)),'x',$,$,.LINEAR.);\n#101=IFCPROPERTYSET('0000000000000000000101',$,'Pset_AirTerminalPHistory',$,(#100));\n#103=IFCPERFORMANCEHISTORY('0000000000000000000103',$,$,$,$,$,'OPERATION',.NOTDEFINED.);\n#104=IFCRELASSIGNSTOCONTROL('0000000000000000000104',$,$,$,(#1),$,#103);\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#103),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "11",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCAIRTERMINAL('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Qto_AirTerminalBaseQuantities",
+        "target": "1",
+        "entries": [
+          {
+            "name": "Perimeter",
+            "kind": "Q_LENGTH",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCAIRTERMINAL('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCQUANTITYLENGTH('Perimeter',$,$,1.,$);\n#101=IFCELEMENTQUANTITY('0000000000000000000101',$,'Qto_AirTerminalBaseQuantities',$,$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "12",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCBEAM('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Qto_BeamBaseQuantities",
+        "target": "1",
+        "entries": [
+          {
+            "name": "GrossVolume",
+            "kind": "Q_VOLUME",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCBEAM('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCQUANTITYVOLUME('GrossVolume',$,$,1.,$);\n#101=IFCELEMENTQUANTITY('0000000000000000000101',$,'Qto_BeamBaseQuantities',$,$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "13",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCBUILDINGELEMENTPROXY('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Qto_BodyGeometryValidation",
+        "target": "1",
+        "entries": [
+          {
+            "name": "SurfaceGenusBeforeFeatures",
+            "kind": "Q_COUNT",
+            "value": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCBUILDINGELEMENTPROXY('0000000000000000000001',$,'selected target',$,$,$,$,$,.NOTDEFINED.);\n#100=IFCQUANTITYCOUNT('SurfaceGenusBeforeFeatures',$,$,1,$);\n#101=IFCELEMENTQUANTITY('0000000000000000000101',$,'Qto_BodyGeometryValidation',$,$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    },
+    {
+      "name": "14",
+      "source": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCCONSTRUCTIONEQUIPMENTRESOURCE('0000000000000000000001',$,'selected target',$,$,$,$,$,$,$,.NOTDEFINED.);\nENDSEC;\nEND-ISO-10303-21;\n",
+      "application": {
+        "template": "Qto_ConstructionEquipmentResourceBaseQuantities",
+        "target": "1",
+        "entries": [
+          {
+            "name": "UsageTime",
+            "kind": "Q_TIME",
+            "value": {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          }
+        ],
+        "identities": [
+          {
+            "key": "entry:0",
+            "id": "100"
+          },
+          {
+            "key": "set",
+            "id": "101",
+            "guid": "0000000000000000000101"
+          },
+          {
+            "key": "relation",
+            "id": "102",
+            "guid": "0000000000000000000102"
+          }
+        ]
+      },
+      "expected": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('ViewDefinition []'),'2;1');\nFILE_NAME('templates.ifc','2026-10-21T12:00:00',('semio'),('semio'),'semio','semio','');\nFILE_SCHEMA(('IFC4X3_ADD2'));\nENDSEC;\nDATA;\n#1=IFCCONSTRUCTIONEQUIPMENTRESOURCE('0000000000000000000001',$,'selected target',$,$,$,$,$,$,$,.NOTDEFINED.);\n#100=IFCQUANTITYTIME('UsageTime',$,$,1.,$);\n#101=IFCELEMENTQUANTITY('0000000000000000000101',$,'Qto_ConstructionEquipmentResourceBaseQuantities',$,$,(#100));\n#102=IFCRELDEFINESBYPROPERTIES('0000000000000000000102',$,$,$,(#1),#101);\nENDSEC;\nEND-ISO-10303-21;\n"
+    }
+  ]
+}

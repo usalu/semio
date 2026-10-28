@@ -1,0 +1,8 @@
+//! 📤️ Authored Drawing birth custody transfers through a paid original header move.
+use super::LayoutDrawingBirth;
+use semio_framework_value::{RetireOwned,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,retained_clone_grant_admits}};
+pub struct DrawingBirthTransfer{pub done:bool,pub cancelled:bool,pub progress:RetainedCloneProgress}
+pub fn drawing_birth_transfer_demand<S:RetireOwned>()->RetirementDemand{RetirementDemand{copy_bytes:std::mem::size_of::<Option<LayoutDrawingBirth<S>>>().saturating_mul(2),depth:1,..Default::default()}}
+/// 📤️ Cancellation retains source custody, while admission moves the same original typed owner into an empty slot.
+pub fn transfer_drawing_birth<S:RetireOwned>(source:&mut Option<LayoutDrawingBirth<S>>,target:&mut Option<LayoutDrawingBirth<S>>,grant:RetainedCloneGrant,cancelled:bool)->Result<DrawingBirthTransfer,ValueError>{let d=drawing_birth_transfer_demand::<S>();if !retained_clone_grant_admits(grant,d){return Ok(DrawingBirthTransfer{done:false,cancelled:false,progress:Default::default()})}let progress=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};if cancelled{return Ok(DrawingBirthTransfer{done:true,cancelled:true,progress})}if target.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Layout Drawing birth destination is occupied").with_retained_progress(progress))}if source.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"Layout Drawing birth source is empty").with_retained_progress(progress))}*target=source.take();Ok(DrawingBirthTransfer{done:true,cancelled:false,progress})}
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;

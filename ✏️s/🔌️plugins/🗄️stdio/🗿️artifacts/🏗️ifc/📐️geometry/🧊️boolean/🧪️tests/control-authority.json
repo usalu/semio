@@ -1,0 +1,365 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "operation": "difference",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "difference",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "difference",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "difference",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "difference",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "difference",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "false"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "false"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "difference",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "false"
+    },
+    {
+      "operation": "union",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "union",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "union",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "union",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "union",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "union",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "false"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "false"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "union",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "false"
+    },
+    {
+      "operation": "intersection",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "intersection",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "intersection",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "intersection",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "false"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "false"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "false"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "tick",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "tick",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "tick",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "error"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "initial",
+      "outcome": "false"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "error"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "interior",
+      "outcome": "false"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "error"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "observer": "progress",
+      "phase": "completion",
+      "outcome": "false"
+    }
+  ]
+}

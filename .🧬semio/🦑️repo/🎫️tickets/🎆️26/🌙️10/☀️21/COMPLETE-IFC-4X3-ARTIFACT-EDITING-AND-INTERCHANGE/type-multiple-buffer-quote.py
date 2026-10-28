@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/type-guidance.rs');s=p.read_text(encoding='utf8');assert s.count('128 + size_of::<String>()')==2;s=s.replace('128 + size_of::<String>()','192 + size_of::<String>()');data=s.encode();p.open('r+b').write(data)
+p=Path(__file__).with_name('host-type-multiple-input-implementation.md');s=p.read_text(encoding='utf8').replace('Chunk buffer plus retained String writes are both included in the copied-byte quote.','Chunk-buffer zero initialization, source-to-buffer and buffer-to-retained String writes are each included in the copied-byte quote.');p.write_text(s,encoding='utf8')

@@ -1,0 +1,27 @@
+{
+  "schema": "semio.ifc.mvd-header-control.v1",
+  "routes": [
+    "declarations-sync",
+    "declarations-async",
+    "selection-sync",
+    "selection-async"
+  ],
+  "properties": [
+    "signal",
+    "onProgress",
+    "maxEntities",
+    "maxValues",
+    "maxDepth",
+    "yieldEvery"
+  ],
+  "originalDepth": 0,
+  "replacementDepth": 256,
+  "depthRefusal": "depthLimit",
+  "faults": [
+    "abort",
+    "undefined",
+    "editError"
+  ],
+  "initialView": "Alignment-basedReferenceView",
+  "selectedView": "ReferenceView"
+}

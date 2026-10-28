@@ -7,7 +7,7 @@ import type { ActionKind as GeneratedActionKind, ActionDefinition as GeneratedAc
 //#region PluginRuntime
 /** 🧬️ Generated from Rust `ActionKind`/`ActionDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type ActionKind = GeneratedActionKind;
-export type ActionDefinition = GeneratedActionDefinition;
+export type ActionDefinition = GeneratedActionDefinition & {readonly staging?:import('../🧮️arg-schema/📝️staging/🟦️.ts').StagedActionDefinition};
 export type ActionAddress = GeneratedActionAddress;
 export type ActionInvocation = GeneratedActionInvocation;
 export type ActionArgDef = GeneratedActionArgDef;

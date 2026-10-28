@@ -1,77 +1,12 @@
-//! 🧊 IFC 2x3 Cobie viewer — the Main window: a read-only world-3d mesh scene built with the shared
-//! `MeshWindowKit` (ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.6), from the
-//! artifact-level `Ifc2x3Snapshot` — this file imports nothing from the sibling editor module
-//! (a substring check on that module path is what `policyViewerPurityBreaches` forbids). One
-//! placeholder-box instance per entry of the snapshot's largest top-level collection stands in for
-//! real per-kind geometry — deliberately generic across all subsets this kit serves (see the
-//! packet's own report for the tradeoff).
-
+//! 🏗️ IFC2x3 source representation geometry shared by editor and viewer.
 use crate::standards::v2x3::subsets::cobie::schema::snapshot::Ifc2x3Snapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
-
-//#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
-pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
-const IFC2X3_COBIE_VIEW_FALLBACK_MESH_KIND: &str = "box";
-const IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_POSITION: [f64; 3] = [8.0, -8.0, 6.0];
-const IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_FOV: f64 = 45.0;
-//#endregion 🔖️Constants
-
-//#region 🔖️Definition
-/// 🧱️ Stitched into the viewer manifest by the surface root's `create_*_viewer`.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn definition() -> WindowKindDefinition {
-    MeshWindowKit::window_kind()
-}
-//#endregion 🔖️Definition
-
-//#region 🔖️Render
-/// 👁️ Pure, kind-agnostic content signal: the length of the snapshot's largest top-level JSON
-/// array field, clamped to a small display range — real (not fabricated), deliberately generic so
-/// this same shape replicates uniformly across every subset this window kit serves without coupling
-/// to field names a live peer ticket may still be refactoring.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_count(document: &Ifc2x3Snapshot) -> usize {
-    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
-    let count = entity_count(document);
-    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
-        .map(|index| {
-            semio_framework_pack_json::json!({
-                "id": format!("ifc2x3_cobie-{index}"),
-                "meshId": IFC2X3_COBIE_VIEW_FALLBACK_MESH_KIND,
-                "position": [index as f64 * 2.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": format!("IFC 2x3 Cobie {index}"),
-                "smoothShading": false,
-            })
-        })
-        .collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
-}
-
-/// 👁️ Pure `Ifc2x3Snapshot -> BuiltNode` read: default camera (a viewer has no persisted
-/// per-session camera — `Config = NoConfig`), no selection/gumball/engagement overlay.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &Ifc2x3Snapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": IFC2X3_COBIE_VIEW_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_COBIE_VIEW_FALLBACK_MESH_KIND) })]));
-    let view = MeshView {
-        camera_json: world3d_camera_json(IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_POSITION, IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_TARGET, IFC2X3_COBIE_VIEW_DEFAULT_CAMERA_FOV),
-        meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    };
-    MeshWindowKit::render(&view)
-}
-//#endregion 🔖️Render
-
-//#region 🧪️Tests
+use crate::standards::v2x3::subsets::cobie::schema::geometry;
+#[cfg(test)]use semio_framework_plugin::{MeshWindowKit,WindowKit};
+#[path="../../../../../../../🚪️io/📐️geometry/🦀️.rs"]
+mod representation_surface;
+pub use representation_surface::{render,render_in_context,render_with,render_selected_in_context};
+pub const WINDOW_KIND_ID:&str=semio_framework_plugin::MeshWindowKit::KIND_ID;
+pub const BODY_KEY:&str=semio_framework_plugin::MeshWindowKit::KIND_ID;
+pub fn definition()->semio_framework_plugin::WindowKindDefinition{<semio_framework_plugin::MeshWindowKit as semio_framework_plugin::WindowKit>::window_kind()}
 #[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+#[path="🧪️tests/🔬️unit/🦀️.rs"]mod tests;

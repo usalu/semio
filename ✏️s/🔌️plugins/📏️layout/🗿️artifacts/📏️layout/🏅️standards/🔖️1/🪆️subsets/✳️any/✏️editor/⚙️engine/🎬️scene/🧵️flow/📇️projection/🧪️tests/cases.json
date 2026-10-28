@@ -1,0 +1,5019 @@
+{
+  "schema": "layout.flow-projection.v1",
+  "cases": [
+    {
+      "name": "Page Instances And Independent Heads",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": {
+        "frames": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 1,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 33,
+              "y": 44,
+              "width": 60,
+              "height": 70,
+              "rotation": 0.5
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": 6,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": false,
+            "storyIndex": 1,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 5,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 1,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          }
+        ],
+        "addresses": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": 1,
+            "predecessor": null,
+            "head": 0,
+            "visible": false,
+            "locked": true
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 0,
+            "head": 0,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 6,
+            "predecessor": null,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 1,
+            "next": null,
+            "predecessor": null,
+            "head": 3,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 5,
+            "predecessor": null,
+            "head": 4,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 1,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 4,
+            "head": 4,
+            "visible": false,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 2,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          }
+        ],
+        "heads": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "storyCounts": {
+          "0": 6,
+          "1": 1
+        }
+      }
+    },
+    {
+      "name": "Empty Metadata",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [],
+        "spreads": [],
+        "pages": [],
+        "printTarget": null
+      },
+      "expected": {
+        "frames": [],
+        "addresses": [],
+        "heads": [],
+        "storyCounts": {}
+      }
+    },
+    {
+      "name": "Borrowed Long Unicode Story Identity",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-very-long-😀-",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": {
+        "frames": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 1,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 33,
+              "y": 44,
+              "width": 60,
+              "height": 70,
+              "rotation": 0.5
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": 6,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": false,
+            "storyIndex": 1,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 5,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 1,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          }
+        ],
+        "addresses": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": 1,
+            "predecessor": null,
+            "head": 0,
+            "visible": false,
+            "locked": true
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 0,
+            "head": 0,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 6,
+            "predecessor": null,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 1,
+            "next": null,
+            "predecessor": null,
+            "head": 3,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 5,
+            "predecessor": null,
+            "head": 4,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 1,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 4,
+            "head": 4,
+            "visible": false,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 2,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          }
+        ],
+        "heads": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "storyCounts": {
+          "0": 6,
+          "1": 1
+        }
+      }
+    },
+    {
+      "name": "Exact Collision Chain Identity",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-erfyto-ww8",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-1kcwvnf-1jvb",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-erfyto-ww8",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-erfyto-ww8",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-erfyto-ww8",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1kcwvnf-1jvb",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-erfyto-ww8",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": {
+        "frames": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 1,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 33,
+              "y": 44,
+              "width": 60,
+              "height": 70,
+              "rotation": 0.5
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": 6,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": false,
+            "storyIndex": 1,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 5,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 1,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          }
+        ],
+        "addresses": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": 1,
+            "predecessor": null,
+            "head": 0,
+            "visible": false,
+            "locked": true
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 0,
+            "head": 0,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 6,
+            "predecessor": null,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 1,
+            "next": null,
+            "predecessor": null,
+            "head": 3,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 5,
+            "predecessor": null,
+            "head": 4,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 1,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 4,
+            "head": 4,
+            "visible": false,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 2,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          }
+        ],
+        "heads": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "storyCounts": {
+          "0": 6,
+          "1": 1
+        }
+      }
+    },
+    {
+      "name": "Original Non Text Source Slots",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-decoration",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "rect",
+                "id": "parent-decoration",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 1,
+                  "y": 2,
+                  "w": 3,
+                  "h": 4,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-decoration",
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "local-decoration",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 1,
+                  "y": 2,
+                  "w": 3,
+                  "h": 4,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": {
+        "frames": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 1,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 33,
+              "y": 44,
+              "width": 60,
+              "height": 70,
+              "rotation": 0.5
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 2,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parent": false,
+            "storyIndex": 0,
+            "next": 6,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 2,
+            "parent": false,
+            "storyIndex": 1,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": true,
+            "storyIndex": 0,
+            "next": 5,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 2,
+            "parent": true,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parent": false,
+            "storyIndex": 0,
+            "next": null,
+            "columns": 1,
+            "gutter": 0,
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50,
+              "rotation": 0
+            },
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "width": 50,
+              "height": 50
+            }
+          }
+        ],
+        "addresses": [
+          {
+            "pageIndex": 0,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": 1,
+            "predecessor": null,
+            "head": 0,
+            "visible": false,
+            "locked": true
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 2,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 0,
+            "head": 0,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 1,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 6,
+            "predecessor": null,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 0,
+            "frameIndex": 2,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 1,
+            "next": null,
+            "predecessor": null,
+            "head": 3,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": 0,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": 5,
+            "predecessor": null,
+            "head": 4,
+            "visible": true,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 2,
+            "parentIndex": 0,
+            "overrideIndex": 0,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 4,
+            "head": 4,
+            "visible": false,
+            "locked": false
+          },
+          {
+            "pageIndex": 1,
+            "frameIndex": 0,
+            "parentIndex": null,
+            "overrideIndex": null,
+            "storyIndex": 0,
+            "next": null,
+            "predecessor": 2,
+            "head": 2,
+            "visible": true,
+            "locked": false
+          }
+        ],
+        "heads": [
+          0,
+          2,
+          3,
+          4
+        ],
+        "storyCounts": {
+          "0": 6,
+          "1": 1
+        }
+      }
+    }
+  ],
+  "cuts": [
+    0,
+    1,
+    16,
+    128
+  ],
+  "grants": [
+    0,
+    1,
+    64
+  ],
+  "wide": {
+    "pages": 40,
+    "framesPerPage": 80
+  },
+  "hashCollision": {
+    "domain": 0,
+    "scope": 0,
+    "ids": [
+      "story-erfyto-ww8",
+      "story-1kcwvnf-1jvb"
+    ]
+  },
+  "refusals": [
+    {
+      "name": "Missing Story",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "story"
+    },
+    {
+      "name": "Missing Thread Target",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "missing",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "next"
+    },
+    {
+      "name": "Cross Story Edge",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "story"
+    },
+    {
+      "name": "Ambiguous Predecessors",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "fork"
+    },
+    {
+      "name": "Two Frame Cycle",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-a",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "cycle"
+    },
+    {
+      "name": "Duplicate Exact Identity",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "duplicate"
+    },
+    {
+      "name": "Missing Parent Instance",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-a",
+                  "parent-b"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-a",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "parent-b",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "missing",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-a",
+                  "local-c"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-a",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "local-b",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "local-c",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-2",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-a",
+                "bounds": {
+                  "x": 33,
+                  "y": 44,
+                  "w": 60,
+                  "h": 70,
+                  "rotation": 0.5
+                },
+                "visible": false,
+                "locked": true
+              }
+            ]
+          },
+          {
+            "id": "page-2",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "local-b"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "local-b",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-b",
+                "bounds": null,
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "error": "parent"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/exchange-control-cases.schema.json",
+  "title": "Original IFC Exchange Control Contract",
+  "type": "object", "additionalProperties": false,
+  "required": ["$schema", "schema", "endpoints", "cutoff", "replacement", "code", "callbacksBeforeCancellation", "invalidBatchSizes"],
+  "properties": {
+    "$schema": { "const": "./exchange-control.schema.json" },
+    "schema": { "const": "IFC4X3_ADD2" },
+    "endpoints": { "type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": { "enum": ["bim-to-ifc", "ifc-to-bim", "fem-to-ifc", "ifc-to-fem", "ifc-triangles"] } },
+    "cutoff": { "const": "first-progress" },
+    "replacement": { "const": "fresh-signal-and-callback" },
+    "code": { "const": "io.cancelled" },
+    "callbacksBeforeCancellation": { "const": 1 },
+    "invalidBatchSizes": { "const": [0, -1, 0.5] }
+  }
+}

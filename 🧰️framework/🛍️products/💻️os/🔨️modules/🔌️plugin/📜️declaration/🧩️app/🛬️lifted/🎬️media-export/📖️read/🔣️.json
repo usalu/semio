@@ -1,0 +1,44 @@
+{
+  "schema": "framework.media-original-read.v1",
+  "cases": [
+    {
+      "name": "original snapshot and current issuer",
+      "sameSnapshot": true,
+      "current": true,
+      "accept": true
+    },
+    {
+      "name": "same value from another snapshot",
+      "sameSnapshot": false,
+      "current": true,
+      "accept": false
+    },
+    {
+      "name": "original snapshot from stale issuer",
+      "sameSnapshot": true,
+      "current": false,
+      "accept": false
+    },
+    {
+      "name": "foreign snapshot and stale issuer",
+      "sameSnapshot": false,
+      "current": false,
+      "accept": false
+    }
+  ],
+  "denials": [
+    "items",
+    "copyBytes",
+    "depth"
+  ],
+  "closeOrder": [
+    "consumer",
+    "drawingSources",
+    "parentRead",
+    "children",
+    "operationContext",
+    "snapshotAlias",
+    "snapshotLease",
+    "supplierRetention"
+  ]
+}

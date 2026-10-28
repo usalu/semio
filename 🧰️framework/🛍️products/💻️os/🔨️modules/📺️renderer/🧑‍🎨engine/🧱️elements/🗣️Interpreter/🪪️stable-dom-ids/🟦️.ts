@@ -3,8 +3,8 @@
  * 🧱️ Child module of {@link ../🟦️.tsx | Interpreter}; importers import this module directly.
  */
 
-import { UiDocumentStore, type UiDocumentState } from "../../📃️UiDocumentStore/🟦️.tsx";
-import { type SurfaceId, type UiNodeId, type UiNodeRecord } from "@semio-tech/framework";
+import { type SurfaceId, type UiNodeId, type UiNodeRecord } from "../../../../../../../../🔨️modules/🛂️manifest/🤖️generated/📜️ui-contract/🟦️.ts";
+import { type UiControlContext } from "../🎛️control-port/🟦️.ts";
 
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
@@ -26,8 +26,13 @@ export function uiNodeDomId(surface: SurfaceId, key: string, fallbackNodeId: UiN
 
 /** 🪪️ {@link uiNodeDomId} for a record held by a live store — the surface comes off the store's own state, the row scope
  * off the rendering context. */
-export function nodeDomId(store: UiDocumentStore, record: UiNodeRecord, scope?: string): string {
+export function nodeDomId(store: { getState(): { readonly surface: SurfaceId } }, record: UiNodeRecord, scope?: string): string {
   return uiNodeDomId(store.getState().surface, record.key, record.id, scope);
+}
+
+/** 🎛️ Names a control from its source surface without a document projection. */
+export function controlDomId(context: UiControlContext, record: UiNodeRecord): string {
+  return uiNodeDomId(context.controls.surface(), record.key, record.id, context.domScope);
 }
 
 /** 🪪️ React reconciliation keys for a sibling run — the SAME authored identity {@link uiNodeDomId}
@@ -56,7 +61,7 @@ export function uiSiblingReactKeys(siblings: readonly { readonly id: UiNodeId; r
 
 /** 🪪️ {@link uiSiblingReactKeys} for a child-id run resolved against a live document state. A child id
  * with no record keeps the id fallback rather than being dropped — the caller still renders it. */
-export function uiChildReactKeys(state: UiDocumentState, children: readonly UiNodeId[]): readonly string[] {
+export function uiChildReactKeys(state: { readonly nodes: ReadonlyMap<UiNodeId, { readonly key: string }> }, children: readonly UiNodeId[]): readonly string[] {
   return uiSiblingReactKeys(children.map((id) => ({ id, key: state.nodes.get(id)?.key ?? "" })));
 }
 //#endregion 🪪️StableDomIds

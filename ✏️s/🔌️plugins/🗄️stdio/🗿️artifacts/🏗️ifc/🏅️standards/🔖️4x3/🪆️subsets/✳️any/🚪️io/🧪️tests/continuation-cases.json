@@ -1,0 +1,14 @@
+{
+  "version": 1,
+  "steps": 32,
+  "routes": [
+    "io",
+    "edit"
+  ],
+  "laws": [
+    "shared-host-continuation",
+    "original-error",
+    "original-cancellation",
+    "timer-fairness"
+  ]
+}

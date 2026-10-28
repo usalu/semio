@@ -6,6 +6,7 @@ union StepValue =
   | StepValueInteger
   | StepValueReal
   | StepValueString
+  | StepValueBinary
   | StepValueEnum
   | StepValueReference
   | StepValueAggregate
@@ -16,6 +17,7 @@ type StepValueDerived { _: Boolean }
 type StepValueInteger { integer: Int! }
 type StepValueReal { real: Float! }
 type StepValueString { string: String! }
+type StepValueBinary { binary: String! }
 type StepValueEnum { enum: String! }
 type StepValueReference { reference: Int! }
 type StepValueAggregate { aggregate: [StepValue!]! }

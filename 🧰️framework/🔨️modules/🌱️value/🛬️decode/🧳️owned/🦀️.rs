@@ -27,7 +27,7 @@ impl super::NativeDecodeConstructionRecipient for OriginalConstructionFixture{
 fn receiving_child_body_budget(body:usize,metadata:usize)->usize{body.saturating_sub(metadata)}
 
 /// 🏭️ Native construction declares a required receiving owner independently of synchronous wire decoding.
-pub trait NativeReceive<I>:RetireOwned+Sized{
+pub trait NativeReceive<I:?Sized>:RetireOwned+Sized{
  type Receiver:NativeReceiver<I,Self>;
  fn receive_birth_demand()->RetirementDemand;
  /// 🌱️ Birth performs no input work; refusal retains no partial owner and an admitted receiver remains caller-owned before receipt validation.
@@ -43,7 +43,7 @@ pub trait NativeRecordFields{
 }
 
 /// 🫴️ The original input remains held until staged output and every alias complete funded transfer or closure.
-pub trait NativeReceiver<I,T>:Send+'static{
+pub trait NativeReceiver<I:?Sized,T>:Send+'static{
  fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>;
  fn advance(&mut self,original:RetainedCloneRef<'_,I>,control:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
  fn output_ready(&self)->bool;

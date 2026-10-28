@@ -1,0 +1,6 @@
+[
+ {"name":"implicit-set-identity-unique","body":"#1=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);#2=IFCUNITASSIGNMENT((#1,#1));","codes":["aggregate-unique"]},
+ {"name":"separate-equal-entity-instances","body":"#1=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);#2=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);#3=IFCUNITASSIGNMENT((#1,#2));","codes":[]},
+ {"name":"unique-list-defined-scalars","body":"#1=IFCPROPERTYENUMERATION('Labels',(IFCLABEL('A'),IFCLABEL('A')),$);","codes":["aggregate-unique"]},
+ {"name":"unique-list-real-negative-zero","body":"#1=IFCPROPERTYENUMERATION('Lengths',(IFCLENGTHMEASURE(0.),IFCLENGTHMEASURE(-0.)),$);","codes":["aggregate-unique"]}
+]

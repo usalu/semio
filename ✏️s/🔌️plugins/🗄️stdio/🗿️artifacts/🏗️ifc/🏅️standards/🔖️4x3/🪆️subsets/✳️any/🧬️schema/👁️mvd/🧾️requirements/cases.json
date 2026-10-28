@@ -1,0 +1,227 @@
+{
+  "schema": "semio.ifc4x3.requirements.v1",
+  "contracts": [
+    "body-tessellation",
+    "body-swept-solid",
+    "body-advanced-swept-solid",
+    "body-surface-model",
+    "body-clipping",
+    "body-brep",
+    "body-advanced-brep",
+    "alignment-terminal",
+    "alignment-direct"
+  ],
+  "completeReleasedBindings": false,
+  "maximumObligations": 64000,
+  "coverage": [
+    {
+      "id": "pass",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        }
+      ],
+      "expected": {
+        "status": "pass",
+        "complete": true,
+        "valid": true,
+        "hasFailure": false
+      }
+    },
+    {
+      "id": "failure",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "fail",
+          "hasFailure": true
+        }
+      ],
+      "expected": {
+        "status": "fail",
+        "complete": true,
+        "valid": false,
+        "hasFailure": true
+      }
+    },
+    {
+      "id": "not-applicable",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": false,
+          "implementation": "implemented",
+          "status": "not-applicable",
+          "hasFailure": false
+        }
+      ],
+      "expected": {
+        "status": "not-applicable",
+        "complete": true,
+        "valid": false,
+        "hasFailure": false
+      }
+    },
+    {
+      "id": "unknown",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": null,
+          "implementation": "implemented",
+          "status": "incomplete",
+          "hasFailure": false
+        }
+      ],
+      "expected": {
+        "status": "incomplete",
+        "complete": false,
+        "valid": false,
+        "hasFailure": false
+      }
+    },
+    {
+      "id": "unimplemented",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": true,
+          "implementation": "unimplemented",
+          "status": "incomplete",
+          "hasFailure": false
+        }
+      ],
+      "expected": {
+        "status": "incomplete",
+        "complete": false,
+        "valid": false,
+        "hasFailure": false
+      }
+    },
+    {
+      "id": "known-failure-incomplete",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "incomplete",
+          "hasFailure": true
+        }
+      ],
+      "expected": {
+        "status": "fail",
+        "complete": false,
+        "valid": false,
+        "hasFailure": true
+      }
+    },
+    {
+      "id": "failed-plus-unimplemented",
+      "scope": "selected-contracts",
+      "rows": [
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "fail",
+          "hasFailure": true
+        },
+        {
+          "applicable": true,
+          "implementation": "unimplemented",
+          "status": "incomplete",
+          "hasFailure": false
+        }
+      ],
+      "expected": {
+        "status": "fail",
+        "complete": false,
+        "valid": false,
+        "hasFailure": true
+      }
+    },
+    {
+      "id": "all-nine-no-view",
+      "scope": "released-view",
+      "rows": [
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        },
+        {
+          "applicable": true,
+          "implementation": "implemented",
+          "status": "pass",
+          "hasFailure": false
+        }
+      ],
+      "expected": {
+        "status": "incomplete",
+        "complete": false,
+        "valid": false,
+        "hasFailure": false
+      }
+    },
+    {
+      "id": "no-view-set",
+      "scope": "released-view",
+      "rows": [],
+      "expected": {
+        "status": "incomplete",
+        "complete": false,
+        "valid": false,
+        "hasFailure": false
+      }
+    }
+  ]
+}

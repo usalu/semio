@@ -1,0 +1,11 @@
+# Bounded Export Text Formatting
+
+The native Layout writer formats SVG/PDF headers, matrix/path attributes, precise paints, Unicode CMap ranges and semantic font properties through fmt::Display views into an 8192-byte stack TextFragment. Whole UTF8 writes fit or poison the fragment; a poisoned fragment cannot be published. The actual ChunkRope.append_format charges the produced stack bytes and the destination byte copy to the same original OutputWork. OUTPUT_COPY_BYTES includes both header copies. PDF path state advances only after the corresponding output write succeeds.
+
+Native production format! calls in the SVG/PDF writer phases and their color/affine/path/CMap/text helper views have been removed. PDF object formatting and image object headers no longer construct temporary String owners. This is a scoped formatting change; ZIP owners, error ownership and other JSON/interchange encoder paths still need separate original accounting.
+
+Schema and neutral fixtures were authored before implementation. Actual portable evidence: 7 fragment cases covering exact capacity, UTF8 multi-byte boundaries, whole-write overflow, persistent poison and the full 8192-byte extent; 16406 admitted bytes match the independent Node Buffer UTF8 oracle. Four invalid capacities are refused. Live portable ChunkRope.appendText publishes the independently expected 28-byte numeric/Unicode example with two accounted copies, refuses three original undergrants without changing its byte owner, and closes all logical backing. Independent AJV validates the neutral fixture. Existing output storage evidence remains 4 cases / 389 turns / 982 denials / 16 cancellation cuts.
+
+Native OriginalJobFixtureCaller laws cover exact aggregate copies and undergrant refusal. A first-party HeapWitness test asserts no allocation or release during successful fixed formatting and actual append_format after byte backing admission. These native laws are authored and mounted but UNRUN because repo is unavailable. Grammar checks are not native compilation or physical allocator evidence.
+
+Raster extraction now uses caller-owned original-funded slices; see [caller-owned-pdf-raster.md](caller-owned-pdf-raster.md). The native TextFragment keeps only its written prefix initialized with MaybeUninit backing; fixed stack formatting does not zero an unused8192-byte body.

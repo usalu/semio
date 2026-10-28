@@ -35,8 +35,8 @@ pub struct Fem3dArtifact {
 
 impl Fem3dArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
-        crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot {
+    pub fn to_reference_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue {
+        crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue {
             nodes: self.nodes.clone(),
             elements: self.elements.clone(),
             materials: self.materials.clone(),
@@ -50,7 +50,7 @@ impl Fem3dArtifact {
     }
 
     /// 🧬️ Builds a full artifact from a snapshot, preserving the authored document fields.
-    pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) -> Self {
+    pub fn from_reference_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue) -> Self {
         Self {
             nodes: snapshot.nodes,
             elements: snapshot.elements,
@@ -65,7 +65,7 @@ impl Fem3dArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshot) {
+    pub fn set_reference_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::Fem3dSnapshotValue) {
         self.nodes = snapshot.nodes;
         self.elements = snapshot.elements;
         self.materials = snapshot.materials;

@@ -234,6 +234,8 @@ async fn every_printed_op_line_starts_with_the_rows_wire_keyword() {
             "exportPng" => "export-png",
             "exportSvg" => "export-svg",
             "exportPdf" => "export-pdf",
+            "exportStep" => "export-step",
+            "exportIdml" => "export-idml",
             "exportPackage" => "export-package",
             "engagementSubmit" => "engagement-submit",
             "deleteSelection" => "delete-selection",
@@ -291,6 +293,8 @@ pub fn every_command() -> Vec<LayoutCommand> {
         LayoutCommand::ExportPng(semio_s_artifact_layout_layout_editor_commands::export_png::ExportPng { page_id: Some("page-1".into()) }),
         LayoutCommand::ExportSvg(semio_s_artifact_layout_layout_editor_commands::export_svg::ExportSvg { page_id: None }),
         LayoutCommand::ExportPdf(semio_s_artifact_layout_layout_editor_commands::export_pdf::ExportPdf { page_id: None }),
+        LayoutCommand::ExportStep(semio_s_artifact_layout_layout_editor_commands::export_step::ExportStep { page_id: None }),
+        LayoutCommand::ExportIdml(semio_s_artifact_layout_layout_editor_commands::export_idml::ExportIdml {}),
         LayoutCommand::ExportPackage(semio_s_artifact_layout_layout_editor_commands::export_package::ExportPackage {}),
         LayoutCommand::EngagementSubmit(semio_s_artifact_layout_layout_editor_commands::engagement_submit::EngagementSubmit { value: "export png".into() }),
         LayoutCommand::DeleteSelection(semio_s_artifact_layout_layout_editor_commands::delete_selection::DeleteSelection {}),
@@ -865,3 +869,9 @@ mod package_fonts {
     }
 }
 //#endregion 🔤️PackageFonts
+
+#[test]
+fn interchange_shell_actions_decode_the_selected_page_and_document_payloads(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../🚪️io/🔀️interchange/🧪️fixtures/🔣️.json")).unwrap();let case=fixture["cases"].as_array().unwrap().iter().find(|case|case["id"]=="interchange-shell-controls").unwrap();
+    for action in case["actions"].as_array().unwrap(){let id=action["id"].as_str().unwrap();let command=LayoutPlayApp::command_from_action(id,Some(action["args"].clone().into()),None).unwrap();assert_eq!(command.command_id(),id);match command{LayoutCommand::ExportStep(payload)=>assert_eq!(payload.page_id.as_deref(),Some("selected-page")),LayoutCommand::ExportIdml(_)=>{},_=>panic!("interchange export command")}}
+}

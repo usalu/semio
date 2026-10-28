@@ -1,3 +1,4 @@
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 #[allow(unused_imports)] use protocol::{MutationKind, SemanticDescriptor};
 #[allow(unused_imports)] use semio_framework_value_derive::{FromValue, ToValue};
 #[allow(unused_imports)] use semio_s_artifact_layout_layout_mutations_content::update_spread::*;

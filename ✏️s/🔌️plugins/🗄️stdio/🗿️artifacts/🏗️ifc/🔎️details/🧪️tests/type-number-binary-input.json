@@ -1,0 +1,712 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "encoding": "ifc-template-command",
+  "sources": {
+    "real": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCPOINTONCURVE",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "7"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCPOINT",
+              "args": []
+            },
+            {
+              "name": "IFCGEOMETRICREPRESENTATIONITEM",
+              "args": []
+            },
+            {
+              "name": "IFCREPRESENTATIONITEM",
+              "args": []
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "name": "IFCPOLYLINE",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "9"
+                },
+                {
+                  "kind": "reference",
+                  "value": "10"
+                }
+              ]
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "9",
+          "name": "IFCCARTESIANPOINT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                },
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "10",
+          "name": "IFCCARTESIANPOINT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "4607182418800017408"
+                  }
+                },
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "number": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCQUANTITYNUMBER",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "Caller formula"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCPHYSICALQUANTITY",
+              "args": [
+                {
+                  "kind": "string",
+                  "value": "Caller number"
+                },
+                {
+                  "kind": "unset"
+                }
+              ]
+            },
+            {
+              "name": "IFCPHYSICALSIMPLEQUANTITY",
+              "args": [
+                {
+                  "kind": "unset"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    "binary": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCBLOBTEXTURE",
+          "args": [
+            {
+              "kind": "string",
+              "value": "PNG"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCSURFACETEXTURE",
+              "args": [
+                {
+                  "kind": "enum",
+                  "value": "T"
+                },
+                {
+                  "kind": "enum",
+                  "value": "F"
+                },
+                {
+                  "kind": "string",
+                  "value": "TEXTURE"
+                },
+                {
+                  "kind": "unset"
+                },
+                {
+                  "kind": "unset"
+                }
+              ]
+            },
+            {
+              "name": "IFCPRESENTATIONITEM",
+              "args": []
+            }
+          ]
+        }
+      ]
+    },
+    "ratio": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCCOLOURRGB",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCCOLOURSPECIFICATION",
+              "args": [
+                {
+                  "kind": "string",
+                  "value": "Caller colour"
+                }
+              ]
+            },
+            {
+              "name": "IFCPRESENTATIONITEM",
+              "args": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "real-zero",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "0"
+        }
+      },
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "0"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "real-negative-zero",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "9223372036854775808"
+        }
+      },
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "9223372036854775808"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "real-half",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "4602678819172646912"
+        }
+      },
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4602678819172646912"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "real-one-and-half",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "4609434218613702656"
+        }
+      },
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4609434218613702656"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "real-subnormal",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "1"
+        }
+      },
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "1"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "real-max-finite",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "9218868437227405311"
+        }
+      },
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "9218868437227405311"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "number-integer",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": 0,
+      "value": {
+        "kind": "integer",
+        "value": "2"
+      },
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "string",
+          "value": "Caller formula"
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "number-binary64",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": 0,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "4609434218613702656"
+        }
+      },
+      "args": [
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4609434218613702656"
+          }
+        },
+        {
+          "kind": "string",
+          "value": "Caller formula"
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "number-large-integer",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": 0,
+      "value": {
+        "kind": "integer",
+        "value": "9007199254740993"
+      },
+      "args": [
+        {
+          "kind": "integer",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "string",
+          "value": "Caller formula"
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "binary-bytes",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": 1,
+      "value": {
+        "kind": "binary",
+        "value": "0A5FF"
+      },
+      "args": [
+        {
+          "kind": "string",
+          "value": "PNG"
+        },
+        {
+          "kind": "binary",
+          "value": "0A5FF"
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "binary-empty",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": 1,
+      "value": {
+        "kind": "binary",
+        "value": "0"
+      },
+      "args": [
+        {
+          "kind": "string",
+          "value": "PNG"
+        },
+        {
+          "kind": "binary",
+          "value": "0"
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "binary-leading-zeros",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": 1,
+      "value": {
+        "kind": "binary",
+        "value": "00000"
+      },
+      "args": [
+        {
+          "kind": "string",
+          "value": "PNG"
+        },
+        {
+          "kind": "binary",
+          "value": "00000"
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "ratio-half",
+      "source": "ratio",
+      "target": "IFCCOLOURRGB",
+      "index": 0,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "4602678819172646912"
+        }
+      },
+      "args": [
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4602678819172646912"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "0"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4607182418800017408"
+          }
+        }
+      ],
+      "admitted": true
+    },
+    {
+      "id": "ratio-above-one",
+      "source": "ratio",
+      "target": "IFCCOLOURRGB",
+      "index": 0,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "4609434218613702656"
+        }
+      },
+      "args": [
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4609434218613702656"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "0"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4607182418800017408"
+          }
+        }
+      ],
+      "admitted": false
+    }
+  ],
+  "invalidBits": [
+    "",
+    "-",
+    "01",
+    "-0",
+    "18446744073709551616",
+    "9218868437227405312",
+    "9221120237041090560",
+    "18442240474082181120"
+  ],
+  "invalidBinary": [
+    "",
+    "4F",
+    "0a5",
+    "3A"
+  ],
+  "binarySyntax": [
+    {
+      "word": "0",
+      "bits": ""
+    },
+    {
+      "word": "30",
+      "bits": "0"
+    },
+    {
+      "word": "31",
+      "bits": "1"
+    },
+    {
+      "word": "23",
+      "bits": "11"
+    },
+    {
+      "word": "12A",
+      "bits": "0101010"
+    },
+    {
+      "word": "0A5FF",
+      "bits": "1010010111111111"
+    },
+    {
+      "word": "00",
+      "bits": "0000"
+    },
+    {
+      "word": "23B",
+      "bits": "111011"
+    },
+    {
+      "word": "092A",
+      "bits": "100100101010"
+    }
+  ],
+  "binaryCandidateRefusals": [
+    "31",
+    "23",
+    "12A"
+  ],
+  "numberModes": [
+    "integer",
+    "real"
+  ],
+  "candidateRefusals": [
+    {
+      "id": "ratio",
+      "source": "ratio",
+      "target": "IFCCOLOURRGB",
+      "component": "",
+      "index": 1,
+      "value": {
+        "kind": "real",
+        "value": {
+          "bits": "4609434218613702656"
+        }
+      },
+      "inputIndex": 0,
+      "input": {
+        "kind": "real",
+        "value": {
+          "bits": "4602678819172646912"
+        }
+      }
+    },
+    {
+      "id": "format",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "component": "",
+      "index": 0,
+      "value": {
+        "kind": "string",
+        "value": "TXT"
+      },
+      "inputIndex": 1,
+      "input": {
+        "kind": "binary",
+        "value": "0A5FF"
+      }
+    },
+    {
+      "id": "inherited",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "component": "IFCSURFACETEXTURE",
+      "index": 0,
+      "value": {
+        "kind": "string",
+        "value": "T"
+      },
+      "inputIndex": 1,
+      "input": {
+        "kind": "binary",
+        "value": "0A5FF"
+      }
+    }
+  ],
+  "originalControl": {
+    "cancelEveryProgressPrefix": true,
+    "preserveCallerSource": true,
+    "retainOriginalCallbackAndSignal": true,
+    "propagateOriginalFailureIdentity": true,
+    "undefinedFailureTailPrefixes": 32
+  },
+  "ownerRefusals": [
+    "absent",
+    "duplicate"
+  ],
+  "contextSequence": [
+    "valid",
+    "invalid-preserved-alias",
+    "valid"
+  ]
+}

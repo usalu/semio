@@ -1,0 +1,838 @@
+{
+  "schema": "layout.export.original-drawing-pdf-laws.v1",
+  "cases": [
+    {
+      "name": "background",
+      "content": {
+        "schema": "drawing.document",
+        "id": "background",
+        "title": "background",
+        "assets": {},
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 2,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  10,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  70
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  70
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "move": [
+          0,
+          50
+        ],
+        "line": [
+          100,
+          0
+        ]
+      }
+    },
+    {
+      "name": "stroke",
+      "content": {
+        "schema": "drawing.document",
+        "id": "stroke",
+        "title": "stroke",
+        "assets": {},
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  1,
+                  0,
+                  0,
+                  0.5
+                ],
+                "width": 2,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  10,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  70
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  70
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "stroke": [
+          1,
+          0,
+          0,
+          0.5
+        ],
+        "width": 2
+      }
+    },
+    {
+      "name": "fill",
+      "content": {
+        "schema": "drawing.document",
+        "id": "fill",
+        "title": "fill",
+        "assets": {},
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  1,
+                  1
+                ]
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  10,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  70
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  70
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "fill": [
+          0,
+          0,
+          1,
+          1
+        ]
+      }
+    },
+    {
+      "name": "placed",
+      "content": {
+        "schema": "drawing.document",
+        "id": "placed",
+        "title": "placed",
+        "assets": {},
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "move": [
+          146,
+          65
+        ],
+        "line": [
+          186,
+          25
+        ]
+      }
+    },
+    {
+      "name": "text",
+      "content": {
+        "schema": "drawing.document",
+        "id": "text",
+        "title": "text",
+        "assets": {},
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          },
+          {
+            "id": "text",
+            "kind": "text",
+            "name": "text",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              }
+            },
+            "x": 0,
+            "y": 0,
+            "content": "Plan",
+            "size": 11,
+            "fontFamily": "shareTechMono"
+          }
+        ]
+      },
+      "expected": {
+        "text": "Plan"
+      }
+    },
+    {
+      "name": "sample",
+      "content": {
+        "schema": "drawing.document",
+        "id": "sample",
+        "title": "sample",
+        "assets": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                255,
+                0,
+                0,
+                255
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          },
+          {
+            "id": "sample",
+            "kind": "image",
+            "name": "sample",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "imageKey": "red",
+            "width": 1,
+            "height": 1
+          }
+        ]
+      },
+      "expected": {
+        "resolution": "refuse",
+        "matrix": [
+          40,
+          0,
+          0,
+          40,
+          146,
+          25
+        ],
+        "samples": [
+          255,
+          0,
+          0,
+          255
+        ]
+      }
+    },
+    {
+      "name": "rotated-sample",
+      "content": {
+        "schema": "drawing.document",
+        "id": "rotated-sample",
+        "title": "rotated-sample",
+        "assets": {
+          "red": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                255,
+                0,
+                0,
+                255
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 1,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  1,
+                  1
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  0,
+                  1
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          },
+          {
+            "id": "sample",
+            "kind": "image",
+            "name": "sample",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "imageKey": "red",
+            "width": 1,
+            "height": 1
+          }
+        ]
+      },
+      "expected": {
+        "resolution": "refuse",
+        "matrix": [
+          0,
+          -40,
+          40,
+          0,
+          146,
+          65
+        ],
+        "samples": [
+          255,
+          0,
+          0,
+          255
+        ]
+      }
+    },
+    {
+      "name": "edited-text",
+      "content": {
+        "schema": "drawing.document",
+        "id": "edited-text",
+        "title": "edited-text",
+        "assets": {},
+        "layers": [
+          {
+            "id": "text",
+            "kind": "text",
+            "name": "text",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "fill": {
+                "kind": "solid",
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              }
+            },
+            "x": 0,
+            "y": 0,
+            "content": "Plan",
+            "size": 11,
+            "fontFamily": "shareTechMono"
+          }
+        ]
+      },
+      "expected": {
+        "text": "Title",
+        "mutation": {
+          "field": "textContent",
+          "value": "Title"
+        }
+      }
+    },
+    {
+      "name": "compositing",
+      "content": {
+        "schema": "drawing.document",
+        "id": "compositing",
+        "title": "compositing",
+        "assets": {},
+        "layers": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 0.5,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero",
+              "stroke": {
+                "color": [
+                  1,
+                  0,
+                  0,
+                  0.5
+                ],
+                "width": 2,
+                "cap": "round",
+                "join": "round"
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  10,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  20
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  110,
+                  70
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  70
+                ]
+              },
+              {
+                "kind": "close"
+              }
+            ]
+          }
+        ]
+      },
+      "expected": {
+        "compositing": "refuse"
+      }
+    }
+  ]
+}

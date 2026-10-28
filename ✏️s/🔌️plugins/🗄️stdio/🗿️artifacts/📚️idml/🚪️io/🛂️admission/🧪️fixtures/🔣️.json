@@ -1,0 +1,249 @@
+{
+  "schema": "idml.package.admission.v1",
+  "mime": "application/vnd.adobe.indesign-idml-package",
+  "cases": [
+    {
+      "id": "minimal",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ]
+      ],
+      "valid": true
+    },
+    {
+      "id": "encoded-version",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8&#x2e;0\"/>"
+        ],
+        [
+          "Stories/日本語.xml",
+          "<Story>Grüße 😀</Story>"
+        ]
+      ],
+      "valid": true
+    },
+    {
+      "id": "empty-story",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ],
+        [
+          "Stories/a.xml",
+          ""
+        ]
+      ],
+      "valid": false,
+      "error": "xml.validation.root"
+    },
+    {
+      "id": "bad-xml",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ],
+        [
+          "Stories/a.xml",
+          "<Story><a></b></Story>"
+        ]
+      ],
+      "valid": false,
+      "error": "xml.validation.close-name"
+    },
+    {
+      "id": "duplicate",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.duplicate-member"
+    },
+    {
+      "id": "unsafe-path",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ],
+        [
+          "Stories/../bad.xml",
+          "<a/>"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.member-path"
+    },
+    {
+      "id": "version-mismatch",
+      "version": "9.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.dom-version-mismatch"
+    },
+    {
+      "id": "bad-version",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8..0\"/>"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.dom-version"
+    },
+    {
+      "id": "wrong-root",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Story DOMVersion=\"8.0\"/>"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.designmap"
+    },
+    {
+      "id": "missing-designmap",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.designmap"
+    },
+    {
+      "id": "directory-payload",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<Document DOMVersion=\"8.0\"/>"
+        ],
+        [
+          "Stories/",
+          "bad"
+        ]
+      ],
+      "valid": false,
+      "error": "stdio.idml.directory-payload"
+    },
+    {
+      "id": "doctype",
+      "version": "8.0",
+      "parts": [
+        [
+          "mimetype",
+          "$mime"
+        ],
+        [
+          "designmap.xml",
+          "<!DOCTYPE Document><Document DOMVersion=\"8.0\"/>"
+        ]
+      ],
+      "valid": false,
+      "error": "xml.validation.doctype"
+    }
+  ],
+  "lifecycle": {
+    "workGrants": [
+      1,
+      7,
+      64,
+      4096
+    ],
+    "maximumMetadataPageBytes": 1024,
+    "cancellationCuts": [
+      0,
+      1,
+      20,
+      200
+    ],
+    "changedVersionOverlay": "9&#46;0",
+    "maximumMetadataCopyBytes": 2048,
+    "additionalParts": 2049,
+    "lookupKeys": [
+      "mimetype",
+      "designmap.xml",
+      "Stories/日本語.xml",
+      "Stories/2048.xml",
+      "missing.xml",
+      "Stories/../missing.xml"
+    ]
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes"
+    ],
+    "method": "independent stored ZIP roundtrip plus XML syntax/root attribute extraction; test-only byte/part interface"
+  }
+}

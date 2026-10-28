@@ -1,0 +1,155 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "tunnel-half",
+      "host": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "sourceTurns": 7,
+      "operations": [
+        {
+          "operation": "difference",
+          "right": [
+            [
+              1,
+              1,
+              -1
+            ],
+            [
+              3,
+              3,
+              5
+            ]
+          ],
+          "volume": 48
+        },
+        {
+          "operation": "difference",
+          "right": [
+            [
+              2,
+              0,
+              0
+            ],
+            [
+              6,
+              4,
+              4
+            ]
+          ],
+          "volume": 24
+        }
+      ]
+    },
+    {
+      "id": "disconnected-retained",
+      "host": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "sourceTurns": 5,
+      "operations": [
+        {
+          "operation": "union",
+          "right": [
+            [
+              5,
+              0,
+              0
+            ],
+            [
+              9,
+              4,
+              4
+            ]
+          ],
+          "volume": 128
+        },
+        {
+          "operation": "intersection",
+          "right": [
+            [
+              -1,
+              -1,
+              -1
+            ],
+            [
+              10,
+              5,
+              5
+            ]
+          ],
+          "volume": 128
+        }
+      ]
+    },
+    {
+      "id": "identity-covering-empty",
+      "host": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "sourceTurns": 3,
+      "operations": [
+        {
+          "operation": "intersection",
+          "right": [
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              4,
+              4,
+              4
+            ]
+          ],
+          "volume": 64
+        },
+        {
+          "operation": "difference",
+          "right": [
+            [
+              -1,
+              -1,
+              -1
+            ],
+            [
+              5,
+              5,
+              5
+            ]
+          ],
+          "volume": 0
+        }
+      ]
+    }
+  ]
+}

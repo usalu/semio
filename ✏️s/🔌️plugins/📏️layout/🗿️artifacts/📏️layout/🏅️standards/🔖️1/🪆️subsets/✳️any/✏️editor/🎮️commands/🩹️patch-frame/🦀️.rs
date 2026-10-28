@@ -14,7 +14,6 @@ use semio_s_artifact_layout_layout_mutations_frames::rotate_frame::RotateFrame;
 use semio_s_artifact_layout_layout_mutations_frames::update_text_frame::UpdateTextFrame;
 use semio_s_artifact_layout_layout_mutations_frames::set_frame_flags::SetFrameFlags;
 use semio_s_artifact_layout_layout_mutations_frames::set_frame_layer::SetFrameLayer;
-use semio_s_artifact_layout_layout_mutations_frames::set_drawing_text::{drawing_text_index, is_drawing_kind, SetDrawingText};
 use semio_s_artifact_layout_layout_mutations_content::set_story_runs::SetStoryRuns;
 use semio_s_artifact_layout_layout_mutations_content::set_page_overrides::SetPageOverrides;
 use semio_s_artifact_layout_layout_mutations_content::update_link::UpdateLink;
@@ -25,6 +24,9 @@ use semio_s_artifact_layout_layout_model::{Frame, Page, PageOverride, TextStyleR
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
+
+#[path = "📖️parent/🦀️.rs"]
+mod parent;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patch-frame")]
@@ -37,7 +39,7 @@ pub struct PatchFrame {
 
 
 /// ✂️ The single contiguous splice (character `offset`, characters `delete`d, text `insert`ed) the field edit changed; `None` for an unchanged value.
-fn story_splice(content: &str, value: &str) -> Option<(usize, usize, String)> {
+pub(crate) fn story_splice(content: &str, value: &str) -> Option<(usize, usize, String)> {
     if content == value {
         return None;
     }
@@ -51,6 +53,9 @@ fn inherited_override(document: &LayoutSnapshot, page: &Page, page_id: &str, fra
     let Some(parent_id) = &page.parent_page_id else { return Ok(Emit::default()) };
     let Some(parent) = document.parent_pages.iter().find(|parent| parent.id == *parent_id) else { return Ok(Emit::default()) };
     let Some(frame) = parent.frames.iter().find(|frame| frame.id() == frame_id) else { return Ok(Emit::default()) };
+    let mut resolved = frame.clone();
+    if let Some(page_override) = page.overrides.iter().find(|item| item.object_id == frame_id) { semio_s_artifact_layout_layout_model::apply_page_override(&mut resolved, page_override); }
+    let frame = &resolved;
     if semio_s_artifact_layout_layout_model::layer_locked(document, page, frame.layer_id()) || (frame.locked() && !matches!(field, "locked" | "visible" | "open")) {
         return Ok(Emit::default());
     }
@@ -84,32 +89,13 @@ fn inherited_override(document: &LayoutSnapshot, page: &Page, page_id: &str, fra
 }
 
 
-/// ✂️ Inspector key for one style run: `styleStart` / `styleEnd`, then `.1` through `.3`.
-pub fn style_range_key(index: usize, start: bool) -> Option<&'static str> {
-    const START: [&str; 4] = ["styleStart", "styleStart.1", "styleStart.2", "styleStart.3"];
-    const END: [&str; 4] = ["styleEnd", "styleEnd.1", "styleEnd.2", "styleEnd.3"];
-    if start { START.get(index).copied() } else { END.get(index).copied() }
-}
-
-fn style_range_index(field: &str) -> Option<(usize, bool)> {
-    (0..4).find_map(|index| {
-        if style_range_key(index, true) == Some(field) {
-            Some((index, true))
-        } else if style_range_key(index, false) == Some(field) {
-            Some((index, false))
-        } else {
-            None
-        }
-    })
+fn run_field(field: &str) -> Option<(usize, &str)> {
+    let (index, key) = field.strip_prefix("run.")?.split_once('.')?;
+    Some((index.parse().ok()?, key))
 }
 
 fn char_to_byte(content: &str, chars: usize) -> usize {
     content.char_indices().nth(chars).map(|(index, _)| index).unwrap_or(content.len())
-}
-
-fn byte_to_char(content: &str, byte: u64) -> usize {
-    let byte=usize::try_from(byte).unwrap_or(content.len());
-    content.get(..byte.min(content.len())).unwrap_or(content).chars().count()
 }
 
 pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
@@ -121,13 +107,21 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
     let Some(page) = document.pages.iter().find(|page| page.id == page_id) else {
         return Ok(Emit::default());
     };
-    let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
+    if payload.field.starts_with("parent.") { return parent::handle(payload, document, page) }
+    let local = page.frames.iter().find(|frame| frame.id() == payload.frame_id);
+    if local.is_none() && matches!(payload.field.as_str(), "x" | "y" | "width" | "height" | "rotation" | "locked" | "visible") {
         return inherited_override(document, page, &page_id, &payload.frame_id, &payload.field, &payload.value);
-    };
+    }
+    let inherited = page.parent_page_id.as_ref().and_then(|id| document.parent_pages.iter().find(|parent| parent.id == *id)).and_then(|parent| parent.frames.iter().find(|frame| frame.id() == payload.frame_id));
+    let Some(frame) = local.or(inherited) else { return Ok(Emit::default()) };
+    if local.is_none() && !matches!(payload.field.as_str(), "storyContent" | "addStyleRun" | "clearStyleRuns" | "linkPath" | "linkWidth" | "linkHeight" | "dpi" | "colorProfile" | "open") && run_field(&payload.field).is_none() {
+        return Err(Fault::new(semio_framework_diagnostic::FaultOrigin::App, "layout.parent-frame.scope", "Use the shared parent-frame controls for this property."));
+    }
     if semio_s_artifact_layout_layout_model::layer_locked(document, page, frame.layer_id()) {
         return Ok(Emit::default());
     }
-    if frame.locked() && !matches!(payload.field.as_str(), "locked" | "visible" | "open") {
+    let locked=if local.is_none(){page.overrides.iter().find(|entry|entry.object_id==frame.id()).and_then(|entry|entry.locked).unwrap_or_else(||frame.locked())}else{frame.locked()};
+    if locked && !matches!(payload.field.as_str(), "locked" | "visible" | "open") {
         return Ok(Emit::default());
     }
     let frame_id = payload.frame_id.clone();
@@ -187,50 +181,51 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
                 _ => Ok(Emit::default()),
             }
         }
-        "characterStyle" => {
+        "clearStyleRuns" => {
+            let Frame::Text { story_id, .. } = frame else { return Ok(Emit::default()) };
+            Ok(Emit::mutations(vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story_id.clone(), runs: Vec::new() })]))
+        }
+        "addStyleRun" => {
             let Frame::Text { story_id, .. } = frame else { return Ok(Emit::default()) };
             let Some(story) = document.stories.iter().find(|story| story.id == *story_id) else { return Ok(Emit::default()) };
-            let style_id = payload.value.trim();
-            let runs = if style_id.is_empty() {
-                Vec::new()
-            } else if document.character_styles.iter().any(|style| style.id == style_id) && !story.content.is_empty() {
-                if story.style_runs.is_empty() {
-                    vec![TextStyleRun { start: 0, end: u64::try_from(story.content.len()).expect("host string length fits u64"), paragraph_style_id: None, character_style_id: Some(style_id.to_string()) }]
-                } else {
-                    let mut runs = story.style_runs.clone();
-                    runs[0].character_style_id = Some(style_id.to_string());
-                    runs
-                }
-            } else {
-                return Ok(Emit::default());
-            };
+            let mut runs = story.style_runs.clone();
+            runs.push(TextStyleRun { start: 0, end: story.content.len() as u64, paragraph_style_id: None, character_style_id: None });
             Ok(Emit::mutations(vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story.id.clone(), runs })]))
         }
-        field if style_range_index(field).is_some() => {
+        field if run_field(field).is_some() => {
             let Frame::Text { story_id, .. } = frame else { return Ok(Emit::default()) };
             let Some(story) = document.stories.iter().find(|story| story.id == *story_id) else { return Ok(Emit::default()) };
-            let Some((index, is_start)) = style_range_index(field) else { return Ok(Emit::default()) };
-            let Ok(chars) = payload.value.trim().parse::<usize>() else { return Ok(Emit::default()) };
-            let len_chars = story.content.chars().count();
-            let chars = chars.min(len_chars);
+            let Some((index, key)) = run_field(field) else { return Ok(Emit::default()) };
             let mut runs = story.style_runs.clone();
-            if index > runs.len() || (runs.is_empty() && index != 0) {
-                return Ok(Emit::default());
+            let Some(run) = runs.get_mut(index) else { return Ok(Emit::default()) };
+            match key {
+                "start" | "end" => {
+                    let Ok(chars) = payload.value.trim().parse::<usize>() else { return Ok(Emit::default()) };
+                    let byte = char_to_byte(&story.content, chars) as u64;
+                    if key == "start" { run.start = byte.min(run.end) } else { run.end = byte.max(run.start) }
+                }
+                "paragraphStyle" => run.paragraph_style_id = (!payload.value.is_empty()).then(|| payload.value.clone()),
+                "characterStyle" => run.character_style_id = (!payload.value.is_empty()).then(|| payload.value.clone()),
+                "delete" => { runs.remove(index); }
+                _ => return Ok(Emit::default()),
             }
-            if index == runs.len() {
-                runs.push(TextStyleRun { start: 0, end: u64::try_from(story.content.len()).expect("host string length fits u64"), paragraph_style_id: None, character_style_id: None });
-            }
-            let run = &mut runs[index];
-            let mut start_chars = byte_to_char(&story.content, run.start);
-            let mut end_chars = byte_to_char(&story.content, run.end);
-            if is_start {
-                start_chars = chars.min(end_chars);
-            } else {
-                end_chars = chars.max(start_chars);
-            }
-            run.start = u64::try_from(char_to_byte(&story.content, start_chars)).expect("host string offset fits u64");
-            run.end = u64::try_from(char_to_byte(&story.content, end_chars)).expect("host string offset fits u64");
             Ok(Emit::mutations(vec![LayoutMutation::SetStoryRuns(SetStoryRuns { id: story.id.clone(), runs })]))
+        }
+        "fillEnabled" | "strokeEnabled" | "fillAlpha" | "strokeAlpha" => {
+            let Frame::Rect { fill, stroke, .. } = frame else { return Ok(Emit::default()) };
+            let is_fill = payload.field.starts_with("fill");
+            let previous = if is_fill { fill } else { stroke };
+            let color = if payload.field.ends_with("Enabled") {
+                matches!(payload.value.as_str(), "true" | "1").then(|| previous.unwrap_or([0.0, 0.0, 0.0, 1.0]))
+            } else {
+                let Ok(alpha) = payload.value.parse::<f32>() else { return Ok(Emit::default()) };
+                if !alpha.is_finite() { return Ok(Emit::default()) }
+                let mut color = previous.unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                color[3] = alpha.clamp(0.0, 1.0);
+                Some(color)
+            };
+            let mutation = if is_fill { LayoutMutation::ChangeFrameFill(ChangeFrameFill { page_id, frame_id, new_fill: color }) } else { LayoutMutation::ChangeFrameStroke(ChangeFrameStroke { page_id, frame_id, new_stroke: color }) };
+            Ok(Emit::mutations(vec![mutation]))
         }
         "linkWidth" | "linkHeight" | "dpi" | "colorProfile" => {
             let Frame::Image { link_id, .. } = frame else { return Ok(Emit::default()) };
@@ -288,19 +283,6 @@ pub fn handle(payload: &PatchFrame, doc: &ArtifactView<'_, LayoutSnapshot>, cfg:
                 _ => return Ok(Emit::default()),
             }
             Ok(Emit::mutations(vec![LayoutMutation::UpdateTextFrame(next)]))
-        }
-        field if drawing_text_index(field).is_some() => {
-            let Frame::Image { link_id, .. } = frame else { return Ok(Emit::default()) };
-            let Some(link) = document.links.iter().find(|link| link.id == *link_id) else { return Ok(Emit::default()) };
-            if !is_drawing_kind(&link.artifact_kind) {
-                return Ok(Emit::default());
-            }
-            let text = payload.value.trim();
-            if text.chars().count() > 256 {
-                return Ok(Emit::default());
-            }
-            let index = drawing_text_index(field).unwrap_or(0);
-            Ok(Emit::mutations(vec![LayoutMutation::SetDrawingText(SetDrawingText { index, text: text.to_string() })]))
         }
         "forward" | "backward" => Ok(Emit::mutations(vec![LayoutMutation::ReorderFrame(ReorderFrame { page_id, frame_id, forward: payload.field == "forward" })])),
         "layerId" => {
@@ -388,28 +370,14 @@ mod open_tests {
     }
 
     #[test]
-    fn patch_frame_renames_drawing_text() {
-        semio_framework_io_ports::testkit::bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);
-        use semio_framework_io_ports::VectorPoint2;
-        use semio_framework_io_ports::VectorTransform;
-        use semio_framework_io_ports::{VectorLayer, VectorNode, VectorScene};
-        let point = |x: f64, y: f64| VectorPoint2 { x, y };
-        let content = VectorScene {
-            schema: "test.scene".into(),
-            canvas: Default::default(),
-            styles: Vec::new(),
-            layers: vec![VectorLayer { id: "imported".into(), name: "Imported".into(), visible: true, root: VectorNode::Group { transform: VectorTransform::identity(), children: vec![VectorNode::Text { value: "Plan".into(), at: point(0.0, 0.0), style: None }] } }],
-        };
-        let mut document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
-        document.links[0].artifact_kind = "s.draw.drawing".into();
-        document.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("dwg", &semio_framework_io_ports::testkit::scene_content(&content)));
+    fn parent_patch_cannot_issue_child_text_commands() {
+        let document = semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document();
         let config = NoConfig::default();
         let history = HistoryView::empty();
         let doc = ArtifactView::new(&document, &history);
         let cfg = ConfigView { snapshot: &config, window: None };
-        let emit = handle(&PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "drawingText".into(), value: "Title".into() }, &doc, &cfg).expect("rename");
-        let LayoutMutation::SetDrawingText(set) = &emit.artifact_mutations[0] else { panic!("{:?}", emit.artifact_mutations) };
-        assert_eq!(set.text, "Title");
+        let emit = handle(&PatchFrame { frame_id: "frame-image-1".into(), page_id: Some("page-1".into()), field: "drawingText".into(), value: "Title".into() }, &doc, &cfg).expect("parent command");
+        assert!(emit.artifact_mutations.is_empty());
     }
 
     #[test]
@@ -433,3 +401,5 @@ mod open_tests {
         assert!(blocked.artifact_mutations.is_empty());
     }
 }
+
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod inherited_tests;

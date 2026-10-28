@@ -435,6 +435,12 @@ pub trait PluginApp: Send + 'static {
     /// 🕰️ `view_state` supplies wrapper chrome and the OS-owned render context.
     /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): return type flipped
     /// from `UiNode` to `ui_runtime::ComponentTree`, matching `ArtifactApp::render` above.
+    /// 📏️ Original callers can fund the exact next action without changing source or cancellation identity.
+    fn render_demand(&self,_body_key:&str,_maximum_body_bytes:usize)->Result<RetirementDemand,ValueError>{Ok(Default::default())}
+    /// 📨️ The original staged input lends its stationary donor to one retained controller work owner.
+    fn receive_render_work_request(&mut self,_body_key:&str,_request:&mut Option<semio_framework::action_staging::StagedFormRequest>,_view:&ViewModel,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.render-request-unsupported").into())}
+    /// ♻️ Revokes the original private render before its donated input and context can retire.
+    fn close_render_work_request(&mut self,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{Ok(Some(true))}
     async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure>;
     fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<ComponentTree>,semio_framework_job::OriginalTurnFailure>;
     async fn window_engagements(&mut self, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {

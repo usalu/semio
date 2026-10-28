@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "properties",
+    "modes",
+    "failures",
+    "limits",
+    "cleanup",
+    "cancellation"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.edit-control-cases.v1"
+    },
+    "properties": {
+      "const": [
+        "signal",
+        "onProgress",
+        "maxEntities",
+        "maxValues",
+        "maxDepth",
+        "yieldEvery"
+      ]
+    },
+    "modes": {
+      "const": [
+        "sync",
+        "async"
+      ]
+    },
+    "failures": {
+      "const": [
+        "undefined",
+        "object",
+        "editError",
+        "error"
+      ]
+    },
+    "limits": {
+      "const": [
+        {
+          "name": "maxEntities",
+          "value": 0,
+          "code": "entityLimit"
+        },
+        {
+          "name": "maxValues",
+          "value": 0,
+          "code": "valueLimit"
+        },
+        {
+          "name": "maxDepth",
+          "value": 0,
+          "code": "depthLimit"
+        }
+      ]
+    },
+    "cleanup": {
+      "const": {
+        "yielded": 3,
+        "finished": true,
+        "observed": 1
+      }
+    },
+    "cancellation": {
+      "const": {
+        "code": "cancelled",
+        "originalCalls": 1,
+        "replacementCalls": 0,
+        "published": false
+      }
+    }
+  }
+}

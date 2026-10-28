@@ -1,0 +1,10 @@
+import Ajv from'ajv';
+import{ifc4x3Catalog as catalog}from'../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🟦️.ts';
+import law from'../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/type-measure-select-input.json';
+import schema from'../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/type-measure-select-input.schema.json';
+const validate=new Ajv({strict:true}).compile(schema);if(!validate(law))throw Error(JSON.stringify(validate.errors));
+if(JSON.stringify(catalog.types.IFCMEASUREVALUE!.members)!==JSON.stringify(law.members))throw Error('complete released domain');
+const aggregate=catalog.types.IFCCOMPLEXNUMBER!.typeExpr!;if(aggregate.aggregate!==law.aggregate.kind||aggregate.lower!==1||aggregate.upper!==2||aggregate.unique!==false||aggregate.item?.name!=='REAL')throw Error('released fixed array');
+const entity=catalog.entities.IFCRIGIDOPERATION!;if(entity.attributes.length!==3||entity.allAttributes.length!==5||entity.attributes[0]!.name!=='FirstCoordinate'||entity.attributes[1]!.name!=='SecondCoordinate')throw Error('actual owner slots');
+for(const row of law.cases)if(!law.members.includes(row.member))throw Error('nonmember vector');
+console.log('[DEBUG]',JSON.stringify({schema:true,cases:law.cases.length,choices:law.members.length,actualEntityRules:entity.whereRules,arrayCardinality:aggregate.upper!-aggregate.lower!+1,nativeExecuted:false}));

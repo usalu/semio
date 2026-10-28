@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "scope": "standalone-evaluator",
+  "cases": [
+    {
+      "id": "work-counter",
+      "mutation": "work",
+      "mode": "set",
+      "source": "SIZEOF([1:20])",
+      "maximumWork": 4,
+      "maximumDepth": 256,
+      "maximumIterations": 1000,
+      "expected": "work-budget"
+    },
+    {
+      "id": "shadow-work-counter",
+      "mutation": "work",
+      "mode": "shadow",
+      "source": "SIZEOF([1:20])",
+      "maximumWork": 4,
+      "maximumDepth": 256,
+      "maximumIterations": 1000,
+      "expected": "work-budget"
+    },
+    {
+      "id": "depth-counter",
+      "mutation": "depth",
+      "mode": "set",
+      "source": "1+(2*3)",
+      "maximumWork": 1000,
+      "maximumDepth": 1,
+      "maximumIterations": 1000,
+      "expected": "depth"
+    },
+    {
+      "id": "shadow-depth-counter",
+      "mutation": "depth",
+      "mode": "shadow",
+      "source": "1+(2*3)",
+      "maximumWork": 1000,
+      "maximumDepth": 1,
+      "maximumIterations": 1000,
+      "expected": "depth"
+    },
+    {
+      "id": "control-work",
+      "mutation": "control",
+      "mode": "set",
+      "source": "SIZEOF([1:20])",
+      "maximumWork": 4,
+      "maximumDepth": 256,
+      "maximumIterations": 1000,
+      "expected": "work-budget"
+    },
+    {
+      "id": "shadow-control-work",
+      "mutation": "control",
+      "mode": "shadow",
+      "source": "SIZEOF([1:20])",
+      "maximumWork": 4,
+      "maximumDepth": 256,
+      "maximumIterations": 1000,
+      "expected": "work-budget"
+    },
+    {
+      "id": "control-depth",
+      "mutation": "control",
+      "mode": "set",
+      "source": "1+(2*3)",
+      "maximumWork": 1000,
+      "maximumDepth": 1,
+      "maximumIterations": 1000,
+      "expected": "depth"
+    },
+    {
+      "id": "control-iterations",
+      "mutation": "control",
+      "mode": "set",
+      "source": "REPEAT i:=1 TO 2; END_REPEAT;",
+      "maximumWork": 1000,
+      "maximumDepth": 256,
+      "maximumIterations": 0,
+      "expected": "iteration-budget"
+    }
+  ]
+}

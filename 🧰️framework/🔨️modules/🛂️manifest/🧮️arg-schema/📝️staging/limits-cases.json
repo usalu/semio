@@ -1,0 +1,14 @@
+{
+  "cases": [
+    {"id":"unicode","value":{"a":"é😀"},"reservation":14,"nodes":2,"depth":2},
+    {"id":"escaped","value":{"a":"\n"},"reservation":10,"nodes":2,"depth":2},
+    {"id":"empty","value":[],"reservation":2,"nodes":1,"depth":1},
+    {"id":"numbers","value":[0,true,null],"reservation":44,"nodes":4,"depth":2},
+    {"id":"nested","value":{"a":{"b":"x"}},"reservation":15,"nodes":3,"depth":3}
+  ],
+  "refusals": [
+    {"axis":"utf8Bytes","value":{"a":"é😀"},"limit":13},
+    {"axis":"nodes","value":{"a":"é😀"},"limit":1},
+    {"axis":"depth","value":{"a":"é😀"},"limit":1}
+  ]
+}

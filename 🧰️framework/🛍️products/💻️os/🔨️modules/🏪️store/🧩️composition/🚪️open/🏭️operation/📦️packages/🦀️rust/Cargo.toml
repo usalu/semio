@@ -41,4 +41,16 @@ semio-framework-pack = { path = "../../../../../../../../../🔨️modules/🎒�
 semio-framework-schema-composition = { path = "../../../../../../../../../🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 
+semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+
+semio-framework-os-semio = { path = "../../../../../../🧬️semio/📦️packages/🦀️rust" }
+
+semio-framework-replication = { workspace = true }
+
 [dev-dependencies]
+
+semio-s-artifact-draw-drawing-model = { path = "../../../../../../../../../../✏️s/🔌️plugins/🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
+semio-framework-artifact-reference = { workspace = true }

@@ -23,6 +23,8 @@ pub trait MemberFactory: MemberVisit + Sized {
     const OPEN_DECLARATIONS: &'static [MemberOpenDeclaration];
     type Open: MemberOpenOperation<Member = Self> + Send;
     fn open_birth_demand(request: &MemberOpenRequest) -> Result<RetainedCloneBirthDemand, MemberOpenDiagnostic>;
+    /// 🎟️ Quotes concrete member opening header movement independently from physical birth.
+    fn open_copy_byte_demand(_request:&MemberOpenRequest)->Result<usize,MemberOpenDiagnostic>{Err(MemberOpenDiagnostic::Initialization)}
     fn member_frame_bytes(&self) -> usize;
     fn begin_open(admission:&mut MemberOpenSourceAdmission,opened:&mut Option<Self::Open>,cx:&mut semio_framework_job::StepContext<'_>,parent:&semio_framework_job::OriginalCallerSourceParent)->Result<bool,semio_framework_job::OriginalTurnFailure>;
     async fn create(id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId) -> Result<Self, VcsError>;
@@ -94,11 +96,11 @@ impl SpaceMember for NoMembers {
     fn owned_publication_birth_bytes(&self, _request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { match *self {} }
     fn begin_one_item_owned_publication(&self, _request: &mut MemberStoreOwnedBatchRequest, _grant: ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn ErasedMemberStoreOneItemPublication>>, String> { match *self {} }
 
-    fn advance_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _body: usize, _grant: ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
+    fn advance_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _body:usize, _grant: ArtifactStoreOneItemGrant, _receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, semio_framework_os_vcs::VcsError> {
         match *self {}
     }
 
-    fn prepare_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _body: usize, _grant: ArtifactStoreOneItemGrant, _receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn prepare_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _body:usize, _grant: ArtifactStoreOneItemGrant, _receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_os_vcs::VcsError> {
         match *self {}
     }
 
@@ -109,7 +111,7 @@ impl SpaceMember for NoMembers {
     fn snapshot_read_erased_for_publication(&self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, _grant: ArtifactStoreOneItemGrant) -> Result<Option<(u64, [u8; 32], ErasedSnapshotRead, RetainedCloneProgress)>, ValueError> { match *self {} }
     fn return_prepared_snapshot_read_erased(&self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, _snapshot: ErasedSnapshotRead, _grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> { match *self {} }
 
-    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn abort_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, _grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         match *self {}
     }
 

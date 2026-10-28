@@ -1,0 +1,228 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/child-editor/source",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "grant",
+    "cases",
+    "capability",
+    "custodyGrant"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "request",
+          "current",
+          "accepted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "request": {
+            "$ref": "#/$defs/source"
+          },
+          "current": {
+            "$ref": "#/$defs/source"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "capability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset",
+        "editorId",
+        "commandId"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "editorId": {
+          "type": "string",
+          "minLength": 1
+        },
+        "commandId": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "custodyGrant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "parentArtifact",
+        "owner",
+        "slot",
+        "childId",
+        "artifactId",
+        "artifactKind",
+        "standard",
+        "subset",
+        "editorId",
+        "commandId",
+        "parentRevision",
+        "childRevision"
+      ],
+      "properties": {
+        "parentArtifact": {
+          "type": "string"
+        },
+        "owner": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        },
+        "childId": {
+          "type": "string"
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        },
+        "editorId": {
+          "type": "string"
+        },
+        "commandId": {
+          "type": "string"
+        },
+        "parentRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        },
+        "childRevision": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "states": {
+      "enum": [
+        "bind",
+        "identity",
+        "parentRevision",
+        "childRevision",
+        "capability",
+        "ready",
+        "cancelled",
+        "empty"
+      ]
+    },
+    "custody": {
+      "enum": [
+        "original-parent-read",
+        "original-member-read",
+        "original-command",
+        "qualified-stamp",
+        "original-registry-alias",
+        "issued-typed-source",
+        "returned-original-registry"
+      ]
+    }
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "cases": [
+    {
+      "name": "partial alpha keeps original colors",
+      "width": 2,
+      "height": 1,
+      "rgba": [
+        255,
+        0,
+        0,
+        128,
+        0,
+        255,
+        0,
+        0
+      ],
+      "rgb": [
+        255,
+        0,
+        0,
+        0,
+        255,
+        0
+      ],
+      "alpha": [
+        128,
+        0
+      ]
+    },
+    {
+      "name": "row order and opaque blue",
+      "width": 2,
+      "height": 2,
+      "rgba": [
+        1,
+        2,
+        3,
+        255,
+        4,
+        5,
+        6,
+        192,
+        7,
+        8,
+        9,
+        64,
+        0,
+        0,
+        255,
+        255
+      ],
+      "rgb": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        0,
+        0,
+        255
+      ],
+      "alpha": [
+        255,
+        192,
+        64,
+        255
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "name": "empty image",
+      "width": 0,
+      "height": 1,
+      "rgba": []
+    },
+    {
+      "name": "truncated image",
+      "width": 2,
+      "height": 1,
+      "rgba": [
+        1,
+        2,
+        3,
+        4
+      ]
+    },
+    {
+      "name": "extra image bytes",
+      "width": 1,
+      "height": 1,
+      "rgba": [
+        1,
+        2,
+        3,
+        4,
+        5
+      ]
+    }
+  ]
+}

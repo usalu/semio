@@ -1,0 +1,13 @@
+# Native SurfaceModel Independent Audit
+
+No new confirmed P1/P2 was found in the frozen eleven-file native SurfaceModel policy extension. All eleven owned and nine reference observations match the current manifest (`🗑️generated/native-surface-independent-hashes.json`). This is source review, not Rust type/runtime or native output proof; authentic compiler ingress remains refused before rustc.
+
+The fourth closed policy variant exhaustively supplies SurfaceModel representation type, released concept identifier, pinned primary URL/commit/SHA256 and exactly three allowed families: IFCTESSELLATEDITEM, IFCSHELLBASEDSURFACEMODEL and IFCFACEBASEDSURFACEMODEL. It retains the wider TessellatedItem ancestor, admitting indexed polygonal face and with-voids descendants through real metadata rather than narrowing to a face set. Exact English/German labels match the independently audited TypeScript wrapper. surface_model() fixes policy at construction; no mutable continuation policy, Default or compatibility alias appears.
+
+The family cursor remains shared: no early positive exit, all three membership branches are visited, unknown dominates after all branches and Pending remains distinct. Existing parent copy_bound covers child state/reset and membership; no new source alias, index, query, report owner or caller authority was introduced. The unchanged clause/preparation/report mechanisms retain their previously reviewed original request/source/index route pins, original quote/debit, partial donation and retirement boundaries. This does not manufacture a standalone grant certificate for the pure family helper.
+
+Two new mounted native functions consume the25 shared neutral rows, exact provenance, wider indexed/TIN inheritance and late unknown constituents, exact pointer, foreign-family failure and bilingual labels. The shared real-constructor test match is exhaustive across four policies; cancellation/currency and expired-deadline close matrices include SurfaceModel. These are authored unexecuted laws. No semantic native red/green, physical receipt equality or runtime cancellation proof is asserted.
+
+Actual independent TypeScript public25+original1020 and external IfcOpenShell metadata/whole-file observations remain separately recorded in body-surface-model-independent-audit.md. Abstract projection rows do not acquire physical validity. Full schema/view/geometry conformance and native publication/capability remain unclaimed. Prior native Body9/Advanced10 source reports are historical checkpoints after this fourth policy extension.
+
+No production source was edited and no audit process remains live.

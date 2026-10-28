@@ -1,0 +1,15 @@
+{"schema":"IFC4X3_ADD2","cases":[
+{"id":"base","x":2,"y":4,"depth":3,"direction":[0,0,1],"expected":"supported"},
+{"id":"profile-offset-rotation","x":2,"y":4,"depth":3,"direction":[0,0,1],"profileOrigin":[5,-2],"profileX":[0,1],"expected":"supported"},
+{"id":"solid-placement","x":2,"y":4,"depth":3,"direction":[0,0,1],"solidOrigin":[10,20,30],"solidZ":[0,1,0],"solidX":[1,0,0],"expected":"supported"},
+{"id":"oblique-nonunit","x":2,"y":4,"depth":3,"direction":[3,0,4],"expected":"supported"},
+{"id":"negative-z","x":2,"y":4,"depth":3,"direction":[0,0,-7],"expected":"supported"},
+{"id":"millimetres","x":2000,"y":4000,"depth":3000,"direction":[0,0,1],"millimetres":true,"expected":"supported"},
+{"id":"combined","x":2,"y":4,"depth":3,"direction":[3,0,4],"profileOrigin":[5,-2],"profileX":[0,1],"solidOrigin":[10,20,30],"solidZ":[0,1,0],"solidX":[1,0,0],"expected":"supported"},
+{"id":"zero-x","x":0,"y":4,"depth":3,"direction":[0,0,1],"expected":"refuse"},
+{"id":"negative-y","x":2,"y":-4,"depth":3,"direction":[0,0,1],"expected":"refuse"},
+{"id":"zero-depth","x":2,"y":4,"depth":0,"direction":[0,0,1],"expected":"refuse"},
+{"id":"negative-depth","x":2,"y":4,"depth":-3,"direction":[0,0,1],"expected":"refuse"},
+{"id":"non-area","x":2,"y":4,"depth":3,"direction":[0,0,1],"profileType":"CURVE","expected":"refuse"},
+{"id":"plane-parallel","x":2,"y":4,"depth":3,"direction":[1,0,0],"expected":"refuse"}
+]}

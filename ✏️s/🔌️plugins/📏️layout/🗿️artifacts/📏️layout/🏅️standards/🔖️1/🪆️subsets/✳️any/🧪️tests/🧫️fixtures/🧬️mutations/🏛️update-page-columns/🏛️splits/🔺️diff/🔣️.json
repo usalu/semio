@@ -24,8 +24,7 @@
           "margin_bottom": null,
           "margin_left": null,
           "columns_count": 3,
-          "columns_gutter": 12.0,
-          "parent_page_id": null,
+          "columns_gutter": 12,
           "guides": null,
           "overrides": {
             "removed": [],
@@ -49,8 +48,5 @@
     ]
   },
   "printTarget": null,
-  "backgroundDrawing": null,
-  "drawingTexts": [],
-  "referencedModel": null,
   "dataFields": null
 }

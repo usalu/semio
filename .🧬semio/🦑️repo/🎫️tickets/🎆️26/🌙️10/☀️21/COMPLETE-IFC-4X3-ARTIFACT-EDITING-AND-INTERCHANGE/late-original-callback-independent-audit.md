@@ -1,0 +1,19 @@
+# Late Original Callback Independent Closure
+
+The confirmed late STEP error-identity P2 is closed in the frozen six-owned scope. Exact actual twelve-case replay now preserves every observer instance: IfcEditError and IfcStepError at parser references, writer capture, chunk capture, write text, GLB read projection and GLB write JSON bytes. All targeted late phases are reached. Output `🗑️generated/late-class-callback-independent-after.json` is distinct from immutable before evidence; input late-class-callback-independent-after.ts.
+
+Independent supplementary probe verifies first failure remains latched across repeated observer invocation: callback executes once, both invocations throw the same first object. Genuine foreign-schema writer still reports existing step.graph, actual dangling-reference STEP still reports step.reference, and original abort still reports io.cancelled. A real streamed writer yields its first chunk, return closes it, subsequent next is done and produces no additional notifications. Exact output `🗑️generated/late-callback-independent-supplement-after.json`; authored input retained.
+
+Source review confirms parser uses one captureIfcIoControlScope and scope.run across its entire async operation. Genuine internal reference-domain normalization remains inside that scope; caller failures are rethrown exactly before the mapped error can escape. The streamed writer retains one scope throughout iteration with an outer failure gate, preserving normal inner domain classification and normal terminal observer gate. No alternate parser, scheduler, mutable capture authority or callback recapture was added. Scope itself checks the existing failure before re-invoking user code, preventing the first refusal from being overwritten. Separate boolean failed state preserves thrown undefined.
+
+All six owned hashes match (`🗑️generated/late-callback-independent-after-hashes.json`). Root147/483/four files and strict evidence remain separately attributed; this audit executed twelve real public-route class cases, latch/genuine-code/cancel and streamed-close supplements. No production source changes or live mappings remain.
+
+The separately confirmed central runIfcEdit options P2 is outside this closure and remains assigned to Semantics; IO fixed scope does not make mutable public central options authoritative. Native runtime/type/receipt, whole-view and semantic publication claims remain false.
+
+## Shared Generator Cleanup Extension
+
+The prior six-file closure is historical after the subsequent shared runIfcIoSteps scope extension. The refreshed six owned hashes match (`🗑️generated/io-cleanup-independent-owned-hashes.json`); active central diff reference is not part of this freeze.
+
+New independent io-shared-cleanup-independent-after.ts enters the actual finite shared generator, throws each of nine original observer values at its first yielded interior checkpoint, and makes its finally throw a distinct cleanup Error. All nine original values remain exact and all nine finally blocks execute. Output `🗑️generated/io-shared-cleanup-independent-after.json`. Values cover undefined/null/number/object/Error and both IO/central domain classes with cancellation and noncancellation codes. The old twelve actual late STEP/GLB class routes were replayed into `🗑️generated/late-class-callback-cleanup-independent-after.json`; all twelve still preserve exact identity.
+
+Source uses existing captured failure scope.run around the existing loop/finally, so the latched callback failure wins after cleanup without skipping generator.return. This audit does not claim arbitrary internal-error precedence or genuine signal-abort precedence when cleanup throws: those distinct cases were not independently established. Root156tests/519assertions/strict0 remain separately attributed. No production edits or live processes resulted.

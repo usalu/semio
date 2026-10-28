@@ -1,0 +1,30 @@
+{
+  "feature": "layout.retained.batch-original-absolute-inverse",
+  "source": "completed numeric plan plus original immutable Page and changed Frame projections",
+  "rows": {
+    "DragFrames": [
+      "MoveFrame"
+    ],
+    "RotateFrames": [
+      "MoveFrame",
+      "RotateFrame"
+    ],
+    "ScaleFrames": [
+      "MoveFrame",
+      "ResizeFrame"
+    ]
+  },
+  "order": "original Page changed-frame order; inverse replay runs stored rows in reverse",
+  "stages": [
+    "reserve exact mutation vector headers with actual receipt",
+    "prepare original Page String and original Frame identity for one issued event",
+    "transfer one typed event with original scalar fields",
+    "fund complete field closure before reuse"
+  ],
+  "cancel": "all partial prepared fields and issued events remain under original field/factory-vector retirement",
+  "prohibitions": [
+    "no negated-relative inverse",
+    "no Snapshot/current Frame clone",
+    "no cold mutation inverse or diff call"
+  ]
+}

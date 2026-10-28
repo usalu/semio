@@ -1,0 +1,188 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:artifact-output:original-producer:v1",
+  "title": "Original Segmented Output Producer Laws",
+  "description": "Original allocation custody and coupled output credit publication through one initiating caller.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "sealCases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.artifact-output.original-producer.v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 20,
+      "items": {
+        "$ref": "#/$defs/case"
+      }
+    },
+    "sealCases": {
+      "type": "array",
+      "minItems": 8,
+      "items": {
+        "$ref": "#/$defs/sealCase"
+      }
+    }
+  },
+  "$defs": {
+    "case": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "length",
+        "grant",
+        "outcome",
+        "charged"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "length": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 0
+        },
+        "grant": {
+          "enum": [
+            "items-zero",
+            "copy-short",
+            "depth-zero",
+            "fuel-zero",
+            "full"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "yield",
+            "refusal",
+            "published"
+          ]
+        },
+        "charged": {
+          "type": "boolean"
+        },
+        "cancelled": {
+          "type": "boolean"
+        },
+        "busy": {
+          "enum": [
+            "queue",
+            "credit"
+          ]
+        },
+        "sealed": {
+          "type": "boolean"
+        },
+        "maximum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "slotsFull": {
+          "type": "boolean"
+        },
+        "allocationAdmitted": {
+          "type": "boolean"
+        },
+        "creditMaximum": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "creditExceeded": {
+          "type": "boolean"
+        },
+        "creditInitial": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "credit": {
+          "type": "boolean"
+        },
+        "capacity": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "sealCase": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "grant",
+        "outcome",
+        "charged"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "grant": {
+          "enum": [
+            "items-zero",
+            "copy-short",
+            "depth-zero",
+            "fuel-zero",
+            "full"
+          ]
+        },
+        "outcome": {
+          "enum": [
+            "yield",
+            "refusal",
+            "sealed"
+          ]
+        },
+        "charged": {
+          "type": "boolean"
+        },
+        "cancelled": {
+          "type": "boolean"
+        },
+        "busy": {
+          "const": "queue"
+        },
+        "sealed": {
+          "type": "boolean"
+        }
+      }
+    }
+  },
+  "x-ownership": {
+    "source": "original optional contiguous byte vector",
+    "move": "one original allocation identity",
+    "failure": "source, queued bytes, outstanding bytes, slots and credited bytes unchanged"
+  },
+  "x-authority": {
+    "items": 1,
+    "depth": 1,
+    "copy": "native vector header plus five native counters and one native tag",
+    "capacity": 0,
+    "release": 0,
+    "caller": "same original StepContext and retained recipient"
+  },
+  "x-transaction": {
+    "gates": [
+      "output queue",
+      "optional credit writer"
+    ],
+    "busy": "yield without progress",
+    "validation": "funded before source and state checks",
+    "commit": "one queue move and optional credit update under both gates"
+  },
+  "x-close": {
+    "refusedSource": "controlled original source retirement",
+    "publishedSource": "controlled queue retirement",
+    "assert": "every allocated byte released under original recipient"
+  }
+}

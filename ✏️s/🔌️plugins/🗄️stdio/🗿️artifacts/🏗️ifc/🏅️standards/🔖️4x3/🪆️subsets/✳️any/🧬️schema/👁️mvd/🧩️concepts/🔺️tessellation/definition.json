@@ -1,0 +1,5 @@
+{
+ "id":"Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_Tessellation_Geometry",
+ "source":{"commit":"610ee3f95db9d0380b1eb8de4dc6e17833531518","url":"https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_Tessellation_Geometry/content.html","sha256":"b8f905fdf6d7bcb4afa69d20111600589e52f4bef43043b8a7814e0b5da78d32"},
+ "predicates":[{"attribute":"RepresentationIdentifier","kind":"equals-string","value":"Body"},{"attribute":"RepresentationType","kind":"equals-string","value":"Tessellation"},{"attribute":"Items","kind":"every-subtype","value":"IFCTESSELLATEDFACESET"}]
+}

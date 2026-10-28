@@ -1,0 +1,15 @@
+# Faceted Brep Explicit Fixture Contract
+
+The frozen neutral input uses explicit parametric geometry, units, placement, bound orientation and a closed modifier. Both physical and artifact builders must consume these same values; case IDs carry no hidden numeric geometry. There are 18 rows: ten supported and eight malformed/unsupported projections.
+
+`missing-outer-marker` is supported (volume 6). `hole-no-outer` and `outer-marker-reordered` are supported (volume 64). A Face may have at most one OuterBound; absence does not authorize rejecting an otherwise unambiguous outer ring. The reordered case rotates the actual bound roster, retaining the same geometry. Duplicate outer markers remain unsupported.
+
+`with-voids` is supported with expected volume 5.5 and outer bounds [0,0,0]–[2,1,3]. Original-funded runtime topology still needs its own checks. The authored physical source has zero IfcOpenShell full EXPRESS diagnostics. Normal IfcOpenShell 0.9.0.post1 independently meshes each ClosedShell (8 vertices / 12 triangles each) but its compound path refuses with GEO027, “Unexpected configuration of subshapes.” This is explicitly a compound-backend gap, not a successful independent compound mesh.
+
+The source-polygon certificate uses existing Three 182 Vector3 operations: outer signed volume 6, inward cavity signed volume −0.5000000000000001, total 5.5. Every edge occurs exactly twice in opposing directions; the cavity bounds [.5,.25,1]–[1.5,.75,2] lie strictly inside the outer shell. These facts corroborate this simple axis-aligned void, without claiming arbitrary shell intersection validity or universal geometry support.
+
+The physical oracle records unsupported-shape geometry acceptance separately. In particular, a permissive mesh result or zero EXPRESS diagnostics does not establish face planarity, a simple loop, or supported runtime semantics. Wrong bound/loop/point roles are intentional malformed authored STEP inputs, never modifications of original official assets.
+
+Inputs: `faceted-brep-geometry-vectors.json`, matching closed schema, and `faceted-brep-vectors-oracle.py`. Generated evidence: `faceted-brep-vectors/oracle.json`, `void-shell-evidence.json`, `void-shell-certificate.json`, and `bounds-certificate.json`. Existing original model hashes remain those recorded in `faceted-brep-geometry-independent-plan.md`; no originals were rewritten or retagged. No native execution, full view, or runtime geometry proof is claimed.
+
+Final physical run completed all 18 rows. All ten supported sources have zero full EXPRESS diagnostics; nine normal compound meshes match the explicit volume and SI bounds. The void compound remains the explicitly recorded backend refusal, independently certified through both shell meshes and oriented source surfaces. Ajv strict closed-schema validation passes; source census is generated/faceted-brep-vectors/input-source.json. Inputs are frozen with vectors SHA256 E4E2E4BD7A6BEC441B2B71F04DD57799E5C97DB014F81E55828B6D2E68381DDA and schema D834570219AE0D4F81FAE3B0F2FE4AA1BA0D2D0CB57424482E69D667435C788F.

@@ -110,6 +110,16 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
             _ => true,
         }
     }
+    if <SnapshotEditEvent as OpBinary>::encode_op(event).map_or(true, |bytes| bytes.len() > SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES) {
+        return false;
+    }
+    let mut remaining = SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES;
+    if matches!(event, SnapshotEditEvent::SetValue {value,..}|SnapshotEditEvent::InsertValue {value,..} if !value_is_admitted(value,&mut remaining,0)){return false;}
+    snapshot_edit_path_is_admitted(event,snapshot)
+}
+
+/// 🧭️ Borrow only snapshot shape after a retained worker has admitted the original event payload.
+pub fn snapshot_edit_path_is_admitted<S:ToValue>(event:&SnapshotEditEvent,snapshot:&S)->bool {
     fn path(path: &str) -> Option<Vec<String>> {
         if path.len() > SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES {
             return None;
@@ -129,18 +139,14 @@ pub fn snapshot_edit_value_is_admitted<S: ToValue>(event: &SnapshotEditEvent, sn
             _ => false,
         }
     }
-    if <SnapshotEditEvent as OpBinary>::encode_op(event).map_or(true, |bytes| bytes.len() > SNAPSHOT_EDIT_MAXIMUM_RAW_BYTES) {
-        return false;
-    }
-    let mut remaining = SNAPSHOT_EDIT_MAXIMUM_VALUE_NODES;
     match event {
-        SnapshotEditEvent::SetValue { path: pointer, value } => {
+        SnapshotEditEvent::SetValue { path: pointer, .. } => {
             let Some(path) = path(pointer) else { return false };
-            value_is_admitted(value, &mut remaining, 0) && (path.is_empty() || shape(snapshot, &path).is_some())
+            path.is_empty() || shape(snapshot, &path).is_some()
         }
-        SnapshotEditEvent::InsertValue { path: pointer, value } => {
+        SnapshotEditEvent::InsertValue { path: pointer, .. } => {
             let Some(path) = path(pointer) else { return false };
-            value_is_admitted(value, &mut remaining, 0) && insertion_parent_is_admitted(snapshot, &path, pointer)
+            insertion_parent_is_admitted(snapshot, &path, pointer)
         }
         SnapshotEditEvent::RemoveValue { path: pointer } => {
             let Some(path) = path(pointer) else { return false };
@@ -218,7 +224,7 @@ fn snapshot_edit_command_id<E: SnapshotEditingEditor>(command: &E::Command) -> &
 
 fn snapshot_edit_extent<E: SnapshotEditingEditor>(command: &E::Command, _snapshot: &E::Snapshot, _interaction: &kernel::InteractionState) -> Option<usize> {
     let event = E::snapshot_edit_event(command)?;
-    E::snapshot_edit_is_admitted(event, _snapshot).then(|| SNAPSHOT_EDIT_WORK_CAPACITY.rows_for_items(1)).flatten()
+    E::snapshot_edit_retained_extent(event,_snapshot)
 }
 
 /// 📏️ Refuses a resolved edit whose mutation or exact undo cannot be carried as one native publication item.
@@ -245,6 +251,27 @@ fn snapshot_edit_reduce<E: SnapshotEditingEditor>(
 ) -> Result<Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, Fault> {
     let event = E::snapshot_edit_event(command).ok_or_else(|| edit_fault("snapshot-edit.command-mismatch", "snapshot edit factory received a native command"))?;
     E::snapshot_edit_emit(event, snapshot)
+}
+
+pub(super) fn snapshot_edit_contextual_once<T>(consumed:&mut bool,cx:&mut semio_framework_job::StepContext<'_>,reduce:impl FnOnce(&mut semio_framework_job::StepContext<'_>)->Result<T,Fault>)->Result<T,Fault>{
+    if *consumed{return Err(Fault::from("retained-command-bounded-work-repeated"));}
+    *consumed=true;reduce(cx)
+}
+
+pub(crate) struct SnapshotEditWork<E:SnapshotEditingEditor>{tool_id:&'static str,consumed:bool,marker:std::marker::PhantomData<fn()->E>}
+impl<E:SnapshotEditingEditor> SnapshotEditWork<E>{pub(crate) fn new(tool_id:&'static str)->Self{Self{tool_id,consumed:false,marker:std::marker::PhantomData}}}
+impl<E:SnapshotEditingEditor> semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<E>> for SnapshotEditWork<E>{
+    fn tool_id(&self)->&'static str{self.tool_id}
+    fn extent(&self,command:&E::Command,snapshot:&E::Snapshot,interaction:&kernel::InteractionState,_context:Option<&semio_framework_plugin::app::ArtifactOwnedToolJobContext<EditorApp<E>>>)->Option<usize>{snapshot_edit_extent::<E>(command,snapshot,interaction)}
+    fn work_demands(&self,_input:&semio_framework_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<E>>,_maximum_copy_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+    fn terminal_frame_release_bytes(&self)->Option<usize>{Some(std::mem::size_of::<Self>())}
+    fn reports_progress(&self)->bool{false}
+    fn step(&mut self,input:&semio_framework_plugin::retained_command::ArtifactCommandInputs<'_,EditorApp<E>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<E>>,semio_framework_job::OriginalTurnFailure>{
+        snapshot_edit_contextual_once(&mut self.consumed,cx,|cx|{
+            let event=E::snapshot_edit_event(input.command).ok_or_else(||edit_fault("snapshot-edit.command-mismatch","snapshot edit factory received a native command"))?;
+            E::snapshot_edit_emit_in_context(event,input.snapshot,cx).map(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete)
+        }).map_err(semio_framework_job::OriginalTurnFailure::from)
+    }
 }
 
 pub fn build_snapshot_edit_tool_job<E: SnapshotEditingEditor>(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<E>>>, output: &mut Option<semio_framework_plugin::ErasedToolJob>, cx: &mut semio_framework_plugin::__job::StepContext<'_>) -> Result<bool, semio_framework_plugin::__job::OriginalTurnFailure> {

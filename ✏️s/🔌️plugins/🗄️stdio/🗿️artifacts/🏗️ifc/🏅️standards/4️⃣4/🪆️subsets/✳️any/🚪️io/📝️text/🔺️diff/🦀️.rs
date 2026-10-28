@@ -114,6 +114,7 @@ pub fn enc_ifc_value(v: &IfcValue) -> String {
         IfcValue::Integer(i) => format!("I[{i}]"),
         IfcValue::Real(r) => format!("R[{r}]"),
         IfcValue::String(s) => format!("S[{}]", enc_str(s)),
+        IfcValue::Binary(s) => format!("B[{}]", enc_str(s)),
         IfcValue::Enum(s) => format!("E[{}]", enc_str(s)),
         IfcValue::Reference(id) => format!("F[{id}]"),
         IfcValue::Aggregate(items) => format!("A[{}]", items.iter().map(enc_ifc_value).collect::<Vec<_>>().join(",")),
@@ -140,6 +141,7 @@ pub fn dec_ifc_value(s: &str) -> Result<IfcValue, String> {
         "I" => Ok(IfcValue::Integer(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "R" => Ok(IfcValue::Real(inner.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?)),
         "S" => Ok(IfcValue::String(dec_str(inner)?)),
+        "B" => {let content=dec_str(inner)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(&content){return Err("invalid canonical IFC binary content".into());}Ok(IfcValue::Binary(content))},
         "E" => Ok(IfcValue::Enum(dec_str(inner)?)),
         "F" => Ok(IfcValue::Reference(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "A" => {
@@ -179,12 +181,12 @@ pub(crate) fn dec_complex_type(s: &str) -> Result<IfcComplexType, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_complex_list(list: &[IfcComplexType]) -> String {
+pub fn enc_complex_list(list: &[IfcComplexType]) -> String {
     format!("[{}]", list.iter().map(enc_complex_type).collect::<Vec<_>>().join(","))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_complex_list(s: &str) -> Result<Vec<IfcComplexType>, String> {
+pub fn dec_complex_list(s: &str) -> Result<Vec<IfcComplexType>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_complex_type).collect()
 }
 
@@ -269,7 +271,7 @@ pub(crate) fn dec_entity_diff(s: &str) -> Result<IfcEntityDiff, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_entities_diff(d: &IfcEntitiesDiff) -> String {
-    let removed = d.removed.iter().map(|id| id.to_string()).collect::<Vec<_>>().join(",");
+    let removed = d.removed.iter().map(|entry| format!("{}:{}", entry.id, entry.index)).collect::<Vec<_>>().join(",");
     let modified = d.modified.iter().map(|m| format!("{}:{}", m.id, enc_entity_diff(&m.diff))).collect::<Vec<_>>().join(",");
     let added = d.added.iter().map(|a| format!("{}:{}", a.index, enc_entity(&a.entity))).collect::<Vec<_>>().join(",");
     format!("[{removed}];[{modified}];[{added}]")
@@ -279,7 +281,10 @@ pub(crate) fn enc_entities_diff(d: &IfcEntitiesDiff) -> String {
 pub(crate) fn dec_entities_diff(body: &str) -> Result<IfcEntitiesDiff, String> {
     let three = split_top_level(body, ';');
     let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("entities diff: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(parse_u64).collect::<Result<Vec<_>, String>>()?;
+    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|entry| !entry.is_empty()).map(|entry| {
+        let (id, index) = entry.split_once(':').ok_or_else(|| format!("entity removed: bad entry {entry:?}"))?;
+        Ok(IfcEntityRemoved { id: parse_u64(id)?, index: parse_usize(index)? })
+    }).collect::<Result<Vec<_>, String>>()?;
     let modified = split_top_level(strip_brackets(modified_s)?, ',')
         .into_iter()
         .filter(|s| !s.is_empty())

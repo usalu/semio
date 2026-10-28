@@ -1,0 +1,21 @@
+{
+  "packages": [
+    {
+      "name": "@cto.af/linebreak",
+      "version": "3.0.5",
+      "integrity": "sha512-9q1DpxBLYiNmDrrd97/ykIb7QWEPx+CDCY2wLFM1c+HA4CjF60tMiaEkxE+OPn6PKp6YqrqbmilA7dGRUori1w==",
+      "file": "linebreak-oracle-3.0.5.tgz"
+    },
+    {
+      "name": "@cto.af/unicode-trie-runtime",
+      "version": "3.2.6",
+      "integrity": "sha512-4ie2tvH98YRtUBSBOMnBjdkaNXbfJTWUMfLkdGirWNrBH3av1WEyFHjJl5bGI8g5I81l58iRg91rG5DQtsht6A==",
+      "file": "unicode-trie-oracle-3.2.6.tgz"
+    }
+  ],
+  "interface": {
+    "input": "Unicode string",
+    "output": "UTF8 break positions and mandatory flags"
+  },
+  "runtime": false
+}

@@ -19,6 +19,10 @@ pub mod standards {
                     #[path = "../../🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    #[path="../../🚪️io/🪟️details/🦀️.rs"]
+                    pub mod details;
+                    #[path="../../🚪️io/🔎️inspector/🦀️.rs"]
+                    pub mod inspector;
                     #[path = "."]
                     pub mod import {
                         #[path = "."]

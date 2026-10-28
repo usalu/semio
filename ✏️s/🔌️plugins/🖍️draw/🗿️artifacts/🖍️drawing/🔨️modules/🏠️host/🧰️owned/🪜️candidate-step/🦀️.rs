@@ -17,6 +17,13 @@ impl DrawingMutationCandidateAuthority {
         if let Some(overlay) = self.overlay.as_ref() {
             overlay.validate(access.read())?;
         }
+        if let DrawingMutation::SetArtboard(value)=mutation{if self.phase==DrawingMutationCandidatePhase::PreflightSource{
+            let copy=2*size_of::<Option<semio_s_artifact_draw_drawing_model::DrawingArtboard>>()+2*size_of::<DrawingMutationOverlayPatch>()+size_of::<DrawingMutationCandidatePhase>();
+            let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<copy{return Ok(false)}
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}).map_err(|_|"drawing-store.artboard-original-receipt")?;cx.consume_fuel(copy.max(1)as u64);
+            if !semio_s_artifact_draw_drawing_mutations::artboard::valid(&value.artboard){return self.fail("drawing-store.artboard-invalid")}
+            let source=access.write()?;source.artboard=semio_s_artifact_draw_drawing_mutations::artboard::copy(&value.artboard);let mut overlay=DrawingMutationOverlayPatch::bind(source);overlay.commit(source)?;self.overlay=Some(overlay);self.phase=DrawingMutationCandidatePhase::Complete;return Ok(false);
+        }}
         match self.phase {
             DrawingMutationCandidatePhase::PreflightSource => {
                 let source = access.read();
@@ -336,6 +343,7 @@ impl DrawingMutationCandidateAuthority {
     ) -> Result<bool, &'static str> {
         let source = access.write()?;
         match mutation {
+            DrawingMutation::SetArtboard(_)=>return Err("drawing-store.artboard-requires-original-scalar-stage"),
             DrawingMutation::ImportImageAsset(_)=>{
                 let key=self.text_clone.as_mut().ok_or("drawing-store.asset-key-clone")?.take().ok_or("drawing-store.asset-key-incomplete")?;
                 let asset=self.asset_clone.as_mut().ok_or("drawing-store.asset-clone")?.take().ok_or("drawing-store.asset-incomplete")?;

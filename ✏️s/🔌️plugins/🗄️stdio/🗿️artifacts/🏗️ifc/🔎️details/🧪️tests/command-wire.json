@@ -1,0 +1,25 @@
+{
+  "schema":"stdio.ifc.retained-command-wire/1",
+  "wrapper":"EditSnapshot",
+  "field":"event",
+  "closedWrapper":true,
+  "closedEvent":true,
+  "duplicateMembers":"reject",
+  "valid":[
+    {"EditSnapshot":{"event":{"operation":"setValue","path":"/entities/0/args/2/value","value":"Grüße 😀"}}},
+    {"EditSnapshot":{"event":{"operation":"insertValue","path":"/entities/0/args/3/value/-","value":{"kind":"string","value":"Owned"}}}},
+    {"EditSnapshot":{"event":{"operation":"removeValue","path":"/entities/0"}}},
+    {"EditSnapshot":{"event":{"operation":"moveValue","from":"/entities/0/complex/0","path":"/entities/0/complex/1"}}},
+    {"EditSnapshot":{"event":{"operation":"renameKey","path":"/header/fileName","key":"name"}}},
+    {"EditSnapshot":{"event":{"operation":"replaceSource","source":"A\nB"}}}
+  ],
+  "invalid":[
+    {"EditSnapshot":{"event":{"operation":"removeValue","path":"/entities/0"},"unknown":true}},
+    {"EditSnapshot":{"event":{"operation":"removeValue","path":"/entities/0","value":null}}},
+    {"ApplyTemplate":{"application":{}}},
+    {"EditSnapshot":{"event":{"operation":"setValue","path":7,"value":null}}},
+    {"EditSnapshot":{"event":{"operation":"unknown","path":""}}}
+  ],
+  "invalidWire":["{\"EditSnapshot\":{\"event\":{\"operation\":\"removeValue\",\"path\":\"/entities/0\",\"path\":\"/entities/1\"}}}","{\"EditSnapshot\":{\"event\":{\"operation\":\"removeValue\",\"path\":\"\"}}} true"],
+  "nativeExecution":false
+}

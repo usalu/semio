@@ -1,0 +1,21 @@
+{
+ "token":{"action":"applyIfcTemplate","generation":"9007199254740993","revision":"r1","window":"left"},
+ "valid":[
+  {"fieldOffset":"0","diagnosticOffset":"0"},
+  {"fieldOffset":"16","diagnosticOffset":"32","choice":{"path":["entries","0","value"],"offset":"64"}},
+  {"fieldOffset":"18446744073709551615","diagnosticOffset":"18446744073709551615"}
+ ],
+ "invalid":[
+  {"fieldOffset":"00","diagnosticOffset":"0"},
+  {"fieldOffset":"18446744073709551616","diagnosticOffset":"0"},
+  {"fieldOffset":"0","diagnosticOffset":"-1"},
+  {"fieldOffset":0,"diagnosticOffset":"0"},
+  {"fieldOffset":"0"},
+  {"fieldOffset":"0","diagnosticOffset":"0","extra":true},
+  {"fieldOffset":"0","diagnosticOffset":"0","choice":{"path":[],"offset":"0"}},
+  {"fieldOffset":"0","diagnosticOffset":"0","choice":{"path":["__proto__"],"offset":"0"}},
+  {"fieldOffset":"0","diagnosticOffset":"0","choice":{"path":["value"],"offset":"01"}},
+  {"fieldOffset":"0","diagnosticOffset":"0","choice":{"path":["value"],"offset":"0","extra":true}}
+ ],
+ "pageSizes":{"controls":16,"choices":32,"diagnostics":16}
+}

@@ -1,0 +1,1 @@
+{"schema":"IFC4X3_ADD2","rule":"IfcProduct.PlacementForShapeRepresentation","baseEntities":7,"entitiesPerPrimitive":5,"identity":{"placementRelTo":"unset","relativePlacement":"context.WorldCoordinateSystem"},"cases":[{"primitives":1,"entities":12},{"primitives":11,"entities":62}]}

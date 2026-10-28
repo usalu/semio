@@ -1,0 +1,30 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": [
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/contextual.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_value.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/entity_removal.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/argument_insertion.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_insertion.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_move.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_removal.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_roster_removal.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_zero_slot_type.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/primary_zero_slot_type.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/zero_slot_constituent_insertion.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/normalization_identity.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/equal_arity_type.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/primary_equal_arity_type.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_optional_shape.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/primary_optional_shape.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/constituent_remap.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/primary_remap.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/type_input.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/type_multiple_input.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/type_scalar_input.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/type_enum_input.test.ts",
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83d\udd0e\ufe0fdetails/type_number_binary_input.test.ts"
+  ]
+}

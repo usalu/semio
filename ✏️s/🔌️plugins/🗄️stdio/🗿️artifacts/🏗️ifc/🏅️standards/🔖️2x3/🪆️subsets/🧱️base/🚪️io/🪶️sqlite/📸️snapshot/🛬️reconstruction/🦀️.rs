@@ -75,7 +75,7 @@ impl Forest{
                 continue;
             }
             let row=catalog.tables[8].rows[index];let kind=row.text(1)?;
-            for column in 2..12{let active=matches!((kind,column),("int",2)|("real",3..=6)|("str",7)|("enum",8)|("ref",9..=10)|("typed",11));if !active{null(row,column)?;}}
+            for column in 2..12{let active=matches!((kind,column),("int",2)|("real",3..=6)|("str"|"binary",7)|("enum",8)|("ref",9..=10)|("typed",11));if !active{null(row,column)?;}}
             let value=match kind{
                 "unset"=>Part21Value::Unset,"derived"=>Part21Value::Derived,"int"=>Part21Value::Int(row.integer(2)?),
                 "real"=>{
@@ -84,7 +84,7 @@ impl Forest{
                     let exponent=match &row.values[6]{SqliteValue::Null=>None,SqliteValue::Integer(value)=>Some(i32::try_from(*value).map_err(|_|invalid("IFC2x3 decimal exponent exceeds signed32"))?),_=>return Err(invalid("invalid IFC2x3 decimal exponent storage"))};
                     Part21Value::Real(Part21Decimal{negative,coefficient:control.copy_text(row.text(4)?)?,scale,exponent})
                 },
-                "str"=>Part21Value::Str(control.copy_text(row.text(7)?)?),"enum"=>Part21Value::Enum(control.copy_text(row.text(8)?)?),
+                "binary"=>{let content=row.text(7)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(content){return Err(invalid("invalid canonical STEP binary content"))}Part21Value::Binary(control.copy_text(content)?)},"str"=>Part21Value::Str(control.copy_text(row.text(7)?)?),"enum"=>Part21Value::Enum(control.copy_text(row.text(8)?)?),
                 "ref"=>{let word=word(row.text(9)?)?;match &row.values[10]{SqliteValue::Null=>{if words.binary_search(&word).is_ok(){return Err(invalid("resolved IFC2x3 reference lacks its relationship"));}},SqliteValue::Integer(instance)=>{let actual=instances.binary_search_by_key(instance,|item|item.0).ok().map(|index|instances[index].1);if actual!=Some(word){return Err(invalid("IFC2x3 reference word differs from related instance identity"));}},_=>return Err(invalid("invalid IFC2x3 resolved reference storage"))}Part21Value::Ref(word)},
                 "list"|"typed"=>{
                     let table=if kind=="list"{9}else{10};let range=catalog.tables[table].range(id);

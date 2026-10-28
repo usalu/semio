@@ -1,0 +1,25 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://semio.tech/s/stdio/ifc/4x3/mutation.schema.json",
+  "title":"Ifc4x3Mutation Decimal Transport",
+  "description":"Lossless JSON command transport. Native identifiers and integer leaves are bigint; decimal strings preserve them across languages. Commands yield sparse diffs and central application validates coordinates, identities, references and scalar bounds.",
+  "$defs":{
+    "Id":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/EntityId"},
+    "Value":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcValue"},
+    "Entity":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcEntity"},
+    "Complex":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcComplexType"},
+    "Index":{"type":"integer","minimum":0,"maximum":9007199254740991}
+  },
+  "oneOf":[
+    {"type":"object","required":["mutation","application"],"properties":{"mutation":{"const":"applyTemplate"},"application":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/template-application.schema.json"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","diff"],"properties":{"mutation":{"const":"applyDiff"},"diff":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/diff.schema.json"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","values"],"properties":{"mutation":{"enum":["setFileDescription","setFileName","setFileSchema"]},"values":{"type":"array","items":{"$ref":"#/$defs/Value"}}},"additionalProperties":false},
+    {"type":"object","required":["mutation","index","entity"],"properties":{"mutation":{"const":"insertEntity"},"index":{"$ref":"#/$defs/Index"},"entity":{"$ref":"#/$defs/Entity"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","id"],"properties":{"mutation":{"const":"removeEntity"},"id":{"$ref":"#/$defs/Id"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","id","name"],"properties":{"mutation":{"const":"setEntityName"},"id":{"$ref":"#/$defs/Id"},"name":{"type":"string","pattern":"^[A-Z][A-Z0-9_]*$"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","id","index","value"],"properties":{"mutation":{"enum":["setEntityArg","insertEntityArg"]},"id":{"$ref":"#/$defs/Id"},"index":{"$ref":"#/$defs/Index"},"value":{"$ref":"#/$defs/Value"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","id","index"],"properties":{"mutation":{"const":"removeEntityArg"},"id":{"$ref":"#/$defs/Id"},"index":{"$ref":"#/$defs/Index"}},"additionalProperties":false},
+    {"type":"object","required":["mutation","id","complex"],"properties":{"mutation":{"const":"setEntityComplex"},"id":{"$ref":"#/$defs/Id"},"complex":{"type":"array","items":{"$ref":"#/$defs/Complex"}}},"additionalProperties":false},
+    {"type":"object","required":["mutation","id","index","path","value"],"properties":{"mutation":{"const":"setEntityValue"},"id":{"$ref":"#/$defs/Id"},"index":{"$ref":"#/$defs/Index"},"path":{"type":"array","items":{"$ref":"#/$defs/Index"}},"value":{"$ref":"#/$defs/Value"}},"additionalProperties":false}
+  ]
+}

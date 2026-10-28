@@ -1,0 +1,13 @@
+# Original External BIM Source Capture
+
+bimSpatialToIfc4x3 now enters the same domain-neutral captureIfcExternalSource interface as FEM, after capturing controls and before reading any model field or invoking semantic progress. It interprets only the admitted private model. The shared central own-data copier checks descriptors/prototypes, functions/symbols and explicit field/depth limits, without executing input getters or constructors. Root did not add another copier.
+
+BIM record admission counts the project plus each supplied top-level family entry under maxEntities, including unsupported families retained in source. Family/project containers and rows must be records. maxValues counts copied own fields and array indices; maxDepth counts literal object/array nesting from root zero. These are source limits, not claimed native memory receipts or complete BIM domain validation. Exact initial-state capture requires caller stability until cooperative capture completes.
+
+Schema-first neutral tests preceded the mapper change: **1 pass / 12 fail** reproduced source mutation, getter reads, ignored limits and absent source/index cancellation. All thirteen new cases now pass. Combined new/existing BIM, rotation, IFC-source and original-control suites pass **59 tests / 240 assertions**, zero failures, with one existing genuine-output-gated skip. Independent captures compare every authored graph payload; only the independently generated header timestamp is explicitly normalized.
+
+The real five-rotation output oracle and all three IFC-source endpoint oracles were regenerated after adoption. IfcOpenShell 0.9.0.post1 reports zero complete EXPRESS errors on all five BIM frames and on the BIM/FEM/official-triangle source graphs; all independently serialized outputs reproduce supported semantic projections on reciprocal import. The four deliberately one-sided BIM counterexamples continue to fail the actual AxisAndRefDirProvision rule.
+
+Fresh focused strict TypeScript checks pass for geometry/exchange-source/external-source/axis tests and for the new BIM source/axis test dependency graph. The wider FEM snapshot parser still independently reaches the missing shared framework-interaction module; the BIM success does not establish that missing module was repaired.
+
+The limited external-fem-source-independent-audit.md and its BIM adoption addendum distinguish private data ownership from complete source-domain validation and native physical accounting. Native publication, broad BIM geometry and remaining cold semantic work are open. All generated output and dependencies remain in the active ticket.

@@ -9,14 +9,16 @@ enum IfcMutationTag {
   SET_ENTITY_ARG
   INSERT_ENTITY_ARG
   REMOVE_ENTITY_ARG
+  SET_ENTITY_COMPLEX
 }
 
 type IfcMutation {
   mutation: IfcMutationTag!
   values: [IfcValue!]
-  index: Int
+  index: IfcIndex
   entity: IfcEntity
-  id: Int
+  id: IfcUInt64
   name: String
   value: IfcValue
+  complex: [IfcComplexType!]
 }

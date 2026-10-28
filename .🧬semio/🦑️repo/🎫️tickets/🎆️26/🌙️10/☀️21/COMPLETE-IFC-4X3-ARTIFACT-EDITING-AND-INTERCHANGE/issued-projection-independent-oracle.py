@@ -1,0 +1,4 @@
+"""🧭 Independently replay unchanged projection interfaces, retaining all external gaps."""
+from pathlib import Path
+import importlib.util,json
+p=Path(__file__).parent;s=importlib.util.spec_from_file_location('projection_interface',p/'issued-express-projection-oracle.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m);o=m.GeneratedProjectionOracle();q=m.SqliteProjectionOracle();f=[o.observe(c) for c in m.data['functions']];a=[q.observe(c) for c in m.data['functions']];(p/'🗑️generated/issued-projection-independent-oracle.json').write_text(json.dumps({'version':m.ifcopenshell.version,'functions':f,'arithmetic':a},indent=2,default=str),encoding='utf8');print('[DEBUG]',{k:sum(r['status']==k for r in f) for k in ['agree','divergent-value','unsupported']},sum(not r['sourceUnchanged'] for r in f),sum(r['status']=='agree' for r in a))

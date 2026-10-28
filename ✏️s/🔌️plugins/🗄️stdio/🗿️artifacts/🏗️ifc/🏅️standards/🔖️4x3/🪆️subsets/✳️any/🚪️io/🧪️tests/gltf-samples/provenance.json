@@ -1,0 +1,42 @@
+{
+  "repository": "https://github.com/KhronosGroup/glTF-Sample-Assets",
+  "commit": "15cd02d304e54cb42a4db4eefe719f76190f4b68",
+  "cases": [
+    {
+      "name": "Triangle",
+      "file": "Triangle.gltf",
+      "source": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/Triangle/glTF-Embedded/Triangle.gltf",
+      "bytes": 1122,
+      "sha256": "6bf10f2d1e07643cbda968fc6941929d52d4dfd4250182c852103668997f706a",
+      "readmeSource": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/Triangle/README.md",
+      "readmeSha256": "f5bfa2c9c7feb3a930c849b20c1cfd294c957a7bbf8de3e9555cee44e426e5ea"
+    },
+    {
+      "name": "TriangleWithoutIndices",
+      "file": "TriangleWithoutIndices.gltf",
+      "source": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/TriangleWithoutIndices/glTF-Embedded/TriangleWithoutIndices.gltf",
+      "bytes": 804,
+      "sha256": "ee329910d99e32017cc8462eb880a42496b3c2ea56692e7b7ee613af331d631d",
+      "readmeSource": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/TriangleWithoutIndices/README.md",
+      "readmeSha256": "9b214bef86948440f734c364cff992a46e0167f56b6e635e460267720c8e346c"
+    },
+    {
+      "name": "BoxInterleaved",
+      "file": "BoxInterleaved.glb",
+      "source": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/BoxInterleaved/glTF-Binary/BoxInterleaved.glb",
+      "bytes": 1632,
+      "sha256": "b2ae631f118f1d13f829cdf9d9dc0fe7cb582de20b8c51d17f81f77a1cbf290c",
+      "readmeSource": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/BoxInterleaved/README.md",
+      "readmeSha256": "6cedb2eff1d0249ba5bfc0ab1275189a8c1baa74e8bc7e4a99160cd112583edb"
+    },
+    {
+      "name": "NegativeScaleTest",
+      "file": "NegativeScaleTest.glb",
+      "source": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/NegativeScaleTest/glTF-Binary/NegativeScaleTest.glb",
+      "bytes": 62568,
+      "sha256": "ea8c41fd0630f03adcf7a5c06bf86d7b850fa510b6f07cc51eb1fccc205a50f2",
+      "readmeSource": "https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Assets/15cd02d304e54cb42a4db4eefe719f76190f4b68/Models/NegativeScaleTest/README.md",
+      "readmeSha256": "8263f649b088541b821d58e7fe97eb5924440d831f8706bfc5b799ed443d286f"
+    }
+  ]
+}

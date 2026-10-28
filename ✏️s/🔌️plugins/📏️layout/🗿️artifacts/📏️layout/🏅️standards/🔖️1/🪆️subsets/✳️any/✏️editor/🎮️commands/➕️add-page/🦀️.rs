@@ -23,7 +23,7 @@ pub fn handle(_payload: &AddPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &
     let page_id = format!("page-{}", document.pages.len() + 1);
     let layer_id = format!("layer-{page_id}");
     let index = document.pages.len();
-    let page = semio_s_artifact_layout_layout_model::Page {
+    let page = semio_s_artifact_layout_layout_model::Page {background_drawing:None,
         id: page_id.clone(),
         name: format!("Page {}", document.pages.len() + 1),
         spread_id,

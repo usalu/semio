@@ -241,6 +241,11 @@ pub struct PluginRuntime<PA: PluginApp> {
     pub document_backbones: RefCell<RuntimeInstanceRegistry<RuntimeDocumentBackboneBindingV1>>,
 }
 impl<PA: PluginApp> PluginRuntime<PA> {
+    /// 🔑️ Reads the one acknowledged live actor allocation authority shared by receiving and rendering.
+    pub fn live_instance_key(&self,instance:u32)->Result<crate::instance_lifetime::NativeCloseKey,semio_framework_value::ValueError>{
+        let lifetimes=self.guest_lifetimes.try_borrow().map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"lifecycle authority busy"))?;
+        lifetimes.get(instance).filter(|slot|slot.cell.is_live()).and_then(|slot|slot.cell.owner()).map(|owner|owner.key()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"instance has no acknowledged live lifetime"))
+    }
     /// 🏇️ Borrows the embedding owner's unchanged phase authority for each real reactor turn.
     pub fn mounted_owner_policy(&self) -> MountedOwnerPolicyV1 { self.mounted_policy }
     /// 🧩️ Creates an empty typed runtime without erasing the plugin-owned app enum.

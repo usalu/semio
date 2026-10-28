@@ -1,0 +1,548 @@
+{
+  "version": 1,
+  "baseBounds": [
+    [
+      -1,
+      -0.5,
+      0
+    ],
+    [
+      1,
+      0.5,
+      3
+    ]
+  ],
+  "layerOrder": "inner-to-outer",
+  "cases": [
+    {
+      "id": "identity",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          -1.0,
+          -0.5,
+          0.0
+        ],
+        [
+          1.0,
+          0.5,
+          3.0
+        ]
+      ],
+      "expectedVolume": 6
+    },
+    {
+      "id": "origin-translation",
+      "layers": [
+        {
+          "origin": [
+            2,
+            3,
+            4
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          1.0,
+          2.5,
+          4.0
+        ],
+        [
+          3.0,
+          3.5,
+          7.0
+        ]
+      ],
+      "expectedVolume": 6
+    },
+    {
+      "id": "target-translation",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          9.0,
+          19.5,
+          30.0
+        ],
+        [
+          11.0,
+          20.5,
+          33.0
+        ]
+      ],
+      "expectedVolume": 6
+    },
+    {
+      "id": "nonzero-origin-rotation",
+      "layers": [
+        {
+          "origin": [
+            2,
+            3,
+            4
+          ],
+          "originRotation": 0.4,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          10.88422983484279,
+          22.150051160689905,
+          34.0
+        ],
+        [
+          13.11577016515721,
+          23.849948839310095,
+          37.0
+        ]
+      ],
+      "expectedVolume": 6
+    },
+    {
+      "id": "reflected-nonuniform",
+      "layers": [
+        {
+          "origin": [
+            2,
+            3,
+            4
+          ],
+          "originRotation": 0.4,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              -1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            4
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          11.76845966968558,
+          8.450153482069721,
+          46.0
+        ],
+        [
+          16.23154033031442,
+          13.549846517930279,
+          58.0
+        ]
+      ],
+      "expectedVolume": 144
+    },
+    {
+      "id": "tilted-default-axes",
+      "layers": [
+        {
+          "origin": [
+            2,
+            3,
+            4
+          ],
+          "originRotation": 0.4,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            null,
+            null,
+            [
+              0,
+              2,
+              2
+            ]
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          10.88422983484279,
+          24.348742880368032,
+          30.106102193248745
+        ],
+        [
+          13.11577016515721,
+          27.672072399803277,
+          33.42943171268399
+        ]
+      ],
+      "expectedVolume": 6
+    },
+    {
+      "id": "nested",
+      "layers": [
+        {
+          "origin": [
+            2,
+            3,
+            4
+          ],
+          "originRotation": 0.4,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        },
+        {
+          "origin": [
+            1,
+            2,
+            0
+          ],
+          "originRotation": -0.2,
+          "target": [
+            -4,
+            5,
+            6
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": 2,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": false,
+      "expectedBounds": [
+        [
+          28.501584598285074,
+          47.937593402184284,
+          74.0
+        ],
+        [
+          32.819189571240166,
+          50.69240388104701,
+          80.0
+        ]
+      ],
+      "expectedVolume": 48
+    },
+    {
+      "id": "repeated-source",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "repeatedSource": true,
+      "expectedBounds": [
+        [
+          9.0,
+          19.5,
+          30.0
+        ],
+        [
+          11.0,
+          20.5,
+          33.0
+        ]
+      ],
+      "expectedVolume": 6
+    }
+  ],
+  "refusals": [
+    {
+      "id": "zero-scale",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": 0,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "damage": null
+    },
+    {
+      "id": "negative-scale",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": -1,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "damage": null
+    },
+    {
+      "id": "parallel-axis1-axis3",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            [
+              0,
+              0,
+              1
+            ],
+            null,
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "damage": null
+    },
+    {
+      "id": "cycle",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "damage": "cycle"
+    },
+    {
+      "id": "two-dimensional",
+      "layers": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": null,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "damage": "two-dimensional-operator"
+    }
+  ]
+}

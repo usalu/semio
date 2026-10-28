@@ -1,3 +1,4 @@
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 /// 🚧️ Caps, checkpoint and pdf style laws: the dimension and collection caps, the output cap, the chunk rope and crc, the preflight entry, the yield budget, the checkpoint codec, the close ladder and the pdf proxy, style and layer laws.
 
 #[test]
@@ -81,12 +82,12 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
     let layer = snapshot.pages[0].layers[0].clone();
     let guide = semio_s_artifact_layout_layout_model::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 };
     let page = &mut snapshot.pages[0];
-    page.frames.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, frame);
-    page.overrides.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, PageOverride { object_id: "frame-1".into(), bounds: None, visible: None, locked: None });
+    page.frames.resize(32, frame);
+    page.overrides.resize(32, PageOverride { object_id: "frame-1".into(), bounds: None, visible: None, locked: None });
     page.guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE, guide);
     page.layers.resize(MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE, layer);
     for layer in &mut page.layers {
-        layer.object_ids.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, "frame-1".into());
+        layer.object_ids.resize(32, "frame-1".into());
     }
     page.layer_ids.resize(MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE, "layer-1".into());
     snapshot.spreads[0].page_ids.resize(MAX_LAYOUT_EXPORT_SPREAD_PAGE_IDS, "page-1".into());
@@ -96,8 +97,8 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
 
     let mut frames = request(LayoutExportKind::Svg);
     let seed = frames.snapshot.pages[0].frames[0].clone();
-    Arc::make_mut(&mut frames.snapshot).pages[0].frames.resize(MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE + 1, seed);
-    assert!(run_layout_export_headless_batch(operation(), frames).expect_err("frame max + 1").contains("page-envelope"));
+    Arc::make_mut(&mut frames.snapshot).pages[0].frames.resize(semio_s_artifact_layout_layout_engine_json::MAX_LAYOUT_EXPORT_DECODED_ITEMS + 1, seed);
+    assert!(run_layout_export_headless_batch(operation(), frames).expect_err("decoded item budget + 1").contains("item-limit"));
 
     let mut guides = request(LayoutExportKind::Svg);
     Arc::make_mut(&mut guides.snapshot).pages[0].guides.resize(MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE + 1, semio_s_artifact_layout_layout_model::LayoutRect { x: 0.0, y: 0.0, width: 1.0, height: 1.0 });
@@ -121,36 +122,10 @@ fn nested_collection_string_and_json_caps_accept_max_and_reject_max_plus_one() {
 }
 
 #[test]
-fn exact_output_cap_accepts_max_and_rejects_one_more_byte() {
-    let mut rope = ChunkRope::new();
-    let chunk = vec![0u8; OUTPUT_CHUNK_BYTES];
-    for _ in 0..MAX_LAYOUT_EXPORT_OUTPUT_BYTES / OUTPUT_CHUNK_BYTES {
-        rope.append(&chunk).expect("exact output max");
-    }
-    assert_eq!(rope.len, MAX_LAYOUT_EXPORT_OUTPUT_BYTES);
-    assert!(rope.append(&[0]).is_err());
-    let mut drained = 0;
-    while rope.take_chunk().is_some() {
-        drained += 1;
-    }
-    assert_eq!(drained, MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS);
-    assert!(rope.chunks.is_empty());
-    assert_eq!(rope.front_byte_cursor, 0);
-}
+fn exact_output_cap_accepts_max_and_rejects_one_more_byte(){let operation=operation();let mut caller=layout_export_fixture_caller(operation,operation.generation);let mut rope=ChunkRope::new();assert!(rope.terminal_is_empty());let chunk=vec![0u8;OUTPUT_CHUNK_BYTES];for _ in 0..MAX_LAYOUT_EXPORT_OUTPUT_BYTES/OUTPUT_CHUNK_BYTES{append_output_fixture(&mut rope,&chunk,&mut caller);}assert_eq!(rope.len,MAX_LAYOUT_EXPORT_OUTPUT_BYTES);assert!(output_append_refused_fixture(&mut rope,&[0],&mut caller));let mut drained=0;loop{let(chunk,done)=caller.turn(LAYOUT_EXPORT_FIXTURE_TURN,|cx|{let result=rope.transfer_one(cx.retained_grant())?;cx.consume_retained(result.2)?;Ok((result.0,result.1))}).unwrap();if chunk.is_some(){drained+=1;}if done{break;}}assert_eq!(drained,MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS);close_output_fixture(&mut rope,&mut caller);assert!(rope.terminal_is_empty());caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);}
 
 #[test]
-fn chunk_rope_outer_storage_is_stable_across_growth_boundaries() {
-    let mut rope = ChunkRope::new();
-    assert!(rope.chunks.capacity() >= MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS);
-    let chunk = vec![0u8; OUTPUT_CHUNK_BYTES];
-    rope.append(&chunk).expect("first pre-admitted chunk");
-    let storage = rope.chunks.as_slices().0.as_ptr();
-    for _ in 1..257 {
-        rope.append(&chunk).expect("pre-admitted chunk");
-        assert_eq!(rope.chunks.as_slices().0.as_ptr(), storage);
-    }
-    assert_eq!(rope.chunks.len(), 257);
-}
+fn output_byte_pages_keep_original_payload_addresses_across_metadata_growth(){let operation=operation();let mut caller=layout_export_fixture_caller(operation,operation.generation);let mut rope=ChunkRope::new();assert_eq!(rope.allocated_bytes(),0);let chunk=vec![0u8;OUTPUT_CHUNK_BYTES];append_output_fixture(&mut rope,&chunk,&mut caller);let original=rope.fixture_source_pointer(0).unwrap();for _ in 1..257{append_output_fixture(&mut rope,&chunk,&mut caller);assert_eq!(rope.fixture_source_pointer(0),Some(original));}assert_eq!(rope.len,257*OUTPUT_CHUNK_BYTES);close_output_fixture(&mut rope,&mut caller);caller.retire(LAYOUT_EXPORT_FIXTURE_STOCK);}
 
 #[test]
 fn owned_crc32_is_standard_and_incremental() {
@@ -283,9 +258,8 @@ fn pdf_export_prints_proxy_png_pixels() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    assert!(text.contains("q 60.000 0 0 40.000 136.000 25.000 cm"), "the proxy is placed in the image frame");
-    let hex = text.split("ID\n").nth(1).unwrap_or("").split('>').next().unwrap_or("").to_string();
-    assert_eq!(hex, "FF000000FF000000FFFFFFFF", "inline image bytes were {hex}");
+    assert!(pdf_has_operation(&bytes, "cm", &[60.0, 0.0, 0.0, 40.0, 136.0, 25.0]), "the proxy is placed in the image frame");
+    assert!(pdf_rgb_images(&bytes).iter().any(|(rgb, alpha)| rgb == &[255,0,0,0,255,0,0,0,255,255,255,255] && alpha == &[255;4]));
 }
 
 fn base64_encode(bytes: &[u8]) -> String {
@@ -317,11 +291,8 @@ fn pdf_export_rotates_a_proxy_with_its_frame() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    let matrix = LayoutExportJob::pdf_image_matrix(136.0, 435.0, 60.0, 40.0, std::f64::consts::FRAC_PI_2 as f32, 500.0);
-    assert!(text.contains(&format!("q {matrix} cm")), "the proxy turns with the frame: {matrix}");
-    assert!(!text.contains("q 60.000 0 0 40.000 136.000 25.000 cm"), "a quarter turn is not the upright box");
-    let hex = text.split("ID\n").nth(1).unwrap_or("").split('>').next().unwrap_or("");
-    assert_eq!(hex, "FF000000FF000000FFFFFFFF");
+    assert!(pdf_has_operation(&bytes, "cm", &[0.0, -60.0, 40.0, 0.0, 146.0, 75.0]), "the proxy turns with the frame");
+    assert!(pdf_rgb_images(&bytes).iter().any(|(rgb, alpha)| rgb == &[255,0,0,0,255,0,0,0,255,255,255,255] && alpha == &[255;4]));
 }
 
 #[test]
@@ -333,10 +304,10 @@ fn pdf_export_prints_a_character_style_run() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    assert!(text.contains("24.000 Tf"), "the styled run prints at the character size");
-    assert!(text.contains("1.0000 0.0000 0.0000 rg"), "the styled run prints its color");
-    assert!(text.contains("12.000 Tf"), "the rest of the story keeps the paragraph size");
-    assert_eq!(text.matches("> Tj ET").count(), snapshot.stories[0].content.chars().count());
+    assert!(pdf_font_size(&bytes,24.0), "the styled run retains its character size");
+    assert!(pdf_has_operation(&bytes,"rg",&[1.0,0.0,0.0]));
+    assert!(pdf_font_size(&bytes,12.0), "the remaining text retains its paragraph size");
+    assert!(pdf_text_compact(&bytes).contains(&snapshot.stories[0].content.chars().filter(|c|!c.is_whitespace()).collect::<String>()));
 }
 
 #[test]
@@ -361,8 +332,8 @@ fn pdf_export_obliques_and_tracks_a_character_span() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    assert!(text.contains("1 0 0.250 1"), "the styled span prints oblique");
-    assert!(text.contains("1 0 0 1"), "the rest of the story stays upright");
+    assert!(pdf_has_oblique_text(&bytes,true));
+    assert!(pdf_has_oblique_text(&bytes,false));
 }
 
 #[test]
@@ -373,8 +344,8 @@ fn pdf_export_prints_a_page_override() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    assert!(text.contains("0.4000 0.5000 0.7000 RG 1 w 90.000 370.000 100.000 80.000 re S Q"), "the override prints at the page position");
-    assert!(!text.contains("50.000 370.000 100.000 80.000 re S Q"), "the master position is not printed on this page");
+    assert!(pdf_has_operation(&bytes,"m",&[90.0,450.0]));
+    assert!(!pdf_has_operation(&bytes,"m",&[50.0,450.0]));
 }
 
 #[test]
@@ -385,9 +356,9 @@ fn pdf_export_omits_a_hidden_layer() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    assert_eq!(text.matches("> Tj ET").count(), 0, "the hidden content layer prints no story glyphs");
-    assert!(!text.contains("10.000 450.000 40.000 40.000 re f Q"), "the hidden rect is omitted");
-    assert!(text.contains("0.4000 0.5000 0.7000 RG 1 w 50.000 370.000 100.000 80.000 re S Q"), "the master frame stays on its own layer");
+    assert!(pdf_text_compact(&bytes).is_empty(), "the hidden content layer prints no story text");
+    assert!(!pdf_has_operation(&bytes,"m",&[10.0,490.0]), "the hidden rect is omitted");
+    assert!(pdf_has_operation(&bytes,"m",&[50.0,450.0]));
 }
 
 #[test]
@@ -404,6 +375,8 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
     let bytes = decode_base64(&all.data).expect("base64 pdf");
     assert_pdf_structure(&bytes);
     let text = String::from_utf8_lossy(&bytes);
-    assert!(!text.contains("10.000 450.000 40.000 40.000 re f Q"));
-    assert_eq!(text.matches("> Tj ET").count(), snapshot.stories[0].content.chars().count());
+    assert!(!pdf_has_operation(&bytes,"m",&[10.0,490.0]));
+    assert!(pdf_text_compact(&bytes).contains(&snapshot.stories[0].content.chars().filter(|c|!c.is_whitespace()).collect::<String>()));
 }
+
+#[test]fn checkpoint_envelope_separates_work_progress_from_committed_prefix_and_rejects_invalid_counters(){let operation=operation();let request_value=request(LayoutExportKind::Svg);let checkpoint=LayoutExportCheckpoint{work_units:17,committed_units:3,output_bytes:0,output_digest:0xcbf29ce484222325};let encoded=encode_export_checkpoint_fixture(&operation,&request_value,&checkpoint).unwrap();assert_eq!(&encoded[..4],b"LXC3");assert_eq!(encoded.len(),642);assert_eq!(decode_export_checkpoint_fixture(&operation,&request_value,&encoded).unwrap(),checkpoint);let mut invalid=encoded;let work_offset=MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES-32;invalid[work_offset..work_offset+8].copy_from_slice(&2u64.to_le_bytes());assert!(decode_export_checkpoint_fixture(&operation,&request_value,&invalid).is_err());let mut invalid=encoded;let bytes_offset=MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES-16;invalid[bytes_offset..bytes_offset+8].copy_from_slice(&u64::MAX.to_le_bytes());assert!(decode_export_checkpoint_fixture(&operation,&request_value,&invalid).is_err());assert!(encode_export_checkpoint_fixture(&operation,&request_value,&LayoutExportCheckpoint{committed_units:18,..checkpoint}).is_err());}

@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "dofs",
+    "bits",
+    "identities",
+    "receiver",
+    "ownership"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.fem.native-load-receiving.v1"
+    },
+    "dofs": {
+      "const": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    "bits": {
+      "const": [
+        "0",
+        "9223372036854775808",
+        "4613937818241073152"
+      ]
+    },
+    "identities": {
+      "const": [
+        {
+          "id": "distinct-scoped-loads",
+          "cases": [
+            {
+              "id": "a",
+              "loads": [
+                "same"
+              ]
+            },
+            {
+              "id": "b",
+              "loads": [
+                "same"
+              ]
+            }
+          ],
+          "valid": true
+        },
+        {
+          "id": "duplicate-case",
+          "cases": [
+            {
+              "id": "a",
+              "loads": []
+            },
+            {
+              "id": "a",
+              "loads": []
+            }
+          ],
+          "valid": false
+        },
+        {
+          "id": "duplicate-load",
+          "cases": [
+            {
+              "id": "a",
+              "loads": [
+                "same",
+                "same"
+              ]
+            }
+          ],
+          "valid": false
+        },
+        {
+          "id": "empty-case-id",
+          "cases": [
+            {
+              "id": "",
+              "loads": []
+            }
+          ],
+          "valid": false
+        },
+        {
+          "id": "empty-load-id",
+          "cases": [
+            {
+              "id": "a",
+              "loads": [
+                ""
+              ]
+            }
+          ],
+          "valid": false
+        }
+      ]
+    },
+    "receiver": {
+      "const": {
+        "variants": [
+          "nodal",
+          "member-udl"
+        ],
+        "area": "unsupported",
+        "unknown": "invalid",
+        "selfWeight": "retained",
+        "emptyCases": "retained",
+        "nodeReference": "required",
+        "memberReference": "required"
+      }
+    },
+    "ownership": {
+      "const": [
+        "original-pack-receiving",
+        "same-wallet",
+        "partial-row-retained",
+        "all-axis-denial",
+        "every-prefix-cancel",
+        "paid-close"
+      ]
+    }
+  }
+}

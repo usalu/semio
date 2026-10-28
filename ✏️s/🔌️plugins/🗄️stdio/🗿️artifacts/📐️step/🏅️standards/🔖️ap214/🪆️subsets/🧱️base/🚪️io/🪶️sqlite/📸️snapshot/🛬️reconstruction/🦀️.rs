@@ -94,12 +94,12 @@ impl Forest{
                 continue;
             }
             let row=catalog.tables[8].rows[index];validate_ieee754_row(row,8,REAL)?;let kind=row.text(1)?;
-            let active=match kind{"integer"=>Some(2),"real"=>Some(3),"string"=>Some(4),"enum"=>Some(5),"reference"=>Some(6),"unset"|"derived"|"aggregate"|"typedValue"=>None,_=>return Err(invalid("unknown STEP value kind"))};
+            let active=match kind{"integer"=>Some(2),"real"=>Some(3),"string"|"binary"=>Some(4),"enum"=>Some(5),"reference"=>Some(6),"unset"|"derived"|"aggregate"|"typedValue"=>None,_=>return Err(invalid("unknown STEP value kind"))};
             for column in 2..8{if Some(column)!=active&&!(kind=="reference"&&column==7){null(row,column)?;}}
             if kind!="real"&&!ieee754_is_null(row,3,REAL)?{return Err(invalid("inactive STEP real companions"));}
             let value=match kind{
                 "unset"=>StepValue::Unset,"derived"=>StepValue::Derived,"integer"=>StepValue::Integer(row.integer(2)?),"real"=>StepValue::Real(read_binary64(row,3,REAL)?),
-                "string"=>StepValue::String(control.copy_text(row.text(4)?)?),"enum"=>StepValue::Enum(control.copy_text(row.text(5)?)?),
+                "binary"=>{let content=row.text(4)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(content){return Err(invalid("invalid canonical STEP binary content"))}StepValue::Binary(control.copy_text(content)?)},"string"=>StepValue::String(control.copy_text(row.text(4)?)?),"enum"=>StepValue::Enum(control.copy_text(row.text(5)?)?),
                 "reference"=>{let word=unsigned(row.text(6)?)?;let entity=row.integer(7)?;let actual=entities.binary_search_by_key(&entity,|item|item.0).ok().map(|index|entities[index].1);if actual!=Some(word){return Err(invalid("STEP reference word differs from related entity identity"));}StepValue::Reference(word)},
                 "aggregate"=>{let range=catalog.tables[10].range((0,id));let mut output=DecodedFieldOwner::new(control.allocate_vec(range.len())?,native::close::<Vec<StepValue>>);for edge in range{let row=catalog.tables[10].row(catalog.edge(10,edge).id)?;output.as_mut().push(self.pop(catalog,row.integer(3)?)?);control.step()?;}StepValue::Aggregate(output.take())},
                 "typedValue"=>{let edge=catalog.tables[11].range((0,id)).start;let row=catalog.tables[11].row(catalog.edge(11,edge).id)?;let name=DecodedFieldOwner::new(control.copy_text(row.text(2)?)?,native::close::<String>);let mut slot=DecodedFieldOwner::new(control.allocate_vec(1)?,native::close::<Vec<StepValue>>);slot.as_mut().push(self.pop(catalog,row.integer(3)?)?);StepValue::TypedValue(StepTypedValue {type_name:name.take(),value:native::box_slot(slot.take())?})},

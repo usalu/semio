@@ -1,0 +1,17 @@
+# IO Original Control Receiver Independent Before Audit
+
+Confirmed P2: the captured IO control record is mutable authority exposed as progress callback this. Independent actual STEP parsing of unchanged official extruded-solid.ifc succeeds after the callback replaces that captured record's signal/progress and aborts the original signal (1original callback,507replacement callbacks). Actual shared runIfcIoSteps likewise succeeds with1original/4replacement calls; its finite generator finally still runs. Actual GLB reading a previously generated physical coarse circle GLB eventually rejects original cancellation, but only after952replacement callbacks. The GLB result is not mislabeled as final false success: it demonstrates redirected work until another original boundary rejects.
+
+Both actual captureIfcIoControl and scoped capture read a source progress getter3times. Direct capture keeps the later returned callback rather than the first; scoped capture wraps the selected callback so equality with either raw callback is not itself meaningful. One-time read failure is independently established by the getter count. Nine direct STEP/GLB/shared undefined/number/opaque-object throw probes retain exact original failure identity; those already-correct behaviors must survive the fix.
+
+Inputs/output: authored io-control-independent-probe.ts; immutable generated/io-control-independent-before.json. Parent's independent original reproduction remains separately preserved. No production source changed, no fake issued control/program authority, source copy or test relaxation was used. All audit processes exited and production files are free for edits.
+
+## Closed Neutral Regression Matrix Recommended
+
+For direct capture and scope, declare each signal/progress/batch/maxEntities/maxValues/maxDepth/maxNumericCodeUnits getter read exactly once. Retain first observed callback and limits, validate them once, and reject malformed first values rather than silently reading a valid later value. Source mutation after capture cannot change original authority.
+
+For actual STEP ingress, raw GLB ingress, and shared steps: ordinary function callback attempts Reflect.set(signal/progress/budget) and guarded defineProperty on its receiver, then aborts original signal. Required result is original cancellation rejection before further semantic publication; replacement callback count remains0. Captured records should be immutable and callback receiver must expose no mutable authority. Do not require callbacks to throw on denied mutation: guarded Reflect probes must verify cancellation independently of TypeError. Capture and scope wrappers must remain correct without mutating an already frozen record.
+
+For each route preserve exact undefined, number, object, IfcStepError and same-code domain-error throws. Distinguish genuine abort from callback-thrown cancellation-shaped errors. Keep signal checks before/after callback and after real framework continuation. Shared finite generator cleanup must complete on callback failure, cancellation and normal result; initial cancellation may occur before its body starts, so do not claim its inner finally necessarily ran without entering it.
+
+Actual private capture completion boundaries and currently passing geometry/MVD/external-source caller-failure laws must stay intact. This fix does not establish native grants, program/source graph custody or universal synchronous parser progress. Frozen AFTER closure remains pending root implementation and exact replay with distinct output filenames.

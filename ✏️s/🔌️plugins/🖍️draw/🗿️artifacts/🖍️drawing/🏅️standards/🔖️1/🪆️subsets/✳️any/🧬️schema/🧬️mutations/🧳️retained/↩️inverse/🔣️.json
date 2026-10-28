@@ -1,0 +1,48 @@
+{
+  "contract": "DrawingOriginalFieldInverse",
+  "original": [
+    "DrawingSnapshot",
+    "DrawingMutation"
+  ],
+  "phases": [
+    "find-original-target",
+    "admit-inverse-row",
+    "clone-original-command-metadata",
+    "take-original-command",
+    "receive-old-affected-field",
+    "replace-inverse-field",
+    "restore-original-scalars",
+    "ready"
+  ],
+  "fields": [
+    "SetLayerVisible",
+    "SetLayerLocked",
+    "SetLayerOpacity",
+    "SetLayerBlendMode",
+    "RenameLayer",
+    "UpdateLayerTransform",
+    "ReplaceLayerFill",
+    "ReplaceLayerStroke",
+    "SetLayerBooleanOperation",
+    "UpdateLayerTraceParams",
+    "UpdatePathGeometry",
+    "UpdateText",
+    "SetLayerFillRule",
+    "SetGroupIsolation",
+    "UpdateImage",
+    "SetShapeCoordinate"
+  ],
+  "forbidden": [
+    "cold-inverse",
+    "cold-diff",
+    "whole-snapshot-clone",
+    "callerless-identity-mint"
+  ],
+  "closure": [
+    "original-target-lookup",
+    "typed-field-recipients",
+    "displaced-new-fields",
+    "inverse-row",
+    "original-bindings"
+  ]
+}

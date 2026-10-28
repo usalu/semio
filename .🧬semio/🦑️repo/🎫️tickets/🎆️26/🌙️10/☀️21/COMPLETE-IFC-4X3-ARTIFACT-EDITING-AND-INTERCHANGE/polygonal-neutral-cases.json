@@ -1,0 +1,2574 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "shared-indices",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "distinct-indices-exact-coordinates",
+      "coordinates": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            13,
+            14,
+            15,
+            16
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            17,
+            18,
+            19,
+            20
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            21,
+            22,
+            23,
+            24
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "pnindex-aliases",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            1,
+            2,
+            3,
+            4
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            13,
+            14,
+            15,
+            16
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            17,
+            18,
+            19,
+            20
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            21,
+            22,
+            23,
+            24
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": [
+        4,
+        3,
+        2,
+        1,
+        1,
+        2,
+        6,
+        5,
+        2,
+        3,
+        7,
+        6,
+        3,
+        4,
+        8,
+        7,
+        4,
+        1,
+        5,
+        8,
+        5,
+        6,
+        7,
+        8
+      ],
+      "closed": true,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "pnindex-permutation",
+      "coordinates": [
+        [
+          0,
+          1,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            8,
+            7,
+            3,
+            4
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            7,
+            6,
+            2,
+            3
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            6,
+            5,
+            1,
+            2
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            8,
+            4,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "explicit-end-repeat",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1,
+            4
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6,
+            2
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7,
+            3
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8,
+            4
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8,
+            5
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "qualified",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "normal-backend-only"
+    },
+    {
+      "id": "consecutive-repeat",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "qualified",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "normal-backend-only"
+    },
+    {
+      "id": "open-false",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": false,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": null,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "open-unset",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": null,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": null,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "closed-missing-face",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "zero-index",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            0,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "negative-index",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            -1,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "fractional-index",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            1.5,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "out-of-range-index",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            9,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "pnindex-out-of-range",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        9
+      ],
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "nonplanar-face",
+      "coordinates": [
+        [
+          0,
+          0,
+          0.25
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "self-crossing-face",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            1,
+            3,
+            2,
+            4
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "duplicate-face-reference",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "duplicate-face-reference",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "wrong-face-role",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "wrong-face-role",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "wrong-coordinate-role",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            1,
+            2,
+            6,
+            5
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            7,
+            6
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            8,
+            7
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            5,
+            8
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            7,
+            8
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "unsupported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "wrong-coordinate-role",
+      "qualification": "geometric-contract"
+    },
+    {
+      "id": "through-hole",
+      "coordinates": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          0
+        ],
+        [
+          0,
+          4,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          3,
+          0
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          2
+        ],
+        [
+          4,
+          0,
+          2
+        ],
+        [
+          4,
+          4,
+          2
+        ],
+        [
+          0,
+          4,
+          2
+        ],
+        [
+          1,
+          1,
+          2
+        ],
+        [
+          1,
+          3,
+          2
+        ],
+        [
+          3,
+          3,
+          2
+        ],
+        [
+          3,
+          1,
+          2
+        ]
+      ],
+      "faces": [
+        {
+          "outer": [
+            4,
+            3,
+            2,
+            1
+          ],
+          "holes": [
+            [
+              8,
+              7,
+              6,
+              5
+            ]
+          ]
+        },
+        {
+          "outer": [
+            9,
+            10,
+            11,
+            12
+          ],
+          "holes": [
+            [
+              13,
+              14,
+              15,
+              16
+            ]
+          ]
+        },
+        {
+          "outer": [
+            1,
+            2,
+            10,
+            9
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            2,
+            3,
+            11,
+            10
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            3,
+            4,
+            12,
+            11
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            4,
+            1,
+            9,
+            12
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            5,
+            6,
+            14,
+            13
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            6,
+            7,
+            15,
+            14
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            7,
+            8,
+            16,
+            15
+          ],
+          "holes": []
+        },
+        {
+          "outer": [
+            8,
+            5,
+            13,
+            16
+          ],
+          "holes": []
+        }
+      ],
+      "pnIndex": null,
+      "closed": true,
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          2
+        ]
+      ],
+      "volume": 24,
+      "damage": "none",
+      "qualification": "geometric-contract"
+    }
+  ]
+}

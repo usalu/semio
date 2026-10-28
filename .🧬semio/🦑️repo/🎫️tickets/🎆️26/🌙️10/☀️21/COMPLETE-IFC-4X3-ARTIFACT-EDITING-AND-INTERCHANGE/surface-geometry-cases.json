@@ -1,0 +1,2402 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "single-face",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 2,
+      "damage": "none"
+    },
+    {
+      "id": "open-shell-face",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCOPENSHELL",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 2,
+      "damage": "none"
+    },
+    {
+      "id": "closed-box-concrete-set",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                2,
+                1,
+                0
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 22,
+      "damage": "none"
+    },
+    {
+      "id": "closed-shell-box",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                2,
+                1,
+                0
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCLOSEDSHELL",
+          "faces": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 22,
+      "damage": "none"
+    },
+    {
+      "id": "open-box",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                2,
+                1,
+                0
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCOPENSHELL",
+          "faces": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 20,
+      "damage": "none"
+    },
+    {
+      "id": "disconnected-separate-groups",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          5,
+          0,
+          0
+        ],
+        [
+          5,
+          1,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            1
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 4,
+      "damage": "none"
+    },
+    {
+      "id": "disconnected-one-group",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          5,
+          0,
+          0
+        ],
+        [
+          5,
+          1,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "adjacent-open-faces",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                4,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 2,
+      "damage": "none"
+    },
+    {
+      "id": "face-hole",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          0
+        ],
+        [
+          0,
+          4,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          3,
+          0
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            },
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": false
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 12,
+      "damage": "none"
+    },
+    {
+      "id": "false-orientation-equivalent",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          0
+        ],
+        [
+          0,
+          4,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          1,
+          3,
+          0
+        ],
+        [
+          3,
+          3,
+          0
+        ],
+        [
+          3,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                2,
+                1,
+                0
+              ],
+              "orientation": false,
+              "outer": true
+            },
+            {
+              "loop": [
+                7,
+                6,
+                5,
+                4
+              ],
+              "orientation": false,
+              "outer": false
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 12,
+      "damage": "none"
+    },
+    {
+      "id": "unmarked-sole-bound",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": false
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 2,
+      "damage": "none"
+    },
+    {
+      "id": "closed-shell-open",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                2,
+                1,
+                0
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCLOSEDSHELL",
+          "faces": [
+            0,
+            1,
+            2,
+            3,
+            4
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "missing-orientation",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": null,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "nonplanar",
+      "points": [
+        [
+          0,
+          0,
+          0.25
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "crossing",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                2,
+                1,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "duplicate-face-reference",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0,
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "duplicate-group-reference",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "duplicate-group-reference"
+    },
+    {
+      "id": "wrong-bound",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "wrong-bound"
+    },
+    {
+      "id": "wrong-loop",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "wrong-loop"
+    },
+    {
+      "id": "wrong-point",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "wrong-point"
+    },
+    {
+      "id": "empty-groups",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "empty-groups"
+    },
+    {
+      "id": "vertex-connected-open-faces",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          4,
+          1,
+          0
+        ],
+        [
+          4,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 4,
+      "damage": "none"
+    },
+    {
+      "id": "common-edge-separate-groups",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          1,
+          1,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                4,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            1
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 2,
+      "damage": "none"
+    },
+    {
+      "id": "common-vertex-separate-groups",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          4,
+          1,
+          0
+        ],
+        [
+          4,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            1
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 4,
+      "damage": "none"
+    },
+    {
+      "id": "common-source-face-separate-groups",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 4,
+      "damage": "none"
+    },
+    {
+      "id": "identical-boundaries-distinct-faces",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            1
+          ]
+        }
+      ],
+      "expected": "supported",
+      "area": 4,
+      "damage": "none"
+    },
+    {
+      "id": "vertex-pinched-open-shell",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          4,
+          1,
+          0
+        ],
+        [
+          4,
+          2,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                4,
+                5,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCOPENSHELL",
+          "faces": [
+            0,
+            1
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "crossing-group-interiors",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          0,
+          -1
+        ],
+        [
+          1,
+          2,
+          -1
+        ],
+        [
+          1,
+          2,
+          1
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            1
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "partial-coplanar-overlap",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          2,
+          0
+        ],
+        [
+          0,
+          2,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          3,
+          0,
+          0
+        ],
+        [
+          3,
+          2,
+          0
+        ],
+        [
+          1,
+          2,
+          0
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                2,
+                3
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            0
+          ]
+        },
+        {
+          "kind": "IFCCONNECTEDFACESET",
+          "faces": [
+            1
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    },
+    {
+      "id": "open-shell-closed-box",
+      "points": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          3
+        ],
+        [
+          2,
+          0,
+          3
+        ],
+        [
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          1,
+          3
+        ]
+      ],
+      "faces": [
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                2,
+                1,
+                0
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                0,
+                1,
+                5,
+                4
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                1,
+                2,
+                6,
+                5
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                2,
+                3,
+                7,
+                6
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                3,
+                0,
+                4,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        },
+        {
+          "bounds": [
+            {
+              "loop": [
+                4,
+                5,
+                6,
+                7
+              ],
+              "orientation": true,
+              "outer": true
+            }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "kind": "IFCOPENSHELL",
+          "faces": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5
+          ]
+        }
+      ],
+      "expected": "unsupported",
+      "area": null,
+      "damage": "none"
+    }
+  ]
+}

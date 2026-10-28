@@ -1,9 +1,9 @@
 //! 📝 `edit-story` — splices a story's authored `content` body: `delete` characters from `offset` are replaced by `insert`.
 
-
 use semio_s_artifact_layout_layout_diff::LayoutStoriesDelta;
 use semio_s_artifact_layout_layout_diff::LayoutStoriesModification;
-use semio_s_artifact_layout_layout_diff::{LayoutDiff, TextStoryPatch};
+use semio_s_artifact_layout_layout_diff::{LayoutDiff, TextStoryPatch, TextStyleRunsDelta, TextStyleRunRow};
+use semio_s_artifact_layout_layout_model::story_splice::{byte_range, splice};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -25,17 +25,7 @@ pub struct EditStory {
     pub insert: String,
 }
 
-/// ✂️ The characters of `content` a splice replaces, or `None` when the range leaves the text.
-fn spliced_range(content: &str, offset: usize, delete: usize) -> Option<(usize, usize)> {
-    let length = content.chars().count();
-    (offset.checked_add(delete)? <= length).then(|| {
-        let start = content.char_indices().nth(offset).map_or(content.len(), |(at, _)| at);
-        let end = content.char_indices().nth(offset + delete).map_or(content.len(), |(at, _)| at);
-        (start, end)
-    })
-}
-
-impl<Op> MutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::edit_story::EditStory> {
+impl<Op> MutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::edit_story::EditStory> + From<crate::set_story_runs::SetStoryRuns> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "edit", entity: "story", kind: "edit-story", record: "EditedStory" };
 
     fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
@@ -46,7 +36,7 @@ impl<Op> MutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::Muta
     }
 }
 
-impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::edit_story::EditStory> {
+impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for EditStory where Op: protocol::ColdMutation<LayoutSnapshot, ReferenceDiff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::edit_story::EditStory> + From<crate::set_story_runs::SetStoryRuns> {
     fn diff(&self, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
         diff_edit_story(self, base)
     }
@@ -64,26 +54,36 @@ pub fn diff_edit_story(payload: &EditStory, base: &LayoutSnapshot) -> protocol::
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    let Some((start, end)) = spliced_range(&story.content, payload.offset, payload.delete) else {
+    let Some((start, end)) = byte_range(&story.content, payload.offset, payload.delete) else {
         return protocol::MutationOutcome::error("mutation.target-mismatch", format!("The splice leaves story \"{}\".", payload.id), [payload.id.clone()]);
     };
     if story.content[start..end] == payload.insert {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Story \"{}\" content is unchanged.", payload.id));
     }
-    let content = format!("{}{}{}", &story.content[..start], payload.insert, &story.content[end..]);
+    let Some(next) = splice(story, payload.offset, payload.delete, &payload.insert) else {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "The spliced style ranges exceed the text address space.", [payload.id.clone()]);
+    };
+    let style_runs = (story.style_runs != next.style_runs).then(|| TextStyleRunsDelta {
+        len: Some(next.style_runs.len()),
+        rows: next.style_runs.iter().enumerate().map(|(index, run)| TextStyleRunRow { index, run: run.clone() }).collect(),
+    });
     protocol::MutationOutcome::new(LayoutDiff {
-        stories: Some(LayoutStoriesDelta { modified: vec![LayoutStoriesModification { id: payload.id.clone(), patch: TextStoryPatch { content: Some(content), style_runs: None } }], ..Default::default() }),
+        stories: Some(LayoutStoriesDelta { modified: vec![LayoutStoriesModification { id: payload.id.clone(), patch: TextStoryPatch { content: Some(next.content), style_runs } }], ..Default::default() }),
         ..Default::default()
     })
 }
 //#endregion 📝EditStory
 
 //#region 📝EditStory
-pub fn inverse_edit_story<Op: From<crate::edit_story::EditStory>>(payload: &EditStory, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse_edit_story<Op: From<crate::edit_story::EditStory> + From<crate::set_story_runs::SetStoryRuns>>(payload: &EditStory, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_edit_story(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else { return Vec::new() };
-    let Some((start, end)) = spliced_range(&story.content, payload.offset, payload.delete) else { return Vec::new() };
-    vec![Op::from(EditStory { id: payload.id.clone(), offset: payload.offset, delete: payload.insert.chars().count(), insert: story.content[start..end].to_string() })]
+    let Some((start, end)) = byte_range(&story.content, payload.offset, payload.delete) else { return Vec::new() };
+    let mut inverse = Vec::new();
+    if !story.style_runs.is_empty() { inverse.push(Op::from(crate::set_story_runs::SetStoryRuns { id: story.id.clone(), runs: story.style_runs.clone() })); }
+    inverse.push(Op::from(EditStory { id: payload.id.clone(), offset: payload.offset, delete: payload.insert.chars().count(), insert: story.content[start..end].to_string() }));
+    inverse
 
     })())
 }

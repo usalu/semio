@@ -1,0 +1,9 @@
+{
+  "schema": "semio.drawing.canvas-size.v1",
+  "input": {
+    "width": "finite nonnegative binary64",
+    "height": "finite nonnegative binary64"
+  },
+  "output": "same admitted Drawing with only canvas width and height changed",
+  "ownership": "original layers styles image bytes and text remain in original backing"
+}

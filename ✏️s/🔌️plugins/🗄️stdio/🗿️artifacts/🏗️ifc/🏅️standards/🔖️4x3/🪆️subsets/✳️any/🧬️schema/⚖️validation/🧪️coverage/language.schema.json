@@ -1,0 +1,254 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "const": [
+    {
+      "id": "bag-intersection-multiplicity",
+      "expression": "A * B",
+      "bindings": {
+        "A": {
+          "kind": "aggregate",
+          "aggregate": "BAG",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "string",
+              "value": "x"
+            },
+            {
+              "kind": "string",
+              "value": "x"
+            },
+            {
+              "kind": "string",
+              "value": "y"
+            }
+          ]
+        },
+        "B": {
+          "kind": "aggregate",
+          "aggregate": "BAG",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "string",
+              "value": "x"
+            },
+            {
+              "kind": "string",
+              "value": "x"
+            },
+            {
+              "kind": "string",
+              "value": "x"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "BAG",
+        "lower": "1",
+        "items": [
+          {
+            "kind": "string",
+            "value": "x"
+          },
+          {
+            "kind": "string",
+            "value": "x"
+          }
+        ]
+      },
+      "scope": "known-value-multiset"
+    },
+    {
+      "id": "bag-set-kind",
+      "expression": "A * B",
+      "bindings": {
+        "A": {
+          "kind": "aggregate",
+          "aggregate": "BAG",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "string",
+              "value": "x"
+            },
+            {
+              "kind": "string",
+              "value": "x"
+            },
+            {
+              "kind": "string",
+              "value": "y"
+            }
+          ]
+        },
+        "B": {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "string",
+              "value": "x"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "SET",
+        "lower": "1",
+        "items": [
+          {
+            "kind": "string",
+            "value": "x"
+          }
+        ]
+      },
+      "scope": "known-value-mixed-aggregate"
+    },
+    {
+      "id": "scalar-set-dedup",
+      "expression": "SIZEOF(A + B)",
+      "bindings": {
+        "A": {
+          "kind": "string",
+          "value": "INTEGER"
+        },
+        "B": {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "string",
+              "value": "INTEGER"
+            },
+            {
+              "kind": "string",
+              "value": "REAL"
+            },
+            {
+              "kind": "string",
+              "value": "NUMBER"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      },
+      "scope": "known-value-set"
+    },
+    {
+      "id": "ordered-definite-false",
+      "expression": "A = B",
+      "bindings": {
+        "A": {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "unknown"
+            }
+          ]
+        },
+        "B": {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "unknown"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "scope": "ordered-three-valued-comparison"
+    },
+    {
+      "id": "ordered-indeterminate",
+      "expression": "A = B",
+      "bindings": {
+        "A": {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "unknown"
+            }
+          ]
+        },
+        "B": {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "unknown"
+            }
+          ]
+        }
+      },
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      },
+      "scope": "ordered-three-valued-comparison"
+    },
+    {
+      "id": "set-indeterminate-membership-refused",
+      "expression": "A + B",
+      "bindings": {
+        "A": {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            }
+          ]
+        },
+        "B": {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "unknown"
+            }
+          ]
+        }
+      },
+      "error": "aggregate-indeterminate",
+      "scope": "existing-conservative-refusal-not-normative-output-completion"
+    }
+  ]
+}

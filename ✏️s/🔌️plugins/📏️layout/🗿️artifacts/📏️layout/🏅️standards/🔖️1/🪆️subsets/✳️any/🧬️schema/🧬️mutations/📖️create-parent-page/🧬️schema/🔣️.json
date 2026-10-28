@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-parent-page/schema.json",
+  "title": "CreateParentPage",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "page"
+  ],
+  "properties": {
+    "page": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/artifact.json#/$defs/ParentPage"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}

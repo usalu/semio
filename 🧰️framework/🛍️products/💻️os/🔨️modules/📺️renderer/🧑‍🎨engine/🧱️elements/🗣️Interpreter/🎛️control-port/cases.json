@@ -1,0 +1,14 @@
+{
+  "surface": "ifc-form",
+  "revision": 41,
+  "cases": [
+    { "id": "resident", "state": "live", "bindings": ["change"], "trigger": "change", "sent": true },
+    { "id": "replaced", "state": "replaced", "bindings": ["change"], "trigger": "change", "sent": false },
+    { "id": "removed", "state": "removed", "bindings": ["change"], "trigger": "change", "sent": false },
+    { "id": "disabled", "state": "disabled", "bindings": ["change"], "trigger": "change", "sent": false },
+    { "id": "missing-binding", "state": "live", "bindings": ["activate"], "trigger": "change", "sent": false },
+    { "id": "ambiguous-binding", "state": "live", "bindings": ["change", "change"], "trigger": "change", "sent": false },
+    { "id": "unique-binding", "state": "live", "bindings": ["commit", "change"], "trigger": "change", "sent": true },
+    { "id": "activation", "state": "live", "bindings": ["activate"], "trigger": "activate", "sent": true }
+  ]
+}

@@ -1,0 +1,119 @@
+{
+  "schema": "ifc-consumed-geometry-domain",
+  "version": 1,
+  "nativeExecution": false,
+  "cases": [
+    {
+      "id": "cylinder-height-integer",
+      "primitive": "cylinder",
+      "target": "height",
+      "carrier": "integer",
+      "value": 3,
+      "expected": "refuse"
+    },
+    {
+      "id": "cylinder-radius-integer",
+      "primitive": "cylinder",
+      "target": "radius",
+      "carrier": "integer",
+      "value": 1,
+      "expected": "refuse"
+    },
+    {
+      "id": "cylinder-point-integer",
+      "primitive": "cylinder",
+      "target": "point",
+      "carrier": "integer",
+      "value": 0,
+      "expected": "refuse"
+    },
+    {
+      "id": "cylinder-axis-integer",
+      "primitive": "cylinder",
+      "target": "axis",
+      "carrier": "integer",
+      "value": 0,
+      "expected": "refuse"
+    },
+    {
+      "id": "cylinder-reference-integer",
+      "primitive": "cylinder",
+      "target": "reference",
+      "carrier": "integer",
+      "value": 1,
+      "expected": "refuse"
+    },
+    {
+      "id": "cylinder-height-real",
+      "primitive": "cylinder",
+      "target": "height",
+      "carrier": "real",
+      "value": 3,
+      "expected": "supported"
+    },
+    {
+      "id": "cylinder-radius-real",
+      "primitive": "cylinder",
+      "target": "radius",
+      "carrier": "real",
+      "value": 1,
+      "expected": "supported"
+    },
+    {
+      "id": "cone-height-integer",
+      "primitive": "cone",
+      "target": "height",
+      "carrier": "integer",
+      "value": 3,
+      "expected": "refuse"
+    },
+    {
+      "id": "cone-radius-integer",
+      "primitive": "cone",
+      "target": "radius",
+      "carrier": "integer",
+      "value": 1,
+      "expected": "refuse"
+    },
+    {
+      "id": "cone-point-integer",
+      "primitive": "cone",
+      "target": "point",
+      "carrier": "integer",
+      "value": 0,
+      "expected": "refuse"
+    },
+    {
+      "id": "cone-axis-integer",
+      "primitive": "cone",
+      "target": "axis",
+      "carrier": "integer",
+      "value": 0,
+      "expected": "refuse"
+    },
+    {
+      "id": "cone-reference-integer",
+      "primitive": "cone",
+      "target": "reference",
+      "carrier": "integer",
+      "value": 1,
+      "expected": "refuse"
+    },
+    {
+      "id": "cone-height-real",
+      "primitive": "cone",
+      "target": "height",
+      "carrier": "real",
+      "value": 3,
+      "expected": "supported"
+    },
+    {
+      "id": "cone-radius-real",
+      "primitive": "cone",
+      "target": "radius",
+      "carrier": "real",
+      "value": 1,
+      "expected": "supported"
+    }
+  ]
+}

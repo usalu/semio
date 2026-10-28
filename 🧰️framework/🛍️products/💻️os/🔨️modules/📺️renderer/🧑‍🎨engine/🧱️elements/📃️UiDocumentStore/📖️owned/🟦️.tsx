@@ -1,6 +1,6 @@
 //#region 🧬️OwnedReadSource
 import { useCallback, useLayoutEffect, useRef, useSyncExternalStore } from "../../⚛️react-port/🟦️.ts";
-import type { OwnedUiReadSource, OwnedUiReadSubscription, OwnedUiSceneReadSource, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "@semio-tech/ui-contract/retained/read-lease";
+import type { OwnedUiReadSource, OwnedUiReadSubscription, OwnedUiNodeReadSnapshot, OwnedUiSceneReadSource, OwnedUiSceneRecordView, OwnedUiSceneTextView } from "@semio-tech/ui-contract/retained/read-lease";
 import type { RetainedUiNodeRecord } from "@semio-tech/ui-contract/retained/wire/typed";
 import type { OwnedUiSceneDiagnostic } from "@semio-tech/ui-contract/retained/scene/binding";
 import type { NumericIndexGrant } from "@semio-tech/framework/value/ordered/numeric";
@@ -18,8 +18,9 @@ export function useOwnedUiView(source: OwnedUiInstanceSurface): OwnedUiSurfaceVi
   return useSyncExternalStore(subscribe, snapshot, snapshot);
 }
 
-function useOwnedRead(source: OwnedUiReadSource, id: number) {
-  const current = useRef<{ source: OwnedUiReadSource; id: number; subscription: OwnedUiReadSubscription } | null>(null);
+/** 🧵️ Keeps the source's exact subscription and issued snapshot through speculative reads and commit. */
+export function useOwnedRead<Snapshot, Subscription extends { readonly snapshot: Snapshot | null }>(source: { subscribeNode(id: number, notify: () => void): Subscription; acknowledgeRead(subscription: Subscription, snapshot: Snapshot): void; unsubscribeNode(subscription: Subscription): void }, id: number) {
+  const current = useRef<{ source: typeof source; id: number; subscription: Subscription } | null>(null);
   const subscribe = useCallback((notify: () => void) => {
     const subscription = source.subscribeNode(id, notify);
     const exact = { source, id, subscription }; current.current = exact; notify();
@@ -38,7 +39,7 @@ function useOwnedRead(source: OwnedUiReadSource, id: number) {
   return { snapshot, subscription: exact?.source === source && exact.id === id ? exact.subscription : null };
 }
 /** 🪝️ Subscriptions own reads outside speculative render; layout commit acknowledges the exact issued token. */
-export function useOwnedUiNode(source: OwnedUiReadSource, id: number): RetainedUiNodeRecord | undefined { return useOwnedRead(source, id).snapshot?.record; }
+export function useOwnedUiNode(source: OwnedUiReadSource, id: number): RetainedUiNodeRecord | undefined { return useOwnedRead<OwnedUiNodeReadSnapshot, OwnedUiReadSubscription>(source, id).snapshot?.record; }
 //#endregion 🪝️OwnedReadHook
 
 //#region 🎬️OwnedSceneEffect
@@ -51,7 +52,7 @@ export interface OwnedUiSceneEffectView {
 
 /** 🎬️ Effects borrow managed scene readers; exact cleanup transfers children to subscription-owned retirement. */
 export function useOwnedUiScene(source: OwnedUiSceneReadSource, id: number, consume: (view: OwnedUiSceneEffectView) => () => void): RetainedUiNodeRecord | undefined {
-  const { snapshot, subscription } = useOwnedRead(source, id);
+  const { snapshot, subscription } = useOwnedRead<OwnedUiNodeReadSnapshot, OwnedUiReadSubscription>(source, id);
   useLayoutEffect(() => {
     const record = snapshot?.record; if (!snapshot || !subscription || !record) return;
     const children: [({ close(): boolean }) | null, ({ close(): boolean }) | null] = [null, null]; let closed = false;

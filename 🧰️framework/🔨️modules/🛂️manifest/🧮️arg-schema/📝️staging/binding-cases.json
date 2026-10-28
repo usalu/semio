@@ -1,0 +1,36 @@
+{
+  "invalid": [
+    {"id":"empty-choice-key","edit":{"source":"choice","kind":"set","path":["choice"],"options":[{"key":"","value":"x"}]},"input":""}
+  ],
+  "cases": [
+    {
+      "id": "partial-text",
+      "edit": {"source": "text", "path": ["count"]},
+      "input": "-",
+      "kind": "set",
+      "path": ["count"],
+      "value": "-"
+    },
+    {
+      "id": "exact-choice",
+      "edit": {"source": "choice", "kind": "set", "path": ["choice"], "options": [{"key": "0", "value": {"kind": "typedValue", "value": {"name": "IFCINTEGER", "items": [{"kind": "integer", "value": "9007199254740993"}]}}}]},
+      "input": "0",
+      "kind": "set",
+      "path": ["choice"],
+      "value": {"kind": "typedValue", "value": {"name": "IFCINTEGER", "items": [{"kind": "integer", "value": "9007199254740993"}]}}
+    },
+    {
+      "id": "exact-fixed",
+      "edit": {"source": "fixed", "edit": {"kind": "set", "path": ["target"], "value": "18446744073709551615"}},
+      "kind": "set",
+      "path": ["target"],
+      "value": "18446744073709551615"
+    },
+    {
+      "id": "source-reset",
+      "edit": {"source": "fixed", "edit": {"kind": "remove", "path": ["identities"]}},
+      "kind": "remove",
+      "path": ["identities"]
+    }
+  ]
+}

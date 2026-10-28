@@ -1,4 +1,5 @@
 //! 💾️ Drawing store preparation: the one item publication preparation factory, bounded by the drawing work items and otherwise the cold mutation preparation of the store.
+//! 💾️ Drawing publication and replay use the genuine shared retained decision, preflight, inverse and commit stages.
 
 #![allow(clippy::result_large_err)]
 
@@ -47,3 +48,6 @@ impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFacto
     }
 }
 //#endregion 📬️StorePreparation
+
+#[path="🏭️member/🦀️.rs"]pub mod member;
+pub use member::{DrawingMemberStoreProducer,DrawingMemberWirePreparationFactory,DRAWING_MEMBER_OPERATION_SCHEMA};

@@ -1,0 +1,10 @@
+{
+  "schema":"stdio.ifc.retained-native-owner-policy/1",
+  "originalSource":"OriginalFixtureCaller closed independent initiating stock; each loan remains below that original stock.",
+  "contiguousOwnerLoan":{"maximumItems":1,"maximumCopyBytes":32768,"maximumCapacityBytes":2097152,"maximumReleaseBytes":2097152,"maximumDepth":64},
+  "shortLoan":{"maximumItems":1,"maximumCopyBytes":32768,"maximumCapacityBytes":262144,"maximumReleaseBytes":1048576,"maximumDepth":64},
+  "deniedExistingBody":{"textBytes":1000000,"path":"/entities/0/args/3/value/0/value","maximumTurns":64,"capacityDemand":1000000,"publication":false,"copiedLargeBody":false,"originalCancelRefuses":true,"controlledCloseRequired":true},
+  "borrowedWholeReplacement":{"textBytes":1000000,"path":"/entities/0/args/3/value","replacement":"changed","maximumCapacityBytes":262144,"largeOldBodyCopied":false,"exactInverseBorrowed":true},
+  "rejectedReferenceWrapper":{"textBytes":1000000,"path":"/entities/0/args/0/value/0","maximumTicks":1,"kind":"aggregate"},
+  "scope":"An independently authored fixture phase policy for contiguous native String/Vec owners; production mounted policy, scheduler and heap receipts still require execution. Loans are not derived from cursor demands."
+}

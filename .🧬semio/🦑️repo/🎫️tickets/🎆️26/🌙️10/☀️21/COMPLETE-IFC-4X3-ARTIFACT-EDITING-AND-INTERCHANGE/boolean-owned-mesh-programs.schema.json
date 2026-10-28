@@ -1,0 +1,17 @@
+{
+  "type":"object","additionalProperties":false,
+  "required":["metric","coordinateTriple","meshIndexScalar","spatialAxisRow","physicalHeapBound","source","programs"],
+  "properties":{
+    "metric":{"const":"reserved-numeric-backing"},"coordinateTriple":{"const":3},"meshIndexScalar":{"const":1},"spatialAxisRow":{"const":2},"physicalHeapBound":{"const":false},
+    "source":{"type":"object","additionalProperties":false,"required":["vertices","triangles"],"properties":{
+      "vertices":{"type":"array","minItems":8,"maxItems":8,"items":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"number"}}},
+      "triangles":{"type":"array","minItems":12,"maxItems":12,"items":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"integer","minimum":0,"maximum":7}}}
+    }},
+    "programs":{"type":"array","minItems":3,"items":{"type":"object","additionalProperties":false,"required":["id","limit","steps"],"properties":{
+      "id":{"type":"string","minLength":1},"limit":{"type":"integer","minimum":1,"maximum":9007199254740991},
+      "steps":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["operation","owner","expectedUsed","expectedPeak"],"properties":{
+        "operation":{"enum":["builder","points","triangles","seal","release"]},"owner":{"enum":["left","right"]},"rows":{"type":"integer","minimum":0,"maximum":12},"refusal":{"enum":["limit","incomplete"]},"expectedUsed":{"type":"integer","minimum":0},"expectedPeak":{"type":"integer","minimum":0}
+      }}}
+    }}}
+  }
+}

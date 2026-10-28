@@ -1,0 +1,548 @@
+{
+  "schema": "IFC2X3",
+  "cases": [
+    {
+      "entity": "IFCWALL",
+      "index": 7,
+      "attribute": "Tag",
+      "type": "IFCIDENTIFIER",
+      "optional": true
+    },
+    {
+      "entity": "IFCPROJECT",
+      "index": 4,
+      "attribute": "ObjectType",
+      "type": "IFCLABEL",
+      "optional": true
+    },
+    {
+      "entity": "IFCWALLTYPE",
+      "index": 9,
+      "attribute": "PredefinedType",
+      "type": "IFCWALLTYPEENUM",
+      "optional": false,
+      "enum": [
+        "STANDARD",
+        "POLYGONAL",
+        "SHEAR",
+        "ELEMENTEDWALL",
+        "PLUMBINGWALL",
+        "USERDEFINED",
+        "NOTDEFINED"
+      ]
+    },
+    {
+      "entity": "IFCCARTESIANPOINT",
+      "index": 0,
+      "attribute": "Coordinates",
+      "aggregate": "LIST",
+      "lower": 1,
+      "upper": 3
+    },
+    {
+      "entity": "IFCGEOMETRICREPRESENTATIONSUBCONTEXT",
+      "index": 2,
+      "attribute": "CoordinateSpaceDimension",
+      "derived": true
+    }
+  ],
+  "wallAttributes": 8,
+  "labelWidth": null,
+  "reference": {
+    "id": "18446744073709551615",
+    "field": 5,
+    "target": "IFCLOCALPLACEMENT"
+  },
+  "typeSwitch": {
+    "from": "IFCWALL",
+    "to": "IFCDOOR",
+    "oldArity": 8
+  },
+  "decimal": {
+    "negative": true,
+    "coefficient": "12345678901234567890123456789",
+    "scale": 14,
+    "exponent": -200
+  },
+  "uniqueness": {
+    "entity": "IFCUNITASSIGNMENT",
+    "index": 0,
+    "targets": [
+      "2",
+      "3"
+    ],
+    "replaceIndex": 0,
+    "duplicateTarget": "3"
+  },
+  "structured": {
+    "cases": [
+      {
+        "name": "closed enum accepts declared value",
+        "expression": {
+          "kind": "named",
+          "name": "IFCWALLTYPEENUM"
+        },
+        "value": {
+          "kind": "enum",
+          "value": "STANDARD"
+        },
+        "admitted": true
+      },
+      {
+        "name": "closed enum rejects unknown value",
+        "expression": {
+          "kind": "named",
+          "name": "IFCWALLTYPEENUM"
+        },
+        "value": {
+          "kind": "enum",
+          "value": "BANANA"
+        },
+        "admitted": false
+      },
+      {
+        "name": "exact finite decimal retains huge exponent",
+        "expression": {
+          "kind": "named",
+          "name": "REAL"
+        },
+        "value": {
+          "kind": "real",
+          "value": {
+            "negative": false,
+            "coefficient": "12345678901234567890123456789",
+            "scale": 12,
+            "exponent": 1000000000
+          }
+        },
+        "admitted": true
+      },
+      {
+        "name": "invalid decimal coefficient",
+        "expression": {
+          "kind": "named",
+          "name": "REAL"
+        },
+        "value": {
+          "kind": "real",
+          "value": {
+            "negative": false,
+            "coefficient": "1x",
+            "scale": 0
+          }
+        },
+        "admitted": false
+      },
+      {
+        "name": "required unset refuses",
+        "expression": {
+          "kind": "named",
+          "name": "STRING"
+        },
+        "value": {
+          "kind": "unset"
+        },
+        "admitted": false
+      },
+      {
+        "name": "optional unset admits",
+        "expression": {
+          "kind": "named",
+          "name": "STRING",
+          "optional": true
+        },
+        "value": {
+          "kind": "unset"
+        },
+        "admitted": true
+      },
+      {
+        "name": "TC1 unbounded label",
+        "expression": {
+          "kind": "named",
+          "name": "IFCLABEL"
+        },
+        "value": {
+          "kind": "str",
+          "value": "A😀"
+        },
+        "admitted": true
+      },
+      {
+        "name": "SELECT exact measure payload",
+        "expression": {
+          "kind": "named",
+          "name": "IFCVALUE"
+        },
+        "value": {
+          "kind": "typed",
+          "typeName": "IFCLENGTHMEASURE",
+          "values": [
+            {
+              "kind": "real",
+              "value": {
+                "negative": false,
+                "coefficient": "10",
+                "scale": 1
+              }
+            }
+          ]
+        },
+        "admitted": true
+      },
+      {
+        "name": "SELECT wrong constructor refuses",
+        "expression": {
+          "kind": "named",
+          "name": "IFCVALUE"
+        },
+        "value": {
+          "kind": "typed",
+          "typeName": "IFCWALL",
+          "values": [
+            {
+              "kind": "int",
+              "value": "1"
+            }
+          ]
+        },
+        "admitted": false
+      },
+      {
+        "name": "implicit SET decimal numeric uniqueness",
+        "expression": {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "item": {
+            "kind": "named",
+            "name": "NUMBER"
+          }
+        },
+        "value": {
+          "kind": "list",
+          "values": [
+            {
+              "kind": "int",
+              "value": "1"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "negative": false,
+                "coefficient": "0001000",
+                "scale": 3
+              }
+            }
+          ]
+        },
+        "admitted": false
+      },
+      {
+        "name": "negative exact zero uniqueness",
+        "expression": {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "unique": true,
+          "item": {
+            "kind": "named",
+            "name": "NUMBER"
+          }
+        },
+        "value": {
+          "kind": "list",
+          "values": [
+            {
+              "kind": "real",
+              "value": {
+                "negative": true,
+                "coefficient": "0000",
+                "scale": 0,
+                "exponent": 10
+              }
+            },
+            {
+              "kind": "int",
+              "value": "0"
+            }
+          ]
+        },
+        "admitted": false
+      },
+      {
+        "name": "binary field width",
+        "expression": {
+          "kind": "named",
+          "name": "BINARY",
+          "width": 3,
+          "fixed": true
+        },
+        "value": {
+          "kind": "binary",
+          "value": "17"
+        },
+        "admitted": true
+      },
+      {
+        "name": "SELECT refuses multiple payloads",
+        "expression": {
+          "kind": "named",
+          "name": "IFCVALUE"
+        },
+        "value": {
+          "kind": "typed",
+          "typeName": "IFCLENGTHMEASURE",
+          "values": [
+            {
+              "kind": "real",
+              "value": {
+                "negative": false,
+                "coefficient": "1",
+                "scale": 0
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "negative": false,
+                "coefficient": "2",
+                "scale": 0
+              }
+            }
+          ]
+        },
+        "admitted": false
+      },
+      {
+        "name": "exact reference target",
+        "expression": {
+          "kind": "named",
+          "name": "IFCUNIT"
+        },
+        "value": {
+          "kind": "ref",
+          "value": "18446744073709551615"
+        },
+        "admitted": true
+      },
+      {
+        "name": "missing exact reference refuses",
+        "expression": {
+          "kind": "named",
+          "name": "IFCUNIT"
+        },
+        "value": {
+          "kind": "ref",
+          "value": "2"
+        },
+        "admitted": false
+      },
+      {
+        "name": "wrong target subtype refuses",
+        "expression": {
+          "kind": "named",
+          "name": "IFCWALL"
+        },
+        "value": {
+          "kind": "ref",
+          "value": "18446744073709551615"
+        },
+        "admitted": false
+      }
+    ],
+    "repairs": [
+      {
+        "name": "repair list deficit",
+        "aggregate": "LIST",
+        "lower": 3,
+        "before": [
+          "1"
+        ],
+        "after": [
+          "1",
+          "2"
+        ],
+        "route": [
+          1
+        ],
+        "operation": "insert",
+        "admitted": true
+      },
+      {
+        "name": "do not worsen list deficit",
+        "aggregate": "LIST",
+        "lower": 3,
+        "before": [
+          "1",
+          "2"
+        ],
+        "after": [
+          "1"
+        ],
+        "route": [
+          1
+        ],
+        "operation": "remove",
+        "admitted": false
+      },
+      {
+        "name": "ignore unrelated invalid sibling",
+        "aggregate": "LIST",
+        "before": [
+          "invalid",
+          "1"
+        ],
+        "after": [
+          "invalid",
+          "2"
+        ],
+        "route": [
+          1
+        ],
+        "operation": "set",
+        "admitted": true
+      },
+      {
+        "name": "reject changed invalid leaf",
+        "aggregate": "LIST",
+        "before": [
+          "invalid",
+          "1"
+        ],
+        "after": [
+          "invalid",
+          "invalid"
+        ],
+        "route": [
+          1
+        ],
+        "operation": "set",
+        "admitted": false
+      },
+      {
+        "name": "repair duplicate set",
+        "aggregate": "SET",
+        "before": [
+          "1",
+          "1",
+          "2"
+        ],
+        "after": [
+          "1",
+          "3",
+          "2"
+        ],
+        "route": [
+          1
+        ],
+        "operation": "set",
+        "admitted": true
+      },
+      {
+        "name": "reject new duplicate group",
+        "aggregate": "SET",
+        "before": [
+          "1",
+          "1",
+          "2"
+        ],
+        "after": [
+          "1",
+          "2",
+          "2"
+        ],
+        "route": [
+          1
+        ],
+        "operation": "set",
+        "admitted": false
+      },
+      {
+        "name": "repair excess list",
+        "aggregate": "LIST",
+        "upper": 1,
+        "before": [
+          "1",
+          "2",
+          "3"
+        ],
+        "after": [
+          "1",
+          "2"
+        ],
+        "route": [
+          2
+        ],
+        "operation": "remove",
+        "admitted": true
+      },
+      {
+        "name": "array partial removal forbidden",
+        "aggregate": "ARRAY",
+        "lower": 0,
+        "upper": 2,
+        "before": [
+          "1",
+          "2",
+          "3"
+        ],
+        "after": [
+          "1",
+          "2"
+        ],
+        "route": [
+          2
+        ],
+        "operation": "remove",
+        "admitted": false
+      }
+    ],
+    "numbers": [
+      {
+        "integer": "1",
+        "real": {
+          "negative": false,
+          "coefficient": "1000",
+          "scale": 3
+        },
+        "equal": true
+      },
+      {
+        "integer": "0",
+        "real": {
+          "negative": true,
+          "coefficient": "000",
+          "scale": 3,
+          "exponent": 99
+        },
+        "equal": true
+      },
+      {
+        "integer": "9007199254740993",
+        "real": {
+          "negative": false,
+          "coefficient": "9007199254740992",
+          "scale": 0
+        },
+        "equal": false
+      },
+      {
+        "integer": "9223372036854775807",
+        "real": {
+          "negative": false,
+          "coefficient": "92233720368547758070",
+          "scale": 1
+        },
+        "equal": true
+      }
+    ],
+    "targets": [
+      {
+        "id": "18446744073709551615",
+        "types": [
+          "IFCDERIVEDUNIT",
+          "IFCSIUNIT"
+        ]
+      }
+    ]
+  }
+}

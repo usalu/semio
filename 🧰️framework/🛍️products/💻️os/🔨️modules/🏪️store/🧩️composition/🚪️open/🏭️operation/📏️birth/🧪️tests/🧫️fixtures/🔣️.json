@@ -56,7 +56,7 @@
     ],
     "policy": {
       "maximumItems": 1,
-      "maximumCopyBytes": 4096,
+      "maximumCopyBytes": 1048576,
       "maximumCapacityBytes": 65536,
       "maximumReleaseBytes": 65536,
       "maximumDepth": 64
@@ -65,7 +65,9 @@
       "copiesPerPayloadByte": 2,
       "sameSourceOnDenial": true,
       "reportedAllocationEqualsSystem": true,
-      "terminalDropBytes": 0
+      "terminalDropBytes": 0,
+      "constructorHeaderCopies": 2,
+      "constructorPageCopyBytes": 4096
     }
   }
 }

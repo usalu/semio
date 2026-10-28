@@ -1,0 +1,86 @@
+{
+  "counts": {
+    "entities": 653,
+    "types": 327,
+    "enumerations": 164,
+    "selects": 46,
+    "definedTypes": 117,
+    "functions": 38,
+    "rules": 2
+  },
+  "subtypes": [
+    [
+      "IfcWallStandardCase",
+      "IfcElement",
+      true
+    ],
+    [
+      "IfcSpace",
+      "IfcProduct",
+      true
+    ],
+    [
+      "IfcSpatialZone",
+      "IfcRoot",
+      false
+    ],
+    [
+      "IfcProject",
+      "IfcObject",
+      true
+    ]
+  ],
+  "attributes": [
+    {
+      "entity": "IfcWall",
+      "index": 7,
+      "name": "Tag",
+      "optional": true,
+      "derived": false
+    },
+    {
+      "entity": "IfcDoor",
+      "index": 8,
+      "name": "OverallHeight",
+      "optional": true,
+      "derived": false
+    },
+    {
+      "entity": "IfcSIUnit",
+      "index": 0,
+      "name": "Dimensions",
+      "optional": false,
+      "derived": true
+    }
+  ],
+  "enums": [
+    {
+      "name": "IfcSlabTypeEnum",
+      "members": [
+        "FLOOR",
+        "ROOF",
+        "LANDING",
+        "BASESLAB",
+        "USERDEFINED",
+        "NOTDEFINED"
+      ]
+    }
+  ],
+  "selects": [
+    {
+      "name": "IfcMaterialSelect",
+      "accepts": [
+        "IfcMaterial",
+        "IfcMaterialLayerSetUsage"
+      ],
+      "rejects": [
+        "IfcBuilding"
+      ]
+    }
+  ],
+  "labels": {
+    "name": "IfcLabel",
+    "type": "STRING",
+    "width": null
+  }
+}

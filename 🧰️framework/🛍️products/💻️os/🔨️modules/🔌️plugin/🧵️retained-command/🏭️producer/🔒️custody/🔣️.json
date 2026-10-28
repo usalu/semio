@@ -1,0 +1,60 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "minItems": 9,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "original",
+          "accept",
+          "decode"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "original": {
+            "type": "boolean"
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "decode": {
+            "type": "boolean"
+          },
+          "repeat": {
+            "type": "boolean"
+          },
+          "checkpoint": {
+            "type": "boolean"
+          },
+          "foreignCaller": {
+            "type": "boolean"
+          },
+          "foreignWire": {
+            "type": "boolean"
+          },
+          "deny": {
+            "type": "boolean"
+          },
+          "empty": {
+            "type": "boolean"
+          },
+          "cancel": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

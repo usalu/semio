@@ -1,0 +1,138 @@
+{
+  "version": 1,
+  "source": "tfs-admission-cases.json",
+  "sourceSha256": "09395563333c29049d82b1d71c0e2dd5a57191a815cc8e1986bb17098701c5a2",
+  "requireClosed": true,
+  "normalTransport": false,
+  "nativeExecuted": false,
+  "cases": [
+    {
+      "id": "closed-tetra",
+      "expected": "accept"
+    },
+    {
+      "id": "open-single-triangle",
+      "expected": "refuse"
+    },
+    {
+      "id": "unknown-single-triangle",
+      "expected": "refuse"
+    },
+    {
+      "id": "closed-open-triangle",
+      "expected": "refuse"
+    },
+    {
+      "id": "closed-inward",
+      "expected": "refuse"
+    },
+    {
+      "id": "closed-duplicate-face",
+      "expected": "refuse"
+    },
+    {
+      "id": "real-coordinate-index",
+      "expected": "refuse"
+    },
+    {
+      "id": "zero-coordinate-index",
+      "expected": "refuse"
+    },
+    {
+      "id": "negative-coordinate-index",
+      "expected": "refuse"
+    },
+    {
+      "id": "index-out-of-range",
+      "expected": "refuse"
+    },
+    {
+      "id": "index-row-two",
+      "expected": "refuse"
+    },
+    {
+      "id": "empty-triangles",
+      "expected": "refuse"
+    },
+    {
+      "id": "empty-points",
+      "expected": "refuse"
+    },
+    {
+      "id": "point-two-components",
+      "expected": "refuse"
+    },
+    {
+      "id": "integer-coordinate-value",
+      "expected": "refuse"
+    },
+    {
+      "id": "foreign-coordinate-role",
+      "expected": "refuse"
+    },
+    {
+      "id": "closed-logical-unknown",
+      "expected": "refuse"
+    },
+    {
+      "id": "pn-permutation",
+      "expected": "accept"
+    },
+    {
+      "id": "real-pn-entry",
+      "expected": "refuse"
+    },
+    {
+      "id": "unused-invalid-pn",
+      "expected": "refuse"
+    },
+    {
+      "id": "unused-oob-pn",
+      "expected": "refuse"
+    },
+    {
+      "id": "empty-pn",
+      "expected": "refuse"
+    },
+    {
+      "id": "pn-alias-coordinate",
+      "expected": "accept"
+    },
+    {
+      "id": "unused-valid-point",
+      "expected": "accept"
+    },
+    {
+      "id": "coordinate-alias-closed",
+      "expected": "accept"
+    },
+    {
+      "id": "degenerate-alias-triangle",
+      "expected": "refuse"
+    },
+    {
+      "id": "normals-valid",
+      "expected": "accept"
+    },
+    {
+      "id": "normals-short",
+      "expected": "refuse"
+    },
+    {
+      "id": "normals-empty",
+      "expected": "refuse"
+    },
+    {
+      "id": "normals-two-components",
+      "expected": "refuse"
+    },
+    {
+      "id": "normals-extra-valid",
+      "expected": "accept"
+    },
+    {
+      "id": "pn-normal-domain",
+      "expected": "accept"
+    }
+  ]
+}

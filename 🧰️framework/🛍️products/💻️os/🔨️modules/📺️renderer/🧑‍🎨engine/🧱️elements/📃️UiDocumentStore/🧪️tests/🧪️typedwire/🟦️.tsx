@@ -8,6 +8,8 @@ import { registerNodeFieldsAndValidationTests } from "../🧩️node-fields-and-
 import { registerOwnedSceneTests } from "../🎬️owned-scene-binding/🟦️.tsx";
 import { registerNativeChildAndWireOperationTests } from "../📥️native-child-and-wire-operation/🟦️.tsx";
 import { registerOwnedIntakeAndSurfaceTests } from "../🧾️owned-intake-and-surface/🟦️.tsx";
+import { registerOwnedStagedControlTests } from "../🪢️owned-staged-controls/🟦️.tsx";
+import {registerOwnedFacadeLeaseTests} from '../🪟️owned-facade/🟦️.tsx';
 import { registerOwnedWireAndBytePagesTests } from "../🏅️owned-wire-and-byte-pages/🟦️.tsx";
 import { registerRetainedAndStoreTests } from "../🔏️retained-and-store/🟦️.tsx";
 
@@ -20,6 +22,8 @@ export async function registerTypedWireTests(vitest: TypedWireVitest, dependenci
   await registerOwnedSceneTests(vitest, dependencies);
   await registerNativeChildAndWireOperationTests(vitest, dependencies);
   await registerOwnedIntakeAndSurfaceTests(vitest, dependencies);
+  await registerOwnedStagedControlTests(vitest, dependencies);
+  await registerOwnedFacadeLeaseTests(vitest,dependencies);
   await registerOwnedWireAndBytePagesTests(vitest, dependencies);
   await registerRetainedAndStoreTests(vitest, dependencies, source);
 }

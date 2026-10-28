@@ -1,0 +1,325 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "nativeExecution",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ifc-faceted-brep-geometry-vectors-v1"
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expected",
+          "geometry",
+          "unit",
+          "placement",
+          "orientation",
+          "modifier"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "expected": {
+            "enum": [
+              "supported",
+              "unsupported"
+            ]
+          },
+          "geometry": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "outer",
+              "holes",
+              "base",
+              "height",
+              "voids"
+            ],
+            "properties": {
+              "outer": {
+                "type": "array",
+                "minItems": 3,
+                "items": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "holes": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "minItems": 3,
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 2,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              "base": {
+                "type": "number"
+              },
+              "height": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "voids": {
+                "type": "array",
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "outer",
+                    "holes",
+                    "base",
+                    "height",
+                    "reverse"
+                  ],
+                  "properties": {
+                    "outer": {
+                      "type": "array",
+                      "minItems": 3,
+                      "items": {
+                        "type": "array",
+                        "minItems": 2,
+                        "maxItems": 2,
+                        "items": {
+                          "type": "number"
+                        }
+                      }
+                    },
+                    "holes": {
+                      "type": "array",
+                      "items": {
+                        "type": "array",
+                        "minItems": 3,
+                        "items": {
+                          "type": "array",
+                          "minItems": 2,
+                          "maxItems": 2,
+                          "items": {
+                            "type": "number"
+                          }
+                        }
+                      }
+                    },
+                    "base": {
+                      "type": "number"
+                    },
+                    "height": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    },
+                    "reverse": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "unit": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "prefix",
+              "coordinateScale",
+              "siScale"
+            ],
+            "properties": {
+              "prefix": {
+                "enum": [
+                  null,
+                  "MILLI"
+                ]
+              },
+              "coordinateScale": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              },
+              "siScale": {
+                "type": "number",
+                "exclusiveMinimum": 0
+              }
+            }
+          },
+          "placement": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "origin",
+              "rotation"
+            ],
+            "properties": {
+              "origin": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "rotation": {
+                "type": "number"
+              }
+            }
+          },
+          "orientation": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "reversePolygon",
+              "bound"
+            ],
+            "properties": {
+              "reversePolygon": {
+                "type": "boolean"
+              },
+              "bound": {
+                "type": "boolean"
+              }
+            }
+          },
+          "modifier": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "none",
+                      "no-outer",
+                      "two-outer",
+                      "empty-bounds",
+                      "wrong-bound",
+                      "wrong-loop",
+                      "wrong-point",
+                      "outer-last"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ordinal",
+                  "order"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "polygon-order"
+                  },
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "order": {
+                    "type": "array",
+                    "minItems": 3,
+                    "items": {
+                      "type": "integer",
+                      "minimum": 0
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ordinal",
+                  "coordinates"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "point-coordinates"
+                  },
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "coordinates": {
+                    "type": "array",
+                    "minItems": 3,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ordinal",
+                  "dimensions"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "point-coordinates"
+                  },
+                  "ordinal": {
+                    "type": "integer",
+                    "minimum": 0
+                  },
+                  "dimensions": {
+                    "const": 2
+                  }
+                }
+              }
+            ]
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "bounds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

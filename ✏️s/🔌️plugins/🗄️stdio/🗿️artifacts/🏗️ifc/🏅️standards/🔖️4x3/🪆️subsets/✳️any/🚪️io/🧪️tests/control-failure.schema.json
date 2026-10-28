@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/io/original-late-refusal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "cleanup",
+    "routes",
+    "failures",
+    "expected"
+  ],
+  "properties": {
+    "scope": {
+      "const": "original-late-io-refusal"
+    },
+    "cleanup": {"const":{"route":"io-steps","phase":"caller-steps","exactOriginal":true,"closed":true,"cancelCode":"io.cancelled","yieldedClose":true}},
+    "routes": {
+      "const": [
+        {
+          "route": "step-parse",
+          "phase": "references"
+        },
+        {
+          "route": "step-write",
+          "phase": "capture-"
+        },
+        {
+          "route": "step-stream",
+          "phase": "capture-"
+        },
+        {
+          "route": "step-text",
+          "phase": "write-text"
+        },
+        {
+          "route": "glb-read",
+          "phase": "glb-json-project"
+        },
+        {
+          "route": "glb-write",
+          "phase": "glb-json-bytes"
+        }
+      ]
+    },
+    "failures": {
+      "const": [
+        {
+          "kind": "edit",
+          "code": "cancelled"
+        },
+        {
+          "kind": "edit",
+          "code": "invalidSchema"
+        },
+        {
+          "kind": "edit",
+          "code": "danglingReference"
+        },
+        {
+          "kind": "edit",
+          "code": "original.custom"
+        },
+        {
+          "kind": "step",
+          "code": "io.cancelled"
+        },
+        {
+          "kind": "undefined"
+        },
+        {
+          "kind": "number"
+        },
+        {
+          "kind": "object"
+        },
+        {
+          "kind": "error"
+        }
+      ]
+    },
+    "expected": {
+      "const": {
+        "exactOriginal": true,
+        "firstCalls": 1,
+        "domainCodes": [
+          "step.schema",
+          "step.reference",
+          "step.graph"
+        ],
+        "cancelCode": "io.cancelled"
+      }
+    }
+  }
+}

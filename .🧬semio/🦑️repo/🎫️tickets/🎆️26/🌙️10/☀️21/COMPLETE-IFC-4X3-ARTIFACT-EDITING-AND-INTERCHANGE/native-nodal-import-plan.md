@@ -1,0 +1,37 @@
+# Original-Owned Native Nodal Import Plan
+
+Native nodal export/unit14 is frozen for Low. No importer dispatch or frozen file is changed by this plan. The native compiler still refuses before rustc. Source admission alone is not native execution or a complete IFC schema verdict.
+
+## Before boundary and exact metadata
+
+Current native_fem_owned::build_index refuses every structural entity except the unloaded analysis model/point connection/curve member. admit requires analysis LoadedBy to be Unset. Projection has no retained load-case/load row slots and Graph only has the four unloaded relation roles. Therefore loaded input cannot reach canonical FEM receiving.
+
+New test-owned NodalMetadataOracle/IfcOpenShellMetadataOracle reads actual IFC4X3_ADD2 metadata. Python3.13/IfcOpenShell0.8.5 corroborates20 required role/name/declaration-owner pairs, written in generated/native-nodal-import-metadata.json. Six Force/Moment attributes are OPTIONAL and declared by IFCSTRUCTURALLOADSINGLEFORCE; AppliedLoad/GlobalOrLocal belong to IFCSTRUCTURALACTIVITY, DestabilizingLoad to IFCSTRUCTURALACTION, placements/representation to IFCPRODUCT, case Name to IFCROOT, coefficient/predefined type to IFCSTRUCTURALLOADGROUP and self-weight to IFCSTRUCTURALLOADCASE. Relation objects/group and target/activity use their actual declaring owners. Primary catalog metadata stays the authority; no ordinal is inferred from these external numbers.
+
+## One source/index and borrowed query turns
+
+After export14 review releases the parent, factor Graph's existing paid binary entity lookup into one ordinal method and let entity lookup use it. A narrow borrowed attribute visit then calls the already-audited with_ifc4x3_native_attribute with the exact existing source row, named attribute and declared owner. No second index, guessed position, catalog clone, fabricated StepContext or inferred wallet is allowed. The synchronous immutable original source loan supplies a private source epoch distinct from canonical document revision; the query itself keeps its existing source/profile/caller/request pins.
+
+Callbacks consume exact borrowed values inside the original owner loan. Unique/None, Missing, Unknown and Ambiguous stay distinct; only one actual declaration/value is admitted. Every optional force/moment field is queried even after earlier matches; only explicit Unset skips a component. Missing serialized values, Derived/unknown scalar forms and nonfinite values refuse rather than inventing zero/Unset. Explicit real +0/-0 creates one canonical nodal row with exact bits. Units are checked only for present components under the closed Force/Torque role and actual project assignment. All-six-Unset refusal is selected analytical projection policy, not an EXPRESS WHERE.
+
+## Source-ordered rosters and exact receiving
+
+Extend the existing single relationship locator vector with original source-ordinal group assignments and activity links, using named owner-qualified queries during both counted allocation and fill. Keep the existing entity/relationship cardinality limits and original work for every borrowed row/list member. Factor no copied lookup/sort algorithm. Preserve all unknown/error statuses even after prior matches, and reject duplicate/factored/unassigned actions or ambiguous targets rather than silently dropping them.
+
+The analysis LoadedBy list must name exactly admitted actual load cases; preserve list order. Each selected case retains its original Name and receives actual IFC ID-based canonical case identity. Require unit coefficient and absent/zero self-weight with supported global axes; other semantic roles remain explicit refusal. Case assignments preserve source/list order. A point action requires exactly one declared activity relation to a mapped structural node and one IfcStructuralLoadSingleForce. Canonical load identity uses actual action ID plus component ordinal inside its case. Empty load cases remain present.
+
+An adjacent retained load projection owner keeps pending case, pending load, scratch locator/count vectors and completed canonical rows. Every partial String/Vec/FemLoad/FemLoadCase is attached before fallible posting. Original receiving grants pay initialization/copy/capacity/retirement, and canonical Fem3dSnapshot::receive_authoring reuses current case-scoped identity/reference admission before output. No whole DTO/graph copy, donated-source reconstruction, second wallet, caller boolean admission or self-referential borrowed owner is permitted. Source and query/index owners retire after child rows/metadata through the original close ladder.
+
+## Tests and claims
+
+Reuse the same eighteen nodal vectors, native unit14 contract and full seven two-way native nodal laws already authored. Add a closed native import status/lifecycle contract before production and mount actual controller laws only after coherent source support: source pointer/value/declaration equality, missing/unknown/ambiguous refusal, all-component presence/units, source order/empty cases/scoped IDs, actual central edit/inverse and every observed original callback prefix denial/cancel/paid close. Minimal internal projection fixtures remain separate from physical full EXPRESS evidence.
+
+The optional native STEP fixture port must provide actual native-produced output before the external full EXPRESS interface can corroborate it. Existing TS eighteen outputs and source-equivalent row layouts are not native physical evidence. Preserve genuine Cargo refusal, native type/runtime/heap/receipt/scheduler/publication/capability flags false and selected/partial fidelity throughout.
+
+## Concrete receiving phases and capacity
+
+Keep one existing entity index and extend the existing relation locator vector with case-group assignments and point-activity links. Count/fill both use original qualified visits at the actual enumerated source ordinal. No second entity map is required. Existing node/analysis membership admission proves all exact point connections are projected; canonical node identity is the existing bounded key(actual IFC ID), and canonical receiver reference admission finally checks it. Component identity is bounded key(actual action ID)+underscore+ordinal under original copy work.
+
+A source-ordinal usage vector can mark admitted cases/actions/load values during selected projection, refusing unsupported unassigned structural semantics at the end. This is progressive source-state metadata rather than another index or copied model. Repeated assignment of one action within a case refuses; sharing the same action between different cases can preserve independent case-scoped identities. Multiple actual case assignment relations may contribute disjoint actions in source order. Factored group relations retain explicit refusal.
+
+Retain a LoadReceiving frame containing source-case ordinals, usage flags, a pending FemLoadCase, pending FemLoad and completed output vectors. Capacity counts use checked case/action×six arithmetic plus the existing64000/2million limits. Each record header is attached before string/vector child receiving, each push has original metadata quote, and each child query retires metadata before returning owned scalar or count. Parent Projection owns this frame before any fallible callback. Final close retires pending load, case, scratch and query metadata before the parent snapshot/output/source lease; no borrowed DTO is stored in the owner.

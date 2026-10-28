@@ -21,6 +21,7 @@ pub fn diff(payload: &super::mutation::DragLayers, base: &DrawingSnapshot) -> pr
         let source = layer_base(entry.layer);
         if entry.addressed_ancestor.is_some_and(|ancestor| moved.contains(ancestor)) {
             applies = true;
+            moved.insert(&source.id);
             continue;
         }
         if !entry.editable {
@@ -41,6 +42,8 @@ pub fn diff(payload: &super::mutation::DragLayers, base: &DrawingSnapshot) -> pr
     if !applies {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("none of the {} target(s) is a visible, unlocked layer this transform can place", targets.len()), targets);
     }
+    locked.sort_by_key(|id| targets.iter().position(|target| target==id));
+    singular.sort_by_key(|id| targets.iter().position(|target| target==id));
     let partial = drawing_selection_partial(&payload.targets, &placed, locked, singular);
     if rows.is_empty() {
         return protocol::MutationOutcome::new(DrawingDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "no layer changes its transform").at(targets)]));

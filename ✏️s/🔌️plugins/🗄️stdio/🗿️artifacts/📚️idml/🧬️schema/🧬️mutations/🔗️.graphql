@@ -1,0 +1,7 @@
+scalar IdmlMutationByte
+
+type IdmlMutationPart { path: String!, bytes: [IdmlMutationByte!]! }
+type IdmlMutationDocument { domVersion: String!, parts: [IdmlMutationPart!]! }
+type IdmlReplacePackage { document: IdmlMutationDocument! }
+type IdmlReplacePart { path: String!, bytes: [IdmlMutationByte!]! }
+union IdmlMutation = IdmlReplacePackage | IdmlReplacePart

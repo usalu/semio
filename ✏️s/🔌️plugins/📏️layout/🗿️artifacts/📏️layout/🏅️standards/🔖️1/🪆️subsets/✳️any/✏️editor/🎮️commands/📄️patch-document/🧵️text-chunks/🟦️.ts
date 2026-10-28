@@ -1,0 +1,8 @@
+/** 🪟️ Direct UTF-8 byte windows borrow the original validated text backing. */
+export interface TextSpan{start:number;end:number}
+export function textWindowCount(byteLength:number):number{if(!Number.isSafeInteger(byteLength)||byteLength<0)throw Error('layout.chunk.length');return Math.floor(Math.max(0,byteLength-1)/252)+1}
+export function textWindowAt(utf8:Uint8Array,index:number):TextSpan|undefined{if(!Number.isSafeInteger(index)||index<0||index>=textWindowCount(utf8.length))return;const boundary=(at:number)=>{while(at>0&&at<utf8.length&&(utf8[at]!&192)===128)at--;return at};return{start:boundary(index*252),end:boundary(Math.min((index+1)*252,utf8.length))}}
+export function byteWindowCount(byteLength:number):number{if(!Number.isSafeInteger(byteLength)||byteLength<0)throw Error('layout.chunk.length');return Math.floor(Math.max(0,byteLength-1)/128)+1}
+export function byteWindowAt(byteLength:number,index:number):TextSpan|undefined{if(!Number.isSafeInteger(index)||index<0||index>=byteWindowCount(byteLength))return;const start=index*128;return{start,end:Math.min(start+128,byteLength)}}
+/** 🔎️ Only requested rows invoke the original indexed choice source. */
+export function choiceWindow<T>(total:number,offset:number,rows:number,at:(index:number)=>T):{total:number;offset:number;values:T[]}{for(const n of[total,offset,rows])if(!Number.isSafeInteger(n)||n<0)throw Error('layout.choice.window');if(rows>32)throw Error('layout.choice.capacity');offset=Math.min(offset,total);const values:T[]=[];for(let index=offset;index<Math.min(total,offset+rows);index++)values.push(at(index));return{total,offset,values}}

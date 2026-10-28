@@ -33,6 +33,7 @@ pub type OriginalRenderResult<T>=Result<Option<T>,OriginalRenderFailure>;
 impl From<Fault> for OriginalRenderFailure{fn from(source:Fault)->Self{Self::Original(source.into())}}
 impl From<PluginAssemblyError> for OriginalRenderFailure{fn from(source:PluginAssemblyError)->Self{Self::Assembly(source)}}
 impl From<semio_framework_job::OriginalTurnFailure> for OriginalRenderFailure{fn from(source:semio_framework_job::OriginalTurnFailure)->Self{Self::Original(source)}}
+impl From<semio_framework_value::ValueError> for OriginalRenderFailure{fn from(source:semio_framework_value::ValueError)->Self{Self::Original(source.into())}}
 impl semio_framework_job::OriginalDomainFailure for OriginalRenderFailure{
  fn domain_code(&self)->&str{match self{Self::Assembly(source)=>&source.code,Self::Original(_)=>"render.original"}}
  fn domain_message(&self)->&str{match self{Self::Assembly(source)=>&source.message,Self::Original(source)=>source.primary.message()}}

@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases",
+    "expected"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.relation-source.v1"
+    },
+    "cases": {
+      "const": [
+        "missing",
+        "wrong-ordinal",
+        "same-content-row",
+        "foreign-row"
+      ]
+    },
+    "expected": {
+      "const": "refuse-before-role-value-access"
+    }
+  }
+}

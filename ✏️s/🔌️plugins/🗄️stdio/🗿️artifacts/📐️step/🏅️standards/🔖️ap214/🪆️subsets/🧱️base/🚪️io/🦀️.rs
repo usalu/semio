@@ -168,3 +168,7 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: StepAnalyzer,
     composer: StepComposer,
 );
+
+pub use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::projection;
+
+pub use semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::io::draughting;

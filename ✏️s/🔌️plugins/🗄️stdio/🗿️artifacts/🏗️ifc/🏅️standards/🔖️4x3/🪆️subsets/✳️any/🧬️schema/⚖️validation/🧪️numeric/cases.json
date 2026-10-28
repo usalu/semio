@@ -1,0 +1,6333 @@
+{
+  "schema": "semio.ifc4x3.issued-numeric-boundaries.v1",
+  "source": {
+    "schema": "IFC4X3_ADD2",
+    "sha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+  },
+  "scope": "selected-concrete-boundaries-not-total-branch-coverage",
+  "functions": [
+    {
+      "id": "spline-clamped",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "minimum clamped knot count and endpoint maximum"
+    },
+    {
+      "id": "spline-interior",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "interior multiplicity equals degree"
+    },
+    {
+      "id": "spline-degree-zero",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "Degree lower bound"
+    },
+    {
+      "id": "spline-one-knot",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "UpKnots lower bound"
+    },
+    {
+      "id": "spline-few-controls",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "UpCp less than degree"
+    },
+    {
+      "id": "spline-sum-small",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "multiplicity sum below degree plus controls plus two"
+    },
+    {
+      "id": "spline-sum-large",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "multiplicity sum above degree plus controls plus two"
+    },
+    {
+      "id": "spline-first-zero",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "0"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "first multiplicity lower bound after sum passes"
+    },
+    {
+      "id": "spline-first-large",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "4"
+            },
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "first multiplicity upper bound after sum passes"
+    },
+    {
+      "id": "spline-interior-zero",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "0"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "interior multiplicity lower bound"
+    },
+    {
+      "id": "spline-interior-large",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "5"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "interior multiplicity upper bound"
+    },
+    {
+      "id": "spline-last-zero",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "0"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            },
+            {
+              "kind": "real",
+              "value": "2"
+            },
+            {
+              "kind": "real",
+              "value": "3"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "last multiplicity lower bound after all prior checks pass"
+    },
+    {
+      "id": "spline-last-large",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "4"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "last multiplicity upper bound"
+    },
+    {
+      "id": "spline-equal-knots",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "nonincreasing equal knots"
+    },
+    {
+      "id": "spline-descending-last",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            },
+            {
+              "kind": "real",
+              "value": "0.5"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "late decreasing knot"
+    },
+    {
+      "id": "spline-negative-origin",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "-2"
+            },
+            {
+              "kind": "real",
+              "value": "-1"
+            },
+            {
+              "kind": "real",
+              "value": "0"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "strict order permits negative knot origin"
+    },
+    {
+      "id": "spline-exact-large-integer",
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "9007199254740994"
+            },
+            {
+              "kind": "integer",
+              "value": "9007199254740994"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "real",
+              "value": "0"
+            },
+            {
+              "kind": "real",
+              "value": "1"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "exact INTEGER greater than binary64 consecutive precision"
+    },
+    {
+      "id": "si-metre",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "METRE"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE METRE",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-square_metre",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "SQUARE_METRE"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE SQUARE_METRE",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-cubic_metre",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "CUBIC_METRE"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "3"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE CUBIC_METRE",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-gram",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "GRAM"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE GRAM",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-second",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "SECOND"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE SECOND",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-ampere",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AMPERE"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE AMPERE",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-kelvin",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "KELVIN"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE KELVIN",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-mole",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MOLE"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE MOLE",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-candela",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "CANDELA"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "1"
+          }
+        }
+      },
+      "branch": "released CASE CANDELA",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-radian",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "RADIAN"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE RADIAN",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-steradian",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "STERADIAN"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE STERADIAN",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-hertz",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "HERTZ"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE HERTZ",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-newton",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "NEWTON"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE NEWTON",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-pascal",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "PASCAL"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE PASCAL",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-joule",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "JOULE"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE JOULE",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-watt",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "WATT"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-3"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE WATT",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-coulomb",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "COULOMB"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE COULOMB",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-volt",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "VOLT"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-3"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE VOLT",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-farad",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "FARAD"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "4"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE FARAD",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-ohm",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "OHM"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-3"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE OHM",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-siemens",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "SIEMENS"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "3"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE SIEMENS",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-weber",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "WEBER"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE WEBER",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-tesla",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "TESLA"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE TESLA",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-henry",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "HENRY"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE HENRY",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-degree_celsius",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "DEGREE_CELSIUS"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE DEGREE_CELSIUS",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-lumen",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LUMEN"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "1"
+          }
+        }
+      },
+      "branch": "released CASE LUMEN",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-lux",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LUX"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "1"
+          }
+        }
+      },
+      "branch": "released CASE LUX",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-becquerel",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "BECQUEREL"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-1"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE BECQUEREL",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-gray",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "GRAY"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE GRAY",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "si-sievert",
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "SIEVERT"
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "released CASE SIEVERT",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "correct-lengthunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LENGTHUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for LENGTHUNIT"
+    },
+    {
+      "id": "wrong-lengthunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LENGTHUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for LENGTHUNIT"
+    },
+    {
+      "id": "correct-areaunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AREAUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for AREAUNIT"
+    },
+    {
+      "id": "wrong-areaunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AREAUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for AREAUNIT"
+    },
+    {
+      "id": "correct-volumeunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "VOLUMEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for VOLUMEUNIT"
+    },
+    {
+      "id": "wrong-volumeunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "VOLUMEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "4"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for VOLUMEUNIT"
+    },
+    {
+      "id": "correct-massunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MASSUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for MASSUNIT"
+    },
+    {
+      "id": "wrong-massunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MASSUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for MASSUNIT"
+    },
+    {
+      "id": "correct-timeunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "TIMEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for TIMEUNIT"
+    },
+    {
+      "id": "wrong-timeunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "TIMEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for TIMEUNIT"
+    },
+    {
+      "id": "correct-electriccurrentunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCURRENTUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ELECTRICCURRENTUNIT"
+    },
+    {
+      "id": "wrong-electriccurrentunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCURRENTUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ELECTRICCURRENTUNIT"
+    },
+    {
+      "id": "correct-thermodynamictemperatureunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "THERMODYNAMICTEMPERATUREUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for THERMODYNAMICTEMPERATUREUNIT"
+    },
+    {
+      "id": "wrong-thermodynamictemperatureunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "THERMODYNAMICTEMPERATUREUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for THERMODYNAMICTEMPERATUREUNIT"
+    },
+    {
+      "id": "correct-amountofsubstanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AMOUNTOFSUBSTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for AMOUNTOFSUBSTANCEUNIT"
+    },
+    {
+      "id": "wrong-amountofsubstanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AMOUNTOFSUBSTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for AMOUNTOFSUBSTANCEUNIT"
+    },
+    {
+      "id": "correct-luminousintensityunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LUMINOUSINTENSITYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for LUMINOUSINTENSITYUNIT"
+    },
+    {
+      "id": "wrong-luminousintensityunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LUMINOUSINTENSITYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for LUMINOUSINTENSITYUNIT"
+    },
+    {
+      "id": "correct-planeangleunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "PLANEANGLEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for PLANEANGLEUNIT"
+    },
+    {
+      "id": "wrong-planeangleunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "PLANEANGLEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for PLANEANGLEUNIT"
+    },
+    {
+      "id": "correct-solidangleunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "SOLIDANGLEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for SOLIDANGLEUNIT"
+    },
+    {
+      "id": "wrong-solidangleunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "SOLIDANGLEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for SOLIDANGLEUNIT"
+    },
+    {
+      "id": "correct-absorbeddoseunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ABSORBEDDOSEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ABSORBEDDOSEUNIT"
+    },
+    {
+      "id": "wrong-absorbeddoseunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ABSORBEDDOSEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ABSORBEDDOSEUNIT"
+    },
+    {
+      "id": "correct-radioactivityunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "RADIOACTIVITYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for RADIOACTIVITYUNIT"
+    },
+    {
+      "id": "wrong-radioactivityunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "RADIOACTIVITYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for RADIOACTIVITYUNIT"
+    },
+    {
+      "id": "correct-electriccapacitanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCAPACITANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "4"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ELECTRICCAPACITANCEUNIT"
+    },
+    {
+      "id": "wrong-electriccapacitanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCAPACITANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "4"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ELECTRICCAPACITANCEUNIT"
+    },
+    {
+      "id": "correct-doseequivalentunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "DOSEEQUIVALENTUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for DOSEEQUIVALENTUNIT"
+    },
+    {
+      "id": "wrong-doseequivalentunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "DOSEEQUIVALENTUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for DOSEEQUIVALENTUNIT"
+    },
+    {
+      "id": "correct-electricchargeunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCHARGEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ELECTRICCHARGEUNIT"
+    },
+    {
+      "id": "wrong-electricchargeunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCHARGEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ELECTRICCHARGEUNIT"
+    },
+    {
+      "id": "correct-electricconductanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCONDUCTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ELECTRICCONDUCTANCEUNIT"
+    },
+    {
+      "id": "wrong-electricconductanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICCONDUCTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ELECTRICCONDUCTANCEUNIT"
+    },
+    {
+      "id": "correct-electricvoltageunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICVOLTAGEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ELECTRICVOLTAGEUNIT"
+    },
+    {
+      "id": "wrong-electricvoltageunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICVOLTAGEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ELECTRICVOLTAGEUNIT"
+    },
+    {
+      "id": "correct-electricresistanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICRESISTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ELECTRICRESISTANCEUNIT"
+    },
+    {
+      "id": "wrong-electricresistanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ELECTRICRESISTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ELECTRICRESISTANCEUNIT"
+    },
+    {
+      "id": "correct-energyunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ENERGYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ENERGYUNIT"
+    },
+    {
+      "id": "wrong-energyunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ENERGYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ENERGYUNIT"
+    },
+    {
+      "id": "correct-forceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "FORCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for FORCEUNIT"
+    },
+    {
+      "id": "wrong-forceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "FORCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for FORCEUNIT"
+    },
+    {
+      "id": "correct-frequencyunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "FREQUENCYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for FREQUENCYUNIT"
+    },
+    {
+      "id": "wrong-frequencyunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "FREQUENCYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for FREQUENCYUNIT"
+    },
+    {
+      "id": "correct-inductanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "INDUCTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for INDUCTANCEUNIT"
+    },
+    {
+      "id": "wrong-inductanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "INDUCTANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for INDUCTANCEUNIT"
+    },
+    {
+      "id": "correct-illuminanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ILLUMINANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for ILLUMINANCEUNIT"
+    },
+    {
+      "id": "wrong-illuminanceunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "ILLUMINANCEUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for ILLUMINANCEUNIT"
+    },
+    {
+      "id": "correct-luminousfluxunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LUMINOUSFLUXUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for LUMINOUSFLUXUNIT"
+    },
+    {
+      "id": "wrong-luminousfluxunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "LUMINOUSFLUXUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "1"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for LUMINOUSFLUXUNIT"
+    },
+    {
+      "id": "correct-magneticfluxunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MAGNETICFLUXUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for MAGNETICFLUXUNIT"
+    },
+    {
+      "id": "wrong-magneticfluxunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MAGNETICFLUXUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for MAGNETICFLUXUNIT"
+    },
+    {
+      "id": "correct-magneticfluxdensityunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MAGNETICFLUXDENSITYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for MAGNETICFLUXDENSITYUNIT"
+    },
+    {
+      "id": "wrong-magneticfluxdensityunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "MAGNETICFLUXDENSITYUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for MAGNETICFLUXDENSITYUNIT"
+    },
+    {
+      "id": "correct-powerunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "POWERUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "2"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for POWERUNIT"
+    },
+    {
+      "id": "wrong-powerunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "POWERUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "3"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-3"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for POWERUNIT"
+    },
+    {
+      "id": "correct-pressureunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "PRESSUREUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "-1"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "equal seven-value dimensional entity for PRESSUREUNIT"
+    },
+    {
+      "id": "wrong-pressureunit",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "PRESSUREUNIT"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "1"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "-2"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "one exponent differs for PRESSUREUNIT"
+    },
+    {
+      "id": "correct-userdefined",
+      "owner": "IFCCORRECTDIMENSIONS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "USERDEFINED"
+        },
+        {
+          "kind": "entity",
+          "type": "IFCDIMENSIONALEXPONENTS",
+          "fields": {
+            "LengthExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "MassExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "TimeExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ElectricCurrentExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "ThermodynamicTemperatureExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "AmountOfSubstanceExponent": {
+              "kind": "integer",
+              "value": "0"
+            },
+            "LuminousIntensityExponent": {
+              "kind": "integer",
+              "value": "0"
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      },
+      "branch": "released OTHERWISE UNKNOWN, not missing implementation"
+    },
+    {
+      "id": "derive-torque",
+      "owner": "IFCDERIVEDIMENSIONALEXPONENTS",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "-2"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "1"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "1"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "two named units add dimensions",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "derive-reciprocal",
+      "owner": "IFCDERIVEDIMENSIONALEXPONENTS",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "-2"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "1"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "1"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "negative exponent scales before sum",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "derive-cancellation",
+      "owner": "IFCDERIVEDIMENSIONALEXPONENTS",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "3"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "0"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "-3"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "0"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "0"
+          }
+        }
+      },
+      "branch": "opposite exponents cancel",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "derive-all-axes",
+      "owner": "IFCDERIVEDIMENSIONALEXPONENTS",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCDERIVEDUNITELEMENT",
+              "fields": {
+                "Unit": {
+                  "kind": "entity",
+                  "type": "IFCCONTEXTDEPENDENTUNIT",
+                  "fields": {
+                    "Dimensions": {
+                      "kind": "entity",
+                      "type": "IFCDIMENSIONALEXPONENTS",
+                      "fields": {
+                        "LengthExponent": {
+                          "kind": "integer",
+                          "value": "1"
+                        },
+                        "MassExponent": {
+                          "kind": "integer",
+                          "value": "-2"
+                        },
+                        "TimeExponent": {
+                          "kind": "integer",
+                          "value": "3"
+                        },
+                        "ElectricCurrentExponent": {
+                          "kind": "integer",
+                          "value": "-4"
+                        },
+                        "ThermodynamicTemperatureExponent": {
+                          "kind": "integer",
+                          "value": "5"
+                        },
+                        "AmountOfSubstanceExponent": {
+                          "kind": "integer",
+                          "value": "-6"
+                        },
+                        "LuminousIntensityExponent": {
+                          "kind": "integer",
+                          "value": "7"
+                        }
+                      }
+                    },
+                    "Name": {
+                      "kind": "string",
+                      "value": "caller-unit"
+                    }
+                  }
+                },
+                "Exponent": {
+                  "kind": "integer",
+                  "value": "-2"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "LengthExponent": {
+            "kind": "integer",
+            "value": "-2"
+          },
+          "MassExponent": {
+            "kind": "integer",
+            "value": "4"
+          },
+          "TimeExponent": {
+            "kind": "integer",
+            "value": "-6"
+          },
+          "ElectricCurrentExponent": {
+            "kind": "integer",
+            "value": "8"
+          },
+          "ThermodynamicTemperatureExponent": {
+            "kind": "integer",
+            "value": "-10"
+          },
+          "AmountOfSubstanceExponent": {
+            "kind": "integer",
+            "value": "12"
+          },
+          "LuminousIntensityExponent": {
+            "kind": "integer",
+            "value": "-14"
+          }
+        }
+      },
+      "branch": "every exponent participates",
+      "projection": [
+        "LengthExponent",
+        "MassExponent",
+        "TimeExponent",
+        "ElectricCurrentExponent",
+        "ThermodynamicTemperatureExponent",
+        "AmountOfSubstanceExponent",
+        "LuminousIntensityExponent"
+      ]
+    },
+    {
+      "id": "project-two",
+      "owner": "IFCCONVERTDIRECTIONINTO2D",
+      "args": [
+        {
+          "kind": "entity",
+          "type": "IFCDIRECTION",
+          "fields": {
+            "DirectionRatios": {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "real",
+                  "value": "3"
+                },
+                {
+                  "kind": "real",
+                  "value": "4"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "DirectionRatios": {
+            "kind": "aggregate",
+            "aggregate": "LIST",
+            "lower": "1",
+            "items": [
+              {
+                "kind": "real",
+                "value": "3"
+              },
+              {
+                "kind": "real",
+                "value": "4"
+              }
+            ]
+          }
+        }
+      },
+      "branch": "copy first two ratios without normalizing",
+      "projection": [
+        "DirectionRatios"
+      ]
+    },
+    {
+      "id": "project-three",
+      "owner": "IFCCONVERTDIRECTIONINTO2D",
+      "args": [
+        {
+          "kind": "entity",
+          "type": "IFCDIRECTION",
+          "fields": {
+            "DirectionRatios": {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "real",
+                  "value": "3"
+                },
+                {
+                  "kind": "real",
+                  "value": "4"
+                },
+                {
+                  "kind": "real",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "DirectionRatios": {
+            "kind": "aggregate",
+            "aggregate": "LIST",
+            "lower": "1",
+            "items": [
+              {
+                "kind": "real",
+                "value": "3"
+              },
+              {
+                "kind": "real",
+                "value": "4"
+              }
+            ]
+          }
+        }
+      },
+      "branch": "copy first two ratios without normalizing",
+      "projection": [
+        "DirectionRatios"
+      ]
+    },
+    {
+      "id": "project-signed",
+      "owner": "IFCCONVERTDIRECTIONINTO2D",
+      "args": [
+        {
+          "kind": "entity",
+          "type": "IFCDIRECTION",
+          "fields": {
+            "DirectionRatios": {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "real",
+                  "value": "-3"
+                },
+                {
+                  "kind": "real",
+                  "value": "0"
+                },
+                {
+                  "kind": "real",
+                  "value": "9"
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "expected": {
+        "kind": "attributes",
+        "values": {
+          "DirectionRatios": {
+            "kind": "aggregate",
+            "aggregate": "LIST",
+            "lower": "1",
+            "items": [
+              {
+                "kind": "real",
+                "value": "-3"
+              },
+              {
+                "kind": "real",
+                "value": "0"
+              }
+            ]
+          }
+        }
+      },
+      "branch": "copy first two ratios without normalizing",
+      "projection": [
+        "DirectionRatios"
+      ]
+    },
+    {
+      "id": "choose-first",
+      "owner": "IFCBOOLEANCHOOSE",
+      "args": [
+        {
+          "kind": "logical",
+          "value": "true"
+        },
+        {
+          "kind": "integer",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "9007199254740993"
+      },
+      "branch": "concrete IF branch preserves selected generic value"
+    },
+    {
+      "id": "choose-second",
+      "owner": "IFCBOOLEANCHOOSE",
+      "args": [
+        {
+          "kind": "logical",
+          "value": "false"
+        },
+        {
+          "kind": "string",
+          "value": "first"
+        },
+        {
+          "kind": "string",
+          "value": "second"
+        }
+      ],
+      "expected": {
+        "kind": "string",
+        "value": "second"
+      },
+      "branch": "concrete IF branch preserves selected generic value"
+    },
+    {
+      "id": "choose-aggregate",
+      "owner": "IFCBOOLEANCHOOSE",
+      "args": [
+        {
+          "kind": "logical",
+          "value": "true"
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "LIST",
+        "lower": "1",
+        "items": [
+          {
+            "kind": "integer",
+            "value": "1"
+          },
+          {
+            "kind": "integer",
+            "value": "2"
+          }
+        ]
+      },
+      "branch": "concrete IF branch preserves selected generic value"
+    }
+  ]
+}

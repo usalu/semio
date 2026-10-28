@@ -1,0 +1,32 @@
+{
+  "id": "Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SweptSolid_Geometry",
+  "source": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SweptSolid_Geometry/content.html",
+    "sha256": "c571f3ac400b669781c09cc666b5cd55031b6a480333df6ac47d8ebb1f8dd7c0"
+  },
+  "predicates": [
+    {
+      "attribute": "RepresentationIdentifier",
+      "kind": "equals-string",
+      "value": "Body"
+    },
+    {
+      "attribute": "RepresentationType",
+      "kind": "equals-string",
+      "value": "SweptSolid"
+    },
+    {
+      "attribute": "Items",
+      "kind": "every-subtype-except",
+      "value": [
+        "IFCEXTRUDEDAREASOLID",
+        "IFCREVOLVEDAREASOLID"
+      ],
+      "exclude": [
+        "IFCEXTRUDEDAREASOLIDTAPERED",
+        "IFCREVOLVEDAREASOLIDTAPERED"
+      ]
+    }
+  ]
+}

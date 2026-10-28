@@ -1,0 +1,16 @@
+{
+ "$schema":"./external-source.schema.json","schema":"IFC4X3_ADD2",
+ "sourceRefusal":"exchange.source","cancelled":"io.cancelled",
+ "capturePhase":"capture-external","indexPhase":"index-external",
+ "semanticPhases":["fem-export","fem-topology","fem-loads"],
+ "policyCases":[
+  {"id":"property-limit","kind":"properties","code":"valueLimit"},
+  {"id":"container-depth","kind":"depth","code":"depthLimit"},
+  {"id":"function-leaf","kind":"function","code":"invalidValue"},
+  {"id":"symbol-leaf","kind":"symbol","code":"invalidValue"},
+  {"id":"own-proto-data","kind":"proto","code":null},
+  {"id":"exact-aliased-data","kind":"aliases","code":null}
+ ],
+ "accessors":["root","node","member","material","support","loads","word","constructor","array-constructor"],
+ "limits":[{"maxEntities":1},{"maxValues":1},{"maxDepth":1}]
+}

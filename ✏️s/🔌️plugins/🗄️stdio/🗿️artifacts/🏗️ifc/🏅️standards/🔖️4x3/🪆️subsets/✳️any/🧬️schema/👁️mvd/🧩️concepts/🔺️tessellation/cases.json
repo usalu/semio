@@ -1,0 +1,13 @@
+{
+ "cases":[
+  {"id":"triangulated","applicable":true,"identifier":"Body","type":"Tessellation","items":["IfcTriangulatedFaceSet"],"expected":"pass"},
+  {"id":"polygonal","applicable":true,"identifier":"Body","type":"Tessellation","items":["IfcPolygonalFaceSet"],"expected":"pass"},
+  {"id":"mixed-tessellated","applicable":true,"identifier":"Body","type":"Tessellation","items":["IfcTriangulatedFaceSet","IfcPolygonalFaceSet"],"expected":"pass"},
+  {"id":"wrong-identifier","applicable":true,"identifier":"Axis","type":"Tessellation","items":["IfcTriangulatedFaceSet"],"expected":"fail"},
+  {"id":"wrong-type","applicable":true,"identifier":"Body","type":"SurfaceModel","items":["IfcTriangulatedFaceSet"],"expected":"fail"},
+  {"id":"wrong-item","applicable":true,"identifier":"Body","type":"Tessellation","items":["IfcPolyline"],"expected":"fail"},
+  {"id":"mixed-invalid","applicable":true,"identifier":"Body","type":"Tessellation","items":["IfcTriangulatedFaceSet","IfcPolyline"],"expected":"fail"},
+  {"id":"other-body-not-requested","applicable":false,"identifier":"Body","type":"Curve3D","items":["IfcPolyline"],"expected":"not-applicable"},
+  {"id":"unknown-applicability","applicable":null,"identifier":"Body","type":"Tessellation","items":["IfcTriangulatedFaceSet"],"expected":"incomplete"}
+ ]
+}

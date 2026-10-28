@@ -1,0 +1,149 @@
+{
+  "schema": "s.layout.layout.retained.positional-plan.v1",
+  "cases": [
+    {
+      "id": "preserve-live-tail",
+      "held": 3,
+      "delta": {
+        "rows": [
+          {
+            "index": 0
+          }
+        ]
+      },
+      "origins": [
+        [
+          "row",
+          0
+        ],
+        [
+          "held",
+          1
+        ],
+        [
+          "held",
+          2
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/0",
+          "value": {
+            "authored": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "extend-complete",
+      "held": 1,
+      "delta": {
+        "len": 3,
+        "rows": [
+          {
+            "index": 2
+          },
+          {
+            "index": 1
+          }
+        ]
+      },
+      "origins": [
+        [
+          "held",
+          0
+        ],
+        [
+          "row",
+          1
+        ],
+        [
+          "row",
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "add",
+          "path": "/1",
+          "value": {
+            "authored": 1
+          }
+        },
+        {
+          "op": "add",
+          "path": "/2",
+          "value": {
+            "authored": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "truncate-live",
+      "held": 3,
+      "delta": {
+        "len": 1,
+        "rows": []
+      },
+      "origins": [
+        [
+          "held",
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "remove",
+          "path": "/2"
+        },
+        {
+          "op": "remove",
+          "path": "/1"
+        }
+      ]
+    },
+    {
+      "id": "duplicate-index",
+      "held": 1,
+      "delta": {
+        "rows": [
+          {
+            "index": 0
+          },
+          {
+            "index": 0
+          }
+        ]
+      },
+      "error": "mutation.apply.duplicate-target"
+    },
+    {
+      "id": "past-final-length",
+      "held": 1,
+      "delta": {
+        "len": 0,
+        "rows": [
+          {
+            "index": 0
+          }
+        ]
+      },
+      "error": "mutation.apply.invalid-order"
+    },
+    {
+      "id": "missing-extended-position",
+      "held": 1,
+      "delta": {
+        "len": 3,
+        "rows": [
+          {
+            "index": 2
+          }
+        ]
+      },
+      "error": "mutation.apply.missing-target"
+    }
+  ]
+}

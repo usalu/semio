@@ -1,0 +1,247 @@
+{
+  "schemaVersion": 1,
+  "geometryCases": [
+    "word-wrap-left",
+    "center-tracking",
+    "unicode-mandatory-separators",
+    "opening-punctuation-space-context"
+  ],
+  "grants": [
+    1,
+    7,
+    4096
+  ],
+  "maximumGlyphPublicationsPerTurn": 1,
+  "maximumSegmentsPerTurn": 1,
+  "events": [
+    {
+      "name": "stale-generation",
+      "start": 1,
+      "advance": 7,
+      "next": 2,
+      "expectedPublished": 0
+    },
+    {
+      "name": "cancel-before-start",
+      "start": 1,
+      "advance": 0,
+      "cancel": true,
+      "expectedPublished": 0
+    },
+    {
+      "name": "cancel-during-shape",
+      "start": 1,
+      "advance": 1000,
+      "cancel": true,
+      "expectedPublished": 0
+    }
+  ],
+  "styles": [
+    {
+      "name": "base",
+      "paragraph": 0,
+      "character": null,
+      "expected": {
+        "family": "Share Tech Mono",
+        "weight": 400,
+        "italic": false
+      }
+    },
+    {
+      "name": "character-wins",
+      "paragraph": 0,
+      "character": 0,
+      "expected": {
+        "family": "Anta",
+        "weight": 700,
+        "italic": true
+      }
+    },
+    {
+      "name": "paragraph-inherits",
+      "paragraph": 1,
+      "character": 1,
+      "expected": {
+        "family": "Kelly Slab",
+        "weight": 600,
+        "italic": false
+      }
+    },
+    {
+      "name": "label-default",
+      "kind": "label",
+      "paragraph": null,
+      "character": null,
+      "expected": {
+        "family": "Layout Sans",
+        "weight": 400,
+        "italic": false
+      }
+    }
+  ],
+  "paintCases": [
+    {
+      "name": "upright",
+      "color": [
+        0.2,
+        0.4,
+        0.6,
+        0.5
+      ],
+      "italic": false,
+      "rotation": 0,
+      "center": [
+        40,
+        30
+      ]
+    },
+    {
+      "name": "rotated-italic",
+      "color": [
+        0.2,
+        0.4,
+        0.6,
+        0.5
+      ],
+      "italic": true,
+      "rotation": 0.35,
+      "center": [
+        40,
+        30
+      ]
+    }
+  ],
+  "segments": [
+    {
+      "baseline": 12,
+      "italic": true,
+      "rotation": 0.35,
+      "center": [
+        40,
+        30
+      ],
+      "source": {
+        "kind": "move",
+        "to": [
+          3,
+          5
+        ]
+      },
+      "expected": {
+        "kind": "move",
+        "to": [
+          15.26228878881823,
+          -5.643474073554782
+        ]
+      }
+    },
+    {
+      "baseline": 12,
+      "italic": true,
+      "rotation": 0.35,
+      "center": [
+        40,
+        30
+      ],
+      "source": {
+        "kind": "line",
+        "to": [
+          9,
+          4
+        ]
+      },
+      "expected": {
+        "kind": "line",
+        "to": [
+          21.448084870184378,
+          -4.450022424029254
+        ]
+      }
+    },
+    {
+      "baseline": 12,
+      "italic": true,
+      "rotation": 0.35,
+      "center": [
+        40,
+        30
+      ],
+      "source": {
+        "kind": "quad",
+        "ctrl": [
+          10,
+          11
+        ],
+        "to": [
+          12,
+          8
+        ]
+      },
+      "expected": {
+        "kind": "quad",
+        "ctrl": [
+          18.540538953058633,
+          1.9404217498764549
+        ],
+        "to": [
+          22.067963791599016,
+          0.0344117791658185
+        ]
+      }
+    },
+    {
+      "baseline": 12,
+      "italic": true,
+      "rotation": 0.35,
+      "center": [
+        40,
+        30
+      ],
+      "source": {
+        "kind": "cubic",
+        "ctrl1": [
+          5,
+          3
+        ],
+        "ctrl2": [
+          11,
+          13
+        ],
+        "to": [
+          12,
+          15
+        ]
+      },
+      "expected": {
+        "kind": "cubic",
+        "ctrl1": [
+          18.24015382307674,
+          -6.6855488490582395
+        ],
+        "ctrl2": [
+          18.380792057342262,
+          4.011189947746265
+        ],
+        "to": [
+          18.221045161625895,
+          6.081958145616076
+        ]
+      }
+    },
+    {
+      "baseline": 12,
+      "italic": true,
+      "rotation": 0.35,
+      "center": [
+        40,
+        30
+      ],
+      "source": {
+        "kind": "close"
+      },
+      "expected": {
+        "kind": "close"
+      }
+    }
+  ]
+}

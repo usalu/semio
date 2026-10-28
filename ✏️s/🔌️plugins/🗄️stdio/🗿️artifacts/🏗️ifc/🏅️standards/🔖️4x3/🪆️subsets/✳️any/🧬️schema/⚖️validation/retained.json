@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/retained-express.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "authority", "states", "result", "limits"],
+  "properties": {
+    "schema": {"const": "IFC4X3_ADD2"},
+    "authority": {"const": "original-captured-source-and-final-mutations"},
+    "states": {"const": ["overlay", "receive", "evaluate", "population", "complete", "close"]},
+    "result": {
+      "type": "object", "additionalProperties": false,
+      "required": ["complete", "valid", "nativeExecution"],
+      "properties": {"complete": {"type": "boolean"}, "valid": {"type": "boolean"}, "nativeExecution": {"const": false}}
+    },
+    "limits": {"const": {"depth": 256, "textQuantum": 64, "sourceClone": false, "coldEvaluation": false}}
+  }
+}

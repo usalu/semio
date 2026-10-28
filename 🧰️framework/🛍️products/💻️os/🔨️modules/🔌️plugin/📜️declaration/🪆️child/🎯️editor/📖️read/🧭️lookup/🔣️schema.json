@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.original-child-member-lookup.tests/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "accept"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "unicode": {
+            "type": "boolean"
+          },
+          "collisions": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1023
+          },
+          "missing": {
+            "type": "boolean"
+          },
+          "substitute": {
+            "enum": [
+              "root",
+              "parent",
+              "projection",
+              "key",
+              "operation",
+              "operationRevision",
+              "facet"
+            ]
+          },
+          "oversize": {
+            "type": "boolean"
+          },
+          "denied": {
+            "type": "boolean"
+          },
+          "cancel": {
+            "type": "boolean"
+          },
+          "render": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,15 @@
+# Native SET Receiving And Copier Partial Checkpoint
+
+Broad135 completed before these production edits:3482 pass,141697 assertions,12 existing gated skips,0 failures,135 files,407.63 seconds,0 selected test-source hash changes (parent evidence). The SET TS20 suite is registered exactly once and independently closed. No selected TypeScript or package bytes changed here.
+
+The native kind cursor now recognizes an actual unique SET-of-entity-reference aggregate only beneath a completed SELECT or its privately admitted selected-member traversal. Complete SELECT classification retains the ordinary entity-reference member and the typed aggregate member. Direct required SET is still outside this control scope. No new catalog hook, lazy index, or profile authority was added.
+
+The closed typed-constructor reader can borrow one aggregate child without traversing it synchronously. After exact selected-name metadata admission, the command receiver validates one closed ordinary-reference record per original turn before donating the actual raw payload into the existing canonical decimal receiver. SET lower bounds, uniqueness, target subtype and complete candidate/local rules remain central authority. There is no member cap or text coercion.
+
+The retained typed copier now owns a SET child copier. It reserves actual object/member backing, retains every born String/Vec frame before fallible posting, copies raw member text in UTF8-safe chunks, preserves ordered duplicates and partial drafts, and donates completed output before its receipt. Child retirement precedes constructor Parts retirement. New authored laws include all denied axes, repeated demands, cancellation prefixes, source substitution, absent-child no-default and direct member-string posting refusal. These laws are not executed.
+
+`native-type-set-receiving-qa.py` records eight current receiver/copier/test paths in generated/native-type-set-receiving-source.json. All eight rustfmt syntax checks exit0. The authentic native selector exits101 before rustc through the enforcing repository-launcher requirement; generated/native-type-set-receiving-cargo.txt preserves that refusal. This is a partial source checkpoint, not the final full producer roster.
+
+The actual donated form controls, SET page windows, fixed Add/Create/Remove bindings and controller mount are still unfinished. The existing producer continues to refuse the newly selected SET child instead of publishing a ready form. The previously authored new editor controller law remains unmounted. A transient Windows mapped-file write refusal was reported; a later narrow patch succeeded without force replacement. The producer currently includes only the new enum exhaustiveness arms, not completed SET control behavior.
+
+Native typecheck, execution, physical accounting, receipt, denial, cancellation and close sufficiency remain unproved. Public transport, capabilities and publication flags are unchanged. Continue the producer integration and exact source/controller laws before requesting a complete independent source audit.

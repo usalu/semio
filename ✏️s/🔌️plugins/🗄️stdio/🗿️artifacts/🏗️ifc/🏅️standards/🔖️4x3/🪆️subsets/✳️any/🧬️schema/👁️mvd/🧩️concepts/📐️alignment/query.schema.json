@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "physicalConformance",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "physicalConformance": {
+      "const": "not-evaluated"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 29,
+      "maxItems": 29,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "kind",
+          "variant",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "horizontal",
+              "vertical",
+              "cant"
+            ]
+          },
+          "variant": {
+            "enum": [
+              "baseline",
+              "foreign-relationship-owner",
+              "foreign-relationship-owner-late-unknown",
+              "relation-late-unknown",
+              "target-late-unknown",
+              "segment-late-unknown",
+              "parameter-late-unknown",
+              "discovery-unknown-only",
+              "duplicate-relationship-owner",
+              "foreign-parameter-owner",
+              "foreign-parameter-owner-late-unknown"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "pass",
+              "incomplete"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

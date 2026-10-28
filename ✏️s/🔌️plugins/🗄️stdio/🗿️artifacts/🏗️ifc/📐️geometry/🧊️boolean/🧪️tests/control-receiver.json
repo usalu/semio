@@ -1,0 +1,221 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "operation": "difference",
+      "mode": "sync",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "difference",
+      "mode": "sync",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "difference",
+      "mode": "steps",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "difference",
+      "mode": "steps",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "difference",
+      "mode": "async",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "difference",
+      "mode": "async",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "union",
+      "mode": "sync",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "union",
+      "mode": "sync",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "union",
+      "mode": "steps",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "union",
+      "mode": "steps",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "union",
+      "mode": "async",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "union",
+      "mode": "async",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "mode": "sync",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "mode": "sync",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "mode": "steps",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "mode": "steps",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "mode": "async",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "intersection",
+      "mode": "async",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "mode": "sync",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "mode": "sync",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "mode": "steps",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "mode": "steps",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "mode": "async",
+      "observer": "tick",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    },
+    {
+      "operation": "halfspace",
+      "mode": "async",
+      "observer": "progress",
+      "maxWork": 1,
+      "expected": "boolean-work-limit",
+      "calls": 2,
+      "receiver": "undefined"
+    }
+  ]
+}

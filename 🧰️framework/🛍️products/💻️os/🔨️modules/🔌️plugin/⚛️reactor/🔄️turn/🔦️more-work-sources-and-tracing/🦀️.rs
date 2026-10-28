@@ -169,8 +169,7 @@ pub(super) fn trace_guest_memory_pressure() {
 }
 
 pub(super) fn native_close_key<PA: semio_framework_plugin_reactor_app::PluginApp>(runtime: &semio_framework_plugin_reactor_lifecycle::life_instance_registry::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
-    let lifetimes = runtime.guest_lifetimes.try_borrow().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
-    lifetimes.get(instance).filter(|slot| slot.cell.is_live()).and_then(|slot| slot.cell.owner()).map(|owner| owner.key()).ok_or_else(|| reactor_close_fault("instance has no acknowledged live lifetime"))
+    runtime.live_instance_key(instance).map_err(|error|reactor_close_fault(if error.message=="lifecycle authority busy"{"lifecycle authority busy"}else{"instance has no acknowledged live lifetime"}))
 }
 
 /// 🔦️ The work the executors reported on one turn.

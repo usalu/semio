@@ -1,0 +1,98 @@
+{
+  "texts": [
+    {
+      "name": "ascii",
+      "unit": "a",
+      "repeat": 513,
+      "spans": [
+        {
+          "start": 0,
+          "end": 252,
+          "byteStart": 0,
+          "byteEnd": 252
+        },
+        {
+          "start": 252,
+          "end": 504,
+          "byteStart": 252,
+          "byteEnd": 504
+        },
+        {
+          "start": 504,
+          "end": 513,
+          "byteStart": 504,
+          "byteEnd": 513
+        }
+      ]
+    },
+    {
+      "name": "unicode",
+      "unit": "😀é",
+      "repeat": 300,
+      "spans": [
+        {
+          "start": 0,
+          "end": 252,
+          "byteStart": 0,
+          "byteEnd": 252
+        },
+        {
+          "start": 252,
+          "end": 504,
+          "byteStart": 252,
+          "byteEnd": 504
+        },
+        {
+          "start": 504,
+          "end": 756,
+          "byteStart": 504,
+          "byteEnd": 756
+        },
+        {
+          "start": 756,
+          "end": 1008,
+          "byteStart": 756,
+          "byteEnd": 1008
+        },
+        {
+          "start": 1008,
+          "end": 1260,
+          "byteStart": 1008,
+          "byteEnd": 1260
+        },
+        {
+          "start": 1260,
+          "end": 1512,
+          "byteStart": 1260,
+          "byteEnd": 1512
+        },
+        {
+          "start": 1512,
+          "end": 1764,
+          "byteStart": 1512,
+          "byteEnd": 1764
+        },
+        {
+          "start": 1764,
+          "end": 1800,
+          "byteStart": 1764,
+          "byteEnd": 1800
+        }
+      ]
+    }
+  ],
+  "choiceCount": 80,
+  "choiceOffset": 76,
+  "choiceRows": 4,
+  "inheritedFields": [
+    "storyContent",
+    "addStyleRun",
+    "open"
+  ],
+  "parentFields": [
+    "parent.fill",
+    "parent.columns",
+    "parent.storyId",
+    "parent.layerId"
+  ]
+}

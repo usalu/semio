@@ -1,0 +1,98 @@
+{
+  "schema": "semio.ifc.fem.nodal-components.v1",
+  "dofs": [
+    "Tx",
+    "Ty",
+    "Tz",
+    "Rx",
+    "Ry",
+    "Rz"
+  ],
+  "values": [
+    {
+      "id": "positive-zero",
+      "bits": "0"
+    },
+    {
+      "id": "negative-zero",
+      "bits": "9223372036854775808"
+    },
+    {
+      "id": "nonzero",
+      "bits": "4613937818241073152"
+    }
+  ],
+  "vectors": [
+    {
+      "id": "one-explicit-zero",
+      "components": [
+        {
+          "dof": "Tz",
+          "bits": "0"
+        }
+      ]
+    },
+    {
+      "id": "mixed-explicit-and-absent",
+      "components": [
+        {
+          "dof": "Tx",
+          "bits": "0"
+        },
+        {
+          "dof": "Ty",
+          "bits": "4613937818241073152"
+        },
+        {
+          "dof": "Rz",
+          "bits": "9223372036854775808"
+        }
+      ]
+    },
+    {
+      "id": "six-explicit-zeros",
+      "components": [
+        {
+          "dof": "Tx",
+          "bits": "0"
+        },
+        {
+          "dof": "Ty",
+          "bits": "0"
+        },
+        {
+          "dof": "Tz",
+          "bits": "0"
+        },
+        {
+          "dof": "Rx",
+          "bits": "0"
+        },
+        {
+          "dof": "Ry",
+          "bits": "0"
+        },
+        {
+          "dof": "Rz",
+          "bits": "0"
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    "missing-force-unit",
+    "missing-torque-unit",
+    "duplicate-force-unit",
+    "duplicate-torque-unit",
+    "wrong-force-unit-name",
+    "wrong-torque-dimensions",
+    "scaled-force-unit",
+    "derived-component",
+    "invalid-component",
+    "no-components"
+  ],
+  "sourceRefusals": [
+    "missing-node",
+    "invalid-dof"
+  ]
+}

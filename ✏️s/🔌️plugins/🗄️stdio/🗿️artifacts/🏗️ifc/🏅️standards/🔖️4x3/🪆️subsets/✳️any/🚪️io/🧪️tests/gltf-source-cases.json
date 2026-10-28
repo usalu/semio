@@ -1,0 +1,12 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "loadedRoutes": ["importGltf", "writeGlb"],
+  "semanticPhases": ["gltf-import", "gltf-accessor", "gltf-materialize-positions", "gltf-materialize-indices", "gltf-materialize-triangles", "glb", "glb-bytes"],
+  "capturePhases": ["capture-external", "index-external", "gltf-source-bytes"],
+  "accessors": ["document", "asset", "buffers", "byte", "constructor"],
+  "rawAccessors": ["buffer", "byteOffset", "length"],
+  "limits": [{"maxEntities": 1}, {"maxValues": 1}, {"maxDepth": 1}],
+  "sourceRefusal": "exchange.source",
+  "byteRefusals": {"importGltf": "gltf.bytes", "writeGlb": "glb.bytes"},
+  "cancellation": "io.cancelled"
+}

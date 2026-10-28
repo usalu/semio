@@ -93,6 +93,9 @@ use semio_framework_plugin_window_transient::window_transient::WindowTransientOw
 #[path = "../../../../../🧪️tests/🧪️bounded-reload/🦀️.rs"]
 mod bounded_reload_tests;
 #[cfg(test)]
+#[path = "../../../../../🧵️instance/👷️jobs/📥️staging/🖼️render/work-tests.rs"]
+mod original_render_work_tests;
+#[cfg(test)]
 #[path = "../../../../../🧪️tests/🧪️composed-child-history/🦀️.rs"]
 mod composed_child_history_tests;
 #[cfg(test)]

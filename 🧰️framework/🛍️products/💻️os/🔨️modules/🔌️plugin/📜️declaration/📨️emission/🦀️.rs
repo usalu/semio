@@ -514,9 +514,9 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
             return Ok(match step{ChildEmitPreparationStep::Ready(progress)=>ChildEmitPreparationStep::Pending(progress),step=>step});
         }
         if owned{
-            let Some((metadata,batch,progress))=preparation.take_ready_owned(grant).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending(idle))};
+            let Some((child,progress))=preparation.take_ready_owned_qualified(grant).map_err(|error|crate::child_emit_preparation::retirement_refusal_fault(&error))?else{return Ok(ChildEmitPreparationStep::Pending(idle))};
             if !progress.fits(grant){return Err(plugin_sdk_fault("original child source transfer exceeded its caller grant"));}
-            self.owned_child_emits.push(OwnedChildEmit::new(metadata,batch));return Ok(ChildEmitPreparationStep::Pending(progress));
+            self.owned_child_emits.push(child);return Ok(ChildEmitPreparationStep::Pending(progress));
         }
         let child=preparation.take_ready().ok_or_else(||plugin_sdk_fault("child-emission-ready-without-complete-owned-prefix"))?;self.child_emits.push(child);
         Ok(ChildEmitPreparationStep::Pending(RetainedCloneProgress{copied_items:1,..idle}))

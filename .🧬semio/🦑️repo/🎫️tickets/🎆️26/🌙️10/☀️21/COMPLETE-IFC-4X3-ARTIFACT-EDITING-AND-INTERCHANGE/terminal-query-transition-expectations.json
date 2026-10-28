@@ -1,0 +1,20 @@
+{
+  "scope": "Internal source-projection laws, not physical IFC validity",
+  "nativeExecuted": false,
+  "cases": [
+    {"id":"baseline", "before":"pass", "after":"pass"},
+    {"id":"known-relation-late-unknown", "before":"incomplete", "after":"incomplete"},
+    {"id":"positive-layout-late-unknown", "before":"incomplete", "after":"incomplete"},
+    {"id":"positive-segment-late-unknown", "before":"incomplete", "after":"incomplete"},
+    {"id":"positive-parameter-late-unknown", "before":"incomplete", "after":"incomplete"},
+    {"id":"foreign-rel-owner", "before":"incomplete", "after":"pass", "reason":"The required declaration belongs to IfcRelNests, not another known constituent"},
+    {"id":"unknown-only-discovery", "before":"pass", "after":"incomplete", "reason":"Explicit conservative discovery uncertainty policy"},
+    {"id":"repeat-required-owner", "before":"incomplete", "after":"incomplete"}
+  ],
+  "officialBusinessLayouts": [
+    {"file":"sectioned-solid-horizontal.ifc", "layout":"34", "kind":"horizontal", "before":"pass", "after":"pass"},
+    {"file":"sectioned-solid-horizontal.ifc", "layout":"45", "kind":"vertical", "before":"pass", "after":"pass"},
+    {"file":"segmented-reference-curve.ifc", "layout":"61", "kind":"cant", "before":"pass", "after":"pass"},
+    {"file":"linear-placement-of-signal.ifc", "layout":"2388", "kind":"cant", "before":"pass", "after":"pass"}
+  ]
+}

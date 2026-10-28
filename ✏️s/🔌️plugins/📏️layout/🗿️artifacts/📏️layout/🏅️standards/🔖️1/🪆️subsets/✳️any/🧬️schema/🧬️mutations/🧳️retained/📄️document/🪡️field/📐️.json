@@ -1,0 +1,21 @@
+{
+  "feature": "layout.retained.explicit-document-field",
+  "source": "original typed LayoutSnapshot descendant loans bound to the original root",
+  "scope": "explicit ReplaceDocument authored payload and whole original inverse only",
+  "preservation": [
+    "IEEE word records and bigint limbs",
+    "ordered dictionary variants, members, bytes versus arrays",
+    "genuine LayoutDrawingMember and ArtifactLink reference fields only"
+  ],
+  "frontiers": [
+    "one original binding",
+    "one linked source frame allocation",
+    "one destination header and owned retirement node",
+    "at most64 UTF16 units per string/key chunk",
+    "one scalar or typed byte",
+    "one completed frame transfer and release",
+    "one owned node retirement"
+  ],
+  "oracle": "test-only Lodash cloneDeep and original typed equality behind first-party interface",
+  "native": "actual RetainedFieldPreparation<LayoutSnapshot>; no portable allocator claim"
+}

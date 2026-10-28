@@ -38,3 +38,6 @@ semio-framework-trace = { workspace = true }
 semio-s-artifact-draw-drawing-diff = { workspace = true }
 serde_json = { workspace = true }
 semio-s-artifact-draw-drawing-host-digest = { workspace = true }
+
+semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"] }

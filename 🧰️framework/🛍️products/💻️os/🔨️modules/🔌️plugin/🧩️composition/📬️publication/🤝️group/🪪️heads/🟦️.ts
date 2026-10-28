@@ -1,0 +1,2 @@
+/** 🪪️ The host obtains expected heads from its live sealed command authority before this fixed comparison. */
+export function qualifiedHeadsCurrent(expectedParent:Uint8Array,expectedChild:Uint8Array,currentParent:Uint8Array,currentChild:Uint8Array):boolean{if(expectedParent.length!==32||expectedChild.length!==32||currentParent.length!==32||currentChild.length!==32)return false;for(let index=0;index<32;index++)if(expectedParent[index]!==currentParent[index]||expectedChild[index]!==currentChild[index])return false;return true}

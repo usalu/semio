@@ -1,0 +1,9 @@
+/** 🛤️ A selected direct counterpart verdict leaves full layout, parent curve and view conformance unevaluated. */
+import type {IfcConceptStatus,IfcConceptSource,IfcConceptDiagnostic} from '../types.ts';
+import type {IfcAlignmentLayoutKind} from './types.ts';
+export interface IfcAlignmentDirectTarget {readonly segment:string;readonly kind:IfcAlignmentLayoutKind;readonly applicable:boolean}
+export interface IfcAlignmentDirectRequest {readonly targets:readonly IfcAlignmentDirectTarget[]}
+export type IfcAlignmentDirectDiagnosticCode='mvd.direct.source'|'mvd.direct.target.missing'|'mvd.direct.target.ambiguous'|'mvd.direct.target.type'|'mvd.direct.role.unknown'|'mvd.direct.attribute.missing'|'mvd.direct.attribute.ambiguous'|'mvd.direct.attribute.unknown'|'mvd.direct.attribute.shape'|'mvd.direct.reference.missing'|'mvd.direct.reference.ambiguous'|'mvd.direct.parameter.type'|'mvd.direct.business.shape'|'mvd.direct.business.nonzero'|'mvd.direct.path.missing'|'mvd.direct.path.ambiguous'|'mvd.direct.path.unsupported'|'mvd.direct.curve.shape'|'mvd.direct.curve.nonzero';
+export type IfcAlignmentDirectDiagnostic=IfcConceptDiagnostic<IfcAlignmentDirectDiagnosticCode>;
+export interface IfcAlignmentDirectTargetReport extends IfcAlignmentDirectTarget {readonly status:IfcConceptStatus;readonly diagnostics:readonly IfcAlignmentDirectDiagnostic[];readonly curve?:string}
+export interface IfcAlignmentDirectReport {readonly concept:string;readonly predicate:'selected-direct-zero-counterpart';readonly source:IfcConceptSource;readonly schemaConformance:'not-evaluated';readonly viewConformance:'not-evaluated';readonly geometryConformance:'not-evaluated';readonly layoutTerminalConformance:'not-evaluated';readonly parentCurveConformance:'not-evaluated';readonly status:IfcConceptStatus;readonly targets:readonly IfcAlignmentDirectTargetReport[];readonly diagnostics:readonly IfcAlignmentDirectDiagnostic[]}

@@ -18,14 +18,13 @@
         "patch": {
           "name": null,
           "width": null,
-          "height": 360.0,
+          "height": 360,
           "margin_top": null,
           "margin_right": null,
           "margin_bottom": null,
           "margin_left": null,
           "columns_count": null,
           "columns_gutter": null,
-          "parent_page_id": null,
           "guides": null,
           "overrides": {
             "removed": [],
@@ -49,8 +48,5 @@
     ]
   },
   "printTarget": null,
-  "backgroundDrawing": null,
-  "drawingTexts": [],
-  "referencedModel": null,
   "dataFields": null
 }

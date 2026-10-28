@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/body/item-family-cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "physicalValidity",
+    "cases"
+  ],
+  "properties": {
+    "scope": {
+      "const": "item-family-only"
+    },
+    "physicalValidity": {
+      "const": "not-claimed"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "policy",
+          "names",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "policy": {
+            "enum": [
+              "tessellation",
+              "swept-solid"
+            ]
+          },
+          "names": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "expected": {
+            "enum": [
+              "pass",
+              "fail",
+              "incomplete"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

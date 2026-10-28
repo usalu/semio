@@ -3,13 +3,18 @@
 use super::*;
 
 //#region ⚙️Scene
-pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64) -> DisplayList {
-    let resolved = resolve_page(doc, page);
+pub(super) fn assemble_display_list(engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64, deferred:bool) -> DisplayList {
+    assemble_display_list_items(engine, doc, page, active_page_id, selected_ids, hovered_id, chrome_blueprint, proxy_band, camera_x, camera_y, zoom, resolve_page(doc, page), true, false, deferred)
+}
+
+/// 🧩️ Builds one bounded frame or background batch using the same scene primitives as the full page.
+pub(super) fn assemble_display_list_items(mut engine: Option<&mut LayoutEngine>, doc: &LayoutSnapshot, page: &Page, active_page_id: &str, selected_ids: &[String], hovered_id: Option<&str>, chrome_blueprint: bool, proxy_band: bool, camera_x: f64, camera_y: f64, zoom: f64, resolved: Vec<semio_s_artifact_layout_layout_model::ResolvedFrame>, include_background: bool, export: bool, deferred:bool) -> DisplayList {
+    let source_page_index=deferred.then(||doc.pages.iter().position(|candidate|candidate.id==page.id)).flatten();
     let mut rects = Vec::new();
     let mut text_runs = Vec::new();
     let mut images = Vec::new();
     let mut frame_strokes = Vec::new();
-    let background = background_scene(doc);
+    let background = if deferred{None}else{background_scene(doc)};
     let raw_drawing = raw_drawing_strokes(background.as_ref());
     let raw_labels = raw_drawing_labels(background.as_ref());
     let raw_rasters = raw_drawing_rasters(background.as_ref());
@@ -42,7 +47,7 @@ pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: 
         }
         let selected = selected_ids.iter().any(|id| id == item.frame.id());
         let hovered = hovered_id.is_some_and(|id| id == item.frame.id());
-        if engine.is_none() && !selected && !hovered && outside_interactive_view(item.frame.bounds(), camera_x, camera_y, zoom) {
+        if !export && engine.is_none() && !selected && !hovered && outside_interactive_view(item.frame.bounds(), camera_x, camera_y, zoom) {
             continue;
         }
         let stack = next_stack;
@@ -60,17 +65,18 @@ pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: 
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.2, 0.55, 0.9, 0.9])));
                 }
                 if !proxy_band {
-                    if let Some(story) = doc.stories.iter().find(|s| s.id == *story_id) {
+                    if let Some((story_index,story)) = doc.stories.iter().enumerate().find(|(_,s)| s.id == *story_id) {
+                        if deferred{let paragraph=default_paragraph(doc);text_runs.push(DisplayTextRun{deferred:Some(display_list_and_hit_testing::DisplayParagraph{page_index:source_page_index,parent:item.parent,frame_index:item.frame_index,story:story_index,width:(bounds.width.min(inset.x+inset.width)-inset.x.max(0.0)).max(0.0),height:(bounds.height.min(inset.y+inset.height)-inset.y.max(0.0)).max(0.0)}),rotation:0.0,center:[0.0;2],object_id:id.clone(),glyphs:Vec::new(),content:String::new(),origin_x:(bounds.x+inset.x.max(0.0))as f32,origin_y:(bounds.y+inset.y.max(0.0))as f32,font_size:paragraph.font_size as f32,stack:0,color:[0.0,0.0,0.0,1.0]});}else{
                         let paragraph = default_paragraph(doc);
-                        let base_x = (bounds.x + inset.x) as f32;
-                        let base_y = (bounds.y + inset.y) as f32;
+                        let base_x = (bounds.x + inset.x.max(0.0)) as f32;
+                        let base_y = (bounds.y + inset.y.max(0.0)) as f32;
                         let font_size = paragraph.font_size as f32;
                         let glyphs = if let Some(engine) = engine.as_deref_mut() {
-                            let frame_width = (bounds.width - inset.width - inset.x * 2.0).max(1.0) as f32;
-                            let frame_height = (bounds.height - inset.height - inset.y * 2.0).max(1.0) as f32;
+                            let frame_width = (bounds.width.min(inset.x+inset.width)-inset.x.max(0.0)).max(1.0) as f32;
+                            let frame_height = (bounds.height.min(inset.y+inset.height)-inset.y.max(0.0)).max(1.0) as f32;
                             if story.style_runs.is_empty() {
                                 let (shaped, _overset) = layout_story_in_frame(engine, story, &paragraph, frame_width, frame_height);
-                                shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]), italic: false }).collect()
+                                shaped.glyphs.iter().map(|glyph| DisplayGlyph { font: glyph.font, glyph_id: glyph.glyph_id as u32, font_size, x: base_x + glyph.x, y: base_y + glyph.y, color: DisplayColor([0.0, 0.0, 0.0, 1.0]), italic: false }).collect()
                             } else {
                                 story_run_glyphs(engine, doc, story, &paragraph, frame_width, frame_height, base_x, base_y)
                             }
@@ -89,11 +95,12 @@ pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: 
                                     continue;
                                 }
                                 let chars = slice.chars().count() as f32;
-                                text_runs.push(DisplayTextRun { object_id: format!("{id}.span.{index}"), glyphs: Vec::new(), content: slice, origin_x: pen, origin_y: base_y, font_size: span.font_size, stack: 0, color: span.color.0 });
+                                text_runs.push(DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: format!("{id}.span.{index}"), glyphs: Vec::new(), content: slice, origin_x: pen, origin_y: base_y, font_size: span.font_size, stack: 0, color: span.color.0 });
                                 pen += span.font_size * chars * 0.6 + span.tracking * chars;
                             }
                         } else {
-                            text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs, content: story.content.clone(), origin_x, origin_y, font_size, stack: 0, color: [0.0, 0.0, 0.0, 1.0] });
+                            text_runs.push(DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: id.clone(), glyphs, content: story.content.clone(), origin_x, origin_y, font_size, stack: 0, color: [0.0, 0.0, 0.0, 1.0] });
+                        }
                         }
                     }
                 }
@@ -105,21 +112,22 @@ pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: 
                 if chrome_blueprint {
                     rects.push(bounds_to_display_rect(id, bounds, item.inherited, selected, hovered, None, Some([0.85, 0.45, 0.2, 0.9])));
                 }
-                let placed = if !proxy_band && proxy_data_url.is_none() {
+                let deferred_drawing=deferred&&!proxy_band&&proxy_data_url.is_none()&&doc.background_drawing.is_some()&&link.is_some_and(|link|drawing_kind(&link.artifact_kind));
+                let placed = if !deferred && !proxy_band && proxy_data_url.is_none() {
                     link.and_then(|link| drawing_kind(&link.artifact_kind).then(|| place_drawing_in_frame(&raw_drawing, bounds))).filter(|strokes| !strokes.is_empty())
                 } else {
                     None
                 };
-                let preview = if proxy_band || proxy_data_url.is_some() || placed.is_some() { String::new() } else { link.map(|link| preview_mark(&link.artifact_kind)).unwrap_or_default() };
-                images.push(DisplayImage { object_id: id.clone(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, rotation: bounds.rotation as f32, placeholder, proxy_data_url: proxy_data_url.clone(), preview, stack: 0 });
+                let preview = if proxy_band || proxy_data_url.is_some() || placed.is_some() || deferred_drawing { String::new() } else { link.map(|link| preview_mark(&link.artifact_kind)).unwrap_or_default() };
+                images.push(DisplayImage { drawing_bounds:deferred_drawing.then_some([bounds.x,bounds.y,bounds.width,bounds.height,bounds.rotation]), object_id: id.clone(), x: bounds.x as f32, y: bounds.y as f32, width: bounds.width as f32, height: bounds.height as f32, rotation: bounds.rotation as f32, placeholder, proxy_data_url: proxy_data_url.clone(), preview, stack: 0 });
                 if let Some(placed) = placed {
                     frame_strokes.extend(placed);
                     frame_labels.extend(place_drawing_labels(&raw_labels, &raw_drawing, bounds).into_iter().map(|label| (stack, label)));
                     images.extend(place_drawing_rasters(&raw_rasters, &raw_drawing, bounds));
-                } else if !proxy_band && proxy_data_url.is_none() {
+                } else if !deferred_drawing && !proxy_band && proxy_data_url.is_none() {
                     if let Some(kind) = link.and_then(|link| (!link.artifact_kind.is_empty()).then(|| link.artifact_kind.clone())) {
                         let glyphs = placed_kind_glyphs(engine.as_deref_mut(), doc, bounds, &kind);
-                        text_runs.push(DisplayTextRun { object_id: id.clone(), glyphs, content: kind, origin_x: bounds.x as f32 + 4.0, origin_y: bounds.y as f32 + 4.0, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] });
+                        text_runs.push(DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: id.clone(), glyphs, content: kind, origin_x: bounds.x as f32 + 4.0, origin_y: bounds.y as f32 + 4.0, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] });
                     }
                 }
             }
@@ -132,14 +140,17 @@ pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: 
         }
         for run in &mut text_runs[text_from..] {
             run.stack = stack;
+            let bounds = item.frame.bounds();
+            run.rotation = bounds.rotation as f32;
+            run.center = [(bounds.x + bounds.width * 0.5) as f32, (bounds.y + bounds.height * 0.5) as f32];
         }
         for stroke in &mut frame_strokes[stroke_from..] {
             stroke.stack = stack;
         }
     }
 
-    let strokes = drawing_strokes(&raw_drawing, page.width, page.height);
-    let label_fit = fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_labels.iter().map(|label| (label.x, label.y)), page.width, page.height));
+    let strokes = if include_background { drawing_strokes(&raw_drawing, page.width, page.height) } else { Vec::new() };
+    let label_fit = include_background.then(|| fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_labels.iter().map(|label| (label.x, label.y)), page.width, page.height))).flatten();
     if let Some(engine) = engine.as_deref_mut() {
         if let Some((scale, ox, oy)) = label_fit {
             for label in &raw_labels {
@@ -159,7 +170,7 @@ pub(super) fn assemble_display_list(mut engine: Option<&mut LayoutEngine>, doc: 
             text_runs.last_mut().unwrap().stack = *stack;
         }
     }
-    if let Some((scale, ox, oy)) = fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_rasters.iter().flat_map(|raster| [(raster.x, raster.y), (raster.x + raster.width, raster.y + raster.height)]), page.width, page.height)) {
+    if let Some((scale, ox, oy)) = include_background.then(|| fit_from_points(stroke_points(&raw_drawing), page.width, page.height).or_else(|| fit_from_points(raw_rasters.iter().flat_map(|raster| [(raster.x, raster.y), (raster.x + raster.width, raster.y + raster.height)]), page.width, page.height))).flatten() {
         for raster in &raw_rasters {
             push_drawing_raster(&mut images, raster, raster.x * scale + ox, raster.y * scale + oy, raster.width * scale, raster.height * scale, 0.0);
         }

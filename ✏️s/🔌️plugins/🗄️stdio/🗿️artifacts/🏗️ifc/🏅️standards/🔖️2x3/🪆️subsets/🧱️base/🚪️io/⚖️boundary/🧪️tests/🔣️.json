@@ -1,0 +1,177 @@
+{
+  "contract": "IFC2x3 STEP Exchange Boundary",
+  "base": {
+    "description": "(''),'2;1'",
+    "name": "'','',(''),(''),'','',''",
+    "schema": "('IFC2X3')",
+    "data": "#1=IFCAXIS2PLACEMENT3D(#2,$,$);#2=IFCCARTESIANPOINT((0.,0.,0.));"
+  },
+  "cases": [
+    {
+      "name": "forward reference",
+      "accepted": true
+    },
+    {
+      "name": "full width identifier",
+      "data": "#18446744073709551615=IFCAXIS2PLACEMENT3D(#1,$,$);#1=IFCCARTESIANPOINT((0.,0.,0.));",
+      "accepted": true
+    },
+    {
+      "name": "complex reference",
+      "data": "#1=(IFCREPRESENTATIONITEM() IFCGEOMETRICREPRESENTATIONITEM(#2));#2=IFCCARTESIANPOINT((0.,0.,0.));",
+      "accepted": true
+    },
+    {
+      "name": "exact decimal",
+      "data": "#1=IFCCARTESIANPOINT((12345678901234567890.123456789E-20,-0.,1.E300));",
+      "accepted": true
+    },
+    {
+      "name": "self reference is exchange structural only",
+      "data": "#1=IFCLOCALPLACEMENT(#1,#1);",
+      "accepted": true
+    },
+    {
+      "name": "empty data population",
+      "data": "",
+      "accepted": true
+    },
+    {
+      "name": "trailing closed comment",
+      "suffix": "/* complete */",
+      "accepted": true
+    },
+    {
+      "name": "mixed schema",
+      "schema": "('IFC2X3','IFC4')",
+      "accepted": false
+    },
+    {
+      "name": "duplicate schema",
+      "schema": "('IFC2X3','IFC2X3')",
+      "accepted": false
+    },
+    {
+      "name": "foreign schema",
+      "schema": "('IFC4')",
+      "accepted": false
+    },
+    {
+      "name": "schema scalar",
+      "schema": "'IFC2X3'",
+      "accepted": false
+    },
+    {
+      "name": "schema multiple arguments",
+      "schema": "('IFC2X3'),('IFC2X3')",
+      "accepted": false
+    },
+    {
+      "name": "schema empty list",
+      "schema": "()",
+      "accepted": false
+    },
+    {
+      "name": "description empty list",
+      "description": "(),'2;1'",
+      "accepted": false
+    },
+    {
+      "name": "description wrong arity",
+      "description": "('')",
+      "accepted": false
+    },
+    {
+      "name": "description list contains integer",
+      "description": "('',1),'2;1'",
+      "accepted": false
+    },
+    {
+      "name": "name wrong arity",
+      "accepted": false,
+      "nameAttributes": "''"
+    },
+    {
+      "name": "name empty author",
+      "accepted": false,
+      "nameAttributes": "'','',(),(''),'','',''"
+    },
+    {
+      "name": "name nonstring system",
+      "accepted": false,
+      "nameAttributes": "'','',(''),(''),1,'',''"
+    },
+    {
+      "name": "zero identifier",
+      "data": "#0=IFCCARTESIANPOINT((0.,0.,0.));",
+      "accepted": false
+    },
+    {
+      "name": "out of range identifier",
+      "data": "#18446744073709551616=IFCCARTESIANPOINT((0.,0.,0.));",
+      "accepted": false
+    },
+    {
+      "name": "duplicate identifier",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));#1=IFCCARTESIANPOINT((1.,0.,0.));",
+      "accepted": false
+    },
+    {
+      "name": "direct dangling reference",
+      "data": "#1=IFCAXIS2PLACEMENT3D(#999,$,$);",
+      "accepted": false
+    },
+    {
+      "name": "nested list dangling reference",
+      "data": "#1=IFCFOO(((#999)));",
+      "accepted": false
+    },
+    {
+      "name": "nested typed dangling reference",
+      "data": "#1=IFCFOO(IFCBAR((IFCBAZ(#999))));",
+      "accepted": false
+    },
+    {
+      "name": "complex constituent dangling reference",
+      "data": "#1=(IFCFOO() IFCBAR(#999));",
+      "accepted": false
+    },
+    {
+      "name": "empty complex record",
+      "data": "#1=();",
+      "accepted": false
+    },
+    {
+      "name": "trailing tokens",
+      "suffix": "#2=IFCFOO();",
+      "accepted": false
+    },
+    {
+      "name": "unterminated trailing comment",
+      "suffix": "/* incomplete",
+      "accepted": false
+    },
+    {
+      "name": "missing terminator",
+      "terminator": "",
+      "accepted": false
+    },
+    {
+      "name": "duplicate header record",
+      "headerSuffix": "FILE_SCHEMA(('IFC2X3'));",
+      "accepted": false
+    },
+    {
+      "name": "unknown header record",
+      "headerSuffix": "UNRETAINED_HEADER();",
+      "accepted": false
+    }
+  ],
+  "limits": {
+    "work": 1,
+    "depth": 2,
+    "input": 8,
+    "cancel": true
+  },
+  "oracle": "AJV validates normalized boundary projection and exact reference enum; unchanged official inputs remain separate"
+}

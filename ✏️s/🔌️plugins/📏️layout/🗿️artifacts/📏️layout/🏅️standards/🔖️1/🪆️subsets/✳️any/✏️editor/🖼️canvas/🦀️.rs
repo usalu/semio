@@ -245,31 +245,15 @@ fn drop_preview_fill(kind: &str) -> [f32; 4] {
 const LAYOUT_DROP_PREVIEW_WIDTH: f64 = 200.0;
 const LAYOUT_DROP_PREVIEW_HEIGHT: f64 = 120.0;
 
-fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::DisplayList, blueprint: bool, drop_preview: &semio_s_artifact_layout_layout_model::LayoutDropPreviewState) -> Vec<Value> {
-    let mut layers = Vec::new();
-
-    let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
-    layers.push(host_layer("layout.page-bg", &rect_segments(0.0, 0.0, list.page_width as f64, list.page_height as f64), Some(page_bg), None));
-
-    if blueprint {
-        for guide in &list.guides {
-            let color = guide_stroke_color(&guide.kind);
-            let segments = if guide.rect.height <= 0.0 { line_segments(guide.rect.x, guide.rect.y, guide.rect.x + guide.rect.width, guide.rect.y) } else { rect_segments(guide.rect.x, guide.rect.y, guide.rect.width, guide.rect.height) };
-            layers.push(host_layer(format!("layout.guide.{}", guide.kind), &segments, None, Some((color, 1.0, None))));
-        }
-    }
-
-    let mut plan_index = 0usize;
-    let mut frame_index = 0usize;
-    for piece in semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::stack_pieces(list) {
+fn append_piece_layers(layers:&mut Vec<Value>,piece:semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece<'_>,blueprint:bool,plan_index:&mut usize,frame_index:&mut usize){
         match piece {
             semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Stroke(stroke) => {
-                push_plan_stroke(&mut layers, stroke, format!("drawing.plan.{plan_index}"));
-                plan_index += 1;
+                push_plan_stroke(layers, stroke, format!("drawing.plan.{plan_index}"));
+                *plan_index += 1;
             }
             semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::FrameStroke(stroke) => {
-                push_plan_stroke(&mut layers, stroke, format!("drawing.frame.{frame_index}"));
-                frame_index += 1;
+                push_plan_stroke(layers, stroke, format!("drawing.frame.{frame_index}"));
+                *frame_index += 1;
             }
             semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Rect(rect) => {
                 let segments = rotated_rect_segments(rect.x as f64, rect.y as f64, rect.width as f64, rect.height as f64, rect.rotation as f64);
@@ -293,11 +277,11 @@ fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::sce
                 if let Some(data_url) = &image.proxy_data_url {
                     if upright {
                         layers.push(json!({ "id": format!("{}.image", image.object_id), "kind": "image", "x": image.x, "y": image.y, "width": image.width, "height": image.height, "dataUrl": data_url }));
-                        continue;
+                        return;
                     }
                     if let Some(layer) = rotated_proxy_layer(image) {
                         layers.push(layer);
-                        continue;
+                        return;
                     }
                 }
                 let color = if image.placeholder { [0.92, 0.88, 0.84, 1.0] } else { [0.85, 0.85, 0.85, 1.0] };
@@ -326,12 +310,30 @@ fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::sce
             }
             semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::StackPiece::Text(run) => {
                 if run.content.is_empty() {
-                    continue;
+                    return;
                 }
                 layers.push(json!({ "id": format!("{}.text", run.object_id), "kind": "text", "x": run.origin_x, "y": run.origin_y, "width": run.font_size * run.content.chars().count() as f32 * 0.6, "height": run.font_size, "text": { "content": run.content, "size": run.font_size }, "fill": { "color": run.color } }));
             }
         }
+}
+
+fn display_list_to_host_layers(list: &semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::DisplayList, blueprint: bool, drop_preview: &semio_s_artifact_layout_layout_model::LayoutDropPreviewState) -> Vec<Value> {
+    let mut layers = Vec::new();
+
+    let page_bg = if blueprint { [0.97, 0.97, 0.98, 1.0] } else { [1.0, 1.0, 1.0, 1.0] };
+    layers.push(host_layer("layout.page-bg", &rect_segments(0.0, 0.0, list.page_width as f64, list.page_height as f64), Some(page_bg), None));
+
+    if blueprint {
+        for guide in &list.guides {
+            let color = guide_stroke_color(&guide.kind);
+            let segments = if guide.rect.height <= 0.0 { line_segments(guide.rect.x, guide.rect.y, guide.rect.x + guide.rect.width, guide.rect.y) } else { rect_segments(guide.rect.x, guide.rect.y, guide.rect.width, guide.rect.height) };
+            layers.push(host_layer(format!("layout.guide.{}", guide.kind), &segments, None, Some((color, 1.0, None))));
+        }
     }
+
+    let mut plan_index = 0usize;
+    let mut frame_index = 0usize;
+    for piece in semio_s_artifact_layout_layout_engine::scene::display_list_and_hit_testing::stack_pieces(list){append_piece_layers(&mut layers,piece,blueprint,&mut plan_index,&mut frame_index);}
 
     if blueprint && !drop_preview.kind.is_empty() && drop_preview.kind != "page" {
         let segments = rect_segments(drop_preview.x, drop_preview.y, LAYOUT_DROP_PREVIEW_WIDTH, LAYOUT_DROP_PREVIEW_HEIGHT);
@@ -389,3 +391,6 @@ pub fn canvas_layers(doc: &LayoutSnapshot, config: &LayoutWindowConfig, transien
 }
 //#endregion 🔖️CanvasScene
 
+
+#[path="🧵️paragraph-work/🦀️.rs"]
+pub mod paragraph_work;

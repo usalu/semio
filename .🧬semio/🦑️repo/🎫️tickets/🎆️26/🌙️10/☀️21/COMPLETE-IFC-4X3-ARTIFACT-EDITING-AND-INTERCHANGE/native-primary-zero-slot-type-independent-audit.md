@@ -1,0 +1,11 @@
+# Native Primary Zero-Slot Type Independent Audit
+
+Read-only source review of constituent_roster.rs primary flag, phase9, candidate phase7, phase10, requested_type and DomainWork draft recognition. No new confirmed P1/P2. Worker reports TS6/21 and focused29/74 with strict pass; authentic Cargo refuses before rustc, so native type/runtime/accounting remains unverified.
+
+Root marker path is admitted only through exact two-field entities/ordinal shape with sole $ifcType String. Phase9 requires actual complex nonempty, primary args empty and old/new direct attribute count zero; other primary/simple/nonzero-own-slot paths fall back. Candidate root declaration participates in normalization guard while unchanged auxiliary constituents retain canonical-name/derived/GlobalId/top-Derived conservative checks. The auxiliary selected-index substitution is disabled for primary mode.
+
+Primary path bypasses parts clone and rebuilt roster, reserving one central mutation slot only in phase10. Name is uppercased in its original retained String; actual change moves that String into SetEntityName, leaving empty marker String with its owner. Same exact canonical source name creates empty pending Vec and preserves prior no-op. Source snapshot/name and auxiliary parts are untouched. Fallible reservation precedes donation, and pending receiver is retained before allocation; original command owns the name on allocation failure and pending mutation owns it after donation.
+
+requested_type intentionally recognizes the marker even with empty name, so consumed marker retains DomainWork draft semantics. This means type drafts retain existing permissive behavior rather than newly promising complete schema-valid complex chains. Central primitive/inverse uses prepared SetEntityName and original snapshot, not the now-empty event value. Close machinery retains original event and pending mutation owners; no new partial owner was introduced.
+
+Quote/pins include existing original source/address/receiver/caller authority plus both profile hooks and bounded canonical scratch. Physical capacity sufficiency and cancellation after donation remain authored native test gates, not proven by this read-only review.

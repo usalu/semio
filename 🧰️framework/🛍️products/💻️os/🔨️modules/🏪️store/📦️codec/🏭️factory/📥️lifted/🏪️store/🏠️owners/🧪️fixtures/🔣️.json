@@ -1,0 +1,116 @@
+{
+  "schema": "semio.codec.owner-source.v1",
+  "cases": [
+    {
+      "id": "shared-idml-source",
+      "source": "idml",
+      "expected": {
+        "publication": "retained",
+        "replay": "same-original-source",
+        "coldFallback": false
+      }
+    },
+    {
+      "id": "copy-budget",
+      "demand": {
+        "copyBytes": 17,
+        "capacityBytes": 32,
+        "releaseBytes": 8,
+        "depth": 3
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 32,
+        "maximumReleaseBytes": 8,
+        "maximumDepth": 3
+      },
+      "admit": true
+    },
+    {
+      "id": "copy-refusal",
+      "demand": {
+        "copyBytes": 17,
+        "capacityBytes": 32,
+        "releaseBytes": 8,
+        "depth": 3
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 16,
+        "maximumCapacityBytes": 32,
+        "maximumReleaseBytes": 8,
+        "maximumDepth": 3
+      },
+      "admit": false
+    },
+    {
+      "id": "release-refusal",
+      "demand": {
+        "copyBytes": 17,
+        "capacityBytes": 32,
+        "releaseBytes": 8,
+        "depth": 3
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 32,
+        "maximumReleaseBytes": 7,
+        "maximumDepth": 3
+      },
+      "admit": false
+    },
+    {
+      "id": "item-refusal",
+      "demand": {
+        "copyBytes": 17,
+        "capacityBytes": 32,
+        "releaseBytes": 8,
+        "depth": 3
+      },
+      "grant": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 32,
+        "maximumReleaseBytes": 8,
+        "maximumDepth": 3
+      },
+      "admit": false
+    },
+    {
+      "id": "capacity-refusal",
+      "demand": {
+        "copyBytes": 17,
+        "capacityBytes": 32,
+        "releaseBytes": 8,
+        "depth": 3
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 31,
+        "maximumReleaseBytes": 8,
+        "maximumDepth": 3
+      },
+      "admit": false
+    },
+    {
+      "id": "depth-refusal",
+      "demand": {
+        "copyBytes": 17,
+        "capacityBytes": 32,
+        "releaseBytes": 8,
+        "depth": 3
+      },
+      "grant": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 17,
+        "maximumCapacityBytes": 32,
+        "maximumReleaseBytes": 8,
+        "maximumDepth": 2
+      },
+      "admit": false
+    }
+  ]
+}

@@ -1,0 +1,1795 @@
+{
+  "title": "Original Live Post Final Semantic Admission",
+  "cases": [
+    {
+      "name": "live predecessor competes with authored edge",
+      "before": [
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/0/threadNext",
+          "value": null
+        }
+      ],
+      "live": [
+        {
+          "op": "add",
+          "path": "/pages/0/frames/-",
+          "value": {
+            "kind": "text",
+            "id": "text-3",
+            "layerId": "layer-1",
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "w": 50,
+              "h": 50,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "storyId": "story-1",
+            "threadNext": "text-2",
+            "columns": 1,
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "wrapMode": "none"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/pages/0/layers/0/objectIds/-",
+          "value": "text-3"
+        }
+      ],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": [
+                    {
+                      "id": "text-1",
+                      "patch": {
+                        "x": null,
+                        "y": null,
+                        "width": null,
+                        "height": null,
+                        "wrap_mode": null,
+                        "columns": null,
+                        "thread_next": "text-2"
+                      }
+                    }
+                  ]
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/0/threadNext",
+          "value": "text-2"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "live story removal invalidates authored reference",
+      "before": [],
+      "live": [
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/0/storyId",
+          "value": "story-2"
+        },
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/1/storyId",
+          "value": "story-2"
+        },
+        {
+          "op": "remove",
+          "path": "/stories/0"
+        }
+      ],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": [
+                    {
+                      "id": "text-1",
+                      "patch": {
+                        "x": null,
+                        "y": null,
+                        "width": null,
+                        "height": null,
+                        "wrap_mode": null,
+                        "columns": null,
+                        "story_id": "story-1"
+                      }
+                    }
+                  ]
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/0/storyId",
+          "value": "story-1"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "live parent removal invalidates authored parent",
+      "before": [],
+      "live": [
+        {
+          "op": "remove",
+          "path": "/parentPages/0"
+        },
+        {
+          "op": "replace",
+          "path": "/pages/0/parentPageId",
+          "value": null
+        },
+        {
+          "op": "replace",
+          "path": "/pages/0/overrides",
+          "value": []
+        }
+      ],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "parent_page_id": "parent-1"
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/parentPageId",
+          "value": "parent-1"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "authored spread members invalidate live page membership",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "spread-1",
+              "patch": {
+                "pageIds": []
+              }
+            }
+          ]
+        },
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/spreads/0/pageIds",
+          "value": []
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "authored typography is validated on final graph",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "paragraph-1",
+              "patch": {
+                "fontSize": 0
+              }
+            }
+          ]
+        },
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/paragraphStyles/0/fontSize",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "ordered scalar repair validates the final value",
+      "before": [
+        {
+          "op": "replace",
+          "path": "/characterStyles/0/fontSize",
+          "value": 12
+        }
+      ],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "character-1",
+              "patch": {
+                "fontSize": null
+              }
+            }
+          ]
+        },
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": 0,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                }
+              }
+            },
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": 201,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/width",
+          "value": 201
+        },
+        {
+          "op": "replace",
+          "path": "/characterStyles/0/fontSize",
+          "value": null
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "untouched live scalar survives sparse authored edit",
+      "before": [],
+      "live": [
+        {
+          "op": "replace",
+          "path": "/pages/0/height",
+          "value": 321
+        }
+      ],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": 201,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/width",
+          "value": 201
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "authored parent insertion preserves existing inherited membership",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": {
+          "removed": [],
+          "inserted": [
+            {
+              "index": 1,
+              "row": {
+                "id": "parent-new",
+                "name": "New",
+                "width": 210,
+                "height": 297,
+                "layerIds": [],
+                "layers": [],
+                "frames": []
+              }
+            }
+          ],
+          "moved": [],
+          "modified": []
+        },
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "add",
+          "path": "/parentPages/-",
+          "value": {
+            "id": "parent-new",
+            "name": "New",
+            "width": 210,
+            "height": 297,
+            "layerIds": [],
+            "layers": [],
+            "frames": []
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "authored parent dimensions are checked on final descriptor",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "parent-1",
+              "patch": {
+                "width": 0
+              }
+            }
+          ]
+        },
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/parentPages/0/width",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "inserted local frame cannot collide with inherited identity",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "frames": {
+                  "inserted": [
+                    {
+                      "index": 2,
+                      "row": {
+                        "kind": "rect",
+                        "id": "parent-frame",
+                        "layerId": "layer-1",
+                        "bounds": {
+                          "x": 0,
+                          "y": 0,
+                          "w": 20,
+                          "h": 20,
+                          "rotation": 0
+                        },
+                        "locked": null,
+                        "visible": null,
+                        "fill": null,
+                        "stroke": null
+                      }
+                    }
+                  ],
+                  "removed": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "add",
+          "path": "/pages/0/frames/-",
+          "value": {
+            "kind": "rect",
+            "id": "parent-frame",
+            "layerId": "layer-1",
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "w": 20,
+              "h": 20,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": null,
+            "stroke": null
+          }
+        },
+        {
+          "op": "add",
+          "path": "/pages/0/layers/0/objectIds/-",
+          "value": "parent-frame"
+        }
+      ],
+      "valid": false,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "removed frame version patches cannot alter replacement identity",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "frames": {
+                  "modified": [
+                    {
+                      "id": "text-1",
+                      "patch": {
+                        "x": null,
+                        "y": null,
+                        "width": null,
+                        "height": null,
+                        "wrap_mode": null,
+                        "columns": null,
+                        "story_id": "missing"
+                      }
+                    }
+                  ],
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                }
+              }
+            },
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "frames": {
+                  "removed": [
+                    {
+                      "id": "text-1",
+                      "index": 0
+                    }
+                  ],
+                  "inserted": [
+                    {
+                      "index": 0,
+                      "row": {
+                        "kind": "rect",
+                        "id": "text-1",
+                        "layerId": "layer-1",
+                        "bounds": {
+                          "x": 0,
+                          "y": 0,
+                          "w": 20,
+                          "h": 20,
+                          "rotation": 0
+                        },
+                        "locked": null,
+                        "visible": null,
+                        "fill": [
+                          1,
+                          0,
+                          0,
+                          1
+                        ],
+                        "stroke": null
+                      }
+                    }
+                  ],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                }
+              }
+            },
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "frames": {
+                  "modified": [
+                    {
+                      "id": "text-1",
+                      "patch": {
+                        "x": null,
+                        "y": null,
+                        "width": null,
+                        "height": null,
+                        "wrap_mode": null,
+                        "columns": null,
+                        "fill": null
+                      }
+                    }
+                  ],
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/0",
+          "value": {
+            "kind": "rect",
+            "id": "text-1",
+            "layerId": "layer-1",
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "w": 20,
+              "h": 20,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": null,
+            "stroke": null
+          }
+        }
+      ],
+      "valid": true,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "sparse frame bounds are checked against live source",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "frames": {
+                  "modified": [
+                    {
+                      "id": "text-1",
+                      "patch": {
+                        "x": null,
+                        "y": null,
+                        "width": 0,
+                        "height": null,
+                        "wrap_mode": null,
+                        "columns": null
+                      }
+                    }
+                  ],
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/pages/0/frames/0/bounds/w",
+          "value": 0
+        }
+      ],
+      "valid": false,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "authored grid change checks virtual header",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": {
+          "baselineGrid": 0
+        },
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/grid/baselineGrid",
+          "value": 0
+        }
+      ],
+      "valid": false,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "authored text content cannot strand inherited UTF8 run",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "story-1",
+              "patch": {
+                "content": "A"
+              }
+            }
+          ]
+        },
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/stories/0/content",
+          "value": "A"
+        }
+      ],
+      "valid": false,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "authored run replacement repairs a changed final story",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "story-1",
+              "patch": {
+                "content": "A",
+                "style_runs": {
+                  "len": 1,
+                  "rows": [
+                    {
+                      "index": 0,
+                      "run": {
+                        "start": 0,
+                        "end": 1,
+                        "paragraphStyleId": "paragraph-1",
+                        "characterStyleId": null
+                      }
+                    }
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "replace",
+          "path": "/stories/0/content",
+          "value": "A"
+        },
+        {
+          "op": "replace",
+          "path": "/stories/0/styleRuns/0",
+          "value": {
+            "start": 0,
+            "end": 1,
+            "paragraphStyleId": "paragraph-1",
+            "characterStyleId": null
+          }
+        }
+      ],
+      "valid": true,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "layer-only removal leaves live frames invalid",
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": null,
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "layers": {
+                  "removed": [
+                    {
+                      "id": "layer-1",
+                      "index": 0
+                    }
+                  ],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "overrides": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": []
+                }
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "remove",
+          "path": "/pages/0/layers/0"
+        },
+        {
+          "op": "remove",
+          "path": "/pages/0/layerIds/0"
+        }
+      ],
+      "valid": false,
+      "before": [],
+      "live": []
+    },
+    {
+      "name": "inserted parent frames require an owning layer",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": {
+          "removed": [],
+          "inserted": [
+            {
+              "index": 1,
+              "row": {
+                "id": "parent-new",
+                "name": "New",
+                "width": 210,
+                "height": 297,
+                "layerIds": [],
+                "layers": [],
+                "frames": [
+                  {
+                    "kind": "text",
+                    "id": "parent-text-new",
+                    "layerId": "parent-layer-new",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  }
+                ]
+              }
+            }
+          ],
+          "moved": [],
+          "modified": []
+        },
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "add",
+          "path": "/parentPages/-",
+          "value": {
+            "id": "parent-new",
+            "name": "New",
+            "width": 210,
+            "height": 297,
+            "layerIds": [],
+            "layers": [],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-text-new",
+                "layerId": "parent-layer-new",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "inserted parent text requires a final story",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": {
+          "removed": [],
+          "inserted": [
+            {
+              "index": 1,
+              "row": {
+                "id": "parent-new",
+                "name": "New",
+                "width": 210,
+                "height": 297,
+                "layerIds": [
+                  "parent-layer-new"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer-new",
+                    "name": "New",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-text-new"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "text",
+                    "id": "parent-text-new",
+                    "layerId": "parent-layer-new",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "missing",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  }
+                ]
+              }
+            }
+          ],
+          "moved": [],
+          "modified": []
+        },
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "add",
+          "path": "/parentPages/-",
+          "value": {
+            "id": "parent-new",
+            "name": "New",
+            "width": 210,
+            "height": 297,
+            "layerIds": [
+              "parent-layer-new"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer-new",
+                "name": "New",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-text-new"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-text-new",
+                "layerId": "parent-layer-new",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "missing",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "inserted parent threads cannot cycle",
+      "before": [],
+      "live": [],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": {
+          "removed": [],
+          "inserted": [
+            {
+              "index": 1,
+              "row": {
+                "id": "parent-new",
+                "name": "New",
+                "width": 210,
+                "height": 297,
+                "layerIds": [
+                  "parent-layer-new"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer-new",
+                    "name": "New",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-text-new"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "text",
+                    "id": "parent-text-new",
+                    "layerId": "parent-layer-new",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": "parent-text-new",
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  }
+                ]
+              }
+            }
+          ],
+          "moved": [],
+          "modified": []
+        },
+        "spreads": null,
+        "pages": null,
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "add",
+          "path": "/parentPages/-",
+          "value": {
+            "id": "parent-new",
+            "name": "New",
+            "width": 210,
+            "height": 297,
+            "layerIds": [
+              "parent-layer-new"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer-new",
+                "name": "New",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-text-new"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "parent-text-new",
+                "layerId": "parent-layer-new",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "parent-text-new",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "concurrent live local identity collides with newly authored parent",
+      "before": [],
+      "live": [
+        {
+          "op": "replace",
+          "path": "/pages/0/width",
+          "value": 202
+        }
+      ],
+      "diff": {
+        "schema": null,
+        "name": null,
+        "grid": null,
+        "paragraphStyles": null,
+        "characterStyles": null,
+        "stories": null,
+        "links": null,
+        "parentPages": {
+          "removed": [],
+          "inserted": [
+            {
+              "index": 1,
+              "row": {
+                "id": "parent-new",
+                "name": "New",
+                "width": 210,
+                "height": 297,
+                "layerIds": [
+                  "parent-layer-new"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer-new",
+                    "name": "New",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "text-1"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "text",
+                    "id": "text-1",
+                    "layerId": "parent-layer-new",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  }
+                ]
+              }
+            }
+          ],
+          "moved": [],
+          "modified": []
+        },
+        "spreads": null,
+        "pages": {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "page-1",
+              "patch": {
+                "name": null,
+                "width": null,
+                "height": null,
+                "margin_top": null,
+                "margin_right": null,
+                "margin_bottom": null,
+                "margin_left": null,
+                "columns_count": null,
+                "columns_gutter": null,
+                "overrides": {
+                  "removed": [
+                    {
+                      "id": "parent-frame",
+                      "index": 0
+                    }
+                  ],
+                  "inserted": [],
+                  "moved": []
+                },
+                "frames": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "layers": {
+                  "removed": [],
+                  "inserted": [],
+                  "moved": [],
+                  "modified": []
+                },
+                "parent_page_id": "parent-new"
+              }
+            }
+          ]
+        },
+        "printTarget": null,
+        "dataFields": null
+      },
+      "final": [
+        {
+          "op": "add",
+          "path": "/parentPages/-",
+          "value": {
+            "id": "parent-new",
+            "name": "New",
+            "width": 210,
+            "height": 297,
+            "layerIds": [
+              "parent-layer-new"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer-new",
+                "name": "New",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "text-1"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "text-1",
+                "layerId": "parent-layer-new",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              }
+            ]
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/pages/0/parentPageId",
+          "value": "parent-new"
+        },
+        {
+          "op": "replace",
+          "path": "/pages/0/overrides",
+          "value": []
+        }
+      ],
+      "valid": false
+    }
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    32,
+    128,
+    512,
+    1024,
+    4096,
+    16384
+  ],
+  "sourceSubstitutions": [
+    "live lease",
+    "live projection",
+    "authored lease",
+    "authored projection"
+  ],
+  "oracle": "Independent RFC6902 application and existing AJV/reference graph oracle; owned test candidate only"
+}

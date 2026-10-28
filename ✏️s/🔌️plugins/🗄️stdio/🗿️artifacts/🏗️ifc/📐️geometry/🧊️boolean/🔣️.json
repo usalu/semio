@@ -1,0 +1,100 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/geometry/boolean.json",
+  "title": "ClosedSolidBoolean",
+  "description": "Atomic regularized union, intersection and ordered difference of closed oriented finite triangle solids. Invalid, unsupported or incomplete operands/results publish no mesh.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "operation",
+    "left",
+    "right"
+  ],
+  "properties": {
+    "operation": {
+      "enum": [
+        "difference",
+        "union",
+        "intersection"
+      ]
+    },
+    "left": {
+      "$ref": "#/definitions/Mesh"
+    },
+    "right": {
+      "$ref": "#/definitions/Mesh"
+    },
+    "limits": {
+      "$ref": "#/definitions/Limits"
+    }
+  },
+  "definitions": {
+    "Mesh": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "triangles"
+      ],
+      "properties": {
+        "vertices": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "triangles": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 4294967295
+            }
+          }
+        }
+      }
+    },
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "maxWork": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maxPolygons": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maxDepth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        },
+        "maxIntermediateValues": {
+          "description": "Reserved numeric backing slots in one captured evaluation; not a physical heap limit.",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 9007199254740991
+        }
+      },
+      "default": {
+        "maxWork": 2000000,
+        "maxPolygons": 200000,
+        "maxDepth": 256,
+        "maxIntermediateValues": 20000000
+      }
+    }
+  }
+}

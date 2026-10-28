@@ -15,6 +15,7 @@ use semio_framework_dsl_record::Shape;
 use std::collections::HashMap;
 
 pub use pack::record::{decode_document_controlled, decode_record_body_exact_controlled, encode_document_controlled, RetainedValueContainer, RetainedValueCursor, RetainedValueRole, RetainedValueToken};
+pub use pack::record::RetainedRecordReceiving;
 pub use pack::{
     MAGIC, RETAINED_PACK_MAXIMUM_PAGES, RETAINED_PACK_PAGE_BYTES, RetainedPackAnchorCursor, RetainedPackCatalog, RetainedPackCatalogAllocationError, RetainedPackCatalogAllocationStep, RetainedPackCatalogCursor, RetainedPackCatalogEvent,
     RetainedPackCatalogFault, RetainedPackCatalogProgress, RetainedPackCloseStep, RetainedPackPage, RetainedPackSegmentCursor, RetainedPackSegmentEvent, RetainedPackSourceAllocationError, RetainedPackSourceAllocationStep,
@@ -48,6 +49,18 @@ pub const OP_BINARY_FORMAT: u8 = 1;
 /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
 /// whole document" so schema-less apps (puzzle plugins, semio_compose_rs kit) get a pack encoding too.
 const VALUE_BRIDGE_FIELD_ID: u16 = 1;
+
+/// 🫳️ The canonical wire bridge shape borrows authored metadata for original retained receiving.
+pub fn wire_value_spec()->semio_framework_dsl_record::BorrowedRecordSpec{
+    use semio_framework_dsl_record::{BorrowedFieldSpec,BorrowedRecordSpec,BorrowedShape,RecordLayout};
+    static FIELDS:[BorrowedFieldSpec;1]=[BorrowedFieldSpec::new(VALUE_BRIDGE_FIELD_ID,"value",BorrowedShape::Value)];
+    BorrowedRecordSpec{keyword:None,layout:RecordLayout::Lines,fields:&FIELDS}
+}
+
+/// 🪶️ Moves the received wire payload while its original receiver retains paid Record close.
+pub fn take_received_wire_value(receiver:&mut RetainedRecordReceiving,output:&mut Option<DslValue>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>{
+    receiver.take_value_into(VALUE_BRIDGE_FIELD_ID,output,grant)
+}
 
 fn value_bridge_spec() -> RecordSpec {
     RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, vec![semio_framework_dsl_record::FieldSpec::new(VALUE_BRIDGE_FIELD_ID, "value", semio_framework_dsl_record::Shape::Value)])

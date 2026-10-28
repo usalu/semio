@@ -1,0 +1,760 @@
+{
+ "cases": [
+  {
+   "phase": "capture-copyOwned",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "vertices",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "triangles",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "error",
+   "endpoint": "source-capture",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "step-error",
+   "endpoint": "source-capture",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "edit-error",
+   "endpoint": "source-capture",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "edit-cancelled",
+   "endpoint": "source-capture",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "undefined",
+   "endpoint": "source-capture",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "capture-copyOwned",
+   "fault": "number",
+   "endpoint": "source-capture",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "units",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "placements",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "representations",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "items",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "pn-indices",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "step-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "edit-error",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "edit-cancelled",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "undefined",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "number",
+   "endpoint": "triangles",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "step-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "edit-error",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "edit-cancelled",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "undefined",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  },
+  {
+   "phase": "geometry-unbound",
+   "fault": "number",
+   "endpoint": "glb-export",
+   "expected": "reject-original"
+  }
+ ]
+}

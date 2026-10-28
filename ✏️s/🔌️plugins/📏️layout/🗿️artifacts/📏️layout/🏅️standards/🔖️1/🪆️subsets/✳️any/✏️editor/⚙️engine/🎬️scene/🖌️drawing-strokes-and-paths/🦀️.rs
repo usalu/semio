@@ -22,7 +22,8 @@ pub(super) fn drawing_strokes(raw: &[DisplayStroke], page_width: f64, page_heigh
     fit_strokes(raw, page_width, page_height)
 }
 
-pub(super) fn drawing_kind(kind: &str) -> bool {
+/// 🖊️ Classifies first-party vector artifacts for shared Drawing placement.
+pub fn drawing_kind(kind: &str) -> bool {
     matches!(kind, "drawing" | "dwg" | "dxf" | "svg" | "cad" | "s.draw.drawing" | "s.stdio.dwg" | "s.stdio.dxf" | "s.stdio.svg" | "s.cad.cad")
 }
 

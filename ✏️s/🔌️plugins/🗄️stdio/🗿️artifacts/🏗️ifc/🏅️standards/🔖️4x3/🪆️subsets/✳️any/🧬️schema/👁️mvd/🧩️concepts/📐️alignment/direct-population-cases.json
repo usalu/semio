@@ -1,0 +1,10 @@
+{
+ "version":1,"conformance":"not-evaluated",
+ "targets":[{"segment":"selected","kind":"horizontal","applicable":true},{"segment":"99999","kind":"cant","applicable":false}],
+ "cases":[
+  {"id":"prepared","variant":"prepared","status":"pass","targets":["pass","not-applicable"],"diagnostics":[]},
+  {"id":"other-header","variant":"header","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":["mvd.direct.source"]},
+  {"id":"zero-id","variant":"id","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":["mvd.direct.source"]},
+  {"id":"zero-reference","variant":"reference","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":["mvd.direct.source"]}
+ ]
+}

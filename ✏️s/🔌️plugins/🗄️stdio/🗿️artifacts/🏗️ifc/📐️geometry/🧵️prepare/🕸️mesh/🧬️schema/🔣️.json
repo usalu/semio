@@ -1,0 +1,31 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RetainedGeometryMeshPages",
+  "description": "Geometry-owned scalar access over bounded numeric payload pages; native reserves and returns existing first-party PagedList storage.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "payloadPageBytes",
+    "fanout",
+    "components",
+    "scalarBytes"
+  ],
+  "properties": {
+    "payloadPageBytes": {
+      "const": 4096
+    },
+    "fanout": {
+      "const": 16
+    },
+    "components": {
+      "const": 3
+    },
+    "scalarBytes": {
+      "enum": [
+        4,
+        8
+      ]
+    }
+  },
+  "$comment": "Source result byte ceilings include retained payload and metadata. Every allocation, append, pop and empty-page return is independently original-funded. No raw backing buffer escapes; closing invalidates parent result views."
+}

@@ -9,6 +9,7 @@ import { type ContinuousGestureLane, continuousPressIdentity, createContinuousGe
 import { emitIntent } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type UiNodeRecord, type UiTrigger, type UiValue } from "@semio-tech/framework";
 import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
+import { dispatchControlTrigger, type UiControlContext } from "../🎛️control-port/🟦️.ts";
 
 //#region 🔖️UiInterpreter
 //#region ActionDispatch
@@ -34,7 +35,7 @@ export function dispatchTrigger(context: UiInterpreterContext, record: UiNodeRec
  * `context` and `record` are read through a ref because both identities change on every render while
  * the lane must outlive them: a lane recreated per render is not a lane. Press identities come from
  * `continuousPressIdentity`, unique per page even within one millisecond. */
-export function useContinuousTriggerLane(context: UiInterpreterContext, record: UiNodeRecord): ContinuousGestureLane<UiValue> {
+export function useContinuousTriggerLane(context: UiControlContext, record: UiNodeRecord): ContinuousGestureLane<UiValue> {
   const bindingRef = useRef({ context, record });
   bindingRef.current = { context, record };
   const gestureRef = useRef<string | null>(null);
@@ -45,13 +46,13 @@ export function useContinuousTriggerLane(context: UiInterpreterContext, record: 
         if (gestureRef.current === null) gestureRef.current = continuousPressIdentity(bindingRef.current.record.key);
         const gesture = gestureRef.current;
         if (phase === "commit") gestureRef.current = null;
-        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue)?.then(() => undefined);
+        return dispatchControlTrigger(bindingRef.current.context, bindingRef.current.record, "change", { value, gesture, commit: phase === "commit" } as UiValue)?.then(() => undefined);
       },
       abort: (reason) => {
         const gesture = gestureRef.current;
         gestureRef.current = null;
         if (gesture === null) return undefined;
-        return dispatchTrigger(bindingRef.current.context, bindingRef.current.record, "change", { gesture, abort: reason } as UiValue)?.then(() => undefined);
+        return dispatchControlTrigger(bindingRef.current.context, bindingRef.current.record, "change", { gesture, abort: reason } as UiValue)?.then(() => undefined);
       },
       onFault: (error) => undefined,
     });

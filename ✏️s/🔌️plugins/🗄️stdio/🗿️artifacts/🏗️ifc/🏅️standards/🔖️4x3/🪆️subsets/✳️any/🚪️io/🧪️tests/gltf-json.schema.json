@@ -1,0 +1,4 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"stdio.ifc.gltf-json","type":"object","additionalProperties":false,"required":["schema","cases"],
+ "properties":{"schema":{"const":"stdio.ifc.gltf-json"},"cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","prefix","json","accepted"],"properties":{"name":{"type":"string","minLength":1},"prefix":{"type":"string"},"json":{"type":"string","minLength":1},"accepted":{"type":"boolean"}}}}}
+}

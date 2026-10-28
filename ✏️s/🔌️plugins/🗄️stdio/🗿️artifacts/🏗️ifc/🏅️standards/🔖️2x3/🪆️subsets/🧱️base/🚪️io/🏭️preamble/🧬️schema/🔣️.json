@@ -1,0 +1,90 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "IFC2x3 EDM Preamble",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "producer",
+    "module",
+    "creationDate",
+    "host",
+    "database",
+    "databaseVersion",
+    "databaseCreationDate",
+    "schema",
+    "model",
+    "modelCreationDate",
+    "headerModel",
+    "headerModelCreationDate",
+    "user",
+    "group",
+    "license",
+    "options"
+  ],
+  "properties": {
+    "producer": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "module": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "creationDate": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "host": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "database": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "databaseVersion": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "databaseCreationDate": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "schema": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "model": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "modelCreationDate": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "headerModel": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "headerModelCreationDate": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "user": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "group": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "license": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    },
+    "options": {
+      "type": "string",
+      "pattern": "^(?![\\s\\u0085])(?![\\s\\S]*\\*/)[^\\r\\n]*(?![\\s\\S])"
+    }
+  }
+}

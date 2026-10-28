@@ -1,0 +1,28 @@
+{
+  "title": "Borrowed Question Value Equality",
+  "sources": [
+    "Original optional QuestionDictionary projections",
+    "Original intrinsic DslValue projections"
+  ],
+  "semantics": [
+    "Absent differs from present empty",
+    "Dictionary entries compare in authored order",
+    "Intrinsic object members compare in authored order including repeated literal keys",
+    "Null, bool, UInt, Int, Float, String, Bytes, Array and Object variants retain identity",
+    "Float identity is all 64 bits including signed zero and NaN payloads"
+  ],
+  "work": {
+    "maximumComparedUtf8BytesPerSource": 256,
+    "maximumComparedOctetsPerSource": 256,
+    "frontier": "Funded first-party paged borrowed pair frames",
+    "traversal": "Linear ordinal traversal; no key search or source copy"
+  },
+  "lifecycle": [
+    "Both original issuer+projection bindings checked throughout",
+    "No denied turn changes frontier or polls continuation",
+    "All page births retain original authority until funded close",
+    "Close all frame slots/backing before right and left source alias release",
+    "Settled-pair rebind drains borrowed slots and old original aliases under grants while retaining empty frontier pages",
+    "Next source pair binds only after a funded final state reset; final close releases retained pages once"
+  ]
+}

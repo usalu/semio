@@ -1,0 +1,7 @@
+# Original Khronos glTF Samples
+
+These four files retain exact original bytes from KhronosGroup/glTF-Sample-Assets at the immutable commit recorded in provenance.json. Each original model README is retained beside its asset with copyright, attribution and license links. Triangle and TriangleWithoutIndices are CC0 by Marco Hutter; BoxInterleaved is CC BY 4.0 by Cesium; NegativeScaleTest is CC BY 4.0 by Analytical Graphics, Inc. / Ed Mackey. No source asset or original README was modified. The fixture is used for geometry interoperability tests; no screenshots or remote textures are downloaded.
+
+The neutral contract covers actual counts, all decoded world coordinates, reflected index order and world bounds. The independent three.js loader decomposes and recomposes authored node matrices; BoxInterleaved's exact half-unit bounds become 0.5000000000000001 in that route. Coordinate comparisons therefore permit eight binary64 epsilons relative to max(1, magnitude). Exact original source hashes and index order remain strict. IFC's importer preserves the authored matrix coefficients.
+
+The test-only three.js texture plugin supplies an empty texture so Node can evaluate geometry without a DOM image decoder; it does not alter source bytes, positions, transforms or indices and does not prove material/rendering fidelity. The original NegativeScaleTest's full visual normals/material/back-face requirements are broader than this IFC geometry projection. Loss diagnostics remain explicit.

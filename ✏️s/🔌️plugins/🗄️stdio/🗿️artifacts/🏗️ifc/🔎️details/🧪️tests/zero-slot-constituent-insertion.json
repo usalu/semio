@@ -1,0 +1,10 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"cases":[
+{"id":"first","path":"/entities/0/complex/0","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":true,"order":[-1,0,1,2]},
+{"id":"middle","path":"/entities/0/complex/1","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":true,"order":[0,-1,1,2]},
+{"id":"end","path":"/entities/0/complex/3","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":true,"order":[0,1,2,-1]},
+{"id":"dash","path":"/entities/0/complex/-","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":true,"order":[0,1,2,-1]},
+{"id":"canonical-name","path":"/entities/0/complex/1","value":{"name":"IfcRepresentationItem","args":[]},"admitted":true,"order":[0,-1,1,2]},
+{"id":"maximum-id","entityId":"18446744073709551615","path":"/entities/0/complex/1","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":true,"order":[0,-1,1,2]},
+{"id":"missing-destination","path":"/entities/0/complex/4","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":false},
+{"id":"duplicate-id","duplicate":true,"path":"/entities/0/complex/1","value":{"name":"IFCREPRESENTATIONITEM","args":[]},"admitted":false}
+],"fallback":["first-constituent-layout","candidate-own-attributes","candidate-arguments","unknown-candidate","candidate-global-id","derived-survivor","global-id-root","derived-direct-value","lowercase-survivor-name"]}

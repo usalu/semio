@@ -43,3 +43,11 @@ fn original_lifecycle_adopts_nested_context_receipt_without_second_debit(){
 fn original_lifecycle_job_pair_transfer_preserves_both_owned_pointers(){
  let corpus=corpus();for kind in ["fault","value"]{let mut failure=source(kind,&corpus,Default::default());failure.receipt_refusal=Some(ValueError::new(ValueRefusalKind::InvariantViolated,"original separate receipt 源"));let pointers=(pointer(&failure),failure.receipt_refusal.as_ref().unwrap().message.as_ptr());let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let job:semio_framework_job::OriginalTurnFailure=failure.into();PluginLifecycleFailure::from(job)});assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((pointer(&failure),failure.receipt_refusal.as_ref().unwrap().message.as_ptr()),pointers);close(failure,3);}
 }
+
+thread_local!{static CLOSE_CLOCK:std::cell::Cell<u64>=const{std::cell::Cell::new(1)};}
+fn close_clock()->Option<u64>{Some(CLOSE_CLOCK.get())}
+#[test]
+fn original_lifecycle_expired_deadline_needs_actual_paid_retirement_permission(){
+    CLOSE_CLOCK.set(1);let stock=RetainedCloneGrant{maximum_items:32,maximum_copy_bytes:65536,..grant()};let mut caller=semio_framework_job::OriginalJobFixtureCaller::admit(OperationId(97532),Generation(18),stock,close_clock,100,10000);CLOSE_CLOCK.set(101);let demand=RetirementDemand{copy_bytes:3,depth:1,..Default::default()};let progress=RetainedCloneProgress{copied_items:1,copied_bytes:3,..Default::default()};
+    caller.turn(stock,|cx|{let before=cx.retained_progress();let ordinary=original_lifecycle_step(cx,stock,demand,|_,_|panic!("expired semantic lifecycle ran")).map_err(semio_framework_job::OriginalTurnFailure::from)?;assert_eq!(ordinary.progress(),Some(Default::default()));assert_eq!(cx.retained_progress(),before);cx.with_original_retirement(|cx|{let paid=original_lifecycle_step(cx,stock,demand,|_,_|Ok((PluginLifecycleStep::Complete(progress),true))).map_err(semio_framework_job::OriginalTurnFailure::from)?;assert_eq!(paid.progress(),Some(progress));Ok(())})}).unwrap();caller.retire(stock);CLOSE_CLOCK.set(1);
+}

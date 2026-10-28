@@ -1,0 +1,17 @@
+# Package Writer Original Ownership
+
+The actual ZIP path has unfunded local/central/descriptor/EOCD Vec buffers, cloned String entry names and a Vec entry registry despite the package having exactly three fixed members. append_zip_data mutates CRC/size before destination append succeeds. Supplied preflight JSON also creates a temporary Vec for each chunk. Root owns this next slice; no package implementation change or pass is claimed yet.
+
+Schema-first neutral cases now specify four binary member sets and three chunk extents. CRC32 expectations were produced with the independent crc-32 test library. Planned implementation uses three fixed member tags/inline entries, bounded binary fragments on Native stack, original preflight slices, combined original work quotes before construction/CRC, and metadata commit only after destination append. The first-party ChunkRope remains the output owner. The generated ZIP must independently unzip through fflate and reproduce the exact three input byte sequences; this is internal stored ZIP package evidence, not whole-format or official artifact compliance.
+
+Remaining original JSON cursor allocations and any true imported child source serialization are separate unresolved work. Native execution remains unrun while the authorized repo runner is unavailable.
+
+Primary format references inspected: [PKWARE APPNOTE6.3.10](https://pkware.cachefly.net/webdocs/casestudies/APPNOTE.TXT), local headers/data descriptors/central directory/EOCD and section4.4.6MSDOS time; [Microsoft MSDOS Date and Time](https://learn.microsoft.com/en-us/windows/win32/sysinfo/ms-dos-date-and-time). Generated package records use deterministic valid MSDOS1980-01-01dateword33 and time0; original old writer used date0. No official ZIP conformance suite is claimed.
+
+## Executed Portable Slice
+
+The actual PackageZipWriter passes4neutralbinarysets across3chunkextents:12archives,37742fundedturns,111742undergrantdenials,6cancellationcuts. Every archive independently unzips through fflate to the exact three source byte sequences; crc-32 independently agrees with every retained CRC. Item/copy/depth denial preserves metadata/output byte identity with zero work receipts. The writer retains inline logical metadata; Native stack fragment and noheap claims remain authored/unrun.
+
+Selected in the actual Native package pipeline: fixed three membertags and inline entry slots replace String/Vec metadata; local/descriptor/central/EOCD records use bounded96-byte uninitialized stack fragments, and CRC/size commit follows successful destination append. Supplied preflight payload borrows original request slices directly. Native close now retires scalar entryslots/currentmember and original output backing. The old empty-string allocation fixture now uses the real request parent-authority String, preserving all four physical-close cases without fabricating dynamic ZIP names. Native59scopedsources parse0grammarerrors, not compilation.
+
+The current package protocol contains exactly document.json,preflight-report.json,package-manifest.json; the writer is intentionally specific to this protocol. Full child-member source packaging must be defined against the new genuine prepared Drawing sources; reference-only parent JSON alone is not self-contained child export. TypedJsonCursor still has unresolved original allocation/retirement accounting; the whole package pipeline is not yet fully original-funded.

@@ -1,0 +1,21 @@
+# Local Candidate Rule Independent Audit
+
+The refreshed final20-file roster matches exactly (`generated/local-candidate-independent-final-hashes.json`). This is source review plus inspection of authored laws/reference evidence; native type/runtime/physical allocation/receipt/cancellation/retirement proof remains false under authentic compiler ingress refusal. No production source was edited by the auditor.
+
+## Confirmed P2 and correction
+
+The initial frozen validation/local.rs called PopulationOverlay::demands() with no source/mutation arguments, while its actual API requires both. This is a concrete compile-level mismatch, invisible to rustfmt parsing. It was reported immediately. The corrected IfcCandidateRules demand signature accepts actual borrowed snapshot/prepared mutations; Work quote/advance and NativeCandidateRules forward those exact owners, and phase1 now calls overlay.demands(snapshot,mutations). No fabricated empty source, unsafe saved-pointer dereference or alternative quote context was introduced. The worker preserved the pre-fix roster separately; all final hashes match. This P2 is closed at source level, not compiler execution proof.
+
+## Candidate authority and actual SELF
+
+The opaque candidate constructor is private to shared details and only mints from the completed same-name repair RetainedTypeAdmission. It borrows exact event/source/address/prepared mutations and calls the existing profile-specific witness validator. Native owner additionally pins original caller, witness owner, target source position and source/mutation ptr+len before work. Every admitted turn rechecks the candidate; public snapshot/mutation accessors do not expose a public constructor or arbitrary SELF certificate.
+
+Work invokes this stage after strict DomainWork and before inverse/publication. It is limited to same-name repair compatible with actual overlay SetEntityArg support. Unsupported remap mutation forms are not represented as an old preimage. The owner advances actual PopulationOverlay, PopulationReceiver and the issued static program. Local start is crate-restricted and refuses a different program pointer; initialization still checks program-index digest and performs real header/normalization. SELF is the actual received candidate entity selected by overlay ID, not a free caller value.
+
+The existing entity lane covers actual inherited WHERE indices; type-rule lane visits every present candidate attribute including unchanged siblings and follows named aliases/aggregate items/actual SELECT domains. Local mode stops after those selected candidate lanes, omitting unrelated population global/UNIQUE/inverse stages. These omitted domains remain unclaimed. Local Unknown sets incomplete and invalid; failure stays failure, and local_status cannot publish a running/closing result. Thus population.valid's historical Unknown policy is not reused as local approval. No Blob/range rules are hardcoded.
+
+## Original resource and close boundary
+
+The published demand combines next actual overlay/receiver/machine/close demand with conservative metadata, checked before candidate verification and child progression. Source/receiver/overlay identity remains an original continuation check, not canonical revision authority independently of the enclosing owned request/source lifetime. Child born stores and operands stay retained on error. On success the machine, receiver and overlay are all retired under original paid close before the stage approves; outer original authority metadata remains until final close. On failure/cancellation Work closes this child before original event/address/roster/prepared/source owners. Actual close order matches borrowed environment dependencies.
+
+No additional confirmed P1/P2 was found in this bounded source review after the demand correction. Authored native laws cover source/prepared/caller substitution, denied axes and prefixes; they remain unexecuted. Worker-reported actual issued TypeScript AST6/22 and strict0 corroborate reference selected-rule behavior, not this native path. REAL/NUMBER/BINARY controls and generic guided candidate preparation remain open/red/unregistered and must not advertise readiness from this checkpoint alone. Complete graph, complex schema, global and MVD conformance are not established.

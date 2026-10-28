@@ -1,0 +1,57 @@
+{
+  "cases": [
+    {
+      "id": "typed-output-alone",
+      "snapshot": true,
+      "request": true,
+      "receiver": false,
+      "parser": false,
+      "ready": false
+    },
+    {
+      "id": "native-closed-parser-live",
+      "snapshot": true,
+      "request": true,
+      "receiver": true,
+      "parser": false,
+      "ready": false
+    },
+    {
+      "id": "both-closed",
+      "snapshot": true,
+      "request": true,
+      "receiver": true,
+      "parser": true,
+      "ready": true
+    },
+    {
+      "id": "request-missing",
+      "snapshot": true,
+      "request": false,
+      "receiver": true,
+      "parser": true,
+      "ready": false
+    },
+    {
+      "id": "snapshot-missing",
+      "snapshot": false,
+      "request": true,
+      "receiver": true,
+      "parser": true,
+      "ready": false
+    }
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "error": {
+    "primary": "invalid-original-record",
+    "copiedItems": 1,
+    "copiedBytes": 37,
+    "wrapperBytes": 1
+  }
+}

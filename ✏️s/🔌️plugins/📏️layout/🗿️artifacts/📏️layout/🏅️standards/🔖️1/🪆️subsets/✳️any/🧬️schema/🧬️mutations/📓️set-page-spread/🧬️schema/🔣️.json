@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-spread/schema.json",
+  "title": "SetPageSpread",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "spreadId"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "spreadId": {
+      "type": "string"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}

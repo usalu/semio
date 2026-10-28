@@ -1,0 +1,95 @@
+{
+  "schema": "ifc-circular-solid-orientation",
+  "version": 1,
+  "nativeExecution": false,
+  "cases": [
+    {
+      "id": "positive-negative-z",
+      "radius": 1,
+      "depth": 5,
+      "direction": [
+        3,
+        0,
+        -4
+      ],
+      "profileOrigin": [
+        2,
+        -1
+      ],
+      "profileRotation": 0.7853981633974483,
+      "representedScale": [
+        2,
+        3,
+        4
+      ],
+      "segments": 72,
+      "polygonVolume": 301.21024693590664
+    },
+    {
+      "id": "positive-positive-z",
+      "radius": 1,
+      "depth": 5,
+      "direction": [
+        3,
+        0,
+        4
+      ],
+      "profileOrigin": [
+        2,
+        -1
+      ],
+      "profileRotation": 0.7853981633974483,
+      "representedScale": [
+        2,
+        3,
+        4
+      ],
+      "segments": 72,
+      "polygonVolume": 301.21024693590664
+    },
+    {
+      "id": "reflected-negative-z",
+      "radius": 1,
+      "depth": 5,
+      "direction": [
+        3,
+        0,
+        -4
+      ],
+      "profileOrigin": [
+        2,
+        -1
+      ],
+      "profileRotation": 0.7853981633974483,
+      "representedScale": [
+        -2,
+        3,
+        4
+      ],
+      "segments": 72,
+      "polygonVolume": 301.21024693590664
+    },
+    {
+      "id": "reflected-positive-z",
+      "radius": 1,
+      "depth": 5,
+      "direction": [
+        3,
+        0,
+        4
+      ],
+      "profileOrigin": [
+        2,
+        -1
+      ],
+      "profileRotation": 0.7853981633974483,
+      "representedScale": [
+        -2,
+        3,
+        4
+      ],
+      "segments": 72,
+      "polygonVolume": 301.21024693590664
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+# TypeScript Domain Continuation Peer Review
+
+Independently executed focused actualsource harness ifc-domain-cursor-check.mjs:8groupspassed,0TypeScriptdiagnostics. No broadDetails/oracle reruns. Freshcore.ts,own4adapter,exactPart21adapter andcatalogmetadata generators reviewed. No definite functionalblockerfound.
+
+## Continuation and cancellation
+
+Synchronous APIs drain samegenerator implementation; nestedyield* preservesactiveDFS/equality/scalarindices. No completedprefix replay found. observe invokesoriginaltick beforeeachinternalnext andfinally callsunderlyingreturn, so throwncancellation closesactiveborrowedtraversal ratherthan publishingcompletion. Explicit return onpendinggenerator closesdelegatedreferencegenerator undernormalJavaScriptreturnsemantics. Testscovercancelateverytext/decimalboundary and explicitclose; no resultafterclose.
+
+Zero-grant iscallerpolicy (do not callnext), notan internalfuelbudget. Generators provide logicalsuspensiononly; they do notownSnapshotRead,validatecalleridentity,physicalretainedstock,deadlines ormountedpublication. Thoseclaims remainexplicitlyoutsideAPI.
+
+## Scalar and metadata bounds
+
+UnicodeSTRING scansone scalarperyield and rejectsisolatedsurrogates; widthcountscodepoints. BINARY scansonelexicalcharacterperyield thenconstantfirstnibble/bitwidthchecks. Decimalvalidity/leadingzero/trailingzero/comparison retainsindices andborrowscoefficient; no binary64conversion ofPart21. Inti64 stringnormalization bounded19digits. Type/sourceidentifiers validateASCIIgrammar<=256characters beforeuppercaseallocation. Enumcomparison usesASCIIcasefolding, avoidingUnicodeuppercasetokenaliases. Alias/select/subtype metadata frontiers retainseenSets; malformedcatalogcyclesfail ratherthanrecurseforever.
+
+UnorderedSET/BAG equality comparesgroupmultiplicity, withsameyieldingequalityinsideeachmembercomparison. LIST/ARRAY preservesorder. Repairchecks old/newgroupcounts andbounds beforechangedleaf; unrelatedinvalidsiblings canremainunchanged. Definedtypedconstructor/SELECTmembership goes throughsamecatalogyielders, references throughcaller-suppliedgenerator ratherthanfreshsourceaccess.
+
+## Remaining proof boundaries
+
+Referencecallback itself mustyieldforitsownexpensivework; arbitrarysynchronouscallbackcode cannotbecontrolledbyoutergenerator. Catalogcollections aretrustedstaticmetadata; constantboundedmemberlookup andephemeralJSgeneratorframes are notphysicalallocationreceiptproof. Borrowedinputmutationduringpendingtraversal iscallercontract violationunlessembeddingowner addsrevision/identitychecks. Testsestablishgeneratorbehavior, notnativecursorparity/nativehostexecution orfullEXPRESSWHERE/populationrules.
+
+Ownfocusedgeneratedmodulefolderdeletedafterverification.

@@ -13,7 +13,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region ✋️DragFrames
 /// ✋️ `drag-frames` payload — the page, the frames it moves (literal ids) and the offset every one of them moves by.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -69,6 +69,7 @@ pub fn diff_drag_frames(payload: &DragFrames, base: &LayoutSnapshot) -> protocol
 //#region ↩️Inverse
 /// ↩️ One absolute origin setter per frame the drag moves, restoring the BASE origin.
 pub fn inverse_drag_frames<Op: From<crate::move_frame::MoveFrame>>(payload: &DragFrames, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_drag_frames(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     if !(payload.dx.is_finite() && payload.dy.is_finite()) || layout_frame_targets_invariant(&payload.targets).is_err() {
         return Ok(Vec::new());
     }
@@ -80,3 +81,12 @@ pub fn inverse_drag_frames<Op: From<crate::move_frame::MoveFrame>>(payload: &Dra
 }
 //#endregion ↩️Inverse
 
+
+impl PartialEq for DragFrames {
+    fn eq(&self, other: &Self) -> bool {
+        self.page_id == other.page_id
+            && self.targets == other.targets
+            && semio_framework_value::equal_f64(self.dx, other.dx)
+            && semio_framework_value::equal_f64(self.dy, other.dy)
+    }
+}

@@ -1,0 +1,5 @@
+# Official Property and Quantity Set Authoring
+
+Complete EXPRESS declaration editing already permits raw IfcPropertySet/IfcElementQuantity graphs. The next schema-authoring check is the official released property/quantity template catalog: exact property names, declared value and enum/aggregate types, applicability and localized definitions. Inspect the same pinned formal release as the EXPRESS/MVD work before designing any source-owned template API or details controls. Avoid substituting a changing development catalog for the ADD2 publication.
+
+Research inputs and Markdown stay in this ticket; downloaded API metadata/XML/archives stay in `🗑️generated`. Any retained normative source or generated immutable catalog must carry release provenance, hashes and attribution. Runtime parsing/external libraries are not needed for compiled immutable template metadata; independent test-only XML parsing should corroborate extraction. Do not introduce a separate competing IFC graph or bypass mutations/diffs to author templates.

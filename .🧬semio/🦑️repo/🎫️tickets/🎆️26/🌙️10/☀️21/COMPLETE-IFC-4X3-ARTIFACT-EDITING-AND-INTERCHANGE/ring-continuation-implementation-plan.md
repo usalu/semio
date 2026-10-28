@@ -1,0 +1,9 @@
+# Cooperative Existing Ring Core
+
+The existing first-party TypeScript/Rust ring triangulators already implement concavity, holes, bridging, intersection/coverage/incidence checks and independent Three/Earcut tests. The IFC4x3 exchange path must reuse this implementation through a cooperative generator rather than create another polygon algorithm or call a synchronous document-sized triangulation.
+
+The TypeScript algorithm becomes one triangulateRingsSteps generator. The existing synchronous entry drains that same generator and invokes its original tick for every yielded unit. Source-sized maps/copies/reversals, area/inside/blocked/filled helpers, hole ordering/bridge assembly, ear scans/removal, incidence and overlap validation require bounded continuation units. Replace native sort/splice and spread roster copies with stable cooperative iteration. Fixed coordinate/triangle tuples remain bounded. Original loop state/owners stay resident until completion or generator.return.
+
+Freeze original triangle-index hashes/counts for all30 existing scale/orientation variants before implementation: ring-continuation-baseline.ts executes the actual old core and saves only generated output data, never copied source. Existing third-party coverage, invalid topology and every synchronous interruption law remain. New neutral asynchronous source/cancellation/original fault tests will use the common IFC runner, initial/interior/completion and source immutability. Exact index hashes should remain unchanged; changed tick counts reflect newly exposed cold work and are not an original budget/receipt proof.
+
+Native Rust continuation parity, geometric exact predicates and full arbitrary profile/void topology remain separate work. Do not claim the current synchronous Rust core yields on an async host. Actual closed2DPolyline extrusion can mount after this shared core is executed and independently audited.

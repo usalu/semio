@@ -38,6 +38,8 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub dispatch_report: protocol::DispatchReport,
     pub pending_render_tree: std::mem::ManuallyDrop<Option<ComponentTree>>,
     pub pending_render_tree_identity: Option<OriginalRenderTreeIdentity>,
+    pub pending_render_work: ManuallyDrop<Option<crate::jobs_render::work::OriginalRenderWork<A::RenderWork>>>,
+    pub pending_render_source: ManuallyDrop<Option<crate::jobs_render::work::OriginalRenderWork<std::sync::Arc<A::Snapshot>>>>,
     pub pending_render_tree_ready: bool,
     pub pending_render_tree_close:std::mem::ManuallyDrop<Option<semio_framework_ui_contract::OriginalBuiltTreeRetirement>>,
     pub pending_configuration_source:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
@@ -69,6 +71,8 @@ impl<A: ArtifactApp> PendingReserved<A> {
             dispatch_report,
             pending_render_tree: std::mem::ManuallyDrop::new(None),
             pending_render_tree_identity: None,
+            pending_render_work: ManuallyDrop::new(None),
+            pending_render_source: ManuallyDrop::new(None),
             pending_render_tree_ready: false,
             pending_render_tree_close: std::mem::ManuallyDrop::new(None),
             pending_configuration_source: None,
@@ -95,7 +99,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
 
     pub fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<semio_framework_ui_runtime::ComponentTree>,semio_framework_job::OriginalTurnFailure>{
         self.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source has no initiating identity"))?.validate(cx)?;
-        if !self.pending_render_tree_ready || self.pending_render_failure.is_some() || self.pending_render_compound.is_some() || self.pending_render_close_failure.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
+        if !self.pending_render_tree_ready || self.pending_render_work.is_some() || self.pending_render_source.is_some() || self.pending_render_failure.is_some() || self.pending_render_compound.is_some() || self.pending_render_close_failure.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source is not ready for donation").into());}
         Ok(&mut self.pending_render_tree)
     }
 }

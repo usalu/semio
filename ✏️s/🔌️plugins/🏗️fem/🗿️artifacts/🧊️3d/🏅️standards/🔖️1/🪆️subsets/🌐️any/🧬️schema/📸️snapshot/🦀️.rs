@@ -17,6 +17,14 @@ mod identity_admission;
 
 #[path="❄️reference/🦀️.rs"]mod reference;
 pub use reference::Fem3dSnapshotValue;
+#[path="native.rs"]mod native;
+pub use native::Fem3dReceiving;
+#[path="record.rs"]mod record;
+#[path="receive-record.rs"]mod receive_record;
+#[path="projection.rs"]mod projection;
+#[path="write-pack.rs"]mod write_pack;
+#[path="identity-index.rs"]mod identity_index;
+pub use identity_index::{FemIdentityIndex,FemIdentityKind,FemIdentitySource};
 //#region 🔖️Snapshot
 /// 📸️ Persisted fem3d document snapshot (persistent fields of the artifact).
 #[derive(Debug, Default, PartialEq, ToValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

@@ -1,0 +1,3 @@
+*.glb -text
+*.gltf -text
+*-README.md -text

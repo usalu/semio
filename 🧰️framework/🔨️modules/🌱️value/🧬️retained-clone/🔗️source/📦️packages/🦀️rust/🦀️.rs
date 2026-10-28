@@ -27,6 +27,8 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
  pub fn get(self)->&'a T{self.value}
  /// 🪪️ Observes the already issued sealed source without duplicating a lease or granting authority.
  pub fn source_identity(self)->u64{self.lease.get().id}
+ /// 🪪️ Observes fixed issued-source and projection coordinates without retaining or authorizing access.
+ pub fn reference_identity(self)->(u64,usize,usize,usize){(self.lease.get().id,self.projection.parent,self.projection.address,self.projection.discriminator)}
  pub fn project<U:?Sized,F>(self,discriminator:usize,project:F)->RetainedCloneRef<'a,U>where F:for<'source>FnOnce(&'source T)->&'source U{let value=project(self.value);RetainedCloneRef{value,lease:self.lease,projection:RetainedCloneProjection{parent:self.projection.address,address:value as*const U as*const()as usize,discriminator}}}
  pub fn binding_copy_bytes(self)->usize{0}
  /// ✅️ Checks the original issued source and exact projected path without granting a new alias.

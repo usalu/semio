@@ -20,6 +20,11 @@ import { pluginInstallConcurrency } from "../../🔌️extension-runtime/🟦️
 import type { ShellCoreAfterPluginLifecycle } from "../../🚀️plugin-lifecycle/🟦️.ts";
 import type { OpenDocumentSession } from "../../🔒️identity-document-ports/🧰️identity-port-types/🟦️.ts";
 import type { useFocusedProgramAndIntroductionState } from "../🎯️focused-program-and-introduction/🟦️.tsx";
+import type { LocalDocumentOwnerV1 } from "../../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+import type { LocalSourceRevisionV1, SourceRevisionObservationV1 } from "../../../🛠️ShellHelpers/📝️source-revision/🟦️.ts";
+import { readSourceRevisionV1 } from "../../../🛠️ShellHelpers/📝️source-revision/observation.ts";
+
+type LocalInteractionObservation = Readonly<{ plugin: PluginWasmHandle; instanceId: number; owner: LocalDocumentOwnerV1; source: LocalSourceRevisionV1; revision: SourceRevisionObservationV1 }>;
 
 /** 🧰 Builds the utility and tool register cells, the local interaction publishers and the introduction callbacks. */
 export function useUtilityAndToolRegisters({ utilityRegisterCell, bumpRegisterRevision, activeUtilityByWindowIdRef, dispatch, toolRegisterRef, activeToolIdRef, focusedToolMeasuresByToolId, activeWindowId, actionPaneExpandedByWindowId, actionPaneStagedArgsByKey, introductionStepIndex, introductionCompletedInteractions, tutorialPlaying, tutorialRecording, shellState, core, overlayDialog, isCurrentDialogOrigin, closeOwnedDialog, session, sessionRef, loadedPluginsRef, localInteraction, dropForRetiredInstance, loadedPlugins, scope, dismissedIntroductionAppIdsRef, persistIntroductionSeen, introductionSeenKey, activeIntroductionRef, expandedCommandId, commandStagedArgsByCommandId, uiLocale, uiTerminology, identityRef, extraWindowInstancesRef }: Pick<ReturnType<typeof useFocusedProgramAndIntroductionState>, "utilityRegisterCell" | "bumpRegisterRevision" | "activeUtilityByWindowIdRef" | "dispatch" | "toolRegisterRef" | "activeToolIdRef" | "focusedToolMeasuresByToolId" | "activeWindowId" | "actionPaneExpandedByWindowId" | "actionPaneStagedArgsByKey" | "introductionStepIndex" | "introductionCompletedInteractions" | "tutorialPlaying" | "tutorialRecording" | "shellState" | "overlayDialog" | "isCurrentDialogOrigin" | "closeOwnedDialog" | "session" | "sessionRef" | "loadedPluginsRef" | "localInteraction" | "dropForRetiredInstance" | "loadedPlugins" | "scope" | "dismissedIntroductionAppIdsRef" | "persistIntroductionSeen" | "introductionSeenKey" | "activeIntroductionRef" | "expandedCommandId" | "commandStagedArgsByCommandId" | "uiLocale" | "uiTerminology" | "identityRef" | "extraWindowInstancesRef"> & { readonly core: ShellCoreAfterPluginLifecycle }) {
@@ -113,25 +118,60 @@ export function useUtilityAndToolRegisters({ utilityRegisterCell, bumpRegisterRe
   useEffect(() => {
     if (overlayDialog !== null && !isCurrentDialogOrigin(overlayDialog.origin)) closeOwnedDialog(overlayDialog.openingId);
   }, [overlayDialog, session, closeOwnedDialog, isCurrentDialogOrigin]);
-  const publishLocalInteraction = useCallback(async (plugin: PluginWasmHandle, instanceId: number): Promise<LocalInteractionState | null> => {
-    const capture = await plugin.readLocalInteraction(instanceId);
+  const sourceRevisions = core.localSourceRevisions;
+  const sourceOwnerRef = core.localSourceOwnerRef;
+  const sourcePluginsRef = useRef<readonly PluginWasmHandle[]>([]);
+  useEffect(() => {
+    const current = new Set(loadedPlugins.map(entry => entry.handle));
+    for (const plugin of sourcePluginsRef.current) if (!current.has(plugin)) sourceRevisions.retirePlugin(plugin);
+    sourcePluginsRef.current = [...current];
+  }, [loadedPlugins, sourceRevisions]);
+  const beginLocalInteraction = useCallback((plugin: PluginWasmHandle, instanceId: number): LocalInteractionObservation | null => {
     const active = sessionRef.current;
     const currentPlugin = loadedPluginsRef.current.find((entry) => entry.handle.pluginId === active?.pluginId)?.handle;
-    if (!active || active.instanceId !== instanceId || currentPlugin !== plugin) return null;
-    localInteraction.observe({ ...capture.state, hover: localInteraction.get().hover });
-    return capture.state;
+    const owner = sourceOwnerRef.current;
+    if (!active || active.instanceId !== instanceId || currentPlugin !== plugin || !owner?.active || owner.identity.pluginId !== active.pluginId || owner.identity.appId !== active.app.id || owner.identity.sessionInstanceId !== instanceId) return null;
+    const sourceRevision = sourceRevisions.acquire(owner, plugin);
+    if (sourceRevision === null) return null;
+    const revision = sourceRevision.begin(owner, plugin);
+    return revision === null ? null : { plugin, instanceId, owner, source: sourceRevision, revision };
   }, []);
+  const readLocalInteraction = useCallback(async ({ plugin, instanceId, owner, source, revision }: LocalInteractionObservation): Promise<LocalInteractionState | null> => {
+    return readSourceRevisionV1({
+      source,
+      observation: revision,
+      capture: signal => plugin.readLocalInteraction(instanceId, signal),
+      current: () => {
+        const active = sessionRef.current;
+        const currentPlugin = loadedPluginsRef.current.find(entry => entry.handle.pluginId === active?.pluginId)?.handle;
+        return active?.instanceId === instanceId && currentPlugin === plugin && sourceOwnerRef.current === owner && owner.active;
+      },
+      accept: state => localInteraction.observe({ ...state, hover: localInteraction.get().hover }),
+    });
+  }, []);
+  const publishLocalInteraction = useCallback((plugin: PluginWasmHandle, instanceId: number): Promise<LocalInteractionState | null> => {
+    const observation = beginLocalInteraction(plugin, instanceId);
+    return observation === null ? Promise.resolve(null) : readLocalInteraction(observation);
+  }, [beginLocalInteraction, readLocalInteraction]);
   const observeLocalInteraction = useMemo(
-    () => createLatestAsyncDispatcher(({ plugin, instanceId }: { readonly plugin: PluginWasmHandle; readonly instanceId: number }) => publishLocalInteraction(plugin, instanceId).catch((error) => {
-      dropForRetiredInstance({ pluginId: plugin.pluginId, instanceId }, "local interaction observation", error);
-    })),
-    [dropForRetiredInstance, publishLocalInteraction],
+    () => {
+      const dispatch = createLatestAsyncDispatcher((observation: LocalInteractionObservation) => readLocalInteraction(observation).catch((error) => {
+        dropForRetiredInstance({ pluginId: observation.plugin.pluginId, instanceId: observation.instanceId }, "local interaction observation", error);
+      }));
+      return ({ plugin, instanceId }: { readonly plugin: PluginWasmHandle; readonly instanceId: number }) => {
+        const observation = beginLocalInteraction(plugin, instanceId);
+        if (observation !== null) dispatch(observation);
+      };
+    },
+    [dropForRetiredInstance, beginLocalInteraction, readLocalInteraction],
   );
   useEffect(() => {
-    if (!session) return;
-    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
-    if (plugin) observeLocalInteraction({ plugin, instanceId: session.instanceId });
-  }, [loadedPlugins, observeLocalInteraction, session?.instanceId, session?.pluginId]);
+    const refresh = (plugin: PluginWasmHandle, instanceId: number) => observeLocalInteraction({ plugin, instanceId });
+    core.localSourceRefreshRef.current = refresh;
+    return () => {
+      if (core.localSourceRefreshRef.current === refresh) core.localSourceRefreshRef.current = () => {};
+    };
+  }, [observeLocalInteraction, core.localSourceRefreshRef]);
 
   /** 🎓️ Ends the active introduction — records the answer for this shell session (see
    * {@link dismissedIntroductionAppIdsRef}), persists the device-local seen flag when configured, and on

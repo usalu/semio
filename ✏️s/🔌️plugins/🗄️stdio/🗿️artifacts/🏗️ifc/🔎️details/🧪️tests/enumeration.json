@@ -1,0 +1,18 @@
+{
+  "schema":"IFC4X3_ADD2",
+  "payloadEncoding":"ifc-native-graph",
+  "revision":"18446744073709551615",
+  "cases":[
+    {"id":"labels","allowed":[{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"Red"}]}},{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"Blue"}]}}],"selected":[0,1],"available":true},
+    {"id":"exact-integers","allowed":[{"kind":"typedValue","value":{"name":"IFCINTEGER","items":[{"kind":"integer","value":"9223372036854775807"}]}},{"kind":"typedValue","value":{"name":"IFCINTEGER","items":[{"kind":"integer","value":"-9223372036854775808"}]}}],"selected":[1],"available":true},
+    {"id":"mixed-domains","allowed":[{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"1"}]}},{"kind":"typedValue","value":{"name":"IFCREAL","items":[{"kind":"real","value":{"bits":"4607182418800017408"}}]}}],"selected":[0],"available":true},
+    {"id":"empty-selection","allowed":[{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":""}]}}],"selected":[],"available":true},
+    {"id":"unset-selection","allowed":[{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"$"}]}}],"selected":null,"available":true},
+    {"id":"empty-definition","allowed":[],"selected":[],"available":false,"diagnostic":"enumeration.empty"},
+    {"id":"unset-reference","allowed":[],"selected":null,"reference":"unset","available":false,"diagnostic":"enumeration.unset"},
+    {"id":"missing-reference","allowed":[],"selected":null,"reference":"missing","available":false,"diagnostic":"enumeration.missing"},
+    {"id":"wrong-kind","allowed":[],"selected":null,"reference":"wrong-kind","available":false,"diagnostic":"enumeration.wrong-kind"},
+    {"id":"duplicate-identity","allowed":[],"selected":null,"reference":"duplicate","available":false,"diagnostic":"enumeration.ambiguous"},
+    {"id":"duplicate-property-identity","allowed":[],"selected":null,"reference":"duplicate-property","available":false,"diagnostic":"enumeration.ambiguous"}
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "feature": "layout.retained.central-apply",
+  "protocol": "RetainedDiff<LayoutSnapshot>",
+  "preflight": [
+    "reject missing retained Drawing text owner port",
+    "prepare only supplied root fields",
+    "admit sparse root lists against live post",
+    "group and admit all nested page/story prefixes and derived caches",
+    "admit optional dictionary presence and rows"
+  ],
+  "commit": [
+    "move nested original and authored rows, exchange nested fields and caches",
+    "move root memberships",
+    "exchange supplied root row fields",
+    "exchange root scalar and grid fields",
+    "commit dictionary presence and membership"
+  ],
+  "unrelated": "untouched live post owners move unchanged; no whole snapshot candidate clone",
+  "cancel": "every partial source, staged sparse payload, numeric plan, typed row/vector and displaced field remains original-funded closeable",
+  "diagnostics": "fatal refusal prepared before any post writes"
+}

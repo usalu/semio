@@ -1,0 +1,30 @@
+{
+  "title": "Borrowed Layout Final Graph Read",
+  "authority": [
+    "Actual live-post immutable original source",
+    "Authored diff immutable original source"
+  ],
+  "lookup": "Paid final row and nested positional address plans select original fields in indexed work; no Snapshot or row clone",
+  "fields": [
+    "Root schema and grid",
+    "Paragraph and character typography",
+    "Stories and indexed UTF8 style runs",
+    "Parent and page content",
+    "Layers and exact frame/cache paint order",
+    "Spreads and page membership",
+    "Overrides and thread edges",
+    "Original qualified Drawing member reference"
+  ],
+  "laws": [
+    "Every returned authored string/range/row field borrows one of the two bound originals",
+    "Numeric descriptors copy only fixed scalar fields",
+    "No source mint from bare address or baseline token",
+    "No whole post candidate materialization",
+    "No key scan inside field/index access",
+    "Fixed reader storage is owned and pinned before any borrowing continuation starts",
+    "Continuation closes before index/reader/plan/source aliases",
+    "Both genuine source bindings close fully before mutable commit",
+    "Publication checks the same source version again"
+  ],
+  "boundary": "This is a read interface, not a source issuer, grant issuer or semantic admission claim"
+}

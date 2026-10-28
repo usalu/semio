@@ -1,0 +1,12 @@
+{
+  "schema": "stdio.ifc.step-emission",
+  "fragmentBytes": 64,
+  "maximumDepth": 64,
+  "cases": [
+    {"name": "Quoted Unicode", "data": "#1=IFCPROPERTYSINGLEVALUE('a''b\\\\c',$,IFCTEXT('\\X2\\00E4\\X0\\\\X4\\0001F600\\X0\\'),$);"},
+    {"name": "Exact Integer and Negative Zero", "data": "#9007199254740993=IFCA(9007199254740993,-0.,1.E-12,18446744073709551615.);"},
+    {"name": "All Binary Padding", "data": "#1=IFCA(\"0\",\"000\",\"17\",\"23\",\"31\");"},
+    {"name": "Complex and Nested", "data": "#1=(IFCA($,*,(1,IFCLABEL('x'),(#1)),.T.) IFCB('')) ;"},
+    {"name": "Empty Population", "data": ""}
+  ]
+}

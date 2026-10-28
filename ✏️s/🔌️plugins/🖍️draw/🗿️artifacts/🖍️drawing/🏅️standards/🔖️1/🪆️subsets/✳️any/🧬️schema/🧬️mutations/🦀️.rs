@@ -19,13 +19,14 @@ use semio_s_artifact_draw_drawing_structure::import_image_asset::mutation::Impor
 use semio_s_artifact_draw_drawing_structure::remove_image_asset::mutation::RemoveImageAsset;
 
 //#region 🔖️Mutations
-#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::CanonicalJsonTree,semio_framework_value::NativeReceive)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(tag = "mutation", rename_all = "camelCase"))]
 #[mutations(snapshot = DrawingSnapshot, diff = semio_s_artifact_draw_drawing_diff::DrawingDiff, schema = "drawing.drawing", reference = DrawingSnapshot, reference_diff = semio_s_artifact_draw_drawing_diff::DrawingDiff)]
 pub enum DrawingMutation {
+    SetArtboard(SetArtboard),
     SetLayerVisible(SetLayerVisible),
     SetLayerLocked(SetLayerLocked),
     SetLayerOpacity(SetLayerOpacity),
@@ -228,6 +229,7 @@ mod tests;
 /// catalog` below is what keeps this list honest against the enum, since the framework never parses
 /// Rust.
 pub const KINDS: &[&str] = &[
+    "set-artboard",
     "set-layer-visible",
     "set-layer-locked",
     "set-layer-opacity",
@@ -308,3 +310,14 @@ pub mod rename_prepare;
 #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
 pub mod text;
 //#endregion 🪢️TaxonomyMounts
+
+#[path="🧳️retained/↩️inverse/🦀️.rs"]pub mod retained_inverse;
+
+#[path="🧳️retained/🔺️decision/🦀️.rs"]pub mod retained_decision;
+
+#[path="🧳️retained/🦀️.rs"]pub mod retained;
+
+pub use semio_s_artifact_draw_drawing_metadata::set_artboard::mutation as artboard;
+pub use artboard::{SetArtboard,set_artboard};
+
+#[path="🧳️retained/✋️drag/🦀️.rs"]pub mod retained_drag;

@@ -1,0 +1,7 @@
+# Official IFC Specification Model Corpus
+
+Expand independent import/schema evidence beyond the three retained ADD2 examples using the [buildingSMART IFC specification models](https://github.com/buildingSMART/IFC4.x-specification-models). The repository's [validation script](https://github.com/buildingSMART/IFC4.x-specification-models/blob/main/validate.sh) rewrites schema identifiers when validating against a changing development schema; this ticket will preserve original source bytes and inspect each declared schema instead. Only exact IFC4X3_ADD2 inputs will enter ADD2 conformance claims. Older or development declarations are recorded separately.
+
+Use a pinned commit, retain source URL, repository blob identity, byte count and SHA-256 for each downloaded file. Flatten generated research file names to hashes under this ticket's `🗑️generated` folder so paths stay below 256 characters. Network research uses Python system libraries; third-party conformance oracles remain test-only. Do not copy existing repository source into the ticket or delete shared generated dependencies while concurrent IFC work is active.
+
+The research script and this report remain ticket inputs. Generated downloaded corpus, logs and JSON results will be removed only when the entire ticket can close. Any production fixture selected later must retain exact original bytes and provenance; successful parse counts alone do not establish model-view or complete geometry conformance.

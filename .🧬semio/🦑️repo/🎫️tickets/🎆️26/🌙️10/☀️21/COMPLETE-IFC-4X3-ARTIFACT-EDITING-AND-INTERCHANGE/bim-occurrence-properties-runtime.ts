@@ -1,0 +1,8 @@
+/** 🧾 Produce real STEP inputs through current public property exchange for independent physical validation. */
+import {resolve} from 'node:path';
+const root=resolve(import.meta.dir,'../../../../../../..'),base=resolve(root,'✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any'),io=resolve(base,'🚪️io');
+const {bimSpatialToIfc4x3,ifc4x3ToBimSpatial}=await import(resolve(io,'bim.ts')),{propertyModel,propertyValue}=await import(resolve(io,'bim/properties/fixture.ts')),{writeIfc4x3Step}=await import(resolve(io,'step-writer.ts'));
+const cases=await Bun.file(resolve(io,'bim/properties/cases.json')).json(),rows=[];
+for(const holder of cases.holders)for(const row of cases.values){const model=propertyModel();model.properties={[holder]:{Authored:{Value:propertyValue(row)}}};const result=await bimSpatialToIfc4x3(model);if(!result.artifact)throw Error('Public occurrence export refused '+holder+'/'+row.id);const graph=result.artifact,entity=graph.entities.find((entity:{name:string})=>entity.name===({site:'IFCSITE',building:'IFCBUILDING',storey:'IFCBUILDINGSTOREY'}as Record<string,string>)[holder])!,output=resolve(import.meta.dir,'🗑️generated/bim-properties/'+holder+'-'+row.id+'.ifc'),step=await writeIfc4x3Step(graph),imported=await ifc4x3ToBimSpatial(graph);await Bun.write(output,step);rows.push({holder,id:row.id,entity:String(entity.id),expected:row,path:output,inputSha256:new Bun.CryptoHasher('sha256').update(step).digest('hex'),imported:!!imported.artifact,diagnostics:result.diagnostics});}
+await Bun.write(resolve(import.meta.dir,'🗑️generated/bim-properties-runtime.json'),JSON.stringify(rows,null,2)+'\n');
+console.log('[DEBUG] '+JSON.stringify({files:rows.length,imported:rows.filter(row=>row.imported).length}));

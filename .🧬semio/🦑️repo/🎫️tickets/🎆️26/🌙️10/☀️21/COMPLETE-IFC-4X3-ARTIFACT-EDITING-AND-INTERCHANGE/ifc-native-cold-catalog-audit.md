@@ -1,0 +1,27 @@
+# Native Cold Catalog Materialization Audit
+
+Read-only source observation. Native runtime allocation/time notexecuted ormeasured.
+
+## Actual builder
+
+IFC4 schema/catalog/🦀️.rs uses functionlocal static OnceLock<IfcCatalog>. ifc4_catalog calls get_or_init(build_catalog). Own2 basecatalogsamepattern. Remote4x3 has namedstatic IFC4X3_CATALOG and ifc4x3_catalog get_or_init. These are generateddirectRustbuilders, notruntimeJSONparsers: data.rs inserts everyentity/type/function/rule intoownedBTreeMaps, Vecs, Strings andboxedtypeexpressions. IFC4generatedsource2417941bytes; own2 1892962bytes. Sourceextent isnotruntimeheapmeasurement.
+
+## Details call paths
+
+Shared /🔎️details/🦀️.rs details_work_capacity<C> line43 calls C::catalog() then scansallentities formaxinheritedattributes. IFC4profilecatalog delegates ifc4_catalog; own4editor snapshot_edit_work_capacity delegates thishelper. Sharedediting/🛠️tool-job-factories/🦀️.rs line282 extentquery and353 workextent call E::snapshot_edit_work_capacity withoutoriginalStepContext parameter. Thus coldcatalogcanmaterialize during admission/capacityquerybeforecursorwork, notnecessarilyrenderfirst.
+
+IfcDetailsProvider::new line548 onlystoresborrowed snapshot/rawprovider/derivedcache; constructoritself doesnotcallcatalog. Subsequent attributepresentation/context/typevariant paths do C::catalog; editorrender calls provider+render_snapshot_details_provider_revisioned. Therefore typedDetailsrender caninitializecatalogoutsidecontrolled originaljob aswell. Plainroot/providermountalone doesnotproveprewarming.
+
+Native DomainWork::advance consumesoneoriginalfuel then task/attribute call C::catalog; activecursor furthercalls C::catalog. If catalogwasnotalreadyinitialized byrender/extent/admission, thissinglepaidunitcantriggercompletebuilder. OnceLock guarantees oneinitialization andretainedimmutablelifetime; itdoesnotprovideincrementalconstruction, physicalreceiptfunding orcancellation whileconstructor runs. Priorwarmaccess makeslaterqueriescheap butisnotcoldpathproof.
+
+Own2Details repeatedlycalls ownifc2x3_catalog incontext/type/ref/domain routes; genericcore mountpreservesnominalcatalogidentity anddoesnotavoidcoldmaterialization. Remote4x3profile alsoaccessesitsownfullcatalog.
+
+## Existing mechanisms and scoped options
+
+Remote4x3 exposes ifc4x3_cached_catalog()->Option<&'static IfcCatalog> viaOnceLock.get withoutinitialization; searchfounddeclarationbutnoadditionalusewithin4x3graph. Itisavailableascached-onlyqueryprecedent, notproofcurrentDetailsusesit. Geometryproductfacet isgeneratedstaticallocation-freecatalogprojectionforproducttaxonomy; thislegitimatelyavoidswholecatalogforitsnarrowquestion. SnapshotEditcapacitycouldsimilarlycomefromgeneratedstaticmaxattributemetadata instead ofrequiringfullownedcatalogscan, withoutchangingactualpublicationfootprintauthority.
+
+Framework mountedowner/inferencesession andoriginalretirementmechanisms describedinifc-retained-render-architecture-audit.md canholdcontrolleddynamicderivedstate, but theydo notmagicallymake thisexistingglobalOnceLockbuilderfunded. Movingget_or_init intoanothercallback/freshcontext/backgroundthreadwouldnotresolvecoldcontrol. A futureborrowedstaticdeclarationcatalog orpaiddynamiccatalogcursor isaseparateclearlyscopeddesign; thisauditdoesnotrequestbroadrefactororclaimnewblockerbasedonruntimeunmeasuredcost.
+
+## Evidence limit
+
+Proven: completeownedbuilderreachablefromcapacityquery,typedproviderrender andonepaidDomainWorkunit; nocxparameter/controlinsidebuilder; OnceLockwarmcachethereafter. Unproven: actualfirstaccessorderingofmountednativeapp,heapbytes/elapsedtime,ordinaryUIdeadlinefailure ornativehostexecution. Coldfirstcalltestmustusefreshprocess/isolatedcatalogstaticandactualallocatorobservation; testorderwarmcachecannotestablishabsenceofcoldwork.

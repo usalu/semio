@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "functions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "schema",
+        "expSha256",
+        "physical"
+      ],
+      "properties": {
+        "file": {
+          "const": "source.ifc"
+        },
+        "schema": {
+          "const": "IFC4X3_ADD2"
+        },
+        "expSha256": {
+          "const": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+        },
+        "physical": {
+          "type": "string"
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 42,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "id",
+          "args",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "enum": [
+              "IFCCORRECTLOCALPLACEMENT",
+              "IFCPOINTDIM",
+              "IFCPOINTLISTDIM",
+              "IFCSAMEAXIS2PLACEMENT",
+              "IFCSAMECARTESIANPOINT",
+              "IFCSAMEDIRECTION"
+            ]
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 3,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "entity"
+                    },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "real"
+                    },
+                    "value": {
+                      "type": "string",
+                      "pattern": "^-?[0-9]+(?:\\.[0-9]+)?$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "unknown"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "logical"
+                  },
+                  "value": {
+                    "enum": [
+                      "true",
+                      "false",
+                      "unknown"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "integer"
+                  },
+                  "value": {
+                    "enum": [
+                      "2",
+                      "3"
+                    ]
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "unknown"
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

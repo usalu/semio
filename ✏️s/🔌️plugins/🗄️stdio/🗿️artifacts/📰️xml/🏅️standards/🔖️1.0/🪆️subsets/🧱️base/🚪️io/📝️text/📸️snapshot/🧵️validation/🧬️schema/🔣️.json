@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded Borrowed No-DTD XML Validation",
+  "type": "object",
+  "required": [
+    "maximumSourceBytes",
+    "maximumDepth",
+    "maximumAttributes",
+    "maximumLexicalLookaheadBytes"
+  ],
+  "properties": {
+    "maximumSourceBytes": {
+      "const": 8388608
+    },
+    "maximumDepth": {
+      "const": 256
+    },
+    "maximumAttributes": {
+      "const": 1024
+    },
+    "maximumLexicalLookaheadBytes": {
+      "const": 16
+    }
+  },
+  "description": "Incremental borrowed UTF8/XML1.0 syntax validation without DTD or DOM ownership. Fixed numeric ancestor/attribute spans, no source or tree clone. A work unit consumes one source byte with at most16 additional fixed-token lookups, or compares one pair of original name bytes. Emits borrowed root/attribute source spans; open source binding must remain immutable until close."
+}

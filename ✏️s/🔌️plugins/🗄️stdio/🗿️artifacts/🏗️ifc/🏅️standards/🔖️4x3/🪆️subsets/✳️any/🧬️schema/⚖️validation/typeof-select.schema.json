@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "expressions",
+    "models",
+    "seeds"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "expressions": {
+      "type": "array",
+      "minItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expression",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "expression": {
+            "type": "string"
+          },
+          "expected": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "models": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "body",
+          "valid",
+          "rule",
+          "result"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "valid": {
+            "type": "boolean"
+          },
+          "rule": {
+            "const": "MAXONECOLOUR"
+          },
+          "result": {
+            "enum": [
+              "true",
+              "false"
+            ]
+          }
+        }
+      }
+    },
+    "seeds": {
+      "minItems": 3,
+      "items": {
+        "properties": {
+          "excludes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "includes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "names": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "names",
+          "includes",
+          "excludes"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  }
+}

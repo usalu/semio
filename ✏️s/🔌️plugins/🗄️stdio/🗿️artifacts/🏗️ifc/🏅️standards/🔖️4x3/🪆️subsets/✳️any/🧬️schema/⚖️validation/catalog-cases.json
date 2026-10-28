@@ -1,0 +1,152 @@
+{
+  "version": 1,
+  "expectedRules": 777,
+  "expectedFunctions": 48,
+  "expectedFailure": "IFCDIRECTION.MAGNITUDEGREATERZERO",
+  "cases": [
+    {
+      "id": "compile-index-where-rules",
+      "phase": "compile-index",
+      "mutation": "where-rules",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-where-rules",
+      "phase": "admit",
+      "mutation": "where-rules",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-direct-attribute",
+      "phase": "compile-index",
+      "mutation": "direct-attribute",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-direct-attribute",
+      "phase": "admit",
+      "mutation": "direct-attribute",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-inherited-attribute",
+      "phase": "compile-index",
+      "mutation": "inherited-attribute",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-inherited-attribute",
+      "phase": "admit",
+      "mutation": "inherited-attribute",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-type-domain",
+      "phase": "compile-index",
+      "mutation": "type-domain",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-type-domain",
+      "phase": "admit",
+      "mutation": "type-domain",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-select-members",
+      "phase": "compile-index",
+      "mutation": "select-members",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-select-members",
+      "phase": "admit",
+      "mutation": "select-members",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-function-source",
+      "phase": "compile-index",
+      "mutation": "function-source",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-function-source",
+      "phase": "admit",
+      "mutation": "function-source",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-global-source",
+      "phase": "compile-index",
+      "mutation": "global-source",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-global-source",
+      "phase": "admit",
+      "mutation": "global-source",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-entity-roster",
+      "phase": "compile-index",
+      "mutation": "entity-roster",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-entity-roster",
+      "phase": "admit",
+      "mutation": "entity-roster",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-type-roster",
+      "phase": "compile-index",
+      "mutation": "type-roster",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-type-roster",
+      "phase": "admit",
+      "mutation": "type-roster",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-source-provenance",
+      "phase": "compile-index",
+      "mutation": "source-provenance",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-source-provenance",
+      "phase": "admit",
+      "mutation": "source-provenance",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-schema-name",
+      "phase": "compile-index",
+      "mutation": "schema-name",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-schema-name",
+      "phase": "admit",
+      "mutation": "schema-name",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "compile-index-validation-capability",
+      "phase": "compile-index",
+      "mutation": "validation-capability",
+      "expected": "mutation-refused"
+    },
+    {
+      "id": "admit-validation-capability",
+      "phase": "admit",
+      "mutation": "validation-capability",
+      "expected": "mutation-refused"
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+{"schema":"IFC4X3_ADD2","cases":[{"file":"slab-openings.ifc","sha256":"958350475139ad5ee7bfdf1181c259c9f188c977302233c10dbe5644b5843a90","relations":[{"id":"328","host":"303","opening":"325"},{"id":"339","host":"303","opening":"336"}],"diagnostic":"geometry.opening-subtraction","fidelity":"partial"}]}

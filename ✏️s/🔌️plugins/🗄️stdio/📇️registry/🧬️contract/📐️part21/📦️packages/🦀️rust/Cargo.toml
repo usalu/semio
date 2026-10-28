@@ -25,3 +25,4 @@ semio-framework-value-derive = { path = "../../../../../../../../🧰️framewor
 semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract-testing = { path = "../../../🧰️testing/📦️packages/🦀️rust" }
 serde_json = { workspace = true }
+semio-s-artifact-stdio-step-test-oracle = { path = "../../../../../🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust" }

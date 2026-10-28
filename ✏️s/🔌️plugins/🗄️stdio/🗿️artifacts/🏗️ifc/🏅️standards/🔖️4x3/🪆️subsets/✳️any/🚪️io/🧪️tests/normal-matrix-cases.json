@@ -1,0 +1,320 @@
+{
+  "schema": "normal-covector-neutral",
+  "version": 1,
+  "nativeExecution": false,
+  "matrixLayout": "columns",
+  "cases": [
+    {
+      "id": "identity",
+      "columns": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        1,
+        2,
+        3
+      ],
+      "directionAvailable": true,
+      "oracle": "three+mpmath",
+      "expectedDirection": [
+        0.2672612419124244,
+        0.5345224838248488,
+        0.8017837257372732
+      ]
+    },
+    {
+      "id": "rotation-z90",
+      "columns": [
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        1,
+        2,
+        3
+      ],
+      "directionAvailable": true,
+      "oracle": "three+mpmath",
+      "expectedDirection": [
+        -0.5345224838248488,
+        0.2672612419124244,
+        0.8017837257372732
+      ]
+    },
+    {
+      "id": "reflection",
+      "columns": [
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        1,
+        0,
+        1
+      ],
+      "directionAvailable": true,
+      "oracle": "three+mpmath",
+      "expectedDirection": [
+        -0.7071067811865475,
+        0,
+        0.7071067811865475
+      ]
+    },
+    {
+      "id": "nonuniform",
+      "columns": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          3,
+          0
+        ],
+        [
+          0,
+          0,
+          4
+        ]
+      ],
+      "normal": [
+        1,
+        1,
+        1
+      ],
+      "directionAvailable": true,
+      "oracle": "three+mpmath",
+      "expectedDirection": [
+        0.7682212795973759,
+        0.5121475197315839,
+        0.3841106397986879
+      ]
+    },
+    {
+      "id": "shear",
+      "columns": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0.5,
+          1,
+          0
+        ],
+        [
+          0,
+          0.25,
+          1
+        ]
+      ],
+      "normal": [
+        1,
+        2,
+        3
+      ],
+      "directionAvailable": true,
+      "oracle": "three+mpmath",
+      "expectedDirection": [
+        0.31402746879154386,
+        0.47104120318731574,
+        0.8243221055778026
+      ]
+    },
+    {
+      "id": "extreme-axis",
+      "columns": [
+        [
+          1e+300,
+          0,
+          0
+        ],
+        [
+          0,
+          1e-300,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        1,
+        1,
+        1
+      ],
+      "directionAvailable": true,
+      "oracle": "mpmath",
+      "expectedDirection": [
+        0,
+        1,
+        1e-300
+      ]
+    },
+    {
+      "id": "extreme-balanced",
+      "columns": [
+        [
+          1e+300,
+          0,
+          0
+        ],
+        [
+          0,
+          1e-300,
+          0
+        ],
+        [
+          0,
+          0,
+          1e-100
+        ]
+      ],
+      "normal": [
+        1e+300,
+        1e-300,
+        1e-100
+      ],
+      "directionAvailable": true,
+      "oracle": "mpmath",
+      "expectedDirection": [
+        0.5773502691896258,
+        0.5773502691896258,
+        0.5773502691896258
+      ]
+    },
+    {
+      "id": "extreme-reflected",
+      "columns": [
+        [
+          -1e+300,
+          0,
+          0
+        ],
+        [
+          0,
+          1e-300,
+          0
+        ],
+        [
+          0,
+          0,
+          1e+100
+        ]
+      ],
+      "normal": [
+        1e+300,
+        1e-300,
+        1e+100
+      ],
+      "directionAvailable": true,
+      "oracle": "mpmath",
+      "expectedDirection": [
+        -0.5773502691896258,
+        0.5773502691896258,
+        0.5773502691896258
+      ]
+    },
+    {
+      "id": "singular",
+      "columns": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        1,
+        2,
+        3
+      ],
+      "directionAvailable": false,
+      "oracle": "mpmath",
+      "expectedDirection": null
+    },
+    {
+      "id": "zero-normal",
+      "columns": [
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ],
+        [
+          0,
+          0,
+          1
+        ]
+      ],
+      "normal": [
+        0,
+        0,
+        0
+      ],
+      "directionAvailable": false,
+      "oracle": "mpmath",
+      "expectedDirection": null
+    }
+  ]
+}

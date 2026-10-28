@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 media-turn-testing = []
 
 [dependencies]
+semio-framework-io-ports = { path = "../../../../../../../../🔨️modules/🚪️io/🔌️ports/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

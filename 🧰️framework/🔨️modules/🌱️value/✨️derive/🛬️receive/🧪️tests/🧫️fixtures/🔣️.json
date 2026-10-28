@@ -1,0 +1,77 @@
+{
+  "cases": [
+    {
+      "name": "Acyclic Struct",
+      "sources": [
+        "struct Leaf { value:u64 }"
+      ],
+      "dependencies": {
+        "Leaf": []
+      },
+      "recursive": [],
+      "expectedCycles": []
+    },
+    {
+      "name": "Recursive Bounds Need Explicit Owner",
+      "sources": [
+        "#[value(tag=\"kind\")] enum Node { Group(Group), Leaf(Leaf) }",
+        "struct Group { children: Vec<Node> }",
+        "struct Leaf { value:u64 }"
+      ],
+      "dependencies": {
+        "Node": [
+          "Group",
+          "Leaf"
+        ],
+        "Group": [
+          "Node"
+        ],
+        "Leaf": []
+      },
+      "recursive": [],
+      "expectedCycles": [
+        [
+          "Group",
+          "Node"
+        ]
+      ]
+    },
+    {
+      "name": "Recursive Enum Owner Cuts Trait Selection Cycle",
+      "sources": [
+        "#[value(receive_recursive,tag=\"kind\")] enum Node { Group(Group), Leaf(Leaf) }",
+        "struct Group { children: Vec<Node> }",
+        "struct Leaf { value:u64 }"
+      ],
+      "dependencies": {
+        "Node": [
+          "Group",
+          "Leaf"
+        ],
+        "Group": [
+          "Node"
+        ],
+        "Leaf": []
+      },
+      "recursive": [
+        "Node"
+      ],
+      "expectedCycles": []
+    },
+    {
+      "name": "Recursive Struct Owner Cuts Trait Selection Cycle",
+      "sources": [
+        "#[value(receive_recursive)] struct Branch { children:Vec<Branch> }"
+      ],
+      "dependencies": {
+        "Branch": [
+          "Branch"
+        ]
+      },
+      "recursive": [
+        "Branch"
+      ],
+      "expectedCycles": []
+    }
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "actualProgramRequired",
+    "source",
+    "expectedFailure",
+    "compilerSourceWork",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "actualProgramRequired": {
+      "const": true
+    },
+    "source": {
+      "const": "#1=IFCDIRECTION((0.,0.,0.));"
+    },
+    "expectedFailure": {
+      "const": "IFCDIRECTION.MAGNITUDEGREATERZERO"
+    },
+    "compilerSourceWork": {
+      "const": 172607
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "mutation",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "admit",
+              "normalize",
+              "structure",
+              "evaluate"
+            ]
+          },
+          "mutation": {
+            "enum": [
+              "clear-rules",
+              "replace-rules",
+              "expression-offset",
+              "clear-statements",
+              "delete-variable",
+              "edit-inverse"
+            ]
+          },
+          "expected": {
+            "const": "retained-invalid-report"
+          }
+        }
+      }
+    }
+  }
+}

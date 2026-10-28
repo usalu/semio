@@ -26,3 +26,6 @@ path = "../../🦀️.rs"
 syn = { version = "2.0", features = ["full", "extra-traits", "visit", "visit-mut"] }
 quote = "1.0"
 proc-macro2 = "1.0"
+
+[dev-dependencies]
+serde_json = { workspace = true }

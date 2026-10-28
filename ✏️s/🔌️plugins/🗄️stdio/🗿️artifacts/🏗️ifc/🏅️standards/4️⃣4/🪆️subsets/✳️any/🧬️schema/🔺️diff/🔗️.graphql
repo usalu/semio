@@ -1,16 +1,16 @@
 # 🔺️ One `args.modified[]`/`added[]` entry.
 type IfcArgModified {
-  index: Int!
+  index: IfcIndex!
   value: IfcValue!
 }
 type IfcArgAdded {
-  index: Int!
+  index: IfcIndex!
   value: IfcValue!
 }
 
 # 🔺️ Index-keyed collection triple for one entity's positional `args`.
 type IfcArgsDiff {
-  removed: [Int!]!
+  removed: [IfcIndex!]!
   modified: [IfcArgModified!]!
   added: [IfcArgAdded!]!
 }
@@ -22,18 +22,22 @@ type IfcEntityDiff {
   complex: [IfcComplexType!]
 }
 
+type IfcEntityRemoved {
+  id: IfcUInt64!
+  index: IfcIndex!
+}
 type IfcEntityModified {
-  id: Int!
+  id: IfcUInt64!
   diff: IfcEntityDiff!
 }
 type IfcEntityAdded {
-  index: Int!
+  index: IfcIndex!
   entity: IfcEntity!
 }
 
 # 📦️ Sparse id-keyed `entities` triple.
 type IfcEntitiesDiff {
-  removed: [Int!]!
+  removed: [IfcEntityRemoved!]!
   modified: [IfcEntityModified!]!
   added: [IfcEntityAdded!]!
 }

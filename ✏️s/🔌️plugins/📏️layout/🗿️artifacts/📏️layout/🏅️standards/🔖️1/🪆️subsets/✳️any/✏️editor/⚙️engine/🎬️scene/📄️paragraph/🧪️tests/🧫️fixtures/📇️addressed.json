@@ -1,0 +1,124 @@
+{
+  "schema": "layout.paragraph.addressed-flow.v1",
+  "cases": [
+    {
+      "name": "Three Columns",
+      "flow": 0,
+      "requests": [
+        2,
+        0,
+        1,
+        2
+      ],
+      "heads": [
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        "three",
+        "one ",
+        "two ",
+        "three"
+      ],
+      "plans": 1
+    },
+    {
+      "name": "Different Next Width",
+      "flow": 1,
+      "requests": [
+        1,
+        0,
+        1,
+        1
+      ],
+      "heads": [
+        0,
+        0
+      ],
+      "expected": [
+        "two three",
+        "one ",
+        "two three",
+        "two three"
+      ],
+      "plans": 1
+    },
+    {
+      "name": "Hard Break UTF-8 Consumption",
+      "flow": 2,
+      "requests": [
+        2,
+        0,
+        1,
+        2
+      ],
+      "heads": [
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        "Z",
+        "Aé",
+        "🌍",
+        "Z"
+      ],
+      "plans": 1
+    },
+    {
+      "name": "Short Region Consumes Nothing",
+      "flow": 3,
+      "requests": [
+        2,
+        0,
+        1,
+        2
+      ],
+      "heads": [
+        0,
+        0,
+        0
+      ],
+      "expected": [
+        "two three",
+        "",
+        "one ",
+        "two three"
+      ],
+      "plans": 1
+    },
+    {
+      "name": "Explicit Overset Prefix",
+      "flow": 4,
+      "requests": [
+        0,
+        0
+      ],
+      "heads": [
+        0
+      ],
+      "expected": [
+        "one ",
+        "one "
+      ],
+      "plans": 1
+    },
+    {
+      "name": "Same Frame Three Columns",
+      "flow": 5,
+      "requests": [
+        0,
+        0
+      ],
+      "heads": [
+        0
+      ],
+      "expected": [
+        "one two three",
+        "one two three"
+      ],
+      "plans": 1
+    }
+  ]
+}

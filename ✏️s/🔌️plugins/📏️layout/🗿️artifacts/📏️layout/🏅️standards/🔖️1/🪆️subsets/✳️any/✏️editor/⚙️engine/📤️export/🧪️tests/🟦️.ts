@@ -41,3 +41,6 @@ test("Layout source adoption refuses comment-only and duplicated physical owners
   expect(admits({ ...sources, editor: sources.editor + "\nimpl ArtifactEditor for LayoutPlayApp {}" })).toBe(false);
   expect(admits({ ...sources, export: sources.export + "\nimpl LayoutMediaExportJob {}" })).toBe(false);
 });
+
+import {run as runPlanStorage} from "../🗃️plan/🧪️tests/🔮️oracle.mjs";
+test("Original export plan custody, order and cancellation agree with independent oracle",()=>{expect(runPlanStorage(resolve(import.meta.dir,"../../../../../../../../../../../../.."))).toMatchObject({items:32,cancelled:5,offsets:32,pages:1});});

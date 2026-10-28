@@ -1,0 +1,13 @@
+# Issued EXPRESS Vector Independent Audit
+
+The frozen10-owned/15-reference production-free slice is closed. All25 before/after hashes match. Independent actual npm Bun1.4.2 execution completed49pass/0fail/858assertions in440ms. No production, issued program, catalog or source graph was changed by this slice or this review.
+
+The runtime tests compile the real released program, initialize a genuine IfcExpressContext from the unchanged12-entity STEP source, and assert exact issued function pointer identity. Arguments address actual direction/vector entities. Result projection reads actual DIRECTIONRATIOS/ORIENTATION/MAGNITUDE through context attributes; it does not inject derived Dim, replace dispatch, or install expected ASTs. Source populations are compared before/after every case. Six owners are directly scored; nested called helpers do not become independently scored owners.
+
+The finite REAL comparator intentionally identifies positive and negative zero while retaining negativeZeroPaths in the separate runtime observation. That matches numeric EXPRESS equality; the initial Object.is disagreement is a test artifact rather than a producer red. Only the declared diagonal normalization row permits1e-15 tolerance. Cross-product orientation/magnitude and raw complement scaling remain discriminated rather than normalized to conceal differences.
+
+Independent fresh invocation of the owned installed IfcOpenShell0.8.5 interface agrees41/41, with unchanged external source populations. Fresh SQLite arithmetic agrees25/25;16 other owner rows are explicitly outside its dot/cross/complement interface. This review reuses the worker's exact standalone-source full EXPRESS0 observation and does not relabel it as whole-project validity. External outputs are isolated in issued-vector-independent-oracle.json, leaving worker before/final evidence untouched.
+
+Seven control laws cover preparation and real function calls, captured getter once, unbound observer receiver, original signal replacement, exact object/undefined failure identity and zero work/depth/iteration refusal. The49 actual laws passed in this review. No additional P1/P2 was identified. This establishes bounded owner-case evidence, not complete branch coverage, full specification/all-MVD conformance, or native type/runtime/capability proof.
+
+Evidence: generated/issued-vector-independent-tests.txt; generated/issued-vector-independent-before.json; generated/issued-vector-independent-after.json; issued-vector-independent-oracle.py and generated/issued-vector-independent-oracle.json. All reviewer processes are terminal; source released.

@@ -121,6 +121,16 @@
       "factory": "semio_s_artifact_stdio_ifc_4::viewer::ifc4_any::create_ifc4_any_viewer",
       "mutationRoster": false,
       "laws": null
+    },
+    {
+      "owner": "stdio-bim",
+      "order": 10,
+      "variant": "Ifc4x3AnyEditor",
+      "role": "editor",
+      "type": "semio_s_artifact_stdio_ifc_4x3::editor::Ifc4x3AnyEditor",
+      "factory": "semio_s_artifact_stdio_ifc_4x3::editor::create_ifc4x3_any_editor",
+      "mutationRoster": false,
+      "laws": null
     }
   ],
   "openTargets": [],
@@ -134,7 +144,8 @@
     "semio-s-artifact-stdio-ifc-2x3-sav",
     "semio-s-artifact-stdio-ifc-4",
     "semio-s-artifact-stdio-ifc-4-model",
-    "semio-s-artifact-stdio-ifc-4-mutations"
+    "semio-s-artifact-stdio-ifc-4-mutations",
+    "semio-s-artifact-stdio-ifc-4x3"
   ],
   "playgrounds": [
     {

@@ -1,0 +1,24 @@
+{
+  "feature": "layout.retained.drawing-reference-admission",
+  "authority": "genuine immutable LayoutGraphRead original member reference fields only",
+  "fields": [
+    "handle.childId",
+    "handle.target.artifactId",
+    "handle.target.dialect.artifactKind",
+    "handle.target.dialect.standard",
+    "handle.target.dialect.subset"
+  ],
+  "admission": [
+    "nonempty Unicode White_Space identities",
+    "exact s.draw.drawing / 1 / * dialect",
+    "independent child and target identities across original document and page references"
+  ],
+  "frontier": "one original reference or at most256 native UTF8 bytes /64 portable UTF16 units before yield",
+  "prohibitions": [
+    "no child content loading",
+    "no member births",
+    "no IDs derived from strings",
+    "no inline Drawing decoding"
+  ],
+  "nativeStatus": "authored physical allocator and original custody laws; unrun"
+}

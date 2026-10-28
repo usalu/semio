@@ -1,0 +1,19 @@
+# Recursive IfcValue TS6 Independent Audit
+
+The frozen six-file checkpoint is closed. All6before/after hashes match. Independent current-source actual npm Bun1.4.2 replay completes37pass/0fail/9850assertions in53.11s. The corrected prior unsupported-frontier replacement separately passes1test/11assertions in12.40s with14filtered out; this is not a fresh whole114-suite claim. All reviewer processes are terminal and source released. No additional P1/P2 identified.
+
+## Complete Roster and Real UI Ownership
+
+Independent installed IfcOpenShell0.8.5 schema traversal reproduces all109 unique leaf names, order and complete nested SELECT ancestry exactly. The actual producer progressively traverses the canonical immutable catalog, detects cycles/depth and duplicate leaves, and refuses unsupported leaf domains instead of filtering them. Intermediate SELECT branch names never become choices. Complete109metadata admission remains separate from partial display.
+
+Four leaf pages have31/31/31/16ordinary choices, with at most one exact selected off-page leaf pin under the unchanged32choice cap. Actual navigation paths/offsets remain source-bound, reject forged offsets and do not modify request args. INTEGER LIST member pages use the independent seven-member window; actual overfull eight-member drafts preserve every member while all four leaf pages remain reachable. The explicit current page/fallback logic and declared collection bounds preserve editability rather than silently truncate invalid data.
+
+BOOLEAN/LOGICAL keep typed enumT/F/U semantics with no default child; incompatible discriminator changes clear child items, compatible kinds preserve exact words including UTF8. BINARY retains its actual lexer/left-padding validation rather than string coercion. NUMBER keeps explicit INTEGER/REAL representation. Fixed REAL ARRAY and bounded INTEGER LIST controls create only caller-directed empty containers/blank leaf drafts, preserve source siblings and require actual alias rules for readiness. CompoundPlaneAngleMeasure uses released LIST[3:4] and its four actual WHERE rules, not UI length alone.
+
+Actual binding and canonical mutation tests pass: ready MeasureWithUnit repairs produce one SetEntityArg, UnitComponent#7 and original unit remain exact, and the real inverse recovers the source. Source/request immutability, every progress-prefix cancellation, original callback replacement and exact thrownundefined are exercised. Existing complete candidate structural/inherited/alias/issued-rule checks remain in authority; no free SELF, caller certificate, default constructor or no-op type mutation was introduced.
+
+## External Evidence Qualification
+
+The worker's recent physical0.9.0.post1 run is reused without duplicate expensive full validation. Independent examination/composite replay retains23exact physical carriers,4unserialized drafts, raw22/23acceptance agreement and the known one-item ARRAY gap. Actual external aggregate bounds plus Ajv cardinality gives23/23composite decisions; raw22 is not improved or erased. The independent fresh0.8.5 metadata109match is separate from those0.9physical observations. Invalid BOOLEAN.U remains physically refused while its raw UNKNOWN representation is mapped explicitly; LOGICAL.U is valid. NUMBERinteger graph admission remains semantic-only and is not Part21 REAL-token certification.
+
+Native Value work is outside these six source hashes and remains unmounted/moving; syntax is not native execution/type/grant/publication proof. No whole-schema, whole-view or broad-repository snapshot is inferred from this slice. Inputs/evidence: type-value-independent-composite.ts, type-value-independent-metadata.py, generated/type-value-independent-{before.json,after.json,tests.txt,prior-law.txt,composite.json,metadata.json}. No production or frozen inputs were edited by the reviewer.

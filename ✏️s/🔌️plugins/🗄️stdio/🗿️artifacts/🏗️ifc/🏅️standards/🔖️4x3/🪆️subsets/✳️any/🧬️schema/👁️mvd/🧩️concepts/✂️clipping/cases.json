@@ -1,0 +1,207 @@
+{
+  "scope": "explicit-three-representation-clauses",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "clipping",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBooleanClippingResult"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "multiple-clipping",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBooleanClippingResult",
+        "IfcBooleanClippingResult"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "boolean-result",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBooleanResult"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "csg-solid-schema-boundary",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcCsgSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "block",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBlock"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "half-space",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcHalfSpaceSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "polygonal-half-space",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcPolygonalBoundedHalfSpace"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "boxed-half-space",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBoxedHalfSpace"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "extruded",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "surface-model",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcFaceBasedSurfaceModel"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "tessellated",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "indexed-face",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcIndexedPolygonalFace"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-foreign",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBooleanClippingResult",
+        "IfcCsgSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "mixed-unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcCsgSolid",
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "empty-items",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [],
+      "expected": "pass"
+    },
+    {
+      "id": "wrong-identifier",
+      "applicable": true,
+      "identifier": "Axis",
+      "type": "Clipping",
+      "items": [
+        "IfcBooleanClippingResult"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "wrong-type",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "CSG",
+      "items": [
+        "IfcBooleanClippingResult"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "excluded",
+      "applicable": false,
+      "identifier": "Axis",
+      "type": "CSG",
+      "items": [
+        "IfcCsgSolid"
+      ],
+      "expected": "not-applicable"
+    },
+    {
+      "id": "unresolved",
+      "applicable": null,
+      "identifier": "Body",
+      "type": "Clipping",
+      "items": [
+        "IfcBooleanClippingResult"
+      ],
+      "expected": "incomplete"
+    }
+  ]
+}

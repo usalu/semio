@@ -1,0 +1,134 @@
+[
+  {
+    "mutation": "setElementProperty",
+    "id": "site",
+    "pset": "Authored",
+    "property": "Text",
+    "value": {
+      "Text": {
+        "value": "B\u00fcro \u00b7 \u6771\u4eac"
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "site",
+    "pset": "Authored",
+    "property": "Real",
+    "value": {
+      "Real": {
+        "value": -0.0
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "site",
+    "pset": "Authored",
+    "property": "Integer",
+    "value": {
+      "Integer": {
+        "value": 2147483647
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "site",
+    "pset": "Authored",
+    "property": "Boolean",
+    "value": {
+      "Boolean": {
+        "value": false
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "building",
+    "pset": "Authored",
+    "property": "Text",
+    "value": {
+      "Text": {
+        "value": "B\u00fcro \u00b7 \u6771\u4eac"
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "building",
+    "pset": "Authored",
+    "property": "Real",
+    "value": {
+      "Real": {
+        "value": -0.0
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "building",
+    "pset": "Authored",
+    "property": "Integer",
+    "value": {
+      "Integer": {
+        "value": 2147483647
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "building",
+    "pset": "Authored",
+    "property": "Boolean",
+    "value": {
+      "Boolean": {
+        "value": false
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "storey",
+    "pset": "Authored",
+    "property": "Text",
+    "value": {
+      "Text": {
+        "value": "B\u00fcro \u00b7 \u6771\u4eac"
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "storey",
+    "pset": "Authored",
+    "property": "Real",
+    "value": {
+      "Real": {
+        "value": -0.0
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "storey",
+    "pset": "Authored",
+    "property": "Integer",
+    "value": {
+      "Integer": {
+        "value": 2147483647
+      }
+    }
+  },
+  {
+    "mutation": "setElementProperty",
+    "id": "storey",
+    "pset": "Authored",
+    "property": "Boolean",
+    "value": {
+      "Boolean": {
+        "value": false
+      }
+    }
+  }
+]

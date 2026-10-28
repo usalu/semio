@@ -1,0 +1,6 @@
+/** 🔲️ Compare actual scalar samples with independently generated Three arc rings. */
+import{readFile,writeFile}from'node:fs/promises';import{resolve}from'node:path';
+import{convexProfileSize,convexProfilePoint}from'../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🔲️convex/🟦️.ts';
+const p=import.meta.dir,cases=JSON.parse(await readFile(resolve(p,'rounded-rectangle-profile-cases.json'),'utf8')).cases,refs=JSON.parse(await readFile(resolve(p,'🗑️generated/rounded-rectangle-three-reference.json'),'utf8')).rows,result=[];
+for(const ref of refs.filter((r:any)=>r.status==='sampled-reference')){const row=cases.find((c:any)=>c.id===ref.id),boundary={kind:'rounded-rectangle' as const,width:row.dimensions[0],height:row.dimensions[1],radius:row.radius,chords:ref.curvedSegments},size=convexProfileSize(boundary)!;let maximum=0;for(let i=0;i<size;i++){const actual=convexProfilePoint(boundary,i)!;maximum=Math.max(maximum,...actual.map((v,k)=>Math.abs(v-ref.ring[i][k])));}result.push({id:row.id,size,expectedSize:ref.boundaryEdges,maximumAbsoluteDifference:maximum});if(size!==ref.boundaryEdges||maximum>1e-10)throw Error(JSON.stringify(result.at(-1)));}
+await writeFile(resolve(p,'🗑️generated/rounded-profile-independent-samples.json'),JSON.stringify(result,null,2)+'\n');console.log('[DEBUG]',result);

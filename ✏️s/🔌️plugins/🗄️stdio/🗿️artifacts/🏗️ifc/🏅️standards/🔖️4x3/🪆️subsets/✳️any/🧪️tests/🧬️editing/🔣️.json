@@ -1,0 +1,53 @@
+{
+  "schema": "stdio.ifc",
+  "fileSchema": "IFC4X3_ADD2",
+  "entityIds": [
+    "1",
+    "18446744073709551615"
+  ],
+  "originalArguments": [
+    10,
+    20,
+    30,
+    40
+  ],
+  "editedArguments": [
+    5,
+    10,
+    15,
+    35
+  ],
+  "jsonPatch": [
+    {
+      "op": "replace",
+      "path": "/entities/0/args/0",
+      "value": {
+        "kind": "string",
+        "value": "Edited"
+      }
+    }
+  ],
+  "nestedPath": [
+    0,
+    1
+  ],
+  "refusals": [
+    "duplicateTarget",
+    "missingEntity",
+    "invalidIndex",
+    "danglingReference",
+    "invalidSchema",
+    "staleRevision",
+    "cancelled"
+  ],
+  "omittedComplex": {
+    "id": "1",
+    "name": "IFCTEST",
+    "args": [
+      {
+        "kind": "integer",
+        "value": "7"
+      }
+    ]
+  }
+}

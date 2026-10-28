@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout STEP Rectangle Recovery",
+  "type": "object",
+  "required": [
+    "points",
+    "minX",
+    "maxY"
+  ],
+  "properties": {
+    "points": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "minX": {
+      "type": "number"
+    },
+    "maxY": {
+      "type": "number"
+    }
+  },
+  "description": "Closed orthogonal planar curve coordinates in points. Recover native center-rotation bounds; nonrectangular, nonplanar, zero-length paths return no bounds.",
+  "$defs": {
+    "annotation": {
+      "type": "object",
+      "required": [
+        "position",
+        "xAxis",
+        "yAxis",
+        "width",
+        "height",
+        "minX",
+        "maxY"
+      ],
+      "description": "Point-space standard annotation baseline/normalized axes and positive extent. Mapping preserves baseline, centre rotation and glyph-height box."
+    }
+  }
+}

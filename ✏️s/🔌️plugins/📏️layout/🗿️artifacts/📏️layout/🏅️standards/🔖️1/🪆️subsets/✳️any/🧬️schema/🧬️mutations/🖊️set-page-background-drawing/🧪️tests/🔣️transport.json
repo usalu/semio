@@ -1,0 +1,109 @@
+{
+  "cases": [
+    {
+      "name": "SetPageBackgroundDrawing",
+      "input": {
+        "SetPageBackgroundDrawing": {
+          "pageId": "page-1",
+          "drawing": {
+            "handle": {
+              "childId": "page-drawing-1",
+              "target": {
+                "artifactId": "page-drawing-1",
+                "dialect": {
+                  "artifactKind": "s.draw.drawing",
+                  "standard": "1",
+                  "subset": "*"
+                }
+              }
+            }
+          }
+        }
+      },
+      "output": {
+        "SetPageBackgroundDrawing": {
+          "pageId": "page-1",
+          "drawing": {
+            "handle": {
+              "childId": "page-drawing-1",
+              "target": {
+                "artifactId": "page-drawing-1",
+                "dialect": {
+                  "artifactKind": "s.draw.drawing",
+                  "standard": "1",
+                  "subset": "*"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "name": "ClearPageBackgroundDrawing",
+      "input": {
+        "SetPageBackgroundDrawing": {
+          "pageId": "page-1",
+          "drawing": null
+        }
+      },
+      "output": {
+        "SetPageBackgroundDrawing": {
+          "pageId": "page-1",
+          "drawing": null
+        }
+      }
+    }
+  ],
+  "refusals": [
+    {
+      "SetPageBackgroundDrawing": {
+        "pageId": "page-1"
+      }
+    },
+    {
+      "SetPageBackgroundDrawing": {
+        "pageId": "page-1",
+        "drawing": null,
+        "extra": true
+      }
+    },
+    {
+      "SetPageBackgroundDrawing": {
+        "pageId": "page-1",
+        "drawing": {
+          "handle": {
+            "childId": "page-drawing-1",
+            "target": {
+              "artifactId": 17,
+              "dialect": {
+                "artifactKind": "s.draw.drawing",
+                "standard": "1",
+                "subset": "*"
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "SetPageBackgroundDrawing": {
+        "pageId": "page-1",
+        "drawing": {
+          "handle": {
+            "childId": "page-drawing-1",
+            "target": {
+              "artifactId": "page-drawing-1",
+              "dialect": {
+                "artifactKind": "s.draw.drawing",
+                "standard": "1",
+                "subset": "*"
+              }
+            }
+          },
+          "content": {}
+        }
+      }
+    }
+  ]
+}

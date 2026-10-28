@@ -1,0 +1,11 @@
+{
+  "schema":"stdio.ifc.gltf-originals",
+  "sourceCommit":"15cd02d304e54cb42a4db4eefe719f76190f4b68",
+  "relativeErrorLimit":1.7763568394002505e-15,
+  "cases":[
+    {"name":"Triangle","file":"Triangle.gltf","primitives":1,"vertices":3,"triangles":1,"ifcBounds":[[0,0,0],[1,0,1]]},
+    {"name":"Triangle Without Indices","file":"TriangleWithoutIndices.gltf","primitives":1,"vertices":3,"triangles":1,"ifcBounds":[[0,0,0],[1,0,1]]},
+    {"name":"Box Interleaved","file":"BoxInterleaved.glb","primitives":1,"vertices":24,"triangles":12,"ifcBounds":[[-0.5,-0.5,-0.5],[0.5,0.5,0.5]]},
+    {"name":"Negative Scale Test","file":"NegativeScaleTest.glb","primitives":11,"vertices":3958,"triangles":7724,"ifcBounds":[[-5.1616740226745605,-0.4999999701976776,-4.453539848327637],[5.1616740226745605,0.4999999701976776,4.453539848327637]]}
+  ]
+}

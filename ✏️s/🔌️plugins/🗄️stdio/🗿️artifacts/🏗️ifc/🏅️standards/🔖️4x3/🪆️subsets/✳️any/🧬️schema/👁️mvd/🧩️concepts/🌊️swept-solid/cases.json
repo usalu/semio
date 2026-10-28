@@ -1,0 +1,166 @@
+{
+  "scope": "explicit-three-representation-clauses",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "extruded",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "revolved",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcRevolvedAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "mixed-basic",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid",
+        "IfcRevolvedAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "extruded-tapered",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolidTapered"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "revolved-tapered",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcRevolvedAreaSolidTapered"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "advanced-type",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolidTapered"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-disk",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcSweptDiskSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "sectioned",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcSectionedSolidHorizontal"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "wrong-identifier",
+      "applicable": true,
+      "identifier": "Axis",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "wrong-type",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Tessellation",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "tessellated",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-foreign",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid",
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "empty-items",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [],
+      "expected": "pass"
+    },
+    {
+      "id": "excluded",
+      "applicable": false,
+      "identifier": "Axis",
+      "type": "Tessellation",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "not-applicable"
+    },
+    {
+      "id": "unresolved",
+      "applicable": null,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "incomplete"
+    }
+  ]
+}

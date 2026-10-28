@@ -342,6 +342,7 @@ impl ArtifactMediaExportCompletion {
 }
 
 struct ArtifactMediaExportCreditState {
+    writer: semio_framework_value::retirement::controlled::RetainedOwnerGate<()>,
     bytes: std::sync::atomic::AtomicUsize,
     exceeded: std::sync::atomic::AtomicBool,
 }
@@ -372,10 +373,11 @@ impl ArtifactMediaExportCredit {
     }
 
     pub fn new(maximum: usize) -> Self {
-        Self { maximum, state: std::sync::Arc::new(ArtifactMediaExportCreditState { bytes: std::sync::atomic::AtomicUsize::new(0), exceeded: std::sync::atomic::AtomicBool::new(false) }) }
+        Self { maximum, state: std::sync::Arc::new(ArtifactMediaExportCreditState { writer: semio_framework_value::retirement::controlled::RetainedOwnerGate::new(()), bytes: std::sync::atomic::AtomicUsize::new(0), exceeded: std::sync::atomic::AtomicBool::new(false) }) }
     }
 
     pub fn credit(&self, bytes: usize) -> Result<usize, Fault> {
+        let _writer = self.state.writer.try_lock().map_err(|_| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.media-output-busy"), "media output credit authority is busy"))?;
         let result = self.state.bytes.try_update(std::sync::atomic::Ordering::SeqCst, std::sync::atomic::Ordering::SeqCst, |current| current.checked_add(bytes).filter(|next| *next <= self.maximum)).map(|previous| previous + bytes);
         match result {
             Ok(total) => Ok(total),
@@ -471,3 +473,6 @@ pub fn validate_media_export_structure(result: &ArtifactMediaExportResult, opera
 
 #[path="🏭️construction/🦀️.rs"]
 mod original_output_construction;
+
+#[path="📤️producer/🦀️.rs"]
+mod original_output_producer;

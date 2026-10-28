@@ -1,0 +1,12 @@
+{"version":1,"cases":[
+ {"id":"identity","radius":1,"u":[1,0,0],"v":[0,1,0],"expected":1},
+ {"id":"mirrored","radius":1,"u":[-1,0,0],"v":[0,1,0],"expected":1},
+ {"id":"rotated-anisotropy","radius":1,"u":[707.1067811865476,1.4142135623730951,0],"v":[-707.1067811865476,1.4142135623730951,0],"expected":1000},
+ {"id":"tilted-plane","radius":1,"u":[0,0,1000],"v":[0,3,0],"expected":1000},
+ {"id":"small","radius":1,"u":[0.001,0,0],"v":[0,0.001,0],"expected":0.001},
+ {"id":"balanced-huge","radius":1e-200,"u":[1e200,0,0],"v":[0,1e200,0],"expected":1},
+ {"id":"overflow","radius":1e308,"u":[2,0,0],"v":[0,2,0],"expected":null},
+ {"id":"underflow","radius":1e-200,"u":[1e-200,0,0],"v":[0,1e-200,0],"expected":null},
+ {"id":"zero-basis","radius":1,"u":[0,0,0],"v":[0,0,0],"expected":null},
+ {"id":"negative-radius","radius":-1,"u":[1,0,0],"v":[0,1,0],"expected":null}
+]}

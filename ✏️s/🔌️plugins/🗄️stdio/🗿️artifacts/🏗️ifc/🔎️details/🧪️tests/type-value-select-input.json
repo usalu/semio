@@ -1,0 +1,1431 @@
+{
+ "schema": "IFC4X3_ADD2",
+ "entity": "IFCMEASUREWITHUNIT",
+ "select": "IFCVALUE",
+ "index": "0",
+ "preserved": {
+  "UnitComponent": "7"
+ },
+ "source": {
+  "entities": [
+   {
+    "id": "1",
+    "name": "IFCMEASUREWITHUNIT",
+    "args": [
+     {
+      "kind": "unset"
+     },
+     {
+      "kind": "reference",
+      "value": "7"
+     }
+    ],
+    "complex": []
+   },
+   {
+    "id": "7",
+    "name": "IFCSIUNIT",
+    "args": [
+     {
+      "kind": "derived"
+     },
+     {
+      "kind": "enum",
+      "value": "LENGTHUNIT"
+     },
+     {
+      "kind": "unset"
+     },
+     {
+      "kind": "enum",
+      "value": "METRE"
+     }
+    ],
+    "complex": []
+   }
+  ]
+ },
+ "pages": [
+  {
+   "offset": "0",
+   "ordinary": 31,
+   "first": "IFCABSORBEDDOSEMEASURE",
+   "last": "IFCMAGNETICFLUXDENSITYMEASURE"
+  },
+  {
+   "offset": "31",
+   "ordinary": 31,
+   "first": "IFCMAGNETICFLUXMEASURE",
+   "last": "IFCTHERMALADMITTANCEMEASURE"
+  },
+  {
+   "offset": "62",
+   "ordinary": 31,
+   "first": "IFCTHERMALCONDUCTIVITYMEASURE",
+   "last": "IFCTIMEMEASURE"
+  },
+  {
+   "offset": "93",
+   "ordinary": 16,
+   "first": "IFCVOLUMEMEASURE",
+   "last": "IFCURIREFERENCE"
+  }
+ ],
+ "cases": [
+  {
+   "id": "missing",
+   "member": null,
+   "items": null,
+   "domain": null,
+   "physical": false
+  },
+  {
+   "id": "boolean-itemless",
+   "member": "IFCBOOLEAN",
+   "items": [],
+   "domain": null,
+   "physical": false
+  },
+  {
+   "id": "boolean-true",
+   "member": "IFCBOOLEAN",
+   "items": [
+    {
+     "kind": "enum",
+     "value": "T"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "boolean-false",
+   "member": "IFCBOOLEAN",
+   "items": [
+    {
+     "kind": "enum",
+     "value": "F"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "boolean-unknown",
+   "member": "IFCBOOLEAN",
+   "items": [
+    {
+     "kind": "enum",
+     "value": "U"
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "logical-unknown",
+   "member": "IFCLOGICAL",
+   "items": [
+    {
+     "kind": "enum",
+     "value": "U"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "binary-exact",
+   "member": "IFCBINARY",
+   "items": [
+    {
+     "kind": "binary",
+     "value": "0A5FF"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "binary-empty",
+   "member": "IFCBINARY",
+   "items": [
+    {
+     "kind": "binary",
+     "value": "0"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "integer-large",
+   "member": "IFCINTEGER",
+   "items": [
+    {
+     "kind": "integer",
+     "value": "9007199254740993"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "integer-min",
+   "member": "IFCINTEGER",
+   "items": [
+    {
+     "kind": "integer",
+     "value": "-9223372036854775808"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "real-minus-zero",
+   "member": "IFCREAL",
+   "items": [
+    {
+     "kind": "real",
+     "value": {
+      "bits": "9223372036854775808"
+     }
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "number-semantic-integer",
+   "member": "IFCNUMERICMEASURE",
+   "items": [
+    {
+     "kind": "integer",
+     "value": "9007199254740993"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "last-page-unicode",
+   "member": "IFCURIREFERENCE",
+   "items": [
+    {
+     "kind": "string",
+     "value": "urn:caller:ä:€"
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "angle-itemless",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [],
+   "domain": null,
+   "physical": false
+  },
+  {
+   "id": "angle-empty",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": []
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-two",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "2"
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-three",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "2"
+      },
+      {
+       "kind": "integer",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "angle-four-negative",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "-1"
+      },
+      {
+       "kind": "integer",
+       "value": "-2"
+      },
+      {
+       "kind": "integer",
+       "value": "-3"
+      },
+      {
+       "kind": "integer",
+       "value": "-4"
+      }
+     ]
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "angle-mixed-sign",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "-2"
+      },
+      {
+       "kind": "integer",
+       "value": "3"
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-minute-boundary",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "60"
+      },
+      {
+       "kind": "integer",
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-second-boundary",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "0"
+      },
+      {
+       "kind": "integer",
+       "value": "60"
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-microsecond-boundary",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "0"
+      },
+      {
+       "kind": "integer",
+       "value": "0"
+      },
+      {
+       "kind": "integer",
+       "value": "1000000"
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-partial",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "-"
+      },
+      {
+       "kind": "integer",
+       "value": "0"
+      },
+      {
+       "kind": "integer",
+       "value": "0"
+      }
+     ]
+    }
+   ],
+   "domain": null,
+   "physical": false
+  },
+  {
+   "id": "array-one",
+   "member": "IFCCOMPLEXNUMBER",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "real",
+       "value": {
+        "bits": "0"
+       }
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "array-two",
+   "member": "IFCCOMPLEXNUMBER",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "real",
+       "value": {
+        "bits": "0"
+       }
+      },
+      {
+       "kind": "real",
+       "value": {
+        "bits": "9223372036854775808"
+       }
+      }
+     ]
+    }
+   ],
+   "domain": true,
+   "physical": true
+  },
+  {
+   "id": "array-three",
+   "member": "IFCCOMPLEXNUMBER",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "real",
+       "value": {
+        "bits": "0"
+       }
+      },
+      {
+       "kind": "real",
+       "value": {
+        "bits": "0"
+       }
+      },
+      {
+       "kind": "real",
+       "value": {
+        "bits": "0"
+       }
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  },
+  {
+   "id": "angle-five",
+   "member": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "items": [
+    {
+     "kind": "aggregate",
+     "value": [
+      {
+       "kind": "integer",
+       "value": "1"
+      },
+      {
+       "kind": "integer",
+       "value": "2"
+      },
+      {
+       "kind": "integer",
+       "value": "3"
+      },
+      {
+       "kind": "integer",
+       "value": "4"
+      },
+      {
+       "kind": "integer",
+       "value": "5"
+      }
+     ]
+    }
+   ],
+   "domain": false,
+   "physical": true
+  }
+ ],
+ "members": [
+  "IFCABSORBEDDOSEMEASURE",
+  "IFCACCELERATIONMEASURE",
+  "IFCANGULARVELOCITYMEASURE",
+  "IFCAREADENSITYMEASURE",
+  "IFCCOMPOUNDPLANEANGLEMEASURE",
+  "IFCCURVATUREMEASURE",
+  "IFCDOSEEQUIVALENTMEASURE",
+  "IFCDYNAMICVISCOSITYMEASURE",
+  "IFCELECTRICCAPACITANCEMEASURE",
+  "IFCELECTRICCHARGEMEASURE",
+  "IFCELECTRICCONDUCTANCEMEASURE",
+  "IFCELECTRICRESISTANCEMEASURE",
+  "IFCELECTRICVOLTAGEMEASURE",
+  "IFCENERGYMEASURE",
+  "IFCFORCEMEASURE",
+  "IFCFREQUENCYMEASURE",
+  "IFCHEATFLUXDENSITYMEASURE",
+  "IFCHEATINGVALUEMEASURE",
+  "IFCILLUMINANCEMEASURE",
+  "IFCINDUCTANCEMEASURE",
+  "IFCINTEGERCOUNTRATEMEASURE",
+  "IFCIONCONCENTRATIONMEASURE",
+  "IFCISOTHERMALMOISTURECAPACITYMEASURE",
+  "IFCKINEMATICVISCOSITYMEASURE",
+  "IFCLINEARFORCEMEASURE",
+  "IFCLINEARMOMENTMEASURE",
+  "IFCLINEARSTIFFNESSMEASURE",
+  "IFCLINEARVELOCITYMEASURE",
+  "IFCLUMINOUSFLUXMEASURE",
+  "IFCLUMINOUSINTENSITYDISTRIBUTIONMEASURE",
+  "IFCMAGNETICFLUXDENSITYMEASURE",
+  "IFCMAGNETICFLUXMEASURE",
+  "IFCMASSDENSITYMEASURE",
+  "IFCMASSFLOWRATEMEASURE",
+  "IFCMASSPERLENGTHMEASURE",
+  "IFCMODULUSOFELASTICITYMEASURE",
+  "IFCMODULUSOFLINEARSUBGRADEREACTIONMEASURE",
+  "IFCMODULUSOFROTATIONALSUBGRADEREACTIONMEASURE",
+  "IFCMODULUSOFSUBGRADEREACTIONMEASURE",
+  "IFCMOISTUREDIFFUSIVITYMEASURE",
+  "IFCMOLECULARWEIGHTMEASURE",
+  "IFCMOMENTOFINERTIAMEASURE",
+  "IFCMONETARYMEASURE",
+  "IFCPHMEASURE",
+  "IFCPLANARFORCEMEASURE",
+  "IFCPOWERMEASURE",
+  "IFCPRESSUREMEASURE",
+  "IFCRADIOACTIVITYMEASURE",
+  "IFCROTATIONALFREQUENCYMEASURE",
+  "IFCROTATIONALMASSMEASURE",
+  "IFCROTATIONALSTIFFNESSMEASURE",
+  "IFCSECTIONMODULUSMEASURE",
+  "IFCSECTIONALAREAINTEGRALMEASURE",
+  "IFCSHEARMODULUSMEASURE",
+  "IFCSOUNDPOWERLEVELMEASURE",
+  "IFCSOUNDPOWERMEASURE",
+  "IFCSOUNDPRESSURELEVELMEASURE",
+  "IFCSOUNDPRESSUREMEASURE",
+  "IFCSPECIFICHEATCAPACITYMEASURE",
+  "IFCTEMPERATUREGRADIENTMEASURE",
+  "IFCTEMPERATURERATEOFCHANGEMEASURE",
+  "IFCTHERMALADMITTANCEMEASURE",
+  "IFCTHERMALCONDUCTIVITYMEASURE",
+  "IFCTHERMALEXPANSIONCOEFFICIENTMEASURE",
+  "IFCTHERMALRESISTANCEMEASURE",
+  "IFCTHERMALTRANSMITTANCEMEASURE",
+  "IFCTORQUEMEASURE",
+  "IFCVAPORPERMEABILITYMEASURE",
+  "IFCVOLUMETRICFLOWRATEMEASURE",
+  "IFCWARPINGCONSTANTMEASURE",
+  "IFCWARPINGMOMENTMEASURE",
+  "IFCAMOUNTOFSUBSTANCEMEASURE",
+  "IFCAREAMEASURE",
+  "IFCCOMPLEXNUMBER",
+  "IFCCONTEXTDEPENDENTMEASURE",
+  "IFCCOUNTMEASURE",
+  "IFCDESCRIPTIVEMEASURE",
+  "IFCELECTRICCURRENTMEASURE",
+  "IFCLENGTHMEASURE",
+  "IFCLUMINOUSINTENSITYMEASURE",
+  "IFCMASSMEASURE",
+  "IFCNONNEGATIVELENGTHMEASURE",
+  "IFCNORMALISEDRATIOMEASURE",
+  "IFCNUMERICMEASURE",
+  "IFCPARAMETERVALUE",
+  "IFCPLANEANGLEMEASURE",
+  "IFCPOSITIVELENGTHMEASURE",
+  "IFCPOSITIVEPLANEANGLEMEASURE",
+  "IFCPOSITIVERATIOMEASURE",
+  "IFCRATIOMEASURE",
+  "IFCSOLIDANGLEMEASURE",
+  "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+  "IFCTIMEMEASURE",
+  "IFCVOLUMEMEASURE",
+  "IFCBINARY",
+  "IFCBOOLEAN",
+  "IFCDATE",
+  "IFCDATETIME",
+  "IFCDURATION",
+  "IFCIDENTIFIER",
+  "IFCINTEGER",
+  "IFCLABEL",
+  "IFCLOGICAL",
+  "IFCPOSITIVEINTEGER",
+  "IFCREAL",
+  "IFCTEXT",
+  "IFCTIME",
+  "IFCTIMESTAMP",
+  "IFCURIREFERENCE"
+ ],
+ "ancestry": [
+  {
+   "name": "IFCABSORBEDDOSEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCACCELERATIONMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCANGULARVELOCITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCAREADENSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCCOMPOUNDPLANEANGLEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCCURVATUREMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCDOSEEQUIVALENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCDYNAMICVISCOSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCELECTRICCAPACITANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCELECTRICCHARGEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCELECTRICCONDUCTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCELECTRICRESISTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCELECTRICVOLTAGEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCENERGYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCFORCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCFREQUENCYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCHEATFLUXDENSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCHEATINGVALUEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCILLUMINANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCINDUCTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCINTEGERCOUNTRATEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCIONCONCENTRATIONMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCISOTHERMALMOISTURECAPACITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCKINEMATICVISCOSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLINEARFORCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLINEARMOMENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLINEARSTIFFNESSMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLINEARVELOCITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLUMINOUSFLUXMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLUMINOUSINTENSITYDISTRIBUTIONMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMAGNETICFLUXDENSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMAGNETICFLUXMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMASSDENSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMASSFLOWRATEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMASSPERLENGTHMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMODULUSOFELASTICITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMODULUSOFLINEARSUBGRADEREACTIONMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMODULUSOFROTATIONALSUBGRADEREACTIONMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMODULUSOFSUBGRADEREACTIONMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMOISTUREDIFFUSIVITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMOLECULARWEIGHTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMOMENTOFINERTIAMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMONETARYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPHMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPLANARFORCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPOWERMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPRESSUREMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCRADIOACTIVITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCROTATIONALFREQUENCYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCROTATIONALMASSMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCROTATIONALSTIFFNESSMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSECTIONMODULUSMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSECTIONALAREAINTEGRALMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSHEARMODULUSMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSOUNDPOWERLEVELMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSOUNDPOWERMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSOUNDPRESSURELEVELMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSOUNDPRESSUREMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSPECIFICHEATCAPACITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTEMPERATUREGRADIENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTEMPERATURERATEOFCHANGEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTHERMALADMITTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTHERMALCONDUCTIVITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTHERMALEXPANSIONCOEFFICIENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTHERMALRESISTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTHERMALTRANSMITTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTORQUEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCVAPORPERMEABILITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCVOLUMETRICFLOWRATEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCWARPINGCONSTANTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCWARPINGMOMENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCDERIVEDMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCAMOUNTOFSUBSTANCEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCAREAMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCCOMPLEXNUMBER",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCCONTEXTDEPENDENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCCOUNTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCDESCRIPTIVEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCELECTRICCURRENTMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLENGTHMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCLUMINOUSINTENSITYMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCMASSMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCNONNEGATIVELENGTHMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCNORMALISEDRATIOMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCNUMERICMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPARAMETERVALUE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPLANEANGLEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPOSITIVELENGTHMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPOSITIVEPLANEANGLEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCPOSITIVERATIOMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCRATIOMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCSOLIDANGLEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTHERMODYNAMICTEMPERATUREMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCTIMEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCVOLUMEMEASURE",
+   "path": [
+    "IFCVALUE",
+    "IFCMEASUREVALUE"
+   ]
+  },
+  {
+   "name": "IFCBINARY",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCBOOLEAN",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCDATE",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCDATETIME",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCDURATION",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCIDENTIFIER",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCINTEGER",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCLABEL",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCLOGICAL",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCPOSITIVEINTEGER",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCREAL",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCTEXT",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCTIME",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCTIMESTAMP",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  },
+  {
+   "name": "IFCURIREFERENCE",
+   "path": [
+    "IFCVALUE",
+    "IFCSIMPLEVALUE"
+   ]
+  }
+ ]
+}

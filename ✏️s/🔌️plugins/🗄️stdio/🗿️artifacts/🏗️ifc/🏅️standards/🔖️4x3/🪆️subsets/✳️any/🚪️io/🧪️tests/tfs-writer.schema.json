@@ -1,0 +1,91 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "sourceSha256",
+    "requireClosed",
+    "normalTransport",
+    "nativeExecuted",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "const": "tfs-admission-cases.json"
+    },
+    "sourceSha256": {
+      "const": "09395563333c29049d82b1d71c0e2dd5a57191a815cc8e1986bb17098701c5a2"
+    },
+    "requireClosed": {
+      "const": true
+    },
+    "normalTransport": {
+      "const": false
+    },
+    "nativeExecuted": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 32,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "closed-tetra",
+              "open-single-triangle",
+              "unknown-single-triangle",
+              "closed-open-triangle",
+              "closed-inward",
+              "closed-duplicate-face",
+              "real-coordinate-index",
+              "zero-coordinate-index",
+              "negative-coordinate-index",
+              "index-out-of-range",
+              "index-row-two",
+              "empty-triangles",
+              "empty-points",
+              "point-two-components",
+              "integer-coordinate-value",
+              "foreign-coordinate-role",
+              "closed-logical-unknown",
+              "pn-permutation",
+              "real-pn-entry",
+              "unused-invalid-pn",
+              "unused-oob-pn",
+              "empty-pn",
+              "pn-alias-coordinate",
+              "unused-valid-point",
+              "coordinate-alias-closed",
+              "degenerate-alias-triangle",
+              "normals-valid",
+              "normals-short",
+              "normals-empty",
+              "normals-two-components",
+              "normals-extra-valid",
+              "pn-normal-domain"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "accept",
+              "refuse"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

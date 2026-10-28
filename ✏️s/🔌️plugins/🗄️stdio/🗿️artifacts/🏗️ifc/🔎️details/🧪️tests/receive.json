@@ -1,0 +1,22 @@
+{
+  "schema":"semio.ifc.owned-value-receiving.v1",
+  "maximumDepth":128,
+  "maximumNodes":65536,
+  "binaryScanBytes":64,
+  "cases":[
+    {"mode":"nativeGraph","input":{"kind":"string","value":"Grüße 🌍"},"expected":{"kind":"string","value":"Grüße 🌍"}},
+    {"mode":"nativeGraph","input":{"kind":"aggregate","value":[{"kind":"unset"},{"kind":"derived"},{"kind":"binary","value":"31"}]},"expected":{"kind":"aggregate","value":[{"kind":"unset"},{"kind":"derived"},{"kind":"binary","value":"31"}]}},
+    {"mode":"graphDecimal","input":{"kind":"typedValue","value":{"name":"IFCREAL","items":[{"kind":"real","value":{"bits":"9223372036854775808"}}]}},"expected":{"kind":"typedValue","value":{"name":"IFCREAL","items":[{"kind":"real","value":-0.0}]}},"realBits":"9223372036854775808"},
+    {"mode":"graphDecimal","input":{"kind":"integer","value":"-9007199254740993"},"expected":{"kind":"integer","value":-9007199254740993}},
+    {"mode":"graphDecimal","input":{"kind":"reference","value":"18446744073709551615"},"expected":{"kind":"reference","value":18446744073709551615}}
+  ],
+  "refusals":[
+    {"mode":"nativeGraph","input":{"kind":"unset","value":null}},
+    {"mode":"nativeGraph","input":{"kind":"string","value":"x","extra":true}},
+    {"mode":"graphDecimal","input":{"kind":"reference","value":"01"}},
+    {"mode":"graphDecimal","input":{"kind":"real","value":{"bits":"18442240474082181120"}}},
+    {"mode":"nativeGraph","input":{"kind":"binary","value":"38"}},
+    {"mode":"nativeGraph","input":{"kind":"binary","value":"0a"}}
+  ],
+  "control":{"cancelAtEveryStage":true,"sourceStringsMoved":true,"noPayloadClone":true,"controlledCloseRequired":true}
+}

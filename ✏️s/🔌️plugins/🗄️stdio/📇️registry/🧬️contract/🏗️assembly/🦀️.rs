@@ -570,7 +570,7 @@ fn validate(source: &Source) -> Result<(), PluginAssemblyError> {
         }
         let claims = runtime_claims(item);
         if claims.len() != item.claims.len()
-            || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "schema-export" | "codec" | "codec-extension" | "extension" | "mime" | "dialect" | "validated-dialect" | "grammar") && !claim.value.trim().is_empty())
+            || !item.claims.iter().all(|claim| matches!(claim.namespace.as_str(), "schema" | "schema-export" | "codec" | "codec-extension" | "extension" | "mime" | "dialect" | "composition-route" | "validated-dialect" | "grammar") && !claim.value.trim().is_empty())
             || (item.category == "subset-validator" && item.claims.iter().any(|claim| claim.namespace != "validated-dialect"))
             || !runtime_claim_sets.insert((item.category.clone(), claims.clone()))
         {

@@ -1,0 +1,18 @@
+{
+ "action":"applyIfcTemplate",
+ "payloadSchema":"https://semio.tech/s/stdio/ifc/4x3/template-command.schema.json",
+ "applicationSchema":"https://semio.tech/s/stdio/ifc/4x3/template-application.schema.json",
+ "wireVariant":"ApplyTemplate",
+ "graphSchema":"stdio.ifc",
+ "documentSchema":"s.stdio.ifc@4x3/*",
+ "maximumPublishedEntries":26,
+ "maximumPlannedIdentities":56,
+ "nativeExecution":false,
+ "nativeAuthoringImplementation":false,
+ "nativePlanningImplementation":true,
+ "nativeWireAdmissionImplementation":true,
+ "nativeSemanticAdmission":false,
+ "refusal":"template.semantic-admission-unavailable",
+ "cancelFrontiers":[0,1,2,3,8,16,32,64,128],
+ "reject":["unknownRootField","unknownEntryField","unknownIdentityField","noncanonicalId","foreignTypedDomain","duplicateIdentity","existingTemplate","enumConflict","wrongCarrier","wrongUnit","unorderedBounds"]
+}

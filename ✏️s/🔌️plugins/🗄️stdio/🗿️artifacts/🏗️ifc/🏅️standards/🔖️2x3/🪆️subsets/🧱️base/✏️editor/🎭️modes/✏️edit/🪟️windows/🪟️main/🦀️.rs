@@ -1,73 +1,10 @@
-//! 🧊 IFC 2x3 Any editor — the Main window: the SAME world-3d mesh scene shape as the sibling
-//! viewer window, built with the shared `MeshWindowKit`'s EDITABLE variant (contract §2.6, action id
-//! `set-vertex`). Render is identical to the viewer's read: both surfaces are pure reads of the same
-//! artifact-level `Ifc2x3Snapshot` — this window itself never mutates; mutation is the surface
-//! root's `handle()` responsibility.
-
+//! 🧱️ IFC2x3 source representation geometry.
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
-use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
-
-//#region 🔖️Constants
-pub const WINDOW_KIND_ID: &str = MeshWindowKit::KIND_ID;
-pub const BODY_KEY: &str = MeshWindowKit::KIND_ID;
-const IFC2X3_ANY_EDIT_FALLBACK_MESH_KIND: &str = "box";
-const IFC2X3_ANY_EDIT_DEFAULT_CAMERA_POSITION: [f64; 3] = [8.0, -8.0, 6.0];
-const IFC2X3_ANY_EDIT_DEFAULT_CAMERA_TARGET: [f64; 3] = [0.0, 0.0, 0.0];
-const IFC2X3_ANY_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
-//#endregion 🔖️Constants
-
-//#region 🔖️Definition
-/// 🧱️ Stitched into the editor manifest by the surface root's `create_*_editor`. The EDITABLE
-/// variant — `MeshWindowKit::window_kind()` — carries the frozen `set-vertex` action.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn definition() -> WindowKindDefinition {
-    MeshWindowKit::window_kind()
-}
-//#endregion 🔖️Definition
-
-//#region 🔖️Render
-/// ✏️ Same kind-agnostic content signal as the sibling viewer window (duplicated, not imported —
-/// `policyViewerPurityBreaches` is one-directional but the two surfaces still never reference each
-/// other by design).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn entity_count(document: &Ifc2x3Snapshot) -> usize {
-    semio_framework_value::ToValue::to_value(document).as_object().map_or(0, |object| object.iter().filter_map(|(_, field)| field.as_array().map(|array| array.len())).max().unwrap_or(0)).clamp(1, 6)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn world_instances_json(document: &Ifc2x3Snapshot) -> String {
-    let count = entity_count(document);
-    let instances: Vec<semio_framework_pack_json::Value> = (0..count)
-        .map(|index| {
-            semio_framework_pack_json::json!({
-                "id": format!("ifc2x3_any-{index}"),
-                "meshId": IFC2X3_ANY_EDIT_FALLBACK_MESH_KIND,
-                "position": [index as f64 * 2.0, 0.0, 0.0],
-                "rotation": [0.0, 0.0, 0.0, 1.0],
-                "scale": [1.0, 1.0, 1.0],
-                "label": format!("IFC 2x3 Any {index}"),
-                "smoothShading": false,
-            })
-        })
-        .collect();
-    semio_framework_pack_json::to_string(&semio_framework_pack_json::array(instances))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn render(document: &Ifc2x3Snapshot) -> semio_framework_plugin::UiAssemblyResult<BuiltNode> {
-    let meshes_json = semio_framework_pack_json::to_string(&semio_framework_pack_json::array([semio_framework_pack_json::json!({ "id": IFC2X3_ANY_EDIT_FALLBACK_MESH_KIND, "data": mesh_from_kind(IFC2X3_ANY_EDIT_FALLBACK_MESH_KIND) })]));
-    let view = MeshView {
-        camera_json: world3d_camera_json(IFC2X3_ANY_EDIT_DEFAULT_CAMERA_POSITION, IFC2X3_ANY_EDIT_DEFAULT_CAMERA_TARGET, IFC2X3_ANY_EDIT_DEFAULT_CAMERA_FOV),
-        meshes_json,
-        instances_json: world_instances_json(document),
-        selection_json: world3d_selection_json("rectangle", &[], None),
-    };
-    MeshWindowKit::render(&view)
-}
-//#endregion 🔖️Render
-
-//#region 🧪️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️unit/🦀️.rs"]
-mod tests;
-//#endregion 🧪️Tests
+use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::geometry;
+#[cfg(test)]use semio_framework_plugin::{MeshWindowKit,WindowKit};
+#[path="../../../../../../../🚪️io/📐️geometry/🦀️.rs"]mod representation_surface;
+pub use representation_surface::{render,render_in_context,render_with,render_selected_in_context};
+pub const WINDOW_KIND_ID:&str=semio_framework_plugin::MeshWindowKit::KIND_ID;
+pub const BODY_KEY:&str=semio_framework_plugin::MeshWindowKit::KIND_ID;
+pub fn definition()->semio_framework_plugin::WindowKindDefinition{<semio_framework_plugin::MeshWindowKit as semio_framework_plugin::WindowKit>::window_kind()}
+#[cfg(test)]#[path="🧪️tests/🔬️unit/🦀️.rs"]mod tests;

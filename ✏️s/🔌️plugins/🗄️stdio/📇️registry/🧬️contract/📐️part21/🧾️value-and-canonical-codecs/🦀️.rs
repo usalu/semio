@@ -45,6 +45,7 @@ impl ToValue for Part21Value {
         match self {
             Self::Ref(id) => tagged("ref", vec![("value", id.to_value())]),
             Self::Str(text) => tagged("str", vec![("value", text.to_value())]),
+            Self::Binary(text) => tagged("binary", vec![("value", text.to_value())]),
             Self::Enum(text) => tagged("enum", vec![("value", text.to_value())]),
             Self::Int(value) => tagged("int", vec![("value", value.to_value())]),
             Self::Real(decimal) => tagged("real", vec![("value", decimal.to_value())]),
@@ -70,6 +71,7 @@ impl FromValue for Part21Value {
         let decoded = match kind.as_str() {
             "ref" => Self::Ref(u64::from_value(part21_member(&mut entries, &record, "value")?)?),
             "str" => Self::Str(String::from_value(part21_member(&mut entries, &record, "value")?)?),
+            "binary" => { let content=String::from_value(part21_member(&mut entries, &record, "value")?)?;if !is_part21_binary(&content){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"invalid canonical STEP binary content"));}Self::Binary(content) },
             "enum" => Self::Enum(String::from_value(part21_member(&mut entries, &record, "value")?)?),
             "int" => Self::Int(i64::from_value(part21_member(&mut entries, &record, "value")?)?),
             "real" => Self::Real(Part21Decimal::from_value(part21_member(&mut entries, &record, "value")?)?),
@@ -135,7 +137,7 @@ impl FromValue for Part21Instance {
 //#endregion 🔖️ValueCodec
 
 //#region 🌲️CanonicalTree
-static PART21_KINDS: [&str; 9] = ["ref", "str", "enum", "int", "real", "list", "typed", "unset", "derived"];
+static PART21_KINDS: [&str; 10] = ["ref", "str", "enum", "int", "real", "list", "typed", "unset", "derived", "binary"];
 
 fn part21_tree_refusal(reason: &'static str) -> ValueError {
     ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, reason)
@@ -162,11 +164,12 @@ impl ArtifactCanonicalJsonTree for Part21Value {
             Self::Typed { .. } => 6,
             Self::Unset => 7,
             Self::Derived => 8,
+            Self::Binary(_) => 9,
         };
         match (self, ordinal) {
             (_, 0) => Ok(&PART21_KINDS[kind]),
             (Self::Ref(id), 1) => Ok(id),
-            (Self::Str(text) | Self::Enum(text), 1) => Ok(text),
+            (Self::Str(text) | Self::Binary(text) | Self::Enum(text), 1) => Ok(text),
             (Self::Int(value), 1) => Ok(value),
             (Self::Real(decimal), 1) => Ok(decimal),
             (Self::List(items), 1) => Ok(items),
@@ -182,7 +185,7 @@ impl ArtifactCanonicalJsonTree for Part21Value {
             (Self::List(_), 1) => "values",
             (Self::Typed { .. }, 1) => "typeName",
             (Self::Typed { .. }, 2) => "values",
-            (Self::Ref(_) | Self::Str(_) | Self::Enum(_) | Self::Int(_) | Self::Real(_), 1) => "value",
+            (Self::Ref(_) | Self::Str(_) | Self::Binary(_) | Self::Enum(_) | Self::Int(_) | Self::Real(_), 1) => "value",
             _ => return Err(part21_tree_refusal("canonical Part-21 value key is absent")),
         };
         Ok(ArtifactCanonicalJsonText::from(key))

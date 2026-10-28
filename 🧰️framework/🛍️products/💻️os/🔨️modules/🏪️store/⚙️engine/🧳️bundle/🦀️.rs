@@ -120,7 +120,7 @@ where
             if publication.item_closing {
                 if let Some(stage)=publication.stage.as_mut(){if stage.retiring.is_some(){let step=artifact_retirement_box_close_step(&mut stage.retiring,item_grant.retained_grant()).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));}}
                 if publication.preparation.is_none(){return Err(VcsError::ValidationFailed("staged batch item lost its original preparation before closure".into()));}
-                let step=spend_item_close_grant(&mut publication.preparation,item_grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?;
+                let step=spend_item_close_grant(&mut publication.preparation,item_grant,receiving).map_err(VcsError::InverseRefused)?;
                 if matches!(step,RetainedCloneStep::Complete(_)){publication.item_closing=false;}
                 return Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),step.progress()));
             }
@@ -404,7 +404,7 @@ where
 }
 
 /// 🧹️ Preserves the original preparation receipt before admitting its final owned Box frame.
-fn spend_item_close_grant<P, Mutation>(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError>
+fn spend_item_close_grant<P, Mutation>(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<RetainedCloneStep, ValueError>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
@@ -416,7 +416,7 @@ where
         let depth = current.next_close_depth_demand()?.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation Box depth overflow"))?;
         if grant.maximum_depth < depth { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "batch preparation exceeds admitted Box depth")); }
         let child_grant = ArtifactStoreOneItemGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = current.close_step(child_grant)?;
+        let step=receiving.with_retirement(child_grant.retained_grant(),|retirement|retirement.with_original_close(|original|current.close_original_step(original,child_grant)))?;
         let step = semio_framework_value::retained_clone::admit_retained_clone_close(child_grant.retained_grant(), step, current.terminal_is_empty(), "batch original item preparation")?;
         return Ok(RetainedCloneStep::Progress(step.progress()));
     }

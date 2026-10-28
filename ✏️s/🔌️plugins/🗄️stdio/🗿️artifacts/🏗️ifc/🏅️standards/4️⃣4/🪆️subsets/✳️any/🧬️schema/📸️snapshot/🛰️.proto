@@ -13,6 +13,7 @@ message IfcValue {
     REFERENCE = 6;
     AGGREGATE = 7;
     TYPED_VALUE = 8;
+    BINARY = 9;
   }
   Kind kind = 1;
   int64 int_value = 2;
@@ -22,6 +23,7 @@ message IfcValue {
   repeated IfcValue aggregate = 6;
   string typed_name = 7;
   repeated IfcValue typed_args = 8;
+  string binary_value = 9;
 }
 
 // 🧩️ One additional `(TYPE(args...) ...)` member of an IFC4 COMPLEX instance.

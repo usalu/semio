@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IDML Retained Logical Overlay",
+  "type": "object",
+  "required": [
+    "maximumMembers",
+    "maximumAuthoredMembers",
+    "metadataOnly"
+  ],
+  "properties": {
+    "maximumMembers": {
+      "const": 16384
+    },
+    "maximumAuthoredMembers": {
+      "const": 16384
+    },
+    "metadataOnly": {
+      "const": true
+    }
+  },
+  "description": "Read-only ordered diff batches resolve against the live unpublished post into numeric original member/byte/version coordinates. Each intermediate package is admitted before the next patch. Names and bytes borrow post/diff; no payload clone or post mutation occurs before central preflight. Commit moves untouched post fields instead of cloning the original base."
+}

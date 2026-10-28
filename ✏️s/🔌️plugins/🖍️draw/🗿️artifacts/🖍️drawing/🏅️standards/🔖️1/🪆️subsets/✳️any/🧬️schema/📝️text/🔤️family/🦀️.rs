@@ -1,5 +1,5 @@
 //! 🔤️ Authored text selects one exact shipped family without inferred substitution.
-#[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_dsl_record_derive::DslScalar, semio_framework_value::CanonicalJsonTree, semio_framework_value::NativeReceive)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 #[value(rename_all="camelCase")]

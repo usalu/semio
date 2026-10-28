@@ -38,6 +38,9 @@ import { type ShellSpaceAdministrationStateV1 } from "../../🏠️space-adminis
 import type { ShellCoreAfterShellCoreState } from "../../🧩️shell-core-state/🟦️.ts";
 import type { useIdentityAgentBridgeAndDirectoryState } from "../🪪️identity-and-directory-state/🟦️.ts";
 import type { MountedInferenceHistoryV1, OpenDocumentSession, RetainedBrowserActorUiV1 } from "../🧰️identity-port-types/🟦️.ts";
+import { beginDocumentSourceWorkV1 } from "../../../🛠️ShellHelpers/📝️source-revision/document.ts";
+import { beginSourceRevisionWorkV1, type SourceRevisionWorkV1 } from "../../../🛠️ShellHelpers/📝️source-revision/work.ts";
+import { DocumentSourceIngestionV1 } from "../../../🛠️ShellHelpers/📝️source-revision/ingestion.ts";
 
 /**
  * 🔌 Builds the hub connection port, the inference and presence refs and the document backbone ports.
@@ -134,6 +137,24 @@ export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef
   /** 🗂️ Which session/plugin owns each exact document runtime, so equal document ids in different
    * spaces cannot share socket, bootstrap, presence or plugin-routing state. */
   const openDocumentSessionsRef = useRef<Map<string, OpenDocumentSession>>(new Map());
+  const sourceIngestionRef = useRef(new DocumentSourceIngestionV1<OpenDocumentSession>());
+  const beginDocumentSourceWork = useCallback((runtimeKey: string, entry: OpenDocumentSession): SourceRevisionWorkV1 | null => {
+    if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return null;
+    return beginDocumentSourceWorkV1({
+      owners: core.localDocumentOwnerRegistry, sources: core.localSourceRevisions,
+      refresh: (plugin, instanceId) => core.localSourceRefreshRef.current(plugin, instanceId),
+    }, { pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId }, entry.plugin);
+  }, [core.localDocumentOwnerRegistry, core.localSourceRevisions, core.localSourceRefreshRef]);
+  const beginActorSourceWork = useCallback((plugin: PluginWasmHandle, instanceId: number): SourceRevisionWorkV1 | null => {
+    const owner = core.localSourceOwnerRef.current;
+    if (!owner?.active || owner.identity.pluginId !== plugin.pluginId || owner.identity.sessionInstanceId !== instanceId) return null;
+    const source = core.localSourceRevisions.acquire(owner, plugin);
+    return source === null ? null : beginSourceRevisionWorkV1({
+      source, owner, plugin,
+      subscribe: listener => plugin.subscribeOperationCompletions(instanceId, listener),
+      refresh: () => core.localSourceRefreshRef.current(plugin, instanceId),
+    });
+  }, [core.localSourceOwnerRef, core.localSourceRevisions, core.localSourceRefreshRef]);
   const failDocumentBackbone = useCallback((runtimeKey: string, entry: OpenDocumentSession, failure: unknown) => {
     if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
     const error = failure instanceof Error ? failure : new Error(String(failure));
@@ -152,11 +173,18 @@ export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef
         if (entry.pending.length >= DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumMessages || message.length > DOCUMENT_BACKBONE_RETENTION_LIMITS.maximumBytes - entry.pendingBytes) {
           return;
         }
+        sourceIngestionRef.current.queued(entry, () => beginDocumentSourceWork(runtimeKey, entry));
         entry.pending.push(message.slice());
         entry.pendingBytes += message.length;
-      } else void entry.persistence.ingested(entry.port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message)).catch(error => failDocumentBackbone(runtimeKey, entry, error));
+      } else {
+        const port = entry.port;
+        void sourceIngestionRef.current.receive(() => beginDocumentSourceWork(runtimeKey, entry), () => {
+          if (openDocumentSessionsRef.current.get(runtimeKey) !== entry || entry.port !== port) return Promise.reject(new Error("document-backbone.retired-source"));
+          return entry.persistence.ingested(port.receive({ runtimeKey, clientInstanceId: entry.clientInstanceId, scope: entry.scope ?? null }, message));
+        }).catch(error => failDocumentBackbone(runtimeKey, entry, error));
+      }
     } catch (error) { failDocumentBackbone(runtimeKey, entry, error); }
-  }, [failDocumentBackbone]);
+  }, [failDocumentBackbone, beginDocumentSourceWork]);
   const bindDocumentBackbone = useCallback(async (runtimeKey: string, entry: OpenDocumentSession, admitted: () => boolean = () => true): Promise<void> => {
     const current = () => admitted() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
     if (!current()) return;
@@ -183,6 +211,7 @@ export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef
         entry.pending = [];
         entry.pendingBytes = 0;
         for (const bytes of pending) receiveDocumentBackbone(runtimeKey, entry, bytes);
+        sourceIngestionRef.current.drained(entry);
       },
     }); } catch (error) {
       const candidate = preparation.port;
@@ -208,24 +237,31 @@ export function useHubPortInferenceAndDocumentBackbone({ hubSessionCapabilityRef
     if (!plugin.loadAppDocumentArchive) throw new Error("document-backbone.archive-loader-unavailable");
     const load = plugin.loadAppDocumentArchive;
     const owned = [...openDocumentSessionsRef.current].find(([, entry]) => entry.plugin === plugin && entry.session.instanceId === instanceId);
-    const lane = documentAttachmentLane(plugin, instanceId);
-    if (owned === undefined) {
-      const owner = `cold:${crypto.randomUUID()}`;
-      const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
-      let loaded = false;
-      try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive, task?.signal, task?.progress); loaded = unbound(); } }); }
-      finally { await lane.close(owner); }
-      return loaded;
-    }
-    const [runtimeKey, entry] = owned;
-    const retirement = entry.port?.retire();
-    void retirement?.catch(() => {});
-    entry.port = null;
-    return entry.replacements.replace(archive, (candidate, latest) => {
-      const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
-      return replaceAttachedDocumentV1(lane, entry.clientInstanceId, exact, { retired: retirement, load: () => load(instanceId, candidate, task?.signal, task?.progress), bind: () => bindDocumentBackbone(runtimeKey, entry, latest) });
-    });
-  }, [bindDocumentBackbone, documentAttachmentLane]);
+    return sourceIngestionRef.current.receive(
+      () => owned === undefined ? beginActorSourceWork(plugin, instanceId) : beginDocumentSourceWork(owned[0], owned[1]),
+      async () => {
+        if (!current()) return false;
+        const lane = documentAttachmentLane(plugin, instanceId);
+        if (owned === undefined) {
+          const owner = `cold:${crypto.randomUUID()}`;
+          const unbound = () => current() && ![...openDocumentSessionsRef.current.values()].some(entry => entry.plugin === plugin && entry.session.instanceId === instanceId);
+          let loaded = false;
+          try { await lane.replace(owner, unbound, async () => { if (unbound()) { await load(instanceId, archive, task?.signal, task?.progress); loaded = unbound(); } }); }
+          finally { await lane.close(owner); }
+          return loaded;
+        }
+        const [runtimeKey, entry] = owned;
+        if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return false;
+        const retirement = entry.port?.retire();
+        void retirement?.catch(() => {});
+        entry.port = null;
+        return entry.replacements.replace(archive, (candidate, latest) => {
+          const exact = () => latest() && current() && openDocumentSessionsRef.current.get(runtimeKey) === entry;
+          return replaceAttachedDocumentV1(lane, entry.clientInstanceId, exact, { retired: retirement, load: () => load(instanceId, candidate, task?.signal, task?.progress), bind: () => bindDocumentBackbone(runtimeKey, entry, latest) });
+        });
+      },
+    );
+  }, [bindDocumentBackbone, documentAttachmentLane, beginActorSourceWork, beginDocumentSourceWork]);
   const loadDocumentPair = useCallback(async (plugin: PluginWasmHandle, instanceId: number, pack: Uint8Array, spr: Uint8Array, current: () => boolean, task?: { readonly signal?: AbortSignal; readonly progress?: (status: DocumentArchiveLoadStatus) => void }): Promise<boolean> =>
     loadDocumentArchive(plugin, instanceId, { parent_pack: Array.from(pack), parent_spr: Array.from(spr), members: [] }, current, task), [loadDocumentArchive]);
   const captureDialogOrigin = useCallback((target: ActiveSession | null): ShellDialogOriginV1 | null =>

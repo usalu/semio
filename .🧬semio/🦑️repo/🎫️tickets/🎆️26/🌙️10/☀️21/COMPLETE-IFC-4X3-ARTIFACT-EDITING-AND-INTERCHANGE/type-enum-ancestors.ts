@@ -1,0 +1,2 @@
+import {ifc4x3Catalog as c} from '../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🟦️.ts';
+for(const name of ['IFCSEGMENT','IFCTYPEOBJECT','IFCTYPEPRODUCT','IFCELEMENTTYPE','IFCDISTRIBUTIONELEMENTTYPE','IFCDISTRIBUTIONCONTROLELEMENTTYPE'])console.log(JSON.stringify({name,parent:c.entities[name]!.supertype,attributes:c.entities[name]!.attributes.map(a=>[a.name,a.optional])}));

@@ -69,15 +69,20 @@ fn from_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_
 
 impl SemioDrawingSnapshot {
     /// 🪆️ Projects owned Drawing rows directly into the parent's admitted relational writer.
-    pub fn project_sqlite_component(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
- let bg=colors(self.canvas.background);p.insert_key_float("semio_drawing_document",1,&[Cell::Text(&self.schema),Cell::Real(self.canvas.width),Cell::Real(self.canvas.height),bg[0],bg[1],bg[2],bg[3]],float_columns("semio_drawing_document"))?;
+    pub fn project_sqlite_component(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{self.project_sqlite_component_owned(p).map(|_|())}
+    /// 🪪️ Allocates one independent Drawing document root in the shared relational owner.
+    pub fn project_sqlite_component_owned(&self,p:&mut RowWriter<'_,'_>)->Result<i64,ValueError>{
+ let bg=colors(self.canvas.background);let document=p.insert_float("semio_drawing_document",&[Cell::Text(&self.schema),Cell::Real(self.canvas.width),Cell::Real(self.canvas.height),bg[0],bg[1],bg[2],bg[3]],float_columns("semio_drawing_document"))?;
  let mut styles=p.allocate_frontier(self.styles.len())?;
- for(ordinal,s)in self.styles.iter().enumerate(){let f=colors(s.fill);let k=colors(s.stroke);let id=p.insert_float("semio_drawing_style",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&s.name),f[0],f[1],f[2],f[3],k[0],k[1],k[2],k[3],s.stroke_width.map(Cell::Real).unwrap_or(Cell::Null),s.opacity.map(|v|Cell::Float32(v)).unwrap_or(Cell::Null)],float_columns("semio_drawing_style"))?;styles.push((s.name.as_str(),id));}
+ for(ordinal,s)in self.styles.iter().enumerate(){let f=colors(s.fill);let k=colors(s.stroke);let id=p.insert_float("semio_drawing_style",&[Cell::Integer(document),Cell::Integer(number(ordinal)?),Cell::Text(&s.name),f[0],f[1],f[2],f[3],k[0],k[1],k[2],k[3],s.stroke_width.map(Cell::Real).unwrap_or(Cell::Null),s.opacity.map(|v|Cell::Float32(v)).unwrap_or(Cell::Null)],float_columns("semio_drawing_style"))?;styles.push((s.name.as_str(),id));}
  let phase=p.phase();p.sort_frontier(&mut styles,|left,right,control|{let order=semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(left.0,right.0,phase,control)?;if order.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate drawing style identity"))}Ok(order)})?;
  let mut names=p.allocate_frontier(self.layers.len())?;for layer in &self.layers{names.push(layer.id.as_str());}
  let phase=p.phase();p.sort_frontier(&mut names,|left,right,control|{let order=semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(left,right,phase,control)?;if order.is_eq(){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate drawing layer identity"))}Ok(order)})?;
- for(ordinal,layer)in self.layers.iter().enumerate(){let root=project_node(&layer.root,&styles,p)?;p.insert_float("semio_drawing_layer",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&layer.id),Cell::Text(&layer.name),Cell::Integer(i64::from(layer.visible)),Cell::Integer(root)],float_columns("semio_drawing_layer"))?;}Ok(())
+ for(ordinal,layer)in self.layers.iter().enumerate(){let root=project_node(&layer.root,&styles,p)?;p.insert_float("semio_drawing_layer",&[Cell::Integer(document),Cell::Integer(number(ordinal)?),Cell::Text(&layer.id),Cell::Text(&layer.name),Cell::Integer(i64::from(layer.visible)),Cell::Integer(root)],float_columns("semio_drawing_layer"))?;}Ok(document)
     }
+
+    /// 🧩️ Restores all independently owned Drawing roots with one global ownership index.
+    pub fn reconstruct_sqlite_components(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared_schema:&str)->Result<Vec<(i64,Self)>,ValueError>{reconstruction::reconstruct_components(db,control,declared_schema)}
 
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
     pub fn reconstruct_sqlite_database(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>, declared_schema: &str)->Result<Self,ValueError> {

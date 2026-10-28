@@ -20,6 +20,12 @@ pub mod standards {
                     #[path = "../../🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    #[path = "../../📐️geometry/🦀️.rs"]
+                    pub mod geometry;
+                    #[path="../../📚️catalog/🦀️.rs"]
+                    pub mod catalog;
+                    #[path = "../../🔎️semantics/🦀️.rs"]
+                    pub mod semantics;
                     #[path = "."]
                     pub mod snapshot {
                         #[path = "../../📸️snapshot/🦀️.rs"]

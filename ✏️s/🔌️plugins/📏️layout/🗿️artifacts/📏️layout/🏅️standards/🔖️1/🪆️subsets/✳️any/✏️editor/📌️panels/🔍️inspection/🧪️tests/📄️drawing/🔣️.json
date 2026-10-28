@@ -1,0 +1,13 @@
+{
+  "locales": [
+    "en",
+    "de"
+  ],
+  "fields": [
+    "width",
+    "height"
+  ],
+  "unavailable": true,
+  "editedIn": "original-qualified-drawing-source",
+  "fabricatedValue": ""
+}

@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout Retained Sparse Edit Ownership",
+  "description": "Read-only keyed and positional source plans resolve against the current live post. Authored sparse fields are prepared under original grants. Commit moves untouched owners and retains every displaced field for funded close. No whole-snapshot candidate clone/swap or cold diff operation occurs in a retained turn.",
+  "type": "object",
+  "required": [
+    "preflight",
+    "stage",
+    "commit",
+    "retire"
+  ],
+  "properties": {
+    "preflight": {
+      "const": "borrowed-live-post-and-authored-diff"
+    },
+    "stage": {
+      "const": "authored-fields-and-numeric-addresses"
+    },
+    "commit": {
+      "const": "move-original-owners"
+    },
+    "retire": {
+      "const": "original-typed-displaced-owners"
+    }
+  },
+  "additionalProperties": false
+}

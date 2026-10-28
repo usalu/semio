@@ -1,0 +1,41 @@
+{
+  "feature": "drawing-original-member-wire",
+  "cases": [
+    {
+      "name": "schema-before-bytes",
+      "schema": "foreign",
+      "header": "op",
+      "expected": "refuse-with-original-bytes"
+    },
+    {
+      "name": "canonical-original",
+      "schema": "drawing.drawing",
+      "header": "op",
+      "expected": "one-original-native-mutation"
+    },
+    {
+      "name": "foreign-ledger",
+      "schema": "drawing.drawing",
+      "expected": "refuse-retain-all-owners"
+    },
+    {
+      "name": "cancel-parser",
+      "expected": "original-close-loan-before-empty"
+    },
+    {
+      "name": "deny-each-axis",
+      "axes": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "releaseBytes",
+        "depth"
+      ],
+      "expected": "no-progress-no-owner-transfer"
+    },
+    {
+      "name": "typed-family-refusal",
+      "expected": "same-typed-mutation-and-exact-factory-retained"
+    }
+  ]
+}

@@ -1,0 +1,115 @@
+{
+  "schema": "layout.idml.text.tests.v1",
+  "sharedCase": "idml-style-runs",
+  "stylesXml": "<Styles><RootParagraphStyleGroup><ParagraphStyle Self=\"para-base\" Name=\"Base\" PointSize=\"18\" FontStyle=\"Regular\" Tracking=\"17\" Justification=\"CenterAlign\"><Properties><AppliedFont type=\"string\">Open Sans</AppliedFont><Leading type=\"unit\">24</Leading></Properties></ParagraphStyle><ParagraphStyle Self=\"para-derived\" Name=\"Derived\" BasedOn=\"para-base\" PointSize=\"20\" Tracking=\"Auto\" Justification=\"RightAlign\"/></RootParagraphStyleGroup><RootCharacterStyleGroup><CharacterStyle Self=\"char-base\" Name=\"Base\" PointSize=\"18\" FontStyle=\"Bold Italic\" FillColor=\"Color/Accent\"><Properties><AppliedFont type=\"string\">Open Sans</AppliedFont></Properties></CharacterStyle><CharacterStyle Self=\"char-derived\" Name=\"Derived\" BasedOn=\"char-base\" PointSize=\"21\"/></RootCharacterStyleGroup></Styles>",
+  "colorsXml": "<Graphic><Color Self=\"Color/Accent\" Space=\"RGB\" ColorValue=\"51 76.5 102\"/></Graphic>",
+  "storyXml": "<Story Self=\"story-inline\"><ParagraphStyleRange AppliedParagraphStyle=\"para-derived\" Tracking=\"42\"><CharacterStyleRange AppliedCharacterStyle=\"char-derived\" PointSize=\"22\"><Content>Ä😀</Content><Br/><Content>EF</Content></CharacterStyleRange></ParagraphStyleRange></Story>",
+  "expected": {
+    "text": "Ä😀\nEF",
+    "utf8Bytes": 9,
+    "paragraph": {
+      "id": "para-derived",
+      "fontFamily": "Open Sans",
+      "fontSize": 20,
+      "leading": 24,
+      "tracking": 17,
+      "alignment": "right"
+    },
+    "character": {
+      "id": "char-derived",
+      "fontFamily": "Open Sans",
+      "fontSize": 21,
+      "fontWeight": 700,
+      "italic": true,
+      "color": [
+        0.2,
+        0.3,
+        0.4,
+        1
+      ]
+    },
+    "inlineParagraph": {
+      "id": "inline-paragraph-3",
+      "tracking": 42
+    },
+    "inlineCharacter": {
+      "id": "inline-character-3",
+      "fontSize": 22
+    },
+    "runs": [
+      {
+        "start": 0,
+        "end": 9,
+        "paragraphStyleId": "inline-paragraph-3",
+        "characterStyleId": "inline-character-3"
+      }
+    ],
+    "inlineAttributes": {
+      "fontFamily": "Source Serif",
+      "leading": 31
+    },
+    "collision": {
+      "paragraphId": "inline-paragraph-5",
+      "characterId": "inline-character-5"
+    }
+  },
+  "invalidStyles": [
+    {
+      "id": "cycle",
+      "xml": "<Styles><ParagraphStyle Self=\"a\" BasedOn=\"b\"/><ParagraphStyle Self=\"b\" BasedOn=\"a\"/></Styles>",
+      "error": "layout.idml.style-cycle"
+    },
+    {
+      "id": "missing-base",
+      "xml": "<Styles><CharacterStyle Self=\"a\" BasedOn=\"missing\"/></Styles>",
+      "error": "layout.idml.missing-base-style"
+    },
+    {
+      "id": "nonfinite",
+      "xml": "<Styles><ParagraphStyle Self=\"a\" PointSize=\"NaN\"/></Styles>",
+      "error": "layout.idml.style-number"
+    }
+  ],
+  "invalidRuns": [
+    {
+      "start": 1,
+      "end": 6
+    },
+    {
+      "start": 0,
+      "end": 99
+    },
+    {
+      "start": 6,
+      "end": 1
+    }
+  ],
+  "longStory": {
+    "pattern": "Ä😀abc",
+    "repeat": 260,
+    "maximumFragmentBytes": 512
+  },
+  "inlineAttributeStoryXml": "<Story Self=\"inline-attributes\"><ParagraphStyleRange AppliedParagraphStyle=\"para-derived\" AppliedFont=\"Source Serif\" Leading=\"31\"><CharacterStyleRange AppliedCharacterStyle=\"char-derived\" AppliedFont=\"Source Serif\"><Content>Ä😀</Content></CharacterStyleRange></ParagraphStyleRange></Story>",
+  "exported": {
+    "paragraph": {
+      "PointSize": "18",
+      "FontStyle": "Regular",
+      "Tracking": "20",
+      "Justification": "CenterAlign"
+    },
+    "character": {
+      "PointSize": "20",
+      "FontStyle": "Bold Italic",
+      "Tracking": "30",
+      "FillColor": "Color/style-char-emphasis"
+    },
+    "color": {
+      "Space": "RGB",
+      "ColorValue": "51 76.5 102"
+    },
+    "properties": {
+      "AppliedFont": "Open Sans",
+      "Leading": "24"
+    }
+  }
+}

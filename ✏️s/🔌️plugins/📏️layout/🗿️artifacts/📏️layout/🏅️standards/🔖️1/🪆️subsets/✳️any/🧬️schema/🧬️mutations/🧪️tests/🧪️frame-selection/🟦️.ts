@@ -1,21 +1,20 @@
-/** 🧪️ Conformance of the layout frame-selection leaves' TS twin (`parseDragFrames`/`parseRotateFrames`/`parseScaleFrames`):
- * every committed fixture payload of `drag-frames`, `rotate-frames` and `scale-frames` is parsed by the twin and validated by
- * the third-party Ajv against its leaf schema — the twin accepts exactly what the schema accepts (the `mutation.invariant`
- * vectors are negative witnesses both reject), and an accepted payload parses to itself. */
+/** 🧪️ Named native JSON admission and semantic validation agree with selection leaf schemas. */
 import { expect, test } from "bun:test";
 import { readdirSync, readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import Ajv from "ajv";
-import { parseDragFrames, parseRotateFrames, parseScaleFrames } from "../../🟦️.ts";
+import { layoutMutationFromNativeJson } from "../../🪪️native-json/🟦️.ts";
+import { evaluateLayoutMutation } from "../../⚙️evaluate/🟦️.ts";
+import { layoutArtifactFromNativeJson } from "../../../../🚪️io/📝️text/📸️snapshot/🪪️native-json/🟦️.ts";
 
 const here = fileURLToPath(new URL(".", import.meta.url));
 const mutations = join(here, "../..");
 const fixtures = join(here, "../../../../🧪️tests/🧫️fixtures/🧬️mutations");
 const leaves = [
-  { directory: "✋️drag-frames", variant: "DragFrames", parse: parseDragFrames },
-  { directory: "🔃️rotate-frames", variant: "RotateFrames", parse: parseRotateFrames },
-  { directory: "🗜️scale-frames", variant: "ScaleFrames", parse: parseScaleFrames },
+  { directory: "✋️drag-frames", variant: "DragFrames" },
+  { directory: "🔃️rotate-frames", variant: "RotateFrames" },
+  { directory: "🗜️scale-frames", variant: "ScaleFrames" },
 ] as const;
 
 for (const leaf of leaves) {
@@ -34,20 +33,19 @@ for (const leaf of leaves) {
       expect(validate(payload), `${folder}: Ajv`).toBe(!invariant);
       if (invariant) {
         rejected += 1;
-        expect(() => leaf.parse(payload), folder).toThrow();
+        const base = layoutArtifactFromNativeJson(JSON.parse(readFileSync(join(fixtures, leaf.directory, folder, "📸️snapshot/⬅️before/🔣️.json"), "utf8")));
+        expect(evaluateLayoutMutation(base, layoutMutationFromNativeJson(wire)).messages.some(message => message.code === "mutation.invariant"), folder).toBe(true);
         expect(existsSync(join(fixtures, leaf.directory, folder, "🔺️diff/🚫️.absent")), folder).toBe(true);
       } else {
-        expect(leaf.parse(payload), folder).toEqual(payload);
+        expect(Object.keys(layoutMutationFromNativeJson(wire)), folder).toEqual([leaf.variant]);
       }
     }
     expect(rejected, "one negative witness per leaf").toBe(1);
   });
 }
 
-test("the twin refuses what every leaf schema forbids", () => {
-  expect(() => parseDragFrames({ pageId: "page-1", targets: [], dx: 1, dy: 1 })).toThrow();
-  expect(() => parseDragFrames({ pageId: "page-1", targets: ["a"], dx: 1 })).toThrow();
-  expect(() => parseDragFrames({ pageId: "page-1", targets: ["a"], dx: 1, dy: 1, dz: 0 })).toThrow();
-  expect(() => parseRotateFrames({ pageId: "page-1", targets: ["a"], pivotX: 0, pivotY: Number.NaN, angle: 1 })).toThrow();
-  expect(() => parseScaleFrames({ pageId: "page-1", targets: ["a"], pivotX: 0, pivotY: 0, sx: 2, sy: -1 })).toThrow();
+test("the named native JSON boundary refuses malformed scalar fields", () => {
+  expect(() => layoutMutationFromNativeJson({ DragFrames: { pageId: "page-1", targets: ["a"], dx: 1 } })).toThrow();
+  expect(() => layoutMutationFromNativeJson({ DragFrames: { pageId: "page-1", targets: ["a"], dx: 1, dy: 1, dz: 0 } })).toThrow();
+  expect(() => layoutMutationFromNativeJson({ RotateFrames: { pageId: "page-1", targets: ["a"], pivotX: 0, pivotY: Number.NaN, angle: 1 } })).toThrow();
 });

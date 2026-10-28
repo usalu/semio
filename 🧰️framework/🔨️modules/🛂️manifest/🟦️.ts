@@ -1,5 +1,6 @@
 /// <reference types="vitest/importMeta" />
 import { artifactKindChoices, decodeArtifactKindChoice, decodeSurfaceAppChoice, encodeArtifactKindChoice, encodeSurfaceAppChoice } from "./🔁️host-effects-choices-and-fault-notices/🟦️.ts";
+export * from "./🧮️arg-schema/📝️staging/🟦️.ts";
 export type { WindowStackCorner, WindowLayoutWindowNode, WindowLayoutStackNode, WindowLayoutAxisNode, WindowLayout } from "@semio-tech/framework-onboarding/window-layout";
 export { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "./🧬️schema/🟦️.ts";
 
@@ -52,6 +53,6 @@ export type { InputSchemaAudit } from "./📥️mutation-input-schema/🟦️.ts
 export { PUBLIC_INVOCATION_BODY_BYTES, PUBLIC_INVOCATION_STRING_BYTES, hostArmedViewContext, panelViewContext, parseResolvedPluginViewState, publicInvocationStringPages, windowViewContext } from "./👁️view-state-and-public-invocation/🟦️.ts";
 export type { PluginViewState, ResolvedPluginViewState } from "./👁️view-state-and-public-invocation/🟦️.ts";
 export { UI_REFRESH_SECTIONS, panelTabKindId, sectionViewContext } from "./📋️app-definition-refresh-and-context-menu/🟦️.ts";
-export type { PanelTabKind, PluginUiRefreshRequest, PluginUiRefreshResponse } from "./📋️app-definition-refresh-and-context-menu/🟦️.ts";
+export type { PanelTabKind, PluginUiRefreshFormRequest, PluginUiRefreshRequest, PluginUiRefreshResponse } from "./📋️app-definition-refresh-and-context-menu/🟦️.ts";
 export { exampleBodyAssetPrefix, examplesForApp } from "./🗣️contributions-and-examples/🟦️.ts";
 export type { PluginManifest, ProgramContributionEntry } from "./🗣️contributions-and-examples/🟦️.ts";

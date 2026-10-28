@@ -7,13 +7,13 @@ use json_string_source::RetainedWireJsonStringSource;
 
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct OriginalWireSourceIdentity{pub address:usize,pub extent:usize,pub authority:Option<(u64,u64)>}
+pub struct OriginalWireSourceIdentity{pub address:usize,pub extent:usize,pub range_start:usize,pub authority:Option<(u64,u64)>}
 pub trait RetainedWireByteSource{
  fn original_source_identity(&self)->OriginalWireSourceIdentity;
  fn byte_at(&self,index:usize)->Option<u8>;
 }
 impl RetainedWireByteSource for [u8]{
- fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.as_ptr()as usize,extent:self.len(),authority:None}}
+ fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.as_ptr()as usize,extent:self.len(),authority:None}}
  fn byte_at(&self,index:usize)->Option<u8>{self.get(index).copied()}
 }
 impl RetainedWireByteSource for Vec<u8>{
@@ -89,7 +89,7 @@ impl RetainedWireFieldDecode{
   })
  }
  pub fn source_identity(&self)->(usize,usize){(self.original,self.extent)}
- pub fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.original,extent:self.extent,authority:self.authority}}
+ pub fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.original,extent:self.extent,authority:self.authority}}
  /// 🧳️ Takes the exact published backing from its real caller slot after metadata admission.
  pub fn admit_received(original:&mut Option<Vec<u8>>,grant:RetainedCloneGrant)->Result<Option<Self>,ValueError>{
   if original.is_none()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}

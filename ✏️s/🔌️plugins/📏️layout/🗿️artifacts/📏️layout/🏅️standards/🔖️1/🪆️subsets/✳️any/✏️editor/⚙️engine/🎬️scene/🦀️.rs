@@ -52,7 +52,8 @@ use drawing_labels_and_rasters::{DrawingLabel, background_scene, fit_from_points
 
 #[path = "🖌️drawing-strokes-and-paths/🦀️.rs"]
 mod drawing_strokes_and_paths;
-use drawing_strokes_and_paths::{drawing_kind, drawing_strokes, paint_display_stroke, place_drawing_in_frame, raw_drawing_strokes};
+pub use drawing_strokes_and_paths::drawing_kind;
+use drawing_strokes_and_paths::{drawing_strokes, paint_display_stroke, place_drawing_in_frame, raw_drawing_strokes};
 
 #[path = "🧩️assemble-display-list/🦀️.rs"]
 mod display_list_assembly;
@@ -60,7 +61,8 @@ use display_list_assembly::assemble_display_list;
 
 #[path = "🔠️style-spans-and-preview-marks/🦀️.rs"]
 mod style_spans_and_preview_marks;
-use style_spans_and_preview_marks::{color_from, paint_preview_mark, placed_kind_glyphs, preview_mark, story_run_glyphs, style_spans};
+pub use style_spans_and_preview_marks::preview_mark;
+use style_spans_and_preview_marks::{color_from, paint_preview_mark, placed_kind_glyphs, story_run_glyphs, style_spans};
 
 #[path = "🎬️scene-painting-and-queries/🦀️.rs"]
 pub mod scene_painting_and_queries;
@@ -83,3 +85,17 @@ use scene_painting_and_queries::{LayoutDropPreview, SceneQuery, build_scene_from
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path = "🧪️tests/👁️layer-order/🦀️.rs"]
+mod layer_order_hit_tests;
+
+#[path="📄️paragraph/🦀️.rs"]
+pub mod paragraph;
+#[path = "🧵️flow/🦀️.rs"]
+pub mod text_flow;
+
+#[path="🧵️drawing/🦀️.rs"]
+pub mod drawing_planning;
+
+#[path="📇️metadata-index/🦀️.rs"]pub mod metadata_index;

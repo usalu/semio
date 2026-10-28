@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/template-chooser.schema.json",
+  "title": "Released IFC4x3 Template Selector Contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["$schema", "schema", "argument", "control", "required", "automaticSelection", "choices", "kinds", "labels"],
+  "properties": {
+    "$schema": { "const": "./chooser.schema.json" },
+    "schema": { "const": "IFC4X3_ADD2" },
+    "argument": { "const": "template" },
+    "control": { "const": "select" },
+    "required": { "const": true },
+    "automaticSelection": { "const": false },
+    "choices": { "const": 760 },
+    "kinds": {
+      "type": "object", "additionalProperties": false,
+      "required": ["PSET_MATERIALDRIVEN", "PSET_OCCURRENCEDRIVEN", "PSET_PERFORMANCEDRIVEN", "PSET_PROFILEDRIVEN", "PSET_TYPEDRIVENOVERRIDE", "QTO_OCCURRENCEDRIVEN", "QTO_TYPEDRIVENOVERRIDE"],
+      "properties": {
+        "PSET_MATERIALDRIVEN": { "const": 19 },
+        "PSET_OCCURRENCEDRIVEN": { "const": 105 },
+        "PSET_PERFORMANCEDRIVEN": { "const": 44 },
+        "PSET_PROFILEDRIVEN": { "const": 3 },
+        "PSET_TYPEDRIVENOVERRIDE": { "const": 474 },
+        "QTO_OCCURRENCEDRIVEN": { "const": 14 },
+        "QTO_TYPEDRIVENOVERRIDE": { "const": 101 }
+      }
+    },
+    "labels": {
+      "type": "object", "additionalProperties": false, "required": ["en", "de"],
+      "properties": { "en": { "const": "Template" }, "de": { "const": "Template" } }
+    }
+  }
+}

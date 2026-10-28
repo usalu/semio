@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Bounded Borrowed IDML Package Admission",
+  "type": "object",
+  "required": [
+    "maximumWork",
+    "maximumCopyBytes",
+    "maximumCapacityBytes",
+    "maximumReleaseBytes"
+  ],
+  "properties": {
+    "maximumWork": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumCopyBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumCapacityBytes": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumReleaseBytes": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "description": "Borrowed ordered package parts; optional replacement byte view at a known original index. Paged numeric name index, borrowed XML validation and DOMVersion lexical decoding. No source members or XML DOM clones. Exact metadata allocation/release quotes, explicit progress/cancellation, no publication capability."
+}

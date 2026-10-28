@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "semanticPhases",
+    "accessors",
+    "limits",
+    "sourceRefusal",
+    "cancellation",
+    "capturePhases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "semanticPhases": {
+      "const": [
+        "bim-spatial",
+        "bim-sites",
+        "bim-buildings"
+      ]
+    },
+    "accessors": {
+      "const": [
+        "project",
+        "name",
+        "latitude",
+        "origin",
+        "constructor",
+        "array-constructor"
+      ]
+    },
+    "limits": {
+      "const": [
+        {
+          "maxEntities": 1
+        },
+        {
+          "maxValues": 1
+        },
+        {
+          "maxDepth": 1
+        }
+      ]
+    },
+    "sourceRefusal": {
+      "const": "exchange.source"
+    },
+    "cancellation": {
+      "const": "io.cancelled"
+    },
+    "capturePhases": {
+      "const": [
+        "capture-external",
+        "index-external"
+      ]
+    }
+  }
+}
+

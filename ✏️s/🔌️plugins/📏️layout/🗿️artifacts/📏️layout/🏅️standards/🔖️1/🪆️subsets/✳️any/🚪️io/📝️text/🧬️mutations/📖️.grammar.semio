@@ -46,11 +46,21 @@ line = rename-layout
      / set-page-overrides
      / create-layer
      / set-frame-layer
-     / set-drawing-text
      / reorder-frame
      / drag-frames
      / rotate-frames
      / scale-frames
+     / create-paragraph-style
+     / delete-paragraph-style
+     / create-parent-page
+     / delete-parent-page
+     / create-spread
+     / delete-spread
+     / set-page-spread
+     / reorder-layer
+     / set-parent-page-content
+     / replace-document
+     / set-page-background-drawing
 
 rename-layout = "rename-layout" SP text
 change-print-target = "change-print-target" SP text?
@@ -95,11 +105,23 @@ update-link = "update-link" SP id SP number SP number SP number SP text?
 set-page-overrides = "set-page-overrides" SP id SP block
 create-layer = "create-layer" SP id SP id SP text SP number? SP boolean?
 set-frame-layer = "set-frame-layer" SP id SP id SP id
-set-drawing-text = "set-drawing-text" SP number SP text
 reorder-frame = "reorder-frame" SP id SP id SP boolean
 drag-frames = "drag-frames" SP id SP block SP number SP number
 rotate-frames = "rotate-frames" SP id SP block SP number SP number SP number
 scale-frames = "scale-frames" SP id SP block SP number SP number SP number SP number
+
+create-paragraph-style = "create-paragraph-style" SP block SP number?
+delete-paragraph-style = "delete-paragraph-style" SP id
+create-parent-page = "create-parent-page" SP block SP number?
+delete-parent-page = "delete-parent-page" SP id
+create-spread = "create-spread" SP block SP number?
+delete-spread = "delete-spread" SP id
+set-page-spread = "set-page-spread" SP id SP id SP number?
+reorder-layer = "reorder-layer" SP id SP id SP number
+set-parent-page-content = "set-parent-page-content" SP id SP block SP block
+
+replace-document = "replace-document" SP block
+set-page-background-drawing = "set-page-background-drawing" SP id SP block?
 
 id = OCTET+
 number = OCTET+

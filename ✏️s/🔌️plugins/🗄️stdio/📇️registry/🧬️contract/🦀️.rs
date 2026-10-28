@@ -34,9 +34,9 @@ pub use semio_s_artifact_stdio_contract_wire::{
 
 pub mod editing {
     pub use semio_s_artifact_stdio_contract_editing::{
-        admit_bounded_native_command, ample_close_grant, bounded_native_edit_bounded_first_step_proofs, build_bounded_native_edit_tool_job, build_snapshot_edit_tool_job, bytes, close_revision_turn, edited_subtree, fixture_mounted_owner_policy,
+        admit_bounded_native_command, ample_close_grant, bounded_native_edit_bounded_first_step_proofs, build_bounded_native_edit_tool_job, build_snapshot_edit_tool_job, bytes, close_revision_turn, decode_pointer, edited_subtree, fixture_mounted_owner_policy,
         is_snapshot_edit_action, raster, register_bounded_native_edit_tool_factory, register_snapshot_edit_tool_factory, revision_close_demand, routed_native_edit_preparation_factory, routed_native_edit_preparation_factory_birth_bytes, rules,
-        snapshot_edit_actions, snapshot_edit_actions_with, snapshot_edit_bounded_first_step_proofs, snapshot_edit_event_from_action, snapshot_edit_execution_contract, snapshot_edit_source_is_admitted, snapshot_edit_value_is_admitted,
+        snapshot_edit_actions, snapshot_edit_actions_with, snapshot_edit_bounded_first_step_proofs, snapshot_edit_event_from_action, snapshot_edit_execution_contract, snapshot_edit_source_is_admitted, snapshot_edit_value_is_admitted,snapshot_edit_path_is_admitted,
         snapshot_editing_command_from_action, snapshot_editing_command_id, snapshot_from_edit_source, validate_snapshot_schema_for_dialect, validate_snapshot_value_against_schema, ArtifactPreparationFactory, BoundedNativeEditToolJobFactory,
         BoundedNativeEditingEditor, Carried, EditPlan, EditRules, EntityRule, InsertRule, ItemField, NativeEditPreparationRoute, RemoveRule, RetainedBytesCopy, RetainedTextCopy, RowKey, Selector, SnapshotEditError, SnapshotEditEvent,
         SnapshotEditToolJobFactory, SnapshotEditingCommand, SnapshotEditingEditor, SnapshotEditingNativeCommand, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID,
@@ -45,7 +45,7 @@ pub mod editing {
     pub use semio_s_artifact_stdio_contract_editing_details as details;
     pub use semio_s_artifact_stdio_contract_editing_details::{
         render_file_source_editor, render_snapshot_details, render_snapshot_details_provider_revisioned, snapshot_details_split_layout, snapshot_details_window_definition, DslSnapshotDetailsProvider, SnapshotDetailPathSegment,
-        SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailsProvider, SNAPSHOT_DETAILS_BODY_KEY, SNAPSHOT_DETAILS_WINDOW_KIND_ID,
+        SnapshotDetailItemCapabilities, SnapshotDetailPresentation, SnapshotDetailValue, SnapshotDetailVariant, SnapshotDetailsProvider, SNAPSHOT_DETAILS_BODY_KEY, SNAPSHOT_DETAILS_WINDOW_KIND_ID,
     };
     pub use semio_s_artifact_stdio_contract_editing_patch as patch;
     pub use semio_s_artifact_stdio_contract_editing_patch::{

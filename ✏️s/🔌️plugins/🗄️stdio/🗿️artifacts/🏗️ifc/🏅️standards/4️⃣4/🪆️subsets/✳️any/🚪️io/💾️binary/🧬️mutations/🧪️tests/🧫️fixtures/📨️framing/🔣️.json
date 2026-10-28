@@ -1,0 +1,110 @@
+{
+  "format": 1,
+  "valid": [
+    {
+      "id": "remove-entity",
+      "bytes": [
+        1,
+        6,
+        1
+      ],
+      "mutation": {
+        "mutation": "removeEntity",
+        "id": 1
+      }
+    },
+    {
+      "id": "clear-complex",
+      "bytes": [
+        1,
+        11,
+        1,
+        0
+      ],
+      "mutation": {
+        "mutation": "setEntityComplex",
+        "id": 1,
+        "complex": []
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "id": "empty",
+      "bytes": [],
+      "what": "op format"
+    },
+    {
+      "id": "missing-tag",
+      "bytes": [
+        1
+      ],
+      "what": "op tag"
+    },
+    {
+      "id": "wrong-version",
+      "bytes": [
+        0,
+        6,
+        1
+      ],
+      "what": "op format"
+    },
+    {
+      "id": "future-version",
+      "bytes": [
+        2,
+        6,
+        1
+      ],
+      "what": "op format"
+    },
+    {
+      "id": "unknown-tag",
+      "bytes": [
+        1,
+        255
+      ],
+      "what": "op tag"
+    },
+    {
+      "id": "truncated-id",
+      "bytes": [
+        1,
+        6,
+        128
+      ],
+      "what": "op id"
+    },
+    {
+      "id": "trailing-byte",
+      "bytes": [
+        1,
+        6,
+        1,
+        0
+      ],
+      "what": "op payload"
+    },
+    {
+      "id": "truncated-complex-count",
+      "bytes": [
+        1,
+        11,
+        1
+      ],
+      "what": "op complex"
+    },
+    {
+      "id": "trailing-complex-byte",
+      "bytes": [
+        1,
+        11,
+        1,
+        0,
+        0
+      ],
+      "what": "op payload"
+    }
+  ]
+}

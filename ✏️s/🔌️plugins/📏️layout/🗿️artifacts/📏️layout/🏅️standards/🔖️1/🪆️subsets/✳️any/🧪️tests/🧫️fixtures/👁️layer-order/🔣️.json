@@ -1,0 +1,893 @@
+{
+  "oracle": "lodash.sortBy@4.18.1",
+  "cases": [
+    {
+      "name": "parent and local layers paint in stable order",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [],
+        "characterStyles": [],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Alpha body.",
+            "styleRuns": []
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "template",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "p-back",
+              "p-front"
+            ],
+            "layers": [
+              {
+                "id": "p-back",
+                "name": "Parent back",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "p2"
+                ]
+              },
+              {
+                "id": "p-front",
+                "name": "Parent front",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "p1"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "p1",
+                "layerId": "p-front",
+                "bounds": {
+                  "x": 1,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "p2",
+                "layerId": "p-back",
+                "bounds": {
+                  "x": 2,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "template",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "front",
+              "back"
+            ],
+            "layers": [
+              {
+                "id": "front",
+                "name": "Front",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "a2"
+                ]
+              },
+              {
+                "id": "back",
+                "name": "Back",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "a1",
+                  "a3"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "a1",
+                "layerId": "back",
+                "bounds": {
+                  "x": 3,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "a2",
+                "layerId": "front",
+                "bounds": {
+                  "x": 4,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "a3",
+                "layerId": "back",
+                "bounds": {
+                  "x": 5,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "p2",
+                "bounds": {
+                  "x": 44,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": [
+        {
+          "id": "p2",
+          "inherited": false,
+          "x": 44,
+          "visible": false,
+          "parent": true,
+          "frameIndex": 1
+        },
+        {
+          "id": "p1",
+          "inherited": true,
+          "x": 1,
+          "visible": true,
+          "parent": true,
+          "frameIndex": 0
+        },
+        {
+          "id": "a2",
+          "inherited": false,
+          "x": 4,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 1
+        },
+        {
+          "id": "a1",
+          "inherited": false,
+          "x": 3,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 0
+        },
+        {
+          "id": "a3",
+          "inherited": false,
+          "x": 5,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 2
+        }
+      ],
+      "hit": {
+        "x": 6,
+        "y": 1,
+        "expected": "a3"
+      }
+    },
+    {
+      "name": "reordering a local layer changes paint and hit-test order",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [],
+        "characterStyles": [],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Alpha body.",
+            "styleRuns": []
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "template",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "p-back",
+              "p-front"
+            ],
+            "layers": [
+              {
+                "id": "p-back",
+                "name": "Parent back",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "p2"
+                ]
+              },
+              {
+                "id": "p-front",
+                "name": "Parent front",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "p1"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "p1",
+                "layerId": "p-front",
+                "bounds": {
+                  "x": 1,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "p2",
+                "layerId": "p-back",
+                "bounds": {
+                  "x": 2,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "template",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "back",
+              "front"
+            ],
+            "layers": [
+              {
+                "id": "back",
+                "name": "Back",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "a1",
+                  "a3"
+                ]
+              },
+              {
+                "id": "front",
+                "name": "Front",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "a2"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "a1",
+                "layerId": "back",
+                "bounds": {
+                  "x": 3,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "a2",
+                "layerId": "front",
+                "bounds": {
+                  "x": 4,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "a3",
+                "layerId": "back",
+                "bounds": {
+                  "x": 5,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "p2",
+                "bounds": {
+                  "x": 44,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": [
+        {
+          "id": "p2",
+          "inherited": false,
+          "x": 44,
+          "visible": false,
+          "parent": true,
+          "frameIndex": 1
+        },
+        {
+          "id": "p1",
+          "inherited": true,
+          "x": 1,
+          "visible": true,
+          "parent": true,
+          "frameIndex": 0
+        },
+        {
+          "id": "a1",
+          "inherited": false,
+          "x": 3,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 0
+        },
+        {
+          "id": "a3",
+          "inherited": false,
+          "x": 5,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 2
+        },
+        {
+          "id": "a2",
+          "inherited": false,
+          "x": 4,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 1
+        }
+      ],
+      "hit": {
+        "x": 6,
+        "y": 1,
+        "expected": "a2"
+      }
+    },
+    {
+      "name": "unassigned frames retain stable trailing order",
+      "document": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [],
+        "characterStyles": [],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Alpha body.",
+            "styleRuns": []
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "template",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "p-back",
+              "p-front"
+            ],
+            "layers": [
+              {
+                "id": "p-back",
+                "name": "Parent back",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "p2"
+                ]
+              },
+              {
+                "id": "p-front",
+                "name": "Parent front",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "p1"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "p1",
+                "layerId": "p-front",
+                "bounds": {
+                  "x": 1,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "p2",
+                "layerId": "p-back",
+                "bounds": {
+                  "x": 2,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "template",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "front",
+              "back"
+            ],
+            "layers": [
+              {
+                "id": "front",
+                "name": "Front",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "a2"
+                ]
+              },
+              {
+                "id": "back",
+                "name": "Back",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "a1",
+                  "a3"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "a1",
+                "layerId": "back",
+                "bounds": {
+                  "x": 3,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "a2",
+                "layerId": "front",
+                "bounds": {
+                  "x": 4,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "a3",
+                "layerId": "back",
+                "bounds": {
+                  "x": 5,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              },
+              {
+                "kind": "rect",
+                "id": "unassigned",
+                "layerId": "unknown",
+                "bounds": {
+                  "x": 99,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": null,
+                "stroke": null
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "p2",
+                "bounds": {
+                  "x": 44,
+                  "y": 0,
+                  "w": 10,
+                  "h": 10,
+                  "rotation": 0
+                },
+                "visible": false,
+                "locked": null
+              }
+            ]
+          }
+        ],
+        "printTarget": null
+      },
+      "expected": [
+        {
+          "id": "p2",
+          "inherited": false,
+          "x": 44,
+          "visible": false,
+          "parent": true,
+          "frameIndex": 1
+        },
+        {
+          "id": "p1",
+          "inherited": true,
+          "x": 1,
+          "visible": true,
+          "parent": true,
+          "frameIndex": 0
+        },
+        {
+          "id": "a2",
+          "inherited": false,
+          "x": 4,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 1
+        },
+        {
+          "id": "a1",
+          "inherited": false,
+          "x": 3,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 0
+        },
+        {
+          "id": "a3",
+          "inherited": false,
+          "x": 5,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 2
+        },
+        {
+          "id": "unassigned",
+          "inherited": false,
+          "x": 99,
+          "visible": true,
+          "parent": false,
+          "frameIndex": 3
+        }
+      ],
+      "hit": {
+        "x": 6,
+        "y": 1,
+        "expected": "a3"
+      }
+    }
+  ]
+}

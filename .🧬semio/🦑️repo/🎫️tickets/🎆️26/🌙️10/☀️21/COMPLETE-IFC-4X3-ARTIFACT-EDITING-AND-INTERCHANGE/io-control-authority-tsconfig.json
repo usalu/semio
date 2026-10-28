@@ -1,0 +1,8 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": [
+    "C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/control-authority.test.ts"
+  ]
+}

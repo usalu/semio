@@ -15,29 +15,129 @@
 /// 📐️ The IFC4 (ADD2 TC1) `FILE_SCHEMA` name a conforming Part-21 file must declare.
 pub const IFC4_SCHEMA_NAME: &str = "IFC4";
 
-fn declares_ifc4(document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> bool {
-    document.header.file_schema.iter().any(|value| value.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(IFC4_SCHEMA_NAME))))
+struct ExchangeTokens<'a> {
+    text: &'a str,
+    at: usize,
 }
 
-/// 📥️ Decodes IFC4 SPF bytes into their Part-21 document: standard-specific validation beyond generic Part-21 parsing, a file whose `FILE_SCHEMA` does not declare `IFC4` (an IFC2X3 or AP214 file) is refused.
+impl<'a> ExchangeTokens<'a> {
+    fn next(&mut self) -> Result<Option<&'a str>, String> {
+        let bytes = self.text.as_bytes();
+        loop {
+            while self.at < bytes.len() && bytes[self.at].is_ascii_whitespace() { self.at += 1; }
+            if !bytes[self.at..].starts_with(b"/*") { break; }
+            let end = bytes[self.at + 2..].windows(2).position(|pair| pair == b"*/").ok_or("ifc4: unterminated exchange comment")?;
+            self.at += end + 4;
+        }
+        let Some(&first) = bytes.get(self.at) else { return Ok(None); };
+        let start = self.at;
+        self.at += 1;
+        if first == b'\'' {
+            loop {
+                let value = *bytes.get(self.at).ok_or("ifc4: unterminated exchange string")?;
+                self.at += 1;
+                if value != b'\'' { continue; }
+                if bytes.get(self.at) == Some(&b'\'') { self.at += 1; } else { return Ok(Some("'")); }
+            }
+        }
+        if first.is_ascii_alphanumeric() || first == b'_' {
+            while bytes.get(self.at).is_some_and(|value| value.is_ascii_alphanumeric() || *value == b'_' || *value == b'-') { self.at += 1; }
+        } else if !first.is_ascii() {
+            return Err("ifc4: non-ASCII token outside an exchange string".into());
+        }
+        Ok(Some(&self.text[start..self.at]))
+    }
+
+    fn require(&mut self, expected: &str) -> Result<(), String> {
+        if self.next()? == Some(expected) { Ok(()) } else { Err(format!("ifc4: expected exchange token {expected}")) }
+    }
+}
+
+/// 🛂 Validates section framing and mandatory header presence without interpreting markers inside strings or comments.
+fn validate_ifc4_exchange(text: &str) -> Result<(), String> {
+    let mut tokens = ExchangeTokens { text, at: 0 };
+    for token in ["ISO-10303-21", ";", "HEADER", ";"] { tokens.require(token)?; }
+    let mut headers = [0; 3];
+    loop {
+        let name = tokens.next()?.ok_or("ifc4: missing header ENDSEC")?;
+        if name == "ENDSEC" { tokens.require(";")?; break; }
+        let index = ["FILE_DESCRIPTION", "FILE_NAME", "FILE_SCHEMA"].iter().position(|required| *required == name).ok_or_else(|| format!("ifc4: unsupported HEADER record {name}"))?;
+        headers[index] += 1;
+        if headers[index] > 1 { return Err(format!("ifc4: duplicate {name} header")); }
+        if headers.iter().sum::<usize>() != index + 1 { return Err("ifc4: required HEADER records are out of order".into()); }
+        tokens.require("(")?;
+        let mut depth = 1usize;
+        while depth > 0 {
+            match tokens.next()?.ok_or("ifc4: unterminated header record")? {
+                "(" => depth += 1,
+                ")" => depth -= 1,
+                _ => {}
+            }
+        }
+        tokens.require(";")?;
+    }
+    if headers != [1; 3] { return Err("ifc4: FILE_DESCRIPTION, FILE_NAME and FILE_SCHEMA must each occur once".into()); }
+    tokens.require("DATA")?;
+    tokens.require(";")?;
+    let mut depth = 0usize;
+    loop {
+        match tokens.next()?.ok_or("ifc4: missing data ENDSEC")? {
+            "ENDSEC" if depth == 0 => { tokens.require(";")?; break; }
+            "(" => depth += 1,
+            ")" => depth = depth.checked_sub(1).ok_or("ifc4: unbalanced data record")?,
+            _ => {}
+        }
+    }
+    tokens.require("END-ISO-10303-21")?;
+    tokens.require(";")?;
+    if tokens.next()?.is_some() { return Err("ifc4: trailing tokens after exchange terminator".into()); }
+    Ok(())
+}
+
+fn validate_ifc4_document(document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<(), String> {
+    use semio_s_artifact_stdio_contract::part21::Part21Value;
+    let text_list = |values: &[Part21Value]| !values.is_empty() && values.iter().all(|value| matches!(value, Part21Value::Str(_)));
+    if !matches!(document.header.file_description.as_slice(), [Part21Value::List(values), Part21Value::Str(_)] if text_list(values)) {
+        return Err("ifc4: FILE_DESCRIPTION requires a nonempty string list and implementation level".into());
+    }
+    if !matches!(document.header.file_name.as_slice(), [Part21Value::Str(_), Part21Value::Str(_), Part21Value::List(authors), Part21Value::List(organizations), Part21Value::Str(_), Part21Value::Str(_), Part21Value::Str(_)] if text_list(authors) && text_list(organizations)) {
+        return Err("ifc4: FILE_NAME requires seven correctly typed attributes".into());
+    }
+    if !matches!(document.header.file_schema.as_slice(), [Part21Value::List(names)] if matches!(names.as_slice(), [Part21Value::Str(name)] if name == IFC4_SCHEMA_NAME)) {
+        return Err(format!("ifc4: FILE_SCHEMA must contain exactly {IFC4_SCHEMA_NAME}"));
+    }
+    let mut ids = std::collections::BTreeSet::new();
+    for instance in &document.instances {
+        if instance.id == 0 || !ids.insert(instance.id) {
+            return Err(format!("ifc4: instance #{} must have a positive unique id", instance.id));
+        }
+    }
+    for instance in &document.instances {
+        let mut pending: Vec<_> = instance.entities.iter().flat_map(|(_, args)| args).collect();
+        while let Some(value) = pending.pop() {
+            match value {
+                Part21Value::Ref(id) if !ids.contains(id) => return Err(format!("ifc4: instance #{} references missing instance #{id}", instance.id)),
+                Part21Value::Binary(value) if !semio_s_artifact_stdio_contract::part21::is_part21_binary(value) => return Err(format!("ifc4: instance #{} has an invalid binary literal", instance.id)),
+                Part21Value::List(items) | Part21Value::Typed { items, .. } => pending.extend(items),
+                _ => {}
+            }
+        }
+    }
+    Ok(())
+}
+
+/// 📥️ Decodes an IFC4 exchange graph with a single IFC4 schema declaration, positive unique instance ids and resolved nested references. This does not validate IFC4 EXPRESS rules.
 pub fn decode_ifc4_document(bytes: &[u8]) -> Result<semio_s_artifact_stdio_contract::part21::Part21Document, String> {
     let text = std::str::from_utf8(bytes).map_err(|error| format!("ifc4: not valid utf-8: {error}"))?;
+    validate_ifc4_exchange(text)?;
     let document = semio_s_artifact_stdio_contract::part21::parse_part21(text).map_err(|error| format!("ifc4 parse: {error}"))?;
-    if !declares_ifc4(&document) {
-        return Err(format!("ifc4: FILE_SCHEMA does not declare {IFC4_SCHEMA_NAME}"));
-    }
+    validate_ifc4_document(&document)?;
     Ok(document)
 }
 
-/// 📤️ Regenerates valid IFC4 SPF bytes from a document: the header must declare `IFC4` and every instance id must be unique (losslessness is `write_part21`'s job, shared with `step` and `2x3`).
+/// 📤️ Regenerates an IFC4 exchange graph after the same schema, identity and reference checks used on import.
 pub fn encode_ifc4_document(document: &semio_s_artifact_stdio_contract::part21::Part21Document) -> Result<Vec<u8>, String> {
-    if !declares_ifc4(document) {
-        return Err(format!("ifc4: FILE_SCHEMA does not declare {IFC4_SCHEMA_NAME}"));
-    }
-    let mut ids = std::collections::BTreeSet::new();
-    if let Some(instance) = document.instances.iter().find(|instance| !ids.insert(instance.id)) {
-        return Err(format!("ifc4: the instance #{} is written twice", instance.id));
-    }
+    validate_ifc4_document(document)?;
     Ok(semio_s_artifact_stdio_contract::part21::write_part21(document).into_bytes())
 }
 //#endregion 🔖️Codec

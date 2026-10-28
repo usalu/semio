@@ -1,0 +1,8 @@
+import {deepStrictEqual,strictEqual,ok} from 'node:assert/strict';
+import {pathStart,segment,pathEnd,imageStart,IMAGE_END} from '../🟦️.ts';
+import type {PathSegment} from '../../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts';
+import fixture from './🔣️.json' with {type:'json'};
+import schema from '../🧬️schema/🔣️.json' with {type:'json'};
+export interface CanvasPublicationOracle{matrix:(affine:readonly number[],rect:readonly number[])=>number[];validate:(schema:unknown,value:unknown)=>boolean}
+/** 🧪️ Parsed Canvas publications agree with a separate matrix implementation and JSON Schema validator. */
+export function checkCanvasPublication(oracle:CanvasPublicationOracle):{paths:number;images:number}{for(const row of fixture.paths){const raw='[{}'+pathStart(row.id,row.affine)+segment(row.segment as PathSegment,false)+pathEnd(row.paint)+']',value=JSON.parse(raw)[1];ok(oracle.validate(schema,value));deepStrictEqual(value.transform,row.affine);deepStrictEqual(value.segments[0],row.segment);if(row.paint.stroke)strictEqual(value.stroke.width,row.paint.strokeWidth);if('fillRule'in row.paint){strictEqual(value.fillRule,row.paint.fillRule);strictEqual(value.stroke.cap,row.paint.strokeCap);strictEqual(value.stroke.join,row.paint.strokeJoin);deepStrictEqual(value.fill.color,row.paint.fill);}}for(const row of fixture.images){const raw='[{}'+imageStart(row.id,row.affine,row.rect)+row.proxy+IMAGE_END+']',value=JSON.parse(raw)[1];ok(oracle.validate(schema,value));deepStrictEqual(value.transform,row.expectedTransform);deepStrictEqual(value.transform,Array.from(oracle.matrix(row.affine,row.rect)));strictEqual(value.image.src,row.proxy);}return{paths:fixture.paths.length,images:fixture.images.length};}

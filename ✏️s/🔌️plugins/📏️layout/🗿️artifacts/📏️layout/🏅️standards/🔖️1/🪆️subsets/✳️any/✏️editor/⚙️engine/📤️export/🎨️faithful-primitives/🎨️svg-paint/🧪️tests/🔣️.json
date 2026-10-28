@@ -1,0 +1,136 @@
+{
+  "cases": [
+    {
+      "id": "none",
+      "slot": "fill",
+      "color": null
+    },
+    {
+      "id": "opaque-primary",
+      "slot": "fill",
+      "color": [
+        1,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "fractional-fill",
+      "slot": "fill",
+      "color": [
+        0.1,
+        0.2,
+        0.3,
+        0.456789
+      ]
+    },
+    {
+      "id": "fractional-stroke",
+      "slot": "stroke",
+      "color": [
+        0.123456789,
+        0.333333333,
+        0.987654321,
+        0.0123456789
+      ]
+    },
+    {
+      "id": "near-half-channel",
+      "slot": "fill",
+      "color": [
+        0.50000006,
+        0.49999997,
+        0.001,
+        0.99999994
+      ]
+    },
+    {
+      "id": "smallest-positive",
+      "slot": "stroke",
+      "color": [
+        1.401298464324817e-45,
+        1.1754943508222875e-38,
+        1e-8,
+        1e-7
+      ]
+    },
+    {
+      "id": "clamped-range",
+      "slot": "fill",
+      "color": [
+        -1,
+        2,
+        0.6,
+        1.5
+      ]
+    },
+    {
+      "id": "transparent-black",
+      "slot": "stroke",
+      "color": [
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "refusals": [
+    {
+      "slot": "opacity",
+      "color": [
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "slot": "fill",
+      "color": [
+        0,
+        1,
+        0
+      ]
+    },
+    {
+      "slot": "fill",
+      "color": [
+        0,
+        0,
+        0,
+        1,
+        1
+      ]
+    }
+  ],
+  "official": {
+    "file": "painting-fill-01-t.svg",
+    "sha256": "ea79ff2e62a7e52e6a7211860c5f162e8f6f5d20cfe659aa30baf9a6a667b125",
+    "width": 480,
+    "height": 360,
+    "probes": [
+      {
+        "x": 125,
+        "y": 150,
+        "rgba": [
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "x": 325,
+        "y": 150,
+        "rgba": [
+          0,
+          128,
+          0,
+          255
+        ]
+      }
+    ]
+  }
+}

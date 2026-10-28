@@ -103,12 +103,12 @@ pub(super) fn shape_drawing_label(engine: &mut LayoutEngine, doc: &LayoutSnapsho
     paragraph.leading = 13.2;
     paragraph.alignment = "left".into();
     let (shaped, _) = layout_story_in_frame(engine, &story, &paragraph, 1000.0, 1000.0);
-    let glyphs = shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size: 11.0, x: x + glyph.x, y: y + glyph.y, color: DisplayColor([0.1, 0.1, 0.1, 1.0]), italic: false }).collect();
-    DisplayTextRun { object_id: "drawing-label".into(), glyphs, content: text.to_string(), origin_x: x, origin_y: y, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }
+    let glyphs = shaped.glyphs.iter().map(|glyph| DisplayGlyph { font: glyph.font, glyph_id: glyph.glyph_id as u32, font_size: 11.0, x: x + glyph.x, y: y + glyph.y, color: DisplayColor([0.1, 0.1, 0.1, 1.0]), italic: false }).collect();
+    DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: "drawing-label".into(), glyphs, content: text.to_string(), origin_x: x, origin_y: y, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }
 }
 
 pub(super) fn unshaped_drawing_label(text: &str, x: f32, y: f32) -> DisplayTextRun {
-    DisplayTextRun { object_id: "drawing-label".into(), glyphs: Vec::new(), content: text.to_string(), origin_x: x, origin_y: y, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }
+    DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: "drawing-label".into(), glyphs: Vec::new(), content: text.to_string(), origin_x: x, origin_y: y, font_size: 11.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }
 }
 
 pub(super) struct DrawingRaster {
@@ -174,7 +174,7 @@ pub(super) fn push_drawing_raster(images: &mut Vec<DisplayImage>, raster: &Drawi
     if width <= 0.0 || height <= 0.0 {
         return;
     }
-    images.push(DisplayImage { object_id: format!("drawing-image-{}", images.len()), x, y, width, height, rotation, placeholder: false, proxy_data_url: Some(raster.data_url.clone()), preview: String::new(), stack: 0 });
+    images.push(DisplayImage { drawing_bounds:None, object_id: format!("drawing-image-{}", images.len()), x, y, width, height, rotation, placeholder: false, proxy_data_url: Some(raster.data_url.clone()), preview: String::new(), stack: 0 });
 }
 
 pub(super) fn place_drawing_rasters(rasters: &[DrawingRaster], strokes: &[DisplayStroke], bounds: &LayoutBounds) -> Vec<DisplayImage> {

@@ -36,3 +36,5 @@ impl<T:RetireOwned> NativeDefault for Option<T> {
         Ok((None,super::tree::receipt(demand)))
     }
 }
+
+impl<T:RetireOwned,const N:usize> NativeDefault for semio_framework_value_persistent::list::PagedList<T,N>{fn native_default_demand()->RetirementDemand{super::tree::fixed(2*std::mem::size_of::<Self>())}fn native_default(grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{let d=Self::native_default_demand();if !retained_clone_grant_admits(grant,d){return Err(super::tree::invalid())}Ok((Self::new(),super::tree::receipt(d)))}}

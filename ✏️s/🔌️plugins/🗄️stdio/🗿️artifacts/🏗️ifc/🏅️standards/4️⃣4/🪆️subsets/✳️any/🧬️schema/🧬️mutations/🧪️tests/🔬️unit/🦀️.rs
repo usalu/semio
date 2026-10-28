@@ -1,5 +1,5 @@
 use semio_s_artifact_stdio_ifc_4_mutations::standards::v4::subsets::any::schema::mutations::*;
-use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcEntitiesDiff;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::{IfcEntitiesDiff, IfcEntityRemoved};
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcHeader;
 use protocol::command::{ColdDiffAlgebra, DiffAlgebra};
@@ -10,7 +10,7 @@ use protocol::{ColdMutationDiff, MutationDiff};
 #[test]
 fn missing_entity_target_is_rejected_before_mutation() {
     let base = IfcSnapshot::default();
-    let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![1], ..Default::default() }), ..Default::default() };
+    let diff = IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![IfcEntityRemoved { id: 1, index: 0 }], ..Default::default() }), ..Default::default() };
     let error = protocol::apply_diff_cold(&diff, &base).expect_err("missing entity target must be rejected");
     assert_eq!(error.code, "mutation.apply.invalid-remove-target");
     assert_eq!(error.target, vec!["entities", "1"]);
@@ -283,6 +283,7 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
         IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: 1, index: 1, value: IfcValue::Real(9.0) }),
         IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 1, index: 2, value: IfcValue::Enum("T".into()) }),
         IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: 1, index: 0 }),
+        IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id: 1, complex: vec![] }),
     ];
     assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {

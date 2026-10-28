@@ -1,0 +1,30 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "RetainedGeometrySourceVertexIndex",
+  "description": "Sparse u32 source point ordinals map to mesh-local vertex indices in one item generation. Original u64 entity IDs remain in the captured graph/source index.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceIndex",
+    "vertex",
+    "generation"
+  ],
+  "properties": {
+    "sourceIndex": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "vertex": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "generation": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    }
+  },
+  "$comment": "Three fixed 256-way metadata levels and 512 paired-u32 entries per payload page allocate only touched paths, one original-funded page per turn. Generation changes invalidate mappings logically while all backing remains owned until granted close."
+}

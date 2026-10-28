@@ -1,0 +1,39 @@
+{
+  "schema": "layout.export.physical-close.v1",
+  "cases": [
+    {
+      "name": "Empty Retained Byte Allocation",
+      "kind": "byte",
+      "capacity": 37,
+      "length": 0,
+      "expectedRelease": 37
+    },
+    {
+      "name": "Partially Used Byte Allocation",
+      "kind": "byte",
+      "capacity": 73,
+      "length": 3,
+      "expectedRelease": 73
+    },
+    {
+      "name": "Empty Retained UTF8 Allocation",
+      "kind": "string",
+      "capacity": 97,
+      "length": 0,
+      "expectedRelease": 97
+    },
+    {
+      "name": "Empty Retained Chunk Allocation",
+      "kind": "chunk",
+      "capacity": 41,
+      "length": 0,
+      "expectedRelease": 41
+    }
+  ],
+  "axes": [
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ]
+}

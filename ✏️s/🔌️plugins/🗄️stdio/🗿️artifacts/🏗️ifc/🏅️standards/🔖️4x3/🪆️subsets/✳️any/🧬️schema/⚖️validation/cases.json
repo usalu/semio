@@ -1,0 +1,182 @@
+[
+  {
+    "expression": "9007199254740993 + 1",
+    "kind": "integer",
+    "value": "9007199254740994"
+  },
+  {
+    "expression": "UNKNOWN AND FALSE",
+    "kind": "logical",
+    "value": "false"
+  },
+  {
+    "expression": "UNKNOWN OR TRUE",
+    "kind": "logical",
+    "value": "true"
+  },
+  {
+    "expression": "NOT UNKNOWN",
+    "kind": "logical",
+    "value": "unknown"
+  },
+  {
+    "expression": "SIZEOF(QUERY(x <* [1,2,3] | x > 1))",
+    "kind": "integer",
+    "value": "2"
+  },
+  {
+    "expression": "SIZEOF([1:3,2])",
+    "kind": "integer",
+    "value": "4"
+  },
+  {
+    "expression": "{0 < 0.5 < 1}",
+    "kind": "logical",
+    "value": "true"
+  },
+  {
+    "expression": "[1,2] = [1,2]",
+    "kind": "logical",
+    "value": "true"
+  },
+  {
+    "expression": "5 DIV 2",
+    "kind": "integer",
+    "value": "2"
+  },
+  {
+    "expression": "5 MOD 2",
+    "kind": "integer",
+    "value": "1"
+  },
+  {
+    "kind": "logical",
+    "value": "true",
+    "expression": "9007199254740994 = 9007199254740994.0"
+  },
+  {
+    "kind": "logical",
+    "value": "false",
+    "expression": "9007199254740993 = 9007199254740993.0"
+  },
+  {
+    "kind": "logical",
+    "value": "true",
+    "expression": "9007199254740993 > 9007199254740993.0"
+  },
+  {
+    "kind": "integer",
+    "value": "42",
+    "expression": "NVL(?,42)"
+  },
+  {
+    "kind": "logical",
+    "value": "true",
+    "expression": "EXISTS(UNKNOWN)"
+  },
+  {
+    "kind": "logical",
+    "value": "false",
+    "expression": "EXISTS(?)"
+  },
+  {
+    "kind": "integer",
+    "value": "0",
+    "expression": "SIZEOF(QUERY(x <* [1,2] | UNKNOWN))"
+  },
+  {
+    "kind": "integer",
+    "value": "2",
+    "expression": "[1,2][2]"
+  },
+  {
+    "kind": "integer",
+    "value": "2",
+    "expression": "LENGTH('😀A')"
+  },
+  {
+    "kind": "logical",
+    "value": "unknown",
+    "expression": "UNKNOWN XOR TRUE"
+  },
+  {
+    "kind": "logical",
+    "value": "false",
+    "expression": "FALSE AND ?"
+  },
+  {
+    "kind": "logical",
+    "value": "true",
+    "expression": "TRUE OR ?"
+  },
+  {
+    "kind": "integer",
+    "value": "1024",
+    "expression": "2 ** 10"
+  },
+  {
+    "kind": "logical",
+    "value": "true",
+    "expression": "[1,2] <= [2,1,3]"
+  },
+  {
+    "kind": "logical",
+    "expression": "IfcWallTypeEnum.USERDEFINED = USERDEFINED",
+    "value": "true"
+  },
+  {
+    "kind": "logical",
+    "expression": "UNKNOWN = UNKNOWN",
+    "value": "true"
+  },
+  {
+    "kind": "logical",
+    "expression": "FALSE < UNKNOWN",
+    "value": "true"
+  },
+  {
+    "kind": "logical",
+    "expression": "UNKNOWN < TRUE",
+    "value": "true"
+  },
+  {
+    "kind": "integer",
+    "expression": "-2 ** 2",
+    "value": "4"
+  },
+  {
+    "kind": "logical",
+    "expression": "TRUE OR FALSE = FALSE",
+    "value": "false"
+  },
+  {
+    "kind": "logical",
+    "expression": "? <= [1]",
+    "value": "unknown"
+  },
+  {
+    "kind": "logical",
+    "expression": "? IN [1]",
+    "value": "unknown"
+  },
+  {
+    "value": "undefined",
+    "expression": "[1,2,3][0:1]",
+    "kind": "unknown"
+  },
+  {
+    "value": "undefined",
+    "expression": "'ABC'[0:1]",
+    "kind": "unknown"
+  },
+  {
+    "value": "undefined",
+    "expression": "'ABC'[3:2]",
+    "kind": "unknown"
+  },
+  {
+    "value": "ABC",
+    "expression": "'ABC'[1:3]",
+    "kind": "string"
+  }
+]

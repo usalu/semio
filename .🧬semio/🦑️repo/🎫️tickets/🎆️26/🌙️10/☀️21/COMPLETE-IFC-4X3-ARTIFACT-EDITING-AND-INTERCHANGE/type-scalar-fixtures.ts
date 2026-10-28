@@ -1,0 +1,10 @@
+import {writeFileSync} from 'node:fs';
+import multiple from '../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/type-multiple-input.json';
+import remap from '../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/primary-remap.json';
+const u=()=>({kind:'unset'}),s=(value:string)=>({kind:'string',value}),r=(value:string)=>({kind:'reference',value}),i=(value:string)=>({kind:'integer',value});
+const basic=structuredClone(multiple.sources.lighting.entities[0]),organization={id:'7',name:'IFCORGANIZATION',args:[u(),s('source organization'),u(),u(),u()],complex:[]},unit={id:'7',name:'IFCSIUNIT',args:[{kind:'derived'},{kind:'enum',value:'LENGTHUNIT'},u(),{kind:'enum',value:'METRE'}],complex:[]};
+const contract={schema:'IFC4X3_ADD2',nativeExecution:false,encoding:'ifc-template-command',sources:{basic:{entities:[basic,organization]},unit:{entities:[{id:'1',...remap.sources.constituent},...remap.tail.filter(row=>row.id==='6'),unit]}},cases:[
+{id:'mixed-reference-and-strings',source:'basic',target:'IFCAPPLICATION',required:[{index:0,kind:'reference'},{index:1,kind:'string'},{index:2,kind:'string'},{index:3,kind:'string'}],steps:[{field:3,text:'原 🧭 semio'},{field:0,text:'7'},{field:1,text:''},{field:2,text:'Caller application'}],args:[r('7'),s(''),s('Caller application'),s('原 🧭 semio')],mutations:5},
+{id:'reference-and-negative-integer',source:'unit',target:'IFCDERIVEDUNITELEMENT',required:[{index:0,kind:'reference'},{index:1,kind:'integer'}],steps:[{field:1,text:'-2'},{field:0,text:'7'}],args:[r('7'),i('-2')],mutations:6},
+{id:'seven-exact-integers',source:'basic',target:'IFCDIMENSIONALEXPONENTS',required:Array.from({length:7},(_,index)=>({index,kind:'integer'})),steps:[6,5,4,3,2,1,0].map(field=>({field,text:['1','-2','0','0','0','0','0'][field]})),args:['1','-2','0','0','0','0','0'].map(i),mutations:8}],integerDrafts:['','-','-0','01','+1','9223372036854775808','-9223372036854775809','1.0'],integerValues:['-9223372036854775808','9223372036854775807','0','-2']};
+writeFileSync('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/type-scalar-input.json',JSON.stringify(contract,null,2)+'\n');

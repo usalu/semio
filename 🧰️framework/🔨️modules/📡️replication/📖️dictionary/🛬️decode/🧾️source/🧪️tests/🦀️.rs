@@ -4,7 +4,7 @@ fn observe<T>(action:impl FnOnce()->T)->(T,usize,usize){semio_framework_trace_me
 struct Pages{pages:Vec<Vec<u8>>,extent:usize}
 struct Borrowed<'a>{owner:&'a Pages,authority:Option<(u64,u64)>}
 impl RetainedWireByteSource for Borrowed<'_>{
- fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.owner as*const Pages as usize,extent:self.owner.extent,authority:self.authority}}
+ fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.owner as*const Pages as usize,extent:self.owner.extent,authority:self.authority}}
  fn byte_at(&self,index:usize)->Option<u8>{let mut remaining=index;for page in &self.owner.pages{if remaining<page.len(){return page.get(remaining).copied()}remaining-=page.len()}None}
 }
 #[test]

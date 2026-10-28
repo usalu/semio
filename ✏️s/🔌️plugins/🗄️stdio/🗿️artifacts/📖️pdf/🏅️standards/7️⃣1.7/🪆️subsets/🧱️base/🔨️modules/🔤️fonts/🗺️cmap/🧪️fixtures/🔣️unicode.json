@@ -1,0 +1,144 @@
+{
+  "schema": "pdf.cmap.unicode.v1",
+  "encoding": "/CIDInit /ProcSet findresource begin 12 dict begin begincmap /CMapName /LayoutUTF32 def /CMapType 1 def 1 begincodespacerange <00000000> <0010FFFF> endcodespacerange 1 beginnotdefrange <00000000> <0010FFFF> 0 endnotdefrange endcmap end end",
+  "toUnicode": "begincmap 1 begincodespacerange <00000000> <0010FFFF> endcodespacerange 5 beginbfrange <00000000> <0000D7FF> <0000> <0000E000> <0000FFFF> <E000> <00010000> <000103FF> <D800DC00> <0001F400> <0001F7FF> <D83DDC00> <0010FC00> <0010FFFF> <DBFFDC00> endbfrange endcmap",
+  "text": "Grüße 日本語 𐀀𐏿😀􏿿",
+  "codes": [
+    71,
+    114,
+    252,
+    223,
+    101,
+    32,
+    26085,
+    26412,
+    35486,
+    32,
+    65536,
+    66559,
+    128512,
+    1114111
+  ],
+  "expected": {
+    "codeWidth": 4,
+    "rangeStorage": 5,
+    "utf8Bytes": 34
+  },
+  "oracle": {
+    "library": "pdfjs-dist",
+    "version": "5.7.284",
+    "method": "actual custom Encoding stream plus ToUnicode PDF extraction"
+  },
+  "cmap": {
+    "name": "LayoutUTF32",
+    "codespace": [
+      {
+        "byteWidth": 4,
+        "low": 0,
+        "high": 1114111
+      }
+    ]
+  },
+  "unicode": {
+    "byteWidth": 4,
+    "mappings": [
+      {
+        "kind": "range",
+        "low": 0,
+        "high": 55295,
+        "text": "\u0000"
+      },
+      {
+        "kind": "range",
+        "low": 57344,
+        "high": 65535,
+        "text": ""
+      },
+      {
+        "kind": "range",
+        "low": 65536,
+        "high": 66559,
+        "text": "𐀀"
+      },
+      {
+        "kind": "range",
+        "low": 128000,
+        "high": 129023,
+        "text": "🐀"
+      },
+      {
+        "kind": "range",
+        "low": 1113088,
+        "high": 1114111,
+        "text": "􏰀"
+      }
+    ]
+  },
+  "mixed": {
+    "cmap": {
+      "name": "Mixed",
+      "codespace": [
+        {
+          "byteWidth": 1,
+          "low": 0,
+          "high": 127
+        },
+        {
+          "byteWidth": 2,
+          "low": 33088,
+          "high": 40956
+        },
+        {
+          "byteWidth": 3,
+          "low": 10551296,
+          "high": 10616831
+        },
+        {
+          "byteWidth": 4,
+          "low": 2969567232,
+          "high": 2986344447
+        }
+      ]
+    },
+    "unicode": {
+      "byteWidth": 1,
+      "mappings": [
+        {
+          "kind": "char",
+          "code": 65,
+          "text": "A"
+        },
+        {
+          "kind": "char",
+          "code": 33088,
+          "text": "Ä"
+        },
+        {
+          "kind": "char",
+          "code": 10551297,
+          "text": "中"
+        },
+        {
+          "kind": "char",
+          "code": 2969567233,
+          "text": "😀"
+        }
+      ]
+    },
+    "bytes": [
+      65,
+      129,
+      64,
+      161,
+      0,
+      1,
+      177,
+      0,
+      0,
+      1
+    ],
+    "text": "AÄ中😀",
+    "encoding": "begincmap /CMapName /Mixed def 4 begincodespacerange <00> <7F> <8140> <9FFC> <A10000> <A1FFFF> <B1000000> <B1FFFFFF> endcodespacerange 4 begincidchar <41> 1 <8140> 2 <A10001> 3 <B1000001> 4 endcidchar endcmap",
+    "toUnicode": "begincmap 4 begincodespacerange <00> <7F> <8140> <9FFC> <A10000> <A1FFFF> <B1000000> <B1FFFFFF> endcodespacerange 4 beginbfchar <41> <0041> <8140> <00C4> <A10001> <4E2D> <B1000001> <D83DDE00> endbfchar endcmap"
+  }
+}

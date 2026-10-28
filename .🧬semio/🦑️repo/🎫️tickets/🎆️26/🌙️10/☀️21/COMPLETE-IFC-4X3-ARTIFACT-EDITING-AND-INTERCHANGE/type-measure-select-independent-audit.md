@@ -1,0 +1,13 @@
+# Measure SELECT Independent Audit
+
+No new confirmed P1/P2 was found. All five frozen source hashes match before and after the independent run. Actual focused29 tests/2034 assertions pass, zero failures (16.27s, npm Bun1.4.2); output is generated/type-measure-independent-tests.txt.
+
+The actual complete23-member IfcMeasureValue discriminator is metadata-derived; source Integer words remain canonical signed64, NUMBER requires an explicit integer/REAL choice, and incompatible representation switches clear their child instead of converting it. ARRAY reconstruction uses ordinary structural events, creates no default REAL values, preserves too-many/partial members for correction and leaves exact cardinality plus SameCoordinateType to complete candidate domain/WHERE admission. No claim that declared SELECT membership alone makes a valid RigidOperation candidate is made.
+
+The genuine NUMBER binding sequence reaches a valid Length coordinate pair and emits exactly two SetEntityArg mutations. Existing central structural checks precede alias/entity WHERE, preserved CRS/Height/constituents remain intact, and inverse/fast-json-patch obligations are actual tests. Same-branch UTF8 drafts and source/request snapshots remain exact; closed-shape refusals and every draft cancellation prefix plus exact undefined failures are executed. No alternate mutation engine or typed entity-reference wrapper was introduced.
+
+A fresh independent owned-interface execution against cached IfcOpenShell0.9 reproduced17 exact selected payloads and six unrendered drafts. Raw full validation agreement remains16/17: the library admits one-member ComplexNumber despite actual released ARRAY1:2 bounds. Raw result is generated/type-measure-independent-physical.json. A separate owned Ajv cardinality check driven only by external actual ARRAY bounds gives17/17 composite agreement; it does not overwrite the raw gap or become a whole-schema oracle. Output is generated/type-measure-independent-composite.json. Authored scripts remain in the ticket.
+
+Part21 NUMBER integer-token encoding is deliberately not certified: primary12.1.1.7 maps NUMBER to real exchange tokens, while the semantic graph/controller preserves the selected integer arm. SDK acceptance cannot erase that distinction. No serializer/central NUMBER policy/native implementation is changed or approved by this source closure.
+
+All five files are released for parent registration. Native Measure remains separately planned/unexecuted; no full IFC/MVD/physical-admission/capability proof follows. All independent processes are terminal. Before/after hashes are generated/type-measure-independent-before.json and type-measure-independent-after.json.

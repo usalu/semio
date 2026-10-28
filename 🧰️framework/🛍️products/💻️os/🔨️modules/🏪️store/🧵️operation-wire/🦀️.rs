@@ -93,7 +93,8 @@ impl ArtifactPreparedOperationCursor {
         if grant.maximum_items == 0 || output.is_empty() || grant.maximum_copy_bytes == 0 { return Ok(Default::default()); }
         if grant.maximum_depth == 0 { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "prepared JSON wrapper requires its original parent depth").into()); }
         if header.len() > 11 || prefix.len() > 32 { return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit, "prepared JSON header exceeds declared inline capacity").into()); }
-        let identity = (body as *const dyn ArtifactCanonicalJson as *const () as usize, header.as_ptr() as usize, header.len(), prefix.as_ptr() as usize, prefix.len(), u8::from(hex));
+        let original = body.canonical_json_original_owner().unwrap_or(body);
+        let identity = (original as *const dyn ArtifactCanonicalJson as *const () as usize, header.as_ptr() as usize, header.len(), prefix.as_ptr() as usize, prefix.len(), u8::from(hex));
         if self.source_identity.is_some_and(|original| original != identity) { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared JSON original source changed").into()); }
         if self.source_identity.is_none() {
             let copied_bytes = size_of_val(&self.source_identity);

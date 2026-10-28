@@ -1,0 +1,673 @@
+{
+  "version": 1,
+  "numericEquality": "finite-real-value-with-zero-sign-equivalence",
+  "source": {
+    "schema": "IFC4X3_ADD2",
+    "file": "source.ifc",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "physical": "authored standalone direction/vector population; no project/view claim"
+  },
+  "functions": [
+    {
+      "owner": "IFCNORMALISE",
+      "id": "axis2",
+      "args": [
+        "1"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "opposite2",
+      "args": [
+        "3"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          -1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "three-four2",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0.6,
+          0.8
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "axis3",
+      "args": [
+        "9"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          0,
+          1
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "three-four3",
+      "args": [
+        "8"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0.6,
+          0.8,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "diagonal3",
+      "args": [
+        "10"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0.3333333333333333,
+          0.6666666666666666,
+          0.6666666666666666
+        ]
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "vector",
+      "args": [
+        "11"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0.6,
+          0.8,
+          0
+        ],
+        "magnitude": 1
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "zero-vector",
+      "args": [
+        "12"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCNORMALISE",
+      "id": "absent",
+      "args": [
+        null
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "parallel2",
+      "args": [
+        "1",
+        "1"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": 1
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "opposite2",
+      "args": [
+        "1",
+        "3"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": -1
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "orthogonal2",
+      "args": [
+        "1",
+        "2"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "scaled2",
+      "args": [
+        "1",
+        "4"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": 0.6
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "parallel3",
+      "args": [
+        "5",
+        "5"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": 1
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "orthogonal3",
+      "args": [
+        "5",
+        "9"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "scaled3",
+      "args": [
+        "5",
+        "8"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": 0.6
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "mixed-dimension",
+      "args": [
+        "1",
+        "5"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "absent-left",
+      "args": [
+        null,
+        "5"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCDOTPRODUCT",
+      "id": "absent-right",
+      "args": [
+        "5",
+        null
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "right-handed",
+      "args": [
+        "5",
+        "6"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0,
+          0,
+          1
+        ],
+        "magnitude": 1
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "reverse",
+      "args": [
+        "6",
+        "5"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0,
+          0,
+          -1
+        ],
+        "magnitude": 1
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "parallel",
+      "args": [
+        "5",
+        "5"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1,
+          0,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "antiparallel",
+      "args": [
+        "5",
+        "7"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1,
+          0,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "parallel-scaled",
+      "args": [
+        "8",
+        "8"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          3,
+          4,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "oblique",
+      "args": [
+        "5",
+        "8"
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0,
+          0,
+          0.8
+        ],
+        "magnitude": 0.8
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "two-dimensional-left",
+      "args": [
+        "1",
+        "5"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "two-dimensional-right",
+      "args": [
+        "5",
+        "1"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "absent-left",
+      "args": [
+        null,
+        "5"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCCROSSPRODUCT",
+      "id": "absent-right",
+      "args": [
+        "5",
+        null
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCORTHOGONALCOMPLEMENT",
+      "id": "x",
+      "args": [
+        "1"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          1
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCORTHOGONALCOMPLEMENT",
+      "id": "y",
+      "args": [
+        "2"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          -1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCORTHOGONALCOMPLEMENT",
+      "id": "scaled",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          -4,
+          3
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCORTHOGONALCOMPLEMENT",
+      "id": "three-dimensional",
+      "args": [
+        "5"
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCORTHOGONALCOMPLEMENT",
+      "id": "absent",
+      "args": [
+        null
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILD2AXES",
+      "id": "default",
+      "args": [
+        null
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILD2AXES",
+      "id": "scaled",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            0.6,
+            0.8
+          ],
+          [
+            -0.8,
+            0.6
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILD2AXES",
+      "id": "negative",
+      "args": [
+        "3"
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            -1,
+            0
+          ],
+          [
+            0,
+            -1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILDAXES",
+      "id": "default",
+      "args": [
+        null,
+        null
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILDAXES",
+      "id": "explicit-default",
+      "args": [
+        "9",
+        "5"
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILDAXES",
+      "id": "opposite-reference",
+      "args": [
+        "9",
+        "7"
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            -1,
+            0,
+            0
+          ],
+          [
+            0,
+            -1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBUILDAXES",
+      "id": "y-axis",
+      "args": [
+        "6",
+        "5"
+      ],
+      "expected": {
+        "kind": "directions",
+        "items": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    }
+  ]
+}

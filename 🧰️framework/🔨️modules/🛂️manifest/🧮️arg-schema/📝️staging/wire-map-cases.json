@@ -1,0 +1,1 @@
+{"cases":[{"keys":["a","b"],"valid":true},{"keys":["","a"],"valid":true},{"keys":["a","aa"],"valid":true},{"keys":["ä","😀"],"valid":true},{"keys":["a","a"],"valid":false},{"keys":["b","a"],"valid":false},{"keys":["aa","a"],"valid":false},{"keys":["😀","ä"],"valid":false}]}

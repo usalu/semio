@@ -1,0 +1,130 @@
+{
+  "cases": [
+    {
+      "name": "axial-positive",
+      "origin": [
+        0,
+        0,
+        2
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "volume": 32
+    },
+    {
+      "name": "axial-negative",
+      "origin": [
+        0,
+        0,
+        2
+      ],
+      "normal": [
+        0,
+        0,
+        -1
+      ],
+      "volume": 32
+    },
+    {
+      "name": "outside",
+      "origin": [
+        0,
+        0,
+        6
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "volume": 64
+    },
+    {
+      "name": "covering",
+      "origin": [
+        0,
+        0,
+        -1
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "volume": 0
+    },
+    {
+      "name": "tangent-keep",
+      "origin": [
+        0,
+        0,
+        4
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "volume": 64
+    },
+    {
+      "name": "tangent-remove",
+      "origin": [
+        0,
+        0,
+        0
+      ],
+      "normal": [
+        0,
+        0,
+        1
+      ],
+      "volume": 0
+    },
+    {
+      "name": "oblique-half",
+      "origin": [
+        4,
+        0,
+        0
+      ],
+      "normal": [
+        1,
+        1,
+        0
+      ],
+      "volume": 32
+    },
+    {
+      "name": "oblique-tetrahedron",
+      "origin": [
+        1,
+        0,
+        0
+      ],
+      "normal": [
+        1,
+        1,
+        1
+      ],
+      "volume": 0.16666666666666666
+    },
+    {
+      "name": "corner-touch",
+      "origin": [
+        4,
+        4,
+        4
+      ],
+      "normal": [
+        1,
+        1,
+        1
+      ],
+      "volume": 64
+    }
+  ]
+}

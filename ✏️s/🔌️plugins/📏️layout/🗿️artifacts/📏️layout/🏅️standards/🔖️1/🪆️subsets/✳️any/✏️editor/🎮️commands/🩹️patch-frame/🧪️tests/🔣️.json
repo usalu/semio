@@ -1,0 +1,156 @@
+{
+  "cases": [
+    {
+      "kind": "text",
+      "field": "storyContent",
+      "value": "Edited 😀",
+      "mutation": "EditStory"
+    },
+    {
+      "kind": "text",
+      "field": "addStyleRun",
+      "value": "true",
+      "mutation": "SetStoryRuns"
+    },
+    {
+      "kind": "text",
+      "field": "parent.columns",
+      "value": "2",
+      "mutation": "SetParentPageContent"
+    },
+    {
+      "kind": "image",
+      "field": "linkPath",
+      "value": "images/replaced.png",
+      "mutation": "ChangeLinkPath"
+    },
+    {
+      "kind": "image",
+      "field": "linkWidth",
+      "value": "256",
+      "mutation": "UpdateLink"
+    },
+    {
+      "kind": "image",
+      "field": "open",
+      "value": "true",
+      "effect": "os.open-artifact"
+    },
+    {
+      "kind": "image",
+      "field": "parent.x",
+      "value": "42",
+      "mutation": "SetParentPageContent"
+    }
+  ],
+  "locks": [
+    {
+      "kind": "text",
+      "field": "storyContent",
+      "value": "Changed",
+      "base": false,
+      "instance": true,
+      "blocked": true
+    },
+    {
+      "kind": "image",
+      "field": "linkPath",
+      "value": "next.png",
+      "base": false,
+      "instance": true,
+      "blocked": true
+    },
+    {
+      "kind": "text",
+      "field": "storyContent",
+      "value": "Changed",
+      "base": true,
+      "instance": false,
+      "blocked": false
+    },
+    {
+      "kind": "image",
+      "field": "linkPath",
+      "value": "next.png",
+      "base": true,
+      "instance": false,
+      "blocked": false
+    },
+    {
+      "kind": "text",
+      "field": "parent.columns",
+      "value": "2",
+      "base": true,
+      "instance": false,
+      "blocked": true
+    },
+    {
+      "kind": "image",
+      "field": "parent.x",
+      "value": "42",
+      "base": true,
+      "instance": false,
+      "blocked": true
+    },
+    {
+      "kind": "text",
+      "field": "parent.locked",
+      "value": "false",
+      "base": true,
+      "instance": true,
+      "blocked": false
+    }
+  ],
+  "portable": [
+    {
+      "mutation": {
+        "EditStory": {
+          "id": "story-1",
+          "offset": 1,
+          "delete": 1,
+          "insert": "ö"
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/stories/0/content",
+          "value": "Aö🌍"
+        }
+      ]
+    },
+    {
+      "mutation": {
+        "ChangeLinkPath": {
+          "id": "link-1",
+          "newPath": "images/replaced.png"
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/links/0/path",
+          "value": "images/replaced.png"
+        }
+      ]
+    },
+    {
+      "mutation": {
+        "UpdateLink": {
+          "id": "link-1",
+          "width": 256,
+          "height": 600,
+          "dpi": 300,
+          "colorProfile": null
+        }
+      },
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/links/0/width",
+          "value": 256
+        }
+      ]
+    }
+  ]
+}

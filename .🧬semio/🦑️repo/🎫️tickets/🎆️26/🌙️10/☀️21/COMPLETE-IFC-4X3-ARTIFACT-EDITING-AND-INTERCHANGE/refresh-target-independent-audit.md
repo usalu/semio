@@ -1,0 +1,15 @@
+# Refresh Target Independent Audit and Reader Baseline
+
+Read-only source/actual TypeScript endpoint checkpoint, 2026-10-21. No browser mount/native execution claim.
+
+Reviewed manifest arg-schema staging/refresh.ts and its trusted host-owned target contract. No new confirmed P1/P2. It checks actual windowInstances membership and duplicate roster IDs, en/de locale agreement, per-real-window unique form ownership, collisions against occupied and earlier target surface keys, declared action body's exact bodyKey, exact token.window, nonempty action/revision and canonical bounded u64 generation. windowViewContext derives context from the real roster entry; no fabricated window alias is inserted. It constructs all results before the caller receives any mount targets, preventing partial submission by this helper.
+
+Caller obligations remain material: definition(window,action) must resolve the exact currently authorized action (the helper trusts its returned definition); occupied keys must include all actual normal/section/panel/reserved target keys; target/request/args must already be immutable admitted host data. This helper neither captures external getters nor validates the whole staged request/size/status. Empty target list deliberately avoids demanding an unrelated valid roster. hash is forwarded, not a source ownership proof. No per-target mount/transport can be inferred from this pure return value. Host hookup still must check current action/window/source owner after asynchronous completion and retire consumed surfaces.
+
+## Actual reader baseline
+
+Authored ticket input `glb-reader-baseline.ts` imports the actual current readIfcGltfGlb and loads checked-in Box GLB without copying any source. It constructs33 deterministic GLBs covering duplicate/escaped names, integer-key order, dangerous namespace, overflow replacement, binary64 zero/subnormal/underflow, escaped surrogate forms, actual scene field numeric spellings and safe bounds, BOM/whitespace/trailing errors, defaults, unknown fields and malformed UTF8.
+
+Authoritative immutable output: `🗑️generated/glb-reader-baseline-v2.json`,33cases,22accepted/11refused. Every case preserves input SHA256, ordered normalized full snapshot and digest or actual diagnostic name/code/at/message. Normalization explicitly tags bigint decimal and every native number's exact binary64 word and keeps object entry order. --compare uses the same deterministic script and compares every full row. Initial generated baseline.json is retained as nonauthoritative history: its scene variants were inadvertently overwritten by the later original scene duplicate. V2 corrects the script to replace the actual scene field, and the changed acceptance count confirms refusal coverage. Do not compare against v1.
+
+This baseline records existing endpoint behavior, not normative acceptance of every variant. Use Khronos/Three only for meaningful valid subsets and preserve semantic versus diagnostic-message differences explicitly if new structured error translation is intended. No production code changed during capture; no external runtime dependency was added.

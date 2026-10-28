@@ -1,0 +1,35 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Explicit Codec Owner Source",
+  "description": "A codec selects one source at monomorphization. Source admission and every original factory constructor receive all quoted grant axes. Failure closes retained owners without substituting an issuer.",
+  "type": "object",
+  "required": [
+    "source",
+    "sourceDemand",
+    "sourceAdmission",
+    "constructorDemand",
+    "constructorAdmission",
+    "failureClose"
+  ],
+  "properties": {
+    "source": {
+      "type": "string"
+    },
+    "sourceDemand": {
+      "type": "string"
+    },
+    "sourceAdmission": {
+      "type": "string"
+    },
+    "constructorDemand": {
+      "type": "string"
+    },
+    "constructorAdmission": {
+      "type": "string"
+    },
+    "failureClose": {
+      "const": "close_unscheduled_catalog"
+    }
+  },
+  "additionalProperties": false
+}

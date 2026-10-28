@@ -1,0 +1,5 @@
+Copyright buildingSMART International Ltd.
+Creative Commons Attribution-NoDerivatives 4.0 International (CC BY-ND 4.0).
+https://creativecommons.org/licenses/by-nd/4.0/
+Unchanged official release sample, original producer attribution retained in FILE_NAME.
+https://github.com/buildingSMART/Standards-builds/blob/a8664407b63d42651e48a78a252c76d09dd6274c/README.md

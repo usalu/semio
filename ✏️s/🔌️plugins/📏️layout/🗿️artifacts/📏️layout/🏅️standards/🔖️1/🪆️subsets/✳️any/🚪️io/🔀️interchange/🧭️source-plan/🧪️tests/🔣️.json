@@ -1,0 +1,118 @@
+{
+  "external": [
+    {
+      "format": "svg",
+      "source": [
+        60,
+        115,
+        118,
+        103,
+        47,
+        62
+      ],
+      "name": "Original SVG",
+      "accepted": true
+    },
+    {
+      "format": "dxf",
+      "source": [
+        48,
+        10,
+        69,
+        79,
+        70,
+        10
+      ],
+      "name": "Original DXF",
+      "accepted": true
+    },
+    {
+      "format": "dwg",
+      "source": [
+        65,
+        67,
+        49,
+        48,
+        49,
+        56,
+        255,
+        0
+      ],
+      "name": "Original DWG",
+      "accepted": true
+    },
+    {
+      "format": "svg",
+      "source": [
+        255,
+        254,
+        60,
+        0,
+        115,
+        0,
+        118,
+        0,
+        103,
+        0,
+        47,
+        0,
+        62,
+        0
+      ],
+      "name": "Opaque UTF16 BOM source",
+      "accepted": true
+    },
+    {
+      "format": "ifc",
+      "source": [
+        0
+      ],
+      "name": "Wrong domain",
+      "accepted": false
+    },
+    {
+      "format": "svg",
+      "source": [
+        255,
+        0,
+        129
+      ],
+      "name": "Opaque unknown encoding",
+      "accepted": true
+    }
+  ],
+  "rules": [
+    "mapped document and original external source are distinct plans",
+    "plan does not contain fabricated member references",
+    "original pending scene/page source remains separate from parent persistent fields",
+    "external planning is not published snapshot admission"
+  ],
+  "chunks": [
+    {
+      "length": 0,
+      "checkpoints": [
+        0,
+        0
+      ]
+    },
+    {
+      "length": 4097,
+      "checkpoints": [
+        0,
+        0,
+        4096,
+        4097
+      ]
+    },
+    {
+      "length": 8193,
+      "checkpoints": [
+        0,
+        0,
+        4096,
+        8192,
+        8193
+      ]
+    }
+  ]
+}

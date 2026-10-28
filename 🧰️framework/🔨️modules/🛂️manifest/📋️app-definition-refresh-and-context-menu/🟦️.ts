@@ -94,11 +94,15 @@ export type ProgramHotSwapEvent = {
 /** 🐢️ One requested window/panel section — `bodyKey` only applies to windows/panels; `hash` is the host's known fnv1a-64 hex of that section's last payload, or absent on first fetch. */
 export type PluginUiRefreshSectionRequest = { readonly key: string; readonly bodyKey?: string; readonly hash?: string };
 
+/** 📝️ A consumed form surface borrows one declared real window and receives a separate staged query. */
+export type PluginUiRefreshFormRequest = import('../🧮️arg-schema/📝️staging/refresh.ts').StagedFormRefreshTarget;
+
 /** 🔌️ One batched, hash-conditional refresh request — one round trip for the window/panel/engagements/measures/labels sections. Utility bars are no longer a plugin section: the renderer derives them from the utility registry via {@link deriveUtilityNodes}. */
 export type PluginUiRefreshRequest = {
   readonly viewState: PluginViewState;
   readonly windows?: readonly PluginUiRefreshSectionRequest[];
   readonly panels?: readonly PluginUiRefreshSectionRequest[];
+  readonly forms?: readonly PluginUiRefreshFormRequest[];
   readonly engagements?: { readonly hash?: string };
   readonly measures?: { readonly hash?: string };
   /** 🛠️ Mode-level tool measures, keyed by tool id — see `DocumentApp::tool_measures`. */
@@ -143,6 +147,7 @@ export type PluginUiRefreshSectionResponse = { readonly key: string; readonly ha
 export type PluginUiRefreshResponse = {
   readonly windows?: readonly PluginUiRefreshSectionResponse[];
   readonly panels?: readonly PluginUiRefreshSectionResponse[];
+  readonly forms?: readonly PluginUiRefreshSectionResponse[];
   readonly engagements?: PluginUiRefreshSectionResponse;
   readonly measures?: PluginUiRefreshSectionResponse;
   readonly tools?: PluginUiRefreshSectionResponse;

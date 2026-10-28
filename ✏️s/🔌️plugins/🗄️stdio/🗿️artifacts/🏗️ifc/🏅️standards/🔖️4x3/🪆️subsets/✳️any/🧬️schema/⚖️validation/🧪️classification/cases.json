@@ -1,0 +1,3146 @@
+{
+  "version": 1,
+  "source": {
+    "file": "source.ifc",
+    "schema": "IFC4X3_ADD2",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "physical": "authored standalone records with explicit negative WHERE owners; no geometry or whole-view validity claim"
+  },
+  "scope": "selected discriminating boundaries, not total branch coverage",
+  "positiveUnavailable": [
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "label": "Surface2D",
+      "reason": "IfcSurface.Dim is the released constant3; no valid positive2D subtype is fabricated"
+    }
+  ],
+  "negativeRules": [
+    {
+      "entityId": "60",
+      "owner": "IFCEDGELOOP",
+      "rule": "ISCLOSED"
+    },
+    {
+      "entityId": "62",
+      "owner": "IFCEDGELOOP",
+      "rule": "ISCONTINUOUS"
+    },
+    {
+      "entityId": "63",
+      "owner": "IFCEDGELOOP",
+      "rule": "ISCLOSED"
+    },
+    {
+      "entityId": "65",
+      "owner": "IFCEDGELOOP",
+      "rule": "ISCLOSED"
+    },
+    {
+      "entityId": "65",
+      "owner": "IFCEDGELOOP",
+      "rule": "ISCONTINUOUS"
+    },
+    {
+      "entityId": "72",
+      "owner": "IFCPATH",
+      "rule": "ISCONTINUOUS"
+    },
+    {
+      "entityId": "75",
+      "owner": "IFCPATH",
+      "rule": "ISCONTINUOUS"
+    },
+    {
+      "entityId": "111",
+      "owner": "IFCFILLAREASTYLE",
+      "rule": "CONSISTENTHATCHSTYLEDEF"
+    },
+    {
+      "entityId": "111",
+      "owner": "IFCFILLAREASTYLE",
+      "rule": "MAXONECOLOUR"
+    },
+    {
+      "entityId": "112",
+      "owner": "IFCFILLAREASTYLE",
+      "rule": "CONSISTENTHATCHSTYLEDEF"
+    },
+    {
+      "entityId": "112",
+      "owner": "IFCFILLAREASTYLE",
+      "rule": "MAXONEEXTHATCHSTYLE"
+    },
+    {
+      "entityId": "113",
+      "owner": "IFCFILLAREASTYLE",
+      "rule": "CONSISTENTHATCHSTYLEDEF"
+    },
+    {
+      "entityId": "231",
+      "owner": "IFCUNITASSIGNMENT",
+      "rule": "WR01"
+    },
+    {
+      "entityId": "232",
+      "owner": "IFCUNITASSIGNMENT",
+      "rule": "WR01"
+    },
+    {
+      "entityId": "233",
+      "owner": "IFCUNITASSIGNMENT",
+      "rule": "WR01"
+    }
+  ],
+  "ruleResults": [
+    {
+      "entityId": "70",
+      "owner": "IFCPATH",
+      "rule": "ISCONTINUOUS",
+      "result": "unknown"
+    },
+    {
+      "entityId": "71",
+      "owner": "IFCPATH",
+      "rule": "ISCONTINUOUS",
+      "result": "unknown"
+    },
+    {
+      "entityId": "73",
+      "owner": "IFCPATH",
+      "rule": "ISCONTINUOUS",
+      "result": "unknown"
+    },
+    {
+      "entityId": "74",
+      "owner": "IFCPATH",
+      "rule": "ISCONTINUOUS",
+      "result": "unknown"
+    }
+  ],
+  "functions": [
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "single",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "60"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "closed-continuous",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "61"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "equal-vertex-distinct-identity",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "62"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "open-but-consecutive",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "63"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "reversed-oriented",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "64"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "late-break",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "65"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCLOOPHEADTOTAIL",
+      "id": "absent-argument",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "parameterDomain": "indeterminate-value",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "single",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "70"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "closed-continuous",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "71"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "equal-vertex-distinct-identity",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "72"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "open-but-consecutive",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "73"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "reversed-oriented",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "74"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "late-break",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "75"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCPATHHEADTOTAIL",
+      "id": "absent-argument",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "parameterDomain": "indeterminate-value",
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "same-rectangle-type",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "entity",
+          "id": "121"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "same-identity-parameterized",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "entity",
+          "id": "120"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "circle-type-differs",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "entity",
+          "id": "122"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "subtype-typeof-set-differs",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "entity",
+          "id": "123"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "derived-parent-identity",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "entity",
+          "id": "126"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "equal-profile-distinct-parent",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "entity",
+          "id": "127"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "arbitrary-same-identity-direct",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "124"
+        },
+        {
+          "kind": "entity",
+          "id": "124"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "arbitrary-direct-different",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "124"
+        },
+        {
+          "kind": "entity",
+          "id": "120"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "arbitrary-derived-parent",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "124"
+        },
+        {
+          "kind": "entity",
+          "id": "128"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "derived-start-derived-parent",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "126"
+        },
+        {
+          "kind": "entity",
+          "id": "129"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "derived-start-direct-end",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "126"
+        },
+        {
+          "kind": "entity",
+          "id": "120"
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "absent-start-derived",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "126"
+        }
+      ],
+      "parameterDomain": "indeterminate-value",
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "absent-end",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "120"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "parameterDomain": "indeterminate-value",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "id": "both-absent",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "parameterDomain": "indeterminate-value",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "one-colour",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "100"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "two-colours",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "100",
+            "101"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "hatching",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "103"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "two-hatches",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "103",
+            "104"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "tiles",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "107"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "two-tiles",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "107",
+            "108"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "hatch-colour",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "103",
+            "100"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "tile-colour",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "107",
+            "100"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "hatch-tile",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "103",
+            "107"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "external",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "109"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "two-external",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "109",
+            "110"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "external-colour",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "109",
+            "100"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "external-hatch",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "109",
+            "103"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "external-tile",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "109",
+            "107"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "id": "empty",
+      "args": [
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "outside-declared-cardinality",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "named-distinct",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "200",
+            "202"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "named-duplicate-role",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "200",
+            "201"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "derived-distinct",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "220",
+            "222"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "derived-duplicate-role",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "220",
+            "221"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "monetary-one",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "204"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "monetary-two",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "204",
+            "205"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "named-userdefined-excluded",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "207",
+            "208"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "derived-userdefined-excluded",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "223",
+            "224"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "userdefined-plus-standard",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "200",
+            "207",
+            "208",
+            "220",
+            "223",
+            "224",
+            "204"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "all-unit-families",
+      "args": [
+        {
+          "kind": "set",
+          "ids": [
+            "200",
+            "202",
+            "203",
+            "220",
+            "222",
+            "204"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "id": "empty",
+      "args": [
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "outside-declared-cardinality",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Point-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Point"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Point-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Point"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "91"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "PointCloud-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "PointCloud"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "24"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "PointCloud-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "PointCloud"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "20"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve2D-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "21"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve2D-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve3D-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve3D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "20"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve3D-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve3D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Segment-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Segment"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "131"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Segment-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Segment"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "23"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface3D-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface3D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "23"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface3D-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface3D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SectionedSurface-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SectionedSurface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "150"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SectionedSurface-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SectionedSurface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "FillArea-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "FillArea"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "138"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "FillArea-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "FillArea"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Text-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Text"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "139"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Text-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Text"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedSurface-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedSurface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "28"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedSurface-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedSurface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Annotation2D-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Annotation2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Annotation2D-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Annotation2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "91"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "GeometricSet-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "GeometricSet"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "140"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "GeometricSet-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "GeometricSet"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "91"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "GeometricCurveSet-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "GeometricCurveSet"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "141"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "GeometricCurveSet-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "GeometricCurveSet"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "91"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Tessellation-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Tessellation"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "137"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Tessellation-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Tessellation"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SurfaceOrSolidModel-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SurfaceOrSolidModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "85"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SurfaceOrSolidModel-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SurfaceOrSolidModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SurfaceModel-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SurfaceModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "86"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SurfaceModel-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SurfaceModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SolidModel-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SolidModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "132"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SolidModel-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SolidModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SweptSolid-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SweptSolid"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "132"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SweptSolid-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SweptSolid"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedSweptSolid-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedSweptSolid"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "133"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedSweptSolid-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedSweptSolid"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "CSG-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "CSG"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "134"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "CSG-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "CSG"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Clipping-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Clipping"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "135"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Clipping-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Clipping"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Brep-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Brep"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "90"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Brep-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Brep"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedBrep-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedBrep"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "90"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedBrep-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedBrep"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "BoundingBox-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "BoundingBox"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "91"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "BoundingBox-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "BoundingBox"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SectionedSpine-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SectionedSpine"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "143"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SectionedSpine-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SectionedSpine"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "LightSource-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "LightSource"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "144"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "LightSource-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "LightSource"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "MappedRepresentation-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "MappedRepresentation"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "164"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "MappedRepresentation-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "MappedRepresentation"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface2D-fixed-surface3",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "23"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface2D-even-2d-control-points",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "27"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface3D-2d-control-points",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface3D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "27"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "GeometricCurveSet-geometricset-no-surface",
+      "args": [
+        {
+          "kind": "string",
+          "value": "GeometricCurveSet"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "142"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "GeometricCurveSet-geometricset-surface",
+      "args": [
+        {
+          "kind": "string",
+          "value": "GeometricCurveSet"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "140"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SweptSolid-tapered-excluded",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SweptSolid"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "133"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedSweptSolid-includes-basic",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedSweptSolid"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "132"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Clipping-basic-block-excluded",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Clipping"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "134"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SurfaceModel-excludes-solid",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SurfaceModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "132"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "SurfaceOrSolidModel-includes-solid",
+      "args": [
+        {
+          "kind": "string",
+          "value": "SurfaceOrSolidModel"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "132"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "BoundingBox-cardinality",
+      "args": [
+        {
+          "kind": "string",
+          "value": "BoundingBox"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "91",
+            "92"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Point-mixed-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Point"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1",
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Point-empty",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Point"
+        },
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "BoundingBox-empty",
+      "args": [
+        {
+          "kind": "string",
+          "value": "BoundingBox"
+        },
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Undefined-default",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Undefined"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "indeterminate"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "unknown-label",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Other"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "indeterminate"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "case-sensitive-label",
+      "args": [
+        {
+          "kind": "string",
+          "value": "point"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "indeterminate"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Surface2D-empty-vacuous",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Surface2D"
+        },
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Point-list2d",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Point"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "25"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Point-list3d",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Point"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "24"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "PointCloud-list2d-excluded",
+      "args": [
+        {
+          "kind": "string",
+          "value": "PointCloud"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "25"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve2D-3d-excluded",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve2D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "20"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "Curve3D-2d-excluded",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Curve3D"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "21"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "id": "AdvancedSurface-plane-excluded",
+      "args": [
+        {
+          "kind": "string",
+          "value": "AdvancedSurface"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "23"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Vertex-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Vertex"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "30"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Vertex-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Vertex"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Edge-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Edge"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Edge-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Edge"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Path-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Path"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "71"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Path-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Path"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Face-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Face"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "82"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Face-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Face"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Shell-accepted",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Shell"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "83"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Shell-foreign",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Shell"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Shell-closed",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Shell"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "84"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Edge-oriented",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Edge"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "50"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Vertex-empty",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Vertex"
+        },
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Undefined-empty",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Undefined"
+        },
+        {
+          "kind": "set",
+          "ids": []
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Undefined-geometric",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Undefined"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "1"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "unknown-label",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Other"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "30"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "indeterminate"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "case-sensitive-label",
+      "args": [
+        {
+          "kind": "string",
+          "value": "vertex"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "30"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "indeterminate"
+      }
+    },
+    {
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "id": "Face-mixed",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Face"
+        },
+        {
+          "kind": "set",
+          "ids": [
+            "82",
+            "40"
+          ]
+        }
+      ],
+      "parameterDomain": "declared",
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    }
+  ]
+}

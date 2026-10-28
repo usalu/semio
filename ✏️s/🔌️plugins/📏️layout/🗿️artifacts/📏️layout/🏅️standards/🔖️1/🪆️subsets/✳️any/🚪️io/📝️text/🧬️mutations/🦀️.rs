@@ -11,6 +11,7 @@
 //! (single-line, declaration-order) encoding satisfies `OpText`/`OpBinary`'s laws directly:
 //! `print_op` never contains `\n`, `parse_op(op.print_op()) == op`, and encoding is deterministic.
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 pub use crate::LayoutMutation;
 
 //#region 📖️SemioGrammar

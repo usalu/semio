@@ -1,0 +1,6 @@
+[
+  {"id":"wrong-related-object","result":"refused"},
+  {"id":"type-related-object","result":"refused"},
+  {"id":"late-unknown-related-object","result":"refused"},
+  {"id":"empty-authored-holder","result":"refused"}
+]

@@ -1,0 +1,63 @@
+{
+  "schema": "idml.retained.part.v1",
+  "cases": [
+    {
+      "id": "remove",
+      "path": "Stories/B.xml",
+      "bytes": null
+    },
+    {
+      "id": "unicode-story",
+      "path": "Stories/日本語.xml",
+      "text": "<Story>Grüße 😀</Story>"
+    },
+    {
+      "id": "binary-member",
+      "path": "Links/Ü.png",
+      "bytes": [
+        137,
+        80,
+        78,
+        71,
+        13,
+        10,
+        26,
+        10
+      ]
+    },
+    {
+      "id": "empty-member",
+      "path": "Links/empty.bin",
+      "bytes": []
+    }
+  ],
+  "lifecycle": {
+    "bodyBytes": [
+      1024,
+      4096,
+      65536
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      2,
+      10,
+      30
+    ],
+    "underfundedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ]
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes",
+      "fast-json-patch"
+    ],
+    "method": "the same original path/payload projection compiles planned numeric field coordinates into the typed diff and agrees with independent physical ZIP/XML and RFC6902 output"
+  }
+}

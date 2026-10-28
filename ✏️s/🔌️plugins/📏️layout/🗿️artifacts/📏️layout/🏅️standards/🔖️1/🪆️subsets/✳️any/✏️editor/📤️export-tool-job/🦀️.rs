@@ -1,6 +1,9 @@
-//! 📤️ Export tool job of the layout play app: the export tool payload, the export tool job with its step, close and interactive job implementations and the export job factory. See [`super`].
-
+//! 📤️ Layout export uses the common original retained producer and one supplied output queue.
 use super::*;
+#[path="🧾️metadata/🦀️.rs"]pub mod metadata;
+#[path="🧵️retained/🦀️.rs"]mod retained;
+pub(crate) use retained::drawing::{OriginalExportDrawingRead,OriginalExportDrawingContext,ParentSource};
+pub(super) use retained::LayoutOriginalExportWork;
 
 pub struct LayoutExportToolPayload {
     pub request: LayoutExportRequest,

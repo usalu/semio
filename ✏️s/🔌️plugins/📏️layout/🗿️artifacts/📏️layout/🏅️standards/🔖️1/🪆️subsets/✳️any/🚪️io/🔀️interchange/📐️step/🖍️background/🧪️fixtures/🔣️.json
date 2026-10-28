@@ -1,0 +1,192 @@
+{
+  "schema": "layout.step.background.v1",
+  "page": {
+    "width": 200,
+    "height": 300
+  },
+  "scene": {
+    "schema": "",
+    "canvas": {
+      "width": 200,
+      "height": 300,
+      "background": null
+    },
+    "styles": [
+      {
+        "name": "accent",
+        "fill": {
+          "r": 0.25,
+          "g": 0.5,
+          "b": 0.75,
+          "a": 1
+        },
+        "stroke": {
+          "r": 0.8,
+          "g": 0.1,
+          "b": 0.2,
+          "a": 1
+        },
+        "strokeWidth": 1,
+        "opacity": null
+      }
+    ],
+    "layers": [
+      {
+        "id": "background",
+        "name": "Background",
+        "visible": true,
+        "root": {
+          "kind": "group",
+          "transform": {
+            "translation": {
+              "x": 10,
+              "y": 20,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0.09983341664682815,
+              "w": 0.9950041652780257
+            },
+            "scale": {
+              "x": 2,
+              "y": 1.5,
+              "z": 1
+            }
+          },
+          "children": [
+            {
+              "kind": "path",
+              "style": "accent",
+              "segments": [
+                {
+                  "kind": "moveTo",
+                  "to": {
+                    "x": 0,
+                    "y": 0
+                  }
+                },
+                {
+                  "kind": "lineTo",
+                  "to": {
+                    "x": 20,
+                    "y": 0
+                  }
+                },
+                {
+                  "kind": "lineTo",
+                  "to": {
+                    "x": 20,
+                    "y": 10
+                  }
+                },
+                {
+                  "kind": "lineTo",
+                  "to": {
+                    "x": 0,
+                    "y": 10
+                  }
+                },
+                {
+                  "kind": "close"
+                }
+              ]
+            },
+            {
+              "kind": "text",
+              "value": "Grüße background",
+              "at": {
+                "x": 5,
+                "y": 25
+              },
+              "style": "accent"
+            },
+            {
+              "kind": "image",
+              "at": {
+                "x": 30,
+                "y": 40
+              },
+              "width": 10,
+              "height": 8,
+              "mime": "image/png",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          ]
+        }
+      }
+    ]
+  },
+  "expected": {
+    "minimumPolylines": 2,
+    "text": "Grüße background",
+    "imageReference": "image/png",
+    "outputChunkLimit": 4096,
+    "paint": [
+      0.25,
+      0.5,
+      0.75
+    ],
+    "noSourcePixelReads": true,
+    "rectanglePointsMm": [
+      [
+        3.5277777777777777,
+        98.77777777777777,
+        0
+      ],
+      [
+        17.357606153981962,
+        95.97433277655857,
+        0
+      ],
+      [
+        16.306314278524766,
+        90.788147135482,
+        0
+      ],
+      [
+        2.4764859023205785,
+        93.5915921367012,
+        0
+      ],
+      [
+        3.5277777777777777,
+        98.77777777777777,
+        0
+      ]
+    ]
+  },
+  "oracle": {
+    "library": "three",
+    "version": "0.182.0",
+    "method": "Matrix4.compose + Vector3.applyMatrix4; source scene used by native actual STEP session law"
+  },
+  "lifecycle": {
+    "strokeSegments": 4097,
+    "longStyleBytes": 4097,
+    "textRepeat": 4097,
+    "cancellationTurns": [
+      0,
+      32,
+      512
+    ]
+  },
+  "refusals": [
+    {
+      "id": "compound-fill",
+      "kind": "compound",
+      "error": "layout.step.background-compound-fill"
+    },
+    {
+      "id": "fill-envelope",
+      "kind": "points",
+      "count": 66,
+      "error": "layout.step.background-fill-point-limit"
+    }
+  ]
+}

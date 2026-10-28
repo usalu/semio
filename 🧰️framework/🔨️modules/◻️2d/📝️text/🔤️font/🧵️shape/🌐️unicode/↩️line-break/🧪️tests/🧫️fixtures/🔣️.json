@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "cases": [
+    {
+      "name": "empty",
+      "text": "",
+      "expected": [
+        {
+          "at": 0,
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "ascii-word",
+      "text": "a b",
+      "expected": [
+        {
+          "at": 2,
+          "mandatory": false
+        },
+        {
+          "at": 3,
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "crlf",
+      "text": "a\r\nb",
+      "expected": [
+        {
+          "at": 3,
+          "mandatory": true
+        },
+        {
+          "at": 4,
+          "mandatory": true
+        }
+      ]
+    },
+    {
+      "name": "nonbreaking",
+      "text": "a b",
+      "expected": [
+        {
+          "at": 4,
+          "mandatory": true
+        }
+      ]
+    }
+  ],
+  "refusals": [
+    "bad-magic",
+    "wrong-version",
+    "truncated",
+    "range-gap",
+    "range-overlap",
+    "class-out-of-range",
+    "invalid-east-asian-flag",
+    "nonzero-reserved",
+    "invalid-scalar",
+    "changed-source",
+    "zero-grant",
+    "cancelled"
+  ]
+}

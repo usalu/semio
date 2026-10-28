@@ -1,3 +1,4 @@
+import {DrawingAssetsOwner,type DrawingAssets} from '../🟦️.ts';
 /** 📸️ Mirrors Rust `DrawingSnapshot` (persisted drawing document snapshot — artifact-lane fields only;
  * sibling `🦀️.rs`, `#[serde(rename_all = "camelCase")]`). Nested types re-import the
  * artifact's own root schema (`../🟦️.ts`) rather than re-declaring stubs, so every facet
@@ -21,7 +22,7 @@ export interface DrawingSnapshot {
   /** 🥞️ @state artifact */
   layers: DrawingLayerNode[];
   /** 🎞️ @state artifact */
-  assets: Record<string, DrawingImageAsset>;
+  assets: DrawingAssets;
   /** 🖼️ @state artifact */
   artboard?: DrawingArtboard;
 }
@@ -80,9 +81,9 @@ export function parseDrawingSnapshot(value: unknown, at = "$"): DrawingSnapshot 
     id: drawingDrawingSnapshotGuardString(row["id"], `${at}.id`),
     title: row["title"] === undefined ? undefined : drawingDrawingSnapshotGuardString(row["title"], `${at}.title`),
     layers: drawingDrawingSnapshotGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDrawingLayerNode(item, `${at}.layers[${index}]`)),
-    assets: row["assets"] === undefined ? {} : Object.fromEntries(
+    assets: row["assets"] === undefined ? DrawingAssetsOwner.fromEntriesCold([]) : DrawingAssetsOwner.fromEntriesCold(
       Object.entries(drawingDrawingSnapshotGuardObject(row["assets"], `${at}.assets`))
-        .map(([key, item]) => [key, parseDrawingImageAsset(item, `${at}.assets.${key}`)]),
+        .map(([key, item]) => [key, parseDrawingImageAsset(item, `${at}.assets.${key}`)] as const),
     ),
     artboard: row["artboard"] === undefined ? undefined : parseDrawingArtboard(row["artboard"], `${at}.artboard`),
   };

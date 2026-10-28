@@ -1,0 +1,22 @@
+{
+  "title": "Prepared Original Child Admission Provider",
+  "qualification": "Full borrowed owner, slot, child identity and target reference are checked only by the original funded qualifier",
+  "address": "Original qualified provider-local ordinal plus exact fixed source stamp",
+  "read": "One opaque address returns the same original source, mandatory registered admitter and mandatory vector facet together",
+  "stampFields": [
+    "parentIdentity",
+    "expectedReferenceIdentity",
+    "childIdentity",
+    "capabilityIdentity",
+    "commandIdentity",
+    "parentRevision",
+    "childRevision"
+  ],
+  "laws": [
+    "No hidden map scan, authored key hash, key comparison or source clone in read",
+    "Address birth is paid with actual original copy/items/depth grant",
+    "No source issuer or unqualified bare snapshot can be minted by an address",
+    "Provider checks original parent/reference/member/capability/command identities and both fixed revisions",
+    "Admission cursor and vector consumers retain source aliases before prepared custody can retire"
+  ]
+}

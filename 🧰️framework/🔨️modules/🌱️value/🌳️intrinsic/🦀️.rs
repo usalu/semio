@@ -3,6 +3,12 @@ use crate::{ValueError,ValueRefusalKind};
 #[path="../🔁️codec/🦀️.rs"]
 mod codec;
 pub use codec::{path_index,controlled_sequence,edit_through_value,ControlledValueHasher,DecodedValue,IntrinsicRetirement,FromValue,ToValue,ValueEdit,ValueShape};
+/// 🔢️ Complete binary64 identity preserves signed zero and every NaN payload without allocation.
+pub fn equal_f64(left: f64, right: f64) -> bool { left.to_bits() == right.to_bits() }
+
+/// 🔬️ Complete binary32 identity preserves its native width and payload bits.
+pub fn equal_f32(left: f32, right: f32) -> bool { left.to_bits() == right.to_bits() }
+
 //#region 🔖️Number
 /// 👁️ A JSON-equivalent number that keeps the writer's-eye distinction a bare `f64` erases:
 /// an integer literal (`UInt`/`Int`) round-trips without a decimal point, `Float` always keeps one
@@ -58,7 +64,7 @@ impl PartialEq for Number {
         match (*self, *other) {
             (Number::UInt(a), Number::UInt(b)) => a == b,
             (Number::Int(a), Number::Int(b)) => a == b,
-            (Number::Float(a), Number::Float(b)) => a == b,
+            (Number::Float(a), Number::Float(b)) => equal_f64(a, b),
             (Number::UInt(a), Number::Int(b)) | (Number::Int(b), Number::UInt(a)) => i64::try_from(a).is_ok_and(|a| a == b),
             _ => false,
         }
@@ -395,3 +401,7 @@ macro_rules! dsl_value {
 #[cfg(test)]
 #[path="../🧪️tests/🔬️unit/🦀️.rs"]
 mod original_intrinsic_tests;
+
+#[cfg(test)]
+#[path="../🔢️ieee754/🧪️tests/🦀️.rs"]
+mod ieee_identity_tests;

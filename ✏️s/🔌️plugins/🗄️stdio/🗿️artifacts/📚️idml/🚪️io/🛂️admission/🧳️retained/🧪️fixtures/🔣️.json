@@ -1,0 +1,68 @@
+{
+  "schema": "idml.retained.admission.v1",
+  "bodyBytes": 4096,
+  "casesFrom": "../../🧪️fixtures/🔣️.json",
+  "underfundedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cancellationCuts": [
+    0,
+    1,
+    2,
+    10,
+    100
+  ],
+  "expected": {
+    "originalBytesUnchanged": true,
+    "noUnfundedAdvance": true,
+    "metadataBeforeSourceRetirement": true,
+    "terminalEmpty": true
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes"
+    ],
+    "method": "same canonical package admission cases; genuine framework source custody is additionally a native protocol law"
+  },
+  "replacements": [
+    {
+      "id": "designmap-version",
+      "index": 1,
+      "bytes": "<Document DOMVersion=\"9.0\"/>",
+      "valid": true,
+      "events": [
+        {
+          "kind": "version"
+        },
+        {
+          "kind": "part",
+          "next": 1,
+          "before": 1
+        }
+      ]
+    },
+    {
+      "id": "unclosed-xml",
+      "index": 1,
+      "bytes": "<Document DOMVersion=\"9.0\">",
+      "valid": false
+    },
+    {
+      "id": "mimetype-payload",
+      "index": 0,
+      "bytes": "not IDML",
+      "valid": false
+    },
+    {
+      "id": "missing-resolved-index",
+      "index": 999,
+      "bytes": "<a/>",
+      "valid": false
+    }
+  ]
+}

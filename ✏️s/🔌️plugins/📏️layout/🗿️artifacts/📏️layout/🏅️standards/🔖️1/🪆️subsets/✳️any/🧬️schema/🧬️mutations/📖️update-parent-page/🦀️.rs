@@ -8,7 +8,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -43,7 +43,7 @@ pub fn diff_update_parent_page(payload: &UpdateParentPage, base: &LayoutSnapshot
     if payload.name.trim().is_empty() || !payload.width.is_finite() || payload.width <= 0.0 || !payload.height.is_finite() || payload.height <= 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A parent page needs a name and a positive finite size.", std::iter::empty::<String>());
     }
-    if page.name == payload.name && page.width == payload.width && page.height == payload.height {
+    if page.name == payload.name && semio_framework_value::equal_f64(page.width, payload.width) && semio_framework_value::equal_f64(page.height, payload.height) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Parent page is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff { parent_pages: Some(LayoutParentPagesDelta { modified: vec![LayoutParentPagesModification { id: payload.id.clone(), patch: ParentPagePatch { name: Some(payload.name.clone()), width: Some(payload.width), height: Some(payload.height) } }], ..Default::default() }), ..Default::default() })
@@ -57,3 +57,12 @@ pub fn inverse_update_parent_page<Op: From<crate::update_parent_page::UpdatePare
     })())
 }
 
+
+impl PartialEq for UpdateParentPage {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.name == other.name
+            && semio_framework_value::equal_f64(self.width, other.width)
+            && semio_framework_value::equal_f64(self.height, other.height)
+    }
+}

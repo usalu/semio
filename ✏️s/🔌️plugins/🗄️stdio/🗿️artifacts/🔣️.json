@@ -217,6 +217,12 @@
         "id": "s.stdio.semio",
         "kind": "artifact",
         "responsibility": "Semio artifact definition."
+      },
+      {
+        "directory": "📚️idml",
+        "id": "s.stdio.idml",
+        "kind": "artifact",
+        "responsibility": "InDesign Markup Language package artifact definition."
       }
     ]
   }

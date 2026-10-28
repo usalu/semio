@@ -128,7 +128,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::bare_artifact_codec::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA.to_string()),
+            codec: store::bare_artifact_codec_with_owners::<DrawingSnapshot,DrawingMutation,semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer>(DRAWING_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }

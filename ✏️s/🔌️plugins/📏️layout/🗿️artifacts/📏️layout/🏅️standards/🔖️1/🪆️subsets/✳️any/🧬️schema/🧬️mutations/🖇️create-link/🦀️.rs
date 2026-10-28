@@ -48,6 +48,9 @@ impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for CreateLink where Op:
 
 //#region 🖇️CreateLink
 pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
+    if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_id(&payload.link.id) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.link.id.clone()]);
+    }
     if base.links.iter().any(|link| link.id == payload.link.id) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("A link with id \"{}\" already exists.", payload.link.id), [payload.link.id.clone()]);
     }
@@ -59,7 +62,8 @@ pub fn diff_create_link(payload: &CreateLink, base: &LayoutSnapshot) -> protocol
 //#endregion 🖇️CreateLink
 
 //#region 🖇️CreateLink
-pub fn inverse_create_link<Op: From<crate::delete_link::DeleteLink>>(payload: &CreateLink, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse_create_link<Op: From<crate::delete_link::DeleteLink>>(payload: &CreateLink, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_create_link(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     vec![Op::from(delete_link::DeleteLink { id: payload.link.id.clone() })]
 

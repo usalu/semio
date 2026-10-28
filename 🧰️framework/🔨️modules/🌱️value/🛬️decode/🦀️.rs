@@ -54,15 +54,7 @@ impl<'a> NativeDecodeControl<'a> {
     /// 👓️ Reports the original return slot without moving its pending physical owner.
     pub fn has_retirement_owner(&self)->bool{self.retirement.as_ref().is_some_and(|recipient|recipient.has_owner())}
     /// ♻️ Drains one original return turn after forwarding its exact physical capacity demand.
-    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->Result<crate::retained_clone::RetainedCloneStep,ValueError>{
-        let recipient=self.retirement.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::UnsupportedOwner,"decoder has no original retirement recipient"))?;
-        if recipient.terminal_is_empty(){return Ok(crate::retained_clone::RetainedCloneStep::Complete(Default::default()))}
-        if grant.maximum_items==0{return Ok(crate::retained_clone::RetainedCloneStep::Progress(Default::default()))}
-        if recipient.next_depth_demand()?>grant.maximum_depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"decoder retirement exceeds original depth grant"))}
-        let copy=recipient.next_copy_byte_demand()?;let capacity=recipient.next_capacity_byte_demand(grant.maximum_copy_bytes)?;let release=recipient.next_release_byte_demand()?;
-        if copy>grant.maximum_copy_bytes||capacity>grant.maximum_capacity_bytes||release>grant.maximum_release_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"decoder retirement exceeds original physical grant"))}
-        self.checkpoint()?;self.charge(capacity)?;self.retirement.as_mut().unwrap().close_step(grant)
-    }
+    pub fn close_retirement_recipient(&mut self,grant:crate::retained_clone::RetainedCloneGrant)->Result<crate::retained_clone::RetainedCloneStep,ValueError>{self.with_retirement(grant,|original|original.close_retirement_recipient(grant))}
 
     /// 🆕️ Installs one explicit caller recipient before any retained decoder ownership is created.
     pub fn install_retirement_recipient(&mut self,recipient:&'a mut NativeDecodeRetirementRecipient)->Result<(),ValueError>{

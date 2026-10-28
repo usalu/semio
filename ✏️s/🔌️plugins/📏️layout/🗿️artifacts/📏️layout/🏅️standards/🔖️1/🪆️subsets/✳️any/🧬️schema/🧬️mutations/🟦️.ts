@@ -1,129 +1,7 @@
-/** 🧬️ LayoutMutation — closed semantic mutation vocabulary for the layout document, mirrors
- *  `🧬️mutations/🦀️.rs`'s `LayoutMutation` enum and its per-verb leaf structs field-for-field
- *  (`.../🧬️mutations/<verb-folder>/🦀️.rs`). The enum carries no `#[value(tag)]`, so it wires
- *  EXTERNALLY TAGGED: `{ "<PascalCaseVariantName>": { ...leaf fields } }`. Every leaf struct carries
- *  `#[value(rename_all = "camelCase")]`, so its fields wire camelCase (`{"ChangePageWidth":
- *  {"id":"page-1","newWidth":240.0}}`); an `Option` field wires `null` when absent. */
-
-export interface LayoutBounds {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  rotation: number;
-}
-
-export interface LayoutRect {
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-}
-
-export interface PageMargins {
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
-}
-
-export interface PageColumns {
-  count: number;
-  gutter: number;
-}
-
-export interface Layer {
-  id: string;
-  name: string;
-  visible: boolean;
-  locked: boolean;
-  objectIds: string[];
-}
-
-export type Frame = FrameRect | FrameText | FrameImage;
-
-export interface FrameRect {
-  kind: "rect";
-  id: string;
-  layerId: string;
-  bounds: LayoutBounds;
-  locked?: boolean;
-  visible?: boolean;
-  fill?: [number, number, number, number];
-  stroke?: [number, number, number, number];
-}
-
-export interface FrameText {
-  kind: "text";
-  id: string;
-  layerId: string;
-  bounds: LayoutBounds;
-  locked?: boolean;
-  visible?: boolean;
-  storyId: string;
-  threadNext?: string;
-  columns: number;
-  inset: LayoutRect;
-  wrapMode: string;
-}
-
-export interface FrameImage {
-  kind: "image";
-  id: string;
-  layerId: string;
-  bounds: LayoutBounds;
-  locked?: boolean;
-  visible?: boolean;
-  linkId: string;
-}
-
-export interface PageOverride {
-  objectId: string;
-  bounds?: LayoutBounds;
-  visible?: boolean;
-  locked?: boolean;
-}
-
-export interface Page {
-  id: string;
-  name: string;
-  spreadId: string;
-  parentPageId?: string;
-  width: number;
-  height: number;
-  margins: PageMargins;
-  columns: PageColumns;
-  guides: LayoutRect[];
-  layerIds: string[];
-  layers: Layer[];
-  frames: Frame[];
-  overrides: PageOverride[];
-}
-
-export interface TextStyleRun {
-  start: number;
-  end: number;
-  paragraphStyleId?: string;
-  characterStyleId?: string;
-}
-
-export interface TextStory {
-  id: string;
-  content: string;
-  styleRuns: TextStyleRun[];
-}
-
-export interface ImageLink {
-  id: string;
-  path: string;
-  hash: string;
-  width: number;
-  height: number;
-  dpi: number;
-  colorProfile?: string;
-  state?: string;
-  proxyDataUrl?: string;
-}
+/** 🧬️ Canonical externally tagged semantic commands over the owned Layout model. */
+import type { Binary64, Binary32 } from "@semio-tech/framework/value/ieee754";
+import type { LayoutBounds, LayoutRect, PageMargins, PageColumns, Layer, Frame, FrameRect, FrameText, FrameImage, PageOverride, Page, TextStyleRun, TextStory, ImageLink } from "../🟦️.ts";
+export type { LayoutBounds, LayoutRect, PageMargins, PageColumns, Layer, Frame, FrameRect, FrameText, FrameImage, PageOverride, Page, TextStyleRun, TextStory, ImageLink };
 
 //#region 🔖️Leaves
 export interface RenameLayout {
@@ -154,26 +32,26 @@ export interface RenamePage {
 
 export interface ChangePageWidth {
   id: string;
-  newWidth: number;
+  newWidth: Binary64;
 }
 
 export interface ChangePageHeight {
   id: string;
-  newHeight: number;
+  newHeight: Binary64;
 }
 
 export interface UpdatePageMargins {
   id: string;
-  top: number;
-  right: number;
-  bottom: number;
-  left: number;
+  top: Binary64;
+  right: Binary64;
+  bottom: Binary64;
+  left: Binary64;
 }
 
 export interface UpdatePageColumns {
   id: string;
   count: number;
-  gutter: number;
+  gutter: Binary64;
 }
 
 export interface ReorderPages {
@@ -226,33 +104,33 @@ export interface DeleteFrame {
 export interface MoveFrame {
   pageId: string;
   frameId: string;
-  newX: number;
-  newY: number;
+  newX: Binary64;
+  newY: Binary64;
 }
 
 export interface ResizeFrame {
   pageId: string;
   frameId: string;
-  newWidth: number;
-  newHeight: number;
+  newWidth: Binary64;
+  newHeight: Binary64;
 }
 
 export interface RotateFrame {
   pageId: string;
   frameId: string;
-  newRotation: number;
+  newRotation: Binary64;
 }
 
 export interface ChangeFrameFill {
   pageId: string;
   frameId: string;
-  newFill: [number, number, number, number] | null;
+  newFill: [Binary32, Binary32, Binary32, Binary32] | null;
 }
 
 export interface ChangeFrameStroke {
   pageId: string;
   frameId: string;
-  newStroke: [number, number, number, number] | null;
+  newStroke: [Binary32, Binary32, Binary32, Binary32] | null;
 }
 
 export interface ChangeFrameWrapMode {
@@ -268,8 +146,8 @@ export interface ChangeFrameColumns {
 }
 
 export interface UpdateGrid {
-  baselineGrid: number;
-  baselineOffset: number;
+  baselineGrid: Binary64;
+  baselineOffset: Binary64;
   snapToBaseline: boolean;
 }
 
@@ -284,10 +162,10 @@ export interface UpdateParagraphStyle {
   id: string;
   name: string;
   fontFamily: string;
-  fontSize: number;
+  fontSize: Binary64;
   fontWeight: number;
-  leading: number;
-  tracking: number;
+  leading: Binary64;
+  tracking: Binary64;
   alignment: string;
 }
 
@@ -296,10 +174,10 @@ export interface UpdateTextFrame {
   frameId: string;
   storyId: string;
   threadNext: string | null;
-  insetX: number;
-  insetY: number;
-  insetWidth: number;
-  insetHeight: number;
+  insetX: Binary64;
+  insetY: Binary64;
+  insetWidth: Binary64;
+  insetHeight: Binary64;
 }
 
 export interface UpdateLayer {
@@ -324,18 +202,18 @@ export interface UpdateCharacterStyle {
   id: string;
   name: string | null;
   fontFamily: string | null;
-  fontSize: number | null;
+  fontSize: Binary64 | null;
   fontWeight: number | null;
   italic: boolean | null;
-  color: [number, number, number, number] | null;
-  tracking: number | null;
+  color: [Binary32, Binary32, Binary32, Binary32] | null;
+  tracking: Binary64 | null;
 }
 
 export interface UpdateParentPage {
   id: string;
   name: string;
-  width: number;
-  height: number;
+  width: Binary64;
+  height: Binary64;
 }
 
 export interface UpdateSpread {
@@ -376,7 +254,7 @@ export interface CreateLayer {
   id: string;
   name: string;
   index: number | null;
-  remove?: boolean;
+  remove: boolean;
 }
 
 export interface SetFrameLayer {
@@ -385,10 +263,6 @@ export interface SetFrameLayer {
   layerId: string;
 }
 
-export interface SetDrawingText {
-  index: number;
-  text: string;
-}
 
 export interface ReorderFrame {
   pageId: string;
@@ -400,32 +274,45 @@ export interface ReorderFrame {
 export interface DragFrames {
   pageId: string;
   targets: string[];
-  dx: number;
-  dy: number;
+  dx: Binary64;
+  dy: Binary64;
 }
 
 /** 🔃️ `rotate-frames`: frames of one page turned by `angle` radians about the recorded pivot. */
 export interface RotateFrames {
   pageId: string;
   targets: string[];
-  pivotX: number;
-  pivotY: number;
-  angle: number;
+  pivotX: Binary64;
+  pivotY: Binary64;
+  angle: Binary64;
 }
 
 /** 🗜️ `scale-frames`: frames of one page scaled by positive per-axis factors about the recorded pivot. */
 export interface ScaleFrames {
   pageId: string;
   targets: string[];
-  pivotX: number;
-  pivotY: number;
-  sx: number;
-  sy: number;
+  pivotX: Binary64;
+  pivotY: Binary64;
+  sx: Binary64;
+  sy: Binary64;
 }
+
+export interface CreateParagraphStyle { style: import("../🟦️.ts").ParagraphStyle; index: number | null }
+export interface DeleteParagraphStyle { id: string }
+export interface CreateParentPage { page: import("../🟦️.ts").ParentPage; index: number | null }
+export interface DeleteParentPage { id: string }
+export interface CreateSpread { spread: import("../🟦️.ts").Spread; index: number | null }
+export interface DeleteSpread { id: string }
+export interface SetPageSpread { id: string; spreadId: string; index: number | null }
+export interface ReorderLayer { pageId: string; layerId: string; toIndex: number }
+export interface SetParentPageContent { id: string; layers: Layer[]; frames: Frame[] }
+export interface ReplaceDocument { document: import("../📸️snapshot/🟦️.ts").LayoutSnapshot }
 //#endregion 🔖️Leaves
 
 //#region 🔖️Mutations
+export interface SetPageBackgroundDrawing {pageId:string;drawing:import("../🟦️.ts").LayoutDrawingMember|null}
 export type LayoutMutation =
+  | { SetPageBackgroundDrawing: SetPageBackgroundDrawing }
   | { RenameLayout: RenameLayout }
   | { ChangePrintTarget: ChangePrintTarget }
   | { ChangeDataFields: ChangeDataFields }
@@ -469,60 +356,19 @@ export type LayoutMutation =
   | { SetPageOverrides: SetPageOverrides }
   | { CreateLayer: CreateLayer }
   | { SetFrameLayer: SetFrameLayer }
-  | { SetDrawingText: SetDrawingText }
   | { ReorderFrame: ReorderFrame }
   | { DragFrames: DragFrames }
   | { RotateFrames: RotateFrames }
-  | { ScaleFrames: ScaleFrames };
+  | { ScaleFrames: ScaleFrames }
+  | { CreateParagraphStyle: CreateParagraphStyle }
+  | { DeleteParagraphStyle: DeleteParagraphStyle }
+  | { CreateParentPage: CreateParentPage }
+  | { DeleteParentPage: DeleteParentPage }
+  | { CreateSpread: CreateSpread }
+  | { DeleteSpread: DeleteSpread }
+  | { SetPageSpread: SetPageSpread }
+  | { ReorderLayer: ReorderLayer }
+  | { SetParentPageContent: SetParentPageContent }
+  | { ReplaceDocument: ReplaceDocument };
 //#endregion 🔖️Mutations
 
-//#region 🔖️FrameSelection
-const frameSelectionRecord = (value: unknown, keys: readonly string[], at: string): Record<string, unknown> => {
-  if (value === null || typeof value !== "object" || Array.isArray(value)) throw new Error(`${at}: object required`);
-  const row = value as Record<string, unknown>;
-  const unknown = Object.keys(row).find((key) => !keys.includes(key)), missing = keys.find((key) => !Object.hasOwn(row, key));
-  if (unknown !== undefined) throw new Error(`${at}.${unknown}: unknown field`);
-  if (missing !== undefined) throw new Error(`${at}: missing field ${missing}`);
-  return row;
-};
-const frameSelectionNumber = (value: unknown, at: string): number => {
-  if (typeof value !== "number" || !Number.isFinite(value)) throw new Error(`${at}: finite number required`);
-  return value;
-};
-const frameSelectionFactor = (value: unknown, at: string): number => {
-  const factor = frameSelectionNumber(value, at);
-  if (factor <= 0) throw new Error(`${at}: factor must be positive`);
-  return factor;
-};
-const frameSelectionTargets = (value: unknown, at: string): string[] => {
-  if (!Array.isArray(value) || value.length === 0) throw new Error(`${at}: at least one frame required`);
-  const targets = value.map((item, index) => {
-    if (typeof item !== "string" || item.length === 0) throw new Error(`${at}[${index}]: frame id required`);
-    return item;
-  });
-  if (new Set(targets).size !== targets.length) throw new Error(`${at}: a frame is named twice`);
-  return targets;
-};
-const frameSelectionPage = (value: unknown, at: string): string => {
-  if (typeof value !== "string") throw new Error(`${at}: page id required`);
-  return value;
-};
-
-/** ✋️ Parses one `drag-frames` payload exactly as its leaf schema admits it. */
-export function parseDragFrames(value: unknown, at = "$"): DragFrames {
-  const row = frameSelectionRecord(value, ["pageId", "targets", "dx", "dy"], at);
-  return { pageId: frameSelectionPage(row.pageId, `${at}.pageId`), targets: frameSelectionTargets(row.targets, `${at}.targets`), dx: frameSelectionNumber(row.dx, `${at}.dx`), dy: frameSelectionNumber(row.dy, `${at}.dy`) };
-}
-
-/** 🔃️ Parses one `rotate-frames` payload exactly as its leaf schema admits it. */
-export function parseRotateFrames(value: unknown, at = "$"): RotateFrames {
-  const row = frameSelectionRecord(value, ["pageId", "targets", "pivotX", "pivotY", "angle"], at);
-  return { pageId: frameSelectionPage(row.pageId, `${at}.pageId`), targets: frameSelectionTargets(row.targets, `${at}.targets`), pivotX: frameSelectionNumber(row.pivotX, `${at}.pivotX`), pivotY: frameSelectionNumber(row.pivotY, `${at}.pivotY`), angle: frameSelectionNumber(row.angle, `${at}.angle`) };
-}
-
-/** 🗜️ Parses one `scale-frames` payload exactly as its leaf schema admits it. */
-export function parseScaleFrames(value: unknown, at = "$"): ScaleFrames {
-  const row = frameSelectionRecord(value, ["pageId", "targets", "pivotX", "pivotY", "sx", "sy"], at);
-  return { pageId: frameSelectionPage(row.pageId, `${at}.pageId`), targets: frameSelectionTargets(row.targets, `${at}.targets`), pivotX: frameSelectionNumber(row.pivotX, `${at}.pivotX`), pivotY: frameSelectionNumber(row.pivotY, `${at}.pivotY`), sx: frameSelectionFactor(row.sx, `${at}.sx`), sy: frameSelectionFactor(row.sy, `${at}.sy`) };
-}
-//#endregion 🔖️FrameSelection

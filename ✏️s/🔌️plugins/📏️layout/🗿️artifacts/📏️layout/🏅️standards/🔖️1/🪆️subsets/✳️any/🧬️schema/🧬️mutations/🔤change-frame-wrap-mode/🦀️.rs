@@ -1,6 +1,5 @@
 //! 🔤 `change-frame-wrap-mode` — sets a `Frame::Text`'s `wrap_mode`. A no-op on non-text frames.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_model::Frame;

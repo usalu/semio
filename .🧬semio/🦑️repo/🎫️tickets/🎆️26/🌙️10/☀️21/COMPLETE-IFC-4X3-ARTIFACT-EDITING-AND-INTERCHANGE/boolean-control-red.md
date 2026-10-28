@@ -1,0 +1,5 @@
+# Original IFC Boolean Policy Red
+
+New closed neutral policy proposes explicit maxWork2000000, maxPolygons200000, maxDepth256 and maxIntermediateValues20000000, separate from existing source/expression depth and represented output maxValues. Defaults, sixteen invalid physical policy shapes/numeric controls, twelve nonfinite/unsafe limits, capture-before-progress-getter replacement and both real triangle/GLB endpoint admission are tested.
+
+The first invocation failed JSON module admission because the newly authored schema lacked its final brace:0pass1moduleerror. After that harness correction, the unchanged current producer gives1schema pass63missing-policy failures65 assertions64tests243ms. The initial raw output and valid feature-red output are both retained. This does not claim a policy implementation or Boolean adapter, and no held rounded75 source was edited. New three files remain unregistered. See boolean-ifc-source-construction-plan.md for the exact private-session/writer route.

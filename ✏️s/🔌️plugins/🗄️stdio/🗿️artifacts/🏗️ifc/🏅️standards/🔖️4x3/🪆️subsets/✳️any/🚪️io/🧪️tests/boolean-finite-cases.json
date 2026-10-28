@@ -1,0 +1,635 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "disjoint-difference",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          5,
+          1,
+          1
+        ],
+        [
+          6,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "disjoint-union",
+      "operation": "UNION",
+      "root": "csg",
+      "cut": [
+        [
+          5,
+          1,
+          1
+        ],
+        [
+          6,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 68
+    },
+    {
+      "id": "disjoint-intersection",
+      "operation": "INTERSECTION",
+      "root": "direct",
+      "cut": [
+        [
+          5,
+          1,
+          1
+        ],
+        [
+          6,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "empty",
+      "volume": 0
+    },
+    {
+      "id": "contained-difference",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 56
+    },
+    {
+      "id": "contained-union",
+      "operation": "UNION",
+      "root": "direct",
+      "cut": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "contained-intersection",
+      "operation": "INTERSECTION",
+      "root": "csg",
+      "cut": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 8
+    },
+    {
+      "id": "crossing-difference",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          -1,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 48
+    },
+    {
+      "id": "crossing-union",
+      "operation": "UNION",
+      "root": "csg",
+      "cut": [
+        [
+          -1,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 72
+    },
+    {
+      "id": "crossing-intersection",
+      "operation": "INTERSECTION",
+      "root": "direct",
+      "cut": [
+        [
+          -1,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 16
+    },
+    {
+      "id": "face-touch-difference",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          4,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "face-touch-union",
+      "operation": "UNION",
+      "root": "direct",
+      "cut": [
+        [
+          4,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 68
+    },
+    {
+      "id": "face-touch-intersection",
+      "operation": "INTERSECTION",
+      "root": "csg",
+      "cut": [
+        [
+          4,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "empty",
+      "volume": 0
+    },
+    {
+      "id": "coplanar-half-difference",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          6,
+          4,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 32
+    },
+    {
+      "id": "coplanar-half-union",
+      "operation": "UNION",
+      "root": "csg",
+      "cut": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          6,
+          4,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 96
+    },
+    {
+      "id": "coplanar-half-intersection",
+      "operation": "INTERSECTION",
+      "root": "direct",
+      "cut": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          6,
+          4,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 32
+    },
+    {
+      "id": "covering-difference",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "empty",
+      "volume": 0
+    },
+    {
+      "id": "covering-union",
+      "operation": "UNION",
+      "root": "direct",
+      "cut": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 216
+    },
+    {
+      "id": "covering-intersection",
+      "operation": "INTERSECTION",
+      "root": "csg",
+      "cut": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "identical-difference",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "empty",
+      "volume": 0
+    },
+    {
+      "id": "identical-union",
+      "operation": "UNION",
+      "root": "csg",
+      "cut": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "identical-intersection",
+      "operation": "INTERSECTION",
+      "root": "direct",
+      "cut": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "coplanar-notch-difference",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          6,
+          3,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 48
+    },
+    {
+      "id": "coplanar-notch-union",
+      "operation": "UNION",
+      "root": "direct",
+      "cut": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          6,
+          3,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 80
+    },
+    {
+      "id": "coplanar-notch-intersection",
+      "operation": "INTERSECTION",
+      "root": "csg",
+      "cut": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          6,
+          3,
+          4
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 16
+    },
+    {
+      "id": "edge-touch-difference",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          4,
+          4,
+          1
+        ],
+        [
+          5,
+          5,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "edge-touch-union",
+      "operation": "UNION",
+      "root": "csg",
+      "cut": [
+        [
+          4,
+          4,
+          1
+        ],
+        [
+          5,
+          5,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "volume": null
+    },
+    {
+      "id": "edge-touch-intersection",
+      "operation": "INTERSECTION",
+      "root": "direct",
+      "cut": [
+        [
+          4,
+          4,
+          1
+        ],
+        [
+          5,
+          5,
+          3
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "empty",
+      "volume": 0
+    },
+    {
+      "id": "point-touch-difference",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "volume": 64
+    },
+    {
+      "id": "point-touch-union",
+      "operation": "UNION",
+      "root": "direct",
+      "cut": [
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "volume": null
+    },
+    {
+      "id": "point-touch-intersection",
+      "operation": "INTERSECTION",
+      "root": "csg",
+      "cut": [
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "empty",
+      "volume": 0
+    }
+  ]
+}

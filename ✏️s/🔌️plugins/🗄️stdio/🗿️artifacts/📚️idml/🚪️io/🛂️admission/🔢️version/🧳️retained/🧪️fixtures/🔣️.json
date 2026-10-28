@@ -1,0 +1,54 @@
+{
+  "schema": "idml.retained.version.v1",
+  "cases": [
+    {
+      "id": "literal",
+      "source": "<D v=\"8.0\"/>",
+      "start": 6,
+      "end": 9,
+      "decodedLength": 3,
+      "expected": "8.0"
+    },
+    {
+      "id": "decimal",
+      "source": "<D v=\"8&#46;0\"/>",
+      "start": 6,
+      "end": 13,
+      "decodedLength": 3,
+      "expected": "8.0"
+    },
+    {
+      "id": "hexadecimal",
+      "source": "<D v=\"&#56;&#x2e;&#48;\"/>",
+      "start": 6,
+      "end": 22,
+      "decodedLength": 3,
+      "expected": "8.0"
+    }
+  ],
+  "lifecycle": {
+    "bodyBytes": [
+      1024,
+      4096,
+      65536
+    ],
+    "underfundedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      2,
+      10,
+      30
+    ]
+  },
+  "oracle": {
+    "library": "saxes",
+    "method": "independent root attribute extraction agrees with the typed version output; allocator/alias custody separately native protocol laws"
+  }
+}

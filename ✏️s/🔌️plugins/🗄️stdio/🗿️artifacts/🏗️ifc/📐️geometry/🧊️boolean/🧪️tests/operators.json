@@ -1,0 +1,202 @@
+{
+  "cases": [
+    {
+      "name": "disjoint",
+      "cut": [
+        [
+          5,
+          1,
+          1
+        ],
+        [
+          6,
+          3,
+          3
+        ]
+      ],
+      "difference": 64,
+      "union": 68,
+      "intersection": 0
+    },
+    {
+      "name": "contained",
+      "cut": [
+        [
+          1,
+          1,
+          1
+        ],
+        [
+          3,
+          3,
+          3
+        ]
+      ],
+      "difference": 56,
+      "union": 64,
+      "intersection": 8
+    },
+    {
+      "name": "crossing",
+      "cut": [
+        [
+          -1,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "difference": 48,
+      "union": 72,
+      "intersection": 16
+    },
+    {
+      "name": "face-touch",
+      "cut": [
+        [
+          4,
+          1,
+          1
+        ],
+        [
+          5,
+          3,
+          3
+        ]
+      ],
+      "difference": 64,
+      "union": 68,
+      "intersection": 0
+    },
+    {
+      "name": "coplanar-half",
+      "cut": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          6,
+          4,
+          4
+        ]
+      ],
+      "difference": 32,
+      "union": 96,
+      "intersection": 32
+    },
+    {
+      "name": "covering",
+      "cut": [
+        [
+          -1,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "difference": 0,
+      "union": 216,
+      "intersection": 64
+    },
+    {
+      "name": "identical",
+      "cut": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "difference": 0,
+      "union": 64,
+      "intersection": 64
+    },
+    {
+      "name": "coplanar-notch",
+      "cut": [
+        [
+          2,
+          1,
+          0
+        ],
+        [
+          6,
+          3,
+          4
+        ]
+      ],
+      "difference": 48,
+      "union": 80,
+      "intersection": 16
+    },
+    {
+      "name": "edge-touch",
+      "cut": [
+        [
+          4,
+          4,
+          1
+        ],
+        [
+          5,
+          5,
+          3
+        ]
+      ],
+      "difference": 64,
+      "union": null,
+      "intersection": 0
+    },
+    {
+      "name": "point-touch",
+      "cut": [
+        [
+          4,
+          4,
+          4
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "difference": 64,
+      "union": null,
+      "intersection": 0
+    }
+  ],
+  "host": [
+    [
+      0,
+      0,
+      0
+    ],
+    [
+      4,
+      4,
+      4
+    ]
+  ],
+  "operations": [
+    "difference",
+    "union",
+    "intersection"
+  ],
+  "contactUnionPolicy": "Refuse a pinched nonmanifold boundary; do not guess separated sheets."
+}

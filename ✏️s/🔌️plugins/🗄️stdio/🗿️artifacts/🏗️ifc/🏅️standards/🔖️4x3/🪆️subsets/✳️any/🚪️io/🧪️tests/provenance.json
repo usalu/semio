@@ -1,0 +1,11 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "file": "triangulated.ifc",
+  "sha256": "935acf08d1f1c93035c9f2454928f8ff7ba89378f60e6560fcc07c82f7eb8fd1",
+  "source": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/6ccd7b3991ae44255e82dd6f73b150389ca55637/models/basic-geometric-shape/triangulated-item/triangulated-item.ifc",
+  "publication": "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/annex_e/basic-geometric-shape/triangulated-item.html",
+  "commit": "6ccd7b3991ae44255e82dd6f73b150389ca55637",
+  "retrieved": "2026-10-21",
+  "status": "Official informative example; its declared ReferenceView is not a claim of verified MVD compliance.",
+  "expected": {"vertices": 8, "triangles": 12, "boundsMetres": [[0.5, -0.5, 0], [1.5, 0.5, 2]]}
+}

@@ -273,9 +273,9 @@ impl DrawingStoreInitializationAuthority {
     /// 🧱️ Admits the arena owners of the initialization.
     fn turn_admit_owners(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> DrawingInitializationTurn {
         let grant = cx.retained_grant();
-        let funded = store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<DrawingSnapshot, DrawingMutation>().is_ok_and(|demand| grant.maximum_items > 0 && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_depth >= demand.depth);
+        let funded = <semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer as store::os_store::document_store_owners::producer::DocumentStoreOwnerProducer<DrawingSnapshot,DrawingMutation>>::source_demands().is_ok_and(|demand|semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand));
         if funded {
-            match store::os_store::document_store_owners::bounded_artifact_store_owners::<DrawingSnapshot, DrawingMutation>(grant) {
+            match <semio_s_artifact_draw_drawing_editor_store_preparation::DrawingMemberStoreProducer as store::os_store::document_store_owners::producer::DocumentStoreOwnerProducer<DrawingSnapshot,DrawingMutation>>::admit_sources(grant) {
                 Ok((owners, progress)) => {
                     *self.owners = Some(owners);
                     match cx.consume_retained(progress) {

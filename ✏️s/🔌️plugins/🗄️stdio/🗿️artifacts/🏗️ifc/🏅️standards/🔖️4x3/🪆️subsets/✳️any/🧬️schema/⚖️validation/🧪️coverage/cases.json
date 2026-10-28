@@ -1,0 +1,1313 @@
+{
+  "schema": "semio.ifc4x3.issued-owner-boundaries.v1",
+  "source": {
+    "schema": "IFC4X3_ADD2",
+    "sha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+  },
+  "scope": "selected-concrete-boundaries-not-total-branch-coverage",
+  "functions": [
+    {
+      "id": "array-one",
+      "owner": "IFCLISTTOARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": "1",
+        "items": [
+          {
+            "kind": "integer",
+            "value": "1"
+          },
+          {
+            "kind": "integer",
+            "value": "2"
+          },
+          {
+            "kind": "integer",
+            "value": "3"
+          }
+        ]
+      },
+      "branch": "matching cardinality and ordered assignments"
+    },
+    {
+      "id": "array-zero",
+      "owner": "IFCLISTTOARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": "0",
+        "items": [
+          {
+            "kind": "integer",
+            "value": "1"
+          },
+          {
+            "kind": "integer",
+            "value": "2"
+          },
+          {
+            "kind": "integer",
+            "value": "3"
+          }
+        ]
+      },
+      "branch": "zero lower bound"
+    },
+    {
+      "id": "array-negative",
+      "owner": "IFCLISTTOARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            },
+            {
+              "kind": "integer",
+              "value": "3"
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "-2"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": "-2",
+        "items": [
+          {
+            "kind": "integer",
+            "value": "1"
+          },
+          {
+            "kind": "integer",
+            "value": "2"
+          },
+          {
+            "kind": "integer",
+            "value": "3"
+          }
+        ]
+      },
+      "branch": "negative lower bound"
+    },
+    {
+      "id": "array-single",
+      "owner": "IFCLISTTOARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        },
+        {
+          "kind": "integer",
+          "value": "4"
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": "4",
+        "items": [
+          {
+            "kind": "integer",
+            "value": "7"
+          }
+        ]
+      },
+      "branch": "zero repeat iterations with non-one bound"
+    },
+    {
+      "id": "array-mismatch",
+      "owner": "IFCLISTTOARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "branch": "mismatched cardinality returns indeterminate"
+    },
+    {
+      "id": "matrix-one",
+      "owner": "IFCMAKEARRAYOFARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "1"
+                },
+                {
+                  "kind": "integer",
+                  "value": "2"
+                }
+              ]
+            },
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "3"
+                },
+                {
+                  "kind": "integer",
+                  "value": "4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": "1",
+        "items": [
+          {
+            "kind": "aggregate",
+            "aggregate": "ARRAY",
+            "lower": "1",
+            "items": [
+              {
+                "kind": "integer",
+                "value": "1"
+              },
+              {
+                "kind": "integer",
+                "value": "2"
+              }
+            ]
+          },
+          {
+            "kind": "aggregate",
+            "aggregate": "ARRAY",
+            "lower": "1",
+            "items": [
+              {
+                "kind": "integer",
+                "value": "3"
+              },
+              {
+                "kind": "integer",
+                "value": "4"
+              }
+            ]
+          }
+        ]
+      },
+      "branch": "rectangular rows"
+    },
+    {
+      "id": "matrix-shifted",
+      "owner": "IFCMAKEARRAYOFARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "1"
+                },
+                {
+                  "kind": "integer",
+                  "value": "2"
+                }
+              ]
+            },
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "3"
+                },
+                {
+                  "kind": "integer",
+                  "value": "4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "-2"
+        },
+        {
+          "kind": "integer",
+          "value": "-1"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        }
+      ],
+      "expected": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": "-2",
+        "items": [
+          {
+            "kind": "aggregate",
+            "aggregate": "ARRAY",
+            "lower": "0",
+            "items": [
+              {
+                "kind": "integer",
+                "value": "1"
+              },
+              {
+                "kind": "integer",
+                "value": "2"
+              }
+            ]
+          },
+          {
+            "kind": "aggregate",
+            "aggregate": "ARRAY",
+            "lower": "0",
+            "items": [
+              {
+                "kind": "integer",
+                "value": "3"
+              },
+              {
+                "kind": "integer",
+                "value": "4"
+              }
+            ]
+          }
+        ]
+      },
+      "branch": "two independent lower bounds"
+    },
+    {
+      "id": "matrix-outer-mismatch",
+      "owner": "IFCMAKEARRAYOFARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "1"
+                },
+                {
+                  "kind": "integer",
+                  "value": "2"
+                }
+              ]
+            },
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "3"
+                },
+                {
+                  "kind": "integer",
+                  "value": "4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "branch": "outer dimension mismatch"
+    },
+    {
+      "id": "matrix-first-row-mismatch",
+      "owner": "IFCMAKEARRAYOFARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "1"
+                },
+                {
+                  "kind": "integer",
+                  "value": "2"
+                }
+              ]
+            },
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "3"
+                },
+                {
+                  "kind": "integer",
+                  "value": "4"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "3"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "branch": "first row dimension mismatch"
+    },
+    {
+      "id": "matrix-late-ragged",
+      "owner": "IFCMAKEARRAYOFARRAY",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "1"
+                },
+                {
+                  "kind": "integer",
+                  "value": "2"
+                }
+              ]
+            },
+            {
+              "kind": "aggregate",
+              "aggregate": "LIST",
+              "lower": "1",
+              "items": [
+                {
+                  "kind": "integer",
+                  "value": "3"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "2"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "branch": "later row dimension mismatch"
+    },
+    {
+      "id": "propertyname-distinct",
+      "owner": "IFCUNIQUEPROPERTYNAME",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSINGLEVALUE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSINGLEVALUE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "B"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "SET accumulation preserves distinct names"
+    },
+    {
+      "id": "propertyname-duplicate",
+      "owner": "IFCUNIQUEPROPERTYNAME",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSINGLEVALUE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSINGLEVALUE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "SET accumulation removes duplicated name values"
+    },
+    {
+      "id": "propertytemplatenames-distinct",
+      "owner": "IFCUNIQUEPROPERTYTEMPLATENAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCSIMPLEPROPERTYTEMPLATE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCSIMPLEPROPERTYTEMPLATE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "B"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "SET accumulation preserves distinct names"
+    },
+    {
+      "id": "propertytemplatenames-duplicate",
+      "owner": "IFCUNIQUEPROPERTYTEMPLATENAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCSIMPLEPROPERTYTEMPLATE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCSIMPLEPROPERTYTEMPLATE",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "SET accumulation removes duplicated name values"
+    },
+    {
+      "id": "quantitynames-distinct",
+      "owner": "IFCUNIQUEQUANTITYNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCQUANTITYLENGTH",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCQUANTITYLENGTH",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "B"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "SET accumulation preserves distinct names"
+    },
+    {
+      "id": "quantitynames-duplicate",
+      "owner": "IFCUNIQUEQUANTITYNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCQUANTITYLENGTH",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCQUANTITYLENGTH",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "SET accumulation removes duplicated name values"
+    },
+    {
+      "id": "pset-distinct",
+      "owner": "IFCUNIQUEPROPERTYSETNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSET",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSET",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "B"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "entity ancestry plus qualified IfcRoot Name"
+    },
+    {
+      "id": "pset-duplicate",
+      "owner": "IFCUNIQUEPROPERTYSETNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSET",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCPROPERTYSET",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "qualified duplicate property set names"
+    },
+    {
+      "id": "pset-other-definition",
+      "owner": "IFCUNIQUEPROPERTYSETNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCELEMENTQUANTITY",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCELEMENTQUANTITY",
+              "fields": {
+                "Name": {
+                  "kind": "string",
+                  "value": "A"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "non-property-set definitions count as unnamed"
+    },
+    {
+      "id": "definition-empty",
+      "owner": "IFCUNIQUEDEFINITIONNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": []
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "explicit empty relation branch"
+    },
+    {
+      "id": "definition-duplicate-name",
+      "owner": "IFCUNIQUEDEFINITIONNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCRELDEFINESBYPROPERTIES",
+              "fields": {
+                "RelatingPropertyDefinition": {
+                  "kind": "entity",
+                  "type": "IFCPROPERTYSET",
+                  "fields": {
+                    "Name": {
+                      "kind": "string",
+                      "value": "A"
+                    }
+                  }
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCRELDEFINESBYPROPERTIES",
+              "fields": {
+                "RelatingPropertyDefinition": {
+                  "kind": "entity",
+                  "type": "IFCPROPERTYSET",
+                  "fields": {
+                    "Name": {
+                      "kind": "string",
+                      "value": "A"
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "two distinct related definitions share name"
+    },
+    {
+      "id": "definition-shared-identity",
+      "owner": "IFCUNIQUEDEFINITIONNAMES",
+      "args": [
+        {
+          "kind": "aggregate",
+          "aggregate": "SET",
+          "lower": "1",
+          "items": [
+            {
+              "kind": "entity",
+              "type": "IFCRELDEFINESBYPROPERTIES",
+              "fields": {
+                "RelatingPropertyDefinition": {
+                  "kind": "entity",
+                  "type": "IFCPROPERTYSET",
+                  "fields": {
+                    "Name": {
+                      "kind": "string",
+                      "value": "A"
+                    }
+                  },
+                  "key": "p"
+                }
+              }
+            },
+            {
+              "kind": "entity",
+              "type": "IFCRELDEFINESBYPROPERTIES",
+              "fields": {
+                "RelatingPropertyDefinition": {
+                  "kind": "reference",
+                  "key": "p"
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "SET union collapses actual shared entity identity"
+    },
+    {
+      "id": "same-default",
+      "owner": "IFCSAMEVALUE",
+      "args": [
+        {
+          "kind": "real",
+          "value": "1"
+        },
+        {
+          "kind": "real",
+          "value": "1"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "NVL default epsilon"
+    },
+    {
+      "id": "same-inside",
+      "owner": "IFCSAMEVALUE",
+      "args": [
+        {
+          "kind": "real",
+          "value": "0"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        },
+        {
+          "kind": "real",
+          "value": "0.5"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "strict comparison inside epsilon"
+    },
+    {
+      "id": "same-boundary",
+      "owner": "IFCSAMEVALUE",
+      "args": [
+        {
+          "kind": "real",
+          "value": "0"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "strict exact-binary boundary"
+    },
+    {
+      "id": "same-zero-epsilon",
+      "owner": "IFCSAMEVALUE",
+      "args": [
+        {
+          "kind": "real",
+          "value": "1"
+        },
+        {
+          "kind": "real",
+          "value": "1"
+        },
+        {
+          "kind": "real",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "zero epsilon strict comparison"
+    },
+    {
+      "id": "precision-default",
+      "owner": "IFCSAMEVALIDPRECISION",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "both NVL defaults"
+    },
+    {
+      "id": "precision-equal",
+      "owner": "IFCSAMEVALIDPRECISION",
+      "args": [
+        {
+          "kind": "real",
+          "value": "0.5"
+        },
+        {
+          "kind": "real",
+          "value": "0.5"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "branch": "valid positive equal epsilon"
+    },
+    {
+      "id": "precision-zero",
+      "owner": "IFCSAMEVALIDPRECISION",
+      "args": [
+        {
+          "kind": "real",
+          "value": "0"
+        },
+        {
+          "kind": "real",
+          "value": "0.5"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "zero lower bound excluded"
+    },
+    {
+      "id": "precision-upper",
+      "owner": "IFCSAMEVALIDPRECISION",
+      "args": [
+        {
+          "kind": "real",
+          "value": "1"
+        },
+        {
+          "kind": "real",
+          "value": "1"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "upper epsilon bound strict"
+    },
+    {
+      "id": "precision-ratio",
+      "owner": "IFCSAMEVALIDPRECISION",
+      "args": [
+        {
+          "kind": "real",
+          "value": "0.0001"
+        },
+        {
+          "kind": "real",
+          "value": "0.001"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "branch": "relative epsilon mismatch"
+    }
+  ],
+  "globals": [
+    {
+      "id": "project-none",
+      "owner": "IFCSINGLEPROJECTINSTANCE",
+      "body": "#1=IFCDIRECTION((1.,0.));",
+      "expected": "true"
+    },
+    {
+      "id": "project-one",
+      "owner": "IFCSINGLEPROJECTINSTANCE",
+      "body": "#1=IFCPROJECT('0000000000000000000001',$,'P1',$,$,$,$,$,$);",
+      "expected": "true"
+    },
+    {
+      "id": "project-two",
+      "owner": "IFCSINGLEPROJECTINSTANCE",
+      "body": "#1=IFCPROJECT('0000000000000000000001',$,'P1',$,$,$,$,$,$);\n#2=IFCPROJECT('0000000000000000000002',$,'P2',$,$,$,$,$,$);",
+      "expected": "false"
+    },
+    {
+      "id": "context-none",
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "body": "#1=IFCDIRECTION((1.,0.));",
+      "expected": "true"
+    },
+    {
+      "id": "context-one",
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "body": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#2,$);",
+      "expected": "true"
+    },
+    {
+      "id": "context-same-identity",
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "body": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#2,$);\n#4=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.001,#2,$);",
+      "expected": "true"
+    },
+    {
+      "id": "context-equal-distinct",
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "body": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#2,$);\n#4=IFCCARTESIANPOINT((0.,0.,0.));\n#5=IFCAXIS2PLACEMENT3D(#4,$,$);\n#6=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#5,$);",
+      "expected": "true"
+    },
+    {
+      "id": "context-displaced",
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "body": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#2,$);\n#4=IFCCARTESIANPOINT((1.,0.,0.));\n#5=IFCAXIS2PLACEMENT3D(#4,$,$);\n#6=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#5,$);",
+      "expected": "false"
+    },
+    {
+      "id": "context-precision-mismatch",
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "body": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#2,$);\n#4=IFCCARTESIANPOINT((0.,0.,0.));\n#5=IFCAXIS2PLACEMENT3D(#4,$,$);\n#6=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.001,#5,$);",
+      "expected": "false"
+    }
+  ],
+  "nativeExecuted": false
+}

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/io/original-control-authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "properties",
+    "routes",
+    "boundaries",
+    "failureKinds",
+    "limits",
+    "expected"
+  ],
+  "properties": {
+    "scope": {
+      "const": "original-io-control"
+    },
+    "properties": {
+      "const": [
+        "signal",
+        "progress",
+        "batchSize",
+        "maxEntities",
+        "maxValues",
+        "maxDepth",
+        "maxNumericCodeUnits"
+      ]
+    },
+    "routes": {
+      "const": [
+        "step-parse",
+        "step-write",
+        "step-stream",
+        "glb-read",
+        "glb-write",
+        "shared-steps",
+        "body-concept"
+      ]
+    },
+    "boundaries": {
+      "const": [
+        "interior",
+        "completion"
+      ]
+    },
+    "failureKinds": {
+      "const": [
+        "undefined",
+        "number",
+        "object"
+      ]
+    },
+    "limits": {
+      "const": {
+        "batchSize": 1,
+        "maxEntities": 77,
+        "maxValues": 88,
+        "maxDepth": 12,
+        "maxNumericCodeUnits": 64
+      }
+    },
+    "expected": {
+      "const": {
+        "propertyReads": 1,
+        "originalCalls": 1,
+        "replacementCalls": 0,
+        "cancelCode": "io.cancelled",
+        "capturedMutable": false,
+        "observerReceiver": "undefined"
+      }
+    }
+  }
+}

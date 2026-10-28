@@ -1,0 +1,29 @@
+{
+  "cases": [
+    {
+      "file": "plane-clipping.ifc",
+      "volume": 32,
+      "representation": "11"
+    },
+    {
+      "file": "holed-plane-clipping.ifc",
+      "volume": 24,
+      "representation": "11"
+    },
+    {
+      "file": "nested-plane-clipping.ifc",
+      "volume": 16,
+      "representation": "11"
+    },
+    {
+      "file": "mapped-plane-clipping.ifc",
+      "volume": 192,
+      "representation": "90"
+    },
+    {
+      "file": "reflected-plane-clipping.ifc",
+      "volume": 32,
+      "representation": "90"
+    }
+  ]
+}

@@ -193,7 +193,7 @@ impl TypedJsonCursor {
     /// 📊 Expands the `Page` node into its output fragments.
     pub(super) fn expand_page(&mut self, index: usize, snapshot: &LayoutSnapshot) -> Result<(), String> {
         let value = snapshot.pages.get(index).ok_or("layout-export-json-index")?;
-        self.push_sequence(vec![
+        let mut nodes=vec![
             Self::static_node(b"{\"id\":"),
             Self::string(StringSource::PageId(index)),
             Self::static_node(b",\"name\":"),
@@ -221,7 +221,10 @@ impl TypedJsonCursor {
             Self::static_node(b",\"overrides\":"),
             TypedJsonNode::Overrides { page: index, index: 0, opened: false },
             Self::static_node(b"}"),
-        ]);
+        ];
+        nodes.pop();
+        if value.background_drawing.is_some(){nodes.extend([Self::static_node(b",\"backgroundDrawing\":"),TypedJsonNode::Child(ChildJsonCursor::new(semio_s_artifact_layout_layout_model::DrawingSourceAddress::Page(index)))]);}
+        nodes.push(Self::static_node(b"}"));self.push_sequence(nodes);
         Ok(())
     }
 

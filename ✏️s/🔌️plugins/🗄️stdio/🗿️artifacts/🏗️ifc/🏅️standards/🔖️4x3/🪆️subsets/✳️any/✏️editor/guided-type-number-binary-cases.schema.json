@@ -1,0 +1,147 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "sourceContract",
+    "cases"
+  ],
+  "properties": {
+    "sourceContract": {
+      "const": "type-number-binary-input.json"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "target",
+          "index",
+          "input",
+          "ready",
+          "fields"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "enum": [
+              "real",
+              "number",
+              "binary"
+            ]
+          },
+          "target": {
+            "enum": [
+              "IFCPOINTONCURVE",
+              "IFCQUANTITYNUMBER",
+              "IFCBLOBTEXTURE"
+            ]
+          },
+          "index": {
+            "enum": [
+              "0",
+              "1"
+            ]
+          },
+          "input": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "real"
+                  },
+                  "value": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "bits"
+                    ],
+                    "properties": {
+                      "bits": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "integer",
+                      "binary"
+                    ]
+                  },
+                  "value": {
+                    "type": "string"
+                  }
+                }
+              }
+            ]
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "fields": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "format",
+                "value"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "choice",
+                    "text"
+                  ]
+                },
+                "format": {
+                  "enum": [
+                    null,
+                    "binary64",
+                    "decimal-i64",
+                    "text"
+                  ]
+                },
+                "value": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

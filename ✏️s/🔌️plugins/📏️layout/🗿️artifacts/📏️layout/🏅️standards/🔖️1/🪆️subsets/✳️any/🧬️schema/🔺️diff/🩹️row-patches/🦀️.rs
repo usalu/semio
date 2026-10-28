@@ -1,10 +1,11 @@
 //! 🩹️ Row patches of the layout diff: the paragraph, character, parent page, spread, page and grid patches and their row patch implementations. See [`super`].
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 
 //#region 🔖️DeltaHelpers
 /// 🩹 Sparse patch for a {@link ParagraphStyle}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -19,22 +20,36 @@ pub struct ParagraphStylePatch {
 }
 
 /// 🩹 Sparse patch for a {@link CharacterStyle}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct CharacterStylePatch {
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub name: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub font_family: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub font_size: Option<Option<f64>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub font_weight: Option<Option<u32>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub italic: Option<Option<bool>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub color: Option<Option<[f32; 4]>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub tracking: Option<Option<f64>>,
 }
 
 /// 🩹 Sparse patch for a {@link ParentPage}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
@@ -45,19 +60,21 @@ pub struct ParentPagePatch {
 }
 
 /// 🩹 Sparse patch for a {@link Spread}.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 pub struct SpreadPatch {
     pub name: Option<String>,
+    pub page_ids: Option<Vec<String>>,
 }
 
 /// 📄️ Owned-field patch of one page: its dimensions, margins, columns and parent, the positional guides, and the keyed overrides, frames and layers.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(default, deny_unknown_fields)]
 pub struct PagePatch {
     pub name: Option<String>,
+    pub spread_id: Option<String>,
     pub width: Option<f64>,
     pub height: Option<f64>,
     pub margin_top: Option<f64>,
@@ -66,7 +83,10 @@ pub struct PagePatch {
     pub margin_left: Option<f64>,
     pub columns_count: Option<u32>,
     pub columns_gutter: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
     pub parent_page_id: Option<Option<String>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    pub background_drawing: Option<Option<LayoutDrawingMember>>,
     pub guides: Option<PageGuidesDelta>,
     pub overrides: PageOverridesDelta,
     pub frames: PageFramesDelta,
@@ -133,7 +153,7 @@ impl ParentPagePatch {
 
 impl SpreadPatch {
     pub(super) fn or(self, earlier: Self) -> Self {
-        Self { name: self.name.or(earlier.name) }
+        Self { name: self.name.or(earlier.name), page_ids: self.page_ids.or(earlier.page_ids) }
     }
 }
 
@@ -165,14 +185,14 @@ field_row_patch!(CharacterStylePatch, CharacterStyle, |patch, base| CharacterSty
 
 field_row_patch!(ParentPagePatch, ParentPage, |patch, base| ParentPagePatch { name: patch.name.as_ref().map(|_| base.name.clone()), width: patch.width.map(|_| base.width), height: patch.height.map(|_| base.height) });
 
-field_row_patch!(SpreadPatch, Spread, |patch, base| SpreadPatch { name: patch.name.as_ref().map(|_| base.name.clone()) });
+field_row_patch!(SpreadPatch, Spread, |patch, base| SpreadPatch { name: patch.name.as_ref().map(|_| base.name.clone()), page_ids: patch.page_ids.as_ref().map(|_| base.page_ids.clone()) });
 
 field_row_patch!(ImageLinkPatch, ImageLink, |patch, base| ImageLinkPatch {
     path: patch.path.as_ref().map(|_| base.path.clone()),
     width: patch.width.map(|_| base.width),
     height: patch.height.map(|_| base.height),
     dpi: patch.dpi.map(|_| base.dpi),
-    color_profile: patch.color_profile.as_ref().map(|_| base.color_profile.clone().unwrap_or_default()),
+    color_profile: patch.color_profile.as_ref().map(|_| base.color_profile.clone()),
 });
 
 impl RowPatch<TextStory> for TextStoryPatch {
@@ -278,6 +298,7 @@ impl RowPatch<Frame> for FramePatch {
 
 impl RowPatch<Page> for PagePatch {
     fn commit_into(&self, row: &mut Page, capability: ApplyCapability) -> Result<(), MutationApplyError> {
+        if let Some(spread) = &self.spread_id { row.spread_id = spread.clone(); }
         if let Some(name) = &self.name {
             row.name = name.clone();
         }
@@ -308,6 +329,7 @@ impl RowPatch<Page> for PagePatch {
         if let Some(parent) = &self.parent_page_id {
             row.parent_page_id = parent.clone();
         }
+        if let Some(child) = &self.background_drawing { row.background_drawing = child.clone(); }
         if let Some(delta) = &self.guides {
             row.guides = apply_positional(&row.guides, delta).map_err(|error| error.under(["guides"]))?;
         }
@@ -327,7 +349,9 @@ impl RowPatch<Page> for PagePatch {
         self.margin_left = later.margin_left.or(self.margin_left);
         self.columns_count = later.columns_count.or(self.columns_count);
         self.columns_gutter = later.columns_gutter.or(self.columns_gutter);
+        self.spread_id = later.spread_id.or_else(|| self.spread_id.take());
         self.parent_page_id = later.parent_page_id.or_else(|| self.parent_page_id.take());
+        self.background_drawing = later.background_drawing.or_else(|| self.background_drawing.take());
         self.guides = match (self.guides.take(), later.guides) {
             (Some(first), Some(second)) => Some(absorb_positional(first, second)),
             (first, None) => first,
@@ -348,7 +372,9 @@ impl RowPatch<Page> for PagePatch {
             margin_left: self.margin_left.map(|_| row.margins.left),
             columns_count: self.columns_count.map(|_| row.columns.count),
             columns_gutter: self.columns_gutter.map(|_| row.columns.gutter),
+            spread_id: self.spread_id.as_ref().map(|_| row.spread_id.clone()),
             parent_page_id: self.parent_page_id.as_ref().map(|_| row.parent_page_id.clone()),
+            background_drawing: self.background_drawing.as_ref().map(|_| row.background_drawing.clone()),
             guides: self.guides.as_ref().map(|delta| inverse_positional(delta, &row.guides)),
             overrides: self.overrides.inverse(&row.overrides),
             frames: self.frames.inverse(&row.frames),
@@ -365,7 +391,9 @@ impl RowPatch<Page> for PagePatch {
             && self.margin_left.is_none()
             && self.columns_count.is_none()
             && self.columns_gutter.is_none()
+            && self.spread_id.is_none()
             && self.parent_page_id.is_none()
+            && self.background_drawing.is_none()
             && self.guides.as_ref().is_none_or(is_empty_positional)
             && self.overrides.is_empty()
             && self.frames.is_empty()
@@ -391,3 +419,56 @@ impl GridPatch {
     }
 }
 //#endregion 🔖️RowPatches
+
+impl PartialEq for ParagraphStylePatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+            && self.font_family == other.font_family
+            && self.font_size.map(f64::to_bits) == other.font_size.map(f64::to_bits)
+            && self.font_weight == other.font_weight
+            && self.leading.map(f64::to_bits) == other.leading.map(f64::to_bits)
+            && self.tracking.map(f64::to_bits) == other.tracking.map(f64::to_bits)
+            && self.alignment == other.alignment
+    }
+}
+
+impl PartialEq for CharacterStylePatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+            && self.font_family == other.font_family
+            && self.font_size.map(|value| value.map(f64::to_bits)) == other.font_size.map(|value| value.map(f64::to_bits))
+            && self.font_weight == other.font_weight
+            && self.italic == other.italic
+            && self.color.as_ref().map(|value| value.as_ref().map(|color| color.map(f32::to_bits))) == other.color.as_ref().map(|value| value.as_ref().map(|color| color.map(f32::to_bits)))
+            && self.tracking.map(|value| value.map(f64::to_bits)) == other.tracking.map(|value| value.map(f64::to_bits))
+    }
+}
+
+impl PartialEq for ParentPagePatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+            && self.width.map(f64::to_bits) == other.width.map(f64::to_bits)
+            && self.height.map(f64::to_bits) == other.height.map(f64::to_bits)
+    }
+}
+
+impl PartialEq for PagePatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name
+            && self.spread_id == other.spread_id
+            && self.width.map(f64::to_bits) == other.width.map(f64::to_bits)
+            && self.height.map(f64::to_bits) == other.height.map(f64::to_bits)
+            && self.margin_top.map(f64::to_bits) == other.margin_top.map(f64::to_bits)
+            && self.margin_right.map(f64::to_bits) == other.margin_right.map(f64::to_bits)
+            && self.margin_bottom.map(f64::to_bits) == other.margin_bottom.map(f64::to_bits)
+            && self.margin_left.map(f64::to_bits) == other.margin_left.map(f64::to_bits)
+            && self.columns_count == other.columns_count
+            && self.columns_gutter.map(f64::to_bits) == other.columns_gutter.map(f64::to_bits)
+            && self.parent_page_id == other.parent_page_id
+            && self.background_drawing == other.background_drawing
+            && self.guides == other.guides
+            && self.overrides == other.overrides
+            && self.frames == other.frames
+            && self.layers == other.layers
+    }
+}

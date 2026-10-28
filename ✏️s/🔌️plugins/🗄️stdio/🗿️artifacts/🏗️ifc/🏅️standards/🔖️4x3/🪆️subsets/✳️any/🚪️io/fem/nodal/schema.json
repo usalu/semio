@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "dofs",
+    "values",
+    "vectors",
+    "refusals",
+    "sourceRefusals"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.fem.nodal-components.v1"
+    },
+    "dofs": {
+      "const": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    "values": {
+      "const": [
+        {
+          "id": "positive-zero",
+          "bits": "0"
+        },
+        {
+          "id": "negative-zero",
+          "bits": "9223372036854775808"
+        },
+        {
+          "id": "nonzero",
+          "bits": "4613937818241073152"
+        }
+      ]
+    },
+    "vectors": {
+      "type": "array",
+      "minItems": 3,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "components"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "components": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "dof",
+                "bits"
+              ],
+              "properties": {
+                "dof": {
+                  "enum": [
+                    "Tx",
+                    "Ty",
+                    "Tz",
+                    "Rx",
+                    "Ry",
+                    "Rz"
+                  ]
+                },
+                "bits": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "refusals": {
+      "const": [
+        "missing-force-unit",
+        "missing-torque-unit",
+    "duplicate-force-unit",
+    "duplicate-torque-unit",
+    "wrong-force-unit-name",
+    "wrong-torque-dimensions",
+    "scaled-force-unit",
+    "derived-component",
+        "invalid-component",
+        "no-components"
+      ]
+    },
+    "sourceRefusals": {
+      "const": [
+        "missing-node",
+        "invalid-dof"
+      ]
+    }
+  }
+}

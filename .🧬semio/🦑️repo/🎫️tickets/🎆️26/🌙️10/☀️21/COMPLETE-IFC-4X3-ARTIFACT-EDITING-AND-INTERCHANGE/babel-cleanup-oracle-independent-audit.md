@@ -1,0 +1,9 @@
+# Babel Cleanup Oracle Independent Review
+
+The test-only independent comparison is coherent and appropriately narrow. Own fresh execution of io-cleanup-oracle-independent.ts matches all9actual original observer cases against pinned @babel/runtime7.28.4 createForOfIteratorHelper with0mismatches. Output generated/io-cleanup-oracle-independent.json is distinct from root's original output. Own independent local SHA512 verification of retained runtime.tgz matches the original npm dist.integrity; helper SHA256 matches50c8759e852b08a52b46901e6871a6dd9ec5dfbfcf6ed5501a52ae6204d5ef2f.
+
+retain-cleanup-oracle.py reads exact npm package/version metadata and bounded tarball, verifies SHA512 before retaining only the original3helper modules plus package.json/LICENSE. It does not execute package install scripts or create a production dependency. Fixed explicit archive members, file-kind checks and path-length bounds avoid arbitrary extraction. The owned interface exposes a small IteratorClose test protocol rather than exporting library types into production. License/package/provenance remain under generated/close-ref.
+
+Both backends enter a finite generator, receive a first observer failure and encounter a distinct finally Error. Compared properties are exact original identity, rejection, finally execution and one observer notification. This corroborates first observer failure precedence only. Babel's ordinary IteratorClose helper does not establish draining of yielding finally, infinite generator termination, original signal policy, IFC transaction semantics, native retirement or physical receipts. Existing own finite-cleanup and cancellation probes remain the evidence for those separately implemented JS boundaries.
+
+No new defect found; no production files edited or processes left live.

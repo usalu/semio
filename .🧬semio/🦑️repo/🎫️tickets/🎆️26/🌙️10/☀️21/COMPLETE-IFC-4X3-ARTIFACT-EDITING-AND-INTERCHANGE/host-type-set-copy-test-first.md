@@ -1,0 +1,7 @@
+# SET Copy Test-First Checkpoint
+
+During the broad135 hold, only the new unregistered `details/type_input_set_copy_tests.rs` was added beside the existing copier. It is not mounted in the existing source or a selected test entry. Its syntax parses with rustfmt exit0; that does not typecheck or execute it. The new `Kind::Set` referenced by these laws is deliberately not implemented yet.
+
+The laws require a source-owned compatible typed constructor to preserve exact ordered ordinary-reference records, including a duplicate ID, blank raw ID, partial minus sign, and145-byte UTF8 raw sibling crossing a64-byte boundary. Repeated demands must allocate nothing and match exactly. Each published copy/capacity/release/depth/item demand and fuel denial must leave progress stationary with no heap activity. Every cancellation prefix must close through the original owner; equivalent-but-distinct borrowed source replacement must refuse before any progress or heap activity. An absent constructor child stays itemless and never creates a minimum member or default reference.
+
+These direct copier laws complement the already mounted but unexecuted SET receiving/control laws. The implementation still needs a retained member owner before receipt posting, a direct posting-refusal law for that owner, and the actual editor-controller attachment law. Existing production source bytes remain the closed mixed70 implementation. No native semantic, type, execution, heap, grant, receipt, cancellation, or close capability has been raised.

@@ -48,12 +48,16 @@ pub fn diff_delete_link(payload: &DeleteLink, base: &LayoutSnapshot) -> protocol
     let Some(at) = base.links.iter().position(|link| link.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Link \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
+    if base.pages.iter().flat_map(|page| &page.frames).chain(base.parent_pages.iter().flat_map(|page| &page.frames)).any(|frame| matches!(frame, semio_s_artifact_layout_layout_model::Frame::Image { link_id, .. } if link_id == &payload.id)) {
+        return protocol::MutationOutcome::error("mutation.target-referenced", "The image link is still used by a frame.", [payload.id.clone()]);
+    }
     protocol::MutationOutcome::new(LayoutDiff { links: Some(LayoutLinksDelta { removed: vec![LayoutLinkRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeleteLink
 
 //#region 🗑️DeleteLink
 pub fn inverse_delete_link<Op: From<crate::create_link::CreateLink>>(payload: &DeleteLink, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_delete_link(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()) }
     Ok((|| {
     match base.links.iter().position(|link| link.id == payload.id) {
         Some(index) => vec![Op::from(create_link::CreateLink { link: base.links[index].clone(), index: Some(index) })],

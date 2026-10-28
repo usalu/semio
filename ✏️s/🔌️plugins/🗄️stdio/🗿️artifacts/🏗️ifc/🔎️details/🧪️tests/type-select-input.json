@@ -1,0 +1,31 @@
+{
+  "schema":"IFC4X3_ADD2",
+  "encoding":"ifc-template-command",
+  "nativeExecution":false,
+  "domains":[
+    {"entity":"IFCPOINTBYDISTANCEEXPRESSION","attribute":"DistanceAlong","index":"0","select":"IFCCURVEMEASURESELECT","members":[{"name":"IFCLENGTHMEASURE","kind":"real"},{"name":"IFCPARAMETERVALUE","kind":"real"}],"ancestors":["IFCPOINT","IFCGEOMETRICREPRESENTATIONITEM","IFCREPRESENTATIONITEM"]},
+    {"entity":"IFCLAGTIME","attribute":"LagValue","index":"0","select":"IFCTIMEORRATIOSELECT","members":[{"name":"IFCDURATION","kind":"string"},{"name":"IFCRATIOMEASURE","kind":"real"}],"ancestors":["IFCSCHEDULINGTIME"]}
+  ],
+  "cases":[
+    {"id":"length-negative-zero","entity":"IFCPOINTBYDISTANCEEXPRESSION","member":"IFCLENGTHMEASURE","kind":"real","raw":"9223372036854775808","admitted":true},
+    {"id":"parameter-subnormal","entity":"IFCPOINTBYDISTANCEEXPRESSION","member":"IFCPARAMETERVALUE","kind":"real","raw":"1","admitted":true},
+    {"id":"parameter-maximum","entity":"IFCPOINTBYDISTANCEEXPRESSION","member":"IFCPARAMETERVALUE","kind":"real","raw":"9218868437227405311","admitted":true},
+    {"id":"duration-day","entity":"IFCLAGTIME","member":"IFCDURATION","kind":"string","raw":"P1D","admitted":true},
+    {"id":"duration-explicit-empty","entity":"IFCLAGTIME","member":"IFCDURATION","kind":"string","raw":"","admitted":true},
+    {"id":"ratio-half","entity":"IFCLAGTIME","member":"IFCRATIOMEASURE","kind":"real","raw":"4602678819172646912","admitted":true},
+    {"id":"ratio-partial","entity":"IFCLAGTIME","member":"IFCRATIOMEASURE","kind":"real","raw":"-","admitted":false},
+    {"id":"ratio-infinity","entity":"IFCLAGTIME","member":"IFCRATIOMEASURE","kind":"real","raw":"9218868437227405312","admitted":false}
+  ],
+  "draft":{"missingUnselected":true,"chosenItems":[],"sameKindPreservesChild":true,"differentKindClearsChild":true,"keepAllControlsEditable":true},
+  "refusals":[
+    {"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"P1D"}]}},
+    {"kind":"typedValue","value":{"name":"IFCDURATION","items":[{"kind":"real","value":{"bits":"0"}}]}},
+    {"kind":"typedValue","value":{"name":"IFCDURATION","items":null}},
+    {"kind":"typedValue","value":{"name":"IFCDURATION","items":[{"kind":"string","value":"P1D"},{"kind":"string","value":"P2D"}]}},
+    {"kind":"typedValue","value":{"name":"IFCDURATION","items":[],"extra":false}},
+    {"kind":"typedValue","value":{"name":"IFCDURATION","items":[]},"extra":false},
+    {"kind":"typedValue","value":{"name":"IFCDURATION","items":[{"kind":"string","value":"P1D","extra":false}]}}
+  ],
+  "controls":{"maximumPhysical":16,"maximumChoices":32,"noRequiredDefaults":true},
+  "originalControl":{"cancelEveryProgressPrefix":true,"preserveObserverFailureIdentity":true,"preserveSourceAndRequest":true}
+}

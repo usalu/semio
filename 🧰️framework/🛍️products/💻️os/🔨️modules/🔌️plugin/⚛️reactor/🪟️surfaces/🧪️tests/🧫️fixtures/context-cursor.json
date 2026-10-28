@@ -1,0 +1,1 @@
+{"maximumTurns":16384,"mutationPrefixes":[1,2,4,8,16,32,64,128],"invalidations":["source-update","target-substitution","context-substitution"],"completedLeaseBorrowIsDirect":true}

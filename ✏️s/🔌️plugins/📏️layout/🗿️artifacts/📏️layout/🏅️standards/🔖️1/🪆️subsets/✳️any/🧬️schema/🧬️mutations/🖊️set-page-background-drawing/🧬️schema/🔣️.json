@@ -1,0 +1,53 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-background-drawing/schema.json",
+  "title": "SetPageBackgroundDrawing",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "drawing"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string",
+      "x-semio-ui": {
+        "widget": "reference",
+        "role": "target",
+        "label": {
+          "en": "Page",
+          "de": "Seite"
+        },
+        "ref": {
+          "kind": "page"
+        },
+        "group": "target",
+        "order": 10
+      }
+    },
+    "drawing": {
+      "anyOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/artifact.json#/$defs/LayoutDrawingMember"
+        },
+        {
+          "type": "null"
+        }
+      ],
+      "x-semio-ui": {
+        "role": "value",
+        "label": {
+          "en": "Page Drawing",
+          "de": "Seitenzeichnung"
+        },
+        "description": {
+          "en": "Embedded editable Drawing in the page viewport; empty clears it.",
+          "de": "Eingebettete editierbare Zeichnung im Seitenbereich; leer entfernt sie."
+        },
+        "group": "content",
+        "order": 20
+      }
+    }
+  }
+}
+

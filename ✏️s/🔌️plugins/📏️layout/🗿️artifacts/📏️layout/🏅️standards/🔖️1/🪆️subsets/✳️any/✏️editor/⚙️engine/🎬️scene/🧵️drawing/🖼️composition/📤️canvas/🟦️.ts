@@ -1,0 +1,10 @@
+import type {PathSegment} from '../../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📐️drawing-contract/🟦️.ts';
+import type {DrawingPaint} from '../../🟦️.ts';
+export const IMAGE_END='"}}';
+function finite(values:readonly number[]):void{if(values.some(value=>!Number.isFinite(value)))throw Error('layout-drawing-canvas-nonfinite');}
+/** 🖼️ Publishes source-local segments under the complete authored affine. */
+export function pathStart(id:number,affine:readonly number[]):string{finite(affine);return`,{"id":"layout.drawing.path.${id}","kind":"path","transform":${JSON.stringify(affine)},"segments":[`;}
+export function segment(value:PathSegment,comma:boolean):string{if(value.kind==='arc')throw Error('layout-drawing-canvas-unresolved-arc');for(const point of ['to','ctrl','ctrl1','ctrl2']as const)if(point in value)finite((value as unknown as Record<string,readonly number[]>)[point]!);return(comma?',':'')+JSON.stringify(value);}
+export function pathEnd(paint:DrawingPaint):string{finite([paint.strokeWidth,...paint.fill??[],...paint.stroke??[]]);if(paint.strokeWidth<0)throw Error('layout-drawing-canvas-invalid-paint');const value:Record<string,unknown>={fillRule:paint.fillRule??paint.original?.fillRule()??'nonzero'};if(paint.fill)value.fill={color:paint.fill};if(paint.stroke&&paint.strokeWidth>0)value.stroke={color:paint.stroke,width:paint.strokeWidth,cap:paint.strokeCap??paint.original?.stroke()?.cap??'round',join:paint.strokeJoin??paint.original?.stroke()?.join??'round'};const raw=JSON.stringify(value);return']'+(raw==='{}'?'':','+raw.slice(1,-1))+'}';}
+/** 🖼️ Unit-square image placement composes translation and size before the original affine. */
+export function imageStart(id:number,affine:readonly number[],rect:readonly number[]):string{finite([...affine,...rect]);const[a,b,c,d,e,f]=affine as[number,number,number,number,number,number],[x,y,w,h]=rect as[number,number,number,number],matrix=[a*w,b*w,c*h,d*h,a*x+c*y+e,b*x+d*y+f];finite(matrix);return`,{"id":"layout.drawing.image.${id}","kind":"image","transform":${JSON.stringify(matrix)},"image":{"width":1,"height":1,"src":"`;}

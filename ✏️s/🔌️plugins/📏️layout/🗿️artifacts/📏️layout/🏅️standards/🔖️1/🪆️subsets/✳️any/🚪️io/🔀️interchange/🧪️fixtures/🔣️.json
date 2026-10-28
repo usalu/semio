@@ -1,0 +1,551 @@
+{
+  "schema": "layout.interchange.tests.v1",
+  "cases": [
+    {
+      "id": "pdf-page-text",
+      "format": "pdf",
+      "page": {
+        "width": 200,
+        "height": 300,
+        "text": "Hello Layout"
+      },
+      "expected": {
+        "pages": 1,
+        "stories": 1,
+        "text": "Hello Layout"
+      }
+    },
+    {
+      "id": "step-sheet",
+      "format": "step",
+      "page": {
+        "width": 200,
+        "height": 300
+      },
+      "expected": {
+        "pages": 1,
+        "width": 200,
+        "height": 300
+      }
+    },
+    {
+      "id": "idml-story",
+      "format": "idml",
+      "page": {
+        "width": 200,
+        "height": 300,
+        "text": "Hello & Grüße"
+      },
+      "expected": {
+        "pages": 1,
+        "stories": 1,
+        "text": "Hello & Grüße"
+      }
+    },
+    {
+      "id": "idml-path-traversal",
+      "format": "idml",
+      "member": "../Story.xml",
+      "expectedError": "layout.idml.member-path"
+    },
+    {
+      "id": "cancelled",
+      "format": "pdf",
+      "expectedError": "layout.interchange.cancelled"
+    },
+    {
+      "id": "drawing-canvas-page",
+      "format": "svg",
+      "canvas": {
+        "width": 480,
+        "height": 360
+      },
+      "rectangles": 8,
+      "expected": {
+        "pages": 1,
+        "width": 480,
+        "height": 360
+      }
+    },
+    {
+      "id": "scene-content",
+      "frame": {
+        "x": 10,
+        "y": 20,
+        "width": 40,
+        "height": 20,
+        "rotation": 1.5707963267948966
+      },
+      "expected": {
+        "translation": {
+          "x": 30,
+          "y": 30
+        },
+        "quaternion": {
+          "z": 0.7071067811865476,
+          "w": 0.7071067811865476
+        },
+        "text": "Hello Layout",
+        "imageBytes": [
+          1,
+          2,
+          3
+        ]
+      }
+    },
+    {
+      "id": "pdf-content",
+      "page": {
+        "width": 200,
+        "height": 300
+      },
+      "rect": {
+        "x": 10,
+        "y": 20,
+        "width": 40,
+        "height": 20,
+        "rotation": 1.5707963267948966,
+        "fill": [
+          0.25,
+          0.5,
+          0.75,
+          1
+        ]
+      },
+      "image": {
+        "width": 2,
+        "height": 1,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          255,
+          0,
+          128
+        ]
+      },
+      "expected": {
+        "nativeFrames": 2,
+        "imagePixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          255,
+          0,
+          128
+        ]
+      }
+    },
+    {
+      "id": "streamed-idml",
+      "format": "idml",
+      "maximumChunkBytes": 4096,
+      "story": "Grüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\nGrüße & <Layout>\n",
+      "expected": {
+        "pages": 1,
+        "frames": 1,
+        "cancellable": true,
+        "retires": true
+      }
+    },
+    {
+      "id": "nist-ap203-circles",
+      "file": "../../../🧪️tests/🧫️fixtures/🏅️conformance/📐️step/nist-ftc11-ap203.stp",
+      "expected": {
+        "curves": 6,
+        "pointsPerCurve": 65,
+        "unitToPoints": 2.834645669291339,
+        "width": 178.58267716535434,
+        "height": 178.58267716535434
+      },
+      "oracle": "three EllipseCurve and Matrix4 placement over firstparty Part21 graph"
+    },
+    {
+      "id": "idml-rgba-rectangle",
+      "fill": [
+        0.25,
+        0.5,
+        0.75,
+        0.5
+      ],
+      "stroke": [
+        0,
+        0,
+        0,
+        0.75
+      ],
+      "expected": {
+        "rgbaPreserved": true,
+        "opacityPercent": {
+          "fill": 50,
+          "stroke": 75
+        }
+      }
+    },
+    {
+      "id": "idml-style-runs",
+      "story": "Ä😀BCD\nEF",
+      "paragraphStyles": [
+        {
+          "id": "para-body",
+          "name": "Body",
+          "fontFamily": "Open Sans",
+          "fontSize": 18,
+          "leading": 24,
+          "tracking": 20,
+          "alignment": "center",
+          "fontWeight": 400
+        }
+      ],
+      "characterStyles": [
+        {
+          "id": "char-emphasis",
+          "name": "Emphasis",
+          "fontFamily": "Open Sans",
+          "fontSize": 20,
+          "tracking": 30,
+          "color": [
+            0.2,
+            0.3,
+            0.4,
+            1
+          ],
+          "italic": true,
+          "fontWeight": 700
+        }
+      ],
+      "styleRuns": [
+        {
+          "start": 0,
+          "end": 6,
+          "paragraphStyleId": "para-body",
+          "characterStyleId": "char-emphasis"
+        },
+        {
+          "start": 6,
+          "end": 12,
+          "paragraphStyleId": "para-body"
+        }
+      ],
+      "expected": {
+        "text": "Ä😀BCD\nEF",
+        "fontFamily": "Open Sans",
+        "fontSize": 18,
+        "leading": 24,
+        "alignment": "center"
+      },
+      "frame": {
+        "columns": 3,
+        "inset": {
+          "x": 2,
+          "y": 3,
+          "width": 4,
+          "height": 5
+        },
+        "wrapMode": "none"
+      },
+      "page": {
+        "margins": {
+          "top": 10,
+          "right": 11,
+          "bottom": 12,
+          "left": 13
+        },
+        "columns": {
+          "count": 2,
+          "gutter": 14
+        }
+      }
+    },
+    {
+      "id": "idml-image-and-parent",
+      "page": {
+        "width": 200,
+        "height": 300
+      },
+      "image": {
+        "width": 2,
+        "height": 1,
+        "dpi": 72,
+        "pixels": [
+          255,
+          0,
+          0,
+          255,
+          0,
+          255,
+          0,
+          128
+        ]
+      },
+      "parent": {
+        "id": "master-body",
+        "name": "Header",
+        "width": 200,
+        "height": 300
+      },
+      "expected": {
+        "parentApplied": true,
+        "embeddedImageBytesPreserved": true,
+        "masterFrames": 1
+      }
+    },
+    {
+      "id": "idml-facing-spread",
+      "spread": {
+        "id": "facing-spread",
+        "name": "Facing Pages",
+        "pageIds": [
+          "left",
+          "right"
+        ]
+      },
+      "pages": [
+        {
+          "id": "left",
+          "width": 200,
+          "height": 300,
+          "guides": [
+            {
+              "x": 5,
+              "y": 8,
+              "width": 20,
+              "height": 30
+            }
+          ]
+        },
+        {
+          "id": "right",
+          "width": 180,
+          "height": 300
+        }
+      ],
+      "expected": {
+        "spreads": 1,
+        "pages": 2,
+        "secondFrameX": 30
+      }
+    },
+    {
+      "id": "idml-layer-order",
+      "layers": [
+        {
+          "id": "z-layer",
+          "name": "Back"
+        },
+        {
+          "id": "a-layer",
+          "name": "Front"
+        }
+      ],
+      "expected": {
+        "names": [
+          "Back",
+          "Front"
+        ],
+        "sourceOrderPreserved": true
+      }
+    },
+    {
+      "id": "interchange-shell-controls",
+      "actions": [
+        {
+          "id": "exportStep",
+          "args": {
+            "pageId": "selected-page"
+          },
+          "command": "export-step",
+          "kind": "step",
+          "extension": "step",
+          "mime": "model/step"
+        },
+        {
+          "id": "exportIdml",
+          "args": {},
+          "command": "export-idml",
+          "kind": "idml",
+          "extension": "idml",
+          "mime": "application/vnd.adobe.indesign-idml-package"
+        }
+      ],
+      "expected": {
+        "localizedLanguages": [
+          "en",
+          "de"
+        ],
+        "interactive": true,
+        "hostOnly": true
+      }
+    },
+    {
+      "id": "pdf-idml-utf8-ranges",
+      "page": {
+        "width": 200,
+        "height": 300,
+        "text": "Grüße"
+      },
+      "expected": {
+        "text": "Grüße",
+        "utf8Bytes": 7
+      }
+    },
+    {
+      "id": "step-layout-content",
+      "page": {
+        "width": 200,
+        "height": 300,
+        "text": "Grüße\nSTEP"
+      },
+      "rectFrame": {
+        "id": "frame-rect",
+        "bounds": {
+          "x": 10,
+          "y": 20,
+          "width": 40,
+          "height": 30,
+          "rotation": 0.5235987755982988
+        },
+        "fill": [
+          0.25,
+          0.5,
+          0.75,
+          1
+        ],
+        "stroke": [
+          0.8,
+          0.1,
+          0.2,
+          1
+        ]
+      },
+      "image": {
+        "id": "frame-image",
+        "linkId": "placed-image",
+        "path": "photo.png",
+        "bounds": {
+          "x": 70,
+          "y": 40,
+          "width": 20,
+          "height": 10,
+          "rotation": 0.2
+        }
+      },
+      "parent": {
+        "id": "parent",
+        "frameId": "parent-frame",
+        "overrideBounds": {
+          "x": 5,
+          "y": 7,
+          "width": 25,
+          "height": 8,
+          "rotation": 0.1
+        }
+      },
+      "expected": {
+        "minimumPolylines": 3,
+        "minimumTextAnnotations": 3,
+        "rectPointsMm": [
+          [
+            7.118876317743128,
+            101.59660665058153,
+            0
+          ],
+          [
+            19.33945701559021,
+            94.54105109502598,
+            0
+          ],
+          [
+            14.047790348923538,
+            85.37561557164068,
+            0
+          ],
+          [
+            1.82720965107646,
+            92.43117112719624,
+            0
+          ],
+          [
+            7.118876317743128,
+            101.59660665058153,
+            0
+          ]
+        ],
+        "text": "Grüße\nSTEP",
+        "imageReference": "photo.png",
+        "hiddenGeometryAbsent": true,
+        "outputChunksMaxBytes": 4096,
+        "parentPointsMm": [
+          [
+            1.9267951757714519,
+            103.79707684691131,
+            0
+          ],
+          [
+            10.702179133431818,
+            102.91660157509554,
+            0
+          ],
+          [
+            10.420427046450769,
+            100.10847870864423,
+            0
+          ],
+          [
+            1.6450430887904044,
+            100.98895398046,
+            0
+          ],
+          [
+            1.9267951757714519,
+            103.79707684691131,
+            0
+          ]
+        ],
+        "import": {
+          "pageWidth": 200,
+          "pageHeight": 300,
+          "editableRectangles": 3,
+          "minimumEditableTextFrames": 3,
+          "textFragmentsJoin": "Grüße\nSTEPphoto.png",
+          "rectangleFill": [
+            0.25,
+            0.5,
+            0.75,
+            1
+          ],
+          "rectangleRotation": 0.5235987755982988,
+          "sourceEnvelopeNotContent": true
+        }
+      },
+      "oracle": {
+        "library": "three",
+        "version": "0.182.0",
+        "method": "Vector3.applyAxisAngle around native frame center, then page Y flip and point-to-millimetre conversion"
+      }
+    },
+    {
+      "id": "pdf-editor-unicode-import",
+      "page": {
+        "width": 200,
+        "height": 300,
+        "text": "Grüße 🌍"
+      },
+      "expected": {
+        "text": "Grüße 🌍",
+        "fontCodeWidth": 4,
+        "editableStories": true,
+        "positionedInvisibleText": false
+      },
+      "oracle": {
+        "library": "pdfjs-dist",
+        "version": "5.7.284",
+        "method": "Root production semantic CMap helper extraction, plus canonical CMap witness; native full job chain authored/unrun"
+      }
+    }
+  ]
+}

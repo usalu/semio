@@ -2,7 +2,6 @@
 //! replacement for the retired `SetDataFields` generic variant; the `fields:in` workflow port's
 //! real, undoable write (see `crate::editor::layout::LayoutPlayApp::import_media`).
 
-
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
@@ -16,7 +15,6 @@ use semio_framework_value_derive::{FromValue, ToValue};
 pub struct ChangeDataFields {
     pub new_fields: Option<semio_framework_value_dictionary::QuestionDictionary>,
 }
-
 
 impl<Op> MutationKind<LayoutSnapshot, Op> for ChangeDataFields where Op: protocol::Mutation<LayoutSnapshot, Diff = semio_s_artifact_layout_layout_diff::LayoutDiff> + From<crate::change_data_fields::ChangeDataFields> {
     const SEMANTICS: SemanticDescriptor = SemanticDescriptor { verb: "change", entity: "data-fields", kind: "change-data-fields", record: "ChangedDataFields" };
@@ -63,7 +61,6 @@ pub fn inverse_change_data_fields<Op: From<crate::change_data_fields::ChangeData
     })())
 }
 //#endregion 🧾ChangeDataFields
-
 
 //#region 🔮️SerdeOracle
 /// 🔮️ Test-only independent Serde projection for typed data-field changes.

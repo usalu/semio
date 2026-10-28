@@ -189,7 +189,7 @@ impl IfcArgsDiff {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
+    fn apply(&self, base: &[IfcValue]) -> Vec<IfcValue> {
         let mut next = base.to_vec();
         for m in &self.modified {
             next[m.index] = m.value.clone();
@@ -252,7 +252,7 @@ impl IfcEntityDiff {
         self.name.is_none() && self.args.is_none() && self.complex.is_none()
     }
 
-    pub fn apply(&self, base: &IfcEntity) -> IfcEntity {
+    fn apply(&self, base: &IfcEntity) -> IfcEntity {
         let mut next = base.clone();
         if let Some(v) = &self.name {
             next.name = v.clone();
@@ -306,12 +306,20 @@ pub struct IfcEntityAdded {
     pub entity: IfcEntity,
 }
 
+/// ➖️ An entity identity and its original position for exact composition.
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
+#[value(rename_all = "camelCase")]
+pub struct IfcEntityRemoved {
+    pub id: u64,
+    pub index: usize,
+}
+
 /// 📦️ Sparse id-keyed `entities` triple.
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(rename_all = "camelCase")]
 pub struct IfcEntitiesDiff {
     #[value(default, skip_serializing_if = "Vec::is_empty")]
-    pub removed: Vec<u64>,
+    pub removed: Vec<IfcEntityRemoved>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub modified: Vec<IfcEntityModified>,
     #[value(default, skip_serializing_if = "Vec::is_empty")]
@@ -322,117 +330,71 @@ impl IfcEntitiesDiff {
     /// 🔁️ The rows that undo this diff against `base`: added entities are removed, removed entities return at their base position, and modified
     /// entities invert field by field.
     pub fn inverse(&self, base: &[IfcEntity]) -> Self {
-        let mut removed: Vec<(usize, u64)> = self.added.iter().map(|entry| (entry.index, entry.entity.id)).collect();
-        removed.sort_unstable();
+        let mut removed: Vec<IfcEntityRemoved> = self.added.iter().map(|entry| IfcEntityRemoved { index: entry.index, id: entry.entity.id }).collect();
+        removed.sort_by_key(|entry| entry.index);
         let modified = self.modified.iter().filter_map(|entry| base.iter().find(|entity| entity.id == entry.id).map(|entity| IfcEntityModified { id: entry.id, diff: entry.diff.inverse(entity) })).collect();
-        let mut added: Vec<IfcEntityAdded> = self.removed.iter().filter_map(|id| base.iter().position(|entity| entity.id == *id).map(|index| IfcEntityAdded { index, entity: base[index].clone() })).collect();
+        let mut added: Vec<IfcEntityAdded> = self.removed.iter().filter_map(|entry| base.get(entry.index).filter(|entity| entity.id == entry.id).map(|entity| IfcEntityAdded { index: entry.index, entity: entity.clone() })).collect();
         added.sort_by_key(|entry| entry.index);
-        Self { removed: removed.into_iter().map(|(_, id)| id).collect(), modified, added }
+        Self { removed, modified, added }
     }
 
     pub fn is_empty(&self) -> bool {
         self.removed.is_empty() && self.modified.is_empty() && self.added.is_empty()
     }
 
-    pub fn apply(&self, base: &[IfcEntity]) -> Vec<IfcEntity> {
-        let mut entities: Vec<IfcEntity> = base.to_vec();
-        if !self.removed.is_empty() {
-            let removed: HashSet<u64> = self.removed.iter().copied().collect();
-            entities.retain(|e| !removed.contains(&e.id));
-        }
-        for m in &self.modified {
-            for entity in &mut entities {
-                if entity.id == m.id {
-                    *entity = m.diff.apply(entity);
-                }
-            }
-        }
-        let mut adds: Vec<&IfcEntityAdded> = self.added.iter().collect();
-        adds.sort_by_key(|a| a.index);
-        for a in adds {
-            entities.insert(a.index, a.entity.clone());
+    fn apply(&self, base: &[IfcEntity]) -> Vec<IfcEntity> {
+        let removed: HashSet<u64> = self.removed.iter().map(|entry| entry.id).collect();
+        let modified: BTreeMap<u64, &IfcEntityDiff> = self.modified.iter().map(|entry| (entry.id, &entry.diff)).collect();
+        let mut entities: Vec<IfcEntity> = base.iter().filter(|entity| !removed.contains(&entity.id)).map(|entity| modified.get(&entity.id).map_or_else(|| entity.clone(), |diff| diff.apply(entity))).collect();
+        let mut additions: Vec<&IfcEntityAdded> = self.added.iter().collect();
+        additions.sort_by_key(|entry| entry.index);
+        for entry in additions {
+            entities.insert(entry.index, entry.entity.clone());
         }
         entities
     }
 }
 
-/// ➕️ Structural, total, base-free sequential-coalesce absorb of the `entities` triple (`##
-/// Absorb` contract). Simpler than zip's name-keyed entries: `id` is never itself a diffable
-/// field, so no rename-transport map is needed — only the `added[].index` final-position
-/// bookkeeping (shifted by the count of `other`'s genuine, non-annihilating removals), mirroring
-/// zip's own documented best-effort position adjustment for the same reason (this key kind's
-/// diffs don't carry full base-position information for untouched survivors).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+/// 🧮️ Composes ordered entity edits using original removal positions and final insertion positions.
 fn absorb_entities(d1: Option<IfcEntitiesDiff>, d2: Option<IfcEntitiesDiff>) -> Option<IfcEntitiesDiff> {
-    let (mut d1, d2) = match (d1, d2) {
+    let (mut first, second) = match (d1, d2) {
         (None, None) => return None,
-        (Some(d1), None) => return Some(d1),
-        (None, Some(d2)) => return Some(d2),
-        (Some(d1), Some(d2)) => (d1, d2),
+        (Some(diff), None) | (None, Some(diff)) => return Some(diff),
+        (Some(first), Some(second)) => (first, second),
     };
-
-    let added_ids: HashSet<u64> = d1.added.iter().map(|a| a.entity.id).collect();
-    let mut merged_removed: Vec<u64> = d1.removed;
-    let mut annihilated: HashSet<u64> = HashSet::new();
-    let mut removed_shift_count = 0usize;
-
-    for id in &d2.removed {
-        if added_ids.contains(id) {
-            annihilated.insert(*id);
-        } else {
-            removed_shift_count += 1;
-            if !merged_removed.contains(id) {
-                merged_removed.push(*id);
-            }
-            d1.modified.retain(|m| &m.id != id);
+    let added_ids: HashSet<u64> = first.added.iter().map(|entry| entry.entity.id).collect();
+    let mut first_removed: Vec<usize> = first.removed.iter().map(|entry| entry.index).collect();
+    first_removed.sort_unstable();
+    let mut first_added: Vec<usize> = first.added.iter().map(|entry| entry.index).collect();
+    first_added.sort_unstable();
+    let mut second_removed: Vec<usize> = second.removed.iter().map(|entry| entry.index).collect();
+    second_removed.sort_unstable();
+    let mut second_added: Vec<usize> = second.added.iter().map(|entry| entry.index).collect();
+    second_added.sort_unstable();
+    let removed_ids: HashSet<u64> = second.removed.iter().map(|entry| entry.id).collect();
+    for entry in &second.removed {
+        if !added_ids.contains(&entry.id) {
+            first.removed.push(IfcEntityRemoved { id: entry.id, index: unrank_excluding(rank_excluding(entry.index, &first_added), &first_removed) });
         }
     }
-
-    let mut merged_modified: Vec<IfcEntityModified> = d1.modified;
-    let mut merged_added: Vec<IfcEntityAdded> = d1
-        .added
-        .into_iter()
-        .filter(|a| !annihilated.contains(&a.entity.id))
-        .map(|mut a| {
-            a.index = a.index.saturating_sub(removed_shift_count);
-            a
-        })
-        .collect();
-
-    let mut added2_index_sorted: Vec<usize> = d2.added.iter().map(|entry| entry.index).collect();
-    added2_index_sorted.sort_unstable();
-    for entry in &mut merged_added {
-        entry.index = transport_forward(entry.index, &[], &added2_index_sorted);
+    first.modified.retain(|entry| !removed_ids.contains(&entry.id));
+    first.added.retain(|entry| !removed_ids.contains(&entry.entity.id));
+    for entry in &mut first.added {
+        entry.index = transport_forward(entry.index, &second_removed, &second_added);
     }
-
-    for dm in d2.modified {
-        if added_ids.contains(&dm.id) {
-            if annihilated.contains(&dm.id) {
-                continue;
-            }
-            if let Some(a) = merged_added.iter_mut().find(|a| a.entity.id == dm.id) {
-                a.entity = apply_entity_diff_to_added(&dm.diff, &a.entity);
-            }
+    for entry in second.modified {
+        if let Some(added) = first.added.iter_mut().find(|added| added.entity.id == entry.id) {
+            added.entity = apply_entity_diff_to_added(&entry.diff, &added.entity);
+        } else if let Some(modified) = first.modified.iter_mut().find(|modified| modified.id == entry.id) {
+            modified.diff.absorb(entry.diff);
         } else {
-            if merged_removed.contains(&dm.id) {
-                continue;
-            }
-            if let Some(existing) = merged_modified.iter_mut().find(|m| m.id == dm.id) {
-                existing.diff.absorb(dm.diff.clone());
-            } else {
-                merged_modified.push(IfcEntityModified { id: dm.id, diff: dm.diff.clone() });
-            }
+            first.modified.push(entry);
         }
     }
-
-    merged_added.extend(d2.added);
-
-    let merged = IfcEntitiesDiff { removed: merged_removed, modified: merged_modified, added: merged_added };
-    if merged.is_empty() {
-        None
-    } else {
-        Some(merged)
-    }
+    first.added.extend(second.added);
+    first.removed.sort_by_key(|entry| entry.index);
+    first.added.sort_by_key(|entry| entry.index);
+    if first.is_empty() { None } else { Some(first) }
 }
 //#endregion 🔖️EntitiesDiff
 
@@ -519,9 +481,9 @@ fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> Mutatio
         }
     }
     let mut removed = BTreeSet::new();
-    for &id in &diff.removed {
-        if !base_by_id.contains_key(&id) || !removed.insert(id) {
-            return Err(target_error("mutation.apply.invalid-remove-target", "entity removal target must exist exactly once", vec!["entities".to_string(), id.to_string()]));
+    for entry in &diff.removed {
+        if base.get(entry.index).is_none_or(|entity| entity.id != entry.id) || !removed.insert(entry.id) {
+            return Err(target_error("mutation.apply.invalid-remove-target", "entity removal identity and original position must match exactly once", vec!["entities".to_string(), entry.id.to_string()]));
         }
     }
     let mut modified = BTreeSet::new();
@@ -539,7 +501,7 @@ fn validate_entities_diff(base: &[IfcEntity], diff: &IfcEntitiesDiff) -> Mutatio
     let mut added_ids = BTreeSet::new();
     let mut previous = None;
     for (length, entry) in (base.len() - removed.len()..).zip(additions) {
-        if base_by_id.contains_key(&entry.entity.id) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
+        if (base_by_id.contains_key(&entry.entity.id) && !removed.contains(&entry.entity.id)) || !added_ids.insert(entry.entity.id) || entry.index > length || previous == Some(entry.index) {
             return Err(target_error("mutation.apply.invalid-add-target", "entity id and position must be unique and valid", vec!["entities".to_string(), entry.entity.id.to_string()]));
         }
         previous = Some(entry.index);
@@ -629,8 +591,8 @@ pub fn diff_insert_entity(index: usize, entity: IfcEntity) -> IfcDiff {
     IfcDiff { entities: Some(IfcEntitiesDiff { added: vec![IfcEntityAdded { index, entity }], ..Default::default() }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_remove_entity(id: u64) -> IfcDiff {
-    IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![id], ..Default::default() }), ..Default::default() }
+pub fn diff_remove_entity(id: u64, index: usize) -> IfcDiff {
+    IfcDiff { entities: Some(IfcEntitiesDiff { removed: vec![IfcEntityRemoved { id, index }], ..Default::default() }), ..Default::default() }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn diff_entity_field(id: u64, field: IfcEntityDiff) -> IfcDiff {
@@ -652,6 +614,10 @@ pub fn diff_insert_entity_arg(id: u64, index: usize, value: IfcValue) -> IfcDiff
 pub fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
     diff_entity_field(id, IfcEntityDiff { args: Some(IfcArgsDiff { removed: vec![index], ..Default::default() }), ..Default::default() })
 }
+/// 🧩️ Replaces only the additional type constituents of one entity.
+pub fn diff_set_entity_complex(id: u64, complex: Vec<IfcComplexType>) -> IfcDiff {
+    diff_entity_field(id, IfcEntityDiff { complex: Some(complex), ..Default::default() })
+}
 //#endregion 🔖️MutationDiffBuilders
 //#endregion 🔖️Diff
 
@@ -662,13 +628,13 @@ pub fn diff_remove_entity_arg(id: u64, index: usize) -> IfcDiff {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_diff_cases() -> Vec<IfcDiff> {
     let entities = IfcEntitiesDiff {
-        removed: vec![2],
+        removed: vec![IfcEntityRemoved { id: 2, index: 1 }],
         modified: vec![IfcEntityModified { id: 1, diff: IfcEntityDiff { name: Some("IFCQUANTITYVOLUME".into()), args: Some(IfcArgsDiff { removed: vec![0], ..Default::default() }), complex: Some(Vec::new()) } }],
         added: vec![IfcEntityAdded { index: 1, entity: IfcEntity { id: 300, name: "IFCBUILDINGSTOREY".into(), args: vec![IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)])], complex: vec![] } }],
     };
     vec![
         IfcDiff::default(),
-        IfcDiff { file_name: Some(vec![IfcValue::String("changed.ifc".into())]), entities: Some(entities), ..Default::default() },
+        IfcDiff { file_name: Some(vec![IfcValue::String("changed.ifc".into()), IfcValue::Binary("23".into())]), entities: Some(entities), ..Default::default() },
         IfcDiff { file_description: Some(vec![IfcValue::TypedValue(IfcTypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![IfcValue::Real(3000.0)] })]), ..Default::default() },
     ]
 }

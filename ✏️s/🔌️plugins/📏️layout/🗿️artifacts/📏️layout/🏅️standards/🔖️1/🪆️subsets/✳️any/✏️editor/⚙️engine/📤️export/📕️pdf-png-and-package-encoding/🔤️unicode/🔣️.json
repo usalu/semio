@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LayoutPdfUnicodeRange",
+  "description": "One bounded CMap range maps four-byte Unicode scalar codes to valid UTF-16BE. Two BMP ranges exclude surrogates;1024 supplementary ranges each preserve one high-surrogate plane.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "range"
+  ],
+  "properties": {
+    "range": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 1025
+    }
+  }
+}

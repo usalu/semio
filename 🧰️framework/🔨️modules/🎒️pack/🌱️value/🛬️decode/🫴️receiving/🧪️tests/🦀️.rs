@@ -2,6 +2,29 @@
 use super::*;
 use semio_framework_dsl_record::{BorrowedFieldSpec,RecordLayout,FieldSpec,RecordSpec};
 use semio_framework_value::retirement::RetireOwned;
+#[test]
+fn original_dynamic_value_moves_without_cloning_or_abandoning_record_backing(){
+ use semio_framework_dsl_record::Shape;
+ let expected=DslValue::from(&serde_json::json!({"token":{"generation":"9007199254740993"},"args":{"id":"18446744073709551615","items":[{"bits":"8000000000000000"}]}}));
+ let mut record=RecordValue::default();record.fields.insert(1,FieldValue::Value(expected.clone()));
+ let declared=RecordSpec::new(None,RecordLayout::Lines,vec![FieldSpec::new(1,"value",Shape::Value)]);
+ let source=semio_framework_pack_record::encode_record_body(&declared,&record,&Default::default()).unwrap();
+ static FIELDS:[BorrowedFieldSpec;1]=[BorrowedFieldSpec::new(1,"value",BorrowedShape::Value)];
+ let grant=grant();let(mut receiving,_)=RetainedRecordReceiving::admit(&source,(0,source.len()),BorrowedRecordSpec{keyword:None,layout:RecordLayout::Lines,fields:&FIELDS},PackLimits::default(),grant).unwrap().unwrap();
+ let mut callback=|_|true;let mut native=NativeDecodeControl::new(1<<24,&mut callback);
+ for _ in 0..100000{if receiving.is_ready(){break}receiving.step(&source,&mut native,grant).unwrap();}
+ assert!(receiving.is_ready());
+ let payload=match &receiving.owned.output.as_ref().unwrap().get(1).unwrap(){FieldValue::Value(DslValue::Object(fields))=>fields.as_ptr(),_=>unreachable!()};
+ let mut output=None;
+ for denied in [RetainedCloneGrant{maximum_items:0,..grant},RetainedCloneGrant{maximum_copy_bytes:0,..grant},RetainedCloneGrant{maximum_depth:0,..grant}]{
+  assert_eq!(receiving.take_value_into(1,&mut output,denied).unwrap(),Default::default());assert!(output.is_none());
+ }
+ assert_eq!(receiving.take_value_into(1,&mut output,grant).unwrap().copied_items,1);
+ assert_eq!(output.as_ref(),Some(&expected));assert_eq!(match output.as_ref().unwrap(){DslValue::Object(fields)=>fields.as_ptr(),_=>unreachable!()},payload);
+ let mut substitute=None;assert!(receiving.take_value_into(1,&mut substitute,grant).is_err());assert!(substitute.is_none());
+ while !receiving.terminal_is_empty(){receiving.close_step(grant).unwrap();}
+ let mut output=ControlledRetirement::new(output).ok().unwrap();while !output.terminal_is_empty(){output.step(grant).unwrap();}
+}
 static FIELDS:[BorrowedFieldSpec;2]=[BorrowedFieldSpec::new(0,"text",BorrowedShape::Text),BorrowedFieldSpec::new(1,"items",BorrowedShape::List(||BorrowedShape::Text))];
 fn spec()->BorrowedRecordSpec{BorrowedRecordSpec{keyword:None,layout:RecordLayout::Inline,fields:&FIELDS}}
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()}
@@ -70,3 +93,9 @@ fn original_record_receiving_document_driver_admits_every_close_currency_before_
  let(step,born,released)=semio_framework_trace_memory_testing::observe_backing(||driver.close_step(g).unwrap());let progress=step.progress();assert!(progress.fits(g));assert_eq!((born,released),(progress.retained_capacity_bytes,progress.released_bytes));}assert!(driver.terminal_is_empty());drop(driver);assert_eq!(serde_json::to_value(&bytes).unwrap(),serialized);
  }
 }
+
+struct PagedOriginal{pages:Vec<Vec<u8>>,extent:usize}
+impl RetainedWireByteSource for PagedOriginal{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self as*const Self as usize,extent:self.extent,authority:Some((1,2))}}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.extent{return None}self.pages.get(index/7)?.get(index%7).copied()}}
+#[test]fn record_materializer_reads_the_same_original_paged_source_without_contiguous_copy(){let(bytes,expected)=source();let input=PagedOriginal{pages:bytes.chunks(7).map(|page|page.to_vec()).collect(),extent:bytes.len()};let foreign=PagedOriginal{pages:bytes.chunks(7).map(|page|page.to_vec()).collect(),extent:bytes.len()};let g=grant();let(mut receiving,_)=RetainedRecordReceiving::admit(&input,(0,input.extent),spec(),PackLimits::default(),g).unwrap().unwrap();assert!(receiving.demands(&foreign).is_err());let mut callback=|_|true;let mut native=NativeDecodeControl::new(1<<24,&mut callback);for _ in 0..100000{if receiving.is_ready(){break}let denied=RetainedCloneGrant{maximum_items:0,..g};assert_eq!(receiving.step(&input,&mut native,denied).unwrap(),Default::default());let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||receiving.step(&input,&mut native,g));let p=result.unwrap();assert!(p.fits(g));assert_eq!((born,released),(p.retained_capacity_bytes,p.released_bytes));}assert!(receiving.is_ready());let mut output=None;receiving.take_into(&mut output,g).unwrap();assert_eq!(output.as_ref(),Some(&expected));let mut close=ControlledRetirement::new(output).ok().unwrap();while !close.terminal_is_empty(){close.step(g).unwrap();}while !receiving.terminal_is_empty(){receiving.close_step(g).unwrap();}}
+
+#[test]fn record_receiver_header_birth_refuses_unfunded_copy_without_constructing_an_owner(){let(source,_)=source();let d=RetainedRecordReceiving::birth_demand();let g=RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes.max(grant().maximum_copy_bytes),maximum_depth:d.depth.max(grant().maximum_depth),..grant()};for denied in [RetainedCloneGrant{maximum_items:0,..g},RetainedCloneGrant{maximum_copy_bytes:d.copy_bytes-1,..g},RetainedCloneGrant{maximum_depth:0,..g}]{let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||RetainedRecordReceiving::admit(&source,(0,source.len()),spec(),PackLimits::default(),denied));assert!(result.unwrap().is_none());assert_eq!((born,released),(0,0));}let((mut owner,p),born,released)={let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||RetainedRecordReceiving::admit(&source,(0,source.len()),spec(),PackLimits::default(),g));(result.unwrap().unwrap(),born,released)};assert!(p.fits(g));assert_eq!(p.copied_bytes,d.copy_bytes);assert_eq!((born,released),(0,0));while !owner.terminal_is_empty(){owner.close_step(g).unwrap();}}

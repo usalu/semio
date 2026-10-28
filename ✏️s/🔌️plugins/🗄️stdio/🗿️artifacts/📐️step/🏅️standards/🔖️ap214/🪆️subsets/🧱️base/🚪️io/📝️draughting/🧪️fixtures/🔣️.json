@@ -1,0 +1,174 @@
+{
+  "schema": "step.draughting.v1",
+  "coordinateUnit": "millimetre",
+  "source": {
+    "official": "https://www.mbx-if.org/home/wp-content/uploads/2024/07/AP214E3_2010.zip",
+    "sha256": "8b6360658c444c6b90e0ad63137d7c392103edc4cbc39dc440ee497378630b74",
+    "schemaSha256": "71ab140fe7f774321beee6a31e6fee2afc3973fd60350ae2018c74c211fb4295"
+  },
+  "primitives": [
+    {
+      "kind": "path",
+      "name": "rectangle",
+      "points": [
+        [
+          10,
+          20,
+          0
+        ],
+        [
+          50,
+          20,
+          0
+        ],
+        [
+          50,
+          40,
+          0
+        ],
+        [
+          10,
+          40,
+          0
+        ],
+        [
+          10,
+          20,
+          0
+        ]
+      ],
+      "stroke": [
+        0.2,
+        0.3,
+        0.4
+      ],
+      "fill": [
+        0.7,
+        0.6,
+        0.5
+      ]
+    },
+    {
+      "kind": "path",
+      "name": "line",
+      "points": [
+        [
+          60,
+          10,
+          0
+        ],
+        [
+          70,
+          30,
+          0
+        ]
+      ],
+      "stroke": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "circle",
+      "name": "circle",
+      "center": [
+        25,
+        60,
+        0
+      ],
+      "radius": 8,
+      "stroke": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "kind": "text",
+      "name": "label",
+      "text": "Grüße & Layout",
+      "position": [
+        12,
+        55,
+        0
+      ],
+      "rotation": 0.2,
+      "width": 50,
+      "height": 10,
+      "fontSize": 4,
+      "color": [
+        0.1,
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "kind": "path",
+      "name": "wide-line",
+      "points": [
+        [
+          70,
+          50,
+          0
+        ],
+        [
+          80,
+          50,
+          0
+        ]
+      ],
+      "stroke": [
+        0,
+        0,
+        1
+      ],
+      "strokeWidth": 0.75
+    }
+  ],
+  "expected": {
+    "polylines": 3,
+    "minimumPolylinePoints": 3,
+    "circles": 1,
+    "text": "Grüße & Layout",
+    "fontSize": 4,
+    "unitToPoints": 2.834645669291339,
+    "fillAreas": 1,
+    "annotationTextOccurrences": 1,
+    "frameGeometry": true,
+    "reader": {
+      "texts": 1,
+      "paints": 4,
+      "textColor": [
+        0.1,
+        0.2,
+        0.3
+      ],
+      "textAxis": [
+        0.9800665778412416,
+        0.19866933079506122,
+        0
+      ],
+      "rectangleFill": [
+        0.7,
+        0.6,
+        0.5
+      ],
+      "rectangleStroke": [
+        0.2,
+        0.3,
+        0.4
+      ],
+      "strokeWidthPoints": 0.5
+    }
+  },
+  "refusals": [
+    {
+      "id": "rgb-component-outside-range",
+      "entity": "COLOUR_RGB",
+      "argument": 1,
+      "value": 2,
+      "issue": "step.draughting.curve-style"
+    }
+  ]
+}

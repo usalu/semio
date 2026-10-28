@@ -24,6 +24,7 @@
     "./process/command": "./🏃️process/🎛️command/🟦️.ts",
     "./async": "./⏳️async/🟦️.ts",
     "./schema": "./🧬️schema/🟦️.ts",
+    "./manifest/staging": "./🛂️manifest/📝️staging/🟦️.ts",
     "./process/build-mode": "./🏃️process/🏗️build/🎚️mode/🟦️.ts",
     "./process/compiler-capacity": "./🏃️process/🏗️build/🎟️capacity/🟦️.ts",
     "./process/native-receipt": "./🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts",

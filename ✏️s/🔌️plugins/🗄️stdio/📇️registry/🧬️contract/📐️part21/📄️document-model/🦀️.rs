@@ -124,7 +124,7 @@ impl Part21Builder {
 //#endregion 🔖️Builder
 
 //#region 🔖️Error
-/// 🚫️ Real parse failures — malformed input always surfaces here, never silently fabricated.
+/// 🚫️ Parse refusals identify original UTF-8 byte positions, including ignored source characters.
 #[derive(Clone, Debug, PartialEq)]
 pub enum Part21Error {
     UnexpectedEof { at: usize, expected: &'static str },
@@ -137,7 +137,7 @@ pub enum Part21Error {
 impl fmt::Display for Part21Error {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
-            Part21Error::UnexpectedEof { at, expected } => write!(f, "part21: unexpected end of input at char {at}, expected {expected}"),
+            Part21Error::UnexpectedEof { at, expected } => write!(f, "part21: unexpected end of input at byte {at}, expected {expected}"),
             Part21Error::UnexpectedChar { at, found, expected } => write!(f, "part21: unexpected char {found:?} at {at}, expected {expected}"),
             Part21Error::UnsupportedEscape { at, detail } => write!(f, "part21: unsupported string escape at {at}: {detail}"),
             Part21Error::InvalidNumber { at, text } => write!(f, "part21: invalid number {text:?} at {at}"),

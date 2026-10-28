@@ -38,6 +38,7 @@ pub use crate::admission::ArtifactRetainedAdmissionRefusal;
 pub mod factory;
 #[path="🏭️producer/🦀️.rs"]
 pub mod producer;
+pub use producer::custody::ArtifactRetainedCommandCustody;
 #[doc(hidden)]
 
 #[path="📸️checkpoint/👣️cursor/🦀️.rs"]

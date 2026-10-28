@@ -1,0 +1,25 @@
+{
+  "feature": "layout.retained.frame-selection-transform-plan",
+  "families": [
+    "DragFrames",
+    "RotateFrames",
+    "ScaleFrames"
+  ],
+  "sources": "genuine original mutation and LayoutSnapshot projections",
+  "metadata": [
+    "numeric original authored-target ordinal and matched page-frame ordinal",
+    "numeric missing-target ordinals in authored order",
+    "numeric locked-frame ordinals and changed frame addresses in original Page order",
+    "exact transformed five-word bounds scalars only"
+  ],
+  "steps": [
+    "finite parameter envelope before target admission",
+    "bounded UTF8 numeric hash index of authored targets with collision/duplicate checks",
+    "bounded original page and inherited parent ordinal lookup",
+    "bounded UTF8 page-frame join and local/inherited layer lock resolution",
+    "one constant-size transform and bounds envelope per selected unlocked frame",
+    "one missing address per funded turn",
+    "numeric row/buffer/map and original source alias close"
+  ],
+  "output": "only numeric target/lock/change rows; no payload clone, copied ID array, candidate Snapshot, cold command or cold validator"
+}

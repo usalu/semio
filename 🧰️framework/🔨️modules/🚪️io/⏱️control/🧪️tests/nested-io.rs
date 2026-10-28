@@ -5,6 +5,23 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementR
 use std::cell::Cell;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("nested-io.json")).unwrap()}
 #[test]
+fn empty_nested_pending_slot_preserves_both_original_phase_controls(){
+ let f=fixture();let grant:RetainedCloneGrant=serde_json::from_value(f["grant"].clone()).unwrap();let decode_calls=Cell::new(0);let encode_calls=Cell::new(0);let mut receive=|_|{decode_calls.set(decode_calls.get()+1);true};let mut publish=|_|{encode_calls.set(encode_calls.get()+1);true};let mut decode=NativeDecodeControl::new(1048576,&mut receive);let ledger=decode.ledger_identity();let mut encode=NativeEncodeControl::new(1048576,&mut publish);let mut wallet=RetainedCloneProgress{copied_items:1,copied_bytes:8,..Default::default()};let initial=wallet;let mut pending=None;
+ {let mut run=IoRunControl::borrowed_native(&mut decode,&mut encode,grant,&mut wallet,Some(&mut pending),IoNativeDirection::Decode);let remaining=run.remaining_grant();run.select(IoNativeDirection::Encode).unwrap();run.encode().unwrap().checkpoint().unwrap();run.select(IoNativeDirection::Decode).unwrap();assert_eq!(run.decode().unwrap().ledger_identity(),ledger);assert_eq!(run.remaining_grant(),remaining);}
+ assert_eq!(wallet,initial);assert!(pending.is_none());assert!(decode_calls.get()>0&&encode_calls.get()>0);
+}
+#[test]
+fn occupied_nested_pending_owner_blocks_phase_switch_without_replacing_it(){
+ let f=fixture();let grant:RetainedCloneGrant=serde_json::from_value(f["grant"].clone()).unwrap();let mut receive=|_|true;let mut publish=|_|true;let mut decode=NativeDecodeControl::new(1048576,&mut receive);let mut encode=NativeEncodeControl::new(1048576,&mut publish);let mut wallet=RetainedCloneProgress::default();let mut pending:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>=Some(Box::new(semio_framework_value::retirement::controlled::ControlledRetirement::new(()).ok().unwrap()));let pointer=pending.as_ref().unwrap().as_ref()as*const _ as*const()as usize;
+ {let mut run=IoRunControl::borrowed_native(&mut decode,&mut encode,grant,&mut wallet,Some(&mut pending),IoNativeDirection::Decode);assert_eq!(run.select(IoNativeDirection::Encode).unwrap_err().kind,ValueRefusalKind::UnsupportedOwner);assert_eq!(run.direction(),IoNativeDirection::Decode);}
+ assert_eq!(pending.as_ref().unwrap().as_ref()as*const _ as*const()as usize,pointer);while pending.is_some(){semio_framework_value::close_factory_ticket(&mut pending,grant).unwrap();}
+}
+#[test]
+fn actual_nested_receiving_frame_can_finish_decode_and_select_original_encoder(){
+ let f=fixture();let grant:RetainedCloneGrant=serde_json::from_value(f["grant"].clone()).unwrap();let mut receive=|_|true;let encoded=Cell::new(false);let mut publish=|_|{encoded.set(true);true};let mut recipient=NativeDecodeRetirementRecipient::new();let mut decode=NativeDecodeControl::new(1048576,&mut receive);decode.install_retirement_recipient(&mut recipient).unwrap();let mut encode=NativeEncodeControl::new(1048576,&mut publish);let mut run=IoRunControl::new(&mut decode,&mut encode,grant);
+ run.receive_nested::<(),()>(|_,child|{child.decode()?.checkpoint()?;child.encode()?.checkpoint()?;Ok(())}).unwrap();assert!(encoded.get());
+}
+#[test]
 fn original_receiving_nested_io_decode_retains_child_ticket_and_same_wallet(){
  let f=fixture();let grant:RetainedCloneGrant=serde_json::from_value(f["grant"].clone()).unwrap();let mut source=Some(f["original"].as_str().unwrap().to_owned());let backing=source.as_ref().unwrap().capacity();let live=Cell::new(true);let mut observer=|_|live.get();let mut recipient=NativeDecodeRetirementRecipient::new();let mut native=NativeDecodeControl::new(f["nativeMaximumBytes"].as_u64().unwrap()as usize,&mut observer);native.install_retirement_recipient(&mut recipient).unwrap();native.charge(backing).unwrap();let mut run=IoRunControl::decoding(&mut native,grant);
  let(result,born,released)=semio_framework_trace_memory_testing::observe_backing(||run.receive_nested::<(),()>(|_,run|run.receive_nested::<String,()>(|slot,child|{*slot=source.take();child.decode()?.checkpoint()?;live.set(false);Ok(())})));
@@ -18,7 +35,7 @@ fn original_receiving_nested_io_encode_retains_child_ticket_and_same_wallet(){
 }
 
 #[test]
-fn original_receiving_nested_io_dual_control_phase_change_refuses_without_foreign_ledger_work(){
+fn original_receiving_nested_io_dual_control_empty_phase_change_keeps_original_wallet(){
  let f=fixture();let grant:RetainedCloneGrant=serde_json::from_value(f["grant"].clone()).unwrap();
  for direction in [IoNativeDirection::Decode,IoNativeDirection::Encode]{
   let mut decode_observer=|_|true;let mut encode_observer=|_|true;
@@ -29,7 +46,7 @@ fn original_receiving_nested_io_dual_control_phase_change_refuses_without_foreig
   let (result,born,released)=semio_framework_trace_memory_testing::observe_backing(||run.receive_nested::<(),()>(|_,child|{
    let opposite=if direction==IoNativeDirection::Decode{IoNativeDirection::Encode}else{IoNativeDirection::Decode};
    let before=child.progress();let(refused,birth,release)=semio_framework_trace_memory_testing::observe_backing(||child.select(opposite));
-   assert_eq!(refused.unwrap_err().kind,ValueRefusalKind::UnsupportedOwner);assert_eq!((birth,release),(0,0));assert_eq!(child.direction(),direction);assert_eq!(child.progress(),before);Ok(())
+   refused.unwrap();assert_eq!((birth,release),(0,0));assert_eq!(child.direction(),opposite);assert_eq!(child.progress(),before);Ok(())
   }));result.unwrap();assert_eq!(born,run.progress().retained_capacity_bytes);assert_eq!(released,run.progress().released_bytes);assert_eq!(born,released);drop(run);
   assert!(!decode.has_retirement_owner());assert!(!encode.has_retirement_owner());assert_eq!(decode.owned_bytes(),if direction==IoNativeDirection::Decode{born}else{0});assert_eq!(encode.owned_bytes(),if direction==IoNativeDirection::Encode{born}else{0});
  }

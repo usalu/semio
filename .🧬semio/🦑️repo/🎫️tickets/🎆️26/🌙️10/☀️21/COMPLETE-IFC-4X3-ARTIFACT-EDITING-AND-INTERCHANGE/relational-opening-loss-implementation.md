@@ -1,0 +1,5 @@
+# Explicit Relational Opening Loss
+
+Actual arbitrary profile holes are now projected, but IfcRelVoidsElement is a separate solid subtraction relationship. Geometry extraction previously did not identify that loss. The existing controlled entity traversal now emits an explicit geometry.opening-subtraction diagnostic with relation/host/opening IDs, or an error for unresolved endpoints. These diagnostics travel through actual glTF export and keep partial fidelity visible. No boolean subtraction or complete original slab geometry is claimed.
+
+The original slab-openings.ifc SHA256 and two exact relations are retained in a closed neutral case. Test-first produced1pass1fail because both relationship diagnostics were absent. Actual opening+placement selection passes4tests13assertions; source remains unchanged and glTF retains both exact relationship diagnostics. Narrow strict is rerun after correcting a JSON-inferred string assertion type. This is a precise unsupported-operation boundary, not an implementation of subtraction. Native parity and funded runtime execution remain open.

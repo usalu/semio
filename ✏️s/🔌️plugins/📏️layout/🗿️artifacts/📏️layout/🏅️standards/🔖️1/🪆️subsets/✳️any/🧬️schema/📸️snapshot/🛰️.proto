@@ -16,6 +16,6 @@ message LayoutSnapshot {
   repeated semio.s.layout.layout.artifact.Page pages = 10;
   optional string print_target = 11;
   optional semio.framework.value.dictionary.QuestionDictionary data_fields = 12;
-  semio.s.layout.layout.artifact.LayoutDrawingChild background_drawing = 13;
+  semio.s.layout.layout.artifact.LayoutDrawingMember background_drawing = 13;
   semio.framework.schema.artifact_link.ArtifactLink referenced_model = 14;
 }

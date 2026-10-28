@@ -70,12 +70,12 @@ pub mod member_open {
     pub use semio_framework_os_store_member_open_store::InitialMemberStoreOpen;
     pub use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenOperation;
     pub use semio_framework_os_store_engine_owners::lifted_operation::MemberSnapshotOpenStep;
-    pub use semio_framework_os_store_member_open_store::ProducedMemberSnapshotOpen;
+    pub use semio_framework_os_store_member_open_store::{OriginalRecordMemberSnapshotOpen};
     pub use semio_framework_os_store_space_member::lifted_operation::UnsupportedMemberFactoryOpen;
     pub use semio_framework_os_store_space_member::lifted_operation::UnsupportedMemberSnapshotOpen;
 }
 pub use semio_framework_os_store_member_open::genesis::{MemberGenesisEnvelopeEncoder, MemberGenesisEnvelopeProgress, MemberGenesisEnvelopeSource};
-pub use semio_framework_os_store_member_open_store::{InitialMemberStoreOpen, admit_member_input_buffer, ProducedMemberSnapshotOpen};
+pub use semio_framework_os_store_member_open_store::{InitialMemberStoreOpen, admit_member_input_buffer, OriginalRecordMemberSnapshotOpen};
 pub use semio_framework_os_store_member_open::{MEMBER_OPEN_IDENTITY_BYTES, MemberOpenAdmissionError, MemberOpenDiagnostic, MemberOpenFrame, MemberOpenInputStep, MemberOpenOperation, MemberOpenPhase, MemberOpenProgress, MemberOpenRequest, MemberOpenStep};
 pub use semio_framework_os_store_space_member::factory::MemberOpenDeclaration;
 pub use semio_framework_os_store_member_open::source_admission::MemberOpenSourceAdmission;
@@ -300,7 +300,7 @@ use semio_framework_os_store_engine_owners::BoundedArtifactRetirementFactory;
 
 use semio_framework_os_store_codec_registry::native_snapshot;
 pub use semio_framework_os_io::control::{NativeSnapshotDecodeOwner, NativeSnapshotEncodeOwner, NativeSnapshotBodyWallet};
-pub use native_snapshot::{ArtifactPackReceiving,decode_native_snapshot_record,encode_native_snapshot_record};
+pub use native_snapshot::{ArtifactPackReceiving,OriginalArtifactPackReceiving,OriginalArtifactSnapshotReceiving,OriginalSnapshotRecordReceiving,OriginalPackWriting,decode_native_snapshot_record,encode_native_snapshot_record};
 pub use pack::snapshot::{ArtifactNativeSnapshot,NativeSnapshotEncoding,NativeSnapshotInput};
 
 use semio_framework_os_store_codec_registry::sqlite_snapshot_retirement;
@@ -516,7 +516,7 @@ pub use semio_framework_os_store_space::lifted_store::{SpaceHost, create_member_
 pub(crate) use semio_framework_os_store_space::lifted_store::{validate_member_history_identity};
 pub use semio_framework_os_store_engine_core::lifted_store::{ArtifactEnvelopeView, CommandReceipt, HistoryColumn, StoreCursor, StoreLog, StoreMintToken, StoreOwners, StoreWire, build_history_columns};
 pub use semio_framework_os_store_engine::lifted_store::{ArtifactStore, ConfigStore, DraftStore, HistoryFinalization, config_store_from_initialized_runtime_with_owners, merge_base, reconcile_alternative, retract_history_transitions_from_spr};
-pub use semio_framework_os_store_codec_factory::lifted_store::{ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS, artifact_codec, bare_artifact_codec, replay_envelopes_onto_pair};
+pub use semio_framework_os_store_codec_factory::lifted_store::{ARTIFACT_CODEC_APPLY_CLOSE_MAXIMUM_STEPS, artifact_codec, bare_artifact_codec, bare_artifact_codec_with_owners, ArtifactCodecOwnerSource, BoundedArtifactCodecOwners, codec_document_owners, replay_envelopes_onto_pair};
 pub(crate) use semio_framework_os_store_codec_factory::lifted_store::{close_codec_reduction_store};
 pub(crate) use semio_framework_os_store_engine::lifted_store::{SupersedeScope, checkpoint_ancestors, checkpoint_identity, merge_by_id, preflight_merge_by_id};
 pub use semio_framework_os_store_config::lifted_store::{ConfigEnvelope, ConfigRecord, create_config_envelope};
@@ -545,3 +545,5 @@ pub use semio_framework_os_store_test_support as test_support;
 
 //#endregion 🔖️SchemaExports
 
+
+pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;

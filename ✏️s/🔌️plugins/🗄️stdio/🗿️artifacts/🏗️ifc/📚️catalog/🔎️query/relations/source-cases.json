@@ -1,0 +1,10 @@
+{
+  "schema": "semio.ifc.relation-source.v1",
+  "cases": [
+    "missing",
+    "wrong-ordinal",
+    "same-content-row",
+    "foreign-row"
+  ],
+  "expected": "refuse-before-role-value-access"
+}

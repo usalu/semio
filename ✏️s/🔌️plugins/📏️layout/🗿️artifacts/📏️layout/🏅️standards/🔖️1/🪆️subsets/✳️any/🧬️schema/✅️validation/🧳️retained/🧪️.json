@@ -1,0 +1,44 @@
+{
+  "corpus": "../../../../🧪️tests/🧫️fixtures/✅️validation/🔣️.json",
+  "cases": [
+    {
+      "name": "zero grant leaves cursor unchanged",
+      "grant": {
+        "items": 0,
+        "copy": 0,
+        "capacity": 0,
+        "release": 0,
+        "depth": 0
+      },
+      "progress": 0
+    },
+    {
+      "name": "long keys paginate",
+      "keyPrefixBytes": 4096,
+      "maximumKeyBytesPerTurn": 256
+    },
+    {
+      "name": "UTF-8 runs split scalar refused",
+      "content": "Aé🌍",
+      "start": 2,
+      "end": 7,
+      "valid": false
+    },
+    {
+      "name": "original projection identity swap refused",
+      "valid": false
+    },
+    {
+      "name": "cancel before validation and during key comparison",
+      "balancedCapacityRelease": true
+    },
+    {
+      "name": "all semantic document witnesses match cold owned oracle",
+      "oracle": "validate_document test-only"
+    },
+    {
+      "name": "unbound incremental Drawing admission refuses explicitly",
+      "valid": false
+    }
+  ]
+}

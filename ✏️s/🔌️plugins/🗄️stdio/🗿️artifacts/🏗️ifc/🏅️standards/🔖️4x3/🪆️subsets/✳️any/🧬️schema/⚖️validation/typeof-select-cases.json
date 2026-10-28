@@ -1,0 +1,92 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "seeds": [
+    {"id":"qualified","names":["IFC4X3_ADD2.IFCCOLOURRGB","IFC4X3_ADD2.IFCCOLOURSPECIFICATION","IFC4X3_ADD2.IFCPRESENTATIONITEM"],"includes":["IFC4X3_ADD2.IFCCOLOUR","IFC4X3_ADD2.IFCFILLSTYLESELECT"],"excludes":["IFC4X3_ADD2.IFCAXIS2PLACEMENT"]},
+    {"id":"mixed-duplicate","names":["IFCCOLOURRGB","IFC4X3_ADD2.IFCCOLOURRGB","IFCCOLOURSPECIFICATION"],"includes":["IFC4X3_ADD2.IFCCOLOUR","IFC4X3_ADD2.IFCFILLSTYLESELECT"],"excludes":["IFC4X3_ADD2.IFCAXIS2PLACEMENT"]},
+    {"id":"foreign","names":["FOREIGN.IFCCOLOURRGB","FOREIGN.IFCCOLOURSPECIFICATION"],"includes":["FOREIGN.IFCCOLOURRGB"],"excludes":["IFC4X3_ADD2.IFCCOLOUR","IFC4X3_ADD2.IFCFILLSTYLESELECT"]}
+  ],
+  "expressions": [
+    {
+      "id": "entity-select",
+      "expression": "'IFC4X3_ADD2.IFCCOLOUR' IN TYPEOF(IFCCOLOURRGB(?,1.,0.,0.))",
+      "expected": true
+    },
+    {
+      "id": "transitive-select",
+      "expression": "'IFC4X3_ADD2.IFCFILLSTYLESELECT' IN TYPEOF(IFCCOLOURRGB(?,1.,0.,0.))",
+      "expected": true
+    },
+    {
+      "id": "axis-select",
+      "expression": "'IFC4X3_ADD2.IFCAXIS2PLACEMENT' IN TYPEOF(IFCAXIS2PLACEMENT3D(IFCCARTESIANPOINT([0.,0.,0.]),?,?))",
+      "expected": true
+    },
+    {
+      "id": "defined-select",
+      "expression": "'IFC4X3_ADD2.IFCSIMPLEVALUE' IN TYPEOF(IFCLABEL('value'))",
+      "expected": true
+    },
+    {
+      "id": "nested-defined-select",
+      "expression": "'IFC4X3_ADD2.IFCVALUE' IN TYPEOF(IFCLABEL('value'))",
+      "expected": true
+    },
+    {
+      "id": "untyped-string",
+      "expression": "'IFC4X3_ADD2.IFCSIMPLEVALUE' IN TYPEOF('value')",
+      "expected": false
+    },
+    {
+      "id": "untyped-real",
+      "expression": "'IFC4X3_ADD2.IFCMEASUREVALUE' IN TYPEOF(1.)",
+      "expected": false
+    },
+    {
+      "id": "measure-select",
+      "expression": "'IFC4X3_ADD2.IFCMEASUREVALUE' IN TYPEOF(IFCLENGTHMEASURE(1.))",
+      "expected": true
+    },
+    {
+      "id": "unrelated-select",
+      "expression": "'IFC4X3_ADD2.IFCAXIS2PLACEMENT' IN TYPEOF(IFCCOLOURRGB(?,1.,0.,0.))",
+      "expected": false
+    },
+    {
+      "id": "unknown",
+      "expression": "'IFC4X3_ADD2.IFCCOLOUR' IN TYPEOF(?)",
+      "expected": false
+    },
+    {
+      "id": "no-inferred-subtype",
+      "expression": "'IFC4X3_ADD2.IFCPOSITIVELENGTHMEASURE' IN TYPEOF(IFCLENGTHMEASURE(1.))",
+      "expected": false
+    },
+    {
+      "id": "aggregate-alias",
+      "expression": "'LIST' IN TYPEOF(IFCCOMPOUNDPLANEANGLEMEASURE([1,2,3]))",
+      "expected": true
+    },
+    {
+      "id": "qualified-seed",
+      "expression": "'IFC4X3_ADD2.IFCCOLOUR' IN TYPEOF(IFCCOLOURRGB(?,1.,0.,0.) \\ IFCPRESENTATIONITEM)",
+      "expected": false
+    }
+  ],
+  "models": [
+    {
+      "id": "colours-1",
+      "body": "#1=IFCCOLOURRGB($,1.,0.,0.);#2=IFCCOLOURRGB($,0.,1.,0.);#3=IFCFILLAREASTYLE('Colour',(#1),.T.);",
+      "valid": true,
+      "rule": "MAXONECOLOUR",
+      "result": "true"
+    },
+    {
+      "id": "colours-2",
+      "body": "#1=IFCCOLOURRGB($,1.,0.,0.);#2=IFCCOLOURRGB($,0.,1.,0.);#3=IFCFILLAREASTYLE('Colour',(#1,#2),.T.);",
+      "valid": false,
+      "rule": "MAXONECOLOUR",
+      "result": "false"
+    }
+  ]
+}
+

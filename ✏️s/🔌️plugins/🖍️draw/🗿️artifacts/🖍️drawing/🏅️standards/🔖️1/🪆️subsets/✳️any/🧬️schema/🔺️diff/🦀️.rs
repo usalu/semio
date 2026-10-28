@@ -21,7 +21,7 @@ use semio_framework_value_persistent::list::PagedList;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the drawing artifact; persistent entries apply via [`MutationDiff`](protocol::MutationDiff).
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
@@ -44,7 +44,7 @@ pub struct DrawingDiff {
 
 //#region 🔖️DeltaHelpers
 /// 🗂️ Asset-map wrapper so optional map diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
@@ -53,7 +53,7 @@ pub struct DrawingAssetsDelta {
 }
 
 /// 📋 String-list wrapper so optional list diffs stay scalar across formats.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
@@ -64,7 +64,7 @@ pub struct DrawingStringList {
 /// 🧩 Positional delta for the layer TREE (the shape of the framework's `protocol::list_delta`, addressed per container): `removed`
 /// rows carry their BASE address, `inserted` rows their AFTER address, `moved` rows both (a move may cross containers); no order
 /// list and no anchor is ever carried. Every index is a coordinate of the base or of the after child list of its parent.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
@@ -76,7 +76,7 @@ pub struct DrawingLayersDelta {
 }
 
 /// 📍️ A position in the layer tree: the child list of `parent_id` (the root list when absent) at `index`.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -88,7 +88,7 @@ pub struct DrawingLayerAddress {
 }
 
 /// ➖️ One removed layer subtree and the BASE address the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -101,7 +101,7 @@ pub struct DrawingLayerRemoval {
 }
 
 /// ➕️ One inserted layer subtree and its AFTER address.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -114,7 +114,7 @@ pub struct DrawingLayerInsertion {
 }
 
 /// ↕️ One repositioned layer subtree: its BASE address and its AFTER address — the layer itself is never carried.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -125,7 +125,7 @@ pub struct DrawingLayerRelocation {
 }
 
 /// 🩹 One modified layer entry.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase")]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -135,19 +135,19 @@ pub struct DrawingLayerModification {
 }
 
 /// 🩹 Explicit replacement preserving an absent patch and a cleared value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(default)]
 pub struct DrawingFillPatch { pub value: Option<FillStyle> }
 
 /// 🩹 Explicit replacement preserving an absent patch and a cleared value.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(default)]
 pub struct DrawingStrokePatch { pub value: Option<StrokeStyle> }
 
 /// 🔷️ One sparse authored coordinate edit, independent of transform and appearance.
-#[derive(Clone,Debug,PartialEq,semio_framework_value::ToValue,semio_framework_value::FromValue)]
+#[derive(Clone,Debug,PartialEq,semio_framework_value::RetainedClone,semio_framework_value::RetireOwned,semio_framework_value::ToValue,semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"),derive(serde::Serialize,serde::Deserialize))]
 #[value(rename_all="camelCase")]
 #[cfg_attr(any(test, feature = "testkit"),serde(rename_all="camelCase"))]
@@ -158,7 +158,7 @@ pub struct DrawingShapeCoordinatePatch {
 }
 
 /// 🩹 Typed layer changes.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase", default))]
@@ -326,3 +326,5 @@ pub mod io {
     pub mod text;
 }
 //#endregion 🪢️TaxonomyMounts
+
+#[path="🧳️retained/🦀️.rs"]pub mod retained;

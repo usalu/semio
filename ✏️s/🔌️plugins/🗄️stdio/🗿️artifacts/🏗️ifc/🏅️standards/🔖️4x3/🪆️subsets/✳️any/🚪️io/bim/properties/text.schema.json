@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"array","minItems":7,"maxItems":7,"items":{"type":"object","additionalProperties":false,"required":["direction","fault","result"],"properties":{"direction":{"enum":["export","import"]},"fault":{"enum":["unpaired-text","long-set-name","long-property-name","long-label"]},"result":{"const":"unsupported"}}}}

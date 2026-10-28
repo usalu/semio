@@ -46,10 +46,14 @@ pub fn diff_set_page_parent(payload: &SetPageParent, base: &LayoutSnapshot) -> p
     if page.parent_page_id == payload.parent_page_id {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Page parent is already set to that value.");
     }
+    if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_parent_assignment(base, page, payload.parent_page_id.as_deref()) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.id.clone()]);
+    }
     protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.id.clone(), patch: PagePatch { parent_page_id: Some(payload.parent_page_id.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_set_page_parent<Op: From<crate::set_page_parent::SetPageParent>>(payload: &SetPageParent, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_set_page_parent(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else { return Vec::new() };
     vec![Op::from(SetPageParent { id: page.id.clone(), parent_page_id: page.parent_page_id.clone() })]

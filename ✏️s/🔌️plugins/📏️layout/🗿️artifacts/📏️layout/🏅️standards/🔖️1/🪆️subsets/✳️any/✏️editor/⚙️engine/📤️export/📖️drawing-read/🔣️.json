@@ -1,0 +1,66 @@
+{
+  "schema": "layout.export.original-drawing-read.v1",
+  "producer": "one-original-core-work-unit",
+  "publications": "outer-retained-owner-only",
+  "sourceAddress": "bounded-active-numeric",
+  "closeOrder": [
+    "drawing-composition-and-retirements",
+    "qualified-provider-and-original-child",
+    "original-parent"
+  ],
+  "cases": [
+    {
+      "name": "no Drawing",
+      "source": null,
+      "read": false,
+      "accept": true
+    },
+    {
+      "name": "document Drawing needs original read",
+      "source": {
+        "kind": "document"
+      },
+      "read": false,
+      "accept": false
+    },
+    {
+      "name": "page Drawing needs original read",
+      "source": {
+        "kind": "page",
+        "page": 0
+      },
+      "read": false,
+      "accept": false
+    },
+    {
+      "name": "document original read",
+      "source": {
+        "kind": "document"
+      },
+      "read": true,
+      "accept": true
+    },
+    {
+      "name": "page original read",
+      "source": {
+        "kind": "page",
+        "page": 0
+      },
+      "read": true,
+      "accept": true
+    }
+  ],
+  "refusals": [
+    "mixed-core-publication-owner",
+    "different-original-operation",
+    "changed-child-source"
+  ],
+  "denials": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "cancellation": "every-consumer-boundary"
+}

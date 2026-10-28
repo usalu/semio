@@ -1,0 +1,32 @@
+{
+  "capacity": {
+    "invertibleItems": 2,
+    "rows": 4
+  },
+  "cases": [
+    {
+      "name": "empty",
+      "mutations": 0,
+      "rows": 0,
+      "admitted": true
+    },
+    {
+      "name": "one point inverse",
+      "mutations": 1,
+      "rows": 2,
+      "admitted": true
+    },
+    {
+      "name": "exact row capacity",
+      "mutations": 2,
+      "rows": 4,
+      "admitted": true
+    },
+    {
+      "name": "one past declared capacity",
+      "mutations": 3,
+      "rows": 6,
+      "admitted": false
+    }
+  ]
+}

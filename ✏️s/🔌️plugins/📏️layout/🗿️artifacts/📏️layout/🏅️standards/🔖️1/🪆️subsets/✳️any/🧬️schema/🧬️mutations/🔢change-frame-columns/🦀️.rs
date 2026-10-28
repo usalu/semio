@@ -1,6 +1,5 @@
 //! 🔢 `change-frame-columns` — sets a `Frame::Text`'s `columns` count. A no-op on non-text frames.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_model::Frame;
@@ -54,6 +53,12 @@ pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnap
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
     };
+    if !matches!(frame, Frame::Text { .. }) {
+        return protocol::MutationOutcome::error("mutation.target-mismatch", "The target is not a text frame.", [payload.frame_id.clone()]);
+    }
+    if payload.new_columns == 0 {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Text columns must be positive.", [payload.frame_id.clone()]);
+    }
     if let Frame::Text { columns, .. } = frame {
         if *columns == payload.new_columns {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame \"{}\" already has {} column(s).", payload.frame_id, payload.new_columns));
@@ -74,6 +79,7 @@ pub fn diff_change_frame_columns(payload: &ChangeFrameColumns, base: &LayoutSnap
 
 //#region 🔢ChangeFrameColumns
 pub fn inverse_change_frame_columns<Op: From<crate::change_frame_columns::ChangeFrameColumns>>(payload: &ChangeFrameColumns, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_change_frame_columns(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();

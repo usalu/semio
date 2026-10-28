@@ -1,0 +1,22 @@
+{
+  "schema":"IFC4X3_ADD2",
+  "chunkCodeUnits":4096,
+  "largeItems":16384,
+  "headers":[
+    {"name":"Empty Author List","replace":"FILE_NAME('a','',(),(''),'','','');","code":"step.header"},
+    {"name":"Empty Organisation List","replace":"FILE_NAME('a','',(''),(),'','','');","code":"step.header"},
+    {"name":"Wrong Name Arity","replace":"FILE_NAME('a');","code":"step.header"},
+    {"name":"Wrong Description Type","description":"FILE_DESCRIPTION(('test'),1);","code":"step.header"},
+    {"name":"Lowercase Schema String","schema":"FILE_SCHEMA(('ifc4x3_add2'));","code":"step.schema"}
+  ],
+  "cancelPhases":["parse-source","parse-trivia","parse-unicode","parse-binary","write-text"],
+  "lexical":[
+    {"name":"Line Break Inside Keyword","data":"#1=IFC\r\nLABEL('ab');","nameAfter":"IFCLABEL","value":"ab"},
+    {"name":"Ignored Controls Inside String","data":"#1=IFCLABEL('a\nb\t\fc');","nameAfter":"IFCLABEL","value":"abc"},
+    {"name":"Print Directives Inside String","data":"#1=IFCLABEL('a\\N\\b\\F\\c');","nameAfter":"IFCLABEL","value":"abc"},
+    {"name":"Escaped Print Directive Is Literal","data":"#1=IFCLABEL('a\\\\N\\\\b');","nameAfter":"IFCLABEL","value":"a\\N\\b"},
+    {"name":"Print Directives Inside Binary","data":"#1=IFCLABEL(\"0A\\N\\B\");","nameAfter":"IFCLABEL","binary":"0AB"},
+    {"name":"Print Directives In Unicode Hex","data":"#1=IFCLABEL('\\X2\\00\\N\\E4\\X0\\');","nameAfter":"IFCLABEL","value":"ä"},
+    {"name":"Print Directive Between Tokens","data":"\\N\\#1=IFCLABEL('ab');\\F\\","nameAfter":"IFCLABEL","value":"ab"}
+  ]
+}

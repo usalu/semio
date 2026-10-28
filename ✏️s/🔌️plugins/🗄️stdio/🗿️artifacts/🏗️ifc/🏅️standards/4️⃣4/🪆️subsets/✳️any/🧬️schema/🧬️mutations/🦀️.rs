@@ -29,6 +29,8 @@ pub mod remove_entity;
 pub mod remove_entity_arg;
 #[path = "🎛️set-entity-arg/🦀️.rs"]
 pub mod set_entity_arg;
+#[path = "🧩️set-entity-complex/🦀️.rs"]
+pub mod set_entity_complex;
 #[path = "🏷️set-entity-name/🦀️.rs"]
 pub mod set_entity_name;
 #[path = "🗒️set-file-description/🦀️.rs"]
@@ -47,7 +49,7 @@ pub mod set_file_schema;
 /// error[E0277]: the trait bound `v4::subsets::any::schema::snapshot::component::IfcEntity: DslField` is not satisfied
 ///   --> …/🧬️mutations/🦀️.rs:40:17   (InsertEntity { entity: IfcEntity })
 /// ```
-/// Same root cause as `IfcDiff` (§3a): `IfcValue` carries fields on 7 of its 9 variants, has no
+/// Same root cause as `IfcDiff` (§3a): `IfcValue` carries fields on 8 of its 10 variants, has no
 /// `DslField` impl, and every variant here either carries it directly (`values`/`value`) or
 /// transitively via `IfcEntity` (`InsertEntity`). `OpText`/`OpBinary`
 /// stay hand-rolled below for the same reason, reusing `IfcDiff`'s `pub(crate)` grammar primitives
@@ -82,13 +84,15 @@ pub enum IfcMutation {
     InsertEntityArg(insert_entity_arg::InsertEntityArg),
     /// 🧹️ Removes the argument at `index` of entity `id`'s arg list.
     RemoveEntityArg(remove_entity_arg::RemoveEntityArg),
+    /// 🧩️ Replaces the additional type constituents of entity `id`.
+    SetEntityComplex(set_entity_complex::SetEntityComplex),
 }
 
 /// 📇️ Kebab-case spelling of every `IfcMutation` variant, in declaration order — the exhaustive
 /// mutation catalog `../../🔣️oracle.json`'s `kinds` array is required to match verbatim
 /// (`kinds_const_matches_enum_variants_in_declaration_order` below is what keeps that honest; the
 /// framework never parses Rust to check it itself).
-pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg"];
+pub const KINDS: &[&str] = &["set-file-description", "set-file-name", "set-file-schema", "insert-entity", "remove-entity", "set-entity-name", "set-entity-arg", "insert-entity-arg", "remove-entity-arg", "set-entity-complex"];
 //#endregion 🔖️Mutations
 
 //#region 🔖️Apply
@@ -138,6 +142,7 @@ pub fn demo_mutation_cases() -> Vec<IfcMutation> {
                     IfcValue::Integer(-7),
                     IfcValue::Real(3.25),
                     IfcValue::String("hi".into()),
+                    IfcValue::Binary("17".into()),
                     IfcValue::Enum("EDGE".into()),
                     IfcValue::Reference(42),
                     IfcValue::Aggregate(vec![IfcValue::Integer(1), IfcValue::Integer(2)]),
@@ -150,6 +155,7 @@ pub fn demo_mutation_cases() -> Vec<IfcMutation> {
         IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: 1, index: 1, value: IfcValue::String("Wall-02".into()) }),
         IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: 1, index: 2, value: IfcValue::Derived }),
         IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: 1, index: 0 }),
+        IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id: 1, complex: vec![semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType { name: "IFCOBJECT".into(), args: vec![IfcValue::String("Complex member".into())] }] }),
     ]
 }
 //#endregion 🔖️DemoCases

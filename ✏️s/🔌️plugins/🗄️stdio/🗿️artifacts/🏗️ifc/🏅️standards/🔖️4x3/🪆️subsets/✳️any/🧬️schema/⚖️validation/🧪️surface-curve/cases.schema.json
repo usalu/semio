@@ -1,0 +1,195 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "negativeRules",
+    "functions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "schema",
+        "expSha256",
+        "physical"
+      ],
+      "properties": {
+        "file": {
+          "const": "source.ifc"
+        },
+        "schema": {
+          "const": "IFC4X3_ADD2"
+        },
+        "expSha256": {
+          "const": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+        },
+        "physical": {
+          "const": "authored mixed standalone source with deliberate negative owners"
+        }
+      }
+    },
+    "negativeRules": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entityId",
+          "owner",
+          "rule"
+        ],
+        "properties": {
+          "entityId": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "owner": {
+            "enum": [
+              "IFCCOMPOSITECURVEONSURFACE",
+              "IFCPOLYNOMIALCURVE"
+            ]
+          },
+          "rule": {
+            "enum": [
+              "SAMESURFACE",
+              "CORRECTPOSITIONDIM"
+            ]
+          }
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 58,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "id",
+          "args",
+          "expected"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "IFCASSOCIATEDSURFACE",
+              "IFCGETBASISSURFACE",
+              "IFCCURVEDIM",
+              "IFCSEGMENTDIM"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 1,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "unknown"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "entity"
+                    },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "unknown"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "integer",
+                      "surface"
+                    ]
+                  },
+                  "value": {
+                    "type": "string",
+                    "pattern": "^[1-9][0-9]*$"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "surfaces"
+                  },
+                  "value": {
+                    "type": "array",
+                    "uniqueItems": true,
+                    "items": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$"
+                    }
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

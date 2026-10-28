@@ -526,3 +526,24 @@ fn an_octet_string_equals_the_json_array_of_its_octets() {
         assert_eq!(values_equivalent(&spelled, &DslValue::Bytes(octets)), row["equivalent"].as_bool().unwrap(), "{} is symmetric", row["name"]);
     }
 }
+
+#[test]
+fn contextual_snapshot_work_uses_original_control_and_never_completes_failed_emission(){
+    use semio_framework_job::{StepContext,StepBudget,OperationId,Generation,root_cancel_token};
+    fn now()->Option<u64>{Some(1)}
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🎟️contextual-snapshot-edit.json")).unwrap();
+    for row in fixture["cases"].as_array().unwrap(){
+        let token=root_cancel_token();if row["cancelled"].as_bool().unwrap(){token.cancel_now();}
+        let mut sequence=0;let mut retained=Default::default();let mut cx=StepContext::new(OperationId(712),Generation(3),StepBudget::new(row["fuel"].as_u64().unwrap(),1000,Default::default()),token.clone(),now,&mut sequence,&mut retained);
+        let original=(&mut cx as *mut StepContext<'_>) as usize;let mut consumed=false;
+        let result=tool_job_factories::snapshot_edit_contextual_once(&mut consumed,&mut cx,|cx|{
+            assert_eq!((cx as *mut StepContext<'_>) as usize,original);assert!(cx.original_cancel_token().is_same_node(&token));
+            if cx.is_cancelled()||cx.should_yield(){return Err(Fault::from("original context stopped"));}
+            cx.consume_fuel(row["consume"].as_u64().unwrap());
+            if cx.should_yield(){return Err(Fault::from("original fuel stopped"));}
+            Ok(vec![7u8])
+        });
+        assert_eq!(result.as_ref().map_or(0,Vec::len),row["emitted"].as_u64().unwrap() as usize);assert_eq!(cx.fuel_remaining(),row["remaining"].as_u64().unwrap());assert!(consumed);
+        let repeated=tool_job_factories::snapshot_edit_contextual_once(&mut consumed,&mut cx,|_|Ok(vec![9u8]));assert!(repeated.is_err());
+    }
+}

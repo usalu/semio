@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Typed Layout List Ownership",
+  "description": "Typed row headers move from actual live post and authored insertion owners. Three numeric output buffers reserve before commit. Untouched payload allocation identities survive. Removed/displaced payloads close through their original typed controlled retirement. This operation consumes already validated numeric origins and requires central apply capability.",
+  "type": "object",
+  "required": [
+    "reserve",
+    "capture",
+    "originalRows",
+    "insertedRows",
+    "output",
+    "install",
+    "close"
+  ],
+  "properties": {
+    "reserve": {
+      "const": "quoted-typed-capacities"
+    },
+    "capture": {
+      "const": "move-live-list-header"
+    },
+    "originalRows": {
+      "const": "one-header-per-turn"
+    },
+    "insertedRows": {
+      "const": "one-authored-header-per-turn"
+    },
+    "output": {
+      "const": "numeric-origin-per-turn"
+    },
+    "install": {
+      "const": "move-typed-vector-header"
+    },
+    "close": {
+      "const": "funded-original-displaced-owners"
+    }
+  },
+  "additionalProperties": false
+}

@@ -32,3 +32,4 @@ semio-framework-value-derive = { path = "../../../../🌱️value/✨️derive/�
 semio-framework-io-sqlite-snapshot = { path = "../../../🪶️sqlite-snapshot/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+serde_json = { workspace = true }

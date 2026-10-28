@@ -1,0 +1,19 @@
+{
+  "$schema": "./chooser.schema.json",
+  "schema": "IFC4X3_ADD2",
+  "argument": "template",
+  "control": "select",
+  "required": true,
+  "automaticSelection": false,
+  "choices": 760,
+  "kinds": {
+    "PSET_MATERIALDRIVEN": 19,
+    "PSET_OCCURRENCEDRIVEN": 105,
+    "PSET_PERFORMANCEDRIVEN": 44,
+    "PSET_PROFILEDRIVEN": 3,
+    "PSET_TYPEDRIVENOVERRIDE": 474,
+    "QTO_OCCURRENCEDRIVEN": 14,
+    "QTO_TYPEDRIVENOVERRIDE": 101
+  },
+  "labels": { "en": "Template", "de": "Template" }
+}

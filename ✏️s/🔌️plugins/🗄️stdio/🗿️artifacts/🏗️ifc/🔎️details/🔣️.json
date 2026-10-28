@@ -1,0 +1,15 @@
+{
+  "title": "Catalog-Aware IFC Details",
+  "catalog": "Caller-selected normative schema catalog; no cross-version declarations",
+  "paths": "Original full snapshot pointer paths, including explicit args and complex constituents",
+  "controls": {
+    "attributes": "Inherited names, exact value domains, optional unset and derived read only",
+    "enumeration": "Closed declared literal set",
+    "select": "Explicit typed variants and valid entity references",
+    "aggregate": "Declared bounds, LIST/ARRAY order and SET/UNIQUE membership",
+    "reference": "Exact positive u64 decimal input with declared target admission",
+    "entity": "Schema-native nonabstract type variants, stable identity and complete argument layouts"
+  },
+  "publication": "Existing SnapshotEditEvent -> stable-id IfcMutation -> central diff/applier/inverse; no independent publisher",
+  "control": "Original caller work, cancellation and finite recursion for expensive reference and mutation planning"
+}

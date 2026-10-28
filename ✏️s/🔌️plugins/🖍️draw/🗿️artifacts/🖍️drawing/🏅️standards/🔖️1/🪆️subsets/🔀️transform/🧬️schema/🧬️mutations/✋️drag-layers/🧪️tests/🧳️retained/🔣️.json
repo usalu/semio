@@ -1,0 +1,679 @@
+[
+  {
+    "name": "root-pair-document-order",
+    "layers": [
+      {
+        "id": "a",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      },
+      {
+        "id": "b",
+        "transform": {
+          "x": 4,
+          "y": 5,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      }
+    ],
+    "targets": [
+      "b",
+      "a"
+    ],
+    "delta": [
+      3,
+      -2
+    ],
+    "rows": [
+      [
+        "a",
+        3,
+        -2
+      ],
+      [
+        "b",
+        7,
+        3
+      ]
+    ],
+    "status": [
+      "moved",
+      "moved"
+    ]
+  },
+  {
+    "name": "scaled-parent",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 100,
+          "y": 50,
+          "scaleX": 2,
+          "scaleY": 4,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 5,
+              "y": 6,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c"
+    ],
+    "delta": [
+      20,
+      -8
+    ],
+    "rows": [
+      [
+        "c",
+        15,
+        4
+      ]
+    ],
+    "status": [
+      "moved"
+    ]
+  },
+  {
+    "name": "ancestor-last-command-order",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c",
+      "g"
+    ],
+    "delta": [
+      20,
+      -10
+    ],
+    "rows": [
+      [
+        "g",
+        20,
+        -10
+      ]
+    ],
+    "status": [
+      "covered",
+      "moved"
+    ]
+  },
+  {
+    "name": "locked-ancestor",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": true,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      },
+      {
+        "id": "ok",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      }
+    ],
+    "targets": [
+      "c",
+      "ok"
+    ],
+    "delta": [
+      1,
+      2
+    ],
+    "rows": [
+      [
+        "ok",
+        1,
+        2
+      ]
+    ],
+    "status": [
+      "locked",
+      "moved"
+    ]
+  },
+  {
+    "name": "missing-partial",
+    "layers": [
+      {
+        "id": "ä😀",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      }
+    ],
+    "targets": [
+      "missing",
+      "ä😀"
+    ],
+    "delta": [
+      2,
+      4
+    ],
+    "rows": [
+      [
+        "ä😀",
+        2,
+        4
+      ]
+    ],
+    "status": [
+      "missing",
+      "moved"
+    ]
+  },
+  {
+    "name": "singular-partial",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 0,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      },
+      {
+        "id": "ok",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      }
+    ],
+    "targets": [
+      "c",
+      "ok"
+    ],
+    "delta": [
+      2,
+      3
+    ],
+    "rows": [
+      [
+        "ok",
+        2,
+        3
+      ]
+    ],
+    "status": [
+      "singular",
+      "moved"
+    ]
+  },
+  {
+    "name": "zero-offset-covers-child",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c",
+      "g"
+    ],
+    "delta": [
+      0,
+      0
+    ],
+    "rows": [],
+    "status": [
+      "covered",
+      "moved"
+    ],
+    "codes": [
+      "mutation.no-op"
+    ]
+  },
+  {
+    "name": "all-missing",
+    "layers": [],
+    "targets": [
+      "ghost"
+    ],
+    "delta": [
+      1,
+      1
+    ],
+    "rows": [],
+    "status": [
+      "missing"
+    ],
+    "error": "mutation.target-missing"
+  },
+  {
+    "name": "duplicate",
+    "layers": [
+      {
+        "id": "a",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      }
+    ],
+    "targets": [
+      "a",
+      "a"
+    ],
+    "delta": [
+      1,
+      1
+    ],
+    "rows": [],
+    "error": "mutation.invariant"
+  },
+  {
+    "name": "empty",
+    "layers": [],
+    "targets": [],
+    "delta": [
+      1,
+      1
+    ],
+    "rows": [],
+    "error": "mutation.invariant"
+  },
+  {
+    "name": "overflow",
+    "layers": [
+      {
+        "id": "a",
+        "transform": {
+          "x": 1.7976931348623157e+308,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false
+      }
+    ],
+    "targets": [
+      "a"
+    ],
+    "delta": [
+      1.7976931348623157e+308,
+      0
+    ],
+    "rows": [],
+    "status": [
+      "singular"
+    ],
+    "error": "mutation.target-missing"
+  },
+  {
+    "name": "rotated-parent",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 1.5707963267948966,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c"
+    ],
+    "delta": [
+      0,
+      5
+    ],
+    "rows": [
+      [
+        "c",
+        5,
+        3.061616997868383e-16
+      ]
+    ],
+    "status": [
+      "moved"
+    ]
+  },
+  {
+    "name": "three-selected-levels-move-once",
+    "layers": [
+      {
+        "id": "a",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "b",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false,
+            "children": [
+              {
+                "id": "c",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "rotation": 0,
+                  "shear": 0
+                },
+                "visible": true,
+                "locked": false
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c",
+      "b",
+      "a"
+    ],
+    "delta": [
+      3,
+      2
+    ],
+    "rows": [
+      [
+        "a",
+        3,
+        2
+      ]
+    ],
+    "status": [
+      "covered",
+      "covered",
+      "moved"
+    ]
+  },
+  {
+    "name": "sheared-scaled-parent",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 2,
+          "scaleY": 4,
+          "rotation": 0,
+          "shear": 6
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c"
+    ],
+    "delta": [
+      10,
+      8
+    ],
+    "rows": [
+      [
+        "c",
+        -1,
+        2
+      ]
+    ],
+    "status": [
+      "moved"
+    ]
+  },
+  {
+    "name": "reflected-parent",
+    "layers": [
+      {
+        "id": "g",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": -2,
+          "scaleY": 4,
+          "rotation": 0,
+          "shear": 0
+        },
+        "visible": true,
+        "locked": false,
+        "children": [
+          {
+            "id": "c",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "rotation": 0,
+              "shear": 0
+            },
+            "visible": true,
+            "locked": false
+          }
+        ]
+      }
+    ],
+    "targets": [
+      "c"
+    ],
+    "delta": [
+      10,
+      8
+    ],
+    "rows": [
+      [
+        "c",
+        -5,
+        2
+      ]
+    ],
+    "status": [
+      "moved"
+    ]
+  }
+]

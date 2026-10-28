@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout STEP Bounded Background Projection",
+  "type": "object",
+  "required": [
+    "scene",
+    "page"
+  ],
+  "properties": {
+    "scene": {
+      "type": "object",
+      "description": "Canonical owned VectorScene read via borrowed lower-step descriptors; source image bytes remain borrowed."
+    },
+    "page": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ]
+    }
+  },
+  "description": "Parent/group affine geometry is orthographically projected in native page coordinates and millimetres. Each path batch is bounded to65points; filled compound/over-envelope paths refuse explicitly, stroked paths page through batches."
+}

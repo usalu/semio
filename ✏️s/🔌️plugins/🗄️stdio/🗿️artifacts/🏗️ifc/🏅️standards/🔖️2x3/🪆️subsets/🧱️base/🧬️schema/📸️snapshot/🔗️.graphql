@@ -1,7 +1,7 @@
 # 🧬️ Ifc2x3Snapshot
-enum Part21ValueKind { REF STR ENUM INT REAL LIST TYPED UNSET DERIVED }
+enum Part21ValueKind { REF STR ENUM INT REAL LIST TYPED UNSET DERIVED BINARY }
 type Part21Decimal { negative: Boolean! coefficient: String! scale: Int! exponent: Int }
-type Part21Value { kind: Part21ValueKind! refValue: Float stringValue: String intValue: Float realValue: Part21Decimal values: [Part21Value!] typeName: String }
+type Part21Value { kind: Part21ValueKind! refValue: Float stringValue: String binaryValue: String intValue: Float realValue: Part21Decimal values: [Part21Value!] typeName: String }
 type Part21Entity { typeName: String! arguments: [Part21Value!]! }
 type Part21Instance { id: Float! entities: [Part21Entity!]! }
 type Part21Header { fileDescription: [Part21Value!]! fileName: [Part21Value!]! fileSchema: [Part21Value!]! }

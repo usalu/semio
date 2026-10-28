@@ -37,6 +37,7 @@ fn independent_value(value: &Part21Value) -> serde_json::Value {
     match value {
         Part21Value::Ref(id) => serde_json::json!({"kind":"ref","value":id}),
         Part21Value::Str(text) => serde_json::json!({"kind":"str","value":text}),
+        Part21Value::Binary(text) => serde_json::json!({"kind":"binary","value":text}),
         Part21Value::Enum(text) => serde_json::json!({"kind":"enum","value":text}),
         Part21Value::Int(integer) => serde_json::json!({"kind":"int","value":integer}),
         Part21Value::Real(decimal) => {

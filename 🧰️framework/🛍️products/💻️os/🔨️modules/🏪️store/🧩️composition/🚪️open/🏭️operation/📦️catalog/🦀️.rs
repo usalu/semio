@@ -64,9 +64,10 @@ fn member_catalog_initial_open_cancellation_pays_original_catalog_and_page_befor
     type Open = InitialMemberStoreOpen<RetainedTestMembers, DemoSnapshot, DemoMutation,semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<DemoMutation>>;
     let (birth, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| Open::begin_birth_demand(&request,&semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).unwrap());
     assert_eq!((allocated, released), (0, 0));
+    let copy=Open::begin_copy_byte_demand(&request,&semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).unwrap();
     let mut caller=OriginalMemberCaller::new();let mut admission=MemberOpenSourceAdmission::new(request);let policy=caller.policy;
     let((ready,receipt),allocated,released)=semio_framework_trace_memory_testing::observe_backing(||caller.run(policy,|parent,cx|admission.admit_source(parent,cx).unwrap()));assert!(!ready);assert_eq!((allocated,released),(0,0));assert_eq!(receipt,RetainedCloneProgress{copied_items:1,..Default::default()});
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth, maximum_copy_bytes: 0, maximum_release_bytes: 0 };
+    let grant = RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth, maximum_copy_bytes: copy, maximum_release_bytes: 0 };
     let(((open,raw),receipt),allocated,released)=semio_framework_trace_memory_testing::observe_backing(||caller.run(grant,|_parent,cx|{let(open,raw)=Open::begin(&mut admission,cx,grant,semio_framework_os_store_testing_doubles::DemoMemberStoreProducer::<DemoMutation>::new()).unwrap();semio_framework_os_store_member_open::receive_member_close(cx,Ok(RetainedCloneStep::Progress(raw))).unwrap();(open,raw)}));assert_eq!(raw,receipt);assert!(admission.terminal_is_empty());
     let mut open = open;
     assert_eq!((allocated, released), (birth.capacity_bytes, 0));

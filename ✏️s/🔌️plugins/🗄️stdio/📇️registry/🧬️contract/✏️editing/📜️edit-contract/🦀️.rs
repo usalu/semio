@@ -14,7 +14,8 @@ pub fn is_snapshot_edit_action(action: &str) -> bool {
     SNAPSHOT_EDIT_ACTION_IDS.contains(&action)
 }
 
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned,semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner=semio_framework_pack_json)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 pub enum SnapshotEditEvent {
     SetValue { path: String, value: DslValue },

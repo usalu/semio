@@ -1,0 +1,86 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 30,
+      "maxItems": 30,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "operation",
+          "root",
+          "cut",
+          "unitPrefix",
+          "mapping",
+          "expected",
+          "volume"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "operation": {
+            "enum": [
+              "DIFFERENCE",
+              "UNION",
+              "INTERSECTION"
+            ]
+          },
+          "root": {
+            "enum": [
+              "direct",
+              "csg"
+            ]
+          },
+          "cut": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "unitPrefix": {
+            "type": "null"
+          },
+          "mapping": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "expected": {
+            "enum": [
+              "supported",
+              "empty",
+              "unsupported"
+            ]
+          },
+          "volume": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0
+          }
+        }
+      }
+    }
+  }
+}

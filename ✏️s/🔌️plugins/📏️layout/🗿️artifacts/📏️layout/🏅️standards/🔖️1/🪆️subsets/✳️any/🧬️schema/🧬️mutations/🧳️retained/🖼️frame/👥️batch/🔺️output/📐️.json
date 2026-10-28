@@ -1,0 +1,17 @@
+{
+  "feature": "layout.retained.batch-sparse-output",
+  "source": "original-bound completed numeric plan + genuinely prepared original authored mutation",
+  "stages": [
+    "reserve one Page modification header",
+    "reserve changed Frame modification headers using actual receipts",
+    "transfer prepared Page ID",
+    "transfer one prepared target String header and scalar bounds per turn"
+  ],
+  "order": "changed frames in original Page order",
+  "custody": "unchanged/missing/locked target strings remain in original payload; each partial LayoutDiff uses typed funded retirement",
+  "prohibitions": [
+    "no current Frame or Snapshot clone",
+    "no copied decision identifier array",
+    "no cold leaf/diff call"
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/geometry/length-unit.json",
+  "title": "IfcLengthUnitResolution",
+  "description": "Project-explicit, source-coordinate-preserving length resolution. A pending cursor borrows one immutable native graph; each advance spends at most the caller work grant. No missing or unsupported unit implies metres.",
+  "oneOf": [
+    {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "pending"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "status",
+        "project",
+        "unit",
+        "metresPerUnit"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "resolved"
+        },
+        "project": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "unit": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]*$"
+        },
+        "metresPerUnit": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "status",
+        "entity",
+        "reason"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "invalid",
+            "limited"
+          ]
+        },
+        "entity": {
+          "type": "string",
+          "pattern": "^[0-9]+$"
+        },
+        "reason": {
+          "type": "string"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "required": [
+        "status"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "const": "cancelled"
+        }
+      }
+    }
+  ]
+}

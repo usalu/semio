@@ -1,0 +1,15 @@
+{
+  "feature": "drawing-original-lookup",
+  "sources": [
+    "snapshot",
+    "same original target field"
+  ],
+  "targets": [
+    "pagedUtf8",
+    "string"
+  ],
+  "maximumDepth": 64,
+  "quantum": "one byte pair or one traversal edge",
+  "ready": "actual retained path",
+  "close": "cursor then target then snapshot"
+}

@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "canonical-composition",
+      "text": "Á and 가",
+      "nfc": "Á and 가"
+    },
+    {
+      "id": "mixed-clusters",
+      "text": "Á😀🇩🇪",
+      "nfc": "Á😀🇩🇪"
+    },
+    {
+      "id": "isolated-hebrew",
+      "text": "abc ⁧אב⁩ 12",
+      "nfc": "abc ⁧אב⁩ 12"
+    }
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "grants": [
+    1,
+    7
+  ]
+}

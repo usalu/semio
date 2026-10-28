@@ -1,0 +1,3 @@
+import json
+from pathlib import Path
+p=Path(__file__).parent;f=p/'mapping-neutral-cases.json';d=json.loads(f.read_text());r=next(r for r in d['cases']if r['id']=='default-axes-axis1');r['id']='tilted-default-axes';r['layers'][0]['axes']=[None,None,[0,2,2]];f.write_text(json.dumps(d,indent=2)+'\n');f=p/'mapping-neutral-oracle.py';s=f.read_text(encoding='utf-8');s=s.replace("rows=data['cases'];out=","rows=[row for row in data['cases']if len(sys.argv)==1 or row['id']==sys.argv[1]];out=");s=s.replace("(out/'oracle.json').write_text","(out/('oracle.json'if len(sys.argv)==1 else 'oracle-'+sys.argv[1]+'.json')).write_text");f.write_text(s,encoding='utf-8')

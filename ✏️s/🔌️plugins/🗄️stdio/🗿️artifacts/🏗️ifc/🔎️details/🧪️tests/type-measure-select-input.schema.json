@@ -1,0 +1,19 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+ "required":["schema","entity","select","indices","members","aggregate","source","cases"],
+ "properties":{
+  "schema":{"const":"IFC4X3_ADD2"},"entity":{"const":"IFCRIGIDOPERATION"},"select":{"const":"IFCMEASUREVALUE"},"indices":{"const":["0","1"]},
+  "members":{"type":"array","minItems":23,"maxItems":23,"uniqueItems":true,"items":{"type":"string","pattern":"^IFC[A-Z0-9]+$"}},
+  "aggregate":{"const":{"type":"IFCCOMPLEXNUMBER","kind":"ARRAY","lower":1,"upper":2,"unique":false,"item":"REAL","cardinality":2}},
+  "source":{"type":"object","additionalProperties":false,"required":["entities"],"properties":{"entities":{"type":"array","minItems":3,"maxItems":3,"items":{"$ref":"#/$defs/entity"}}}},
+  "cases":{"type":"array","minItems":23,"maxItems":23,"items":{"type":"object","additionalProperties":false,"required":["id","member","items","domain","ready","physical"],"properties":{"id":{"type":"string","minLength":1},"member":{"type":"string","pattern":"^IFC[A-Z0-9]+$"},"items":{"anyOf":[{"type":"null"},{"type":"array","maxItems":1,"items":{"$ref":"#/$defs/input"}}]},"domain":{"type":["boolean","null"]},"ready":{"type":"boolean"},"physical":{"type":"boolean"}}}}
+ },
+ "$defs":{
+  "text":{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"enum":["string","integer"]},"value":{"type":"string"}}},
+  "real":{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"real"},"value":{"type":"object","additionalProperties":false,"required":["bits"],"properties":{"bits":{"type":"string"}}}}},
+  "input":{"anyOf":[{"$ref":"#/$defs/text"},{"$ref":"#/$defs/real"},{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"aggregate"},"value":{"type":"array","items":{"$ref":"#/$defs/real"}}}}]},
+  "sourceValue":{"anyOf":[{"$ref":"#/$defs/input"},{"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"const":"unset"}}},{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"reference"},"value":{"type":"string","pattern":"^[1-9][0-9]*$"}}}]},
+  "part":{"type":"object","additionalProperties":false,"required":["name","args"],"properties":{"name":{"type":"string","pattern":"^IFC[A-Z0-9]+$"},"args":{"type":"array","items":{"$ref":"#/$defs/sourceValue"}}}},
+  "entity":{"type":"object","additionalProperties":false,"required":["id","name","args","complex"],"properties":{"id":{"type":"string","pattern":"^[1-9][0-9]*$"},"name":{"type":"string","pattern":"^IFC[A-Z0-9]+$"},"args":{"type":"array","items":{"$ref":"#/$defs/sourceValue"}},"complex":{"type":"array","items":{"$ref":"#/$defs/part"}}}}
+ }
+}

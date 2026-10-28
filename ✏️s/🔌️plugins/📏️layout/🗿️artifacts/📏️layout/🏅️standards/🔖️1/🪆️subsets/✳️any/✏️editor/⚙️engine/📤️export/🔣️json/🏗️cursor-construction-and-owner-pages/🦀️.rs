@@ -272,6 +272,9 @@ impl TypedJsonCursor {
                     self.stack.push(TypedJsonNode::String { source, cursor });
                 }
             }
+            TypedJsonNode::Child(mut cursor) => {
+                let (bytes,done)=cursor.advance(snapshot)?;output=bytes;if !done{self.stack.push(TypedJsonNode::Child(cursor));}
+            }
             TypedJsonNode::Dictionary(mut cursor) => {
                 let (bytes, done) = cursor.advance(snapshot)?;
                 output = bytes;

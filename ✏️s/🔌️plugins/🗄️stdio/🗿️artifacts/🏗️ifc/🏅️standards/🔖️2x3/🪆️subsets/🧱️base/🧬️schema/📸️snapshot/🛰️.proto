@@ -2,9 +2,9 @@ syntax = "proto3";
 package semio.s_stdio_ifc_2x3.snapshot;
 message Part21Decimal { bool negative = 1; string coefficient = 2; uint32 scale = 3; optional int32 exponent = 4; }
 message Part21Value {
-  enum Kind { REF = 0; STR = 1; ENUM = 2; INT = 3; REAL = 4; LIST = 5; TYPED = 6; UNSET = 7; DERIVED = 8; }
+  enum Kind { REF = 0; STR = 1; ENUM = 2; INT = 3; REAL = 4; LIST = 5; TYPED = 6; UNSET = 7; DERIVED = 8; BINARY = 9; }
   Kind kind = 1; uint64 ref_value = 2; string string_value = 3; int64 int_value = 4; Part21Decimal real_value = 5;
-  repeated Part21Value values = 6; string type_name = 7;
+  repeated Part21Value values = 6; string type_name = 7; string binary_value = 8;
 }
 message Part21Entity { string type_name = 1; repeated Part21Value arguments = 2; }
 message Part21Instance { uint64 id = 1; repeated Part21Entity entities = 2; }

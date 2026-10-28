@@ -1,0 +1,278 @@
+{
+  "schema": "layout.pdf.semantic-text.v1",
+  "tag": "SemioLayoutText",
+  "maximumDepth": 256,
+  "cases": [
+    {
+      "id": "visible",
+      "mode": 0,
+      "ops": [],
+      "promote": true
+    },
+    {
+      "id": "unmarked-hidden",
+      "mode": 3,
+      "ops": [],
+      "promote": false
+    },
+    {
+      "id": "other-hidden",
+      "mode": 3,
+      "ops": [
+        {
+          "begin": "Artifact"
+        }
+      ],
+      "promote": false
+    },
+    {
+      "id": "tagged-hidden",
+      "mode": 3,
+      "ops": [
+        {
+          "begin": "SemioLayoutText"
+        }
+      ],
+      "promote": true
+    },
+    {
+      "id": "nested-other",
+      "mode": 3,
+      "ops": [
+        {
+          "begin": "SemioLayoutText"
+        },
+        {
+          "begin": "Span"
+        }
+      ],
+      "promote": true
+    },
+    {
+      "id": "nested-tag-end",
+      "mode": 3,
+      "ops": [
+        {
+          "begin": "SemioLayoutText"
+        },
+        {
+          "begin": "SemioLayoutText"
+        },
+        {
+          "end": true
+        }
+      ],
+      "promote": true
+    },
+    {
+      "id": "after-tag-end",
+      "mode": 3,
+      "ops": [
+        {
+          "begin": "SemioLayoutText"
+        },
+        {
+          "end": true
+        }
+      ],
+      "promote": false
+    },
+    {
+      "id": "underflow",
+      "mode": 3,
+      "ops": [
+        {
+          "end": true
+        }
+      ],
+      "error": "layout.pdf.marked-content-stack"
+    },
+    {
+      "id": "depth-limit",
+      "mode": 3,
+      "repeatBegin": 257,
+      "error": "layout.pdf.marked-content-depth"
+    },
+    {
+      "id": "depth-256",
+      "mode": 3,
+      "repeatBegin": 256,
+      "promote": false
+    }
+  ],
+  "oracle": {
+    "library": "pdfjs-dist",
+    "version": "5.7.284",
+    "textUnchangedByMarker": true
+  },
+  "styled": {
+    "text": "Grüße",
+    "tag": "SemioLayoutText",
+    "mode": 3,
+    "fontFamily": "Open Sans Ä",
+    "fontWeight": 700,
+    "italic": true,
+    "fontSize": 18,
+    "position": [
+      20,
+      70
+    ],
+    "fill": [
+      0.2,
+      0.3,
+      0.4,
+      0.5
+    ],
+    "expected": {
+      "x": 20,
+      "y": 215.6,
+      "fontSize": 18,
+      "alpha": 0.5
+    }
+  },
+  "textStrings": [
+    {
+      "bytes": [
+        128,
+        160
+      ],
+      "text": "•€"
+    },
+    {
+      "bytes": [
+        239,
+        187,
+        191,
+        79,
+        112,
+        101,
+        110
+      ],
+      "text": "Open"
+    },
+    {
+      "bytes": [
+        254,
+        255,
+        0,
+        65,
+        128
+      ],
+      "text": "A"
+    }
+  ],
+  "maximumFontWeight": 4294967295,
+  "paintOwnership": [
+    {
+      "id": "unmarked",
+      "tag": null,
+      "promotions": [
+        true
+      ],
+      "suppress": false
+    },
+    {
+      "id": "tagged-promoted",
+      "tag": "SemioLayoutText",
+      "promotions": [
+        true
+      ],
+      "suppress": true
+    },
+    {
+      "id": "tagged-unsupported",
+      "tag": "SemioLayoutText",
+      "promotions": [
+        false
+      ],
+      "suppress": false
+    },
+    {
+      "id": "paint-before-text",
+      "tag": "SemioLayoutText",
+      "promotions": [],
+      "suppress": false
+    },
+    {
+      "id": "mixed-fallback",
+      "tag": "SemioLayoutText",
+      "promotions": [
+        true,
+        false
+      ],
+      "suppress": false
+    }
+  ],
+  "matrices": [
+    {
+      "id": "authored-placeholder-tz",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        20,
+        70
+      ],
+      "scale": 0.6,
+      "authored": true,
+      "editable": true
+    },
+    {
+      "id": "general-tz-anisotropy",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        20,
+        70
+      ],
+      "scale": 0.6,
+      "authored": false,
+      "editable": false
+    },
+    {
+      "id": "authored-shear",
+      "matrix": [
+        1,
+        0,
+        0.5,
+        1,
+        20,
+        70
+      ],
+      "scale": 1,
+      "authored": true,
+      "editable": false
+    },
+    {
+      "id": "authored-anisotropic-tm",
+      "matrix": [
+        2,
+        0,
+        0,
+        1,
+        20,
+        70
+      ],
+      "scale": 1,
+      "authored": true,
+      "editable": false
+    },
+    {
+      "id": "uniform-rotation",
+      "matrix": [
+        0,
+        2,
+        -2,
+        0,
+        20,
+        70
+      ],
+      "scale": 1,
+      "authored": true,
+      "editable": true
+    }
+  ]
+}

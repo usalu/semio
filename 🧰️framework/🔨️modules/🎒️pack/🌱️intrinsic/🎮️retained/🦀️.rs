@@ -2,6 +2,7 @@
 use semio_framework_replication_codec::PackLimits; use semio_framework_pack_error::PackRefusal; use semio_framework_pack_record_retained::{RetainedRecordBodyCursor, RetainedRecordBodyToken, RetainedValueToken as Token, RetainedValueContainer as Container, RetainedValueRole as Role};
 use semio_framework_value::{DslValue,Number,ValueError,ValueRefusalKind,retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::{ManuallyDrop,size_of};
+use semio_framework_replication_wire_core::RetainedWireByteSource;
 
 /// 📥️ Immutable wire custody transfers without copying its complete backing.
 #[derive(Debug)]
@@ -104,7 +105,7 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
    Copy::Symbol{symbol,index,count}=>{let character=self.cursor.symbol_char(symbol,index)?.ok_or_else(||invalid("missing symbol scalar"))?;let DslValue::String(text)=&mut self.owned.scalar else{return Err(invalid("missing symbol owner"))};if text.len()+character.len_utf8()>text.capacity(){return Err(invalid("symbol exceeds admitted owner"))}text.push(character);self.copy=if index+1==count{Copy::Ready}else{Copy::Symbol{symbol,index:index+1,count}};return Ok(())},
    _=>{}
   }
-  let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),self.remaining());let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();if let Some(token)=result?{self.token(token)?}
+  let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),(0,self.input.as_ref().unwrap().bytes().len()),self.remaining());let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();if let Some(token)=result?{self.token(token)?}
   Ok(())
  }
  /// 📏️ Quotes one exact source, parser or materialization frontier before its physical effect.
@@ -134,7 +135,7 @@ impl<'a,D:RetainedValueDriver> Materializer<'a,D>{
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_depth<demand.depth{return RetainedIntrinsicOriginalCall{result:Ok(step()),progress:empty}}
   let before=self.admitted;let result=(||{
    if self.owned.frames.capacity()==0{return self.one()}if let Some(token)=self.pending_token.take(){return self.token(token)}if matches!(self.copy,Copy::Ready|Copy::Symbol{..}){return self.one()}
-   let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),self.remaining());let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("original parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();self.pending_token=result?;Ok(())
+   let before=self.cursor.allocated_bytes();let result=self.cursor.one(self.input.as_ref().unwrap().bytes(),(0,self.input.as_ref().unwrap().bytes().len()),self.remaining());let born=self.cursor.allocated_bytes().checked_sub(before).ok_or_else(||invalid("original parser allocation custody regressed"))?;self.admit(born)?;self.offset=self.cursor.input_bytes();self.pending_token=result?;Ok(())
   })();let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:self.admitted-before,..Default::default()};
   if result.is_err(){self.original_failed=true;}let result=result.map(|_|RetainedIntrinsicStep{units:1,input_bytes:self.offset,admitted_bytes:self.admitted,complete:self.complete});RetainedIntrinsicOriginalCall{result,progress}
  }
@@ -177,10 +178,10 @@ impl<D:RetainedValueDriver> Drop for Materializer<'_,D>{fn drop(&mut self){asser
 struct BodyDriver{cursor:RetainedRecordBodyCursor,offset:usize,sealed:bool}
 impl RetainedValueDriver for BodyDriver{
  fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{let symbols=length.min(limits.max_symbols as usize);Ok(Self{cursor:RetainedRecordBodyCursor::try_new_intrinsic(limits,symbols,length,length,maximum)?,offset:0,sealed:false})}
- fn one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>{
+ fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
   if let Some(bytes)=self.cursor.next_allocation_bytes()?{if bytes>maximum{return Err(capacity())}self.cursor.reserve_allocation(bytes).map_err(|error|error.fault)?;return Ok(None)}
   if let Some(token)=self.cursor.grant()?{return Ok(match token{RetainedRecordBodyToken::Value(token)=>Some(token),_=>None})}
-  if self.cursor.ingress_ready(){if self.offset<input.len(){self.cursor.admit_byte(self.offset as u64,input[self.offset]).map_err(|_|invalid("input handback"))?;self.offset+=1}else if !self.sealed{self.cursor.seal(self.offset as u64)?;self.sealed=true}else{return Err(invalid("terminal progress unavailable"))}}Ok(None)
+  if self.cursor.ingress_ready(){if self.offset<(range.1-range.0){self.cursor.admit_byte(self.offset as u64,input.byte_at(range.0+self.offset).ok_or_else(||invalid("original intrinsic input byte is absent"))?).map_err(|_|invalid("input handback"))?;self.offset+=1}else if !self.sealed{self.cursor.seal(self.offset as u64)?;self.sealed=true}else{return Err(invalid("terminal progress unavailable"))}}Ok(None)
  }
  fn normal_demands(&self)->Result<semio_framework_value::RetirementDemand,PackRefusal>{self.cursor.source_step_demands()}
  fn allocated_bytes(&self)->usize{self.cursor.allocated_bytes()}

@@ -1,0 +1,4 @@
+import pathlib,json
+p=pathlib.Path(__file__).resolve().parent;source=p/'type-measure-select-oracle.py';namespace={'__file__':str(source)};exec(compile(source.read_text(encoding='utf-8-sig').split('\nlaw=')[0],str(source),'exec'),namespace)
+law=json.loads((p.parents[6]/'✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/type-measure-select-input.json').read_text());oracle=namespace['IfcOpenShellMeasure']();rows=[oracle.observe(row)for row in law['cases']]
+result={'library':oracle.version,'arrayMetadata':oracle.array,'rows':rows};(p/'🗑️generated/type-measure-independent-physical.json').write_text(json.dumps(result,indent=2),encoding='utf8');print('[DEBUG] '+json.dumps({'physical':sum(r['physical']for r in rows),'exact':sum(r.get('exact',False)for r in rows),'rawMatched':sum(r.get('exact',False)and r['coordinate']['admitted']==r['expectedReady']and r['carrier']['admitted']==r['expectedDomain']for r in rows if r['physical'])}))

@@ -1,5 +1,5 @@
 /** 🪪️ Literal Layout native JSON boundary alongside its exact owned words and SQLite relations. */
-import {parseLayoutArtifact,LAYOUT_BACKGROUND_DRAWING,type LayoutArtifact,type LayoutDrawingContent} from "../../../../🧬️schema/🟦️.ts";
+import {parseLayoutArtifact,type LayoutArtifact} from "../../../../🧬️schema/🟦️.ts";
 import {binary64,binary32,binary64Value,binary32Value,type Binary64,type Binary32} from "@semio-tech/framework/value/ieee754";
 import{questionDictionaryNativeJson,questionDictionaryFromNativeJson}from"@semio-tech/framework/value/dictionary/native-json";
 export const row=(v:unknown):Record<string,unknown>=>{if(v===null||typeof v!=="object"||Array.isArray(v))throw Error("Layout native JSON record");return v as Record<string,unknown>;};
@@ -15,8 +15,8 @@ export function character(v:unknown,out:boolean):unknown{const r=fields(v,["font
 export function run(v:unknown,out:boolean):unknown{const r={...row(v)};r.start=wide(r.start,out);r.end=wide(r.end,out);return r;}
 export function story(v:unknown,out:boolean):unknown{const r={...row(v)};r.styleRuns=array(r.styleRuns).map(v=>run(v,out));return r;}
 export function frame(v:unknown,out:boolean):unknown{const r={...row(v)};r.bounds=fields(r.bounds,["x","y","w","h","rotation"],out);switch(r.kind){case"rect":if(r.fill!=null)r.fill=rgba(r.fill,out);if(r.stroke!=null)r.stroke=rgba(r.stroke,out);break;case"text":r.inset=fields(r.inset,["x","y","w","h"],out);break;case"image":break;default:throw Error("Layout native JSON frame kind");}return r;}
-export function page(v:unknown,out:boolean,parent:boolean):unknown{const r=fields(v,["width","height"],out);r.frames=array(r.frames).map(v=>frame(v,out));if(!parent){r.margins=fields(r.margins,["top","right","bottom","left"],out);r.columns=fields(r.columns,["gutter"],out);r.guides=array(r.guides).map(v=>fields(v,["x","y","w","h"],out));r.overrides=array(r.overrides).map(v=>{const x={...row(v)};if(x.bounds!=null)x.bounds=fields(x.bounds,["x","y","w","h","rotation"],out);return x;});}return r;}
-export function child(v:unknown,out:boolean):unknown{const r={...row(v)};r.content=out?LAYOUT_BACKGROUND_DRAWING.codec().nativeJson.to(r.content as LayoutDrawingContent):LAYOUT_BACKGROUND_DRAWING.codec().nativeJson.from(r.content);return r;}
+export function page(v:unknown,out:boolean,parent:boolean):unknown{const r=fields(v,["width","height"],out);r.frames=array(r.frames).map(v=>frame(v,out));if(!parent){if(r.backgroundDrawing!==undefined)r.backgroundDrawing=pageChild(r.backgroundDrawing,out);r.margins=fields(r.margins,["top","right","bottom","left"],out);r.columns=fields(r.columns,["gutter"],out);r.guides=array(r.guides).map(v=>fields(v,["x","y","w","h"],out));r.overrides=array(r.overrides).map(v=>{const x={...row(v)};if(x.bounds!=null)x.bounds=fields(x.bounds,["x","y","w","h","rotation"],out);return x;});}return r;}
+export function child(v:unknown,_out:boolean):unknown{const r=row(v);if(Object.keys(r).length!==1||!Object.hasOwn(r,"handle"))throw Error("Layout Drawing member owns only its handle");return{handle:r.handle};}
 export function link(v:unknown,out:boolean):unknown{const r={...row(v)},pin={...row(r.pin)};if(pin.kind==="snapshot"){const blob={...row(pin.blob)};blob.size=wide(blob.size,out);pin.blob=blob;}r.pin=pin;return r;}
 export function image(v:unknown,out:boolean):unknown{const r={...row(v)};if(out){if(r.artifactKind==="")delete r.artifactKind;if(r.artifactRef==="")delete r.artifactRef;}else{r.artifactKind??="";r.artifactRef??="";}return r;}
 export function artifact(v:unknown,out:boolean):unknown{const r={...row(v)};r.grid=fields(r.grid,["baselineGrid","baselineOffset"],out);r.paragraphStyles=array(r.paragraphStyles).map(v=>paragraph(v,out));r.characterStyles=array(r.characterStyles).map(v=>character(v,out));r.stories=array(r.stories).map(v=>story(v,out));r.links=array(r.links).map(v=>image(v,out));r.parentPages=array(r.parentPages).map(v=>page(v,out,true));r.pages=array(r.pages).map(v=>page(v,out,false));if(r.dataFields!==undefined)r.dataFields=out?questionDictionaryNativeJson(r.dataFields as Parameters<typeof questionDictionaryNativeJson>[0]):questionDictionaryFromNativeJson(r.dataFields);if(r.backgroundDrawing!==undefined)r.backgroundDrawing=child(r.backgroundDrawing,out);if(r.referencedModel!==undefined)r.referencedModel=link(r.referencedModel,out);return r;}
@@ -24,3 +24,6 @@ export function artifact(v:unknown,out:boolean):unknown{const r={...row(v)};r.gr
 export function layoutArtifactFromNativeJson(value:unknown):LayoutArtifact{return parseLayoutArtifact(artifact(value,false));}
 /** 📤️ Names the existing finite native JSON projection; complete IEEE state remains owned. */
 export function layoutArtifactNativeJson(value:LayoutArtifact):unknown{return artifact(value,true);}
+
+/** 📄️ Converts only the named Page Drawing member reference. */
+export function pageChild(v:unknown,out:boolean):unknown{return child(v,out);}

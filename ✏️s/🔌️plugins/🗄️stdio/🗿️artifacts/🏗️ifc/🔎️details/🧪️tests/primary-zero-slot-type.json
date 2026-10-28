@@ -1,0 +1,8 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"cases":[
+{"id":"primary-variant","value":{"$ifcType":"IFCGEOMETRICREPRESENTATIONITEM"},"name":"IFCGEOMETRICREPRESENTATIONITEM","admitted":true,"mutations":1},
+{"id":"canonical-variant","value":{"$ifcType":"IfcGeometricRepresentationItem"},"name":"IFCGEOMETRICREPRESENTATIONITEM","admitted":true,"mutations":1},
+{"id":"same-type","value":{"$ifcType":"IFCREPRESENTATIONITEM"},"name":"IFCREPRESENTATIONITEM","admitted":true,"mutations":0},
+{"id":"same-type-canonicalized","value":{"$ifcType":"IfcRepresentationItem"},"name":"IFCREPRESENTATIONITEM","admitted":true,"mutations":0},
+{"id":"maximum-id","entityId":"18446744073709551615","value":{"$ifcType":"IFCGEOMETRICREPRESENTATIONITEM"},"name":"IFCGEOMETRICREPRESENTATIONITEM","admitted":true,"mutations":1},
+{"id":"duplicate-id","duplicate":true,"value":{"$ifcType":"IFCGEOMETRICREPRESENTATIONITEM"},"name":"IFCGEOMETRICREPRESENTATIONITEM","admitted":false,"mutations":0}
+],"fallback":["simple-root-layout","new-own-attributes","old-own-attributes","source-surplus-arguments","unknown-new-type","derived-survivor","global-id-survivor","derived-direct-value","lowercase-survivor-name"]}

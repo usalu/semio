@@ -1,0 +1,9 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"parts":[{"name":"IFCOBJECTDEFINITION","args":[]},{"name":"IFCOBJECT","args":[{"kind":"unset"}]},{"name":"IFCPRODUCT","args":[{"kind":"unset"},{"kind":"unset"}]},{"name":"IFCELEMENT","args":[{"kind":"unset"}]},{"name":"IFCBUILTELEMENT","args":[]},{"name":"IFCWALL","args":[{"kind":"enum","value":"STANDARD"}]}],"cases":[
+{"id":"populated-original-id","globalId":{"kind":"string","value":"0123456789012345678901"},"retained":true},
+{"id":"maximum-entity-id","entityId":"18446744073709551615","globalId":{"kind":"string","value":"0123456789012345678901"},"retained":true},
+{"id":"unchanged-invalid-unicode-id","globalId":{"kind":"string","value":"原始身份🌍"},"retained":true},
+{"id":"empty-id-requires-generation","globalId":{"kind":"string","value":""},"retained":false},
+{"id":"unset-direct-id","globalId":{"kind":"unset"},"retained":false},
+{"id":"wrong-kind-direct-id","globalId":{"kind":"enum","value":"T"},"retained":false},
+{"id":"missing-direct-id","missing":true,"retained":false}
+]}

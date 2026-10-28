@@ -63,6 +63,9 @@ pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protoc
         Some(layer_id) => semio_s_artifact_layout_layout_model::frame_in_layer(&payload.frame, layer_id),
         None => payload.frame.clone(),
     };
+    if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_frame_creation(base, page, &frame) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, [frame.id().to_string()]);
+    }
     let at = payload.index.unwrap_or(page.frames.len());
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::insertion(at, frame), ..Default::default() } }], ..Default::default() }),
@@ -72,7 +75,8 @@ pub fn diff_create_frame(payload: &CreateFrame, base: &LayoutSnapshot) -> protoc
 //#endregion ➕️CreateFrame
 
 //#region ➕️CreateFrame
-pub fn inverse_create_frame<Op: From<crate::delete_frame::DeleteFrame>>(payload: &CreateFrame, _base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+pub fn inverse_create_frame<Op: From<crate::delete_frame::DeleteFrame>>(payload: &CreateFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_create_frame(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     vec![Op::from(delete_frame::DeleteFrame { page_id: payload.page_id.clone(), frame_id: payload.frame.id().to_string() })]
 

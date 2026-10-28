@@ -8,14 +8,17 @@
 // #region 🔌️Adapters
 import * as React from "react";
 import { cn } from "../../🔨️modules/🏷️class-name-composition/🟦️.ts";
+import { fieldAssociation } from "./🔗️association/🟦️.ts";
 // #endregion 🔌️Adapters
 
 // #region 🏷️Field
-export interface FieldProps {
+export interface FieldProps extends React.HTMLAttributes<HTMLDivElement> {
   /** 🪪️ The field ROW's own DOM id, and the stem of its control's — the label associates with
    * `${id}.control`, which is the id an authored `ui::field(...).try_child(control)` gives that child
    * (see `stepper_field` in puzzle 3d's settings panel). */
   readonly id?: string;
+  /** 🎯️ The actual labelable child address; null marks a read-only presentation. */
+  readonly controlId?: string | null;
   readonly label: React.ReactNode;
   readonly description?: React.ReactNode;
   readonly required?: boolean;
@@ -25,17 +28,19 @@ export interface FieldProps {
 }
 
 /** 🏷️ Labelled form field wrapper with description and validation message. */
-export const Field: React.FC<FieldProps> = ({ id, label, description, required, error, className, children }) => {
+export const Field: React.FC<FieldProps> = ({ id, controlId, label, description, required, error, className, children, ...props }) => {
+  const association = fieldAssociation(id, controlId, Boolean(description), Boolean(error));
+  const Label = association.target ? "label" : "span";
   return (
-    <div id={id} className={cn("flex flex-col gap-single min-w-0", className)} data-slot="field">
+    <div {...props} id={id} className={cn("flex flex-col gap-single min-w-0", className)} data-slot="field">
       <div className="flex items-baseline gap-single min-w-0">
-        <label htmlFor={id ? `${id}.control` : undefined} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
+        <Label id={association.label} {...(association.target ? { htmlFor: association.target } : {})} className="text-sm font-medium text-foreground truncate" data-slot="field-label">
           {label}
-          {required ? <span className="text-destructive ms-half">*</span> : null}
-        </label>
+          {required ? <span aria-hidden="true" className="text-destructive ms-half">*</span> : null}
+        </Label>
       </div>
       {description ? (
-        <p className="text-xs text-muted-foreground" data-slot="field-description">
+        <p id={association.description} className="text-xs text-muted-foreground" data-slot="field-description">
           {description}
         </p>
       ) : null}
@@ -43,7 +48,7 @@ export const Field: React.FC<FieldProps> = ({ id, label, description, required, 
         {children}
       </div>
       {error ? (
-        <p className="text-xs text-destructive" data-slot="field-error">
+        <p id={association.error} role="alert" className="text-xs text-destructive" data-slot="field-error">
           {error}
         </p>
       ) : null}

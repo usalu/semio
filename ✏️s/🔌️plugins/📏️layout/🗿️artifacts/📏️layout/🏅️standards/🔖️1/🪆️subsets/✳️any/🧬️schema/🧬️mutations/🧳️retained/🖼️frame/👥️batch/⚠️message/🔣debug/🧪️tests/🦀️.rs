@@ -1,0 +1,2 @@
+use super::*;
+#[test]fn shared_debug_escaping_matches_the_independent_standard_string_formatter(){let fixture:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();for row in fixture["cases"].as_array().unwrap(){let input=row["input"].as_str().unwrap();let scalar=input.chars().next().unwrap();assert_eq!(input.chars().count(),1);let mut bytes=[0;10];let used=rust_string_debug_scalar(scalar,&mut bytes);let body=std::str::from_utf8(&bytes[..used]).unwrap();assert_eq!(body,row["body"].as_str().unwrap());assert_eq!(format!("\"{body}\""),format!("{input:?}"));}}

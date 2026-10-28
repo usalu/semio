@@ -275,6 +275,7 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
           takeSegmentedDownloadChunk: async () => undefined,
           handleAction: async () => ({ output: null, mutations: [], inverseGroup: { invocationId: "", mutations: [], inverseMutations: [] } }),
           refreshUi: async () => ({}),
+          acquireOwnedUiSurface:()=>undefined,
           contextMenu: async () => [],
           readHistory: async () => ({ cursor: 0 }) as unknown as HistoryPatch,
           readLocalInteraction: async (instanceId) => fakeLocalInteraction(instanceId),

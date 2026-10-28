@@ -1,0 +1,886 @@
+{
+  "document": {
+    "schema": "layout.layout",
+    "name": "Fixture Layout",
+    "grid": {
+      "baselineGrid": 12,
+      "baselineOffset": 0,
+      "snapToBaseline": true
+    },
+    "paragraphStyles": [],
+    "characterStyles": [],
+    "stories": [
+      {
+        "id": "story-1",
+        "content": "Alpha body.",
+        "styleRuns": []
+      },
+      {
+        "id": "story-2",
+        "content": "Spare body.",
+        "styleRuns": []
+      }
+    ],
+    "links": [
+      {
+        "id": "link-1",
+        "path": "alpha.png",
+        "hash": "hash-alpha",
+        "width": 800,
+        "height": 600,
+        "dpi": 300,
+        "colorProfile": null,
+        "state": null,
+        "proxyDataUrl": null
+      },
+      {
+        "id": "link-2",
+        "path": "spare.png",
+        "hash": "hash-spare",
+        "width": 400,
+        "height": 300,
+        "dpi": 72,
+        "colorProfile": null,
+        "state": null,
+        "proxyDataUrl": null
+      }
+    ],
+    "parentPages": [],
+    "spreads": [
+      {
+        "id": "spread-1",
+        "name": "First",
+        "pageIds": [
+          "page-1"
+        ]
+      },
+      {
+        "id": "spread-2",
+        "name": "Second",
+        "pageIds": []
+      }
+    ],
+    "pages": [
+      {
+        "id": "page-1",
+        "name": "Cover",
+        "spreadId": "spread-1",
+        "parentPageId": null,
+        "width": 8192,
+        "height": 4096,
+        "margins": {
+          "top": 10,
+          "right": 10,
+          "bottom": 10,
+          "left": 10
+        },
+        "columns": {
+          "count": 1,
+          "gutter": 0
+        },
+        "guides": [],
+        "layerIds": [
+          "front",
+          "back"
+        ],
+        "layers": [
+          {
+            "id": "front",
+            "name": "Front",
+            "visible": true,
+            "locked": false,
+            "objectIds": [
+              "frame-0",
+              "frame-2",
+              "frame-4",
+              "frame-6",
+              "frame-8",
+              "frame-10",
+              "frame-12",
+              "frame-14",
+              "frame-16",
+              "frame-18",
+              "frame-20",
+              "frame-22",
+              "frame-24",
+              "frame-26",
+              "frame-28",
+              "frame-30"
+            ]
+          },
+          {
+            "id": "back",
+            "name": "Back",
+            "visible": true,
+            "locked": false,
+            "objectIds": [
+              "frame-1",
+              "frame-3",
+              "frame-5",
+              "frame-7",
+              "frame-9",
+              "frame-11",
+              "frame-13",
+              "frame-15",
+              "frame-17",
+              "frame-19",
+              "frame-21",
+              "frame-23",
+              "frame-25",
+              "frame-27",
+              "frame-29",
+              "frame-31"
+            ]
+          }
+        ],
+        "frames": [
+          {
+            "kind": "rect",
+            "id": "frame-0",
+            "layerId": "front",
+            "bounds": {
+              "x": 1,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-1",
+            "layerId": "back",
+            "bounds": {
+              "x": 13,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-2",
+            "layerId": "front",
+            "bounds": {
+              "x": 25,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-3",
+            "layerId": "back",
+            "bounds": {
+              "x": 37,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-4",
+            "layerId": "front",
+            "bounds": {
+              "x": 49,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-5",
+            "layerId": "back",
+            "bounds": {
+              "x": 61,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-6",
+            "layerId": "front",
+            "bounds": {
+              "x": 73,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-7",
+            "layerId": "back",
+            "bounds": {
+              "x": 85,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-8",
+            "layerId": "front",
+            "bounds": {
+              "x": 97,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-9",
+            "layerId": "back",
+            "bounds": {
+              "x": 109,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-10",
+            "layerId": "front",
+            "bounds": {
+              "x": 121,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-11",
+            "layerId": "back",
+            "bounds": {
+              "x": 133,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-12",
+            "layerId": "front",
+            "bounds": {
+              "x": 145,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-13",
+            "layerId": "back",
+            "bounds": {
+              "x": 157,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-14",
+            "layerId": "front",
+            "bounds": {
+              "x": 169,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-15",
+            "layerId": "back",
+            "bounds": {
+              "x": 181,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-16",
+            "layerId": "front",
+            "bounds": {
+              "x": 193,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-17",
+            "layerId": "back",
+            "bounds": {
+              "x": 205,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-18",
+            "layerId": "front",
+            "bounds": {
+              "x": 217,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-19",
+            "layerId": "back",
+            "bounds": {
+              "x": 229,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-20",
+            "layerId": "front",
+            "bounds": {
+              "x": 241,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-21",
+            "layerId": "back",
+            "bounds": {
+              "x": 253,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-22",
+            "layerId": "front",
+            "bounds": {
+              "x": 265,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-23",
+            "layerId": "back",
+            "bounds": {
+              "x": 277,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-24",
+            "layerId": "front",
+            "bounds": {
+              "x": 289,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-25",
+            "layerId": "back",
+            "bounds": {
+              "x": 301,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-26",
+            "layerId": "front",
+            "bounds": {
+              "x": 313,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-27",
+            "layerId": "back",
+            "bounds": {
+              "x": 325,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-28",
+            "layerId": "front",
+            "bounds": {
+              "x": 337,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-29",
+            "layerId": "back",
+            "bounds": {
+              "x": 349,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-30",
+            "layerId": "front",
+            "bounds": {
+              "x": 361,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          },
+          {
+            "kind": "rect",
+            "id": "frame-31",
+            "layerId": "back",
+            "bounds": {
+              "x": 373,
+              "y": 0,
+              "w": 10,
+              "h": 10,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "fill": [
+              0.25,
+              0.5,
+              0.75,
+              1
+            ],
+            "stroke": null
+          }
+        ],
+        "overrides": []
+      }
+    ],
+    "printTarget": null
+  },
+  "frameCount": 32,
+  "expectedX": [
+    1,
+    25,
+    49,
+    73,
+    97,
+    121,
+    145,
+    169,
+    193,
+    217,
+    241,
+    265,
+    289,
+    313,
+    337,
+    361,
+    13,
+    37,
+    61,
+    85,
+    109,
+    133,
+    157,
+    181,
+    205,
+    229,
+    253,
+    277,
+    301,
+    325,
+    349,
+    373
+  ],
+  "expectedOrder": [
+    "frame-0",
+    "frame-2",
+    "frame-4",
+    "frame-6",
+    "frame-8",
+    "frame-10",
+    "frame-12",
+    "frame-14",
+    "frame-16",
+    "frame-18",
+    "frame-20",
+    "frame-22",
+    "frame-24",
+    "frame-26",
+    "frame-28",
+    "frame-30",
+    "frame-1",
+    "frame-3",
+    "frame-5",
+    "frame-7",
+    "frame-9",
+    "frame-11",
+    "frame-13",
+    "frame-15",
+    "frame-17",
+    "frame-19",
+    "frame-21",
+    "frame-23",
+    "frame-25",
+    "frame-27",
+    "frame-29",
+    "frame-31"
+  ],
+  "vectorWidth": 8192,
+  "vectorHeight": 4096
+}

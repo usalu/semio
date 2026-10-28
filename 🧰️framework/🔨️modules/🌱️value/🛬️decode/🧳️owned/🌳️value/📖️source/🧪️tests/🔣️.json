@@ -1,0 +1,57 @@
+{
+  "cases": [
+    {
+      "name": "text child",
+      "source": {
+        "id": "original",
+        "count": 7
+      },
+      "path": [
+        "id"
+      ],
+      "expected": "original"
+    },
+    {
+      "name": "heterogeneous nested record",
+      "source": {
+        "rows": [
+          {
+            "name": "first",
+            "values": [
+              true,
+              9
+            ]
+          }
+        ]
+      },
+      "path": [
+        "rows",
+        0,
+        "values",
+        1
+      ],
+      "expected": 9
+    },
+    {
+      "name": "tagged original payload",
+      "source": {
+        "kind": "group",
+        "payload": {
+          "children": [
+            {
+              "id": "nested"
+            }
+          ]
+        }
+      },
+      "path": [
+        "payload",
+        "children",
+        0
+      ],
+      "expected": {
+        "id": "nested"
+      }
+    }
+  ]
+}

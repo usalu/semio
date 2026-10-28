@@ -1,0 +1,23 @@
+{
+  "description": "Normative inherited serialized tuple bounds; native factory extent reads these profile facts without constructing the catalog. Actual arbitrary imported tuples are separately capacity-checked.",
+  "cases": [
+    {
+      "standard": "IFC4",
+      "maximumAttributes": 21,
+      "largestEntities": [
+        "IfcTaskTimeRecurring"
+      ],
+      "invertibleItems": 45,
+      "rows": 90
+    },
+    {
+      "standard": "IFC4X3_ADD2",
+      "maximumAttributes": 21,
+      "largestEntities": [
+        "IfcTaskTimeRecurring"
+      ],
+      "invertibleItems": 45,
+      "rows": 90
+    }
+  ]
+}

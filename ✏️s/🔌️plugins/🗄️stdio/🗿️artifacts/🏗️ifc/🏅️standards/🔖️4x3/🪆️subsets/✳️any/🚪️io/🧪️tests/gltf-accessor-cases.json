@@ -1,0 +1,13 @@
+{
+  "schema":"stdio.ifc.gltf-accessor",
+  "invalid":[
+    {"name":"Misaligned Views","edit":"misalignedViews"},
+    {"name":"Short Declared Buffer","edit":"shortDeclaredBuffer"},
+    {"name":"Wrong Position Target","edit":"wrongPositionTarget"},
+    {"name":"Nonbyte Buffer Value","edit":"nonbyteBufferValue"}
+  ],
+  "cancellation":{"count":4096,"minimumCompleted":256,"phase":"gltf-accessor"},
+  "invalidBytes":[-1,0.5,256],
+  "invalidByteCounts":[0],
+  "binaryCancellation":{"count":16384,"minimumCompleted":4096,"phase":"glb-bytes"}
+}

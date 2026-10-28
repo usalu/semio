@@ -1,0 +1,17 @@
+# Native Body Domain Extraction Before Audit
+
+Captured structured field/derive/wire roster in generated/body-native-domain-before.json from actual current Tessellation native declarations, with its source hash. It records seven DTOs without copying implementation source. Shared concepts are Target(representation,applicable), Source(commit,url,sha256), Label(en,de), Diagnostic(code,path,pointer,label; pointer omitted when None) and TargetReport(representation,applicable,status,diagnostics). Request has targets only. Report has concept/source/schema_conformance/view_conformance/status/targets/diagnostics and its camelCase wire rename attribute.
+
+All models derive Debug/PartialEq/Eq/RetireOwned; Source/Label/Diagnostic/Target/TargetReport/Report additionally ToValue, while Request currently has no ToValue derive. This asymmetry is the captured baseline, not a requested new wire capability. Source/provenance/status labels are borrowed static strings; representation/path/pointer words and report vectors remain owned. Moving domains must preserve retirement behavior and Option pointer omission, not merely field spellings.
+
+Actual MVD root before export hash is generated/body-native-domain-before-export-hash.json; source client census is generated/body-native-domain-before-clients.txt. Root currently reexports all concept DTOs and Tess request/report/work from the Tess module. Planned canonical body request/report names should replace old names in all real Rust clients without compatibility aliases. Direct/Terminal common DTO imports should resolve the single concept_types module; no repeated type definitions or nominal duplicate domains.
+
+Root was notified that the before capture completed and native Tess/model/export files are free for the planned move. No production files were edited, no source file was copied, and no execution/type/wire serialization proof is claimed. Frozen after source will require exact field/attribute comparison plus client/import/export and original retirement review.
+
+## Frozen declaration after closure
+
+Structured extraction after the move compares all seven DTOs in generated/body-native-domain-after-comparison.json. Every field order/type, derive attribute and pointer omission attribute matches exactly, with only the planned Request/Report type-name substitution. Report camelCase remains unchanged; Request has no new ToValue admission. Canonical common models have one definition in concept_types, Body request/report one in body/domain.rs. MVD exports the canonical names and Tess Work separately. Tess endpoint/helper/laws use those canonical declarations; scoped Rust search under the IFC artifact finds no old request/report names or compatibility aliases.
+
+The new Body request implements the actual shared source-key/row validation traits; key parsing uses existing positive_id, and valid_row only checks typed row presence because applicability is already Option<bool>. This is an internal typed request hook, not new wire decoding or arbitrary JSON acceptance. Active worker preparation/Direct/Terminal edits are intentionally excluded from whole-file hash equality; their canonical common imports are coordinated separately.
+
+No new confirmed P1/P2 in this declaration/source-preservation move. This is exact source roster comparison, not executed ToValue/wire/RetireOwned behavior or native type/runtime proof. No production edits were made by the auditor. Root's adjacent Body clause can proceed without treating this DTO move as a funded endpoint implementation.

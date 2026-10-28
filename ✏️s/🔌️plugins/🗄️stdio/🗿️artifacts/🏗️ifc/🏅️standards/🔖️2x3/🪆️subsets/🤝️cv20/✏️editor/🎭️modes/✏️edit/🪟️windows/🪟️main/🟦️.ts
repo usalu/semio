@@ -1,10 +1,9 @@
-/** 🧊 IFC 2x3 Cv20 editor — Main window: typed twin of
- * `🦀️.rs`'s view-model. Editable mirror of the shared `framework.window.mesh` scene payload
- * `render()` produces. */
+/** 🏗️ Source-derived IFC2x3 mesh identity and geometry payload. */
 
 export interface Ifc2x3Cv20EditInstance {
   id: string;
-  meshId: "box";
+  meshId: string;
+  interactionId: string;
   position: [number, number, number];
   rotation: [number, number, number, number];
   scale: [number, number, number];

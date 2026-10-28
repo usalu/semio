@@ -408,7 +408,7 @@ pub fn to_unicode_lookup(map: &PdfToUnicode, code: u32) -> Option<String> {
             PdfToUnicodeMapping::Range { low, high, text } if code >= *low && code <= *high => {
                 let mut chars: Vec<char> = text.chars().collect();
                 if let Some(last) = chars.last_mut() {
-                    *last = char::from_u32(*last as u32 + (code - low)).unwrap_or('\u{FFFD}');
+                    *last = (*last as u32).checked_add(code-low).and_then(char::from_u32).unwrap_or('\u{FFFD}');
                 }
                 return Some(chars.into_iter().collect());
             }
@@ -424,7 +424,7 @@ pub fn to_unicode_reverse(map: &PdfToUnicode, text: &str) -> Option<u32> {
     for mapping in &map.mappings {
         match mapping {
             PdfToUnicodeMapping::Char { code, text: candidate } if candidate == text => return Some(*code),
-            PdfToUnicodeMapping::Range { low, high, text: base } => {
+            PdfToUnicodeMapping::Range { low, high, text: base } if high>=low => {
                 let mut base_chars: Vec<char> = base.chars().collect();
                 let text_chars: Vec<char> = text.chars().collect();
                 if base_chars.len() == text_chars.len() && !base_chars.is_empty() {
@@ -447,3 +447,7 @@ pub fn to_unicode_reverse(map: &PdfToUnicode, text: &str) -> Option<u32> {
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

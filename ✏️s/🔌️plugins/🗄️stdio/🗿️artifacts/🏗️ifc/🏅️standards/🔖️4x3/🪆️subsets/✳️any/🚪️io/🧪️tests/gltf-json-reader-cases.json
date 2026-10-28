@@ -1,0 +1,9 @@
+{
+ "cases":[
+  {"id":"minimal-defaults","source":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}]}"},
+  {"id":"duplicate-last","source":"{\"asset\":false,\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}],\"extras\":{\"x\":1e400,\"x\":-0,\"\\u0078\":5e-324}}"},
+  {"id":"ordered-open-namespace","source":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}],\"extras\":{\"10\":1,\"2\":2,\"01\":3,\"0\":4,\"4294967294\":5,\"4294967295\":6,\"__proto__\":{\"polluted\":true},\"constructor\":7,\"prototype\":8,\"bits\":\"data\",\"toJSON\":9}}"},
+  {"id":"unicode-strings","source":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}],\"nodes\":[{\"name\":\"ä𐐷😀\\ud800\\udfff\"}],\"scene\":-0}"},
+  {"id":"ordered-index-maps","source":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}],\"meshes\":[{\"primitives\":[{\"attributes\":{\"2\":2,\"1\":1,\"01\":0,\"POSITION\":1e0},\"targets\":[{\"10\":1,\"0\":0,\"NORMAL\":2}]}]}]}"}
+ ]
+}

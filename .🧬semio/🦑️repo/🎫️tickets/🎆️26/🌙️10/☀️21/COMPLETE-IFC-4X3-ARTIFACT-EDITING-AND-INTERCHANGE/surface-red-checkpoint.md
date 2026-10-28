@@ -1,0 +1,7 @@
+# Surface Source Test-First Checkpoint
+
+The frozen22 data/schema from surface-geometry-independent-preparation.md are copied exactly to source surface-cases.json/schema. The new shared fixture creates actual points, loops, explicit required bound Orientation, faces, group-kind declarations, a FaceBasedSurfaceModel and real product placement. Foreign role damage uses a valid other declaration shape. No production surface evaluator has been added and this suite is unregistered.
+
+The genuine public25-test run records1 pass /24 fail /64 assertions, terminal1 (generated/surface-red.txt). It includes22 actual neutral geometry outcomes, closed schema/hash provenance, unchanged official surface-model.ifc geometry and canonical point/diff/inverse/STEP restoration. It exercises actual GLB for positive neutral rows; Three independently triangulates the declared planar rings/holes for surface area. These are per-source face occurrences; allowed shared faces across groups must not be globally deduplicated or misreported as a Boolean union area.
+
+Additional cross-group intersection/common-face/edge/vertex and OpenShell topology facts are being established by the Low worker before implementation scope freeze. New expensive output/control laws and mapped/SI cases are required before production closure. Reusable declared face parsing should be factored from faceted BRep while preserving its stronger ClosedShell rules, as in planar-face-reuse-next-plan.md. No full surface/native/MVD/conformance claim follows. Goal/ticket remain active.

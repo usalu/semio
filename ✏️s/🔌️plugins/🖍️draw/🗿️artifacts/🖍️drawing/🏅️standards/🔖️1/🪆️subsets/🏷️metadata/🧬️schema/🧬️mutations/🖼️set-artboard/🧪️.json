@@ -1,0 +1,89 @@
+{
+  "feature": "setArtboard",
+  "command": "setArtboard",
+  "mutation": "setArtboard",
+  "field": "DrawingSnapshot.artboard",
+  "scope": "actual qualified Drawing child member",
+  "valid": "absent or finite positive width and height",
+  "inverse": "old original optional artboard",
+  "noop": "empty diff and mutation.no-op warning",
+  "cases": [
+    {
+      "before": {
+        "width": 100,
+        "height": 80
+      },
+      "artboard": {
+        "width": 200,
+        "height": 120
+      },
+      "diff": {
+        "artboard": {
+          "width": 200,
+          "height": 120
+        }
+      },
+      "inverse": {
+        "mutation": "setArtboard",
+        "artboard": {
+          "width": 100,
+          "height": 80
+        }
+      }
+    },
+    {
+      "before": null,
+      "artboard": {
+        "width": 1,
+        "height": 1
+      },
+      "diff": {
+        "artboard": {
+          "width": 1,
+          "height": 1
+        }
+      },
+      "inverse": {
+        "mutation": "setArtboard",
+        "artboard": null
+      }
+    },
+    {
+      "before": {
+        "width": 100,
+        "height": 80
+      },
+      "artboard": null,
+      "diff": {
+        "artboard": null
+      },
+      "inverse": {
+        "mutation": "setArtboard",
+        "artboard": {
+          "width": 100,
+          "height": 80
+        }
+      }
+    },
+    {
+      "before": {
+        "width": 100,
+        "height": 80
+      },
+      "artboard": {
+        "width": 100,
+        "height": 80
+      },
+      "diff": {},
+      "inverse": null
+    },
+    {
+      "before": null,
+      "artboard": {
+        "width": 0,
+        "height": 1
+      },
+      "error": "mutation.invariant"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.stdio.idml.mutations;
+message IdmlPart { string path = 1; bytes bytes = 2; }
+message IdmlDocument { string dom_version = 1; repeated IdmlPart parts = 2; }
+message ReplacePackage { IdmlDocument document = 1; }
+message ReplacePart { string path = 1; bytes bytes = 2; }
+message IdmlMutation { oneof mutation { ReplacePackage replace_package = 1; ReplacePart replace_part = 2; } }

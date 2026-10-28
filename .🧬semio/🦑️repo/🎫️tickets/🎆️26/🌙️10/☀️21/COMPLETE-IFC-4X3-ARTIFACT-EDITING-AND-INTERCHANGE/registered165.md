@@ -1,0 +1,7 @@
+# Independently Closed Registry 165
+
+Three rounded/boundary suites72 laws are registered after independent75-source closure:441 affected laws69434assert10files plus pure17/398, strict11consumer0 and75stationary hashes. Independent prior Three8 ring observations match actual scalar output within9e-16 (millimetre source units1.8e-13). Pure paired native mounting/syntax and genuineCargo101 remain source-only. Actual capsule/circle equality, declared REAL carrier refusals, total-boundary caps, reflected oblique sweeps, canonical edits/inverses and realGLB are covered. Primary/SDK divergences and harness corrections remain retained in the implementation/audit reports.
+
+The broad runner now includes the new actual convex domain path, so its registered suite is selected. Current165 has no full run. Last immutable fullgreen154 remains4871pass12skip0fail372425assert4883tests with three documented prior-obligation supersessions and zero unexplained missing. Workspace98 and rootread5 were previously added in162.
+
+The closed rounded sources have been released to High for a shared direct-to-owned-writer refactor; this registration does not claim future source stationarity. New original Boolean policy64 now passes132assert but is not independently audited/registered. Actual IFC Boolean AST, official original bath rendering, further EXPRESS owners and native execution remain incomplete. Goal/ticket active.

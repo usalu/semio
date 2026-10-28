@@ -1,0 +1,16 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "ParagraphFlowRegion",
+  "description": "Wrapping reuses one retained complete-source analysis. Regions use line boxes of ParagraphStyle.lineHeight. At a region pause, sourceEnd is the next original UTF-8 offset including consumed hard separators; lineEnd is an exclusive original paragraph line ordinal. The caller supplies another region or finishes an overset prefix before outline publication.",
+  "type": "object", "additionalProperties": false,
+  "required": ["width", "height", "origin"],
+  "properties": {
+    "width": {"type": "number", "exclusiveMinimum": 0},
+    "height": {"type": "number", "exclusiveMinimum": 0},
+    "origin": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}
+  },
+  "$defs": {
+    "pause": {"type": "object", "additionalProperties": false, "required": ["sourceEnd", "lineEnd", "region"], "properties": {"sourceEnd": {"type": "integer", "minimum": 0}, "lineEnd": {"type": "integer", "minimum": 0}, "region": {"type": "integer", "minimum": 0}}},
+    "placement": {"type": "object", "additionalProperties": false, "required": ["origin", "width", "row", "region"], "properties": {"origin": {"type": "array", "items": {"type": "number"}, "minItems": 2, "maxItems": 2}, "width": {"type": "number", "exclusiveMinimum": 0}, "row": {"type": "integer", "minimum": 0}, "region": {"type": "integer", "minimum": 0}}}
+  }
+}

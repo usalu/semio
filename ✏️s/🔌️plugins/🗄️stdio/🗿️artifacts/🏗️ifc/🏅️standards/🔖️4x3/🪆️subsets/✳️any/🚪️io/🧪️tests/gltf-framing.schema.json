@@ -1,0 +1,32 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"stdio.ifc.glb-framing",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","json","cases","scales","orientations","cancellationRoutes"],
+  "properties":{
+    "schema":{"const":"stdio.ifc.glb-framing"},
+    "json":{"type":"string"},
+    "scales":{"type":"array","minItems":1,"items":{"type":"number"}},
+    "cancellationRoutes":{"type":"array","uniqueItems":true,"minItems":1,"items":{"enum":["readGlb","writeGlb","importGltf","exportGltf"]}},
+    "orientations":{"type":"array","minItems":1,"items":{
+      "type":"object","additionalProperties":false,"required":["name","linear","sign"],
+      "properties":{
+        "name":{"type":"string","minLength":1},
+        "linear":{"type":"array","minItems":9,"maxItems":9,"items":{"type":"number"}},
+        "sign":{"enum":[-1,0,1]}
+      }
+    }},
+    "cases":{"type":"array","minItems":1,"items":{
+      "type":"object","additionalProperties":false,
+      "required":["name","jsonTail","binPadding","unknownChunk","accepted"],
+      "properties":{
+        "name":{"type":"string","minLength":1},
+        "jsonTail":{"type":"string","minLength":1},
+        "binPadding":{"type":"integer","minimum":0,"maximum":255},
+        "unknownChunk":{"type":"boolean"},
+        "accepted":{"type":"boolean"}
+      }
+    }}
+  }
+}

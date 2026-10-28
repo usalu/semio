@@ -19,6 +19,8 @@ path = "../../🦀️.rs"
 testkit = ["semio-framework-job/testkit", "semio-framework-job-worker/testkit"]
 
 [dependencies]
+semio-framework-io-ports = { workspace = true }
+semio-s-artifact-layout-layout-io = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-job-publication = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
 semio-framework-job-worker-authority = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/🎟️authority/📦️packages/🦀️rust" }
@@ -39,6 +41,24 @@ semio-s-artifact-layout-layout-engine-json = { workspace = true }
 semio-s-artifact-layout-layout-model = { workspace = true }
 semio-framework-pixels = { workspace = true }
 
+ui_render = { package = "semio-framework-ui-render", path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🖌️render/📦️packages/🦀️rust" }
+semio-framework-2d-text-font = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/📦️packages/🦀️rust" }
+semio-framework-2d-engine = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-value-persistent = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+
+semio-framework-2d-text-font-run = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️run/📦️packages/🦀️rust" }
+
+semio-framework-2d-text-font-shape-unicode = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/◻️2d/📝️text/🔤️font/🧵️shape/🌐️unicode/📦️packages/🦀️rust" }
+
 [dev-dependencies]
+semio-s-artifact-draw-drawing-editor = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-framework-io-ports = { workspace = true, features = ["testkit"] }
+serde_json = { workspace = true }
+ttf-parser = "0.25.1"
+tiny-skia = "0.11.4"
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-job-worker = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust", features = ["testkit"] }
+
+lopdf = { version = "0.44", default-features = false }
+semio-framework-trace = { path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

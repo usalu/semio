@@ -1,0 +1,7 @@
+# Independent Label Admission Correction
+
+The independent audit found a source defect in the new native full-width ASCII name law: concatenating two 255-byte names and a type caption exceeded the existing 512-byte label capacity. The corrected panel uses UTF-8-boundary-safe 160-byte captions, keeps exact original names in command arguments, and uses render ordinals for effective-property and finding keys. No UI capacity was raised. The original 27+18 manifest remains as `generated/bim-properties-source-before-label-fix.json`; the current manifest adds the effective-data module (28+18). The native law remains authored/unexecuted because genuine compiler admission still refuses before rustc; rustfmt is syntax evidence only.
+
+The fixed UI action-text/input lane still has its existing 512-byte resource limit. Valid IFC names containing 255 multi-byte scalars and arbitrarily long text values can therefore exceed native panel resources even when interchange accepts them. This is an explicit UI limitation; names and values are never truncated in command payloads. Captions alone are shortened. The authored resource law checks refusal of an over-capacity action string. TypeScript interchange96/321 and exact physical27/EXP0 evidence are unchanged by these native-only display corrections.
+
+The authoritative implementation report update was refused by an ordinary active file mapping; this adjacent correction records the exact checkpoint until that reader releases. No force or unmapping was used.

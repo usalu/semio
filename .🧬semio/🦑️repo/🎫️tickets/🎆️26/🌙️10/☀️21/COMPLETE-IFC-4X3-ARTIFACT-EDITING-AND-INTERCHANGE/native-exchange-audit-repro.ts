@@ -1,0 +1,6 @@
+import {join} from "node:path";import {mkdir,writeFile} from "node:fs/promises";
+const base=join(process.cwd(),"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests");
+const bytes=new Uint8Array(await Bun.file(join(base,"box.glb")).arrayBuffer()),v=new DataView(bytes.buffer),jsonLength=v.getUint32(12,true),document=JSON.parse(new TextDecoder().decode(bytes.slice(20,20+jsonLength))),bin=bytes.slice(28+jsonLength);const output=join(import.meta.dir,"🗑️generated/native-audit-inputs");await mkdir(output,{recursive:true});
+const frame=(doc:any,pad:number)=>{const text=new TextEncoder().encode(JSON.stringify(doc)+" "),size=Math.ceil((text.length+1)/4)*4,b=new Uint8Array(28+size+bin.length),view=new DataView(b.buffer);view.setUint32(0,0x46546c67,true);view.setUint32(4,2,true);view.setUint32(8,b.length,true);view.setUint32(12,size,true);view.setUint32(16,0x4e4f534a,true);b.fill(pad,20,20+size);b.set(text,20);view.setUint32(20+size,bin.length,true);view.setUint32(24+size,0x004e4942,true);b.set(bin,28+size);return b;};
+const tiny=structuredClone(document);tiny.nodes[0].scale=[1e-6,1e-6,1e-6];await writeFile(join(output,"tiny-scale.glb"),frame(tiny,32));await writeFile(join(output,"nul-json-padding.glb"),frame(document,0));console.log("[DEBUG] Inputs prepared; native Rust route NOT executed. tiny determinant="+(1e-6**3));
+

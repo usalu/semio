@@ -1,0 +1,47 @@
+# Selected Requirement Executor Checkpoint
+
+The public standard export executeIfc4x3Requirements now dispatches the nine existing selected contracts against one private captured IFC source/index. Native nodal import13 is separately independently closed; this checkpoint does not alter its source. Released-view requests explicitly return incomplete/valid=false with an unresolved requirement-set diagnostic and null denominator. No complete ReferenceView or Alignment-basedReferenceView requirement binding is invented.
+
+## Test-First and Executed Evidence
+
+The initial new schema/test run was2pass/14fail because the executor did not exist; generated/requirements-first-red.txt retains it. New request schema closes the two request discriminants and all nine typed target branches, canonical positive-u64 syntax/range, applicability and bounded roster. Neutral cases/schema/feature cover nine coverage combinations, including unknown applicability, applicable unimplemented, known failure plus incomplete, all-N/A and nine selected passes without released-view authority.
+
+The final focused run is536pass/2938assertions/0fail across13files in4.29s, generated/requirements-focused-tests.txt. It includes44new tests across requirements/🧪️.test.ts and public.test.ts, the seven existing Body suites, Alignment terminal/direct and two shared query suites. The public entry is the actual standard export. All nine prepared child report shapes match fresh actual standalone endpoint outputs. The unchanged official brep-model.ifc representation1020 passes the selected dispatcher with exact primary provenance; existing child suites also retain their original physical input observations. Partial authored membership fixtures are explicitly projection tests, not full EXPRESS-valid models.
+
+The new tests preserve exact child source/pointer/EN+DE failure evidence, unknown/ambiguous/missing serialized values, typed request rejection before source getters, source/request privacy across successive obligations, one source-capture completion, exact original observer getter/undefined receiver semantics, eight-stage original cancellation and exact original thrown undefined/object identity, and final-report abort. One intermediate ambiguous fixture was corrected to contain two actual IFCREPRESENTATION declarations; a primary IFCSHAPEREPRESENTATION plus one inherited declaration is not itself a duplicate. The corrected fixture and all regression laws pass.
+
+Narrow strict TypeScript checking of the primary suite and its full direct graph exits0, generated/requirements-narrow-strict.txt. The separate actual public-export suite reaches the existing framework local-interaction import and exits2 solely on unresolved @semio-tech/framework-interaction, generated/requirements-public-strict.txt. No alias workaround or build-system change was made, and broader strict checking is not claimed green.
+
+## Actual Source and Control Ownership
+
+The executor captures the original IO control before request/source work and admits an owned private plain-data request using the existing central copier. Closed runtime admission rejects empty/duplicate/unknown/extra-field/typed-target/u64 violations and enforces min(original maxEntities,64000). There is no public caller-supplied definition, callback, report, registry, prepared source, index or complete-set flag.
+
+Population is an unexported class with runtime-private source/index fields. Its constructor is private and used only after the existing source capture/shape/header admission and one existing cooperative concept index. It lends these same actual fields to trusted internal child generators. Body's prepared helper reuses evaluate/unavailable/report; Alignment terminal reuses relationship/evaluate/finish; Direct reuses evaluate/finish. The existing standalone request/capture/index and progress stages remain their own entry behavior. No predicate algorithm, catalog, second source map or full source clone was added. The seven Body wrappers and registry now share frozen original item diagnostic labels, so composition has no independent family or diagnostic policy.
+
+Source/request owners must remain stable through their existing cooperative capture contract; mutations may be observed during capture. After capture, later callbacks can change caller data without rewriting private evaluation. No canonical document revision is fabricated: this standalone API captures a supplied IFC object, while authenticated host document revision/ACK binding remains a separate integration boundary.
+
+The original observer, signal, limits, first failure and yielding policy flow through request/capture/index/child/evidence/report/final-result stages. Diagnostics and obligation append progress is paid cooperatively; late Unknown in child owner queries remains incomplete. A failed or cancelled operation exposes no successful terminal report. Actual TS child/control regression execution is evidence here; it is not native wallet/copy/heap/receipt/scheduler evidence.
+
+## Coverage and Authority
+
+Rows retain the exact closed typed selection and unchanged original child report. Explicit false applicability is not-applicable and does not invoke a child. Explicit null is incomplete. Current selected keys are implemented; unimplemented rows are covered by the shared pure coverage laws for future authenticated bindings, and are not admitted as invented public executor keys.
+
+hasFailure is separate from complete. The adapter preserves actual failure status or closed existing child failure diagnostics even when that child is also incomplete. Failed and incomplete counts may overlap for one obligation; this is deliberate retention of both facts. Evaluated counts child invocations, including a returned incomplete child, rather than completed normative obligations. Passed/notApplicable/incomplete counts preserve their actual status. The selected denominator is the exact admitted unique roster. Released-view denominator is null because the authenticated requirement set is unresolved; no ratio against312 informative catalog concepts is produced.
+
+Selected complete passes have valid=true only for their explicitly selected scope. All-N/A has valid=false. Known failure plus missing coverage has hasFailure=true, status=fail and complete=false. The complete released view remains unevaluated regardless of nine selected successful examples. Schema conformance, full geometry conformance, whole Alignment child/parent and publication admission remain separate existing child flags.
+
+The closed report schema references the actual nine existing child report schemas and additionally correlates child schema to selected contract. Bilingual diagnostics retain actual pointers and source hashes. Schema tests reject fabricated certification fields, released-view valid/complete claims and swapped contract/child reports. This schema is report structure, not admission authority for arbitrary supplied reports.
+
+## Independent and Native Evidence
+
+The test-owned requirements-coverage-probe.ts executes the actual shared TS arithmetic. requirements-coverage-oracle.py implements the separate CoverageOracle interface with Python's SQLite engine, independently grouping the same neutral evidence. All nine complete summaries and counts agree, generated/requirements-coverage-actual.json and requirements-coverage-independent.json. This validates coverage arithmetic only; SQLite is neither an IFC semantic oracle nor a whole-view certificate. Existing separately audited fresh IfcOpenShell selected-predicate metadata/oracles remain the external evidence for child concept policy; no new complete-view oracle is claimed.
+
+Paired coverage.rs contains closed scalar arithmetic and two mounted native laws consuming the same nine neutral cases plus empty-selected refusal. The real MVD root mounts requirements_coverage. This is coverage-domain parity, not an original-funded native parent dispatcher or source admission. Any future native composition must use the already-authored original request/source/index/preparation owners and receive/advance/take/close authority; it must not promote these pure counts into validation authority or build duplicate full Works.
+
+Rustfmt syntax checks for coverage.rs and the actual MVD module exit0. Authentic cargo test --manifest-path <ADD2 any>/📦️packages/🦀️rust/Cargo.toml --lib requirements_coverage exits101 before rustc at enforcing -vV ingress, generated/requirements-native-cargo.txt. Neither native law has compiled/discovered/executed, and no native type/runtime/receipt/heap/scheduler/physical proof is claimed. Native semantic publication/capability and proof flags stay false.
+
+## Freeze and Remaining Work
+
+generated/requirements-source.json is the exact owned source/hash roster for independent review; reference observations distinguish current borrowed child definitions/schemas/control helpers from owned edits. Root alone registers the two new selected paths and runs broader snapshots. No package script was edited here.
+
+Authenticating the complete released view requirement bindings remains open. This executor makes the current omission visible and runs selected existing predicates; it does not complete the312 informative concepts, synthesize missing applicability, certify a view or enable template semantic publication. Genuine native compilation and original-funded native aggregation remain separate execution gates.

@@ -1,0 +1,170 @@
+{
+  "identity": {
+    "standard": "IFC4",
+    "instance": 7,
+    "operation": "9007199254740993",
+    "generation": "1",
+    "revision": "1111111111111111111111111111111111111111111111111111111111111111",
+    "source": "original-immutable-snapshot-7"
+  },
+  "limits": {
+    "work": 8000000,
+    "sourceBytes": 1048576,
+    "scratchBytes": 16777216,
+    "resultBytes": 16777216,
+    "vertices": 200000,
+    "triangles": 400000,
+    "depth": 64
+  },
+  "cases": [
+    {
+      "name": "zero-turn",
+      "action": "step",
+      "turn": {
+        "work": 0,
+        "items": 0,
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 0
+      },
+      "expected": {
+        "workDelta": 0,
+        "published": false,
+        "ownerReleased": false
+      }
+    },
+    {
+      "name": "source-version-changed",
+      "action": "resume",
+      "changed": [
+        "revision"
+      ],
+      "expected": {
+        "advances": false,
+        "published": false,
+        "priorOwnerRetained": true
+      }
+    },
+    {
+      "name": "original-operation-changed",
+      "action": "resume",
+      "changed": [
+        "operation"
+      ],
+      "expected": {
+        "advances": false,
+        "published": false,
+        "priorOwnerRetained": true
+      }
+    },
+    {
+      "name": "cancel-before-publication",
+      "action": "cancel",
+      "expected": {
+        "advances": false,
+        "published": false,
+        "priorOwnerRetained": true
+      }
+    },
+    {
+      "name": "close-without-release",
+      "action": "close",
+      "turn": {
+        "work": 1,
+        "items": 1,
+        "copyBytes": 1024,
+        "capacityBytes": 1024,
+        "releaseBytes": 0,
+        "depth": 64
+      },
+      "expected": {
+        "published": false,
+        "ownerReleased": false
+      }
+    },
+    {
+      "name": "insufficient-source-cap",
+      "action": "admit-source",
+      "extent": 1048577,
+      "expected": {
+        "refused": true,
+        "published": false
+      }
+    },
+    {
+      "name": "insufficient-result-cap",
+      "action": "admit-result",
+      "extent": 336,
+      "expected": {
+        "refused": true,
+        "published": false
+      },
+      "limit": 335
+    }
+  ],
+  "geometryCases": [
+    {
+      "file": "block.ifc",
+      "volume": 24,
+      "vertices": 8,
+      "triangles": 12,
+      "rawGeometryBytes": 336
+    },
+    {
+      "file": "rectangle",
+      "volume": 64,
+      "vertices": 8,
+      "triangles": 12,
+      "rawGeometryBytes": 336
+    },
+    {
+      "file": "tessellated.ifc",
+      "volume": 24,
+      "vertices": 8,
+      "triangles": 12,
+      "unusedPointExcluded": true,
+      "rawGeometryBytes": 336
+    }
+  ],
+  "scope": {
+    "kind": "product",
+    "target": "17"
+  },
+  "modelCases": [
+    {
+      "name": "two-blocks",
+      "products": [
+        "17",
+        "117"
+      ],
+      "volumes": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "unsupported-middle-product",
+      "products": [
+        "17",
+        "119"
+      ],
+      "issues": [
+        "118"
+      ],
+      "volumes": [
+        24,
+        24
+      ]
+    },
+    {
+      "name": "interleaved-metadata",
+      "products": [
+        "17"
+      ],
+      "volumes": [
+        24
+      ]
+    }
+  ]
+}

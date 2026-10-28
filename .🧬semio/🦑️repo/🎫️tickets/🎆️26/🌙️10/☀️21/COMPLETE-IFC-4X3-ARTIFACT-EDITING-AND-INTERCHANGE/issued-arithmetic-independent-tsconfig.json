@@ -1,0 +1,9 @@
+{
+  "files": [
+    "C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🧪️vector-arithmetic/🧪️.test.ts",
+    "C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/⚖️validation/🧪️vector-arithmetic/isolation.test.ts"
+  ],
+  "exclude": [],
+  "include": [],
+  "extends": "../../../../../../../tsconfig.json"
+}

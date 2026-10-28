@@ -1,0 +1,6 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "compiled": {"rules":777,"derived":60,"functions":48,"globalRules":2,"inverse":165,"bounds":6,"unique":4},
+  "globalRules":["IFCREPRESENTATIONCONTEXTSAMEWCS","IFCSINGLEPROJECTINSTANCE"],
+  "nativeSemanticExecution":false
+}

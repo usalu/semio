@@ -1,0 +1,95 @@
+{
+  "schema": "semio.ifc.source-rows.v1",
+  "entries": [
+    {
+      "source": {
+        "second": 2,
+        "first": 1
+      },
+      "expected": [
+        [
+          "second",
+          2
+        ],
+        [
+          "first",
+          1
+        ]
+      ]
+    },
+    {
+      "source": {
+        "2": 2,
+        "10": 10,
+        "b": 3,
+        "a": 4
+      },
+      "expected": [
+        [
+          "2",
+          2
+        ],
+        [
+          "10",
+          10
+        ],
+        [
+          "b",
+          3
+        ],
+        [
+          "a",
+          4
+        ]
+      ]
+    }
+  ],
+  "levels": [
+    {
+      "query": 3,
+      "rows": [
+        {
+          "level": 0,
+          "height": 10000000000000000
+        },
+        {
+          "level": 2,
+          "height": 1
+        },
+        {
+          "level": 1,
+          "height": 1
+        }
+      ],
+      "expected": 10000000000000000
+    },
+    {
+      "query": -2,
+      "rows": [
+        {
+          "level": -1,
+          "height": 3
+        },
+        {
+          "level": -3,
+          "height": 2
+        },
+        {
+          "level": -2,
+          "height": 4
+        }
+      ],
+      "expected": -7
+    },
+    {
+      "query": 0,
+      "rows": [
+        {
+          "level": 0,
+          "height": 3
+        }
+      ],
+      "expected": 0
+    }
+  ]
+}

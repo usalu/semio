@@ -370,12 +370,12 @@ async fn retained_member_group_preparation_reserves_real_history_without_partial
     close_durable_publication(&mut competing);
     members[1].invalidate_after_external_resource_change().unwrap();
     assert!(receiving_fixture.receive(|receiving|members[1].prepare_one_item_publication(&mut *publications[1], 4096, grant,receiving)).is_err(), "freshness is revalidated even after reservation");
-    assert!(members[1].abort_one_item_publication(&mut *publications[0], grant.retained_grant()).is_err(), "only the exact member can release its reservation");
+    assert!(receiving_fixture.retire(grant.retained_grant(),|original|members[1].abort_one_item_publication(&mut *publications[0], original,grant.retained_grant())).is_err(), "only the exact member can release its reservation");
     for index in 0..members.len() {
         publications[index].begin_close();
         assert_eq!(publications[index].close_step(grant.retained_grant()).unwrap(), RetainedCloneStep::Progress(Default::default()), "generic close cannot silently abandon live member reservations");
         for _ in 0..65_536 {
-            if matches!(members[index].abort_one_item_publication(&mut *publications[index], grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) {
+            if matches!(receiving_fixture.retire(grant.retained_grant(),|original|members[index].abort_one_item_publication(&mut *publications[index], original,grant.retained_grant())).unwrap(), RetainedCloneStep::Complete(_)) {
                 break;
             }
         }
@@ -526,7 +526,7 @@ async fn retained_member_common_root_copies_history_under_grant_and_publishes_th
                 assert!(decision.abort());
                 for lane in 0..3 {
                     for _ in 0..65_536 {
-                        if matches!(members[lane].abort_one_item_publication(&mut *publications[lane], grant.retained_grant()).unwrap(), RetainedCloneStep::Complete(_)) { break; }
+                        if matches!(receiving_fixture.retire(grant.retained_grant(),|original|members[lane].abort_one_item_publication(&mut *publications[lane], original,grant.retained_grant())).unwrap(), RetainedCloneStep::Complete(_)) { break; }
                     }
                     assert!(publications[lane].terminal_is_empty());
                     assert_eq!(members[lane].one_item_publication_identity(), before[lane]);

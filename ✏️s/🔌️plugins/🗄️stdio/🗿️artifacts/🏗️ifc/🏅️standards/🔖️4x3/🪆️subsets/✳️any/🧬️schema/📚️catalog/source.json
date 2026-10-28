@@ -1,0 +1,20 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "version": "4.3.2.0",
+  "source": {
+    "url": "https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/IFC4X3_ADD2.exp",
+    "mirror": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/main/IFC/RELEASE/IFC4_3/HTML/IFC4X3_ADD2.exp",
+    "sha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+  },
+  "validation": {
+    "structural": true,
+    "whereRules": false,
+    "uniqueRules": false,
+    "inverseRules": false,
+    "contextualBounds": false,
+    "functions": false,
+    "globalRules": false,
+    "complexInstances": false,
+    "binaryValues": false
+  }
+}

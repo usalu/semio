@@ -1,0 +1,30 @@
+{
+  "source": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/annex/annex-e/slab-openings.ifc",
+  "commit": "a8664407b63d42651e48a78a252c76d09dd6274c",
+  "sha256": "736a4aad0f03ac6512d486e7d1e5e94e68cfe8b5916c7e9e6d14b0215e26ac62",
+  "license": "CC-BY-ND-4.0",
+  "attribution": "buildingSMART International Limited",
+  "expected": {
+    "product": "303",
+    "representation": "314",
+    "openingProducts": [
+      "325",
+      "336"
+    ],
+    "volume": 1199056451.5686657,
+    "absoluteTolerance": 0.001,
+    "topology": "closed oriented manifold",
+    "lengthUnits": "millimetres"
+  },
+  "reference": {
+    "engine": "Three.js EllipseCurve and ExtrudeGeometry",
+    "version": "0.182.0",
+    "arcRadius": 5200,
+    "arcHalfSpan": 0.39479111969976155,
+    "halfArcSegments": 5,
+    "circleSegments": 72,
+    "grossVolume": 1225625254.9381237,
+    "circleVolume": 1568803.3694578472,
+    "recessVolume": 25000000
+  }
+}

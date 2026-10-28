@@ -13,7 +13,7 @@ fn base() -> IfcSnapshot {
 }
 
 fn resolve(event: SnapshotEditEvent) -> Vec<IfcMutation> {
-    EDIT_RULES.resolve::<IfcSnapshot, IfcMutation>(&base(), &event).unwrap()
+    complex_edit(&event, &base()).unwrap().unwrap_or_else(|| EDIT_RULES.resolve::<IfcSnapshot, IfcMutation>(&base(), &event).unwrap())
 }
 
 fn replay(mutations: &[IfcMutation]) -> IfcSnapshot {
@@ -49,4 +49,31 @@ fn arguments_and_entities_insert_and_remove_at_their_position() {
 fn an_unnamed_pointer_is_refused() {
     let refused = SnapshotEditEvent::SetValue { path: "/schema".into(), value: DslValue::String("other".into()) };
     assert_eq!(EDIT_RULES.resolve::<IfcSnapshot, IfcMutation>(&base(), &refused).unwrap_err().code, "snapshot-edit.unsupported-path");
+}
+
+#[test]
+fn complex_constituents_are_replaced_by_entity_id() {
+    let complex = vec![semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType { name: "IFCOBJECT".into(), args: vec![IfcValue::String("Member".into())] }];
+    let mutations = resolve(SnapshotEditEvent::InsertValue { path: "/entities/1/complex".into(), value: complex.to_value() });
+    assert_eq!(mutations, vec![IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id: 2, complex: complex.clone() })]);
+    assert_eq!(replay(&mutations).entities[1].complex, complex);
+}
+
+#[test]
+fn the_whole_complex_field_and_nested_members_edit_and_remove() {
+    let member = semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::IfcComplexType { name: "IFCOBJECT".into(), args: vec![] };
+    let inserted = resolve(SnapshotEditEvent::InsertValue { path: "/entities/1/complex".into(), value: vec![member].to_value() });
+    let mut snapshot = replay(&inserted);
+    let changed = complex_edit(&SnapshotEditEvent::SetValue { path: "/entities/1/complex/0/name".into(), value: DslValue::String("IFCPRODUCT".into()) }, &snapshot).unwrap().unwrap();
+    for mutation in &changed {
+        apply_ifc_mutation(&mut snapshot, mutation);
+    }
+    assert_eq!(snapshot.entities[1].complex[0].name, "IFCPRODUCT");
+    let removed = complex_edit(&SnapshotEditEvent::RemoveValue { path: "/entities/1/complex".into() }, &snapshot).unwrap().unwrap();
+    assert_eq!(removed, vec![IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id: 2, complex: vec![] })]);
+    for mutation in &removed {
+        apply_ifc_mutation(&mut snapshot, mutation);
+    }
+    assert!(snapshot.entities[1].complex.is_empty());
+    assert_eq!(snapshot.entities[1].args, base().entities[1].args);
 }

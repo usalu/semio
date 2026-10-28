@@ -1,0 +1,12 @@
+{
+  "source": "https://www.nist.gov/system/files/documents/noindex/2024/06/19/NIST-PMI-STEP-Files.zip",
+  "page": "https://www.nist.gov/services-resources/software/step-file-analyzer-and-viewer",
+  "original": "NIST-PMI-STEP-Files/AP203 geometry only/nist_ftc_11_asme1_rb.stp",
+  "file": "nist-ftc11-ap203.stp",
+  "schema": "CONFIG_CONTROL_DESIGN",
+  "standard": "ap203",
+  "scope": "Official NIST geometry-only conformance-project sample; Part21 grammar and declared-schema test, not AP214 or complete CAD/PMI compliance proof.",
+  "bytes": 7634,
+  "sha256": "a5abfea460499dc31bc812aca68917948a117565fea4f5a080e36eb32f39650d",
+  "attribution": "NIST Model Based Enterprise PMI Validation and Conformance Testing Project"
+}

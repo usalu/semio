@@ -1,0 +1,7 @@
+# Native glTF Product Placement Plan
+
+Confirmed released IfcProduct.PlacementForShapeRepresentation failure: native graph::proxy assigns a ProductDefinitionShape but leaves ObjectPlacement Unset. Root owns actual TS producer/closed neutral GLB placement fixture and independent IfcOpenShell validation. Native must author an identity IfcLocalPlacement using the actual graph context axis and reference it from every represented proxy.
+
+Use one original-funded shared identity placement in graph::begin and return a copied context/placement handle, with no hardcoded entity IDs or cold graph lookup. Move the checked entity census into begin: seven actual base entities plus five entities per selected primitive. Carry this handle through original visit/roots/emit/proxy callers and fund its copied metadata through the existing Port. Preserve all original native graph/value allocation, cancellation and retirement-recipient ownership.
+
+Before production change, add native laws over all official samples and neutral counts: every proxy placement resolves to IfcLocalPlacement(Unset,actual context WorldCoordinateSystem), origin is identity, total entity count equals checked census. Add original import denied axes and accepted-prefix cancellation/close-recipient laws. Authentic Cargo remains refused before rustc; native tests are authored only and do not claim compiler/runtime/physical proof. Keep all capability flags false.

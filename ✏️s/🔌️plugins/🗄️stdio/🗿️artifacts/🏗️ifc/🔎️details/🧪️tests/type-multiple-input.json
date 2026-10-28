@@ -1,0 +1,502 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "encoding": "ifc-template-command",
+  "released": {
+    "maximum": 4,
+    "names": [
+      "IFCSURFACESTYLELIGHTING"
+    ],
+    "contentCap": 16,
+    "controlCap": 18
+  },
+  "sources": {
+    "relationship": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCRELASSOCIATESMATERIAL",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "7"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCROOT",
+              "args": [
+                {
+                  "kind": "string",
+                  "value": "0AAAAAAAAAAAAAAAAAAAAA"
+                },
+                {
+                  "kind": "unset"
+                },
+                {
+                  "kind": "string",
+                  "value": "source relationship"
+                },
+                {
+                  "kind": "unset"
+                }
+              ]
+            },
+            {
+              "name": "IFCRELATIONSHIP",
+              "args": []
+            },
+            {
+              "name": "IFCRELASSOCIATES",
+              "args": [
+                {
+                  "kind": "aggregate",
+                  "value": [
+                    {
+                      "kind": "reference",
+                      "value": "8"
+                    },
+                    {
+                      "kind": "reference",
+                      "value": "9"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "name": "IFCMATERIAL",
+          "args": [
+            {
+              "kind": "string",
+              "value": "steel"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "8",
+          "name": "IFCBUILDINGELEMENTPROXY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "0BBBBBBBBBBBBBBBBBBBBB"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "element 8"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "enum",
+              "value": "NOTDEFINED"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "9",
+          "name": "IFCBUILDINGELEMENTPROXY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "0CCCCCCCCCCCCCCCCCCCCC"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "element 9"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "enum",
+              "value": "NOTDEFINED"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "14",
+          "name": "IFCBUILDINGELEMENTPROXY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "0DDDDDDDDDDDDDDDDDDDDD"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "element 14"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "enum",
+              "value": "NOTDEFINED"
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "lighting": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCSURFACESTYLEREFRACTION",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCPRESENTATIONITEM",
+              "args": []
+            }
+          ]
+        },
+        {
+          "id": "10",
+          "name": "IFCCOLOURRGB",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "11",
+          "name": "IFCCOLOURRGB",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "12",
+          "name": "IFCCOLOURRGB",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "13",
+          "name": "IFCCOLOURRGB",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          ],
+          "complex": []
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "two-empty-reverse-entry",
+      "source": "relationship",
+      "target": "IFCRELCONNECTSELEMENTS",
+      "initial": [],
+      "steps": [
+        {
+          "field": 1,
+          "value": "9"
+        },
+        {
+          "field": 0,
+          "value": "8"
+        }
+      ],
+      "required": [
+        1,
+        2
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "8"
+        },
+        {
+          "kind": "reference",
+          "value": "9"
+        }
+      ],
+      "mutations": 4
+    },
+    {
+      "id": "later-reference-preserved",
+      "source": "relationship",
+      "target": "IFCRELCONNECTSELEMENTS",
+      "initial": [
+        {
+          "index": "2",
+          "value": {
+            "kind": "reference",
+            "value": "9"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "field": 0,
+          "value": "8"
+        }
+      ],
+      "required": [
+        1,
+        2
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "8"
+        },
+        {
+          "kind": "reference",
+          "value": "9"
+        }
+      ],
+      "mutations": 4
+    },
+    {
+      "id": "supplied-references-stay-editable",
+      "source": "relationship",
+      "target": "IFCRELCONNECTSELEMENTS",
+      "initial": [
+        {
+          "index": "1",
+          "value": {
+            "kind": "reference",
+            "value": "8"
+          }
+        },
+        {
+          "index": "2",
+          "value": {
+            "kind": "reference",
+            "value": "9"
+          }
+        }
+      ],
+      "steps": [
+        {
+          "field": 1,
+          "value": "14"
+        }
+      ],
+      "required": [
+        1,
+        2
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "8"
+        },
+        {
+          "kind": "reference",
+          "value": "14"
+        }
+      ],
+      "mutations": 4
+    },
+    {
+      "id": "four-released-reference-fields",
+      "source": "lighting",
+      "target": "IFCSURFACESTYLELIGHTING",
+      "initial": [],
+      "steps": [
+        {
+          "field": 3,
+          "value": "13"
+        },
+        {
+          "field": 1,
+          "value": "11"
+        },
+        {
+          "field": 2,
+          "value": "12"
+        },
+        {
+          "field": 0,
+          "value": "10"
+        }
+      ],
+      "required": [
+        0,
+        1,
+        2,
+        3
+      ],
+      "args": [
+        {
+          "kind": "reference",
+          "value": "10"
+        },
+        {
+          "kind": "reference",
+          "value": "11"
+        },
+        {
+          "kind": "reference",
+          "value": "12"
+        },
+        {
+          "kind": "reference",
+          "value": "13"
+        }
+      ],
+      "mutations": 5
+    }
+  ]
+}

@@ -436,3 +436,6 @@ async fn create_node_duplicate_id_is_fatal() {
     assert_eq!(outcome.worst_level(), Some(semio_framework_diagnostic::Severity::Fatal));
 }
 //#endregion 🔖️OutcomeLaws
+
+#[path = "../../../../../../../../../../../🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/fem/self-weight/native-cqrs-tests.rs"]
+mod ifc_self_weight_tests;

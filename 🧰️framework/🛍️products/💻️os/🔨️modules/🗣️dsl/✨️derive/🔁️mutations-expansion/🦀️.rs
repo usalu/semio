@@ -95,7 +95,7 @@ pub fn expand_mutations(input: &DeriveInput, authority: &MutationAggregateSource
         return Err(syn::Error::new_spanned(input, "Mutations does not permit conditional aggregate metadata"));
     }
     let attrs = parse_mutations_attrs(input)?;
-        let reference = attrs.reference.zip(attrs.reference_diff);
+    let reference = attrs.reference.zip(attrs.reference_diff);
     let retained = attrs.retained.is_some();
 let retire_cold = attrs.retire_cold.map(|retire| quote! {
         fn retire_cold(self) {
@@ -105,6 +105,7 @@ let retire_cold = attrs.retire_cold.map(|retire| quote! {
     let (Some(snapshot_ty), Some(diff_ty), Some(schema)) = (attrs.snapshot, attrs.diff, attrs.schema) else {
         return Err(syn::Error::new_spanned(input, "#[derive(Mutations)] requires #[mutations(snapshot = YourSnapshot, diff = YourDiff, schema = \"your.doc.schema\")]"));
     };
+    let (reference_ty, reference_diff_ty) = reference.as_ref().map(|(snapshot, diff)| (snapshot, diff)).unwrap_or((&snapshot_ty, &diff_ty));
     let map_error = |error: String| syn::Error::new_spanned(input, error);
     let workspace_token = mutation_authority_workspace_token(&authority.workspace_root, &authority.taxonomy_path).map_err(map_error)?;
     let mutation_root = mutation_authority_relative(&authority.workspace_root, &authority.mutation_root).map_err(map_error)?;
@@ -194,12 +195,10 @@ let mut timestamp_arms = Vec::new();
         let expected_kebab = to_kebab(&expected_variant);
         let kind = quote! { <#payload_ty as ::semio_framework_os_command::MutationKind<#snapshot_ty, #aggregate_ty>> };
         let leaf = quote! { <#payload_ty as ::semio_framework_os_command::MutationLeaf> };
-        if let Some((reference_ty, _)) = &reference {
-            let cold_kind = quote! { <#payload_ty as ::semio_framework_os_command::ColdMutationKind<#reference_ty, #aggregate_ty>> };
-            diff_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::diff(payload, base) });
-            inverse_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::inverse(payload, base) });
-            cold_foreign_source_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::foreign_step_source(payload, base, index) });
-        }
+        let cold_kind = quote! { <#payload_ty as ::semio_framework_os_command::ColdMutationKind<#reference_ty, #aggregate_ty>> };
+        diff_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::diff(payload, base) });
+        inverse_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::inverse(payload, base) });
+        cold_foreign_source_arms.push(quote! { Self::#variant_ident(payload) => #cold_kind::foreign_step_source(payload, base, index) });
         timestamp_arms.push(quote! { Self::#variant_ident(payload) => #kind::timestamp(payload) });
         descriptor_arms.push(quote! { Self::#variant_ident(_) => &<Self as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS[#index] });
         semantics_arms.push(quote! { Self::#variant_ident(_) => &#kind::SEMANTICS });
@@ -249,7 +248,7 @@ let mut timestamp_arms = Vec::new();
     }
 
     let register_fn_ident = syn::Ident::new(&format!("register_{}_descriptors", to_kebab(&name.to_string()).replace('-', "_")), name.span());
-    let cold_reference = reference.as_ref().map(|(reference_ty, reference_diff_ty)| quote! {
+    let cold_reference = quote! {
         impl #impl_generics ::semio_framework_os_command::ColdMutation<#reference_ty> for #aggregate_ty #where_clause {
             type ReferenceDiff = #reference_diff_ty;
             fn diff(&self, base: &#reference_ty) -> ::semio_framework_os_command::MutationOutcome<Self::ReferenceDiff> {
@@ -267,8 +266,8 @@ let mut timestamp_arms = Vec::new();
                 match self { #(#cold_foreign_source_arms),* }
             }
         }
-    });
-    let payload_law = mutation_payload_law_test(name, &snapshot_ty, reference.as_ref().map(|(wire,_)|wire), authority, &input.generics);
+    };
+    let payload_law = mutation_payload_law_test(name, &snapshot_ty, reference_ty, authority, &input.generics);
     let eager_check = input.generics.params.is_empty().then(|| quote! {
         const _: () = { let _ = <#name as ::protocol::Mutation<#snapshot_ty>>::DESCRIPTORS; };
     });
@@ -375,7 +374,7 @@ impl #impl_generics ::protocol::Mutation<#snapshot_ty> for #aggregate_ty #where_
 /// (`mutation_inverse_rows_failures`, design §20.5) — walked over every subset of the owner's standard, since a subset's
 /// fixtures replay through the aggregate too. Nothing is emitted when the owner directory cannot be addressed from the
 /// compiling crate.
-fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty: Option<&Type>, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
+fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty: &Type, authority: &MutationAggregateSourceAuthority, generics: &syn::Generics) -> proc_macro2::TokenStream {
     if !generics.params.is_empty() {
         return quote! {};
     }
@@ -392,11 +391,7 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, reference_ty
     let signature = format!("demo_mutation_cases() -> Vec<{name}>");
     let demo_cases = source.lines().any(|line| ["fn ", "pub fn ", "pub(crate) fn "].iter().any(|prefix| line.strip_prefix(prefix).is_some_and(|rest| rest.starts_with(&signature)))).then(|| quote! { ops.extend(demo_mutation_cases()); });
     let test_ident = syn::Ident::new(&format!("semio_payload_law_{}", to_kebab(&name.to_string()).replace('-', "_")), name.span());
-    let footprint = match reference_ty {
-        Some(wire) => quote! { ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #wire, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative)) },
-        None => quote! { (::std::vec::Vec::<::std::string::String>::new(), 0usize) },
-    };
-quote! {
+    quote! {
         #[cfg(test)]
         #[test]
         fn #test_ident() {
@@ -408,7 +403,7 @@ quote! {
             failures.extend(::semio_framework_os_command::mutation_label_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_store_one_item::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_command::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
-            let (footprint_failures, cases) = #footprint;
+            let (footprint_failures, cases) = ::semio_framework_os_command::fold::mutation_inverse_rows_failures::<#snapshot_ty, #reference_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
             failures.extend(footprint_failures);
             assert!(failures.is_empty(), "{} breaches of the editable-payload and fold-footprint laws over {} {} operations and {} fixture cases: {:#?}", failures.len(), count, ::core::stringify!(#name), cases, failures);
         }

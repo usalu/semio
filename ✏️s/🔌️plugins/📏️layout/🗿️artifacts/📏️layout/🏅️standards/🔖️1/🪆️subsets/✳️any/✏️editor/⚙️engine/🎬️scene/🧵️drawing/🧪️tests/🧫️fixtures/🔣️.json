@@ -1,0 +1,1754 @@
+{
+  "schema": "layout.drawing.graph-plan.v1",
+  "cases": [
+    {
+      "name": "mixed transformed fitted primitives",
+      "content": {
+        "schema": "drawing.document",
+        "id": "mixed transformed fitted primitives",
+        "title": "mixed transformed fitted primitives",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {
+          "node-3": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                137,
+                80,
+                78,
+                71
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      10,
+                      20
+                    ],
+                    "to": [
+                      20,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      30,
+                      -20
+                    ],
+                    "ctrl2": [
+                      40,
+                      20
+                    ],
+                    "to": [
+                      50,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 10,
+                    "ry": 5,
+                    "rotation": 30,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      60,
+                      10
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              {
+                "id": "node-2",
+                "kind": "text",
+                "name": "node-2",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "x": 5,
+                "y": 25,
+                "content": "Plan",
+                "size": 11,
+                "fontFamily": "shareTechMono"
+              },
+              {
+                "id": "node-3",
+                "kind": "image",
+                "name": "node-3",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 60,
+                  "y": 10,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "imageKey": "node-3",
+                "width": 20,
+                "height": 10
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "group",
+            "name": "node-4",
+            "visible": false,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-5",
+                "kind": "text",
+                "name": "node-5",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "x": 10000000000,
+                "y": 10000000000,
+                "content": "Hidden",
+                "size": 11,
+                "fontFamily": "shareTechMono"
+              },
+              {
+                "id": "node-6",
+                "kind": "path",
+                "name": "node-6",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      10000000000,
+                      10000000000
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      20000000000,
+                      20000000000
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": -0.08974647521972656,
+          "top": 20,
+          "right": 141.06405639648438,
+          "bottom": 125.98075866699219
+        },
+        "affine": {
+          "xx": 0.9435675046846508,
+          "xy": 0,
+          "yx": 0,
+          "yy": 0.9435675046846508,
+          "dx": 33.490611081475855,
+          "dy": -18.871350093693017
+        },
+        "textExtents": [
+          {
+            "index": 0,
+            "content": "Plan",
+            "bounds": {
+              "left": 0,
+              "top": -8,
+              "right": 22.01123046875,
+              "bottom": 0
+            }
+          }
+        ],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath",
+          "text",
+          "resolve"
+        ]
+      }
+    },
+    {
+      "name": "placed rotated background uses the same source bounds",
+      "content": {
+        "schema": "drawing.document",
+        "id": "placed rotated background uses the same source bounds",
+        "title": "placed rotated background uses the same source bounds",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {
+          "node-3": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                137,
+                80,
+                78,
+                71
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      10,
+                      20
+                    ],
+                    "to": [
+                      20,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      30,
+                      -20
+                    ],
+                    "ctrl2": [
+                      40,
+                      20
+                    ],
+                    "to": [
+                      50,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 10,
+                    "ry": 5,
+                    "rotation": 30,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      60,
+                      10
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              {
+                "id": "node-2",
+                "kind": "text",
+                "name": "node-2",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "x": 5,
+                "y": 25,
+                "content": "Plan",
+                "size": 11,
+                "fontFamily": "shareTechMono"
+              },
+              {
+                "id": "node-3",
+                "kind": "image",
+                "name": "node-3",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 60,
+                  "y": 10,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "imageKey": "node-3",
+                "width": 20,
+                "height": 10
+              }
+            ]
+          },
+          {
+            "id": "node-4",
+            "kind": "group",
+            "name": "node-4",
+            "visible": false,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-5",
+                "kind": "text",
+                "name": "node-5",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "x": 10000000000,
+                "y": 10000000000,
+                "content": "Hidden",
+                "size": 11,
+                "fontFamily": "shareTechMono"
+              },
+              {
+                "id": "node-6",
+                "kind": "path",
+                "name": "node-6",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      10000000000,
+                      10000000000
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      20000000000,
+                      20000000000
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 30,
+        "y": 40,
+        "width": 120,
+        "height": 80,
+        "rotation": 0.7853981633974483
+      },
+      "expected": {
+        "bounds": {
+          "left": -0.08974647521972656,
+          "top": 20,
+          "right": 141.06405639648438,
+          "bottom": 125.98075866699219
+        },
+        "affine": {
+          "xx": 0.5337623848558289,
+          "xy": -0.5337623848558288,
+          "yx": 0.5337623848558288,
+          "yy": 0.5337623848558289,
+          "dx": 91.336127011089,
+          "dy": 3.417089121932044
+        },
+        "textExtents": [
+          {
+            "index": 0,
+            "content": "Plan",
+            "bounds": {
+              "left": 0,
+              "top": -8,
+              "right": 22.01123046875,
+              "bottom": 0
+            }
+          }
+        ],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath",
+          "text",
+          "resolve"
+        ]
+      }
+    },
+    {
+      "name": "empty content retains no invented canvas geometry",
+      "content": {
+        "schema": "drawing.document",
+        "id": "empty drawing uses canvas fallback",
+        "title": "empty drawing uses canvas fallback",
+        "artboard": {
+          "width": 100,
+          "height": 50
+        },
+        "assets": {},
+        "layers": []
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": null,
+        "affine": {
+          "xx": 1,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1,
+          "dx": 0,
+          "dy": 0
+        },
+        "textExtents": [],
+        "primitiveKinds": []
+      }
+    },
+    {
+      "name": "fully empty drawing has no invented geometry",
+      "content": {
+        "schema": "drawing.document",
+        "id": "fully empty drawing has no invented geometry",
+        "title": "fully empty drawing has no invented geometry",
+        "assets": {},
+        "layers": []
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 50,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": null,
+        "affine": {
+          "xx": 1,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1,
+          "dx": 0,
+          "dy": 0
+        },
+        "textExtents": [],
+        "primitiveKinds": []
+      }
+    },
+    {
+      "name": "text source index includes hidden earlier leaves",
+      "content": {
+        "schema": "drawing.document",
+        "id": "text source index includes hidden earlier leaves",
+        "title": "text source index includes hidden earlier leaves",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {
+          "node-6": {
+            "width": 1,
+            "height": 1,
+            "samples": [
+              [
+                137,
+                80,
+                78,
+                71
+              ]
+            ]
+          }
+        },
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": false,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "text",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "x": 10000000000,
+                "y": 10000000000,
+                "content": "Hidden",
+                "size": 11,
+                "fontFamily": "shareTechMono"
+              },
+              {
+                "id": "node-2",
+                "kind": "path",
+                "name": "node-2",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      10000000000,
+                      10000000000
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      20000000000,
+                      20000000000
+                    ]
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "id": "node-3",
+            "kind": "group",
+            "name": "node-3",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-4",
+                "kind": "path",
+                "name": "node-4",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      10,
+                      20
+                    ],
+                    "to": [
+                      20,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      30,
+                      -20
+                    ],
+                    "ctrl2": [
+                      40,
+                      20
+                    ],
+                    "to": [
+                      50,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 10,
+                    "ry": 5,
+                    "rotation": 30,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      60,
+                      10
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              },
+              {
+                "id": "node-5",
+                "kind": "text",
+                "name": "node-5",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "x": 5,
+                "y": 25,
+                "content": "Plan",
+                "size": 11,
+                "fontFamily": "shareTechMono"
+              },
+              {
+                "id": "node-6",
+                "kind": "image",
+                "name": "node-6",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 60,
+                  "y": 10,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero"
+                },
+                "imageKey": "node-6",
+                "width": 20,
+                "height": 10
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": -0.08974647521972656,
+          "top": 20,
+          "right": 141.06405639648438,
+          "bottom": 125.98075866699219
+        },
+        "affine": {
+          "xx": 0.9435675046846508,
+          "xy": 0,
+          "yx": 0,
+          "yy": 0.9435675046846508,
+          "dx": 33.490611081475855,
+          "dy": -18.871350093693017
+        },
+        "textExtents": [
+          {
+            "index": 1,
+            "content": "Plan",
+            "bounds": {
+              "left": 0,
+              "top": -8,
+              "right": 22.01123046875,
+              "bottom": 0
+            }
+          }
+        ],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath",
+          "text",
+          "resolve"
+        ]
+      }
+    },
+    {
+      "name": "quadratic extrema after rotated nonuniform scale",
+      "content": {
+        "schema": "drawing.document",
+        "id": "quadratic extrema after rotated nonuniform scale",
+        "title": "quadratic extrema after rotated nonuniform scale",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {},
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "quad",
+                    "ctrl": [
+                      100,
+                      200
+                    ],
+                    "to": [
+                      200,
+                      0
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 10,
+          "top": 20,
+          "right": 356.41015625,
+          "bottom": 269.1488037109375
+        },
+        "affine": {
+          "xx": 0.4013665669292959,
+          "xy": 0,
+          "yx": 0,
+          "yy": 0.4013665669292959,
+          "dx": 26.46760674895531,
+          "dy": -8.027331338585919
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "cubic extrema after rotated nonuniform scale",
+      "content": {
+        "schema": "drawing.document",
+        "id": "cubic extrema after rotated nonuniform scale",
+        "title": "cubic extrema after rotated nonuniform scale",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {},
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "cubic",
+                    "ctrl1": [
+                      0,
+                      200
+                    ],
+                    "ctrl2": [
+                      200,
+                      -200
+                    ],
+                    "to": [
+                      200,
+                      0
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": -12.752738952636719,
+          "top": 20,
+          "right": 379.1629333496094,
+          "bottom": 220
+        },
+        "affine": {
+          "xx": 0.5,
+          "xy": 0,
+          "yx": 0,
+          "yy": 0.5,
+          "dx": 8.397451400756836,
+          "dy": -10
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "large rotated elliptical arc extrema",
+      "content": {
+        "schema": "drawing.document",
+        "id": "large rotated elliptical arc extrema",
+        "title": "large rotated elliptical arc extrema",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {},
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 30,
+                    "ry": 10,
+                    "rotation": 45,
+                    "largeArc": true,
+                    "sweep": false,
+                    "to": [
+                      40,
+                      30
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 2.656217575073242,
+          "top": 19.998260498046875,
+          "right": 57.13628005981445,
+          "bottom": 117.62983703613281
+        },
+        "affine": {
+          "xx": 1.0242587853837446,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1.0242587853837446,
+          "dx": 69.37850449871476,
+          "dy": -20.483394007517212
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "zero radius arc becomes a line",
+      "content": {
+        "schema": "drawing.document",
+        "id": "zero radius arc becomes a line",
+        "title": "zero radius arc becomes a line",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {},
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 2,
+              "scaleY": 1.5000000000000002,
+              "shear": 0,
+              "rotation": 0.523598775598299
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      0,
+                      0
+                    ]
+                  },
+                  {
+                    "kind": "arc",
+                    "rx": 0,
+                    "ry": 10,
+                    "rotation": 45,
+                    "largeArc": false,
+                    "sweep": true,
+                    "to": [
+                      40,
+                      30
+                    ]
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": 10,
+          "top": 20,
+          "right": 56.78202819824219,
+          "bottom": 98.97114562988281
+        },
+        "affine": {
+          "xx": 1.2662852894229741,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1.2662852894229741,
+          "dx": 57.717450047367834,
+          "dy": -25.325705788459484
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    },
+    {
+      "name": "authored affine retains projected spatial transform",
+      "content": {
+        "schema": "drawing.document",
+        "id": "spatial quaternion composes before planar projection",
+        "title": "spatial quaternion composes before planar projection",
+        "artboard": {
+          "width": 200,
+          "height": 100
+        },
+        "assets": {},
+        "layers": [
+          {
+            "id": "node-0",
+            "kind": "group",
+            "name": "node-0",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 10,
+              "y": 20,
+              "scaleX": 1.6581467979527944,
+              "scaleY": 0.8365343622808947,
+              "shear": 0.6961706320757232,
+              "rotation": 0.8129141526829026
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "isolation": true,
+            "children": [
+              {
+                "id": "node-1",
+                "kind": "path",
+                "name": "node-1",
+                "visible": true,
+                "locked": false,
+                "opacity": 1,
+                "blendMode": "normal",
+                "transform": {
+                  "x": 0,
+                  "y": 0,
+                  "scaleX": 1,
+                  "scaleY": 1,
+                  "shear": 0,
+                  "rotation": 0
+                },
+                "attributes": {
+                  "fillRule": "nonzero",
+                  "fill": {
+                    "kind": "solid",
+                    "color": [
+                      0,
+                      0,
+                      1,
+                      0.375
+                    ]
+                  },
+                  "stroke": {
+                    "color": [
+                      1,
+                      0,
+                      0,
+                      0.75
+                    ],
+                    "width": 2,
+                    "cap": "round",
+                    "join": "round"
+                  }
+                },
+                "segments": [
+                  {
+                    "kind": "move",
+                    "to": [
+                      -10,
+                      -5
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      30,
+                      -5
+                    ]
+                  },
+                  {
+                    "kind": "line",
+                    "to": [
+                      30,
+                      20
+                    ]
+                  },
+                  {
+                    "kind": "close"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "width": 200,
+        "height": 100,
+        "rotation": 0
+      },
+      "expected": {
+        "bounds": {
+          "left": -0.7526874542236328,
+          "top": 2.5537643432617188,
+          "right": 44.838706970214844,
+          "bottom": 77.74193572998047
+        },
+        "affine": {
+          "xx": 1.3299964363498806,
+          "xy": 0,
+          "yx": 0,
+          "yy": 1.3299964363498806,
+          "dx": 70.6828755754402,
+          "dy": -3.396497475815479
+        },
+        "textExtents": [],
+        "primitiveKinds": [
+          "beginPath",
+          "segment",
+          "segment",
+          "segment",
+          "segment",
+          "endPath"
+        ]
+      }
+    }
+  ],
+  "cuts": [
+    0,
+    1,
+    5,
+    20,
+    60
+  ],
+  "wide": {
+    "texts": 40,
+    "images": 12,
+    "paths": 140,
+    "segments": 4097,
+    "styleNameBytes": 4097
+  }
+}

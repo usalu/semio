@@ -3,5 +3,10 @@
   "nativeMaximumBytes": 1048576,
   "maximumTurns": 4096,
   "grant": {"maximumItems":4096,"maximumCopyBytes":1048576,"maximumCapacityBytes":1048576,"maximumReleaseBytes":1048576,"maximumDepth":64},
-  "expected": {"nestedFrames":2,"originalAdopted":true,"canceledKind":"canceled","zeroGrantProgress":0,"oppositePhaseRefused":true}
+  "expected": {"nestedFrames":2,"originalAdopted":true,"canceledKind":"canceled","zeroGrantProgress":0,"oppositePhaseRefused":false,"occupiedPendingPhaseRefused":true},
+  "phaseSelection": [
+    {"originalPair":true,"pendingOwner":false,"selected":"encode"},
+    {"originalPair":true,"pendingOwner":true,"selected":"decode"},
+    {"originalPair":false,"pendingOwner":false,"selected":"decode"}
+  ]
 }

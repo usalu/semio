@@ -166,12 +166,16 @@ def apply_change_data_fields(doc, p):
 def apply_create_page(doc, p):
     after = copy.deepcopy(doc)
     after["pages"].insert(p["index"], copy.deepcopy(p["page"]))
+    _, spread = _find(after["spreads"], p["page"]["spreadId"])
+    spread["pageIds"].append(p["page"]["id"])
     return after
 
 
 def apply_delete_page(doc, p):
     after = copy.deepcopy(doc)
-    idx, _ = _page(after, p["id"])
+    idx, page = _page(after, p["id"])
+    _, spread = _find(after["spreads"], page["spreadId"])
+    spread["pageIds"].remove(page["id"])
     after["pages"].pop(idx)
     return after
 

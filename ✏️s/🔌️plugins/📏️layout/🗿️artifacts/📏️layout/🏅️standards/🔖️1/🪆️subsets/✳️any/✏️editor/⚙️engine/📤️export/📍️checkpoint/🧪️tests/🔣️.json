@@ -1,0 +1,400 @@
+{
+  "cases": [
+    {
+      "id": "zero",
+      "source": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        }
+      ],
+      "replay": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        }
+      ],
+      "checkpointAt": 2,
+      "expectedCommitted": 0
+    },
+    {
+      "id": "font-preparation",
+      "source": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 2,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        }
+      ],
+      "replay": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 2,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        }
+      ],
+      "checkpointAt": 8,
+      "expectedCommitted": 3
+    },
+    {
+      "id": "binary-output-switch",
+      "source": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 2,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 100,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 4,
+          "rawBytes": 100,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 4,
+          "rawBytes": 100,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 4,
+          "rawBytes": 100,
+          "encodedBytes": 136,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 100,
+          "encodedBytes": 136,
+          "publishedChunks": 0
+        }
+      ],
+      "replay": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 2,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 15,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 100,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 100,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 4,
+          "rawBytes": 100,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 4,
+          "rawBytes": 100,
+          "encodedBytes": 136,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 100,
+          "encodedBytes": 136,
+          "publishedChunks": 0
+        }
+      ],
+      "checkpointAt": 7,
+      "expectedCommitted": 6
+    },
+    {
+      "id": "queue-preparation",
+      "source": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 2,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 1
+        },
+        {
+          "stage": 6,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 1
+        }
+      ],
+      "replay": [
+        {
+          "stage": 0,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 1,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 2,
+          "rawBytes": 0,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 3,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 0
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 1
+        },
+        {
+          "stage": 5,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 1
+        },
+        {
+          "stage": 6,
+          "rawBytes": 20,
+          "encodedBytes": 0,
+          "publishedChunks": 1
+        }
+      ],
+      "checkpointAt": 6,
+      "expectedCommitted": 4
+    }
+  ]
+}

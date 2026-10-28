@@ -6,6 +6,7 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::binary::diff::{enc_complex_list_bin, dec_complex_list_bin};
 use crate::standards::v4::subsets::any::schema::mutations::*;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcDiff;
@@ -75,6 +76,7 @@ impl OpBinary for IfcMutation {
             IfcMutation::SetEntityArg(..) => TAG_SET_ENTITY_ARG,
             IfcMutation::InsertEntityArg(..) => TAG_INSERT_ENTITY_ARG,
             IfcMutation::RemoveEntityArg(..) => TAG_REMOVE_ENTITY_ARG,
+            IfcMutation::SetEntityComplex(..) => TAG_SET_ENTITY_COMPLEX,
         };
         let mut out = vec![store::pack_rt::OP_BINARY_FORMAT, tag];
         match self {
@@ -100,6 +102,10 @@ impl OpBinary for IfcMutation {
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
                 enc_ifc_value_bin(value, &mut out);
             }
+            IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id, complex }) => {
+                store::pack_rt::write_varint_u64(&mut out, *id);
+                enc_complex_list_bin(complex, &mut out);
+            }
             IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }) => {
                 store::pack_rt::write_varint_u64(&mut out, *id);
                 store::pack_rt::write_varint_u64(&mut out, *index as u64);
@@ -111,9 +117,12 @@ impl OpBinary for IfcMutation {
     fn decode_op(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
         let mut reader = store::ByteReader::new(bytes);
         let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-        let _format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        let format = reader.read_u8().map_err(|e| malformed("op format", 0, e.to_string()))?;
+        if format != store::pack_rt::OP_BINARY_FORMAT {
+            return Err(malformed("op format", 0, format!("expected format {}", store::pack_rt::OP_BINARY_FORMAT)));
+        }
         let tag = reader.read_u8().map_err(|e| malformed("op tag", 1, e.to_string()))?;
-        match tag {
+        let mutation = match tag {
             TAG_SET_FILE_DESCRIPTION => {
                 let values = dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("op values", reader.position(), e))?;
                 Ok(IfcMutation::SetFileDescription(set_file_description::SetFileDescription { values }))
@@ -127,7 +136,7 @@ impl OpBinary for IfcMutation {
                 Ok(IfcMutation::SetFileSchema(set_file_schema::SetFileSchema { values }))
             }
             TAG_INSERT_ENTITY => {
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let index = usize::try_from(reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))?).map_err(|e| malformed("op index", reader.position(), e.to_string()))?;
                 let entity = dec_entity_bin(&mut reader).map_err(|e| malformed("op entity", reader.position(), e))?;
                 Ok(IfcMutation::InsertEntity(insert_entity::InsertEntity { index, entity }))
             }
@@ -142,23 +151,32 @@ impl OpBinary for IfcMutation {
             }
             TAG_SET_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let index = usize::try_from(reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))?).map_err(|e| malformed("op index", reader.position(), e.to_string()))?;
                 let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, index, value }))
             }
             TAG_INSERT_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let index = usize::try_from(reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))?).map_err(|e| malformed("op index", reader.position(), e.to_string()))?;
                 let value = dec_ifc_value_bin(&mut reader).map_err(|e| malformed("op value", reader.position(), e))?;
                 Ok(IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, index, value }))
             }
             TAG_REMOVE_ENTITY_ARG => {
                 let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
-                let index = reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))? as usize;
+                let index = usize::try_from(reader.read_varint_u64().map_err(|e| malformed("op index", reader.position(), e.to_string()))?).map_err(|e| malformed("op index", reader.position(), e.to_string()))?;
                 Ok(IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }))
             }
+            TAG_SET_ENTITY_COMPLEX => {
+                let id = reader.read_varint_u64().map_err(|e| malformed("op id", reader.position(), e.to_string()))?;
+                let complex = dec_complex_list_bin(&mut reader).map_err(|e| malformed("op complex", reader.position(), e))?;
+                Ok(IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id, complex }))
+            }
             other => Err(malformed("op tag", 1, format!("unknown tag {other}"))),
+        }?;
+        if reader.position() != bytes.len() {
+            return Err(malformed("op payload", reader.position(), "unexpected trailing bytes".into()));
         }
+        Ok(mutation)
     }
 }
 }
@@ -175,4 +193,9 @@ const TAG_SET_ENTITY_NAME: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set
 const TAG_SET_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-arg");
 const TAG_INSERT_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "insert-entity-arg");
 const TAG_REMOVE_ENTITY_ARG: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "remove-entity-arg");
+const TAG_SET_ENTITY_COMPLEX: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "set-entity-complex");
 //#endregion 🏷️WireTags
+
+#[cfg(test)]
+#[path = "🧪️tests/🦀️.rs"]
+mod tests;

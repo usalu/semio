@@ -1,0 +1,22 @@
+{
+  "schema": "semio.ifc4x3.details-tests.v1",
+  "identities":{"source":"IFC4X3_ADD2","graph":"stdio.ifc","document":"s.stdio.ifc@4x3/*","standard":"4x3"},
+  "cases": [
+    {"entity":"IFCWALL","attribute":"GlobalId","position":0,"control":"string","inherited":true},
+    {"entity":"IFCWALL","attribute":"PredefinedType","position":8,"control":"enum","choice":"STANDARD"},
+    {"entity":"IFCLOCALPLACEMENT","attribute":"PlacementRelTo","position":0,"control":"reference","target":"IFCLOCALPLACEMENT","optional":true},
+    {"entity":"IFCCARTESIANPOINT","attribute":"Coordinates","position":0,"control":"aggregate","minimum":1,"maximum":3},
+    {"entity":"IFCPROPERTYSINGLEVALUE","attribute":"NominalValue","position":2,"control":"select","choice":"IFCLABEL","optional":true}
+  ],
+  "locales":["en","de"],
+  "referenceInsertion":{"entity":"IFCPROPERTYSET","attribute":"HasProperties","position":4,"itemEntity":"IFCPROPERTYSINGLEVALUE","firstId":2,"lastId":301,"existingLastId":257,"targetId":301,"exactTargetId":"9007199254740993"},
+  "complexTypes":[{"entity":"IFCROOT","attributes":4,"abstract":true},{"entity":"IFCCARTESIANPOINT","attributes":1,"abstract":false},{"entity":"IFCWALL","attributes":1,"abstract":false}],
+  "realEdits":[{"before":"0000000000000000","after":"8000000000000000"}],
+  "typeSwitch":{"from":"IFCWALL","to":"IFCDOOR","fromAttributes":9,"toAttributes":13,"preserved":["GlobalId","Name","Tag"],"fromEnum":"STANDARD","resetToUnset":true,"entityId":"9007199254740993","laws":["identity-never-removed","incoming-reference-preserved","sparse-modifications-only","reset-incompatible-domain","inverse-restores-snapshot"]},
+  "globalIds":[
+    {"hex":"00000000000000000000000000000000","compressed":"0000000000000000000000"},
+    {"hex":"00112233445566778899aabbccddeeff","compressed":"004I8pH5LcTuYPghlCtUx$"},
+    {"hex":"ffffffffffffffffffffffffffffffff","compressed":"3$$$$$$$$$$$$$$$$$$$$$"}
+  ],
+  "laws":["preserve-exact-reference-id","hide-transport-discriminant","nested-edit-resolves-to-argument-mutation","complex-edit-resolves-to-complex-mutation","aggregate-cardinality","explicit-localized-unset","revisioned-host-render"]
+}

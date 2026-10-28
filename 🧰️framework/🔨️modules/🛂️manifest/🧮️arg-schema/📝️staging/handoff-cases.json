@@ -1,0 +1,57 @@
+{
+  "context": {
+    "window": "left",
+    "locale": "de"
+  },
+  "cases": [
+    {
+      "name": "current",
+      "window": "left",
+      "locale": "de",
+      "generation": "1",
+      "expected": true
+    },
+    {
+      "name": "other-window",
+      "window": "right",
+      "locale": "de",
+      "generation": "1",
+      "expected": false
+    },
+    {
+      "name": "other-locale",
+      "window": "left",
+      "locale": "en",
+      "generation": "1",
+      "expected": false
+    },
+    {
+      "name": "u64-last",
+      "window": "left",
+      "locale": "de",
+      "generation": "18446744073709551615",
+      "expected": true
+    },
+    {
+      "name": "u64-overflow",
+      "window": "left",
+      "locale": "de",
+      "generation": "18446744073709551616",
+      "expected": false
+    },
+    {
+      "name": "noncanonical-generation",
+      "window": "left",
+      "locale": "de",
+      "generation": "01",
+      "expected": false
+    },
+    {
+      "name": "empty-window",
+      "window": "",
+      "locale": "de",
+      "generation": "1",
+      "expected": false
+    }
+  ]
+}

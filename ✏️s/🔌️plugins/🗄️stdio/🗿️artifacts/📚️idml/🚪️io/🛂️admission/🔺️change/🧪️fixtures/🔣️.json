@@ -1,0 +1,235 @@
+{
+  "schema": "idml.borrowed.changes.v1",
+  "base": {
+    "version": "8.0",
+    "parts": [
+      [
+        "mimetype",
+        "$mime"
+      ],
+      [
+        "designmap.xml",
+        "<Document DOMVersion=\"8.0\"/>"
+      ],
+      [
+        "Stories/A.xml",
+        "<Story>A 😀</Story>"
+      ],
+      [
+        "Stories/B.xml",
+        "<Story>B</Story>"
+      ]
+    ]
+  },
+  "cases": [
+    {
+      "id": "unchanged",
+      "operations": [],
+      "expected": []
+    },
+    {
+      "id": "story-change",
+      "operations": [
+        {
+          "kind": "replace",
+          "index": 2,
+          "text": "<Story>Ä 中</Story>"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "part",
+          "next": 2,
+          "before": 2
+        }
+      ]
+    },
+    {
+      "id": "insert-binary",
+      "operations": [
+        {
+          "kind": "append",
+          "path": "Links/photo.png",
+          "bytes": [
+            137,
+            80,
+            78,
+            71
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "kind": "order"
+        },
+        {
+          "kind": "part",
+          "next": 4
+        }
+      ]
+    },
+    {
+      "id": "remove-part",
+      "operations": [
+        {
+          "kind": "remove",
+          "index": 3
+        }
+      ],
+      "expected": [
+        {
+          "kind": "order"
+        },
+        {
+          "kind": "remove",
+          "before": 3
+        }
+      ]
+    },
+    {
+      "id": "reorder",
+      "operations": [
+        {
+          "kind": "order",
+          "indices": [
+            0,
+            1,
+            3,
+            2
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "kind": "order"
+        }
+      ]
+    },
+    {
+      "id": "version",
+      "operations": [
+        {
+          "kind": "replace",
+          "index": 1,
+          "text": "<Document DOMVersion=\"8.1\"/>"
+        },
+        {
+          "kind": "version",
+          "value": "8.1"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "version"
+        },
+        {
+          "kind": "part",
+          "next": 1,
+          "before": 1
+        }
+      ]
+    },
+    {
+      "id": "encoded-version",
+      "operations": [
+        {
+          "kind": "replace",
+          "index": 1,
+          "text": "<Document DOMVersion=\"8&#46;0\"/>"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "part",
+          "next": 1,
+          "before": 1
+        }
+      ]
+    },
+    {
+      "id": "mixed",
+      "operations": [
+        {
+          "kind": "replace",
+          "index": 1,
+          "text": "<Document DOMVersion=\"8.1\"/>"
+        },
+        {
+          "kind": "replace",
+          "index": 2,
+          "text": "<Story>Updated A</Story>"
+        },
+        {
+          "kind": "remove",
+          "index": 3
+        },
+        {
+          "kind": "append",
+          "path": "Stories/C.xml",
+          "text": "<Story>C</Story>"
+        },
+        {
+          "kind": "order",
+          "indices": [
+            0,
+            3,
+            1,
+            2
+          ]
+        },
+        {
+          "kind": "version",
+          "value": "8.1"
+        }
+      ],
+      "expected": [
+        {
+          "kind": "version"
+        },
+        {
+          "kind": "order"
+        },
+        {
+          "kind": "remove",
+          "before": 3
+        },
+        {
+          "kind": "part",
+          "next": 1
+        },
+        {
+          "kind": "part",
+          "next": 2,
+          "before": 1
+        },
+        {
+          "kind": "part",
+          "next": 3,
+          "before": 2
+        }
+      ]
+    }
+  ],
+  "lifecycle": {
+    "workGrants": [
+      1,
+      7,
+      64,
+      4096
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      10,
+      100
+    ]
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes",
+      "fast-json-patch"
+    ],
+    "method": "reconstruct the typed sparse event using only emitted numeric source coordinates; canonical application equals independent RFC6902 application and independently admitted ZIP/XML package"
+  }
+}

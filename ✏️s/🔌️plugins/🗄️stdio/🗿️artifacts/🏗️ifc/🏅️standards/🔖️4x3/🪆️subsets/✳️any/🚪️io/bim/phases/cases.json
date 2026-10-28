@@ -1,0 +1,73 @@
+{
+  "schema": "semio.ifc.bim-phase-names.v1",
+  "contract": {
+    "set": "semio_BimProject",
+    "count": "PhaseCount",
+    "names": "PhaseNames",
+    "countType": "IFCINTEGER",
+    "itemType": "IFCTEXT",
+    "empty": "count-only",
+    "ifcPhase": "singular",
+    "refusal": "bim.phase-definition"
+  },
+  "cases": [
+    {
+      "id": "empty",
+      "phases": []
+    },
+    {
+      "id": "one-blank",
+      "phases": [
+        ""
+      ]
+    },
+    {
+      "id": "one-semicolon",
+      "phases": [
+        "Design;Review"
+      ]
+    },
+    {
+      "id": "two-labels",
+      "phases": [
+        "Design",
+        "Review"
+      ]
+    },
+    {
+      "id": "ordered-duplicates-and-blank",
+      "phases": [
+        "Design;Review",
+        "",
+        "Design;Review"
+      ]
+    },
+    {
+      "id": "unicode",
+      "phases": [
+        "Ä;設計",
+        " revisión",
+        "↔"
+      ]
+    },
+    {
+      "id": "long-text",
+      "phases": [
+        "LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL"
+      ]
+    }
+  ],
+  "refusals": [
+    "missing-count",
+    "negative-count",
+    "wrong-count-type",
+    "mismatched-count",
+    "missing-list",
+    "wrong-list-type",
+    "untyped-list-item",
+    "physical-unit",
+    "duplicate-count",
+    "duplicate-set",
+    "unknown-property"
+  ]
+}

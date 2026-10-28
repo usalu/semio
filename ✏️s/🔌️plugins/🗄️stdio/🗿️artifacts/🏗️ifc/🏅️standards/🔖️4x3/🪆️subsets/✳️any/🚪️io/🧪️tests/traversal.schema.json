@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "endpoints",
+    "frontiers",
+    "failures",
+    "irrelevantRows",
+    "propertyRows",
+    "phases",
+    "preserve"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.exchange-traversal.v1"
+    },
+    "endpoints": {
+      "const": [
+        "bim",
+        "fem"
+      ]
+    },
+    "frontiers": {
+      "const": [
+        "initial",
+        "interior",
+        "completion"
+      ]
+    },
+    "failures": {
+      "const": [
+        "abort",
+        "undefined",
+        "error"
+      ]
+    },
+    "irrelevantRows": {
+      "const": 1024
+    },
+    "propertyRows": {
+      "const": 257
+    },
+    "phases": {
+      "const": {
+        "prepare": "exchange-relations",
+        "lookup": "exchange-relations-lookup",
+        "attribute": "exchange-attribute",
+        "bimProperties": "bim-properties",
+        "bimOccurrenceProperties": "bim-occurrence-properties",
+        "femProperties": "fem-properties"
+      }
+    },
+    "preserve": {
+      "const": {
+        "sourceOrder": true,
+        "duplicateRelatedOccurrences": true,
+        "partialPublication": false,
+        "ignoredUnrelatedPayloads": true
+      }
+    }
+  }
+}

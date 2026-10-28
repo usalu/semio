@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "loadedRoutes", "semanticPhases", "capturePhases", "accessors", "rawAccessors", "limits", "sourceRefusal", "byteRefusals", "cancellation"],
+  "properties": {
+    "schema": {"const": "IFC4X3_ADD2"},
+    "loadedRoutes": {"const": ["importGltf", "writeGlb"]},
+    "semanticPhases": {"const": ["gltf-import", "gltf-accessor", "gltf-materialize-positions", "gltf-materialize-indices", "gltf-materialize-triangles", "glb", "glb-bytes"]},
+    "capturePhases": {"const": ["capture-external", "index-external", "gltf-source-bytes"]},
+    "accessors": {"const": ["document", "asset", "buffers", "byte", "constructor"]},
+    "rawAccessors": {"const": ["buffer", "byteOffset", "length"]},
+    "limits": {"const": [{"maxEntities": 1}, {"maxValues": 1}, {"maxDepth": 1}]},
+    "sourceRefusal": {"const": "exchange.source"},
+    "byteRefusals": {"const": {"importGltf": "gltf.bytes", "writeGlb": "glb.bytes"}},
+    "cancellation": {"const": "io.cancelled"}
+  }
+}

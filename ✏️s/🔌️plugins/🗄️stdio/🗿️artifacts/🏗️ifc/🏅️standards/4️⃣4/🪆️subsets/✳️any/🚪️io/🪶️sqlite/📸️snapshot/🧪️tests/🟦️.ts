@@ -41,7 +41,7 @@ test("IFC4 removal-result references preserve full owner through independently e
    expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
    physical.query("UPDATE ifc_value SET reference_instance_id=? WHERE kind='reference' AND reference_entity_id IS NULL").run(corpus.editReference);
    function edit(value:IfcValue){if(value.kind==="reference"&&value.value===BigInt(case_.removedId))value.value=BigInt(corpus.editReference);else if(value.kind==="aggregate")value.value.forEach(edit);else if(value.kind==="typedValue")value.value.items.forEach(edit);}
-   [...input.header.fileDescription,...input.header.fileName,...input.header.fileSchema,...input.entities.flatMap(entity=>[...entity.args,...entity.complex.flatMap(part=>part.args)])].forEach(edit);
+   [...input.header.fileDescription,...input.header.fileName,...input.header.fileSchema,...input.entities.flatMap(entity=>[...entity.args,...(entity.complex??[]).flatMap(part=>part.args)])].forEach(edit);
    expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);
   }finally{physical.close();}
  }
@@ -74,8 +74,32 @@ import {ifcSnapshotToSqliteDatabase as normSemanticProject,ifcSnapshotFromSqlite
 import {exportSqliteDatabase as normSemanticExport,importSqliteDatabase as normSemanticImport} from "@semio-tech/framework/io/sqlite-snapshot";
 import {independentSqliteExtent as normIndependentExtent} from "@semio-tech/framework/io/sqlite-snapshot/testing/semantic-extent";
 test("IFC4 complete independent cells preserve copied limits and required empty metadata",async()=>{
- expect(normSemanticContract["schemaBytes"]).toEqual(3250);expect(normSemanticContract["tableWidths"]).toEqual({"ifc_aggregate_element":4,"ifc_argument":5,"ifc_complex_type":4,"ifc_document":3,"ifc_entity":5,"ifc_file_description_argument":4,"ifc_file_name_argument":4,"ifc_file_schema_argument":4,"ifc_header":1,"ifc_typed_argument":4,"ifc_value":11});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSourceFull","rows":65,"valueBytes":1869},{"id":"emptyEntitiesRetainHeader","rows":18,"valueBytes":456}]);
+ expect(normSemanticContract["schemaBytes"]).toEqual(3271);expect(normSemanticContract["tableWidths"]).toEqual({"ifc_aggregate_element":4,"ifc_argument":5,"ifc_complex_type":4,"ifc_document":3,"ifc_entity":5,"ifc_file_description_argument":4,"ifc_file_name_argument":4,"ifc_file_schema_argument":4,"ifc_header":1,"ifc_typed_argument":4,"ifc_value":11});expect(normSemanticContract["cases"]).toEqual([{"id":"originalSourceFull","rows":65,"valueBytes":1869},{"id":"emptyEntitiesRetainHeader","rows":18,"valueBytes":456}]);
  for(const item of normSemanticContract.cases){const source=fixture();if(item.id==="emptyEntitiesRetainHeader"){source.entities=[];}const database=await normSemanticProject(source),bytes=await normSemanticExport(database);expect(normIndependentExtent(bytes)).toEqual({rows:item.rows,valueBytes:item.valueBytes,schemaBytes:normSemanticContract.schemaBytes,tableWidths:normSemanticContract.tableWidths});const limits={maxRows:item.rows,maxValueBytes:item.valueBytes,maxSchemaBytes:normSemanticContract.schemaBytes,maxTables:11,maxColumns:11};expect(await normSemanticProject(source,limits)).toEqual(database);expect(await normSemanticRestore(await normSemanticImport(bytes),limits)).toEqual(source);
   for(const short of[{...limits,maxRows:item.rows-1},{...limits,maxValueBytes:item.valueBytes-1},{...limits,maxSchemaBytes:limits.maxSchemaBytes-1},{...limits,maxTables:10},{...limits,maxColumns:10}]){await expect(normSemanticProject(source,short)).rejects.toThrow();await expect(normSemanticRestore(database,short)).rejects.toThrow();}
  }
+});
+
+
+import binaryCases from "./binary-cases.json";
+test("IFC binary scalars survive independently queried native SQL graphs",async()=>{
+ const input=fixture(),values:IfcValue[]=binaryCases.canonical.map(value=>({kind:"binary",value}));input.header.fileName=values;input.entities[0]!.args=[{kind:"aggregate",value:values},{kind:"typedValue",value:{name:"IFCBINARY",items:values}}];input.entities[0]!.complex=[{name:"BINARY_EXTENSION",args:values}];
+ const physical=Database.deserialize(await exportSqliteDatabase(await ifcSnapshotToSqliteDatabase(input)));
+ try{expect(physical.query("SELECT kind,string_value FROM ifc_value WHERE kind='binary' ORDER BY id LIMIT ?").all(binaryCases.canonical.length)).toEqual(binaryCases.canonical.map(string_value=>({kind:"binary",string_value})));expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual(input);physical.exec("PRAGMA ignore_check_constraints=ON");physical.exec("UPDATE ifc_value SET string_value='18' WHERE kind='binary'");await expect(ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).rejects.toThrow();}finally{physical.close();}
+ for(const value of binaryCases.invalid){const invalid=fixture();invalid.entities[0]!.args=[{kind:"binary",value}];await expect(ifcSnapshotToSqliteDatabase(invalid)).rejects.toThrow();}
+});
+
+
+import BinaryAjv from "ajv";
+test("IFC binary transport schema independently enforces canonical STEP padding",async()=>{
+ const schema=await Bun.file(new URL("../../../../🧬️schema/📸️snapshot/🔣️.json",import.meta.url)).json();const validate=new BinaryAjv({strict:false}).compile({$defs:schema.$defs,$ref:"#/$defs/IfcValue"});
+ for(const value of binaryCases.canonical)expect(validate({kind:"binary",value})).toBe(true);
+ for(const value of binaryCases.invalid)expect(validate({kind:"binary",value})).toBe(false);
+});
+
+
+test("IFC4 canonical omitted complex lists project as empty native collections",async()=>{
+ const input=fixture();for(const entity of input.entities)delete entity.complex;
+ const bytes=await exportSqliteDatabase(await ifcSnapshotToSqliteDatabase(input)),physical=Database.deserialize(bytes);
+ try{expect(physical.query("SELECT COUNT(*) n FROM ifc_complex_type").get()).toEqual({n:0});expect(await ifcSnapshotFromSqliteDatabase(await importSqliteDatabase(physical.serialize()))).toEqual({...input,entities:input.entities.map(entity=>({...entity,complex:[]}))});}finally{physical.close();}
 });

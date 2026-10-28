@@ -1,0 +1,5 @@
+"""🛁 Independent high-precision original-parameter remaining volume."""
+from pathlib import Path
+import json,sys,hashlib
+p=Path(__file__).parent;sys.path.insert(0,str(p/'🗑️generated/determinant'));import mpmath as mp
+mp.mp.dps=100;d=json.loads((p/'official-bath-finite-contract.json').read_text(encoding='utf8'));scale=mp.mpf('0.001');x,y=[mp.mpf(v)*scale for v in d['cutter']['dimensions']];r=mp.mpf(d['cutter']['radius'])*scale;depth=mp.mpf(d['cutter']['depth'])*scale;block=mp.fprod(mp.mpf(v)*scale for v in d['block']['dimensions']);n=d['policy']['curvedChords'];ideal=block-depth*(x*y-(4-mp.pi)*r*r);finite=block-depth*(x*y-4*r*r+n*r*r*mp.sin(2*mp.pi/n)/2);output={'digits':100,'N':n,'M':76,'idealVolume':mp.nstr(ideal,90),'finitePolygonVolume':mp.nstr(finite,90),'polygonMinusIdeal':mp.nstr(finite-ideal,90),'worldSagitta':mp.nstr(r*(1-mp.cos(mp.pi/n)),90),'relativeTolerance':mp.nstr(r*mp.mpf('0.001'),90)};(p/'🗑️generated/official-bath-finite-mpmath.json').write_text(json.dumps(output,indent=2)+'\n',encoding='utf8');print('[DEBUG]',output)

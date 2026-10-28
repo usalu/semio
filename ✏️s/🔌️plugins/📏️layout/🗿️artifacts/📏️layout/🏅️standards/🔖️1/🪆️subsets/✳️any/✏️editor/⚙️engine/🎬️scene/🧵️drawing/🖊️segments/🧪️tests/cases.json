@@ -1,0 +1,314 @@
+{
+  "tolerance": 1e-7,
+  "cases": [
+    {
+      "name": "quadratic-and-cubic",
+      "affine": {
+        "xx": 1,
+        "xy": 0,
+        "yx": 0,
+        "yy": 1,
+        "dx": 0,
+        "dy": 0
+      },
+      "segments": [
+        {
+          "kind": "moveTo",
+          "to": {
+            "x": 20,
+            "y": 80
+          }
+        },
+        {
+          "kind": "quadTo",
+          "c": {
+            "x": 75,
+            "y": 5
+          },
+          "to": {
+            "x": 130,
+            "y": 80
+          }
+        },
+        {
+          "kind": "cubicTo",
+          "c1": {
+            "x": 140,
+            "y": 110
+          },
+          "c2": {
+            "x": 180,
+            "y": 5
+          },
+          "to": {
+            "x": 220,
+            "y": 80
+          }
+        },
+        {
+          "kind": "close"
+        }
+      ]
+    },
+    {
+      "name": "all-arc-flags",
+      "affine": {
+        "xx": 1,
+        "xy": 0,
+        "yx": 0,
+        "yy": 1,
+        "dx": 0,
+        "dy": 0
+      },
+      "segments": [
+        {
+          "kind": "moveTo",
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 75,
+          "ry": 35,
+          "xRotation": 23,
+          "largeArc": false,
+          "sweep": false,
+          "to": {
+            "x": 170,
+            "y": 70
+          }
+        },
+        {
+          "kind": "lineTo",
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 75,
+          "ry": 35,
+          "xRotation": 23,
+          "largeArc": false,
+          "sweep": true,
+          "to": {
+            "x": 170,
+            "y": 70
+          }
+        },
+        {
+          "kind": "lineTo",
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 75,
+          "ry": 35,
+          "xRotation": 23,
+          "largeArc": true,
+          "sweep": false,
+          "to": {
+            "x": 170,
+            "y": 70
+          }
+        },
+        {
+          "kind": "lineTo",
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 75,
+          "ry": 35,
+          "xRotation": 23,
+          "largeArc": true,
+          "sweep": true,
+          "to": {
+            "x": 170,
+            "y": 70
+          }
+        },
+        {
+          "kind": "lineTo",
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        }
+      ]
+    },
+    {
+      "name": "radii-correction-and-negative-signs",
+      "affine": {
+        "xx": 1.1,
+        "xy": 0.3,
+        "yx": -0.1,
+        "yy": 0.85,
+        "dx": 15,
+        "dy": 20
+      },
+      "segments": [
+        {
+          "kind": "moveTo",
+          "to": {
+            "x": 10,
+            "y": 30
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": -8,
+          "ry": -14,
+          "xRotation": 745,
+          "largeArc": false,
+          "sweep": true,
+          "to": {
+            "x": 150,
+            "y": 80
+          }
+        }
+      ]
+    },
+    {
+      "name": "zero-radius-and-equal-endpoints",
+      "affine": {
+        "xx": 1,
+        "xy": 0,
+        "yx": 0,
+        "yy": 1,
+        "dx": 0,
+        "dy": 0
+      },
+      "segments": [
+        {
+          "kind": "moveTo",
+          "to": {
+            "x": 25,
+            "y": 25
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 0,
+          "ry": 20,
+          "xRotation": 0,
+          "largeArc": false,
+          "sweep": false,
+          "to": {
+            "x": 100,
+            "y": 70
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 40,
+          "ry": 30,
+          "xRotation": 20,
+          "largeArc": true,
+          "sweep": true,
+          "to": {
+            "x": 100,
+            "y": 70
+          }
+        }
+      ]
+    },
+    {
+      "name": "shear-and-reflection",
+      "affine": {
+        "xx": -0.8,
+        "xy": 0.45,
+        "yx": 0.15,
+        "yy": 0.9,
+        "dx": 210,
+        "dy": 15
+      },
+      "segments": [
+        {
+          "kind": "moveTo",
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        },
+        {
+          "kind": "arcTo",
+          "rx": 85,
+          "ry": 25,
+          "xRotation": -30,
+          "largeArc": true,
+          "sweep": false,
+          "to": {
+            "x": 170,
+            "y": 70
+          }
+        },
+        {
+          "kind": "quadTo",
+          "c": {
+            "x": 90,
+            "y": 90
+          },
+          "to": {
+            "x": 25,
+            "y": 75
+          }
+        },
+        {
+          "kind": "close"
+        }
+      ]
+    },
+    {
+      "name": "closed-subpath-pen",
+      "affine": {
+        "xx": 1,
+        "xy": 0,
+        "yx": 0,
+        "yy": 1,
+        "dx": 0,
+        "dy": 0
+      },
+      "segments": [
+        {
+          "kind": "moveTo",
+          "to": {
+            "x": 30,
+            "y": 40
+          }
+        },
+        {
+          "kind": "lineTo",
+          "to": {
+            "x": 100,
+            "y": 40
+          }
+        },
+        {
+          "kind": "close"
+        },
+        {
+          "kind": "arcTo",
+          "rx": 50,
+          "ry": 30,
+          "xRotation": 0,
+          "largeArc": false,
+          "sweep": true,
+          "to": {
+            "x": 110,
+            "y": 65
+          }
+        }
+      ]
+    }
+  ]
+}

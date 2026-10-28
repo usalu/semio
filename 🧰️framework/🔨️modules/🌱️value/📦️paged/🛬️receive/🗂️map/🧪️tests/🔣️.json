@@ -1,0 +1,61 @@
+{
+  "cases": [
+    {
+      "name": "empty",
+      "entries": [],
+      "accepted": true
+    },
+    {
+      "name": "unordered keys remain authored",
+      "entries": [
+        [
+          "β",
+          2
+        ],
+        [
+          "a",
+          1
+        ]
+      ],
+      "accepted": true
+    },
+    {
+      "name": "duplicate original key",
+      "entries": [
+        [
+          "é",
+          1
+        ],
+        [
+          "é",
+          2
+        ]
+      ],
+      "accepted": false
+    },
+    {
+      "name": "equal-looking distinct keys",
+      "entries": [
+        [
+          "é",
+          1
+        ],
+        [
+          "é",
+          2
+        ]
+      ],
+      "accepted": true
+    },
+    {
+      "name": "empty key valid",
+      "entries": [
+        [
+          "",
+          1
+        ]
+      ],
+      "accepted": true
+    }
+  ]
+}

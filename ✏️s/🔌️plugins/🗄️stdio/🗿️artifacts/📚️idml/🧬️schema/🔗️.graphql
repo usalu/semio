@@ -1,0 +1,4 @@
+scalar Byte
+
+type IdmlPart { path: String!, bytes: [Byte!]! }
+type IdmlPackage { domVersion: String!, parts: [IdmlPart!]! }

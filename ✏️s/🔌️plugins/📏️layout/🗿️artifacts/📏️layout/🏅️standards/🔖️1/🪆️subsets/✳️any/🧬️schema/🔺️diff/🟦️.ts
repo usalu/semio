@@ -1,6 +1,6 @@
 /** 🔺️ Canonical Layout diff with every native `ToValue` field present and nullable. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
-import {parseQuestionDictionary,type QuestionDictionary,parseCharacterStyle,parseFrame,parseImageLink,parseLayoutDrawingChild,parseLayer,parseLayoutRect,parsePage,parsePageOverride,parseParagraphStyle,parseParentPage,parseSpread,parseTextStory,parseTextStyleRun,type ArtifactLink,type CharacterStyle,type Frame,type ImageLink,type Layer,type LayoutDrawingChild,type LayoutRect,type Page,type PageOverride,type ParagraphStyle,type ParentPage,type Spread,type TextStory,type TextStyleRun} from "../🟦️.ts";
+import {parseQuestionDictionary,type QuestionDictionary,parseCharacterStyle,parseFrame,parseImageLink,parseLayoutDrawingMember,parseLayer,parseLayoutRect,parsePage,parsePageOverride,parseParagraphStyle,parseParentPage,parseSpread,parseTextStory,parseTextStyleRun,type ArtifactLink,type CharacterStyle,type Frame,type ImageLink,type Layer,type LayoutDrawingMember,type LayoutRect,type Page,type PageOverride,type ParagraphStyle,type ParentPage,type Spread,type TextStory,type TextStyleRun} from "../🟦️.ts";
 import { parseArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
 export * from "../🟦️.ts";
 import {parseBinary64,parseBinary32,type Binary64,type Binary32} from "@semio-tech/framework/value/ieee754";
@@ -11,7 +11,7 @@ function parseQuestionDictionaryEntry(candidate: unknown, at: string): QuestionD
 export interface ParagraphStylePatch { name?: string | null; fontFamily?: string | null; fontSize?: Binary64 | null; fontWeight?: number | null; leading?: Binary64 | null; tracking?: Binary64 | null; alignment?: string | null }
 export interface CharacterStylePatch { name?: string | null; fontFamily?: string | null; fontSize?: Binary64 | null; fontWeight?: number | null; italic?: boolean | null; color?: [Binary32, Binary32, Binary32, Binary32] | null; tracking?: Binary64 | null }
 export interface ParentPagePatch { name?: string | null; width?: Binary64 | null; height?: Binary64 | null }
-export interface SpreadPatch { name?: string | null }
+export interface SpreadPatch { name?: string | null; pageIds?: string[] | null }
 export interface LayoutInsertion<T> { index: number; row: T }
 export interface LayoutRemoval { id: string; index: number }
 export interface LayoutRelocation { id: string; from: number; to: number }
@@ -26,16 +26,15 @@ export interface PrintTargetChange { target: string | null }
 export type DataFieldsPresence = "created" | "deleted" | "replaced";
 export interface LayoutDataEntriesDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<QuestionDictionaryEntry>[]; moved: LayoutRelocation[] }
 export interface LayoutDataFieldsDelta { presence?: DataFieldsPresence | null; entries?: LayoutDataEntriesDelta | null }
-export interface LayoutDrawingTextRow { index: number; text: string }
 export interface ImageLinkPatch { path: string | null; width?: number | null; height?: number | null; dpi?: number | null; color_profile?: string | null }
-export interface FramePatch { x: Binary64 | null; y: Binary64 | null; width: Binary64 | null; height: Binary64 | null; rotation?: Binary64 | null; fill: [Binary32, Binary32, Binary32, Binary32] | null; stroke: [Binary32, Binary32, Binary32, Binary32] | null; wrap_mode: string | null; columns: number | null; locked?: boolean | null; visible?: boolean | null; story_id?: string | null; thread_next?: string | null; inset_x?: Binary64 | null; inset_y?: Binary64 | null; inset_width?: Binary64 | null; inset_height?: Binary64 | null; layer_id?: string | null }
+export interface FramePatch { x: Binary64 | null; y: Binary64 | null; width: Binary64 | null; height: Binary64 | null; rotation?: Binary64 | null; fill?: [Binary32, Binary32, Binary32, Binary32] | null; stroke?: [Binary32, Binary32, Binary32, Binary32] | null; wrap_mode: string | null; columns: number | null; locked?: boolean | null; visible?: boolean | null; story_id?: string | null; thread_next?: string | null; inset_x?: Binary64 | null; inset_y?: Binary64 | null; inset_width?: Binary64 | null; inset_height?: Binary64 | null; layer_id?: string | null }
 export interface LayerPatch { name?: string | null; visible?: boolean | null; locked?: boolean | null }
 export interface PageFramesModification { id: string; patch: FramePatch }
 export interface PageFramesDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<Frame>[]; moved: LayoutRelocation[]; modified: PageFramesModification[] }
 export interface PageLayersModification { id: string; patch: LayerPatch }
 export interface PageLayersDelta { removed: LayoutRemoval[]; inserted: LayoutInsertion<Layer>[]; moved: LayoutRelocation[]; modified: PageLayersModification[] }
 /** 📄️ One page's sparse patch: its fields, the positional guides and the keyed override, frame and layer rows. */
-export interface PagePatch { name: string | null; width: Binary64 | null; height: Binary64 | null; margin_top: Binary64 | null; margin_right: Binary64 | null; margin_bottom: Binary64 | null; margin_left: Binary64 | null; columns_count: number | null; columns_gutter: Binary64 | null; parent_page_id?: string | null; guides?: PageGuidesDelta | null; overrides: PageOverridesDelta; frames: PageFramesDelta; layers: PageLayersDelta }
+export interface PagePatch { name: string | null; width: Binary64 | null; height: Binary64 | null; margin_top: Binary64 | null; margin_right: Binary64 | null; margin_bottom: Binary64 | null; margin_left: Binary64 | null; columns_count: number | null; columns_gutter: Binary64 | null; spread_id?: string | null; parent_page_id?: string | null; background_drawing?: LayoutDrawingMember | null; guides?: PageGuidesDelta | null; overrides: PageOverridesDelta; frames: PageFramesDelta; layers: PageLayersDelta }
 export interface LayoutPagesModification { id: string; patch: PagePatch }
 export interface LayoutStoriesModification { id: string; patch: TextStoryPatch }
 export interface LayoutLinksModification { id: string; patch: ImageLinkPatch }
@@ -63,9 +62,8 @@ export interface LayoutDiff {
   /** 📃️ @state artifact */ pages: LayoutPagesDelta | null;
   /** 🖨️ @state artifact */ printTarget: PrintTargetChange | null;
   /** 📝️ @state artifact */ dataFields: LayoutDataFieldsDelta | null;
-  /** 🪣️ @state artifact @child kind=s.stdio.semio */ backgroundDrawing: LayoutDrawingChild | null;
-  /** 📐️ @state artifact */ drawingTexts: LayoutDrawingTextRow[];
-  /** 📎️ @state artifact @link_slot roles=model */ referencedModel: ArtifactLink | null;
+  /** 🪣️ @state artifact @child kind=s.stdio.semio */ backgroundDrawing?: LayoutDrawingMember | null;
+  /** 📎️ @state artifact @link_slot roles=model */ referencedModel?: ArtifactLink | null;
 }
 
 const required = (row: Record<string, unknown>, keys: readonly string[], at: string): Record<string, unknown> => {
@@ -102,7 +100,8 @@ export function parseParentPagePatch(value: unknown, at = "$" ): ParentPagePatch
   return { ...optional(row, "name", string, at), ...optional(row, "width", word, at), ...optional(row, "height", word, at) };
 }
 export function parseSpreadPatch(value: unknown, at = "$" ): SpreadPatch {
-  return optional(partial(value, [], ["name"], at), "name", string, at);
+  const row = partial(value, [], ["name", "pageIds"], at);
+  return { ...optional(row, "name", string, at), ...optional(row, "pageIds", (items, path) => array(items, path).map((item, index) => string(item, `${path}[${index}]`)), at) };
 }
 export function parseTextStyleRunsDelta(value: unknown, at = "$" ): TextStyleRunsDelta {
   const row = partial(value, ["rows"], ["len"], at);
@@ -141,9 +140,9 @@ export function parseImageLinkPatch(value: unknown, at = "$" ): ImageLinkPatch {
   return { path: nullable(row.path, string, `${at}.path`), ...optional(row, "width", integer, at), ...optional(row, "height", integer, at), ...optional(row, "dpi", integer, at), ...optional(row, "color_profile", string, at) };
 }
 export function parseFramePatch(value: unknown, at = "$" ): FramePatch {
-  const keys = ["x", "y", "width", "height", "fill", "stroke", "wrap_mode", "columns"], row = partial(value, keys, ["rotation", "locked", "visible", "story_id", "thread_next", "inset_x", "inset_y", "inset_width", "inset_height", "layer_id"], at);
+  const keys = ["x", "y", "width", "height", "wrap_mode", "columns"], row = partial(value, keys, ["fill", "stroke", "rotation", "locked", "visible", "story_id", "thread_next", "inset_x", "inset_y", "inset_width", "inset_height", "layer_id"], at);
   return {
-    x: nullable(row.x, word, `${at}.x`), y: nullable(row.y, word, `${at}.y`), width: nullable(row.width, word, `${at}.width`), height: nullable(row.height, word, `${at}.height`), ...optional(row, "rotation", word, at), fill: nullable(row.fill, rgba, `${at}.fill`), stroke: nullable(row.stroke, rgba, `${at}.stroke`), wrap_mode: nullable(row.wrap_mode, string, `${at}.wrap_mode`), columns: nullable(row.columns, integer, `${at}.columns`),
+    x: nullable(row.x, word, `${at}.x`), y: nullable(row.y, word, `${at}.y`), width: nullable(row.width, word, `${at}.width`), height: nullable(row.height, word, `${at}.height`), ...optional(row, "rotation", word, at), ...optional(row, "fill", rgba, at), ...optional(row, "stroke", rgba, at), wrap_mode: nullable(row.wrap_mode, string, `${at}.wrap_mode`), columns: nullable(row.columns, integer, `${at}.columns`),
     ...optional(row, "locked", boolean, at), ...optional(row, "visible", boolean, at), ...optional(row, "story_id", string, at), ...optional(row, "thread_next", string, at), ...optional(row, "inset_x", word, at), ...optional(row, "inset_y", word, at), ...optional(row, "inset_width", word, at), ...optional(row, "inset_height", word, at), ...optional(row, "layer_id", string, at),
   };
 }
@@ -159,10 +158,10 @@ export function parseLayerPatch(value: unknown, at = "$" ): LayerPatch {
 export const parsePageFramesDelta = (value: unknown, at = "$" ): PageFramesDelta => parseDeltaRows(value, parseFrame, parseFramePatch, at) as PageFramesDelta;
 export const parsePageLayersDelta = (value: unknown, at = "$" ): PageLayersDelta => parseDeltaRows(value, parseLayer, parseLayerPatch, at) as PageLayersDelta;
 export function parsePagePatch(value: unknown, at = "$" ): PagePatch {
-  const keys = ["name", "width", "height", "margin_top", "margin_right", "margin_bottom", "margin_left", "columns_count", "columns_gutter", "overrides", "frames", "layers"], row = partial(value, keys, ["parent_page_id", "guides"], at);
+  const keys = ["name", "width", "height", "margin_top", "margin_right", "margin_bottom", "margin_left", "columns_count", "columns_gutter", "overrides", "frames", "layers"], row = partial(value, keys, ["spread_id", "parent_page_id", "background_drawing", "guides"], at);
   return {
     name: nullable(row.name, string, `${at}.name`), width: nullable(row.width, word, `${at}.width`), height: nullable(row.height, word, `${at}.height`), margin_top: nullable(row.margin_top, word, `${at}.margin_top`), margin_right: nullable(row.margin_right, word, `${at}.margin_right`), margin_bottom: nullable(row.margin_bottom, word, `${at}.margin_bottom`), margin_left: nullable(row.margin_left, word, `${at}.margin_left`), columns_count: nullable(row.columns_count, integer, `${at}.columns_count`), columns_gutter: nullable(row.columns_gutter, word, `${at}.columns_gutter`),
-    ...optional(row, "parent_page_id", string, at), ...optional(row, "guides", parsePageGuidesDelta, at),
+    ...optional(row, "spread_id", string, at), ...optional(row, "parent_page_id", string, at), ...optional(row, "background_drawing", parseLayoutDrawingMember, at), ...optional(row, "guides", parsePageGuidesDelta, at),
     overrides: parsePageOverridesDelta(row.overrides, `${at}.overrides`), frames: parsePageFramesDelta(row.frames, `${at}.frames`), layers: parsePageLayersDelta(row.layers, `${at}.layers`),
   };
 }
@@ -178,11 +177,11 @@ export const parseLayoutSpreadsDelta = (value: unknown, at = "$" ): LayoutSpread
 
 /** 🔺️ Parses the exact, full native diff record and rejects stale wrapper or window fields. */
 export function parseLayoutDiff(value: unknown, at = "$" ): LayoutDiff {
-  const keys = ["schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFields", "backgroundDrawing", "drawingTexts", "referencedModel"], row = record(value, keys, at);
+  const keys = ["schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFields"], row = partial(value, keys, ["backgroundDrawing", "referencedModel"], at);
   return {
     schema: nullable(row.schema, string, `${at}.schema`), name: nullable(row.name, string, `${at}.name`), grid: nullable(row.grid, parseGridPatch, `${at}.grid`),
     paragraphStyles: nullable(row.paragraphStyles, parseLayoutParagraphStylesDelta, `${at}.paragraphStyles`), characterStyles: nullable(row.characterStyles, parseLayoutCharacterStylesDelta, `${at}.characterStyles`), stories: nullable(row.stories, parseLayoutStoriesDelta, `${at}.stories`), links: nullable(row.links, parseLayoutLinksDelta, `${at}.links`), parentPages: nullable(row.parentPages, parseLayoutParentPagesDelta, `${at}.parentPages`), spreads: nullable(row.spreads, parseLayoutSpreadsDelta, `${at}.spreads`), pages: nullable(row.pages, parseLayoutPagesDelta, `${at}.pages`),
-    printTarget: nullable(row.printTarget, (value, at) => ({ target: nullable(record(value, ["target"], at).target, string, `${at}.target`) }), `${at}.printTarget`), dataFields: nullable(row.dataFields, parseLayoutDataFieldsDelta, `${at}.dataFields`), backgroundDrawing: nullable(row.backgroundDrawing, parseLayoutDrawingChild, `${at}.backgroundDrawing`),
-    drawingTexts: array(row.drawingTexts, `${at}.drawingTexts`).map((item, index) => { const path = `${at}.drawingTexts[${index}]`, entry = record(item, ["index", "text"], path); return { index: integer(entry.index, `${path}.index`), text: string(entry.text, `${path}.text`) }; }), referencedModel: nullable(row.referencedModel, parseArtifactLink, `${at}.referencedModel`),
+    printTarget: nullable(row.printTarget, (value, at) => ({ target: nullable(record(value, ["target"], at).target, string, `${at}.target`) }), `${at}.printTarget`), dataFields: nullable(row.dataFields, parseLayoutDataFieldsDelta, `${at}.dataFields`), ...optional(row, "backgroundDrawing", parseLayoutDrawingMember, at),
+    ...optional(row, "referencedModel", parseArtifactLink, at),
   };
 }

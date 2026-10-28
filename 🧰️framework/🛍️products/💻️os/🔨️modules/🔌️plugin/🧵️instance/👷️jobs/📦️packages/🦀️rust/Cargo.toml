@@ -60,6 +60,7 @@ semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/�
 semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 
 [dev-dependencies]
+serde_json = { workspace = true }
 
 [features]
 artifact-app-testing = []

@@ -1,0 +1,9 @@
+{
+  "extends": "../../../../../../../tsconfig.json",
+  "include": [],
+  "exclude": [],
+  "files": [
+    "C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/circle-extrusion.test.ts",
+    "C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/🧪️tests/continuation.test.ts"
+  ]
+}

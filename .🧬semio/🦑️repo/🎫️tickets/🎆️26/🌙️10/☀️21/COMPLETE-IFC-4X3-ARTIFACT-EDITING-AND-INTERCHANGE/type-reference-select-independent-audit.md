@@ -1,0 +1,17 @@
+# Reference SELECT Independent Audit
+
+The frozen TypeScript5 and native64 manifests match all current files. Independent observations are `generated/reference-select-independent-source.json` and `generated/native-reference-select-independent-source.json`. No additional confirmed P1/P2 was found in this bounded review. Source holds may be released, subject to the parent's currently running broad-reader hold.
+
+## Actual TypeScript
+
+The actual new consumer suite passes16 tests,5630 assertions,0 failures in35.76 seconds (`generated/reference-select-independent-tests.txt`). It exercises closed schema/catalog owners, all12 raw source cases, inherited/complex actor alternatives, exact direct/subtype references, nonmembers/dangling IDs, blank/partial/overflow drafts, source/request immutability, central SetEntityArg output, independent JSON-patch parity and inverse. It also tests user binding admission without an implicit ID, rejects entity-tagged constructor authority, and checks every observed form progress cancellation prefix plus original thrown undefined at final prefixes. No duplicated broad suite was run.
+
+`inputKind` visits all released SELECT members under original ticks and refuses empty/oversized, mixed, nested and unsupported members as a whole. An entity member is classified through actual immutable catalog entities; all entity members produce the ordinary Reference input. No typed entity constructor is emitted. The existing structural value-domain resolver checks the exact source ID with unique identity and actual primary/complex subtype membership; readiness is not inferred from the selected carrier alone. Complete-candidate/local-rule scope remains the previously documented same-name repair versus structural rename boundary.
+
+The existing external interface output `type-reference-select-oracle.json` records IfcOpenShell0.9.0.post1 nine physical membership outcomes and three unserialized drafts. Physical admitted rows retain their exact IDs; invalid selected roles retain full EXPRESS diagnostics. This audit inspected that independent evidence without claiming a new rerun or universal SELECT validity.
+
+## Native Source Delta
+
+Comparison to the closed native SELECT58 roster finds the sole new native production algorithm in type_input_kind.rs; remaining deltas are TS/neutral inputs, native test files and mounts. All64 current hashes match. The fixed cursor adds scalar/reference flags, resolves one borrowed member per advance, resets per-member alias depth, refuses mixed scalar/entity and nested/list domains, and returns Reference only after the complete bounded member count. It adds no source index, profile hook, caller certificate, owned payload allocation, new receiver or publication route. Existing six-hook profile authority, source/receiver/caller pins and parent-paid fixed-scaffold demand remain applicable.
+
+New mounted laws inspect every member with zero observed heap requests, exact central mutation/inverse, repeated pure demand and all applicable denied axes/zero fuel, missing/partial source controls, binding plan, original typed retirement and source Arc release. The actual editor controller source authors24 modes through the real donated source hook. These are source-authored tests, not native execution. Authentic Cargo still refuses before rustc; Rust syntax parsing does not prove API typing, receipts, physical grants, cancellation or runtime. No native flag or full-semantic claim is raised.

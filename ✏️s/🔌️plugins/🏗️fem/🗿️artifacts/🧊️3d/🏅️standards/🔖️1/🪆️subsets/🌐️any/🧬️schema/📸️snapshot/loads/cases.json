@@ -1,0 +1,105 @@
+{
+  "schema": "semio.fem.native-load-receiving.v1",
+  "dofs": [
+    "Tx",
+    "Ty",
+    "Tz",
+    "Rx",
+    "Ry",
+    "Rz"
+  ],
+  "bits": [
+    "0",
+    "9223372036854775808",
+    "4613937818241073152"
+  ],
+  "identities": [
+    {
+      "id": "distinct-scoped-loads",
+      "cases": [
+        {
+          "id": "a",
+          "loads": [
+            "same"
+          ]
+        },
+        {
+          "id": "b",
+          "loads": [
+            "same"
+          ]
+        }
+      ],
+      "valid": true
+    },
+    {
+      "id": "duplicate-case",
+      "cases": [
+        {
+          "id": "a",
+          "loads": []
+        },
+        {
+          "id": "a",
+          "loads": []
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "duplicate-load",
+      "cases": [
+        {
+          "id": "a",
+          "loads": [
+            "same",
+            "same"
+          ]
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "empty-case-id",
+      "cases": [
+        {
+          "id": "",
+          "loads": []
+        }
+      ],
+      "valid": false
+    },
+    {
+      "id": "empty-load-id",
+      "cases": [
+        {
+          "id": "a",
+          "loads": [
+            ""
+          ]
+        }
+      ],
+      "valid": false
+    }
+  ],
+  "receiver": {
+    "variants": [
+      "nodal",
+      "member-udl"
+    ],
+    "area": "unsupported",
+    "unknown": "invalid",
+    "selfWeight": "retained",
+    "emptyCases": "retained",
+    "nodeReference": "required",
+    "memberReference": "required"
+  },
+  "ownership": [
+    "original-pack-receiving",
+    "same-wallet",
+    "partial-row-retained",
+    "all-axis-denial",
+    "every-prefix-cancel",
+    "paid-close"
+  ]
+}

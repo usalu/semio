@@ -19,7 +19,7 @@ pub(super) fn story_run_glyphs(engine: &mut LayoutEngine, doc: &LayoutSnapshot, 
         let slice = TextStory { id: String::new(), content: story.content[span.start..span.end].to_string(), style_runs: Vec::new() };
         let (shaped, _) = layout_story_in_frame(engine, &slice, &local, (frame_width - pen).max(1.0), frame_height);
         for glyph in &shaped.glyphs {
-            glyphs.push(DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size: span.font_size, x: base_x + pen + glyph.x, y: base_y + glyph.y, color: span.color.clone(), italic: span.italic });
+            glyphs.push(DisplayGlyph { font: glyph.font, glyph_id: glyph.glyph_id as u32, font_size: span.font_size, x: base_x + pen + glyph.x, y: base_y + glyph.y, color: span.color.clone(), italic: span.italic });
         }
         pen += shaped.width;
     }
@@ -117,7 +117,7 @@ pub(super) fn placed_kind_glyphs(engine: Option<&mut LayoutEngine>, doc: &Layout
     paragraph.leading = 13.2;
     paragraph.alignment = "left".into();
     let (shaped, _) = layout_story_in_frame(engine, &story, &paragraph, (bounds.width - 8.0).max(1.0) as f32, (bounds.height - 8.0).max(1.0) as f32);
-    shaped.glyphs.iter().map(|glyph| DisplayGlyph { glyph_id: glyph.glyph_id as u32, font_size: 11.0, x: bounds.x as f32 + 4.0 + glyph.x, y: bounds.y as f32 + 4.0 + glyph.y, color: DisplayColor([0.1, 0.1, 0.1, 1.0]), italic: false }).collect()
+    shaped.glyphs.iter().map(|glyph| DisplayGlyph { font: glyph.font, glyph_id: glyph.glyph_id as u32, font_size: 11.0, x: bounds.x as f32 + 4.0 + glyph.x, y: bounds.y as f32 + 4.0 + glyph.y, color: DisplayColor([0.1, 0.1, 0.1, 1.0]), italic: false }).collect()
 }
 
 pub(super) fn paint_preview_mark(scene: &mut Scene, transform: Affine, image: &DisplayImage) {
@@ -163,7 +163,8 @@ pub(super) fn paint_preview_mark(scene: &mut Scene, transform: Affine, image: &D
     }
 }
 
-pub(super) fn preview_mark(kind: &str) -> String {
+/// 🖼️ Chooses the fixed preview vocabulary shared by live and exported missing assets.
+pub fn preview_mark(kind: &str) -> String {
     if kind.is_empty() {
         return String::new();
     }

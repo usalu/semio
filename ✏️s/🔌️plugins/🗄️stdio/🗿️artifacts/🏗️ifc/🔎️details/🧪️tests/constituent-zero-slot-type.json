@@ -1,0 +1,9 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"names":["IFCGEOMETRICREPRESENTATIONITEM","IFCPOINT","IFCCARTESIANPOINT"],"cases":[
+{"id":"provider-variant","path":"/entities/0/complex/1","value":{"$ifcType":"IFCCURVE"},"name":"IFCCURVE","admitted":true},
+{"id":"name-input","path":"/entities/0/complex/1/name","value":"IFCCURVE","name":"IFCCURVE","admitted":true},
+{"id":"canonical-name","path":"/entities/0/complex/1/name","value":"IfcCurve","name":"IFCCURVE","admitted":true},
+{"id":"canonical-variant","path":"/entities/0/complex/1","value":{"$ifcType":"IfcCurve"},"name":"IFCCURVE","admitted":true},
+{"id":"same-type","path":"/entities/0/complex/1/name","value":"IFCPOINT","name":"IFCPOINT","admitted":true},
+{"id":"maximum-id","entityId":"18446744073709551615","path":"/entities/0/complex/1","value":{"$ifcType":"IFCCURVE"},"name":"IFCCURVE","admitted":true},
+{"id":"duplicate-id","duplicate":true,"path":"/entities/0/complex/1/name","value":"IFCCURVE","name":"IFCCURVE","admitted":false}
+],"fallback":["new-own-attributes","old-own-attributes","source-surplus-arguments","unknown-new-type","derived-survivor","global-id-root","derived-direct-value","lowercase-survivor-name"]}

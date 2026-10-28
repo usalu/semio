@@ -1,0 +1,11 @@
+[
+ {"name":"bag-subset-multiplicity","operator":"<=","leftKind":"BAG","left":["1","1"],"rightKind":"BAG","right":["1","2"],"kind":"logical","value":"false"},
+ {"name":"bag-superset-multiplicity","operator":">=","leftKind":"BAG","left":["1","2"],"rightKind":"BAG","right":["1","1"],"kind":"logical","value":"false"},
+ {"name":"bag-subset-consumes-all-copies","operator":"<=","leftKind":"BAG","left":["1","1"],"rightKind":"BAG","right":["2","1","1"],"kind":"logical","value":"true"},
+ {"name":"bag-set-subset","operator":"<=","leftKind":"BAG","left":["1","1"],"rightKind":"SET","right":["1"],"kind":"logical","value":"false"},
+ {"name":"set-bag-subset","operator":"<=","leftKind":"SET","left":["1"],"rightKind":"BAG","right":["1","1"],"kind":"logical","value":"true"},
+ {"name":"uncertain-subset","operator":"<=","leftKind":"SET","left":["?"],"rightKind":"SET","right":["1"],"kind":"logical","value":"unknown"},
+ {"name":"uncertain-intersection","operator":"*","leftKind":"SET","left":["?"],"rightKind":"SET","right":["1"],"error":"aggregate-indeterminate"},
+ {"name":"uncertain-difference","operator":"-","leftKind":"SET","left":["1"],"rightKind":"SET","right":["?"],"error":"aggregate-indeterminate"},
+ {"name":"uncertain-union","operator":"+","leftKind":"SET","left":["1"],"rightKind":"SET","right":["?"],"error":"aggregate-indeterminate"}
+]

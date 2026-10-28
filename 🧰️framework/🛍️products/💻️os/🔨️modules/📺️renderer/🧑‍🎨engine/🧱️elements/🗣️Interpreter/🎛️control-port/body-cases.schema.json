@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema", "type": "object", "additionalProperties": false, "required": ["cases"],
+  "properties": { "cases": { "type": "array", "minItems": 18, "items": {
+    "type": "object", "additionalProperties": false, "required": ["id", "slot", "kind", "children", "bindings", "admitted"],
+    "properties": {
+      "id": { "type": "string", "minLength": 1 }, "slot": { "enum": ["form", "status", "field", "control"] },
+      "kind": { "enum": ["form", "status", "extension", "field", "input", "select", "button", "text", "slider"] },
+      "children": { "type": "array", "items": { "type": "integer", "minimum": 0, "maximum": 9007199254740991 } },
+      "bindings": { "type": "integer", "minimum": 0, "maximum": 2 }, "admitted": { "type": "boolean" }
+    }
+  } } }
+}

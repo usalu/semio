@@ -1,0 +1,329 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/body-surface-model-concept.schema.json",
+  "$defs": {
+    "Id": {
+      "type": "string",
+      "maxLength": 20,
+      "pattern": "^([1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-5])$"
+    },
+    "Status": {
+      "enum": [
+        "pass",
+        "fail",
+        "not-applicable",
+        "incomplete"
+      ]
+    },
+    "Definition": {
+      "const": {
+        "id": "Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry",
+        "source": {
+          "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+          "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry/content.html",
+          "sha256": "f4ac42de0851bd18e4a3ca56104a6ec69dd547b5c3a3fff1ddc4a5912239cc95"
+        },
+        "predicates": [
+          {
+            "attribute": "RepresentationIdentifier",
+            "kind": "equals-string",
+            "value": "Body"
+          },
+          {
+            "attribute": "RepresentationType",
+            "kind": "equals-string",
+            "value": "SurfaceModel"
+          },
+          {
+            "attribute": "Items",
+            "kind": "every-subtype",
+            "value": [
+              "IFCTESSELLATEDITEM",
+              "IFCSHELLBASEDSURFACEMODEL",
+              "IFCFACEBASEDSURFACEMODEL"
+            ]
+          }
+        ]
+      }
+    },
+    "Provenance": {
+      "const": {
+        "concept": {
+          "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+          "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry/content.html",
+          "sha256": "f4ac42de0851bd18e4a3ca56104a6ec69dd547b5c3a3fff1ddc4a5912239cc95"
+        },
+        "express": {
+          "file": "IFC4X3_ADD2.exp",
+          "sha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+          "function": "IfcShapeRepresentationTypes",
+          "lines": [
+            13568,
+            13575
+          ],
+          "families": [
+            "IFCTESSELLATEDITEM",
+            "IFCSHELLBASEDSURFACEMODEL",
+            "IFCFACEBASEDSURFACEMODEL"
+          ]
+        },
+        "interpretation": "selected-concept-html-and-separate-schema-function-same-three-families",
+        "originals": [
+          {
+            "file": "surface-model.ifc",
+            "representation": "1020",
+            "expected": "pass"
+          }
+        ]
+      }
+    },
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation",
+        "applicable"
+      ],
+      "properties": {
+        "representation": {
+          "$ref": "#/$defs/Id"
+        },
+        "applicable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        }
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "label"
+      ],
+      "properties": {
+        "code": {
+          "enum": [
+            "mvd.source",
+            "mvd.applicability",
+            "mvd.target.missing",
+            "mvd.target.ambiguous",
+            "mvd.target.type",
+            "mvd.target.unknown",
+            "mvd.attribute.missing",
+            "mvd.attribute.unknown",
+            "mvd.attribute.ambiguous",
+            "mvd.attribute.shape",
+            "mvd.equals",
+            "mvd.items.type",
+            "mvd.items.reference",
+            "mvd.items.missing",
+            "mvd.items.ambiguous",
+            "mvd.items.unknown"
+          ]
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "pointer": {
+          "type": "string",
+          "pattern": "^/entities/"
+        }
+      }
+    },
+    "TargetReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "representation",
+        "applicable",
+        "status",
+        "diagnostics"
+      ],
+      "properties": {
+        "representation": {
+          "$ref": "#/$defs/Id"
+        },
+        "applicable": {
+          "type": [
+            "boolean",
+            "null"
+          ]
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets"
+      ],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Target"
+          }
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "concept",
+        "source",
+        "schemaConformance",
+        "viewConformance",
+        "status",
+        "targets",
+        "diagnostics"
+      ],
+      "properties": {
+        "concept": {
+          "const": "Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry"
+        },
+        "source": {
+          "const": {
+            "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+            "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry/content.html",
+            "sha256": "f4ac42de0851bd18e4a3ca56104a6ec69dd547b5c3a3fff1ddc4a5912239cc95"
+          }
+        },
+        "schemaConformance": {
+          "const": "not-evaluated"
+        },
+        "viewConformance": {
+          "const": "not-evaluated"
+        },
+        "status": {
+          "$ref": "#/$defs/Status"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TargetReport"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        }
+      }
+    },
+    "Cases": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "scope",
+        "physicalValidity",
+        "cases"
+      ],
+      "properties": {
+        "scope": {
+          "const": "explicit-three-representation-clauses"
+        },
+        "physicalValidity": {
+          "const": "not-claimed"
+        },
+        "cases": {
+          "type": "array",
+          "minItems": 25,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "id",
+              "applicable",
+              "identifier",
+              "type",
+              "items",
+              "expected"
+            ],
+            "properties": {
+              "id": {
+                "type": "string",
+                "minLength": 1
+              },
+              "applicable": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "identifier": {
+                "type": "string"
+              },
+              "type": {
+                "type": "string"
+              },
+              "items": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "expected": {
+                "$ref": "#/$defs/Status"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Definition"
+    },
+    {
+      "$ref": "#/$defs/Provenance"
+    },
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Report"
+    },
+    {
+      "$ref": "#/$defs/Cases"
+    }
+  ]
+}

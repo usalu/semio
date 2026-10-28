@@ -1,6 +1,5 @@
 //! 🏛️ `update-page-columns` — atomically sets a page's column count and gutter together.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
@@ -9,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🏛️UpdatePageColumns
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -50,7 +49,10 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if page.columns.count == payload.count && page.columns.gutter == payload.gutter {
+    if payload.count == 0 || !payload.gutter.is_finite() || payload.gutter < 0.0 {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Page columns must be positive and gutter finite and non-negative.", [payload.id.clone()]);
+    }
+    if page.columns.count == payload.count && semio_framework_value::equal_f64(page.columns.gutter, payload.gutter) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has those columns.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -62,6 +64,7 @@ pub fn diff_update_page_columns(payload: &UpdatePageColumns, base: &LayoutSnapsh
 
 //#region 🏛️UpdatePageColumns
 pub fn inverse_update_page_columns<Op: From<crate::update_page_columns::UpdatePageColumns>>(payload: &UpdatePageColumns, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_update_page_columns(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![Op::from(UpdatePageColumns { id: payload.id.clone(), count: page.columns.count, gutter: page.columns.gutter })],
@@ -72,3 +75,11 @@ pub fn inverse_update_page_columns<Op: From<crate::update_page_columns::UpdatePa
 }
 //#endregion 🏛️UpdatePageColumns
 
+
+impl PartialEq for UpdatePageColumns {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.count == other.count
+            && semio_framework_value::equal_f64(self.gutter, other.gutter)
+    }
+}

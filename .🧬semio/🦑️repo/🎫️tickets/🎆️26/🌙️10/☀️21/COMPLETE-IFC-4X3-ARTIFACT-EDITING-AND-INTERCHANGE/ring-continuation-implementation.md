@@ -1,0 +1,7 @@
+# Shared Cooperative Ring Evaluation
+
+The existing first-party TypeScript ring triangulator now has one domain generator, work.ts, and an original synchronous tick-draining entry. IFC4x3 uses the same generator through its captured original-control runner. This removes cold source-sized copying/reversal, hole ordering/bridge reconstruction, ear removal shifts, normalization/boundary/winding passes and nested geometric scans. Native Rust remains the original synchronous implementation; continuation parity and native execution are not claimed.
+
+Existing coverage/invalid-hole/collinearity/oblique/each-interruption tests plus new asynchronous source/control/Third-party laws pass26tests92Bunassertions. Narrow strict passes. Independent audit compares all36original triangle arrays exactly, records intentional33–819 added ticks, checks629synchronous thrown-identity stops, every generator prefix0..629 close/no partial output/unchanged source, and6initial/interior/completion original-error/cancel probes. See ring-core-continuation-independent-audit.md. Input arrays are borrowed by the generic core; the IFC4x3 mount builds and retains private arrays from its centrally captured source before callbacks.
+
+The original first-party rectangle point/block face constants are reused by the rectangle evaluator. Closed polyline/voided profile extrusion now consumes the checked ring generator. This source postdates the completed65-file registration; focused checks cover the actual new implementation and no full-run total is inferred.

@@ -1,0 +1,5 @@
+# Canonical Geometry Source Ordinal Index
+
+Qualified geometry attribute queries need actual admitted source ordinals. Replace the existing exposed entity-only Map with one private canonical Map of borrowed entity plus ordinal during the existing original-controlled capture pass. Provide lookup(id) and indexed(id); freeze entry metadata. Do not create a second identity/source index, scan the population per query, retain compatibility aliases or duplicate catalog/query logic. Preserve the existing project candidate bound and private admitted graph.
+
+Closed neutral vectors/schema and five actual laws precede production. Test declared-owner pointers, original graph custody after callback source mutation, immutable ordinal metadata and missing IDs against independent SQLite source-ordered queries. Then update every real consumer of the removed entity-only Map, including narrow shared BIM lookups coordinated with that worker. No source copy, admission/mutation policy or native proof is added. This supplies common infrastructure to faceted geometry and the active relation adapter.

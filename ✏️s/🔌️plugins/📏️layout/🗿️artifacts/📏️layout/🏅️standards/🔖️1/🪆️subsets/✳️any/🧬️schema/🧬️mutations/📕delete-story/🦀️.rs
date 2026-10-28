@@ -48,12 +48,16 @@ pub fn diff_delete_story(payload: &DeleteStory, base: &LayoutSnapshot) -> protoc
     let Some(at) = base.stories.iter().position(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
+    if base.pages.iter().flat_map(|page| &page.frames).chain(base.parent_pages.iter().flat_map(|page| &page.frames)).any(|frame| matches!(frame, semio_s_artifact_layout_layout_model::Frame::Text { story_id, .. } if story_id == &payload.id)) {
+        return protocol::MutationOutcome::error("mutation.target-referenced", "The story is still used by a frame.", [payload.id.clone()]);
+    }
     protocol::MutationOutcome::new(LayoutDiff { stories: Some(LayoutStoriesDelta { removed: vec![LayoutStoryRemoval { id: payload.id.clone(), index: at }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🗑️DeleteStory
 
 //#region 🗑️DeleteStory
 pub fn inverse_delete_story<Op: From<crate::create_story::CreateStory>>(payload: &DeleteStory, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_delete_story(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()) }
     Ok((|| {
     match base.stories.iter().position(|story| story.id == payload.id) {
         Some(index) => vec![Op::from(create_story::CreateStory { story: base.stories[index].clone(), index: Some(index) })],

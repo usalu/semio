@@ -1,0 +1,872 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "scope": "rounded-rectangle-extrusion-neutral",
+  "producerExecuted": false,
+  "segmentCap": "total-boundary-edges",
+  "cases": [
+    {
+      "id": "bath-cutter-profile",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 0.7319645943005142,
+      "expectedChords": 72,
+      "expectedBoundary": 76,
+      "polygonVolume": 0.7318529886896394
+    },
+    {
+      "id": "capsule-limit",
+      "dimensions": [
+        2,
+        1
+      ],
+      "radius": 0.5,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1.7853981633974483,
+      "idealVolume": 1.2497787143782138,
+      "expectedChords": 72,
+      "expectedBoundary": 74,
+      "polygonVolume": 1.2490811793102463
+    },
+    {
+      "id": "circle-limit",
+      "dimensions": [
+        2,
+        2
+      ],
+      "radius": 1,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 3.141592653589793,
+      "idealVolume": 2.199114857512855,
+      "expectedChords": 72,
+      "expectedBoundary": 72,
+      "polygonVolume": 2.1963247172409854
+    },
+    {
+      "id": "profile-position",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0.4,
+          -0.2
+        ],
+        "rotation": 1.0471975511965976
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 0.7319645943005142,
+      "expectedChords": 72,
+      "expectedBoundary": 76,
+      "polygonVolume": 0.7318529886896394
+    },
+    {
+      "id": "solid-tilt",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          3,
+          2,
+          1
+        ],
+        "tilt": 1.5707963267948966
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 0.7319645943005142,
+      "expectedChords": 72,
+      "expectedBoundary": 76,
+      "polygonVolume": 0.7318529886896394
+    },
+    {
+      "id": "oblique-negative-reflection",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        1,
+        2,
+        -3
+      ],
+      "profile": {
+        "translation": [
+          0.4,
+          -0.2
+        ],
+        "rotation": 1.0471975511965976
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        -2,
+        3,
+        4
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 14.085055188624908,
+      "expectedChords": 72,
+      "expectedBoundary": 76,
+      "polygonVolume": 14.082907583124902
+    },
+    {
+      "id": "millimetres",
+      "dimensions": [
+        1800,
+        600
+      ],
+      "radius": 200,
+      "depth": 700,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": "MILLI",
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1045663.7061435918,
+      "idealVolume": 0.7319645943005143,
+      "expectedChords": 72,
+      "expectedBoundary": 76,
+      "polygonVolume": 0.7318529886896395
+    },
+    {
+      "id": "absolute-policy",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 1e-05,
+        "relativeChordError": 0,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 0.7319645943005142,
+      "expectedChords": 316,
+      "expectedBoundary": 320,
+      "polygonVolume": 0.7319587982302704
+    },
+    {
+      "id": "ordinary-boundary-cap4",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 1,
+        "relativeChordError": 1,
+        "maxSegments": 4
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "resource-refusal",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 0.7319645943005142,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "radius-zero",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "radius-over-half",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.31,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "missing-radius",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "radius-unset",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "integer-radius",
+      "dimensions": [
+        4,
+        4
+      ],
+      "radius": 1,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "INTEGER",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid-carrier",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "foreign-profile-position",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "profile-position-3d",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "tangent-extrusion",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        1,
+        0,
+        0
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    },
+    {
+      "id": "coordinate-collapse",
+      "dimensions": [
+        1.8,
+        0.6
+      ],
+      "radius": 0.2,
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          1e+20,
+          1e+20,
+          1e+20
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "x": "REAL",
+        "y": "REAL",
+        "radius": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "precision-refusal",
+      "idealArea": 1.0456637061435918,
+      "idealVolume": 0.7319645943005142,
+      "expectedChords": null,
+      "expectedBoundary": null,
+      "polygonVolume": null
+    }
+  ]
+}

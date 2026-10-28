@@ -1,0 +1,1 @@
+import Ajv from 'ajv/dist/2020';import{readFileSync}from'node:fs';const p=import.meta.dir,read=(name:string)=>JSON.parse(readFileSync(p+'/'+name,'utf8')),v=new Ajv({strict:true}).compile(read('mapping-neutral.schema.json'));if(!v(read('mapping-neutral-cases.json')))throw Error(JSON.stringify(v.errors));console.log('[DEBUG] closed mapping8positive5refusal data validated');

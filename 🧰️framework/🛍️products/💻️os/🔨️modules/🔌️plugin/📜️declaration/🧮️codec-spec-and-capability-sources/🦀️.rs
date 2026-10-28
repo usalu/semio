@@ -67,11 +67,75 @@ impl DocumentCodecSpec {
         DocumentCodecSpec { schema: schema.into(), dialect, extension: <Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: String::new(), foreign: false }
     }
 
+    /// 🧬️ Selects the document-owned original semantic issuer for native stores.
+    pub fn bare_with_owners<Snapshot, Mutation, Source>(schema: impl Into<String>, dialect: Dialect) -> Self
+    where
+        Snapshot: Clone
+            + PartialEq
+            + semio_framework_value::ToValue
+            + semio_framework_value::FromValue
+            + semio_framework_value::retirement::RetireOwned
+            + Send
+            + Sync
+            + pack::snapshot::ArtifactDsl
+            + ArtifactPack
+            + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
+            + 'static,
+        Mutation: ::protocol::Mutation<Snapshot>
+            + PartialEq
+            + semio_framework_value::ToValue
+            + semio_framework_value::FromValue
+            + semio_framework_value::retirement::RetireOwned
+            + Send
+            + Sync
+            + ::protocol::OpText
+            + ::protocol::OpBinary
+            + 'static
+            + store::ArtifactCanonicalJsonTree,
+        Source: store::ArtifactCodecOwnerSource<Snapshot,Mutation>+Send+Sync+'static,
+    {
+        fn codec<Snapshot, Mutation, Source>(schema: String) -> store::os_store::serialization::ArtifactCodec
+        where
+            Snapshot: Clone
+                + PartialEq
+                + semio_framework_value::ToValue
+                + semio_framework_value::FromValue
+                + semio_framework_value::retirement::RetireOwned
+                + Send
+                + Sync
+                + pack::snapshot::ArtifactDsl
+                + ArtifactPack
+                + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot
+                + 'static,
+            Mutation: ::protocol::Mutation<Snapshot>
+                + PartialEq
+                + semio_framework_value::ToValue
+                + semio_framework_value::FromValue
+                + semio_framework_value::retirement::RetireOwned
+                + Send
+                + Sync
+                + ::protocol::OpText
+                + ::protocol::OpBinary
+                + 'static
+                + store::ArtifactCanonicalJsonTree,
+        Source: store::ArtifactCodecOwnerSource<Snapshot,Mutation>+Send+Sync+'static,
+        {
+            store::bare_artifact_codec_with_owners::<Snapshot, Mutation,Source>(schema)
+        }
+        DocumentCodecSpec { schema: schema.into(), dialect, extension: <Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation,Source>, app_id: String::new(), foreign: false }
+    }
+
     pub fn codec(&self) -> store::os_store::serialization::ArtifactCodec {
         (self.codec)(self.schema.clone())
     }
 
-    pub fn binding(&self, channel: semio_framework_os_kernel::io::ArtifactCodecBindingChannel, contributor: &str, artifact_kind: Option<String>, codec: &store::os_store::serialization::ArtifactCodec) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
+    pub fn binding(
+        &self,
+        channel: semio_framework_os_kernel::io::ArtifactCodecBindingChannel,
+        contributor: &str,
+        artifact_kind: Option<String>,
+        codec: &store::os_store::serialization::ArtifactCodec,
+    ) -> semio_framework_os_kernel::io::ArtifactCodecBinding {
         let apps = if self.app_id.is_empty() { Vec::new() } else { vec![self.app_id.to_string()] };
         semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(channel, contributor, artifact_kind, apps, Some(self.dialect.into()), None, codec)
     }
@@ -107,8 +171,8 @@ pub(super) struct ArtifactCapabilitySources<'a> {
 }
 
 impl ArtifactCapabilitySources<'_> {
-    pub(super) fn requirements(self) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
+    pub(super) fn requirements(self, owner: &str) -> Result<Vec<ArtifactRuntimeCapabilityRequirement>, ArtifactDefinitionError> {
+        use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
         let Self { schemas, inferences, inference_services, composers, formats, subset_validators, languages, document_codecs, schema_documents } = self;
         let mut rows = Vec::new();
@@ -122,7 +186,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::inference(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::schema(), service.metadata().inference_schema)?]));
         }
         for entry in composers {
-            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(entry.writes).to_coordinate())?]));
+            rows.push(ArtifactRuntimeCapabilityRequirement::new(ArtifactCapabilityKind::composer(), semio_framework_plugin_identity::composer_identity_claims(owner, entry.writes, entry.reads)?));
         }
         for row in formats {
             let mut claims = Vec::with_capacity(row.mimes.len() + row.extensions.len());
@@ -192,7 +256,7 @@ impl ArtifactDeclaration {
             document_codecs: &self.document_codecs,
             schema_documents: &self.schema_documents,
         }
-        .requirements()
+        .requirements(&self.kind)
     }
 
     /// 🛡️ Inserts every attached definition into a caller-owned plugin registry. The caller

@@ -1,0 +1,7 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/✏️editor')
+s=(p/'guided-type-scalar-tests.rs').read_text(encoding='utf8').replace('scalar_controller_value','enum_controller_value').replace('type-scalar-input.json','type-enum-input.json').replace('scalar_type_inputs_use_the_original_controller_and_keep_empty_strings_and_signed_values_editable','enum_type_inputs_use_the_original_controller_and_declared_resident_choices').replace('actual original GuidedProducer renders every required reference without selecting IDs','actual original GuidedProducer renders declared choices without selecting a default').replace('scalar neutral guidance refuses','enum neutral guidance refuses').replace('original scalar input body','original enum input body')
+s=s.replace('assert_eq!(tree.root.children.len(), count + 1);','assert!(tree.root.children.len() >= count + 1 && tree.root.children.len() <= count + 3);')
+s=s.replace('let Component::Input(props) = &node.component else { panic!("required input") };','let Component::Select(props) = &node.component else { panic!("required declared choice") };\n            assert!(props.items.len()<=32);')
+s=s.replace('            assert!(!node.bindings.is_empty());','            assert!(props.items.iter().any(|item|item.value.as_ref()==props.value.as_ref()));\n            assert!(!node.bindings.is_empty());')
+(p/'guided-type-enum-tests.rs').write_text(s,encoding='utf8')

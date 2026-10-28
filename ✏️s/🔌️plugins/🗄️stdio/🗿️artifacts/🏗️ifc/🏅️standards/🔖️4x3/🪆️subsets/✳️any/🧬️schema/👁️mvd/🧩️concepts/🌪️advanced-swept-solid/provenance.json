@@ -1,0 +1,34 @@
+{
+  "concept": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_AdvancedSweptSolid_Geometry/content.html",
+    "sha256": "c492bb1ef2c769a85c1b4dfd6d4e7caf03614bd03b9b8bf59669d705dd04658b"
+  },
+  "express": {
+    "file": "IFC4X3_ADD2.exp",
+    "sha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "function": "IfcShapeRepresentationTypes",
+    "lines": [
+      13594,
+      13601
+    ],
+    "families": [
+      "IFCSWEPTAREASOLID",
+      "IFCSWEPTDISKSOLID",
+      "IFCSECTIONEDSOLIDHORIZONTAL"
+    ]
+  },
+  "interpretation": "selected-concept-html-two-families; separate-schema-function-three-families",
+  "originals": [
+    {
+      "file": "fixed-reference-swept-area-solid.ifc",
+      "representation": "122",
+      "expected": "pass"
+    },
+    {
+      "file": "sectioned-solid-horizontal.ifc",
+      "representation": "127",
+      "expected": "fail"
+    }
+  ]
+}

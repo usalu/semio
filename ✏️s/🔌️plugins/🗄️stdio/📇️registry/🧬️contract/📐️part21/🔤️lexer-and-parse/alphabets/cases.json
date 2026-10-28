@@ -1,0 +1,4280 @@
+{
+  "schema": "stdio.part21.alphabet-cases",
+  "cases": [
+    {
+      "name": "A-A0",
+      "source": "\\PA\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "A-A1",
+      "source": "\\PA\\\\S\\!",
+      "expected": "\u00a1"
+    },
+    {
+      "name": "A-A2",
+      "source": "\\PA\\\\S\\\"",
+      "expected": "\u00a2"
+    },
+    {
+      "name": "A-A3",
+      "source": "\\PA\\\\S\\#",
+      "expected": "\u00a3"
+    },
+    {
+      "name": "A-A4",
+      "source": "\\PA\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "A-A5",
+      "source": "\\PA\\\\S\\%",
+      "expected": "\u00a5"
+    },
+    {
+      "name": "A-A6",
+      "source": "\\PA\\\\S\\&",
+      "expected": "\u00a6"
+    },
+    {
+      "name": "A-A7",
+      "source": "\\PA\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "A-A8",
+      "source": "\\PA\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "A-A9",
+      "source": "\\PA\\\\S\\)",
+      "expected": "\u00a9"
+    },
+    {
+      "name": "A-AA",
+      "source": "\\PA\\\\S\\*",
+      "expected": "\u00aa"
+    },
+    {
+      "name": "A-AB",
+      "source": "\\PA\\\\S\\+",
+      "expected": "\u00ab"
+    },
+    {
+      "name": "A-AC",
+      "source": "\\PA\\\\S\\,",
+      "expected": "\u00ac"
+    },
+    {
+      "name": "A-AD",
+      "source": "\\PA\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "A-AE",
+      "source": "\\PA\\\\S\\.",
+      "expected": "\u00ae"
+    },
+    {
+      "name": "A-AF",
+      "source": "\\PA\\\\S\\/",
+      "expected": "\u00af"
+    },
+    {
+      "name": "A-B0",
+      "source": "\\PA\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "A-B1",
+      "source": "\\PA\\\\S\\1",
+      "expected": "\u00b1"
+    },
+    {
+      "name": "A-B2",
+      "source": "\\PA\\\\S\\2",
+      "expected": "\u00b2"
+    },
+    {
+      "name": "A-B3",
+      "source": "\\PA\\\\S\\3",
+      "expected": "\u00b3"
+    },
+    {
+      "name": "A-B4",
+      "source": "\\PA\\\\S\\4",
+      "expected": "\u00b4"
+    },
+    {
+      "name": "A-B5",
+      "source": "\\PA\\\\S\\5",
+      "expected": "\u00b5"
+    },
+    {
+      "name": "A-B6",
+      "source": "\\PA\\\\S\\6",
+      "expected": "\u00b6"
+    },
+    {
+      "name": "A-B7",
+      "source": "\\PA\\\\S\\7",
+      "expected": "\u00b7"
+    },
+    {
+      "name": "A-B8",
+      "source": "\\PA\\\\S\\8",
+      "expected": "\u00b8"
+    },
+    {
+      "name": "A-B9",
+      "source": "\\PA\\\\S\\9",
+      "expected": "\u00b9"
+    },
+    {
+      "name": "A-BA",
+      "source": "\\PA\\\\S\\:",
+      "expected": "\u00ba"
+    },
+    {
+      "name": "A-BB",
+      "source": "\\PA\\\\S\\;",
+      "expected": "\u00bb"
+    },
+    {
+      "name": "A-BC",
+      "source": "\\PA\\\\S\\<",
+      "expected": "\u00bc"
+    },
+    {
+      "name": "A-BD",
+      "source": "\\PA\\\\S\\=",
+      "expected": "\u00bd"
+    },
+    {
+      "name": "A-BE",
+      "source": "\\PA\\\\S\\>",
+      "expected": "\u00be"
+    },
+    {
+      "name": "A-BF",
+      "source": "\\PA\\\\S\\?",
+      "expected": "\u00bf"
+    },
+    {
+      "name": "A-C0",
+      "source": "\\PA\\\\S\\@",
+      "expected": "\u00c0"
+    },
+    {
+      "name": "A-C1",
+      "source": "\\PA\\\\S\\A",
+      "expected": "\u00c1"
+    },
+    {
+      "name": "A-C2",
+      "source": "\\PA\\\\S\\B",
+      "expected": "\u00c2"
+    },
+    {
+      "name": "A-C3",
+      "source": "\\PA\\\\S\\C",
+      "expected": "\u00c3"
+    },
+    {
+      "name": "A-C4",
+      "source": "\\PA\\\\S\\D",
+      "expected": "\u00c4"
+    },
+    {
+      "name": "A-C5",
+      "source": "\\PA\\\\S\\E",
+      "expected": "\u00c5"
+    },
+    {
+      "name": "A-C6",
+      "source": "\\PA\\\\S\\F",
+      "expected": "\u00c6"
+    },
+    {
+      "name": "A-C7",
+      "source": "\\PA\\\\S\\G",
+      "expected": "\u00c7"
+    },
+    {
+      "name": "A-C8",
+      "source": "\\PA\\\\S\\H",
+      "expected": "\u00c8"
+    },
+    {
+      "name": "A-C9",
+      "source": "\\PA\\\\S\\I",
+      "expected": "\u00c9"
+    },
+    {
+      "name": "A-CA",
+      "source": "\\PA\\\\S\\J",
+      "expected": "\u00ca"
+    },
+    {
+      "name": "A-CB",
+      "source": "\\PA\\\\S\\K",
+      "expected": "\u00cb"
+    },
+    {
+      "name": "A-CC",
+      "source": "\\PA\\\\S\\L",
+      "expected": "\u00cc"
+    },
+    {
+      "name": "A-CD",
+      "source": "\\PA\\\\S\\M",
+      "expected": "\u00cd"
+    },
+    {
+      "name": "A-CE",
+      "source": "\\PA\\\\S\\N",
+      "expected": "\u00ce"
+    },
+    {
+      "name": "A-CF",
+      "source": "\\PA\\\\S\\O",
+      "expected": "\u00cf"
+    },
+    {
+      "name": "A-D0",
+      "source": "\\PA\\\\S\\P",
+      "expected": "\u00d0"
+    },
+    {
+      "name": "A-D1",
+      "source": "\\PA\\\\S\\Q",
+      "expected": "\u00d1"
+    },
+    {
+      "name": "A-D2",
+      "source": "\\PA\\\\S\\R",
+      "expected": "\u00d2"
+    },
+    {
+      "name": "A-D3",
+      "source": "\\PA\\\\S\\S",
+      "expected": "\u00d3"
+    },
+    {
+      "name": "A-D4",
+      "source": "\\PA\\\\S\\T",
+      "expected": "\u00d4"
+    },
+    {
+      "name": "A-D5",
+      "source": "\\PA\\\\S\\U",
+      "expected": "\u00d5"
+    },
+    {
+      "name": "A-D6",
+      "source": "\\PA\\\\S\\V",
+      "expected": "\u00d6"
+    },
+    {
+      "name": "A-D7",
+      "source": "\\PA\\\\S\\W",
+      "expected": "\u00d7"
+    },
+    {
+      "name": "A-D8",
+      "source": "\\PA\\\\S\\X",
+      "expected": "\u00d8"
+    },
+    {
+      "name": "A-D9",
+      "source": "\\PA\\\\S\\Y",
+      "expected": "\u00d9"
+    },
+    {
+      "name": "A-DA",
+      "source": "\\PA\\\\S\\Z",
+      "expected": "\u00da"
+    },
+    {
+      "name": "A-DB",
+      "source": "\\PA\\\\S\\[",
+      "expected": "\u00db"
+    },
+    {
+      "name": "A-DC",
+      "source": "\\PA\\\\S\\\\",
+      "expected": "\u00dc"
+    },
+    {
+      "name": "A-DD",
+      "source": "\\PA\\\\S\\]",
+      "expected": "\u00dd"
+    },
+    {
+      "name": "A-DE",
+      "source": "\\PA\\\\S\\^",
+      "expected": "\u00de"
+    },
+    {
+      "name": "A-DF",
+      "source": "\\PA\\\\S\\_",
+      "expected": "\u00df"
+    },
+    {
+      "name": "A-E0",
+      "source": "\\PA\\\\S\\`",
+      "expected": "\u00e0"
+    },
+    {
+      "name": "A-E1",
+      "source": "\\PA\\\\S\\a",
+      "expected": "\u00e1"
+    },
+    {
+      "name": "A-E2",
+      "source": "\\PA\\\\S\\b",
+      "expected": "\u00e2"
+    },
+    {
+      "name": "A-E3",
+      "source": "\\PA\\\\S\\c",
+      "expected": "\u00e3"
+    },
+    {
+      "name": "A-E4",
+      "source": "\\PA\\\\S\\d",
+      "expected": "\u00e4"
+    },
+    {
+      "name": "A-E5",
+      "source": "\\PA\\\\S\\e",
+      "expected": "\u00e5"
+    },
+    {
+      "name": "A-E6",
+      "source": "\\PA\\\\S\\f",
+      "expected": "\u00e6"
+    },
+    {
+      "name": "A-E7",
+      "source": "\\PA\\\\S\\g",
+      "expected": "\u00e7"
+    },
+    {
+      "name": "A-E8",
+      "source": "\\PA\\\\S\\h",
+      "expected": "\u00e8"
+    },
+    {
+      "name": "A-E9",
+      "source": "\\PA\\\\S\\i",
+      "expected": "\u00e9"
+    },
+    {
+      "name": "A-EA",
+      "source": "\\PA\\\\S\\j",
+      "expected": "\u00ea"
+    },
+    {
+      "name": "A-EB",
+      "source": "\\PA\\\\S\\k",
+      "expected": "\u00eb"
+    },
+    {
+      "name": "A-EC",
+      "source": "\\PA\\\\S\\l",
+      "expected": "\u00ec"
+    },
+    {
+      "name": "A-ED",
+      "source": "\\PA\\\\S\\m",
+      "expected": "\u00ed"
+    },
+    {
+      "name": "A-EE",
+      "source": "\\PA\\\\S\\n",
+      "expected": "\u00ee"
+    },
+    {
+      "name": "A-EF",
+      "source": "\\PA\\\\S\\o",
+      "expected": "\u00ef"
+    },
+    {
+      "name": "A-F0",
+      "source": "\\PA\\\\S\\p",
+      "expected": "\u00f0"
+    },
+    {
+      "name": "A-F1",
+      "source": "\\PA\\\\S\\q",
+      "expected": "\u00f1"
+    },
+    {
+      "name": "A-F2",
+      "source": "\\PA\\\\S\\r",
+      "expected": "\u00f2"
+    },
+    {
+      "name": "A-F3",
+      "source": "\\PA\\\\S\\s",
+      "expected": "\u00f3"
+    },
+    {
+      "name": "A-F4",
+      "source": "\\PA\\\\S\\t",
+      "expected": "\u00f4"
+    },
+    {
+      "name": "A-F5",
+      "source": "\\PA\\\\S\\u",
+      "expected": "\u00f5"
+    },
+    {
+      "name": "A-F6",
+      "source": "\\PA\\\\S\\v",
+      "expected": "\u00f6"
+    },
+    {
+      "name": "A-F7",
+      "source": "\\PA\\\\S\\w",
+      "expected": "\u00f7"
+    },
+    {
+      "name": "A-F8",
+      "source": "\\PA\\\\S\\x",
+      "expected": "\u00f8"
+    },
+    {
+      "name": "A-F9",
+      "source": "\\PA\\\\S\\y",
+      "expected": "\u00f9"
+    },
+    {
+      "name": "A-FA",
+      "source": "\\PA\\\\S\\z",
+      "expected": "\u00fa"
+    },
+    {
+      "name": "A-FB",
+      "source": "\\PA\\\\S\\{",
+      "expected": "\u00fb"
+    },
+    {
+      "name": "A-FC",
+      "source": "\\PA\\\\S\\|",
+      "expected": "\u00fc"
+    },
+    {
+      "name": "A-FD",
+      "source": "\\PA\\\\S\\}",
+      "expected": "\u00fd"
+    },
+    {
+      "name": "A-FE",
+      "source": "\\PA\\\\S\\~",
+      "expected": "\u00fe"
+    },
+    {
+      "name": "B-A0",
+      "source": "\\PB\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "B-A1",
+      "source": "\\PB\\\\S\\!",
+      "expected": "\u0104"
+    },
+    {
+      "name": "B-A2",
+      "source": "\\PB\\\\S\\\"",
+      "expected": "\u02d8"
+    },
+    {
+      "name": "B-A3",
+      "source": "\\PB\\\\S\\#",
+      "expected": "\u0141"
+    },
+    {
+      "name": "B-A4",
+      "source": "\\PB\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "B-A5",
+      "source": "\\PB\\\\S\\%",
+      "expected": "\u013d"
+    },
+    {
+      "name": "B-A6",
+      "source": "\\PB\\\\S\\&",
+      "expected": "\u015a"
+    },
+    {
+      "name": "B-A7",
+      "source": "\\PB\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "B-A8",
+      "source": "\\PB\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "B-A9",
+      "source": "\\PB\\\\S\\)",
+      "expected": "\u0160"
+    },
+    {
+      "name": "B-AA",
+      "source": "\\PB\\\\S\\*",
+      "expected": "\u015e"
+    },
+    {
+      "name": "B-AB",
+      "source": "\\PB\\\\S\\+",
+      "expected": "\u0164"
+    },
+    {
+      "name": "B-AC",
+      "source": "\\PB\\\\S\\,",
+      "expected": "\u0179"
+    },
+    {
+      "name": "B-AD",
+      "source": "\\PB\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "B-AE",
+      "source": "\\PB\\\\S\\.",
+      "expected": "\u017d"
+    },
+    {
+      "name": "B-AF",
+      "source": "\\PB\\\\S\\/",
+      "expected": "\u017b"
+    },
+    {
+      "name": "B-B0",
+      "source": "\\PB\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "B-B1",
+      "source": "\\PB\\\\S\\1",
+      "expected": "\u0105"
+    },
+    {
+      "name": "B-B2",
+      "source": "\\PB\\\\S\\2",
+      "expected": "\u02db"
+    },
+    {
+      "name": "B-B3",
+      "source": "\\PB\\\\S\\3",
+      "expected": "\u0142"
+    },
+    {
+      "name": "B-B4",
+      "source": "\\PB\\\\S\\4",
+      "expected": "\u00b4"
+    },
+    {
+      "name": "B-B5",
+      "source": "\\PB\\\\S\\5",
+      "expected": "\u013e"
+    },
+    {
+      "name": "B-B6",
+      "source": "\\PB\\\\S\\6",
+      "expected": "\u015b"
+    },
+    {
+      "name": "B-B7",
+      "source": "\\PB\\\\S\\7",
+      "expected": "\u02c7"
+    },
+    {
+      "name": "B-B8",
+      "source": "\\PB\\\\S\\8",
+      "expected": "\u00b8"
+    },
+    {
+      "name": "B-B9",
+      "source": "\\PB\\\\S\\9",
+      "expected": "\u0161"
+    },
+    {
+      "name": "B-BA",
+      "source": "\\PB\\\\S\\:",
+      "expected": "\u015f"
+    },
+    {
+      "name": "B-BB",
+      "source": "\\PB\\\\S\\;",
+      "expected": "\u0165"
+    },
+    {
+      "name": "B-BC",
+      "source": "\\PB\\\\S\\<",
+      "expected": "\u017a"
+    },
+    {
+      "name": "B-BD",
+      "source": "\\PB\\\\S\\=",
+      "expected": "\u02dd"
+    },
+    {
+      "name": "B-BE",
+      "source": "\\PB\\\\S\\>",
+      "expected": "\u017e"
+    },
+    {
+      "name": "B-BF",
+      "source": "\\PB\\\\S\\?",
+      "expected": "\u017c"
+    },
+    {
+      "name": "B-C0",
+      "source": "\\PB\\\\S\\@",
+      "expected": "\u0154"
+    },
+    {
+      "name": "B-C1",
+      "source": "\\PB\\\\S\\A",
+      "expected": "\u00c1"
+    },
+    {
+      "name": "B-C2",
+      "source": "\\PB\\\\S\\B",
+      "expected": "\u00c2"
+    },
+    {
+      "name": "B-C3",
+      "source": "\\PB\\\\S\\C",
+      "expected": "\u0102"
+    },
+    {
+      "name": "B-C4",
+      "source": "\\PB\\\\S\\D",
+      "expected": "\u00c4"
+    },
+    {
+      "name": "B-C5",
+      "source": "\\PB\\\\S\\E",
+      "expected": "\u0139"
+    },
+    {
+      "name": "B-C6",
+      "source": "\\PB\\\\S\\F",
+      "expected": "\u0106"
+    },
+    {
+      "name": "B-C7",
+      "source": "\\PB\\\\S\\G",
+      "expected": "\u00c7"
+    },
+    {
+      "name": "B-C8",
+      "source": "\\PB\\\\S\\H",
+      "expected": "\u010c"
+    },
+    {
+      "name": "B-C9",
+      "source": "\\PB\\\\S\\I",
+      "expected": "\u00c9"
+    },
+    {
+      "name": "B-CA",
+      "source": "\\PB\\\\S\\J",
+      "expected": "\u0118"
+    },
+    {
+      "name": "B-CB",
+      "source": "\\PB\\\\S\\K",
+      "expected": "\u00cb"
+    },
+    {
+      "name": "B-CC",
+      "source": "\\PB\\\\S\\L",
+      "expected": "\u011a"
+    },
+    {
+      "name": "B-CD",
+      "source": "\\PB\\\\S\\M",
+      "expected": "\u00cd"
+    },
+    {
+      "name": "B-CE",
+      "source": "\\PB\\\\S\\N",
+      "expected": "\u00ce"
+    },
+    {
+      "name": "B-CF",
+      "source": "\\PB\\\\S\\O",
+      "expected": "\u010e"
+    },
+    {
+      "name": "B-D0",
+      "source": "\\PB\\\\S\\P",
+      "expected": "\u0110"
+    },
+    {
+      "name": "B-D1",
+      "source": "\\PB\\\\S\\Q",
+      "expected": "\u0143"
+    },
+    {
+      "name": "B-D2",
+      "source": "\\PB\\\\S\\R",
+      "expected": "\u0147"
+    },
+    {
+      "name": "B-D3",
+      "source": "\\PB\\\\S\\S",
+      "expected": "\u00d3"
+    },
+    {
+      "name": "B-D4",
+      "source": "\\PB\\\\S\\T",
+      "expected": "\u00d4"
+    },
+    {
+      "name": "B-D5",
+      "source": "\\PB\\\\S\\U",
+      "expected": "\u0150"
+    },
+    {
+      "name": "B-D6",
+      "source": "\\PB\\\\S\\V",
+      "expected": "\u00d6"
+    },
+    {
+      "name": "B-D7",
+      "source": "\\PB\\\\S\\W",
+      "expected": "\u00d7"
+    },
+    {
+      "name": "B-D8",
+      "source": "\\PB\\\\S\\X",
+      "expected": "\u0158"
+    },
+    {
+      "name": "B-D9",
+      "source": "\\PB\\\\S\\Y",
+      "expected": "\u016e"
+    },
+    {
+      "name": "B-DA",
+      "source": "\\PB\\\\S\\Z",
+      "expected": "\u00da"
+    },
+    {
+      "name": "B-DB",
+      "source": "\\PB\\\\S\\[",
+      "expected": "\u0170"
+    },
+    {
+      "name": "B-DC",
+      "source": "\\PB\\\\S\\\\",
+      "expected": "\u00dc"
+    },
+    {
+      "name": "B-DD",
+      "source": "\\PB\\\\S\\]",
+      "expected": "\u00dd"
+    },
+    {
+      "name": "B-DE",
+      "source": "\\PB\\\\S\\^",
+      "expected": "\u0162"
+    },
+    {
+      "name": "B-DF",
+      "source": "\\PB\\\\S\\_",
+      "expected": "\u00df"
+    },
+    {
+      "name": "B-E0",
+      "source": "\\PB\\\\S\\`",
+      "expected": "\u0155"
+    },
+    {
+      "name": "B-E1",
+      "source": "\\PB\\\\S\\a",
+      "expected": "\u00e1"
+    },
+    {
+      "name": "B-E2",
+      "source": "\\PB\\\\S\\b",
+      "expected": "\u00e2"
+    },
+    {
+      "name": "B-E3",
+      "source": "\\PB\\\\S\\c",
+      "expected": "\u0103"
+    },
+    {
+      "name": "B-E4",
+      "source": "\\PB\\\\S\\d",
+      "expected": "\u00e4"
+    },
+    {
+      "name": "B-E5",
+      "source": "\\PB\\\\S\\e",
+      "expected": "\u013a"
+    },
+    {
+      "name": "B-E6",
+      "source": "\\PB\\\\S\\f",
+      "expected": "\u0107"
+    },
+    {
+      "name": "B-E7",
+      "source": "\\PB\\\\S\\g",
+      "expected": "\u00e7"
+    },
+    {
+      "name": "B-E8",
+      "source": "\\PB\\\\S\\h",
+      "expected": "\u010d"
+    },
+    {
+      "name": "B-E9",
+      "source": "\\PB\\\\S\\i",
+      "expected": "\u00e9"
+    },
+    {
+      "name": "B-EA",
+      "source": "\\PB\\\\S\\j",
+      "expected": "\u0119"
+    },
+    {
+      "name": "B-EB",
+      "source": "\\PB\\\\S\\k",
+      "expected": "\u00eb"
+    },
+    {
+      "name": "B-EC",
+      "source": "\\PB\\\\S\\l",
+      "expected": "\u011b"
+    },
+    {
+      "name": "B-ED",
+      "source": "\\PB\\\\S\\m",
+      "expected": "\u00ed"
+    },
+    {
+      "name": "B-EE",
+      "source": "\\PB\\\\S\\n",
+      "expected": "\u00ee"
+    },
+    {
+      "name": "B-EF",
+      "source": "\\PB\\\\S\\o",
+      "expected": "\u010f"
+    },
+    {
+      "name": "B-F0",
+      "source": "\\PB\\\\S\\p",
+      "expected": "\u0111"
+    },
+    {
+      "name": "B-F1",
+      "source": "\\PB\\\\S\\q",
+      "expected": "\u0144"
+    },
+    {
+      "name": "B-F2",
+      "source": "\\PB\\\\S\\r",
+      "expected": "\u0148"
+    },
+    {
+      "name": "B-F3",
+      "source": "\\PB\\\\S\\s",
+      "expected": "\u00f3"
+    },
+    {
+      "name": "B-F4",
+      "source": "\\PB\\\\S\\t",
+      "expected": "\u00f4"
+    },
+    {
+      "name": "B-F5",
+      "source": "\\PB\\\\S\\u",
+      "expected": "\u0151"
+    },
+    {
+      "name": "B-F6",
+      "source": "\\PB\\\\S\\v",
+      "expected": "\u00f6"
+    },
+    {
+      "name": "B-F7",
+      "source": "\\PB\\\\S\\w",
+      "expected": "\u00f7"
+    },
+    {
+      "name": "B-F8",
+      "source": "\\PB\\\\S\\x",
+      "expected": "\u0159"
+    },
+    {
+      "name": "B-F9",
+      "source": "\\PB\\\\S\\y",
+      "expected": "\u016f"
+    },
+    {
+      "name": "B-FA",
+      "source": "\\PB\\\\S\\z",
+      "expected": "\u00fa"
+    },
+    {
+      "name": "B-FB",
+      "source": "\\PB\\\\S\\{",
+      "expected": "\u0171"
+    },
+    {
+      "name": "B-FC",
+      "source": "\\PB\\\\S\\|",
+      "expected": "\u00fc"
+    },
+    {
+      "name": "B-FD",
+      "source": "\\PB\\\\S\\}",
+      "expected": "\u00fd"
+    },
+    {
+      "name": "B-FE",
+      "source": "\\PB\\\\S\\~",
+      "expected": "\u0163"
+    },
+    {
+      "name": "C-A0",
+      "source": "\\PC\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "C-A1",
+      "source": "\\PC\\\\S\\!",
+      "expected": "\u0126"
+    },
+    {
+      "name": "C-A2",
+      "source": "\\PC\\\\S\\\"",
+      "expected": "\u02d8"
+    },
+    {
+      "name": "C-A3",
+      "source": "\\PC\\\\S\\#",
+      "expected": "\u00a3"
+    },
+    {
+      "name": "C-A4",
+      "source": "\\PC\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "C-A5",
+      "source": "\\PC\\\\S\\%",
+      "expected": null
+    },
+    {
+      "name": "C-A6",
+      "source": "\\PC\\\\S\\&",
+      "expected": "\u0124"
+    },
+    {
+      "name": "C-A7",
+      "source": "\\PC\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "C-A8",
+      "source": "\\PC\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "C-A9",
+      "source": "\\PC\\\\S\\)",
+      "expected": "\u0130"
+    },
+    {
+      "name": "C-AA",
+      "source": "\\PC\\\\S\\*",
+      "expected": "\u015e"
+    },
+    {
+      "name": "C-AB",
+      "source": "\\PC\\\\S\\+",
+      "expected": "\u011e"
+    },
+    {
+      "name": "C-AC",
+      "source": "\\PC\\\\S\\,",
+      "expected": "\u0134"
+    },
+    {
+      "name": "C-AD",
+      "source": "\\PC\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "C-AE",
+      "source": "\\PC\\\\S\\.",
+      "expected": null
+    },
+    {
+      "name": "C-AF",
+      "source": "\\PC\\\\S\\/",
+      "expected": "\u017b"
+    },
+    {
+      "name": "C-B0",
+      "source": "\\PC\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "C-B1",
+      "source": "\\PC\\\\S\\1",
+      "expected": "\u0127"
+    },
+    {
+      "name": "C-B2",
+      "source": "\\PC\\\\S\\2",
+      "expected": "\u00b2"
+    },
+    {
+      "name": "C-B3",
+      "source": "\\PC\\\\S\\3",
+      "expected": "\u00b3"
+    },
+    {
+      "name": "C-B4",
+      "source": "\\PC\\\\S\\4",
+      "expected": "\u00b4"
+    },
+    {
+      "name": "C-B5",
+      "source": "\\PC\\\\S\\5",
+      "expected": "\u00b5"
+    },
+    {
+      "name": "C-B6",
+      "source": "\\PC\\\\S\\6",
+      "expected": "\u0125"
+    },
+    {
+      "name": "C-B7",
+      "source": "\\PC\\\\S\\7",
+      "expected": "\u00b7"
+    },
+    {
+      "name": "C-B8",
+      "source": "\\PC\\\\S\\8",
+      "expected": "\u00b8"
+    },
+    {
+      "name": "C-B9",
+      "source": "\\PC\\\\S\\9",
+      "expected": "\u0131"
+    },
+    {
+      "name": "C-BA",
+      "source": "\\PC\\\\S\\:",
+      "expected": "\u015f"
+    },
+    {
+      "name": "C-BB",
+      "source": "\\PC\\\\S\\;",
+      "expected": "\u011f"
+    },
+    {
+      "name": "C-BC",
+      "source": "\\PC\\\\S\\<",
+      "expected": "\u0135"
+    },
+    {
+      "name": "C-BD",
+      "source": "\\PC\\\\S\\=",
+      "expected": "\u00bd"
+    },
+    {
+      "name": "C-BE",
+      "source": "\\PC\\\\S\\>",
+      "expected": null
+    },
+    {
+      "name": "C-BF",
+      "source": "\\PC\\\\S\\?",
+      "expected": "\u017c"
+    },
+    {
+      "name": "C-C0",
+      "source": "\\PC\\\\S\\@",
+      "expected": "\u00c0"
+    },
+    {
+      "name": "C-C1",
+      "source": "\\PC\\\\S\\A",
+      "expected": "\u00c1"
+    },
+    {
+      "name": "C-C2",
+      "source": "\\PC\\\\S\\B",
+      "expected": "\u00c2"
+    },
+    {
+      "name": "C-C3",
+      "source": "\\PC\\\\S\\C",
+      "expected": null
+    },
+    {
+      "name": "C-C4",
+      "source": "\\PC\\\\S\\D",
+      "expected": "\u00c4"
+    },
+    {
+      "name": "C-C5",
+      "source": "\\PC\\\\S\\E",
+      "expected": "\u010a"
+    },
+    {
+      "name": "C-C6",
+      "source": "\\PC\\\\S\\F",
+      "expected": "\u0108"
+    },
+    {
+      "name": "C-C7",
+      "source": "\\PC\\\\S\\G",
+      "expected": "\u00c7"
+    },
+    {
+      "name": "C-C8",
+      "source": "\\PC\\\\S\\H",
+      "expected": "\u00c8"
+    },
+    {
+      "name": "C-C9",
+      "source": "\\PC\\\\S\\I",
+      "expected": "\u00c9"
+    },
+    {
+      "name": "C-CA",
+      "source": "\\PC\\\\S\\J",
+      "expected": "\u00ca"
+    },
+    {
+      "name": "C-CB",
+      "source": "\\PC\\\\S\\K",
+      "expected": "\u00cb"
+    },
+    {
+      "name": "C-CC",
+      "source": "\\PC\\\\S\\L",
+      "expected": "\u00cc"
+    },
+    {
+      "name": "C-CD",
+      "source": "\\PC\\\\S\\M",
+      "expected": "\u00cd"
+    },
+    {
+      "name": "C-CE",
+      "source": "\\PC\\\\S\\N",
+      "expected": "\u00ce"
+    },
+    {
+      "name": "C-CF",
+      "source": "\\PC\\\\S\\O",
+      "expected": "\u00cf"
+    },
+    {
+      "name": "C-D0",
+      "source": "\\PC\\\\S\\P",
+      "expected": null
+    },
+    {
+      "name": "C-D1",
+      "source": "\\PC\\\\S\\Q",
+      "expected": "\u00d1"
+    },
+    {
+      "name": "C-D2",
+      "source": "\\PC\\\\S\\R",
+      "expected": "\u00d2"
+    },
+    {
+      "name": "C-D3",
+      "source": "\\PC\\\\S\\S",
+      "expected": "\u00d3"
+    },
+    {
+      "name": "C-D4",
+      "source": "\\PC\\\\S\\T",
+      "expected": "\u00d4"
+    },
+    {
+      "name": "C-D5",
+      "source": "\\PC\\\\S\\U",
+      "expected": "\u0120"
+    },
+    {
+      "name": "C-D6",
+      "source": "\\PC\\\\S\\V",
+      "expected": "\u00d6"
+    },
+    {
+      "name": "C-D7",
+      "source": "\\PC\\\\S\\W",
+      "expected": "\u00d7"
+    },
+    {
+      "name": "C-D8",
+      "source": "\\PC\\\\S\\X",
+      "expected": "\u011c"
+    },
+    {
+      "name": "C-D9",
+      "source": "\\PC\\\\S\\Y",
+      "expected": "\u00d9"
+    },
+    {
+      "name": "C-DA",
+      "source": "\\PC\\\\S\\Z",
+      "expected": "\u00da"
+    },
+    {
+      "name": "C-DB",
+      "source": "\\PC\\\\S\\[",
+      "expected": "\u00db"
+    },
+    {
+      "name": "C-DC",
+      "source": "\\PC\\\\S\\\\",
+      "expected": "\u00dc"
+    },
+    {
+      "name": "C-DD",
+      "source": "\\PC\\\\S\\]",
+      "expected": "\u016c"
+    },
+    {
+      "name": "C-DE",
+      "source": "\\PC\\\\S\\^",
+      "expected": "\u015c"
+    },
+    {
+      "name": "C-DF",
+      "source": "\\PC\\\\S\\_",
+      "expected": "\u00df"
+    },
+    {
+      "name": "C-E0",
+      "source": "\\PC\\\\S\\`",
+      "expected": "\u00e0"
+    },
+    {
+      "name": "C-E1",
+      "source": "\\PC\\\\S\\a",
+      "expected": "\u00e1"
+    },
+    {
+      "name": "C-E2",
+      "source": "\\PC\\\\S\\b",
+      "expected": "\u00e2"
+    },
+    {
+      "name": "C-E3",
+      "source": "\\PC\\\\S\\c",
+      "expected": null
+    },
+    {
+      "name": "C-E4",
+      "source": "\\PC\\\\S\\d",
+      "expected": "\u00e4"
+    },
+    {
+      "name": "C-E5",
+      "source": "\\PC\\\\S\\e",
+      "expected": "\u010b"
+    },
+    {
+      "name": "C-E6",
+      "source": "\\PC\\\\S\\f",
+      "expected": "\u0109"
+    },
+    {
+      "name": "C-E7",
+      "source": "\\PC\\\\S\\g",
+      "expected": "\u00e7"
+    },
+    {
+      "name": "C-E8",
+      "source": "\\PC\\\\S\\h",
+      "expected": "\u00e8"
+    },
+    {
+      "name": "C-E9",
+      "source": "\\PC\\\\S\\i",
+      "expected": "\u00e9"
+    },
+    {
+      "name": "C-EA",
+      "source": "\\PC\\\\S\\j",
+      "expected": "\u00ea"
+    },
+    {
+      "name": "C-EB",
+      "source": "\\PC\\\\S\\k",
+      "expected": "\u00eb"
+    },
+    {
+      "name": "C-EC",
+      "source": "\\PC\\\\S\\l",
+      "expected": "\u00ec"
+    },
+    {
+      "name": "C-ED",
+      "source": "\\PC\\\\S\\m",
+      "expected": "\u00ed"
+    },
+    {
+      "name": "C-EE",
+      "source": "\\PC\\\\S\\n",
+      "expected": "\u00ee"
+    },
+    {
+      "name": "C-EF",
+      "source": "\\PC\\\\S\\o",
+      "expected": "\u00ef"
+    },
+    {
+      "name": "C-F0",
+      "source": "\\PC\\\\S\\p",
+      "expected": null
+    },
+    {
+      "name": "C-F1",
+      "source": "\\PC\\\\S\\q",
+      "expected": "\u00f1"
+    },
+    {
+      "name": "C-F2",
+      "source": "\\PC\\\\S\\r",
+      "expected": "\u00f2"
+    },
+    {
+      "name": "C-F3",
+      "source": "\\PC\\\\S\\s",
+      "expected": "\u00f3"
+    },
+    {
+      "name": "C-F4",
+      "source": "\\PC\\\\S\\t",
+      "expected": "\u00f4"
+    },
+    {
+      "name": "C-F5",
+      "source": "\\PC\\\\S\\u",
+      "expected": "\u0121"
+    },
+    {
+      "name": "C-F6",
+      "source": "\\PC\\\\S\\v",
+      "expected": "\u00f6"
+    },
+    {
+      "name": "C-F7",
+      "source": "\\PC\\\\S\\w",
+      "expected": "\u00f7"
+    },
+    {
+      "name": "C-F8",
+      "source": "\\PC\\\\S\\x",
+      "expected": "\u011d"
+    },
+    {
+      "name": "C-F9",
+      "source": "\\PC\\\\S\\y",
+      "expected": "\u00f9"
+    },
+    {
+      "name": "C-FA",
+      "source": "\\PC\\\\S\\z",
+      "expected": "\u00fa"
+    },
+    {
+      "name": "C-FB",
+      "source": "\\PC\\\\S\\{",
+      "expected": "\u00fb"
+    },
+    {
+      "name": "C-FC",
+      "source": "\\PC\\\\S\\|",
+      "expected": "\u00fc"
+    },
+    {
+      "name": "C-FD",
+      "source": "\\PC\\\\S\\}",
+      "expected": "\u016d"
+    },
+    {
+      "name": "C-FE",
+      "source": "\\PC\\\\S\\~",
+      "expected": "\u015d"
+    },
+    {
+      "name": "D-A0",
+      "source": "\\PD\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "D-A1",
+      "source": "\\PD\\\\S\\!",
+      "expected": "\u0104"
+    },
+    {
+      "name": "D-A2",
+      "source": "\\PD\\\\S\\\"",
+      "expected": "\u0138"
+    },
+    {
+      "name": "D-A3",
+      "source": "\\PD\\\\S\\#",
+      "expected": "\u0156"
+    },
+    {
+      "name": "D-A4",
+      "source": "\\PD\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "D-A5",
+      "source": "\\PD\\\\S\\%",
+      "expected": "\u0128"
+    },
+    {
+      "name": "D-A6",
+      "source": "\\PD\\\\S\\&",
+      "expected": "\u013b"
+    },
+    {
+      "name": "D-A7",
+      "source": "\\PD\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "D-A8",
+      "source": "\\PD\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "D-A9",
+      "source": "\\PD\\\\S\\)",
+      "expected": "\u0160"
+    },
+    {
+      "name": "D-AA",
+      "source": "\\PD\\\\S\\*",
+      "expected": "\u0112"
+    },
+    {
+      "name": "D-AB",
+      "source": "\\PD\\\\S\\+",
+      "expected": "\u0122"
+    },
+    {
+      "name": "D-AC",
+      "source": "\\PD\\\\S\\,",
+      "expected": "\u0166"
+    },
+    {
+      "name": "D-AD",
+      "source": "\\PD\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "D-AE",
+      "source": "\\PD\\\\S\\.",
+      "expected": "\u017d"
+    },
+    {
+      "name": "D-AF",
+      "source": "\\PD\\\\S\\/",
+      "expected": "\u00af"
+    },
+    {
+      "name": "D-B0",
+      "source": "\\PD\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "D-B1",
+      "source": "\\PD\\\\S\\1",
+      "expected": "\u0105"
+    },
+    {
+      "name": "D-B2",
+      "source": "\\PD\\\\S\\2",
+      "expected": "\u02db"
+    },
+    {
+      "name": "D-B3",
+      "source": "\\PD\\\\S\\3",
+      "expected": "\u0157"
+    },
+    {
+      "name": "D-B4",
+      "source": "\\PD\\\\S\\4",
+      "expected": "\u00b4"
+    },
+    {
+      "name": "D-B5",
+      "source": "\\PD\\\\S\\5",
+      "expected": "\u0129"
+    },
+    {
+      "name": "D-B6",
+      "source": "\\PD\\\\S\\6",
+      "expected": "\u013c"
+    },
+    {
+      "name": "D-B7",
+      "source": "\\PD\\\\S\\7",
+      "expected": "\u02c7"
+    },
+    {
+      "name": "D-B8",
+      "source": "\\PD\\\\S\\8",
+      "expected": "\u00b8"
+    },
+    {
+      "name": "D-B9",
+      "source": "\\PD\\\\S\\9",
+      "expected": "\u0161"
+    },
+    {
+      "name": "D-BA",
+      "source": "\\PD\\\\S\\:",
+      "expected": "\u0113"
+    },
+    {
+      "name": "D-BB",
+      "source": "\\PD\\\\S\\;",
+      "expected": "\u0123"
+    },
+    {
+      "name": "D-BC",
+      "source": "\\PD\\\\S\\<",
+      "expected": "\u0167"
+    },
+    {
+      "name": "D-BD",
+      "source": "\\PD\\\\S\\=",
+      "expected": "\u014a"
+    },
+    {
+      "name": "D-BE",
+      "source": "\\PD\\\\S\\>",
+      "expected": "\u017e"
+    },
+    {
+      "name": "D-BF",
+      "source": "\\PD\\\\S\\?",
+      "expected": "\u014b"
+    },
+    {
+      "name": "D-C0",
+      "source": "\\PD\\\\S\\@",
+      "expected": "\u0100"
+    },
+    {
+      "name": "D-C1",
+      "source": "\\PD\\\\S\\A",
+      "expected": "\u00c1"
+    },
+    {
+      "name": "D-C2",
+      "source": "\\PD\\\\S\\B",
+      "expected": "\u00c2"
+    },
+    {
+      "name": "D-C3",
+      "source": "\\PD\\\\S\\C",
+      "expected": "\u00c3"
+    },
+    {
+      "name": "D-C4",
+      "source": "\\PD\\\\S\\D",
+      "expected": "\u00c4"
+    },
+    {
+      "name": "D-C5",
+      "source": "\\PD\\\\S\\E",
+      "expected": "\u00c5"
+    },
+    {
+      "name": "D-C6",
+      "source": "\\PD\\\\S\\F",
+      "expected": "\u00c6"
+    },
+    {
+      "name": "D-C7",
+      "source": "\\PD\\\\S\\G",
+      "expected": "\u012e"
+    },
+    {
+      "name": "D-C8",
+      "source": "\\PD\\\\S\\H",
+      "expected": "\u010c"
+    },
+    {
+      "name": "D-C9",
+      "source": "\\PD\\\\S\\I",
+      "expected": "\u00c9"
+    },
+    {
+      "name": "D-CA",
+      "source": "\\PD\\\\S\\J",
+      "expected": "\u0118"
+    },
+    {
+      "name": "D-CB",
+      "source": "\\PD\\\\S\\K",
+      "expected": "\u00cb"
+    },
+    {
+      "name": "D-CC",
+      "source": "\\PD\\\\S\\L",
+      "expected": "\u0116"
+    },
+    {
+      "name": "D-CD",
+      "source": "\\PD\\\\S\\M",
+      "expected": "\u00cd"
+    },
+    {
+      "name": "D-CE",
+      "source": "\\PD\\\\S\\N",
+      "expected": "\u00ce"
+    },
+    {
+      "name": "D-CF",
+      "source": "\\PD\\\\S\\O",
+      "expected": "\u012a"
+    },
+    {
+      "name": "D-D0",
+      "source": "\\PD\\\\S\\P",
+      "expected": "\u0110"
+    },
+    {
+      "name": "D-D1",
+      "source": "\\PD\\\\S\\Q",
+      "expected": "\u0145"
+    },
+    {
+      "name": "D-D2",
+      "source": "\\PD\\\\S\\R",
+      "expected": "\u014c"
+    },
+    {
+      "name": "D-D3",
+      "source": "\\PD\\\\S\\S",
+      "expected": "\u0136"
+    },
+    {
+      "name": "D-D4",
+      "source": "\\PD\\\\S\\T",
+      "expected": "\u00d4"
+    },
+    {
+      "name": "D-D5",
+      "source": "\\PD\\\\S\\U",
+      "expected": "\u00d5"
+    },
+    {
+      "name": "D-D6",
+      "source": "\\PD\\\\S\\V",
+      "expected": "\u00d6"
+    },
+    {
+      "name": "D-D7",
+      "source": "\\PD\\\\S\\W",
+      "expected": "\u00d7"
+    },
+    {
+      "name": "D-D8",
+      "source": "\\PD\\\\S\\X",
+      "expected": "\u00d8"
+    },
+    {
+      "name": "D-D9",
+      "source": "\\PD\\\\S\\Y",
+      "expected": "\u0172"
+    },
+    {
+      "name": "D-DA",
+      "source": "\\PD\\\\S\\Z",
+      "expected": "\u00da"
+    },
+    {
+      "name": "D-DB",
+      "source": "\\PD\\\\S\\[",
+      "expected": "\u00db"
+    },
+    {
+      "name": "D-DC",
+      "source": "\\PD\\\\S\\\\",
+      "expected": "\u00dc"
+    },
+    {
+      "name": "D-DD",
+      "source": "\\PD\\\\S\\]",
+      "expected": "\u0168"
+    },
+    {
+      "name": "D-DE",
+      "source": "\\PD\\\\S\\^",
+      "expected": "\u016a"
+    },
+    {
+      "name": "D-DF",
+      "source": "\\PD\\\\S\\_",
+      "expected": "\u00df"
+    },
+    {
+      "name": "D-E0",
+      "source": "\\PD\\\\S\\`",
+      "expected": "\u0101"
+    },
+    {
+      "name": "D-E1",
+      "source": "\\PD\\\\S\\a",
+      "expected": "\u00e1"
+    },
+    {
+      "name": "D-E2",
+      "source": "\\PD\\\\S\\b",
+      "expected": "\u00e2"
+    },
+    {
+      "name": "D-E3",
+      "source": "\\PD\\\\S\\c",
+      "expected": "\u00e3"
+    },
+    {
+      "name": "D-E4",
+      "source": "\\PD\\\\S\\d",
+      "expected": "\u00e4"
+    },
+    {
+      "name": "D-E5",
+      "source": "\\PD\\\\S\\e",
+      "expected": "\u00e5"
+    },
+    {
+      "name": "D-E6",
+      "source": "\\PD\\\\S\\f",
+      "expected": "\u00e6"
+    },
+    {
+      "name": "D-E7",
+      "source": "\\PD\\\\S\\g",
+      "expected": "\u012f"
+    },
+    {
+      "name": "D-E8",
+      "source": "\\PD\\\\S\\h",
+      "expected": "\u010d"
+    },
+    {
+      "name": "D-E9",
+      "source": "\\PD\\\\S\\i",
+      "expected": "\u00e9"
+    },
+    {
+      "name": "D-EA",
+      "source": "\\PD\\\\S\\j",
+      "expected": "\u0119"
+    },
+    {
+      "name": "D-EB",
+      "source": "\\PD\\\\S\\k",
+      "expected": "\u00eb"
+    },
+    {
+      "name": "D-EC",
+      "source": "\\PD\\\\S\\l",
+      "expected": "\u0117"
+    },
+    {
+      "name": "D-ED",
+      "source": "\\PD\\\\S\\m",
+      "expected": "\u00ed"
+    },
+    {
+      "name": "D-EE",
+      "source": "\\PD\\\\S\\n",
+      "expected": "\u00ee"
+    },
+    {
+      "name": "D-EF",
+      "source": "\\PD\\\\S\\o",
+      "expected": "\u012b"
+    },
+    {
+      "name": "D-F0",
+      "source": "\\PD\\\\S\\p",
+      "expected": "\u0111"
+    },
+    {
+      "name": "D-F1",
+      "source": "\\PD\\\\S\\q",
+      "expected": "\u0146"
+    },
+    {
+      "name": "D-F2",
+      "source": "\\PD\\\\S\\r",
+      "expected": "\u014d"
+    },
+    {
+      "name": "D-F3",
+      "source": "\\PD\\\\S\\s",
+      "expected": "\u0137"
+    },
+    {
+      "name": "D-F4",
+      "source": "\\PD\\\\S\\t",
+      "expected": "\u00f4"
+    },
+    {
+      "name": "D-F5",
+      "source": "\\PD\\\\S\\u",
+      "expected": "\u00f5"
+    },
+    {
+      "name": "D-F6",
+      "source": "\\PD\\\\S\\v",
+      "expected": "\u00f6"
+    },
+    {
+      "name": "D-F7",
+      "source": "\\PD\\\\S\\w",
+      "expected": "\u00f7"
+    },
+    {
+      "name": "D-F8",
+      "source": "\\PD\\\\S\\x",
+      "expected": "\u00f8"
+    },
+    {
+      "name": "D-F9",
+      "source": "\\PD\\\\S\\y",
+      "expected": "\u0173"
+    },
+    {
+      "name": "D-FA",
+      "source": "\\PD\\\\S\\z",
+      "expected": "\u00fa"
+    },
+    {
+      "name": "D-FB",
+      "source": "\\PD\\\\S\\{",
+      "expected": "\u00fb"
+    },
+    {
+      "name": "D-FC",
+      "source": "\\PD\\\\S\\|",
+      "expected": "\u00fc"
+    },
+    {
+      "name": "D-FD",
+      "source": "\\PD\\\\S\\}",
+      "expected": "\u0169"
+    },
+    {
+      "name": "D-FE",
+      "source": "\\PD\\\\S\\~",
+      "expected": "\u016b"
+    },
+    {
+      "name": "E-A0",
+      "source": "\\PE\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "E-A1",
+      "source": "\\PE\\\\S\\!",
+      "expected": "\u0401"
+    },
+    {
+      "name": "E-A2",
+      "source": "\\PE\\\\S\\\"",
+      "expected": "\u0402"
+    },
+    {
+      "name": "E-A3",
+      "source": "\\PE\\\\S\\#",
+      "expected": "\u0403"
+    },
+    {
+      "name": "E-A4",
+      "source": "\\PE\\\\S\\$",
+      "expected": "\u0404"
+    },
+    {
+      "name": "E-A5",
+      "source": "\\PE\\\\S\\%",
+      "expected": "\u0405"
+    },
+    {
+      "name": "E-A6",
+      "source": "\\PE\\\\S\\&",
+      "expected": "\u0406"
+    },
+    {
+      "name": "E-A7",
+      "source": "\\PE\\\\S\\'",
+      "expected": "\u0407"
+    },
+    {
+      "name": "E-A8",
+      "source": "\\PE\\\\S\\(",
+      "expected": "\u0408"
+    },
+    {
+      "name": "E-A9",
+      "source": "\\PE\\\\S\\)",
+      "expected": "\u0409"
+    },
+    {
+      "name": "E-AA",
+      "source": "\\PE\\\\S\\*",
+      "expected": "\u040a"
+    },
+    {
+      "name": "E-AB",
+      "source": "\\PE\\\\S\\+",
+      "expected": "\u040b"
+    },
+    {
+      "name": "E-AC",
+      "source": "\\PE\\\\S\\,",
+      "expected": "\u040c"
+    },
+    {
+      "name": "E-AD",
+      "source": "\\PE\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "E-AE",
+      "source": "\\PE\\\\S\\.",
+      "expected": "\u040e"
+    },
+    {
+      "name": "E-AF",
+      "source": "\\PE\\\\S\\/",
+      "expected": "\u040f"
+    },
+    {
+      "name": "E-B0",
+      "source": "\\PE\\\\S\\0",
+      "expected": "\u0410"
+    },
+    {
+      "name": "E-B1",
+      "source": "\\PE\\\\S\\1",
+      "expected": "\u0411"
+    },
+    {
+      "name": "E-B2",
+      "source": "\\PE\\\\S\\2",
+      "expected": "\u0412"
+    },
+    {
+      "name": "E-B3",
+      "source": "\\PE\\\\S\\3",
+      "expected": "\u0413"
+    },
+    {
+      "name": "E-B4",
+      "source": "\\PE\\\\S\\4",
+      "expected": "\u0414"
+    },
+    {
+      "name": "E-B5",
+      "source": "\\PE\\\\S\\5",
+      "expected": "\u0415"
+    },
+    {
+      "name": "E-B6",
+      "source": "\\PE\\\\S\\6",
+      "expected": "\u0416"
+    },
+    {
+      "name": "E-B7",
+      "source": "\\PE\\\\S\\7",
+      "expected": "\u0417"
+    },
+    {
+      "name": "E-B8",
+      "source": "\\PE\\\\S\\8",
+      "expected": "\u0418"
+    },
+    {
+      "name": "E-B9",
+      "source": "\\PE\\\\S\\9",
+      "expected": "\u0419"
+    },
+    {
+      "name": "E-BA",
+      "source": "\\PE\\\\S\\:",
+      "expected": "\u041a"
+    },
+    {
+      "name": "E-BB",
+      "source": "\\PE\\\\S\\;",
+      "expected": "\u041b"
+    },
+    {
+      "name": "E-BC",
+      "source": "\\PE\\\\S\\<",
+      "expected": "\u041c"
+    },
+    {
+      "name": "E-BD",
+      "source": "\\PE\\\\S\\=",
+      "expected": "\u041d"
+    },
+    {
+      "name": "E-BE",
+      "source": "\\PE\\\\S\\>",
+      "expected": "\u041e"
+    },
+    {
+      "name": "E-BF",
+      "source": "\\PE\\\\S\\?",
+      "expected": "\u041f"
+    },
+    {
+      "name": "E-C0",
+      "source": "\\PE\\\\S\\@",
+      "expected": "\u0420"
+    },
+    {
+      "name": "E-C1",
+      "source": "\\PE\\\\S\\A",
+      "expected": "\u0421"
+    },
+    {
+      "name": "E-C2",
+      "source": "\\PE\\\\S\\B",
+      "expected": "\u0422"
+    },
+    {
+      "name": "E-C3",
+      "source": "\\PE\\\\S\\C",
+      "expected": "\u0423"
+    },
+    {
+      "name": "E-C4",
+      "source": "\\PE\\\\S\\D",
+      "expected": "\u0424"
+    },
+    {
+      "name": "E-C5",
+      "source": "\\PE\\\\S\\E",
+      "expected": "\u0425"
+    },
+    {
+      "name": "E-C6",
+      "source": "\\PE\\\\S\\F",
+      "expected": "\u0426"
+    },
+    {
+      "name": "E-C7",
+      "source": "\\PE\\\\S\\G",
+      "expected": "\u0427"
+    },
+    {
+      "name": "E-C8",
+      "source": "\\PE\\\\S\\H",
+      "expected": "\u0428"
+    },
+    {
+      "name": "E-C9",
+      "source": "\\PE\\\\S\\I",
+      "expected": "\u0429"
+    },
+    {
+      "name": "E-CA",
+      "source": "\\PE\\\\S\\J",
+      "expected": "\u042a"
+    },
+    {
+      "name": "E-CB",
+      "source": "\\PE\\\\S\\K",
+      "expected": "\u042b"
+    },
+    {
+      "name": "E-CC",
+      "source": "\\PE\\\\S\\L",
+      "expected": "\u042c"
+    },
+    {
+      "name": "E-CD",
+      "source": "\\PE\\\\S\\M",
+      "expected": "\u042d"
+    },
+    {
+      "name": "E-CE",
+      "source": "\\PE\\\\S\\N",
+      "expected": "\u042e"
+    },
+    {
+      "name": "E-CF",
+      "source": "\\PE\\\\S\\O",
+      "expected": "\u042f"
+    },
+    {
+      "name": "E-D0",
+      "source": "\\PE\\\\S\\P",
+      "expected": "\u0430"
+    },
+    {
+      "name": "E-D1",
+      "source": "\\PE\\\\S\\Q",
+      "expected": "\u0431"
+    },
+    {
+      "name": "E-D2",
+      "source": "\\PE\\\\S\\R",
+      "expected": "\u0432"
+    },
+    {
+      "name": "E-D3",
+      "source": "\\PE\\\\S\\S",
+      "expected": "\u0433"
+    },
+    {
+      "name": "E-D4",
+      "source": "\\PE\\\\S\\T",
+      "expected": "\u0434"
+    },
+    {
+      "name": "E-D5",
+      "source": "\\PE\\\\S\\U",
+      "expected": "\u0435"
+    },
+    {
+      "name": "E-D6",
+      "source": "\\PE\\\\S\\V",
+      "expected": "\u0436"
+    },
+    {
+      "name": "E-D7",
+      "source": "\\PE\\\\S\\W",
+      "expected": "\u0437"
+    },
+    {
+      "name": "E-D8",
+      "source": "\\PE\\\\S\\X",
+      "expected": "\u0438"
+    },
+    {
+      "name": "E-D9",
+      "source": "\\PE\\\\S\\Y",
+      "expected": "\u0439"
+    },
+    {
+      "name": "E-DA",
+      "source": "\\PE\\\\S\\Z",
+      "expected": "\u043a"
+    },
+    {
+      "name": "E-DB",
+      "source": "\\PE\\\\S\\[",
+      "expected": "\u043b"
+    },
+    {
+      "name": "E-DC",
+      "source": "\\PE\\\\S\\\\",
+      "expected": "\u043c"
+    },
+    {
+      "name": "E-DD",
+      "source": "\\PE\\\\S\\]",
+      "expected": "\u043d"
+    },
+    {
+      "name": "E-DE",
+      "source": "\\PE\\\\S\\^",
+      "expected": "\u043e"
+    },
+    {
+      "name": "E-DF",
+      "source": "\\PE\\\\S\\_",
+      "expected": "\u043f"
+    },
+    {
+      "name": "E-E0",
+      "source": "\\PE\\\\S\\`",
+      "expected": "\u0440"
+    },
+    {
+      "name": "E-E1",
+      "source": "\\PE\\\\S\\a",
+      "expected": "\u0441"
+    },
+    {
+      "name": "E-E2",
+      "source": "\\PE\\\\S\\b",
+      "expected": "\u0442"
+    },
+    {
+      "name": "E-E3",
+      "source": "\\PE\\\\S\\c",
+      "expected": "\u0443"
+    },
+    {
+      "name": "E-E4",
+      "source": "\\PE\\\\S\\d",
+      "expected": "\u0444"
+    },
+    {
+      "name": "E-E5",
+      "source": "\\PE\\\\S\\e",
+      "expected": "\u0445"
+    },
+    {
+      "name": "E-E6",
+      "source": "\\PE\\\\S\\f",
+      "expected": "\u0446"
+    },
+    {
+      "name": "E-E7",
+      "source": "\\PE\\\\S\\g",
+      "expected": "\u0447"
+    },
+    {
+      "name": "E-E8",
+      "source": "\\PE\\\\S\\h",
+      "expected": "\u0448"
+    },
+    {
+      "name": "E-E9",
+      "source": "\\PE\\\\S\\i",
+      "expected": "\u0449"
+    },
+    {
+      "name": "E-EA",
+      "source": "\\PE\\\\S\\j",
+      "expected": "\u044a"
+    },
+    {
+      "name": "E-EB",
+      "source": "\\PE\\\\S\\k",
+      "expected": "\u044b"
+    },
+    {
+      "name": "E-EC",
+      "source": "\\PE\\\\S\\l",
+      "expected": "\u044c"
+    },
+    {
+      "name": "E-ED",
+      "source": "\\PE\\\\S\\m",
+      "expected": "\u044d"
+    },
+    {
+      "name": "E-EE",
+      "source": "\\PE\\\\S\\n",
+      "expected": "\u044e"
+    },
+    {
+      "name": "E-EF",
+      "source": "\\PE\\\\S\\o",
+      "expected": "\u044f"
+    },
+    {
+      "name": "E-F0",
+      "source": "\\PE\\\\S\\p",
+      "expected": "\u2116"
+    },
+    {
+      "name": "E-F1",
+      "source": "\\PE\\\\S\\q",
+      "expected": "\u0451"
+    },
+    {
+      "name": "E-F2",
+      "source": "\\PE\\\\S\\r",
+      "expected": "\u0452"
+    },
+    {
+      "name": "E-F3",
+      "source": "\\PE\\\\S\\s",
+      "expected": "\u0453"
+    },
+    {
+      "name": "E-F4",
+      "source": "\\PE\\\\S\\t",
+      "expected": "\u0454"
+    },
+    {
+      "name": "E-F5",
+      "source": "\\PE\\\\S\\u",
+      "expected": "\u0455"
+    },
+    {
+      "name": "E-F6",
+      "source": "\\PE\\\\S\\v",
+      "expected": "\u0456"
+    },
+    {
+      "name": "E-F7",
+      "source": "\\PE\\\\S\\w",
+      "expected": "\u0457"
+    },
+    {
+      "name": "E-F8",
+      "source": "\\PE\\\\S\\x",
+      "expected": "\u0458"
+    },
+    {
+      "name": "E-F9",
+      "source": "\\PE\\\\S\\y",
+      "expected": "\u0459"
+    },
+    {
+      "name": "E-FA",
+      "source": "\\PE\\\\S\\z",
+      "expected": "\u045a"
+    },
+    {
+      "name": "E-FB",
+      "source": "\\PE\\\\S\\{",
+      "expected": "\u045b"
+    },
+    {
+      "name": "E-FC",
+      "source": "\\PE\\\\S\\|",
+      "expected": "\u045c"
+    },
+    {
+      "name": "E-FD",
+      "source": "\\PE\\\\S\\}",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "E-FE",
+      "source": "\\PE\\\\S\\~",
+      "expected": "\u045e"
+    },
+    {
+      "name": "F-A0",
+      "source": "\\PF\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "F-A1",
+      "source": "\\PF\\\\S\\!",
+      "expected": null
+    },
+    {
+      "name": "F-A2",
+      "source": "\\PF\\\\S\\\"",
+      "expected": null
+    },
+    {
+      "name": "F-A3",
+      "source": "\\PF\\\\S\\#",
+      "expected": null
+    },
+    {
+      "name": "F-A4",
+      "source": "\\PF\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "F-A5",
+      "source": "\\PF\\\\S\\%",
+      "expected": null
+    },
+    {
+      "name": "F-A6",
+      "source": "\\PF\\\\S\\&",
+      "expected": null
+    },
+    {
+      "name": "F-A7",
+      "source": "\\PF\\\\S\\'",
+      "expected": null
+    },
+    {
+      "name": "F-A8",
+      "source": "\\PF\\\\S\\(",
+      "expected": null
+    },
+    {
+      "name": "F-A9",
+      "source": "\\PF\\\\S\\)",
+      "expected": null
+    },
+    {
+      "name": "F-AA",
+      "source": "\\PF\\\\S\\*",
+      "expected": null
+    },
+    {
+      "name": "F-AB",
+      "source": "\\PF\\\\S\\+",
+      "expected": null
+    },
+    {
+      "name": "F-AC",
+      "source": "\\PF\\\\S\\,",
+      "expected": "\u060c"
+    },
+    {
+      "name": "F-AD",
+      "source": "\\PF\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "F-AE",
+      "source": "\\PF\\\\S\\.",
+      "expected": null
+    },
+    {
+      "name": "F-AF",
+      "source": "\\PF\\\\S\\/",
+      "expected": null
+    },
+    {
+      "name": "F-B0",
+      "source": "\\PF\\\\S\\0",
+      "expected": null
+    },
+    {
+      "name": "F-B1",
+      "source": "\\PF\\\\S\\1",
+      "expected": null
+    },
+    {
+      "name": "F-B2",
+      "source": "\\PF\\\\S\\2",
+      "expected": null
+    },
+    {
+      "name": "F-B3",
+      "source": "\\PF\\\\S\\3",
+      "expected": null
+    },
+    {
+      "name": "F-B4",
+      "source": "\\PF\\\\S\\4",
+      "expected": null
+    },
+    {
+      "name": "F-B5",
+      "source": "\\PF\\\\S\\5",
+      "expected": null
+    },
+    {
+      "name": "F-B6",
+      "source": "\\PF\\\\S\\6",
+      "expected": null
+    },
+    {
+      "name": "F-B7",
+      "source": "\\PF\\\\S\\7",
+      "expected": null
+    },
+    {
+      "name": "F-B8",
+      "source": "\\PF\\\\S\\8",
+      "expected": null
+    },
+    {
+      "name": "F-B9",
+      "source": "\\PF\\\\S\\9",
+      "expected": null
+    },
+    {
+      "name": "F-BA",
+      "source": "\\PF\\\\S\\:",
+      "expected": null
+    },
+    {
+      "name": "F-BB",
+      "source": "\\PF\\\\S\\;",
+      "expected": "\u061b"
+    },
+    {
+      "name": "F-BC",
+      "source": "\\PF\\\\S\\<",
+      "expected": null
+    },
+    {
+      "name": "F-BD",
+      "source": "\\PF\\\\S\\=",
+      "expected": null
+    },
+    {
+      "name": "F-BE",
+      "source": "\\PF\\\\S\\>",
+      "expected": null
+    },
+    {
+      "name": "F-BF",
+      "source": "\\PF\\\\S\\?",
+      "expected": "\u061f"
+    },
+    {
+      "name": "F-C0",
+      "source": "\\PF\\\\S\\@",
+      "expected": null
+    },
+    {
+      "name": "F-C1",
+      "source": "\\PF\\\\S\\A",
+      "expected": "\u0621"
+    },
+    {
+      "name": "F-C2",
+      "source": "\\PF\\\\S\\B",
+      "expected": "\u0622"
+    },
+    {
+      "name": "F-C3",
+      "source": "\\PF\\\\S\\C",
+      "expected": "\u0623"
+    },
+    {
+      "name": "F-C4",
+      "source": "\\PF\\\\S\\D",
+      "expected": "\u0624"
+    },
+    {
+      "name": "F-C5",
+      "source": "\\PF\\\\S\\E",
+      "expected": "\u0625"
+    },
+    {
+      "name": "F-C6",
+      "source": "\\PF\\\\S\\F",
+      "expected": "\u0626"
+    },
+    {
+      "name": "F-C7",
+      "source": "\\PF\\\\S\\G",
+      "expected": "\u0627"
+    },
+    {
+      "name": "F-C8",
+      "source": "\\PF\\\\S\\H",
+      "expected": "\u0628"
+    },
+    {
+      "name": "F-C9",
+      "source": "\\PF\\\\S\\I",
+      "expected": "\u0629"
+    },
+    {
+      "name": "F-CA",
+      "source": "\\PF\\\\S\\J",
+      "expected": "\u062a"
+    },
+    {
+      "name": "F-CB",
+      "source": "\\PF\\\\S\\K",
+      "expected": "\u062b"
+    },
+    {
+      "name": "F-CC",
+      "source": "\\PF\\\\S\\L",
+      "expected": "\u062c"
+    },
+    {
+      "name": "F-CD",
+      "source": "\\PF\\\\S\\M",
+      "expected": "\u062d"
+    },
+    {
+      "name": "F-CE",
+      "source": "\\PF\\\\S\\N",
+      "expected": "\u062e"
+    },
+    {
+      "name": "F-CF",
+      "source": "\\PF\\\\S\\O",
+      "expected": "\u062f"
+    },
+    {
+      "name": "F-D0",
+      "source": "\\PF\\\\S\\P",
+      "expected": "\u0630"
+    },
+    {
+      "name": "F-D1",
+      "source": "\\PF\\\\S\\Q",
+      "expected": "\u0631"
+    },
+    {
+      "name": "F-D2",
+      "source": "\\PF\\\\S\\R",
+      "expected": "\u0632"
+    },
+    {
+      "name": "F-D3",
+      "source": "\\PF\\\\S\\S",
+      "expected": "\u0633"
+    },
+    {
+      "name": "F-D4",
+      "source": "\\PF\\\\S\\T",
+      "expected": "\u0634"
+    },
+    {
+      "name": "F-D5",
+      "source": "\\PF\\\\S\\U",
+      "expected": "\u0635"
+    },
+    {
+      "name": "F-D6",
+      "source": "\\PF\\\\S\\V",
+      "expected": "\u0636"
+    },
+    {
+      "name": "F-D7",
+      "source": "\\PF\\\\S\\W",
+      "expected": "\u0637"
+    },
+    {
+      "name": "F-D8",
+      "source": "\\PF\\\\S\\X",
+      "expected": "\u0638"
+    },
+    {
+      "name": "F-D9",
+      "source": "\\PF\\\\S\\Y",
+      "expected": "\u0639"
+    },
+    {
+      "name": "F-DA",
+      "source": "\\PF\\\\S\\Z",
+      "expected": "\u063a"
+    },
+    {
+      "name": "F-DB",
+      "source": "\\PF\\\\S\\[",
+      "expected": null
+    },
+    {
+      "name": "F-DC",
+      "source": "\\PF\\\\S\\\\",
+      "expected": null
+    },
+    {
+      "name": "F-DD",
+      "source": "\\PF\\\\S\\]",
+      "expected": null
+    },
+    {
+      "name": "F-DE",
+      "source": "\\PF\\\\S\\^",
+      "expected": null
+    },
+    {
+      "name": "F-DF",
+      "source": "\\PF\\\\S\\_",
+      "expected": null
+    },
+    {
+      "name": "F-E0",
+      "source": "\\PF\\\\S\\`",
+      "expected": "\u0640"
+    },
+    {
+      "name": "F-E1",
+      "source": "\\PF\\\\S\\a",
+      "expected": "\u0641"
+    },
+    {
+      "name": "F-E2",
+      "source": "\\PF\\\\S\\b",
+      "expected": "\u0642"
+    },
+    {
+      "name": "F-E3",
+      "source": "\\PF\\\\S\\c",
+      "expected": "\u0643"
+    },
+    {
+      "name": "F-E4",
+      "source": "\\PF\\\\S\\d",
+      "expected": "\u0644"
+    },
+    {
+      "name": "F-E5",
+      "source": "\\PF\\\\S\\e",
+      "expected": "\u0645"
+    },
+    {
+      "name": "F-E6",
+      "source": "\\PF\\\\S\\f",
+      "expected": "\u0646"
+    },
+    {
+      "name": "F-E7",
+      "source": "\\PF\\\\S\\g",
+      "expected": "\u0647"
+    },
+    {
+      "name": "F-E8",
+      "source": "\\PF\\\\S\\h",
+      "expected": "\u0648"
+    },
+    {
+      "name": "F-E9",
+      "source": "\\PF\\\\S\\i",
+      "expected": "\u0649"
+    },
+    {
+      "name": "F-EA",
+      "source": "\\PF\\\\S\\j",
+      "expected": "\u064a"
+    },
+    {
+      "name": "F-EB",
+      "source": "\\PF\\\\S\\k",
+      "expected": "\u064b"
+    },
+    {
+      "name": "F-EC",
+      "source": "\\PF\\\\S\\l",
+      "expected": "\u064c"
+    },
+    {
+      "name": "F-ED",
+      "source": "\\PF\\\\S\\m",
+      "expected": "\u064d"
+    },
+    {
+      "name": "F-EE",
+      "source": "\\PF\\\\S\\n",
+      "expected": "\u064e"
+    },
+    {
+      "name": "F-EF",
+      "source": "\\PF\\\\S\\o",
+      "expected": "\u064f"
+    },
+    {
+      "name": "F-F0",
+      "source": "\\PF\\\\S\\p",
+      "expected": "\u0650"
+    },
+    {
+      "name": "F-F1",
+      "source": "\\PF\\\\S\\q",
+      "expected": "\u0651"
+    },
+    {
+      "name": "F-F2",
+      "source": "\\PF\\\\S\\r",
+      "expected": "\u0652"
+    },
+    {
+      "name": "F-F3",
+      "source": "\\PF\\\\S\\s",
+      "expected": null
+    },
+    {
+      "name": "F-F4",
+      "source": "\\PF\\\\S\\t",
+      "expected": null
+    },
+    {
+      "name": "F-F5",
+      "source": "\\PF\\\\S\\u",
+      "expected": null
+    },
+    {
+      "name": "F-F6",
+      "source": "\\PF\\\\S\\v",
+      "expected": null
+    },
+    {
+      "name": "F-F7",
+      "source": "\\PF\\\\S\\w",
+      "expected": null
+    },
+    {
+      "name": "F-F8",
+      "source": "\\PF\\\\S\\x",
+      "expected": null
+    },
+    {
+      "name": "F-F9",
+      "source": "\\PF\\\\S\\y",
+      "expected": null
+    },
+    {
+      "name": "F-FA",
+      "source": "\\PF\\\\S\\z",
+      "expected": null
+    },
+    {
+      "name": "F-FB",
+      "source": "\\PF\\\\S\\{",
+      "expected": null
+    },
+    {
+      "name": "F-FC",
+      "source": "\\PF\\\\S\\|",
+      "expected": null
+    },
+    {
+      "name": "F-FD",
+      "source": "\\PF\\\\S\\}",
+      "expected": null
+    },
+    {
+      "name": "F-FE",
+      "source": "\\PF\\\\S\\~",
+      "expected": null
+    },
+    {
+      "name": "G-A0",
+      "source": "\\PG\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "G-A1",
+      "source": "\\PG\\\\S\\!",
+      "expected": "\u2018"
+    },
+    {
+      "name": "G-A2",
+      "source": "\\PG\\\\S\\\"",
+      "expected": "\u2019"
+    },
+    {
+      "name": "G-A3",
+      "source": "\\PG\\\\S\\#",
+      "expected": "\u00a3"
+    },
+    {
+      "name": "G-A4",
+      "source": "\\PG\\\\S\\$",
+      "expected": "\u20ac"
+    },
+    {
+      "name": "G-A5",
+      "source": "\\PG\\\\S\\%",
+      "expected": "\u20af"
+    },
+    {
+      "name": "G-A6",
+      "source": "\\PG\\\\S\\&",
+      "expected": "\u00a6"
+    },
+    {
+      "name": "G-A7",
+      "source": "\\PG\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "G-A8",
+      "source": "\\PG\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "G-A9",
+      "source": "\\PG\\\\S\\)",
+      "expected": "\u00a9"
+    },
+    {
+      "name": "G-AA",
+      "source": "\\PG\\\\S\\*",
+      "expected": "\u037a"
+    },
+    {
+      "name": "G-AB",
+      "source": "\\PG\\\\S\\+",
+      "expected": "\u00ab"
+    },
+    {
+      "name": "G-AC",
+      "source": "\\PG\\\\S\\,",
+      "expected": "\u00ac"
+    },
+    {
+      "name": "G-AD",
+      "source": "\\PG\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "G-AE",
+      "source": "\\PG\\\\S\\.",
+      "expected": null
+    },
+    {
+      "name": "G-AF",
+      "source": "\\PG\\\\S\\/",
+      "expected": "\u2015"
+    },
+    {
+      "name": "G-B0",
+      "source": "\\PG\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "G-B1",
+      "source": "\\PG\\\\S\\1",
+      "expected": "\u00b1"
+    },
+    {
+      "name": "G-B2",
+      "source": "\\PG\\\\S\\2",
+      "expected": "\u00b2"
+    },
+    {
+      "name": "G-B3",
+      "source": "\\PG\\\\S\\3",
+      "expected": "\u00b3"
+    },
+    {
+      "name": "G-B4",
+      "source": "\\PG\\\\S\\4",
+      "expected": "\u0384"
+    },
+    {
+      "name": "G-B5",
+      "source": "\\PG\\\\S\\5",
+      "expected": "\u0385"
+    },
+    {
+      "name": "G-B6",
+      "source": "\\PG\\\\S\\6",
+      "expected": "\u0386"
+    },
+    {
+      "name": "G-B7",
+      "source": "\\PG\\\\S\\7",
+      "expected": "\u00b7"
+    },
+    {
+      "name": "G-B8",
+      "source": "\\PG\\\\S\\8",
+      "expected": "\u0388"
+    },
+    {
+      "name": "G-B9",
+      "source": "\\PG\\\\S\\9",
+      "expected": "\u0389"
+    },
+    {
+      "name": "G-BA",
+      "source": "\\PG\\\\S\\:",
+      "expected": "\u038a"
+    },
+    {
+      "name": "G-BB",
+      "source": "\\PG\\\\S\\;",
+      "expected": "\u00bb"
+    },
+    {
+      "name": "G-BC",
+      "source": "\\PG\\\\S\\<",
+      "expected": "\u038c"
+    },
+    {
+      "name": "G-BD",
+      "source": "\\PG\\\\S\\=",
+      "expected": "\u00bd"
+    },
+    {
+      "name": "G-BE",
+      "source": "\\PG\\\\S\\>",
+      "expected": "\u038e"
+    },
+    {
+      "name": "G-BF",
+      "source": "\\PG\\\\S\\?",
+      "expected": "\u038f"
+    },
+    {
+      "name": "G-C0",
+      "source": "\\PG\\\\S\\@",
+      "expected": "\u0390"
+    },
+    {
+      "name": "G-C1",
+      "source": "\\PG\\\\S\\A",
+      "expected": "\u0391"
+    },
+    {
+      "name": "G-C2",
+      "source": "\\PG\\\\S\\B",
+      "expected": "\u0392"
+    },
+    {
+      "name": "G-C3",
+      "source": "\\PG\\\\S\\C",
+      "expected": "\u0393"
+    },
+    {
+      "name": "G-C4",
+      "source": "\\PG\\\\S\\D",
+      "expected": "\u0394"
+    },
+    {
+      "name": "G-C5",
+      "source": "\\PG\\\\S\\E",
+      "expected": "\u0395"
+    },
+    {
+      "name": "G-C6",
+      "source": "\\PG\\\\S\\F",
+      "expected": "\u0396"
+    },
+    {
+      "name": "G-C7",
+      "source": "\\PG\\\\S\\G",
+      "expected": "\u0397"
+    },
+    {
+      "name": "G-C8",
+      "source": "\\PG\\\\S\\H",
+      "expected": "\u0398"
+    },
+    {
+      "name": "G-C9",
+      "source": "\\PG\\\\S\\I",
+      "expected": "\u0399"
+    },
+    {
+      "name": "G-CA",
+      "source": "\\PG\\\\S\\J",
+      "expected": "\u039a"
+    },
+    {
+      "name": "G-CB",
+      "source": "\\PG\\\\S\\K",
+      "expected": "\u039b"
+    },
+    {
+      "name": "G-CC",
+      "source": "\\PG\\\\S\\L",
+      "expected": "\u039c"
+    },
+    {
+      "name": "G-CD",
+      "source": "\\PG\\\\S\\M",
+      "expected": "\u039d"
+    },
+    {
+      "name": "G-CE",
+      "source": "\\PG\\\\S\\N",
+      "expected": "\u039e"
+    },
+    {
+      "name": "G-CF",
+      "source": "\\PG\\\\S\\O",
+      "expected": "\u039f"
+    },
+    {
+      "name": "G-D0",
+      "source": "\\PG\\\\S\\P",
+      "expected": "\u03a0"
+    },
+    {
+      "name": "G-D1",
+      "source": "\\PG\\\\S\\Q",
+      "expected": "\u03a1"
+    },
+    {
+      "name": "G-D2",
+      "source": "\\PG\\\\S\\R",
+      "expected": null
+    },
+    {
+      "name": "G-D3",
+      "source": "\\PG\\\\S\\S",
+      "expected": "\u03a3"
+    },
+    {
+      "name": "G-D4",
+      "source": "\\PG\\\\S\\T",
+      "expected": "\u03a4"
+    },
+    {
+      "name": "G-D5",
+      "source": "\\PG\\\\S\\U",
+      "expected": "\u03a5"
+    },
+    {
+      "name": "G-D6",
+      "source": "\\PG\\\\S\\V",
+      "expected": "\u03a6"
+    },
+    {
+      "name": "G-D7",
+      "source": "\\PG\\\\S\\W",
+      "expected": "\u03a7"
+    },
+    {
+      "name": "G-D8",
+      "source": "\\PG\\\\S\\X",
+      "expected": "\u03a8"
+    },
+    {
+      "name": "G-D9",
+      "source": "\\PG\\\\S\\Y",
+      "expected": "\u03a9"
+    },
+    {
+      "name": "G-DA",
+      "source": "\\PG\\\\S\\Z",
+      "expected": "\u03aa"
+    },
+    {
+      "name": "G-DB",
+      "source": "\\PG\\\\S\\[",
+      "expected": "\u03ab"
+    },
+    {
+      "name": "G-DC",
+      "source": "\\PG\\\\S\\\\",
+      "expected": "\u03ac"
+    },
+    {
+      "name": "G-DD",
+      "source": "\\PG\\\\S\\]",
+      "expected": "\u03ad"
+    },
+    {
+      "name": "G-DE",
+      "source": "\\PG\\\\S\\^",
+      "expected": "\u03ae"
+    },
+    {
+      "name": "G-DF",
+      "source": "\\PG\\\\S\\_",
+      "expected": "\u03af"
+    },
+    {
+      "name": "G-E0",
+      "source": "\\PG\\\\S\\`",
+      "expected": "\u03b0"
+    },
+    {
+      "name": "G-E1",
+      "source": "\\PG\\\\S\\a",
+      "expected": "\u03b1"
+    },
+    {
+      "name": "G-E2",
+      "source": "\\PG\\\\S\\b",
+      "expected": "\u03b2"
+    },
+    {
+      "name": "G-E3",
+      "source": "\\PG\\\\S\\c",
+      "expected": "\u03b3"
+    },
+    {
+      "name": "G-E4",
+      "source": "\\PG\\\\S\\d",
+      "expected": "\u03b4"
+    },
+    {
+      "name": "G-E5",
+      "source": "\\PG\\\\S\\e",
+      "expected": "\u03b5"
+    },
+    {
+      "name": "G-E6",
+      "source": "\\PG\\\\S\\f",
+      "expected": "\u03b6"
+    },
+    {
+      "name": "G-E7",
+      "source": "\\PG\\\\S\\g",
+      "expected": "\u03b7"
+    },
+    {
+      "name": "G-E8",
+      "source": "\\PG\\\\S\\h",
+      "expected": "\u03b8"
+    },
+    {
+      "name": "G-E9",
+      "source": "\\PG\\\\S\\i",
+      "expected": "\u03b9"
+    },
+    {
+      "name": "G-EA",
+      "source": "\\PG\\\\S\\j",
+      "expected": "\u03ba"
+    },
+    {
+      "name": "G-EB",
+      "source": "\\PG\\\\S\\k",
+      "expected": "\u03bb"
+    },
+    {
+      "name": "G-EC",
+      "source": "\\PG\\\\S\\l",
+      "expected": "\u03bc"
+    },
+    {
+      "name": "G-ED",
+      "source": "\\PG\\\\S\\m",
+      "expected": "\u03bd"
+    },
+    {
+      "name": "G-EE",
+      "source": "\\PG\\\\S\\n",
+      "expected": "\u03be"
+    },
+    {
+      "name": "G-EF",
+      "source": "\\PG\\\\S\\o",
+      "expected": "\u03bf"
+    },
+    {
+      "name": "G-F0",
+      "source": "\\PG\\\\S\\p",
+      "expected": "\u03c0"
+    },
+    {
+      "name": "G-F1",
+      "source": "\\PG\\\\S\\q",
+      "expected": "\u03c1"
+    },
+    {
+      "name": "G-F2",
+      "source": "\\PG\\\\S\\r",
+      "expected": "\u03c2"
+    },
+    {
+      "name": "G-F3",
+      "source": "\\PG\\\\S\\s",
+      "expected": "\u03c3"
+    },
+    {
+      "name": "G-F4",
+      "source": "\\PG\\\\S\\t",
+      "expected": "\u03c4"
+    },
+    {
+      "name": "G-F5",
+      "source": "\\PG\\\\S\\u",
+      "expected": "\u03c5"
+    },
+    {
+      "name": "G-F6",
+      "source": "\\PG\\\\S\\v",
+      "expected": "\u03c6"
+    },
+    {
+      "name": "G-F7",
+      "source": "\\PG\\\\S\\w",
+      "expected": "\u03c7"
+    },
+    {
+      "name": "G-F8",
+      "source": "\\PG\\\\S\\x",
+      "expected": "\u03c8"
+    },
+    {
+      "name": "G-F9",
+      "source": "\\PG\\\\S\\y",
+      "expected": "\u03c9"
+    },
+    {
+      "name": "G-FA",
+      "source": "\\PG\\\\S\\z",
+      "expected": "\u03ca"
+    },
+    {
+      "name": "G-FB",
+      "source": "\\PG\\\\S\\{",
+      "expected": "\u03cb"
+    },
+    {
+      "name": "G-FC",
+      "source": "\\PG\\\\S\\|",
+      "expected": "\u03cc"
+    },
+    {
+      "name": "G-FD",
+      "source": "\\PG\\\\S\\}",
+      "expected": "\u03cd"
+    },
+    {
+      "name": "G-FE",
+      "source": "\\PG\\\\S\\~",
+      "expected": "\u03ce"
+    },
+    {
+      "name": "H-A0",
+      "source": "\\PH\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "H-A1",
+      "source": "\\PH\\\\S\\!",
+      "expected": null
+    },
+    {
+      "name": "H-A2",
+      "source": "\\PH\\\\S\\\"",
+      "expected": "\u00a2"
+    },
+    {
+      "name": "H-A3",
+      "source": "\\PH\\\\S\\#",
+      "expected": "\u00a3"
+    },
+    {
+      "name": "H-A4",
+      "source": "\\PH\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "H-A5",
+      "source": "\\PH\\\\S\\%",
+      "expected": "\u00a5"
+    },
+    {
+      "name": "H-A6",
+      "source": "\\PH\\\\S\\&",
+      "expected": "\u00a6"
+    },
+    {
+      "name": "H-A7",
+      "source": "\\PH\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "H-A8",
+      "source": "\\PH\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "H-A9",
+      "source": "\\PH\\\\S\\)",
+      "expected": "\u00a9"
+    },
+    {
+      "name": "H-AA",
+      "source": "\\PH\\\\S\\*",
+      "expected": "\u00d7"
+    },
+    {
+      "name": "H-AB",
+      "source": "\\PH\\\\S\\+",
+      "expected": "\u00ab"
+    },
+    {
+      "name": "H-AC",
+      "source": "\\PH\\\\S\\,",
+      "expected": "\u00ac"
+    },
+    {
+      "name": "H-AD",
+      "source": "\\PH\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "H-AE",
+      "source": "\\PH\\\\S\\.",
+      "expected": "\u00ae"
+    },
+    {
+      "name": "H-AF",
+      "source": "\\PH\\\\S\\/",
+      "expected": "\u00af"
+    },
+    {
+      "name": "H-B0",
+      "source": "\\PH\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "H-B1",
+      "source": "\\PH\\\\S\\1",
+      "expected": "\u00b1"
+    },
+    {
+      "name": "H-B2",
+      "source": "\\PH\\\\S\\2",
+      "expected": "\u00b2"
+    },
+    {
+      "name": "H-B3",
+      "source": "\\PH\\\\S\\3",
+      "expected": "\u00b3"
+    },
+    {
+      "name": "H-B4",
+      "source": "\\PH\\\\S\\4",
+      "expected": "\u00b4"
+    },
+    {
+      "name": "H-B5",
+      "source": "\\PH\\\\S\\5",
+      "expected": "\u00b5"
+    },
+    {
+      "name": "H-B6",
+      "source": "\\PH\\\\S\\6",
+      "expected": "\u00b6"
+    },
+    {
+      "name": "H-B7",
+      "source": "\\PH\\\\S\\7",
+      "expected": "\u00b7"
+    },
+    {
+      "name": "H-B8",
+      "source": "\\PH\\\\S\\8",
+      "expected": "\u00b8"
+    },
+    {
+      "name": "H-B9",
+      "source": "\\PH\\\\S\\9",
+      "expected": "\u00b9"
+    },
+    {
+      "name": "H-BA",
+      "source": "\\PH\\\\S\\:",
+      "expected": "\u00f7"
+    },
+    {
+      "name": "H-BB",
+      "source": "\\PH\\\\S\\;",
+      "expected": "\u00bb"
+    },
+    {
+      "name": "H-BC",
+      "source": "\\PH\\\\S\\<",
+      "expected": "\u00bc"
+    },
+    {
+      "name": "H-BD",
+      "source": "\\PH\\\\S\\=",
+      "expected": "\u00bd"
+    },
+    {
+      "name": "H-BE",
+      "source": "\\PH\\\\S\\>",
+      "expected": "\u00be"
+    },
+    {
+      "name": "H-BF",
+      "source": "\\PH\\\\S\\?",
+      "expected": null
+    },
+    {
+      "name": "H-C0",
+      "source": "\\PH\\\\S\\@",
+      "expected": null
+    },
+    {
+      "name": "H-C1",
+      "source": "\\PH\\\\S\\A",
+      "expected": null
+    },
+    {
+      "name": "H-C2",
+      "source": "\\PH\\\\S\\B",
+      "expected": null
+    },
+    {
+      "name": "H-C3",
+      "source": "\\PH\\\\S\\C",
+      "expected": null
+    },
+    {
+      "name": "H-C4",
+      "source": "\\PH\\\\S\\D",
+      "expected": null
+    },
+    {
+      "name": "H-C5",
+      "source": "\\PH\\\\S\\E",
+      "expected": null
+    },
+    {
+      "name": "H-C6",
+      "source": "\\PH\\\\S\\F",
+      "expected": null
+    },
+    {
+      "name": "H-C7",
+      "source": "\\PH\\\\S\\G",
+      "expected": null
+    },
+    {
+      "name": "H-C8",
+      "source": "\\PH\\\\S\\H",
+      "expected": null
+    },
+    {
+      "name": "H-C9",
+      "source": "\\PH\\\\S\\I",
+      "expected": null
+    },
+    {
+      "name": "H-CA",
+      "source": "\\PH\\\\S\\J",
+      "expected": null
+    },
+    {
+      "name": "H-CB",
+      "source": "\\PH\\\\S\\K",
+      "expected": null
+    },
+    {
+      "name": "H-CC",
+      "source": "\\PH\\\\S\\L",
+      "expected": null
+    },
+    {
+      "name": "H-CD",
+      "source": "\\PH\\\\S\\M",
+      "expected": null
+    },
+    {
+      "name": "H-CE",
+      "source": "\\PH\\\\S\\N",
+      "expected": null
+    },
+    {
+      "name": "H-CF",
+      "source": "\\PH\\\\S\\O",
+      "expected": null
+    },
+    {
+      "name": "H-D0",
+      "source": "\\PH\\\\S\\P",
+      "expected": null
+    },
+    {
+      "name": "H-D1",
+      "source": "\\PH\\\\S\\Q",
+      "expected": null
+    },
+    {
+      "name": "H-D2",
+      "source": "\\PH\\\\S\\R",
+      "expected": null
+    },
+    {
+      "name": "H-D3",
+      "source": "\\PH\\\\S\\S",
+      "expected": null
+    },
+    {
+      "name": "H-D4",
+      "source": "\\PH\\\\S\\T",
+      "expected": null
+    },
+    {
+      "name": "H-D5",
+      "source": "\\PH\\\\S\\U",
+      "expected": null
+    },
+    {
+      "name": "H-D6",
+      "source": "\\PH\\\\S\\V",
+      "expected": null
+    },
+    {
+      "name": "H-D7",
+      "source": "\\PH\\\\S\\W",
+      "expected": null
+    },
+    {
+      "name": "H-D8",
+      "source": "\\PH\\\\S\\X",
+      "expected": null
+    },
+    {
+      "name": "H-D9",
+      "source": "\\PH\\\\S\\Y",
+      "expected": null
+    },
+    {
+      "name": "H-DA",
+      "source": "\\PH\\\\S\\Z",
+      "expected": null
+    },
+    {
+      "name": "H-DB",
+      "source": "\\PH\\\\S\\[",
+      "expected": null
+    },
+    {
+      "name": "H-DC",
+      "source": "\\PH\\\\S\\\\",
+      "expected": null
+    },
+    {
+      "name": "H-DD",
+      "source": "\\PH\\\\S\\]",
+      "expected": null
+    },
+    {
+      "name": "H-DE",
+      "source": "\\PH\\\\S\\^",
+      "expected": null
+    },
+    {
+      "name": "H-DF",
+      "source": "\\PH\\\\S\\_",
+      "expected": "\u2017"
+    },
+    {
+      "name": "H-E0",
+      "source": "\\PH\\\\S\\`",
+      "expected": "\u05d0"
+    },
+    {
+      "name": "H-E1",
+      "source": "\\PH\\\\S\\a",
+      "expected": "\u05d1"
+    },
+    {
+      "name": "H-E2",
+      "source": "\\PH\\\\S\\b",
+      "expected": "\u05d2"
+    },
+    {
+      "name": "H-E3",
+      "source": "\\PH\\\\S\\c",
+      "expected": "\u05d3"
+    },
+    {
+      "name": "H-E4",
+      "source": "\\PH\\\\S\\d",
+      "expected": "\u05d4"
+    },
+    {
+      "name": "H-E5",
+      "source": "\\PH\\\\S\\e",
+      "expected": "\u05d5"
+    },
+    {
+      "name": "H-E6",
+      "source": "\\PH\\\\S\\f",
+      "expected": "\u05d6"
+    },
+    {
+      "name": "H-E7",
+      "source": "\\PH\\\\S\\g",
+      "expected": "\u05d7"
+    },
+    {
+      "name": "H-E8",
+      "source": "\\PH\\\\S\\h",
+      "expected": "\u05d8"
+    },
+    {
+      "name": "H-E9",
+      "source": "\\PH\\\\S\\i",
+      "expected": "\u05d9"
+    },
+    {
+      "name": "H-EA",
+      "source": "\\PH\\\\S\\j",
+      "expected": "\u05da"
+    },
+    {
+      "name": "H-EB",
+      "source": "\\PH\\\\S\\k",
+      "expected": "\u05db"
+    },
+    {
+      "name": "H-EC",
+      "source": "\\PH\\\\S\\l",
+      "expected": "\u05dc"
+    },
+    {
+      "name": "H-ED",
+      "source": "\\PH\\\\S\\m",
+      "expected": "\u05dd"
+    },
+    {
+      "name": "H-EE",
+      "source": "\\PH\\\\S\\n",
+      "expected": "\u05de"
+    },
+    {
+      "name": "H-EF",
+      "source": "\\PH\\\\S\\o",
+      "expected": "\u05df"
+    },
+    {
+      "name": "H-F0",
+      "source": "\\PH\\\\S\\p",
+      "expected": "\u05e0"
+    },
+    {
+      "name": "H-F1",
+      "source": "\\PH\\\\S\\q",
+      "expected": "\u05e1"
+    },
+    {
+      "name": "H-F2",
+      "source": "\\PH\\\\S\\r",
+      "expected": "\u05e2"
+    },
+    {
+      "name": "H-F3",
+      "source": "\\PH\\\\S\\s",
+      "expected": "\u05e3"
+    },
+    {
+      "name": "H-F4",
+      "source": "\\PH\\\\S\\t",
+      "expected": "\u05e4"
+    },
+    {
+      "name": "H-F5",
+      "source": "\\PH\\\\S\\u",
+      "expected": "\u05e5"
+    },
+    {
+      "name": "H-F6",
+      "source": "\\PH\\\\S\\v",
+      "expected": "\u05e6"
+    },
+    {
+      "name": "H-F7",
+      "source": "\\PH\\\\S\\w",
+      "expected": "\u05e7"
+    },
+    {
+      "name": "H-F8",
+      "source": "\\PH\\\\S\\x",
+      "expected": "\u05e8"
+    },
+    {
+      "name": "H-F9",
+      "source": "\\PH\\\\S\\y",
+      "expected": "\u05e9"
+    },
+    {
+      "name": "H-FA",
+      "source": "\\PH\\\\S\\z",
+      "expected": "\u05ea"
+    },
+    {
+      "name": "H-FB",
+      "source": "\\PH\\\\S\\{",
+      "expected": null
+    },
+    {
+      "name": "H-FC",
+      "source": "\\PH\\\\S\\|",
+      "expected": null
+    },
+    {
+      "name": "H-FD",
+      "source": "\\PH\\\\S\\}",
+      "expected": "\u200e"
+    },
+    {
+      "name": "H-FE",
+      "source": "\\PH\\\\S\\~",
+      "expected": "\u200f"
+    },
+    {
+      "name": "I-A0",
+      "source": "\\PI\\\\S\\ ",
+      "expected": "\u00a0"
+    },
+    {
+      "name": "I-A1",
+      "source": "\\PI\\\\S\\!",
+      "expected": "\u00a1"
+    },
+    {
+      "name": "I-A2",
+      "source": "\\PI\\\\S\\\"",
+      "expected": "\u00a2"
+    },
+    {
+      "name": "I-A3",
+      "source": "\\PI\\\\S\\#",
+      "expected": "\u00a3"
+    },
+    {
+      "name": "I-A4",
+      "source": "\\PI\\\\S\\$",
+      "expected": "\u00a4"
+    },
+    {
+      "name": "I-A5",
+      "source": "\\PI\\\\S\\%",
+      "expected": "\u00a5"
+    },
+    {
+      "name": "I-A6",
+      "source": "\\PI\\\\S\\&",
+      "expected": "\u00a6"
+    },
+    {
+      "name": "I-A7",
+      "source": "\\PI\\\\S\\'",
+      "expected": "\u00a7"
+    },
+    {
+      "name": "I-A8",
+      "source": "\\PI\\\\S\\(",
+      "expected": "\u00a8"
+    },
+    {
+      "name": "I-A9",
+      "source": "\\PI\\\\S\\)",
+      "expected": "\u00a9"
+    },
+    {
+      "name": "I-AA",
+      "source": "\\PI\\\\S\\*",
+      "expected": "\u00aa"
+    },
+    {
+      "name": "I-AB",
+      "source": "\\PI\\\\S\\+",
+      "expected": "\u00ab"
+    },
+    {
+      "name": "I-AC",
+      "source": "\\PI\\\\S\\,",
+      "expected": "\u00ac"
+    },
+    {
+      "name": "I-AD",
+      "source": "\\PI\\\\S\\-",
+      "expected": "\u00ad"
+    },
+    {
+      "name": "I-AE",
+      "source": "\\PI\\\\S\\.",
+      "expected": "\u00ae"
+    },
+    {
+      "name": "I-AF",
+      "source": "\\PI\\\\S\\/",
+      "expected": "\u00af"
+    },
+    {
+      "name": "I-B0",
+      "source": "\\PI\\\\S\\0",
+      "expected": "\u00b0"
+    },
+    {
+      "name": "I-B1",
+      "source": "\\PI\\\\S\\1",
+      "expected": "\u00b1"
+    },
+    {
+      "name": "I-B2",
+      "source": "\\PI\\\\S\\2",
+      "expected": "\u00b2"
+    },
+    {
+      "name": "I-B3",
+      "source": "\\PI\\\\S\\3",
+      "expected": "\u00b3"
+    },
+    {
+      "name": "I-B4",
+      "source": "\\PI\\\\S\\4",
+      "expected": "\u00b4"
+    },
+    {
+      "name": "I-B5",
+      "source": "\\PI\\\\S\\5",
+      "expected": "\u00b5"
+    },
+    {
+      "name": "I-B6",
+      "source": "\\PI\\\\S\\6",
+      "expected": "\u00b6"
+    },
+    {
+      "name": "I-B7",
+      "source": "\\PI\\\\S\\7",
+      "expected": "\u00b7"
+    },
+    {
+      "name": "I-B8",
+      "source": "\\PI\\\\S\\8",
+      "expected": "\u00b8"
+    },
+    {
+      "name": "I-B9",
+      "source": "\\PI\\\\S\\9",
+      "expected": "\u00b9"
+    },
+    {
+      "name": "I-BA",
+      "source": "\\PI\\\\S\\:",
+      "expected": "\u00ba"
+    },
+    {
+      "name": "I-BB",
+      "source": "\\PI\\\\S\\;",
+      "expected": "\u00bb"
+    },
+    {
+      "name": "I-BC",
+      "source": "\\PI\\\\S\\<",
+      "expected": "\u00bc"
+    },
+    {
+      "name": "I-BD",
+      "source": "\\PI\\\\S\\=",
+      "expected": "\u00bd"
+    },
+    {
+      "name": "I-BE",
+      "source": "\\PI\\\\S\\>",
+      "expected": "\u00be"
+    },
+    {
+      "name": "I-BF",
+      "source": "\\PI\\\\S\\?",
+      "expected": "\u00bf"
+    },
+    {
+      "name": "I-C0",
+      "source": "\\PI\\\\S\\@",
+      "expected": "\u00c0"
+    },
+    {
+      "name": "I-C1",
+      "source": "\\PI\\\\S\\A",
+      "expected": "\u00c1"
+    },
+    {
+      "name": "I-C2",
+      "source": "\\PI\\\\S\\B",
+      "expected": "\u00c2"
+    },
+    {
+      "name": "I-C3",
+      "source": "\\PI\\\\S\\C",
+      "expected": "\u00c3"
+    },
+    {
+      "name": "I-C4",
+      "source": "\\PI\\\\S\\D",
+      "expected": "\u00c4"
+    },
+    {
+      "name": "I-C5",
+      "source": "\\PI\\\\S\\E",
+      "expected": "\u00c5"
+    },
+    {
+      "name": "I-C6",
+      "source": "\\PI\\\\S\\F",
+      "expected": "\u00c6"
+    },
+    {
+      "name": "I-C7",
+      "source": "\\PI\\\\S\\G",
+      "expected": "\u00c7"
+    },
+    {
+      "name": "I-C8",
+      "source": "\\PI\\\\S\\H",
+      "expected": "\u00c8"
+    },
+    {
+      "name": "I-C9",
+      "source": "\\PI\\\\S\\I",
+      "expected": "\u00c9"
+    },
+    {
+      "name": "I-CA",
+      "source": "\\PI\\\\S\\J",
+      "expected": "\u00ca"
+    },
+    {
+      "name": "I-CB",
+      "source": "\\PI\\\\S\\K",
+      "expected": "\u00cb"
+    },
+    {
+      "name": "I-CC",
+      "source": "\\PI\\\\S\\L",
+      "expected": "\u00cc"
+    },
+    {
+      "name": "I-CD",
+      "source": "\\PI\\\\S\\M",
+      "expected": "\u00cd"
+    },
+    {
+      "name": "I-CE",
+      "source": "\\PI\\\\S\\N",
+      "expected": "\u00ce"
+    },
+    {
+      "name": "I-CF",
+      "source": "\\PI\\\\S\\O",
+      "expected": "\u00cf"
+    },
+    {
+      "name": "I-D0",
+      "source": "\\PI\\\\S\\P",
+      "expected": "\u011e"
+    },
+    {
+      "name": "I-D1",
+      "source": "\\PI\\\\S\\Q",
+      "expected": "\u00d1"
+    },
+    {
+      "name": "I-D2",
+      "source": "\\PI\\\\S\\R",
+      "expected": "\u00d2"
+    },
+    {
+      "name": "I-D3",
+      "source": "\\PI\\\\S\\S",
+      "expected": "\u00d3"
+    },
+    {
+      "name": "I-D4",
+      "source": "\\PI\\\\S\\T",
+      "expected": "\u00d4"
+    },
+    {
+      "name": "I-D5",
+      "source": "\\PI\\\\S\\U",
+      "expected": "\u00d5"
+    },
+    {
+      "name": "I-D6",
+      "source": "\\PI\\\\S\\V",
+      "expected": "\u00d6"
+    },
+    {
+      "name": "I-D7",
+      "source": "\\PI\\\\S\\W",
+      "expected": "\u00d7"
+    },
+    {
+      "name": "I-D8",
+      "source": "\\PI\\\\S\\X",
+      "expected": "\u00d8"
+    },
+    {
+      "name": "I-D9",
+      "source": "\\PI\\\\S\\Y",
+      "expected": "\u00d9"
+    },
+    {
+      "name": "I-DA",
+      "source": "\\PI\\\\S\\Z",
+      "expected": "\u00da"
+    },
+    {
+      "name": "I-DB",
+      "source": "\\PI\\\\S\\[",
+      "expected": "\u00db"
+    },
+    {
+      "name": "I-DC",
+      "source": "\\PI\\\\S\\\\",
+      "expected": "\u00dc"
+    },
+    {
+      "name": "I-DD",
+      "source": "\\PI\\\\S\\]",
+      "expected": "\u0130"
+    },
+    {
+      "name": "I-DE",
+      "source": "\\PI\\\\S\\^",
+      "expected": "\u015e"
+    },
+    {
+      "name": "I-DF",
+      "source": "\\PI\\\\S\\_",
+      "expected": "\u00df"
+    },
+    {
+      "name": "I-E0",
+      "source": "\\PI\\\\S\\`",
+      "expected": "\u00e0"
+    },
+    {
+      "name": "I-E1",
+      "source": "\\PI\\\\S\\a",
+      "expected": "\u00e1"
+    },
+    {
+      "name": "I-E2",
+      "source": "\\PI\\\\S\\b",
+      "expected": "\u00e2"
+    },
+    {
+      "name": "I-E3",
+      "source": "\\PI\\\\S\\c",
+      "expected": "\u00e3"
+    },
+    {
+      "name": "I-E4",
+      "source": "\\PI\\\\S\\d",
+      "expected": "\u00e4"
+    },
+    {
+      "name": "I-E5",
+      "source": "\\PI\\\\S\\e",
+      "expected": "\u00e5"
+    },
+    {
+      "name": "I-E6",
+      "source": "\\PI\\\\S\\f",
+      "expected": "\u00e6"
+    },
+    {
+      "name": "I-E7",
+      "source": "\\PI\\\\S\\g",
+      "expected": "\u00e7"
+    },
+    {
+      "name": "I-E8",
+      "source": "\\PI\\\\S\\h",
+      "expected": "\u00e8"
+    },
+    {
+      "name": "I-E9",
+      "source": "\\PI\\\\S\\i",
+      "expected": "\u00e9"
+    },
+    {
+      "name": "I-EA",
+      "source": "\\PI\\\\S\\j",
+      "expected": "\u00ea"
+    },
+    {
+      "name": "I-EB",
+      "source": "\\PI\\\\S\\k",
+      "expected": "\u00eb"
+    },
+    {
+      "name": "I-EC",
+      "source": "\\PI\\\\S\\l",
+      "expected": "\u00ec"
+    },
+    {
+      "name": "I-ED",
+      "source": "\\PI\\\\S\\m",
+      "expected": "\u00ed"
+    },
+    {
+      "name": "I-EE",
+      "source": "\\PI\\\\S\\n",
+      "expected": "\u00ee"
+    },
+    {
+      "name": "I-EF",
+      "source": "\\PI\\\\S\\o",
+      "expected": "\u00ef"
+    },
+    {
+      "name": "I-F0",
+      "source": "\\PI\\\\S\\p",
+      "expected": "\u011f"
+    },
+    {
+      "name": "I-F1",
+      "source": "\\PI\\\\S\\q",
+      "expected": "\u00f1"
+    },
+    {
+      "name": "I-F2",
+      "source": "\\PI\\\\S\\r",
+      "expected": "\u00f2"
+    },
+    {
+      "name": "I-F3",
+      "source": "\\PI\\\\S\\s",
+      "expected": "\u00f3"
+    },
+    {
+      "name": "I-F4",
+      "source": "\\PI\\\\S\\t",
+      "expected": "\u00f4"
+    },
+    {
+      "name": "I-F5",
+      "source": "\\PI\\\\S\\u",
+      "expected": "\u00f5"
+    },
+    {
+      "name": "I-F6",
+      "source": "\\PI\\\\S\\v",
+      "expected": "\u00f6"
+    },
+    {
+      "name": "I-F7",
+      "source": "\\PI\\\\S\\w",
+      "expected": "\u00f7"
+    },
+    {
+      "name": "I-F8",
+      "source": "\\PI\\\\S\\x",
+      "expected": "\u00f8"
+    },
+    {
+      "name": "I-F9",
+      "source": "\\PI\\\\S\\y",
+      "expected": "\u00f9"
+    },
+    {
+      "name": "I-FA",
+      "source": "\\PI\\\\S\\z",
+      "expected": "\u00fa"
+    },
+    {
+      "name": "I-FB",
+      "source": "\\PI\\\\S\\{",
+      "expected": "\u00fb"
+    },
+    {
+      "name": "I-FC",
+      "source": "\\PI\\\\S\\|",
+      "expected": "\u00fc"
+    },
+    {
+      "name": "I-FD",
+      "source": "\\PI\\\\S\\}",
+      "expected": "\u0131"
+    },
+    {
+      "name": "I-FE",
+      "source": "\\PI\\\\S\\~",
+      "expected": "\u015f"
+    }
+  ]
+}

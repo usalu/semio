@@ -120,6 +120,7 @@ pub(crate) fn enc_part21_value_bin(v: &Part21Value, out: &mut Vec<u8>) {
                 }
             }
         }
+        Part21Value::Binary(s) => {out.push(9);write_str_bin(out,s);}
         Part21Value::Str(s) => {
             out.push(4);
             write_str_bin(out, s);
@@ -163,6 +164,7 @@ pub(crate) fn dec_part21_value_bin(reader: &mut store::ByteReader<'_>) -> Result
             Ok(Part21Value::Real(Part21Decimal { negative, coefficient, scale, exponent }))
         }
         4 => Ok(Part21Value::Str(read_str_bin(reader)?)),
+        9 => {let content=read_str_bin(reader)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(&content){return Err("invalid canonical STEP binary content".into());}Ok(Part21Value::Binary(content))},
         5 => Ok(Part21Value::Enum(read_str_bin(reader)?)),
         6 => Ok(Part21Value::Ref(reader.read_varint_u64().map_err(|e| e.to_string())?)),
         7 => Ok(Part21Value::List(dec_part21_value_list_bin(reader)?)),

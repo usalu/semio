@@ -1,0 +1,22 @@
+{
+  "title": "Planar Polygon Rings",
+  "coordinates": "Finite source-space xyz; normalized by common extent before predicates",
+  "rings": "First outer boundary, remaining disjoint nonnested holes. Either winding accepted. Repeated exact closing endpoint normalized. Collinear and near-collinear intermediate boundary vertices preserved.",
+  "tolerance": {
+    "predicate": 2.842170943040401e-14,
+    "plane": 1e-9,
+    "coverage": 1e-9
+  },
+  "result": "Triangles retain input vertex indices and outer winding; no inserted vertices",
+  "control": "Every ring validation, intersection, bridge, ear and coverage step invokes caller work callback. Errors abort atomically.",
+  "invalid": [
+    "degenerate",
+    "nonplanar",
+    "self intersection",
+    "touching",
+    "outside hole",
+    "nested hole",
+    "overlapping hole",
+    "ill-conditioned predicate"
+  ]
+}

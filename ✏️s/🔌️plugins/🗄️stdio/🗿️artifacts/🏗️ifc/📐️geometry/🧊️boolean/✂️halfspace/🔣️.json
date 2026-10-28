@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/geometry/halfspace.json",
+  "title": "ClosedSolidHalfspaceDifference",
+  "description": "Subtract the positive signed side of an oriented plane from an admitted finite closed solid using its exact bounded domain.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "left",
+    "plane"
+  ],
+  "properties": {
+    "left": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/geometry/boolean.json#/definitions/Mesh"
+    },
+    "plane": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origin",
+        "normal"
+      ],
+      "properties": {
+        "origin": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "normal": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "limits": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/geometry/boolean.json#/definitions/Limits"
+    }
+  }
+}

@@ -22,7 +22,9 @@
       "import": "./dist/🟦️.js"
     }
   },
-  "dependencies": {},
+  "dependencies": {
+    "@semio-tech/framework-async": "workspace:*"
+  },
   "devDependencies": {
     "@semio-tech/stdio-registry-ts": "workspace:*"
   },

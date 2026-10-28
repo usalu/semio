@@ -1,0 +1,12 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://semio.tech/framework/staged-form-intent-cases.schema.json",
+  "type":"object","additionalProperties":false,"required":["token","args","drafts","choice","attacks"],
+  "properties":{
+    "token":{"type":"object","additionalProperties":false,"required":["action","window","generation","revision"],"properties":{"action":{"type":"string"},"window":{"type":"string"},"generation":{"type":"string","pattern":"^(0|[1-9][0-9]*)$"},"revision":{"type":"string"}}},
+    "args":{"type":"object"},
+    "drafts":{"type":"array","minItems":1,"items":{"type":"string"}},
+    "choice":{"type":"object","additionalProperties":false,"required":["key","value"],"properties":{"key":{"type":"string"},"value":{"type":"object"}}},
+    "attacks":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["id","field","value"],"properties":{"id":{"type":"string"},"field":{"enum":["surface","revision","node","nodeKey","trigger","action","seq","input"]},"value":{}}}}
+  }
+}

@@ -17,6 +17,7 @@ message StepValue {
     uint64 reference = 7;
     StepValueList aggregate = 8;
     StepTypedValue typed_value = 9;
+    string binary_value = 10;
   }
 }
 

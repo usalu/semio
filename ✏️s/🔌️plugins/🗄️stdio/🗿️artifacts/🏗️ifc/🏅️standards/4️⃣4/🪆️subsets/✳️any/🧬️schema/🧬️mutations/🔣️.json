@@ -30,6 +30,9 @@
     },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/mutation/remove-entity-arg/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/mutation/set-entity-complex/schema.json"
     }
   ]
 }

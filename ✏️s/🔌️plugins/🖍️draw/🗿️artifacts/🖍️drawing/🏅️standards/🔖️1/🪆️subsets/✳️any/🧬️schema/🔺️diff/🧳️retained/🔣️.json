@@ -1,0 +1,18 @@
+{
+  "feature": "DrawingRetainedFieldApply",
+  "diff": "one sparse native modified-layer row",
+  "preflight": [
+    "exact original and post lookup",
+    "target kind and scalar validation",
+    "affected original payload reception",
+    "post lookup binding closure"
+  ],
+  "commit": "central ApplyCapability only; typed ready payload moves; displaced fields retained",
+  "unsupported": [
+    "structural rows",
+    "root fields",
+    "asset rows",
+    "multiple payload replacements"
+  ],
+  "receipts": "original five axes; native decode control; no constructed policy"
+}

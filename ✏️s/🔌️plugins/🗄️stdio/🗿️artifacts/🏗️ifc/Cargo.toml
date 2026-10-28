@@ -3,6 +3,7 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+  "🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust",
   "🏅️standards/4️⃣4/🪆️subsets/✳️any/📦️packages/🦀️rust",
   "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust",
   "🏅️standards/4️⃣4/🪆️subsets/✳️any/🧬️schema/📇️descriptor/📦️packages/🦀️rust",
@@ -43,6 +44,9 @@ member-manifests = [ "**/📦️packages/🦀️rust/Cargo.toml" ]
 path = "../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust"
 package = "semio-framework-pack"
 
+[workspace.dependencies.semio-s-artifact-stdio-ifc-4x3]
+path = "🏅️standards/🔖️4x3/🪆️subsets/✳️any/📦️packages/🦀️rust"
+
 [workspace.dependencies.semio-framework-artifact-reference]
 path = "../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"
 
@@ -72,6 +76,9 @@ path = "../../📇️registry/🧬️contract/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-step]
 path = "../📐️step/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-stdio-gltf-model]
+path = "../🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust"
 
 [workspace.dependencies.semio-s-artifact-stdio-txt]
 path = "../🔤️txt/📦️packages/🦀️rust"

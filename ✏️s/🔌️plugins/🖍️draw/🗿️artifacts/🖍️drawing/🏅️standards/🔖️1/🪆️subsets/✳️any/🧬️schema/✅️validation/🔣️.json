@@ -1,0 +1,48 @@
+{
+  "title": "Original Drawing Snapshot Admission",
+  "dialect": {
+    "artifactKind": "s.draw.drawing",
+    "standard": "1",
+    "subset": "*"
+  },
+  "source": "Issued immutable typed DrawingSnapshot projection",
+  "invariants": {
+    "document": [
+      "Exact drawing.document schema",
+      "Non-empty original document id",
+      "Optional positive finite artboard"
+    ],
+    "identity": [
+      "Globally unique non-empty layer IDs across group ancestry",
+      "Non-empty asset keys",
+      "Every boolean operand resolves a layer",
+      "Every image and trace resolves an asset",
+      "Group and boolean dependency edges are acyclic"
+    ],
+    "geometry": [
+      "Finite transforms and composed matrices",
+      "Finite path coordinates and nonnegative arc radii",
+      "Shape kind matches its supplied geometry",
+      "Finite nonnegative shape extents",
+      "Positive text and image extents"
+    ],
+    "paint": [
+      "Unit opacity and RGBA channels",
+      "Declared blend mode",
+      "Finite gradient geometry; positive radial radius; non-empty unit stops",
+      "Finite nonnegative stroke width and dash lengths"
+    ],
+    "assets": [
+      "Positive unsigned dimensions",
+      "Exact width times height RGBA sample count"
+    ]
+  },
+  "funding": [
+    "One fixed original-address scratch index",
+    "Bounded paged UTF-8 hashing and collision comparison",
+    "Paged numeric/borrowed ancestry with funded reserve and close",
+    "No path/layer/tree/key clone",
+    "Exact cursor/program/index/ancestry birth and close receipts",
+    "Source issuer and projection path bound until final close"
+  ]
+}

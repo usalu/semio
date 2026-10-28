@@ -1,0 +1,376 @@
+{
+  "description": "Authored neutral STEP data vectors; project1 selected explicitly. Actual official files are tested separately without rewriting.",
+  "project": "1",
+  "cases": [
+    {
+      "name": "metre",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1
+      }
+    },
+    {
+      "name": "prefix EXA",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.EXA.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1000000000000000000
+      },
+      "decimalPower": 18
+    },
+    {
+      "name": "prefix PETA",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.PETA.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1000000000000000
+      },
+      "decimalPower": 15
+    },
+    {
+      "name": "prefix TERA",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.TERA.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1000000000000
+      },
+      "decimalPower": 12
+    },
+    {
+      "name": "prefix GIGA",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.GIGA.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1000000000
+      },
+      "decimalPower": 9
+    },
+    {
+      "name": "prefix MEGA",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.MEGA.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1000000
+      },
+      "decimalPower": 6
+    },
+    {
+      "name": "prefix KILO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.KILO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1000
+      },
+      "decimalPower": 3
+    },
+    {
+      "name": "prefix HECTO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.HECTO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 100
+      },
+      "decimalPower": 2
+    },
+    {
+      "name": "prefix DECA",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.DECA.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 10
+      },
+      "decimalPower": 1
+    },
+    {
+      "name": "prefix DECI",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.DECI.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.1
+      },
+      "decimalPower": -1
+    },
+    {
+      "name": "prefix CENTI",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.CENTI.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.01
+      },
+      "decimalPower": -2
+    },
+    {
+      "name": "prefix MILLI",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.001
+      },
+      "decimalPower": -3
+    },
+    {
+      "name": "prefix MICRO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.MICRO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.000001
+      },
+      "decimalPower": -6
+    },
+    {
+      "name": "prefix NANO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.NANO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1e-9
+      },
+      "decimalPower": -9
+    },
+    {
+      "name": "prefix PICO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.PICO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1e-12
+      },
+      "decimalPower": -12
+    },
+    {
+      "name": "prefix FEMTO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.FEMTO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1e-15
+      },
+      "decimalPower": -15
+    },
+    {
+      "name": "prefix ATTO",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.ATTO.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 1e-18
+      },
+      "decimalPower": -18
+    },
+    {
+      "name": "chained foot through millimetres",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.3048
+      },
+      "decimalFactors": [
+        "12",
+        "25.4",
+        ".001"
+      ]
+    },
+    {
+      "name": "missing project",
+      "data": "#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "missing-project"
+      }
+    },
+    {
+      "name": "missing assignment",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,$);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "missing-unit-assignment"
+      }
+    },
+    {
+      "name": "wrong assignment",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCCARTESIANPOINT((0.,0.));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-unit-assignment"
+      }
+    },
+    {
+      "name": "no length unit",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.AREAUNIT.,$,.SQUARE_METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "missing-length-unit"
+      }
+    },
+    {
+      "name": "duplicate assigned length",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3,#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "duplicate-assigned-unit"
+      }
+    },
+    {
+      "name": "two assigned lengths",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3,#4));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);#4=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "ambiguous-length-unit"
+      }
+    },
+    {
+      "name": "foreign reference",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#99));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);#99=IFCCARTESIANPOINT((0.,0.));",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-assigned-unit"
+      }
+    },
+    {
+      "name": "unknown prefix",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,.QUETTA.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-si-prefix"
+      }
+    },
+    {
+      "name": "wrong SI name",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.SECOND.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-si-length-name"
+      }
+    },
+    {
+      "name": "unset SI dimensions",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCSIUNIT($,.LENGTHUNIT.,$,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-si-dimensions"
+      }
+    },
+    {
+      "name": "wrong conversion dimension",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(2,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-length-dimensions"
+      }
+    },
+    {
+      "name": "wrong factor wrapper",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCAREAMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-length-factor"
+      }
+    },
+    {
+      "name": "zero factor",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(0.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-length-factor"
+      }
+    },
+    {
+      "name": "negative factor",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(-1.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "invalid-length-factor"
+      }
+    },
+    {
+      "name": "conversion cycle",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#3);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "cyclic-length-unit"
+      }
+    },
+    {
+      "name": "context dependent",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONTEXTDEPENDENTUNIT(#4,.LENGTHUNIT.,'custom');#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);",
+      "expected": {
+        "status": "invalid",
+        "reason": "unsupported-length-unit"
+      }
+    },
+    {
+      "name": "offset refused",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNITWITHOFFSET(#4,.LENGTHUNIT.,'foot',#5,1.);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "nonlinear-length-unit"
+      }
+    },
+    {
+      "name": "underflow",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(1.E-300),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(1.E-300),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "unrepresentable-length-scale"
+      }
+    },
+    {
+      "name": "overflow",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(1.E300),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(1.E300),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "unrepresentable-length-scale"
+      }
+    },
+    {
+      "name": "positive length alias",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCPOSITIVELENGTHMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.3048
+      }
+    },
+    {
+      "name": "nonnegative length alias IFC4",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3));#3=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'foot',#5);#4=IFCDIMENSIONALEXPONENTS(1,0,0,0,0,0,0);#5=IFCMEASUREWITHUNIT(IFCNONNEGATIVELENGTHMEASURE(12.),#6);#6=IFCCONVERSIONBASEDUNIT(#4,.LENGTHUNIT.,'inch',#7);#7=IFCMEASUREWITHUNIT(IFCLENGTHMEASURE(25.4),#8);#8=IFCSIUNIT(*,.LENGTHUNIT.,.MILLI.,.METRE.);",
+      "standard": "IFC4",
+      "expected": {
+        "status": "resolved",
+        "metresPerUnit": 0.3048
+      }
+    },
+    {
+      "name": "duplicate nonlength assignment",
+      "data": "#1=IFCPROJECT('0AAAAAAAAAAAAAAAAAAAAA',$,$,$,$,$,$,$,#2);#2=IFCUNITASSIGNMENT((#3,#7,#7));#3=IFCSIUNIT(*,.LENGTHUNIT.,$,.METRE.);#7=IFCSIUNIT(*,.AREAUNIT.,$,.SQUARE_METRE.);",
+      "expected": {
+        "status": "invalid",
+        "reason": "duplicate-assigned-unit"
+      }
+    }
+  ],
+  "editing": {
+    "name": "Declared Prefix Edit Preserves Source Coordinates",
+    "source": {
+      "kind": "existing-official-file",
+      "file": "polygonal-face-tessellation.ifc",
+      "sha256": "a76afccde57b9c5e21d797352beb309106037fcaed261ce61fbee413c9460bea"
+    },
+    "project": "3061",
+    "unit": "3063",
+    "attribute": 2,
+    "prefixBefore": "MILLI",
+    "prefixAfter": "CENTI",
+    "refusedPrefix": "QUETTA",
+    "metresBefore": 0.001,
+    "metresAfter": 0.01,
+    "expected": {
+      "sourceGeometryAndCameraUnchanged": true,
+      "stepRoundtripScale": 0.01,
+      "inverseRestoresExactSnapshot": true
+    }
+  },
+  "retirement": {
+    "workGrant": 1,
+    "latchedControl": "cancel",
+    "expected": "closed",
+    "yieldDefersRelease": true,
+    "cancelDoesNotDeferRelease": true
+  }
+}

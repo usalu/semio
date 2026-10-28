@@ -1,0 +1,331 @@
+{
+  "schema": "s.layout.layout.retained.chained-keyed-plan.v1",
+  "cases": [
+    {
+      "id": "two-page-patch-frame-lists",
+      "held": [
+        "a",
+        "b"
+      ],
+      "steps": [
+        {
+          "removed": [
+            {
+              "id": "b",
+              "index": 1
+            }
+          ],
+          "inserted": [
+            {
+              "id": "c",
+              "index": 1
+            }
+          ],
+          "moved": [],
+          "modified": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        {
+          "removed": [],
+          "inserted": [],
+          "moved": [
+            {
+              "id": "c",
+              "from": 1,
+              "to": 0
+            }
+          ],
+          "modified": [
+            {
+              "id": "c"
+            }
+          ]
+        }
+      ],
+      "origins": [
+        [
+          0,
+          0
+        ],
+        [
+          null,
+          0
+        ]
+      ],
+      "modifications": [
+        [
+          [
+            null,
+            0
+          ],
+          0,
+          0
+        ],
+        [
+          [
+            0,
+            0
+          ],
+          1,
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "remove",
+          "path": "/1"
+        },
+        {
+          "op": "add",
+          "path": "/1",
+          "value": {
+            "id": "c",
+            "authored": "0:0"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/0/mark",
+          "value": "0:0"
+        },
+        {
+          "op": "move",
+          "from": "/1",
+          "path": "/0"
+        },
+        {
+          "op": "add",
+          "path": "/0/mark",
+          "value": "1:0"
+        }
+      ]
+    },
+    {
+      "id": "replacement-discards-earlier-patch",
+      "held": [
+        "a"
+      ],
+      "steps": [
+        {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "a"
+            }
+          ]
+        },
+        {
+          "removed": [
+            {
+              "id": "a",
+              "index": 0
+            }
+          ],
+          "inserted": [
+            {
+              "id": "a",
+              "index": 0
+            }
+          ],
+          "moved": [],
+          "modified": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      ],
+      "origins": [
+        [
+          1,
+          0
+        ]
+      ],
+      "modifications": [
+        [
+          [
+            null,
+            0
+          ],
+          0,
+          0
+        ],
+        [
+          [
+            1,
+            0
+          ],
+          1,
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "add",
+          "path": "/0/mark",
+          "value": "0:0"
+        },
+        {
+          "op": "remove",
+          "path": "/0"
+        },
+        {
+          "op": "add",
+          "path": "/0",
+          "value": {
+            "id": "a",
+            "authored": "1:0"
+          }
+        },
+        {
+          "op": "add",
+          "path": "/0/mark",
+          "value": "1:0"
+        }
+      ]
+    },
+    {
+      "id": "live-post-survivor-through-chain",
+      "held": [
+        "a",
+        "live",
+        "b"
+      ],
+      "steps": [
+        {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "b"
+            }
+          ]
+        },
+        {
+          "removed": [],
+          "inserted": [],
+          "moved": [],
+          "modified": [
+            {
+              "id": "a"
+            }
+          ]
+        }
+      ],
+      "origins": [
+        [
+          null,
+          0
+        ],
+        [
+          null,
+          1
+        ],
+        [
+          null,
+          2
+        ]
+      ],
+      "modifications": [
+        [
+          [
+            null,
+            2
+          ],
+          0,
+          0
+        ],
+        [
+          [
+            null,
+            0
+          ],
+          1,
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "add",
+          "path": "/2/mark",
+          "value": "0:0"
+        },
+        {
+          "op": "add",
+          "path": "/0/mark",
+          "value": "1:0"
+        }
+      ]
+    },
+    {
+      "id": "intermediate-stale-coordinate",
+      "held": [
+        "a",
+        "b"
+      ],
+      "steps": [
+        {
+          "removed": [],
+          "inserted": [],
+          "moved": [
+            {
+              "id": "b",
+              "from": 1,
+              "to": 0
+            }
+          ],
+          "modified": []
+        },
+        {
+          "removed": [
+            {
+              "id": "b",
+              "index": 1
+            }
+          ],
+          "inserted": [],
+          "moved": [],
+          "modified": []
+        }
+      ],
+      "error": "mutation.apply.missing-target"
+    },
+    {
+      "id": "intermediate-duplicate-identity",
+      "held": [
+        "a"
+      ],
+      "steps": [
+        {
+          "removed": [],
+          "inserted": [
+            {
+              "id": "a",
+              "index": 1
+            }
+          ],
+          "moved": [],
+          "modified": []
+        },
+        {
+          "removed": [
+            {
+              "id": "a",
+              "index": 0
+            }
+          ],
+          "inserted": [],
+          "moved": [],
+          "modified": []
+        }
+      ],
+      "error": "mutation.apply.duplicate-target"
+    }
+  ]
+}

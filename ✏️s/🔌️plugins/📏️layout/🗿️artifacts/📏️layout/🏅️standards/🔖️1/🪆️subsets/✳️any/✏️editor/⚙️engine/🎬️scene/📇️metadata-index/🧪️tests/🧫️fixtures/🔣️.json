@@ -1,0 +1,79 @@
+{
+  "keys": [
+    "alpha",
+    "alpha",
+    "🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍🌍",
+    "k1jg4pp9",
+    "k1v560fk"
+  ],
+  "operations": [
+    {
+      "key": 0,
+      "domain": 1,
+      "scope": 0,
+      "insert": 7,
+      "expected": 7
+    },
+    {
+      "key": 1,
+      "domain": 1,
+      "scope": 0,
+      "insert": null,
+      "expected": 7
+    },
+    {
+      "key": 1,
+      "domain": 1,
+      "scope": 1,
+      "insert": 9,
+      "expected": 9
+    },
+    {
+      "key": 1,
+      "domain": 2,
+      "scope": 0,
+      "insert": null,
+      "expected": null
+    },
+    {
+      "key": 2,
+      "domain": 1,
+      "scope": 0,
+      "insert": 11,
+      "expected": 11
+    },
+    {
+      "key": 3,
+      "domain": 1,
+      "scope": 0,
+      "insert": 13,
+      "expected": 13
+    },
+    {
+      "key": 4,
+      "domain": 1,
+      "scope": 0,
+      "insert": 15,
+      "expected": 15
+    },
+    {
+      "key": 3,
+      "domain": 1,
+      "scope": 0,
+      "insert": null,
+      "expected": 13
+    },
+    {
+      "key": 4,
+      "domain": 1,
+      "scope": 0,
+      "insert": null,
+      "expected": 15
+    }
+  ],
+  "collision": [
+    "k1jg4pp9",
+    "k1v560fk",
+    3053141472
+  ]
+}

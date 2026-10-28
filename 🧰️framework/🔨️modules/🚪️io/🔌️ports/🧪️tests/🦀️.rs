@@ -8,12 +8,14 @@ struct StubCodec {
 }
 
 impl EmbeddedChildCodecV1 for StubCodec {
+    fn set_canvas_size(&self,content:&mut DslValue,width:f64,height:f64)->Result<(),ValueError>{testkit::VECTOR_SCENE_CODEC.set_canvas_size(content,width,height)}
     fn validate(&self, _content: &DslValue, _control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
         Ok(())
     }
     fn lower(&self, content: &DslValue) -> Result<VectorScene, ValueError> {
         VectorScene::from_value(content.clone())
     }
+    fn lower_step<'a>(&self, content: &'a DslValue, cursor: &mut VectorSceneCursor, grant: VectorSceneGrant) -> Result<VectorSceneStep<'a>, ValueError> { cursor.advance(content,grant,None) }
     fn lift(&self, scene: &VectorScene) -> Result<DslValue, ValueError> {
         Ok(scene.to_value())
     }
@@ -23,11 +25,11 @@ impl EmbeddedChildCodecV1 for StubCodec {
     fn sqlite_owns_table(&self, table: &str) -> bool {
         table.starts_with("stub_")
     }
-    fn sqlite_project(&self, _content: &DslValue, _writer: &mut RowWriter<'_, '_>) -> Result<(), ValueError> {
-        Ok(())
+    fn sqlite_project(&self, _content: &DslValue, _writer: &mut RowWriter<'_, '_>) -> Result<i64, ValueError> {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"stub has no relational content"))
     }
-    fn sqlite_reconstruct(&self, _database: &SqliteDatabase, _control: &mut SqliteSnapshotControl<'_>, _declared_schema: &str) -> Result<DslValue, ValueError> {
-        Ok(DslValue::Null)
+    fn sqlite_reconstruct_components(&self, _database: &SqliteDatabase, _control: &mut SqliteSnapshotControl<'_>, _declared_schema: &str) -> Result<Vec<(i64,DslValue)>, ValueError> {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"stub has no relational content"))
     }
     fn import_formats(&self) -> &'static [&'static str] {
         &["stub"]

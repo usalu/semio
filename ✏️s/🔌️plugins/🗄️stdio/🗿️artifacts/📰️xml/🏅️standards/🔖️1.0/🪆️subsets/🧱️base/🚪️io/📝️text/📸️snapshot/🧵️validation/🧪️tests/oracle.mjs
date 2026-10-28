@@ -1,0 +1,2 @@
+/** 🔮 Strict Saxes XML1.0 with the owning no-DTD admission policy. */
+export function createXmlValidationOracle(SaxesParser){return{valid(source){try{const text=new TextDecoder('utf-8',{fatal:true}).decode(source);let valid=true;const parser=new SaxesParser({xmlns:false,defaultXMLVersion:'1.0',forceXMLVersion:true});parser.on('error',()=>{valid=false;});parser.on('doctype',()=>{valid=false;});parser.write(text).close();return valid;}catch{return false;}}};}

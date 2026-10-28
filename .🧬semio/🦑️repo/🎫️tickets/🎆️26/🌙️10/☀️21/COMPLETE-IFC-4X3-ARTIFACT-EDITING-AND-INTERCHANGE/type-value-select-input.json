@@ -1,0 +1,30 @@
+{
+ "schema":"IFC4X3_ADD2","entity":"IFCMEASUREWITHUNIT","select":"IFCVALUE","index":"0","preserved":{"UnitComponent":"7"},
+ "source":{"entities":[{"id":"1","name":"IFCMEASUREWITHUNIT","args":[{"kind":"unset"},{"kind":"reference","value":"7"}],"complex":[]},{"id":"7","name":"IFCSIUNIT","args":[{"kind":"derived"},{"kind":"enum","value":"LENGTHUNIT"},{"kind":"unset"},{"kind":"enum","value":"METRE"}],"complex":[]}]},
+ "pages":[{"offset":"0","ordinary":31,"first":"IFCABSORBEDDOSEMEASURE","last":"IFCMAGNETICFLUXDENSITYMEASURE"},{"offset":"31","ordinary":31,"first":"IFCMAGNETICFLUXMEASURE","last":"IFCTHERMALADMITTANCEMEASURE"},{"offset":"62","ordinary":31,"first":"IFCTHERMALCONDUCTIVITYMEASURE","last":"IFCTIMEMEASURE"},{"offset":"93","ordinary":16,"first":"IFCVOLUMEMEASURE","last":"IFCURIREFERENCE"}],
+ "cases":[
+  {"id":"missing","member":null,"items":null,"domain":null,"physical":false},
+  {"id":"boolean-itemless","member":"IFCBOOLEAN","items":[],"domain":null,"physical":false},
+  {"id":"boolean-true","member":"IFCBOOLEAN","items":[{"kind":"enum","value":"T"}],"domain":true,"physical":true},
+  {"id":"boolean-false","member":"IFCBOOLEAN","items":[{"kind":"enum","value":"F"}],"domain":true,"physical":true},
+  {"id":"boolean-unknown","member":"IFCBOOLEAN","items":[{"kind":"enum","value":"U"}],"domain":false,"physical":true},
+  {"id":"logical-unknown","member":"IFCLOGICAL","items":[{"kind":"enum","value":"U"}],"domain":true,"physical":true},
+  {"id":"binary-exact","member":"IFCBINARY","items":[{"kind":"binary","value":"0A5FF"}],"domain":true,"physical":true},
+  {"id":"binary-empty","member":"IFCBINARY","items":[{"kind":"binary","value":"0"}],"domain":true,"physical":true},
+  {"id":"integer-large","member":"IFCINTEGER","items":[{"kind":"integer","value":"9007199254740993"}],"domain":true,"physical":true},
+  {"id":"integer-min","member":"IFCINTEGER","items":[{"kind":"integer","value":"-9223372036854775808"}],"domain":true,"physical":true},
+  {"id":"real-minus-zero","member":"IFCREAL","items":[{"kind":"real","value":{"bits":"9223372036854775808"}}],"domain":true,"physical":true},
+  {"id":"number-semantic-integer","member":"IFCNUMERICMEASURE","items":[{"kind":"integer","value":"9007199254740993"}],"domain":true,"physical":true},
+  {"id":"last-page-unicode","member":"IFCURIREFERENCE","items":[{"kind":"string","value":"urn:caller:ä:€"}],"domain":true,"physical":true},
+  {"id":"angle-itemless","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[],"domain":null,"physical":false},
+  {"id":"angle-empty","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[]}],"domain":false,"physical":true},
+  {"id":"angle-two","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"1"},{"kind":"integer","value":"2"}]}],"domain":false,"physical":true},
+  {"id":"angle-three","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"1"},{"kind":"integer","value":"2"},{"kind":"integer","value":"3"}]}],"domain":true,"physical":true},
+  {"id":"angle-four-negative","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"-1"},{"kind":"integer","value":"-2"},{"kind":"integer","value":"-3"},{"kind":"integer","value":"-4"}]}],"domain":true,"physical":true},
+  {"id":"angle-mixed-sign","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"1"},{"kind":"integer","value":"-2"},{"kind":"integer","value":"3"}]}],"domain":false,"physical":true},
+  {"id":"angle-minute-boundary","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"1"},{"kind":"integer","value":"60"},{"kind":"integer","value":"0"}]}],"domain":false,"physical":true},
+  {"id":"angle-second-boundary","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"1"},{"kind":"integer","value":"0"},{"kind":"integer","value":"60"}]}],"domain":false,"physical":true},
+  {"id":"angle-microsecond-boundary","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"1"},{"kind":"integer","value":"0"},{"kind":"integer","value":"0"},{"kind":"integer","value":"1000000"}]}],"domain":false,"physical":true},
+  {"id":"angle-partial","member":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"aggregate","value":[{"kind":"integer","value":"-"},{"kind":"integer","value":"0"},{"kind":"integer","value":"0"}]}],"domain":null,"physical":false}
+ ]
+}

@@ -129,6 +129,9 @@ fn inferred(snapshot: &ModelSnapshot) -> ModelInference {
     semio_s_artifact_bim_model_inferences::standards::v1::subsets::any::schema::inferences::model_graph::instance::with_inference(None, snapshot, Clone::clone)
 }
 
+#[path = "occurrence.rs"]
+mod occurrence_property_tests;
+
 #[semio_framework_async_macros::async_test]
 async fn walls_selected_with_a_roof_offer_to_attach_and_an_attached_wall_offers_to_free_its_top() {
     let snapshot = with_roof();

@@ -1,0 +1,38 @@
+{
+  "description": "Language-neutral logical continuation vectors. Captured source/physical retention is owned by the embedding operation.",
+  "grants": [
+    0,
+    1,
+    2,
+    7
+  ],
+  "text": {
+    "repeat": 128,
+    "scalar": "🧭",
+    "expectedCodepoints": 128
+  },
+  "decimal": {
+    "leadingZeros": 256,
+    "coefficient": "12345000",
+    "scale": 3,
+    "expected": "12345"
+  },
+  "references": {
+    "unrelated": 257,
+    "target": "9223372036854775808",
+    "type": "IFCWALL"
+  },
+  "expected": {
+    "tinyTurnsMatchDrain": true,
+    "noPrefixReplay": true,
+    "cancelAtEveryBoundaryTerminates": true,
+    "closePublishesNoResult": true
+  },
+  "schemaIdentifiers": {
+    "maximumCodeUnits": 256,
+    "lexical": "ASCII identifier",
+    "case": "ASCII insensitive",
+    "refusedEnum": "ſTANDARD",
+    "refusedConstructor": "IFCPOſITIVELENGTHMEASURE"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "locales": [
+    "en",
+    "de"
+  ],
+  "controls": [
+    "patchDocument.addParagraphStyle",
+    "patchDocument.addParentPage",
+    "patchDocument.addSpread",
+    "patchPage.spreadId",
+    "patchFrame.fillEnabled",
+    "patchFrame.fillAlpha",
+    "patchFrame.run.5.start",
+    "patchFrame.run.5.paragraphStyle",
+    "patchFrame.run.5.characterStyle",
+    "patchFrame.run.5.delete",
+    "patchFrame.addStyleRun",
+    "patchDocument.addDataField",
+    "patchDocument.clearDataFields",
+    "patchDocument.paragraph.body.delete",
+    "patchPage.layer-1.moveEarlier",
+    "patchPage.layer-1.delete",
+    "patchDocument.data.0.kind",
+    "patchDocument.data.0.value",
+    "patchDocument.addStory",
+    "patchDocument.story.story-1.content"
+  ],
+  "runCount": 6
+}

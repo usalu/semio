@@ -1,0 +1,1 @@
+{"owner":"IFCREPRESENTATION","cases":[{"id":"declared-complex","status":"pass","code":null},{"id":"duplicate-owner","status":"incomplete","code":"mvd.attribute.ambiguous"},{"id":"late-unknown","status":"incomplete","code":"mvd.target.unknown"},{"id":"flattened-complex-primary","status":"incomplete","code":"mvd.attribute.missing"}]}

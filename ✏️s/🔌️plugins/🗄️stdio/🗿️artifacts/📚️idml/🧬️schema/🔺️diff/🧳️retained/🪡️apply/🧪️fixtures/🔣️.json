@@ -1,0 +1,43 @@
+{
+  "schema": "idml.retained.apply.v1",
+  "overlayCorpus": "../../🗺️overlay/🧪️fixtures/🔣️.json",
+  "lifecycle": {
+    "bodyBytes": [
+      1024,
+      4096,
+      65536
+    ],
+    "underfundedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      5,
+      50,
+      100,
+      250
+    ],
+    "invariants": [
+      "original-diff-serialization",
+      "original-snapshot-unchanged",
+      "read-only-preflight",
+      "live-post-untouched-payload-pointer",
+      "typed-source-retirement",
+      "capability-only-commit",
+      "no-whole-snapshot-clone"
+    ]
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes",
+      "fast-json-patch"
+    ],
+    "test": "overlay source/typed batch witnesses use independent ZIP/XML/RFC6902; native genuine host law verifies ownership and actual original field pointer preservation"
+  }
+}

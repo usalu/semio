@@ -2,7 +2,7 @@
 
 #[cfg(test)]
 #[cfg(test)] use crate::Frame;
-use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingChild, Page, ParagraphStyle, ParentPage, Spread, TextStory};
+use crate::{CharacterStyle, GridSettings, ImageLink, LayoutDrawingMember, Page, ParagraphStyle, ParentPage, Spread, TextStory};
 #[cfg(test)] #[cfg(test)] use crate::LAYOUT_DOCUMENT_SCHEMA;
 use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -15,7 +15,9 @@ use semio_framework_value_derive::{FromValue, ToValue};
 /// `ArtifactLink` reference slot, both new. `#[child(...)]`/`#[link_slot(...)]` drive
 /// `#[derive(ArtifactSchema)]`'s slot-table emission; never hand-written. Text and pack are the
 /// derived spec-driven encodings of the one `dsl::DslRecord` spec, composed child and link slot included.
-#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+/// Current child heads belong to their member stores.
+#[derive(Clone, Debug, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::snapshot::retire")]
 #[dsl(extension = "layout")]
 #[artifact_schema(id = "s.layout.layout")]
@@ -42,6 +44,7 @@ pub struct LayoutSnapshot {
     #[state(artifact)]
     pub spreads: Vec<Spread>,
     #[state(artifact)]
+    #[child(kind = "s.draw.drawing")]
     pub pages: Vec<Page>,
     #[state(artifact)]
     #[value(rename = "printTarget")]
@@ -50,9 +53,9 @@ pub struct LayoutSnapshot {
     #[value(rename = "dataFields", default, skip_serializing_if = "Option::is_none")]
     pub data_fields: Option<semio_framework_value_dictionary::QuestionDictionary>,
     #[state(artifact)]
-    #[child(kind = "s.stdio.semio")]
+    #[child(kind = "s.draw.drawing")]
     #[value(rename = "backgroundDrawing", default, skip_serializing_if = "Option::is_none")]
-    pub background_drawing: Option<LayoutDrawingChild>,
+    pub background_drawing: Option<LayoutDrawingMember>,
     #[state(artifact)]
     #[link_slot(roles("model"))]
     #[value(rename = "referencedModel", default, skip_serializing_if = "Option::is_none")]
@@ -94,12 +97,10 @@ mod round_trip_tests;
 //#endregion 🧪️Tests
 
 
-#[path="🧩️component/🦀️.rs"]
-pub mod drawing_child;
 
-/// 🧹️ Releases recursive child and dictionary owners before the plain snapshot fields.
+
+/// 🧹️ Releases the original dictionary before the plain snapshot and member reference fields.
 pub fn retire(mut value: LayoutSnapshot) {
-    if let Some(child) = value.background_drawing.take() { drawing_child::retire(child); }
     if let Some(dictionary) = value.data_fields.take() { <semio_framework_value_dictionary::QuestionDictionary as semio_framework_value::FromValue>::retire_decoded(dictionary); }
     drop(value);
 }

@@ -1,0 +1,229 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "producerExecuted",
+    "segmentCap",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "scope": {
+      "const": "rounded-rectangle-extrusion-proposal"
+    },
+    "producerExecuted": {
+      "const": false
+    },
+    "segmentCap": {
+      "const": "total-boundary-edges"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dimensions",
+          "radius",
+          "depth",
+          "direction",
+          "profile",
+          "solid",
+          "mappingScale",
+          "unitPrefix",
+          "carriers",
+          "sampling",
+          "damage",
+          "formal",
+          "geometry",
+          "idealArea",
+          "idealVolume"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "dimensions": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "radius": {
+            "type": "number"
+          },
+          "depth": {
+            "type": "number"
+          },
+          "direction": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "profile": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "translation",
+              "rotation"
+            ],
+            "properties": {
+              "translation": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "rotation": {
+                "type": "number"
+              }
+            }
+          },
+          "solid": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "translation",
+              "tilt"
+            ],
+            "properties": {
+              "translation": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "tilt": {
+                "type": "number"
+              }
+            }
+          },
+          "mappingScale": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "unitPrefix": {
+            "enum": [
+              null,
+              "MILLI"
+            ]
+          },
+          "carriers": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "x",
+              "y",
+              "radius",
+              "depth"
+            ],
+            "properties": {
+              "x": {
+                "enum": [
+                  "REAL",
+                  "INTEGER"
+                ]
+              },
+              "y": {
+                "enum": [
+                  "REAL",
+                  "INTEGER"
+                ]
+              },
+              "radius": {
+                "enum": [
+                  "REAL",
+                  "INTEGER"
+                ]
+              },
+              "depth": {
+                "enum": [
+                  "REAL",
+                  "INTEGER"
+                ]
+              }
+            }
+          },
+          "sampling": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "absoluteChordErrorMetres",
+              "relativeChordError",
+              "maxSegments"
+            ],
+            "properties": {
+              "absoluteChordErrorMetres": {
+                "type": "number",
+                "minimum": 0
+              },
+              "relativeChordError": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "maxSegments": {
+                "type": "integer",
+                "minimum": 4
+              }
+            }
+          },
+          "damage": {
+            "enum": [
+              "none",
+              "radius-unset",
+              "profile-position-3d"
+            ]
+          },
+          "formal": {
+            "enum": [
+              "valid",
+              "invalid",
+              "invalid-carrier"
+            ]
+          },
+          "geometry": {
+            "enum": [
+              "supported",
+              "refuse",
+              "resource-refusal",
+              "precision-refusal"
+            ]
+          },
+          "idealArea": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "idealVolume": {
+            "type": [
+              "number",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

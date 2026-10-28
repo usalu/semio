@@ -4,6 +4,7 @@ use semio_framework_dsl_record::{BorrowedRecordSpec,BorrowedShape,RecordFields};
 use semio_framework_value::{DslValue, Number, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep, RetirementDemand, ValueError, ValueRefusalKind, retirement::controlled::ControlledRetirement};
 use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use std::mem::{ManuallyDrop,size_of};
+use semio_framework_replication_wire_core::{RetainedWireByteSource,OriginalWireSourceIdentity};
 use crate::{RetainedDocumentDriver,RetainedValueDriver};
 #[path="📦️document/🦀️.rs"]
 mod document_cursor;
@@ -18,7 +19,7 @@ struct Owned{frames:Vec<Frame>,scalar:FieldValue,output:Option<RecordValue>,scra
 semio_framework_value::artifact_retire_struct!(Owned{frames,scalar,output,scratch});
 impl Default for Owned{fn default()->Self{Self{frames:Vec::new(),scalar:FieldValue::Absent,output:None,scratch:Vec::new()}}}
 pub struct RetainedRecordReceiving{
- source:(usize,usize),range:(usize,usize),cursor:RecordCursor,spec:BorrowedRecordSpec,
+ source:OriginalWireSourceIdentity,range:(usize,usize),cursor:RecordCursor,spec:BorrowedRecordSpec,
  owned:ManuallyDrop<Owned>,retiring:Option<ControlledRetirement<Owned>>,maximum:usize,allocated:usize,frames:usize,position:usize,sealed:bool,
  pending:Option<Token>,copy:CopyPhase,dynamic:Option<usize>,complete:bool,closing:bool,closed:bool,
 }
@@ -30,22 +31,24 @@ fn allocation()->ValueError{ValueError::literal(ValueRefusalKind::AllocationFail
 fn pack(error:PackRefusal)->ValueError{error.into_value_error()}
 fn funded(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
 impl RetainedRecordReceiving{
+ /// 🎟️ The allocation-free Body/Document header and returned owner transfer share an exact fixed copy quote.
+ pub fn birth_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>().saturating_mul(2),depth:1,..Default::default()}}
  /// 🎟️ Retains source identity and immutable authored metadata without creating owned copies.
- pub fn admit(source:&[u8],range:(usize,usize),spec:BorrowedRecordSpec,limits:PackLimits,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-  if range.0>range.1||range.1>source.len(){return Err(invalid("original Record range escaped its source"))}if (range.1-range.0)as u64>limits.max_file_len{return Err(invalid("original Record range exceeds declared maximum"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+ pub fn admit<S:RetainedWireByteSource+?Sized>(source:&S,range:(usize,usize),spec:BorrowedRecordSpec,limits:PackLimits,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+  if range.0>range.1||range.1>source.original_source_identity().extent{return Err(invalid("original Record range escaped its source"))}if (range.1-range.0)as u64>limits.max_file_len{return Err(invalid("original Record range exceeds declared maximum"))}if !funded(grant,Self::birth_demand()){return Ok(None)}
   let maximum=usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX);let frames=usize::from(limits.max_depth)+1;let length=range.1-range.0;let symbols=length.min(limits.max_symbols as usize);let cursor=RecordCursor::Body(RetainedRecordBodyCursor::try_new(limits,symbols,length,length,maximum).map_err(pack)?);
-  Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,cursor,spec,owned:ManuallyDrop::new(Owned::default()),retiring:None,maximum,allocated:0,frames,position:0,sealed:false,pending:None,copy:CopyPhase::None,dynamic:None,complete:false,closing:false,closed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
+  Ok(Some((Self{source:source.original_source_identity(),range,cursor,spec,owned:ManuallyDrop::new(Owned::default()),retiring:None,maximum,allocated:0,frames,position:0,sealed:false,pending:None,copy:CopyPhase::None,dynamic:None,complete:false,closing:false,closed:false},RetainedCloneProgress{copied_items:1,copied_bytes:Self::birth_demand().copy_bytes,..Default::default()})))
  }
  /// 📦️ Reuses complete Pack anchor, catalog, verified body and referenced-chunk receiving under one original source.
- pub fn admit_document(source:&[u8],range:(usize,usize),spec:BorrowedRecordSpec,limits:PackLimits,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
-  if range.0>range.1||range.1>source.len(){return Err(invalid("original Pack Record range escaped its source"))}if (range.1-range.0)as u64>limits.max_file_len{return Err(invalid("original Pack Record exceeds declared file maximum"))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+ pub fn admit_document<S:RetainedWireByteSource+?Sized>(source:&S,range:(usize,usize),spec:BorrowedRecordSpec,limits:PackLimits,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{
+  if range.0>range.1||range.1>source.original_source_identity().extent{return Err(invalid("original Pack Record range escaped its source"))}if (range.1-range.0)as u64>limits.max_file_len{return Err(invalid("original Pack Record exceeds declared file maximum"))}if !funded(grant,Self::birth_demand()){return Ok(None)}
   let maximum=usize::try_from(limits.max_total_alloc).unwrap_or(usize::MAX);let frames=usize::from(limits.max_depth)+1;let cursor=RecordCursor::Document(RetainedDocumentDriver::record(limits,range.1-range.0,maximum).map_err(pack)?);
-  Ok(Some((Self{source:(source.as_ptr()as usize,source.len()),range,cursor,spec,owned:ManuallyDrop::new(Owned::default()),retiring:None,maximum,allocated:0,frames,position:0,sealed:false,pending:None,copy:CopyPhase::None,dynamic:None,complete:false,closing:false,closed:false},RetainedCloneProgress{copied_items:1,..Default::default()})))
+  Ok(Some((Self{source:source.original_source_identity(),range,cursor,spec,owned:ManuallyDrop::new(Owned::default()),retiring:None,maximum,allocated:0,frames,position:0,sealed:false,pending:None,copy:CopyPhase::None,dynamic:None,complete:false,closing:false,closed:false},RetainedCloneProgress{copied_items:1,copied_bytes:Self::birth_demand().copy_bytes,..Default::default()})))
  }
- fn validate(&self,source:&[u8])->Result<(),ValueError>{if self.source!=(source.as_ptr()as usize,source.len()){return Err(invalid("original Record source identity changed"))}Ok(())}
+ fn validate<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<(),ValueError>{if self.source!=source.original_source_identity(){return Err(invalid("original Record source identity changed"))}Ok(())}
  fn shape(&self)->Option<BorrowedShape>{self.owned.frames.last().and_then(|frame|if frame.table.is_some(){frame.id.and_then(|id|frame.record.and_then(|spec|spec.fields.iter().find(|field|field.id==id).map(|field|field.shape)))}else{match &frame.value{FieldValue::Record(_)=>frame.id.and_then(|id|frame.record.and_then(|spec|spec.fields.iter().find(|field|field.id==id).map(|field|field.shape))),FieldValue::List(_)|FieldValue::Tuple(_)=>match frame.shape{Some(BorrowedShape::List(item)|BorrowedShape::Tuple(item,_))=>Some(item()),Some(BorrowedShape::Table(record))=>Some(BorrowedShape::Record(record)),_=>None},FieldValue::Map(_)=>match frame.shape{Some(BorrowedShape::Map(item))=>Some(item()),_=>None},FieldValue::Block(_)=>match frame.shape{Some(BorrowedShape::Block(item))=>Some(item()),_=>None},FieldValue::Statements(_)=>match frame.shape{Some(BorrowedShape::Statements(variants))=>frame.key.as_deref().and_then(|key|variants.iter().find(|(keyword,_)|*keyword==key).map(|(_,make)|BorrowedShape::Record(*make))),_=>None},_=>None}})}
  /// 📏️ Quotes the next real parser, allocation, payload copy or output movement.
- pub fn demands(&self,source:&[u8])->Result<RetirementDemand,ValueError>{
+ pub fn demands<S:RetainedWireByteSource+?Sized>(&self,source:&S)->Result<RetirementDemand,ValueError>{
   self.validate(source)?;let mut demand=RetirementDemand{depth:self.owned.frames.len()+2,..Default::default()};if self.complete||self.closing{return Ok(demand)}if self.owned.scratch.capacity()>0{demand.release_bytes=self.owned.scratch.capacity();return Ok(demand)}
   if self.owned.frames.capacity()==0{demand.capacity_bytes=self.frames.checked_mul(size_of::<Frame>()).ok_or_else(||invalid("original Record frame extent overflow"))?;return Ok(demand)}
   if let Some(frame)=self.owned.frames.last(){if let Some(table)=&frame.table{if table.phase==0{demand.capacity_bytes=frame.record.map_or(0,|spec|spec.fields.len())*size_of::<(u16,FieldValue)>();demand.copy_bytes=size_of::<FieldValue>();return Ok(demand)}if table.phase==4&&table.row<table.rows&&(table.element==super::ELEM_BOOL&&table.bit_count>0||table.element!=super::ELEM_BOOL&&!table_present(table)){demand.copy_bytes=size_of::<FieldValue>();return Ok(demand)}}}
@@ -117,18 +120,29 @@ impl RetainedRecordReceiving{
   }Ok(())
  }
  /// ⏱️ Performs one genuine parser or materialization action under the original supplied currencies.
- pub fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ pub fn step<S:RetainedWireByteSource+?Sized>(&mut self,source:&S,native:&mut NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   let demand=self.demands(source)?;if self.complete||self.closing||!funded(grant,demand){return Ok(Default::default())}if demand.capacity_bytes>self.maximum.saturating_sub(self.allocated){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original Record allocation maximum exhausted"))}native.checkpoint()?;native.charge(demand.capacity_bytes)?;let before=self.allocated;if self.owned.scratch.capacity()>0{let released_bytes=self.owned.scratch.capacity();drop(std::mem::take(&mut self.owned.scratch));return Ok(RetainedCloneProgress{copied_items:1,released_bytes,..Default::default()})}
   let result=(||{if self.owned.frames.capacity()==0{self.owned.frames.try_reserve_exact(self.frames).map_err(|_|allocation())?;let actual=self.owned.frames.capacity()*size_of::<Frame>();self.add_capacity(0,actual)?;return Ok(())}
    if let Some(frame)=self.owned.frames.last_mut(){if let Some(table)=&mut frame.table{if table.phase==0{let FieldValue::List(rows)=&mut frame.value else{unreachable!()};let mut slots=Vec::new();slots.try_reserve_exact(frame.record.unwrap().fields.len()).map_err(|_|allocation())?;let actual=slots.capacity()*size_of::<(u16,FieldValue)>();rows.push(FieldValue::Record(RecordValue{fields:RecordFields::from_empty_slots(slots)}));if rows.len()==table.rows{table.phase=1}self.add_capacity(0,actual)?;return Ok(())}if table.phase==4&&table.row<table.rows&&(table.element==super::ELEM_BOOL&&table.bit_count>0||table.element!=super::ELEM_BOOL&&!table_present(table)){let value=if table_present(table)&&table.element==super::ELEM_BOOL{FieldValue::Bool(table.bits&1!=0)}else{FieldValue::Absent};let FieldValue::List(rows)=&mut frame.value else{unreachable!()};let FieldValue::Record(row)=&mut rows[table.row]else{unreachable!()};row.fields.insert(frame.id.unwrap(),value);table.row+=1;if table.element==super::ELEM_BOOL{table.bits>>=1;table.bit_count-=1}if table.row==table.rows{table.phase=5}return Ok(())}}}
    if self.owned.frames.last().is_some_and(|frame|matches!(frame.value,FieldValue::Block(_))&&frame.remaining==0){let frame=self.owned.frames.pop().unwrap();self.owned.scalar=frame.value;self.copy=CopyPhase::Ready;return Ok(())}
    match self.copy{CopyPhase::Ready=>return self.attach(),CopyPhase::Symbol{symbol,index,count}=>{let character=self.cursor.symbol_char(symbol,index).map_err(pack)?.ok_or_else(||invalid("original symbol scalar absent"))?;let FieldValue::Text(text)=&mut self.owned.scalar else{return Err(invalid("original symbol owner absent"))};if text.len()+character.len_utf8()>text.capacity(){return Err(invalid("original symbol exceeds its capacity"))}text.push(character);self.copy=if index+1==count{CopyPhase::Ready}else{CopyPhase::Symbol{symbol,index:index+1,count}};return Ok(())},_=>{}}
    if let Some(token)=self.pending.take(){return self.token(token)}
-   let before=self.cursor.allocated_bytes();let result=self.cursor.advance(&source[self.range.0..self.range.1],&mut self.position,&mut self.sealed,demand.capacity_bytes);let after=self.cursor.allocated_bytes();self.add_capacity(before,after)?;if let Some(token)=result.map_err(pack)?{self.pending=Some(token)}Ok(())})();
+   let before=self.cursor.allocated_bytes();let result=self.cursor.advance(source,self.range,&mut self.position,&mut self.sealed,demand.capacity_bytes);let after=self.cursor.allocated_bytes();self.add_capacity(before,after)?;if let Some(token)=result.map_err(pack)?{self.pending=Some(token)}Ok(())})();
   let progress=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:self.allocated-before,..Default::default()};if !progress.fits(grant){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original Record receipt exceeds supplied turn").with_retained_progress(progress))}result.map(|_|progress).map_err(|error|error.with_retained_progress(progress))
  }
  pub fn is_ready(&self)->bool{self.complete&&!self.closing&&self.owned.output.is_some()}
  pub fn take_into(&mut self,output:&mut Option<RecordValue>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=RetirementDemand{copy_bytes:size_of::<RecordValue>(),depth:1,..Default::default()};if !self.is_ready()||output.is_some()||!funded(grant,demand){return Ok(Default::default())}*output=self.owned.output.take();Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})}
+ /// 🪶️ Moves the one exact dynamic payload while retaining empty Record backing for paid close.
+ pub fn take_value_into(&mut self,field:u16,output:&mut Option<DslValue>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  let demand=RetirementDemand{copy_bytes:size_of::<DslValue>()+size_of::<FieldValue>(),depth:1,..Default::default()};
+  if !self.is_ready()||output.is_some()||!funded(grant,demand){return Ok(Default::default())}
+  let record=self.owned.output.as_mut().ok_or_else(||invalid("original dynamic Record output is absent"))?;
+  if record.fields.len()!=1{return Err(invalid("original dynamic Record must contain exactly its declared field"))}
+  let value=record.fields.get_mut(&field).ok_or_else(||invalid("original dynamic Record field changed"))?;
+  if !matches!(value,FieldValue::Value(_)){return Err(invalid("original dynamic Record payload is absent or already moved"))}
+  let FieldValue::Value(value)=std::mem::replace(value,FieldValue::Absent)else{unreachable!()};
+  *output=Some(value);Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})
+ }
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Ok(RetirementDemand{copy_bytes:size_of::<Owned>(),depth:1,..Default::default()})}if let Some(owned)=&self.retiring{if !owned.terminal_is_empty(){return owned.next_demand(body)}}self.cursor.source_close_demands().map_err(pack)}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}

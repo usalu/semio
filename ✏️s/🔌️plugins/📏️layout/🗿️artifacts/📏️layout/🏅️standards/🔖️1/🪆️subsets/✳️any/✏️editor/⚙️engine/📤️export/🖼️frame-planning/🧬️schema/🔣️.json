@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:layout-frame-plan-address:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageIndex",
+    "parentIndex",
+    "frameIndex",
+    "overrideIndex",
+    "linkIndex"
+  ],
+  "properties": {
+    "pageIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "parentIndex": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "frameIndex": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "overrideIndex": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "linkIndex": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}

@@ -51,6 +51,7 @@ pub trait ErasedMemberStoreOneItemPublication: Send {
     fn retry(&mut self) -> bool;
     fn acknowledge(&mut self) -> bool;
     fn begin_close(&mut self);
+    fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
@@ -116,6 +117,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedMemberStoreOneIte
         self.publication.begin_close();
     }
 
+    fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.group_history.is_some()||self.group_displaced.is_some()||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.publication.terminal_is_empty(){let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};return self.publication.close_original_step(original,child).map(|s|RetainedCloneStep::Progress(s.progress()))}let d=snapshot_registry_alias_demands(&self.member)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}original.charge(d.capacity_bytes)?;snapshot_registry_alias_close_step(&mut self.member,grant)}
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
         if self.group_history.is_some() || self.group_displaced.is_some() || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -208,6 +210,12 @@ impl<P, Mutation> ArtifactStoreBatchStage<P, Mutation> {
         if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(RetirementDemand { copy_bytes: size_of::<Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         if let Some(factory) = self.factory_close.iter().find_map(Option::as_ref) { return nested(factory.demands(body)?); }
         Ok(Default::default())
+    }
+    /// 🧷️ The same original decoder cleanup loan reaches wire preparation before every outer owner retires.
+    pub fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>where P:Send+Sync+'static,Mutation:Send+'static{
+     self.begin_close();if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}if self.group_preparation.is_some()||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()))}let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+     if self.transaction_close.is_none()&&self.transaction.is_none()&&self.lane_close.is_none()&&self.lane_insert.is_none(){if let Some(owner)=self.preparation.as_mut(){if !owner.terminal_is_empty(){let child=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:grant.maximum_copy_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes,maximum_release_bytes:grant.maximum_release_bytes,maximum_depth:grant.maximum_depth-1};let s=owner.close_original_step(original,child)?;let s=semio_framework_value::retained_clone::admit_retained_clone_close(child.retained_grant(),s,owner.terminal_is_empty(),"original publication preparation")?;return Ok(RetainedCloneStep::Progress(s.progress()))}}}
+     original.charge(d.capacity_bytes)?;self.close_step(grant)
     }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError>
     where P: Send + Sync + 'static, Mutation: Send + 'static,
@@ -576,6 +584,7 @@ impl<P, Mutation> Drop for ArtifactStoreBatchPublication<P, Mutation> {
 }
 
 impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreBatchPublication<P, Mutation> {
+    fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{ArtifactStoreBatchPublication::close_original_step(self,original,grant)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, body: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(body)?.capacity_bytes) }

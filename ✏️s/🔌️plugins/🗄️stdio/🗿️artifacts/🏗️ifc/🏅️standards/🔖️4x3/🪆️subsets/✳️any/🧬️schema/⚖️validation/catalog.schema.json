@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "expectedRules",
+    "expectedFunctions",
+    "expectedFailure",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "expectedRules": {
+      "const": 777
+    },
+    "expectedFunctions": {
+      "const": 48
+    },
+    "expectedFailure": {
+      "const": "IFCDIRECTION.MAGNITUDEGREATERZERO"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 24,
+      "maxItems": 24,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phase",
+          "mutation",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phase": {
+            "enum": [
+              "compile-index",
+              "admit"
+            ]
+          },
+          "mutation": {
+            "enum": [
+              "where-rules",
+              "direct-attribute",
+              "inherited-attribute",
+              "type-domain",
+              "select-members",
+              "function-source",
+              "global-source",
+              "entity-roster",
+              "type-roster",
+              "source-provenance",
+              "schema-name",
+              "validation-capability"
+            ]
+          },
+          "expected": {
+            "const": "mutation-refused"
+          }
+        }
+      }
+    }
+  }
+}

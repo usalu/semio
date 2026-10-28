@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LayoutSvgPaint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "slot",
+    "color"
+  ],
+  "properties": {
+    "slot": {
+      "enum": [
+        "fill",
+        "stroke"
+      ]
+    },
+    "color": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        }
+      ]
+    }
+  }
+}

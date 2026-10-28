@@ -1,0 +1,7 @@
+# Caller-Owned PDF Raster Slices
+
+The actual native PDF image encoder now supplies a fixed stack slice to raster_chunk. Extraction no longer constructs a Vec for every RGB/alpha chunk. The child receives the parent's original OutputWork, validates shape and cursor before writing, posts the scratch copy, and returns an initialized count. The parent separately accounts stack initialization and destination append. Immutable RGBA remains in the original retained image owner. Portable pdfRasterChunk has the same caller-buffer/original-work contract.
+
+Executed evidence: independent Sharp extraction matches both planes of both neutral image cases at four chunk extents (1,2,3,4096); six malformed shape/turn refusals pass; three original work undergrants preserve the caller scratch byte, source pixels and zero receipt. The real large transparent image recipe has 66049 pixels and both extracted planes agree with Sharp. The combined Layout public facade / canonical / PDF runner strict check covers769sources with0diagnostics before subsequent agent changes.
+
+Native shared-fixture OriginalJobFixtureCaller laws now use the original caller across all chunk turns. Physical HeapWitness assertions require zero allocation/release inside successful extraction. All native laws remain authored/unrun because repo --help still exits1 with PowerShell CommandNotFound. No native compile, heap pass, complete PDF GUI rendering or whole PDF spec compliance is claimed.

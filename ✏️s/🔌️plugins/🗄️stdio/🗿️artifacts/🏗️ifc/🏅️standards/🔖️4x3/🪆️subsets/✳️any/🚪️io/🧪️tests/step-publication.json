@@ -1,0 +1,8 @@
+{
+  "schema": "stdio.ifc.step-publication",
+  "nativeMaximumBytes": 67108864,
+  "bodyGrant": {"maximumItems": 1000000, "maximumCopyBytes": 16777216, "maximumCapacityBytes": 67108864, "maximumReleaseBytes": 67108864, "maximumDepth": 128},
+  "closeGrant": {"maximumItems": 1000000, "maximumCopyBytes": 16777216, "maximumCapacityBytes": 67108864, "maximumReleaseBytes": 67108864, "maximumDepth": 128},
+  "deniedAxes": ["items", "copy", "capacity", "release", "depth"],
+  "data": "#9007199254740993=IFCPROPERTYSINGLEVALUE('Original',$,IFCTEXT('a''b\\X2\\00E4\\X0\\'),$);"
+}

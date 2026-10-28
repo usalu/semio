@@ -4,9 +4,6 @@ use crate::viewer::ifc2x3_sav::modes::view::windows::main;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;
-use semio_framework_plugin::WindowLayoutRoot;
-use semio_framework_plugin::WindowLayoutStackNode;
-use semio_framework_plugin::WindowLayoutWindowNode;
 
 pub const IFC2X3_SAV_VIEW_MODE_ID: &str = "view";
 
@@ -20,13 +17,6 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ Single full-pane Main window — the read-only viewer has no quadrant layout to allocate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn layout() -> WindowLayout {
-    WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
-        }),
-    }
+    semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::inspector::layout(main::WINDOW_KIND_ID,false)
 }
 //#endregion 🔖️Definition

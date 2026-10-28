@@ -1,0 +1,17 @@
+# Native Alignment Terminal Independent Audit
+
+All eleven current frozen hashes match (`generated/native-terminal-independent-hashes.json`). No new confirmed P1/P2 was found in this bounded source audit of Terminal and its shared-role/numeric refactor. Native type, runtime, allocation, receipt, cancellation-prefix and retirement proofs remain false under authentic compiler ingress refusal. The preceding Direct seven-file audit is historical; the changed common numeric cursor and Direct consumer are included here.
+
+Request indexing and shape checks precede source capture. Original caller, snapshot/request Arc identities and epoch are checked before progression; original cancellation and demands gate semantic actions. False/null/true applicability remains distinct, and unavailable source keeps global incompleteness. Per-target flags reset before evaluation.
+
+Discovery scans source rows once, with a scalar per-request relation roster and saturated competing count. Unknown-only rows remain unresolved, and a known relation's owner query consumes exact IFCRELNESTS status. Unknown with retained matches cannot establish ownership. Duplicate source IDs and competing relation rows remain unresolved/ambiguous. Qualified query outputs retain actual source slots rather than copied graph lists.
+
+Evaluation preserves actual RelatedObjects order and visits every member. Segment and parameter membership retain late unknowns and mixed-role ambiguity. DesignParameters and length queries use their released declaring owners. Only the final real member is tested for zero; earlier unresolved members keep incomplete precedence over a terminal failure. Common PrimitiveZero retains declared aliases, exact wrapper names/arity, finite integer/real zero and signedzero, with fixed64 depth/address limits. Direct still authenticates its exact CurveMeasure SELECT constructor before invoking this cursor. These internal predicate semantics do not widen physical Part21 admission.
+
+Report/roster vector growth, strings, path backing, each word and pointer use separate demand phases. Partial diagnostic owners are stored in Work before later fallible steps. Query/index child calls are preceded by original parent metadata posting. Complete output take remains original-authorized, cancellation-sensitive, paid, single-donation and empty-recipient-only. Derived typed retirement closes partial reports/roster/query/scaffolds before request/source aliases. Fixed static metadata and bounded address/name work are not a blanket per-comparison accounting assertion.
+
+Reviewed mounted tests cover38 business and29 query laws, four actual original layout inputs, denied axes, source substitution, ordered precedence and cancellation/close/take. These tests are authored/unexecuted. Worker-reported TS283/1542 and independent IfcOpenShell21/21 owner/input observations are separate reference evidence. The independently repeated TS migration probe and six-owner oracle corroborate the intended policy, not native outputs. No full Alignment, geometry, schema or view claim follows. No production files were edited.
+
+## Subsequent compile-level correction
+
+The later population API cross-check found a genuine RetainedCloneBirthDemand field/type mismatch in this historical checkpoint that this audit missed. The corrected four Direct/Terminal branches and actual framework type are reviewed in native-alignment-population-independent-audit.md. This historical no-new-finding review must not be read as type-check proof; native compilation was never available.

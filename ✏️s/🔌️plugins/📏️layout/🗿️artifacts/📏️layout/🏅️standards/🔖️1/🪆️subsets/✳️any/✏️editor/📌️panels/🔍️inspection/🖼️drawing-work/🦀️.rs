@@ -1,0 +1,11 @@
+//! 🖼️ Inspection enters genuine paid Drawing reads before enabling child artboard controls.
+use super::*;
+use semio_s_artifact_layout_layout_editor_commands::patch_page::drawing::source::OriginalPageDrawingSource;
+use semio_framework_value::{RetirementDemand,RetainedCloneProgress,ValueError,ValueRefusalKind};
+#[derive(semio_framework_value::RetireOwned)]pub struct LayoutInspectorWork{drawing:Option<OriginalPageDrawingSource>,initialized:bool,ready:bool}
+impl LayoutInspectorWork{
+ pub fn new()->Self{Self{drawing:None,initialized:false,ready:false}}
+ pub fn demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.drawing.as_ref().map_or(Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Self>()*2,depth:1,..Default::default()}),|drawing|drawing.demand(body))}
+ pub fn advance(&mut self,doc:&semio_framework_plugin::ArtifactView<'_,LayoutSnapshot>,config:&LayoutWindowConfig,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if self.ready{return Ok(true)}if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(self.demand(cx.retained_grant().maximum_copy_bytes)?){return Ok(false)}if !self.initialized{let page=doc.snapshot.pages.iter().enumerate().find(|(_,page)|page.id==config.active_page_id);self.drawing=page.filter(|(_,page)|page.background_drawing.is_some()).map(|(index,_)|OriginalPageDrawingSource::new(semio_s_artifact_layout_layout_model::DrawingSourceAddress::Page(index)));self.initialized=true;self.ready=self.drawing.is_none();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Self>()*2,..Default::default()})?;cx.consume_fuel(1);return Ok(self.ready)}let drawing=self.drawing.as_mut().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"Inspection Drawing source is absent"))?;cx.set_stage("layout.inspect.drawing.artboard");let result=drawing.advance(doc,cx.retained_grant());cx.consume_retained(drawing.last_receipt())?;cx.consume_fuel(1);self.ready=result?;Ok(self.ready)}
+ pub fn render(&self,document:&LayoutSnapshot,config:&LayoutWindowConfig,interaction:&LayoutInteractionSnapshot,labels:&LayoutLabels,windows:&semio_framework_plugin::TreeWindows<'_>)->UiAssemblyResult<BuiltNode>{if !self.ready{return Err(admit())}render_qualified(document,config,interaction,labels,windows,self.drawing.as_ref())}
+}

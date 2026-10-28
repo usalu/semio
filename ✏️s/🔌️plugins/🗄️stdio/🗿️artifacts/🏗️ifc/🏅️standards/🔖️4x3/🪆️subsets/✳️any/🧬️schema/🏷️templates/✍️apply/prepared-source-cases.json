@@ -1,0 +1,17 @@
+{
+  "contract": "native-private-template-page",
+  "maximumDepth": 16,
+  "maximumTextBytes": 512,
+  "cases": [
+    {"name":"raw-scalar","path":["entries","0","value","value"],"editable":true},
+    {"name":"typed-scalar","path":["entries","0","value","items","0","value"],"editable":true},
+    {"name":"identity-id","path":["identities","0","id"],"editable":true},
+    {"name":"identity-guid","path":["identities","1","guid"],"editable":true},
+    {"name":"identity-key","path":["identities","0","key"],"editable":false},
+    {"name":"entry-name","path":["entries","0","name"],"editable":false},
+    {"name":"carrier-kind","path":["entries","0","value","kind"],"editable":false},
+    {"name":"typed-name","path":["entries","0","value","name"],"editable":false},
+    {"name":"template","path":["template"],"editable":false},
+    {"name":"target","path":["target"],"editable":true}
+  ]
+}

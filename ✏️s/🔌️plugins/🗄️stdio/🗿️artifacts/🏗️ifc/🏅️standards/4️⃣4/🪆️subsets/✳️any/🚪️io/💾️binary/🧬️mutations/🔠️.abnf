@@ -1,3 +1,5 @@
-; abnf stdio.ifc mutations
-document = payload
+; 📨️ IFC4 mutation binary envelope; each kind owns its complete payload.
+document = format kind payload
+format = %x01
+kind = %x02-0B
 payload = *OCTET

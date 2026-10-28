@@ -1,0 +1,17 @@
+{
+  "valid": [
+    {"token":{"action":"ApplyTemplate","generation":"0","revision":"r1","window":"w1"},"args":{"id":"18446744073709551615","bits":"8000000000000000"},"locale":"en"},
+    {"locale":"de","args":{"values":[null,true,0,"ä"]},"token":{"window":"w2","revision":"r2","generation":"9007199254740993","action":"ApplyTemplate"}}
+  ],
+  "invalid": [
+    {"token":{"action":"ApplyTemplate","generation":"01","revision":"r1","window":"w1"},"args":{},"locale":"en"},
+    {"token":{"action":"ApplyTemplate","generation":"-1","revision":"r1","window":"w1"},"args":{},"locale":"en"},
+    {"token":{"action":"","generation":"1","revision":"r1","window":"w1"},"args":{},"locale":"en"},
+    {"token":{"action":"ApplyTemplate","generation":"1","revision":"","window":"w1"},"args":{},"locale":"en"},
+    {"token":{"action":"ApplyTemplate","generation":"1","revision":"r1","window":""},"args":{},"locale":"en"},
+    {"token":{"action":"ApplyTemplate","generation":"1","revision":"r1","window":"w1","extra":true},"args":{},"locale":"en"},
+    {"token":{"action":"ApplyTemplate","generation":"1","revision":"r1","window":"w1"},"args":[],"locale":"en"},
+    {"token":{"action":"ApplyTemplate","generation":"1","revision":"r1","window":"w1"},"args":{},"locale":"fr"},
+    {"token":{"action":"ApplyTemplate","generation":"1","revision":"r1","window":"w1"},"args":{},"locale":"en","extra":true}
+  ]
+}

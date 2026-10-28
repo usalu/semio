@@ -1,0 +1,18 @@
+/** 🛢️ Circular CSG fixtures preserve real primitive, product, unit and representation-map declarations. */
+import type {IfcEntity,IfcValue} from '../../🧬️schema/📸️snapshot/🟦️.ts';
+import {createIfc4x3ExchangeGraph} from '../gltf.ts';
+import {ifcReal} from '../step.ts';
+import type {IfcCurveSampling} from '../geometry/control.ts';
+export interface IfcRoundPosition{location:number[];axis:number[]|null;refDirection:number[]|null}
+export interface IfcRoundSource{primitive:string;height:number;radius:number;heightKind:string;radiusKind:string;position:IfcRoundPosition;productPlacement:IfcRoundPosition;unitPrefix:string|null;mapping:null|{origin:IfcRoundPosition;target:number[];axes:number[][];scale:number;secondary:number[]};policy:IfcCurveSampling;damage:string}
+/** 🏗️ Explicit source values select every declaration without identifier-dependent behavior. */
+export function ifcRoundFixture(row:{id:string;source:IfcRoundSource}){
+ const graph=createIfc4x3ExchangeGraph(row.id),s=row.source,unset:IfcValue={kind:'unset'},aggregate=(value:IfcValue[]):IfcValue=>({kind:'aggregate',value}),text=(value:string):IfcValue=>({kind:'string',value}),ref=(entity:IfcEntity):IfcValue=>({kind:'reference',value:entity.id}),put=(name:string,args:IfcValue[])=>{graph.add(name,args);return graph.snapshot.entities.at(-1)!;},point=(values:number[])=>put('IFCCARTESIANPOINT',[aggregate(values.map(ifcReal))]),direction=(values:number[]|null)=>values?ref(put('IFCDIRECTION',[aggregate(values.map(ifcReal))])):unset,axis=(p:IfcRoundPosition)=>put('IFCAXIS2PLACEMENT3D',[ref(point(p.location)),direction(p.axis),direction(p.refDirection)]);
+ if(s.unitPrefix!==null)graph.snapshot.entities.find(entity=>entity.name==='IFCSIUNIT')!.args[2]={kind:'enum',value:s.unitPrefix};
+ const position=axis(s.position),carrier=(value:number,kind:string):IfcValue=>kind==='integer'?{kind:'integer',value:BigInt(value)}:kind==='string'?text(String(value)):ifcReal(value),primitive=put(s.primitive==='cone'?'IFCRIGHTCIRCULARCONE':'IFCRIGHTCIRCULARCYLINDER',[ref(position),carrier(s.height,s.heightKind),carrier(s.radius,s.radiusKind)]),solid=put('IFCCSGSOLID',[ref(primitive)]);
+ if(s.damage==='foreign-position')primitive.args[0]=ref(put('IFCAXIS2PLACEMENT2D',[ref(point(s.position.location.slice(0,2))),unset]));
+ let items=[ref(solid)];
+ if(s.mapping){const m=s.mapping,inner=put('IFCSHAPEREPRESENTATION',[graph.context,text('Body'),text('CSG'),aggregate(items)]),origin=axis(m.origin),source=put('IFCREPRESENTATIONMAP',[ref(origin),ref(inner)]),target=put('IFCCARTESIANTRANSFORMATIONOPERATOR3DNONUNIFORM',[direction(m.axes[0]!),direction(m.axes[1]!),ref(point(m.target)),ifcReal(m.scale),direction(m.axes[2]!),ifcReal(m.secondary[0]!),ifcReal(m.secondary[1]!)]);items=[ref(put('IFCMAPPEDITEM',[ref(source),ref(target)]))];}
+ const representation=put('IFCSHAPEREPRESENTATION',[graph.context,text('Body'),text(s.mapping?'MappedRepresentation':'CSG'),aggregate(items)]),shape=put('IFCPRODUCTDEFINITIONSHAPE',[unset,unset,aggregate([ref(representation)])]),placement=put('IFCLOCALPLACEMENT',[unset,ref(axis(s.productPlacement))]),product=put('IFCBUILDINGELEMENTPROXY',[text('0000000000000000000002'),unset,text(row.id),unset,unset,ref(placement),ref(shape),unset,unset]),positionPoint=graph.snapshot.entities.find(entity=>entity.id===(position.args[0]!.kind==='reference'?position.args[0]!.value:-1n))!,positionDirection=graph.snapshot.entities.find(entity=>entity.id===(position.args[1]!.kind==='reference'?position.args[1]!.value:-1n));
+ return{...graph,primitive,solid,position,positionPoint,positionDirection,product,representation};
+}

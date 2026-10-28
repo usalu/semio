@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "contract": "semio.dsl.mutations-cold-dispatch/v1",
+  "cases": [
+    {
+      "name": "layout-default-reference",
+      "snapshot": "LayoutSnapshot",
+      "diff": "LayoutDiff",
+      "reference": null,
+      "referenceDiff": null,
+      "variants": [
+        {
+          "variant": "RenameLayout",
+          "payload": "rename_layout::RenameLayout"
+        },
+        {
+          "variant": "ChangePrintTarget",
+          "payload": "change_print_target::ChangePrintTarget"
+        },
+        {
+          "variant": "ChangeDataFields",
+          "payload": "change_data_fields::ChangeDataFields"
+        },
+        {
+          "variant": "CreatePage",
+          "payload": "create_page::CreatePage"
+        },
+        {
+          "variant": "DeletePage",
+          "payload": "delete_page::DeletePage"
+        },
+        {
+          "variant": "RenamePage",
+          "payload": "rename_page::RenamePage"
+        },
+        {
+          "variant": "ChangePageWidth",
+          "payload": "change_page_width::ChangePageWidth"
+        },
+        {
+          "variant": "ChangePageHeight",
+          "payload": "change_page_height::ChangePageHeight"
+        },
+        {
+          "variant": "UpdatePageMargins",
+          "payload": "update_page_margins::UpdatePageMargins"
+        },
+        {
+          "variant": "UpdatePageColumns",
+          "payload": "update_page_columns::UpdatePageColumns"
+        },
+        {
+          "variant": "ReorderPages",
+          "payload": "reorder_pages::ReorderPages"
+        },
+        {
+          "variant": "CreateStory",
+          "payload": "create_story::CreateStory"
+        },
+        {
+          "variant": "DeleteStory",
+          "payload": "delete_story::DeleteStory"
+        },
+        {
+          "variant": "EditStory",
+          "payload": "edit_story::EditStory"
+        },
+        {
+          "variant": "CreateLink",
+          "payload": "create_link::CreateLink"
+        },
+        {
+          "variant": "DeleteLink",
+          "payload": "delete_link::DeleteLink"
+        },
+        {
+          "variant": "ChangeLinkPath",
+          "payload": "change_link_path::ChangeLinkPath"
+        },
+        {
+          "variant": "CreateFrame",
+          "payload": "create_frame::CreateFrame"
+        },
+        {
+          "variant": "DeleteFrame",
+          "payload": "delete_frame::DeleteFrame"
+        },
+        {
+          "variant": "MoveFrame",
+          "payload": "move_frame::MoveFrame"
+        },
+        {
+          "variant": "ResizeFrame",
+          "payload": "resize_frame::ResizeFrame"
+        },
+        {
+          "variant": "RotateFrame",
+          "payload": "rotate_frame::RotateFrame"
+        },
+        {
+          "variant": "ChangeFrameFill",
+          "payload": "change_frame_fill::ChangeFrameFill"
+        },
+        {
+          "variant": "ChangeFrameStroke",
+          "payload": "change_frame_stroke::ChangeFrameStroke"
+        },
+        {
+          "variant": "ChangeFrameWrapMode",
+          "payload": "change_frame_wrap_mode::ChangeFrameWrapMode"
+        },
+        {
+          "variant": "ChangeFrameColumns",
+          "payload": "change_frame_columns::ChangeFrameColumns"
+        },
+        {
+          "variant": "UpdateGrid",
+          "payload": "update_grid::UpdateGrid"
+        },
+        {
+          "variant": "SetFrameFlags",
+          "payload": "set_frame_flags::SetFrameFlags"
+        },
+        {
+          "variant": "UpdateParagraphStyle",
+          "payload": "update_paragraph_style::UpdateParagraphStyle"
+        },
+        {
+          "variant": "UpdateTextFrame",
+          "payload": "update_text_frame::UpdateTextFrame"
+        },
+        {
+          "variant": "UpdateLayer",
+          "payload": "update_layer::UpdateLayer"
+        },
+        {
+          "variant": "CreateCharacterStyle",
+          "payload": "create_character_style::CreateCharacterStyle"
+        },
+        {
+          "variant": "DeleteCharacterStyle",
+          "payload": "delete_character_style::DeleteCharacterStyle"
+        },
+        {
+          "variant": "UpdateCharacterStyle",
+          "payload": "update_character_style::UpdateCharacterStyle"
+        },
+        {
+          "variant": "UpdateParentPage",
+          "payload": "update_parent_page::UpdateParentPage"
+        },
+        {
+          "variant": "UpdateSpread",
+          "payload": "update_spread::UpdateSpread"
+        },
+        {
+          "variant": "SetPageParent",
+          "payload": "set_page_parent::SetPageParent"
+        },
+        {
+          "variant": "SetPageGuides",
+          "payload": "set_page_guides::SetPageGuides"
+        },
+        {
+          "variant": "SetStoryRuns",
+          "payload": "set_story_runs::SetStoryRuns"
+        },
+        {
+          "variant": "UpdateLink",
+          "payload": "update_link::UpdateLink"
+        },
+        {
+          "variant": "SetPageOverrides",
+          "payload": "set_page_overrides::SetPageOverrides"
+        },
+        {
+          "variant": "CreateLayer",
+          "payload": "create_layer::CreateLayer"
+        },
+        {
+          "variant": "SetFrameLayer",
+          "payload": "set_frame_layer::SetFrameLayer"
+        },
+        {
+          "variant": "SetDrawingText",
+          "payload": "set_drawing_text::SetDrawingText"
+        },
+        {
+          "variant": "ReorderFrame",
+          "payload": "reorder_frame::ReorderFrame"
+        },
+        {
+          "variant": "DragFrames",
+          "payload": "drag_frames::DragFrames"
+        },
+        {
+          "variant": "RotateFrames",
+          "payload": "rotate_frames::RotateFrames"
+        },
+        {
+          "variant": "ScaleFrames",
+          "payload": "scale_frames::ScaleFrames"
+        },
+        {
+          "variant": "CreateParagraphStyle",
+          "payload": "create_paragraph_style::CreateParagraphStyle"
+        },
+        {
+          "variant": "DeleteParagraphStyle",
+          "payload": "delete_paragraph_style::DeleteParagraphStyle"
+        },
+        {
+          "variant": "CreateParentPage",
+          "payload": "create_parent_page::CreateParentPage"
+        },
+        {
+          "variant": "DeleteParentPage",
+          "payload": "delete_parent_page::DeleteParentPage"
+        },
+        {
+          "variant": "CreateSpread",
+          "payload": "create_spread::CreateSpread"
+        },
+        {
+          "variant": "DeleteSpread",
+          "payload": "delete_spread::DeleteSpread"
+        },
+        {
+          "variant": "SetPageSpread",
+          "payload": "set_page_spread::SetPageSpread"
+        },
+        {
+          "variant": "ReorderLayer",
+          "payload": "reorder_layer::ReorderLayer"
+        },
+        {
+          "variant": "SetParentPageContent",
+          "payload": "set_parent_page_content::SetParentPageContent"
+        },
+        {
+          "variant": "ReplaceDocument",
+          "payload": "replace_document::ReplaceDocument"
+        }
+      ],
+      "expected": {
+        "implementations": 1,
+        "reference": "LayoutSnapshot",
+        "referenceDiff": "LayoutDiff",
+        "admissionCalls": 1,
+        "dispatchMethods": [
+          "diff",
+          "inverse",
+          "foreign_step_source"
+        ]
+      }
+    },
+    {
+      "name": "explicit-same-snapshot",
+      "snapshot": "Doc",
+      "diff": "Delta",
+      "reference": "Doc",
+      "referenceDiff": "Delta",
+      "variants": [
+        {
+          "variant": "InsertPage",
+          "payload": "insert_page::InsertPage"
+        },
+        {
+          "variant": "RemovePage",
+          "payload": "remove_page::RemovePage"
+        }
+      ],
+      "expected": {
+        "implementations": 1,
+        "reference": "Doc",
+        "referenceDiff": "Delta",
+        "admissionCalls": 1,
+        "dispatchMethods": [
+          "diff",
+          "inverse",
+          "foreign_step_source"
+        ]
+      }
+    },
+    {
+      "name": "explicit-wire-reference",
+      "snapshot": "RetainedDoc",
+      "diff": "RetainedDelta",
+      "reference": "WireDoc",
+      "referenceDiff": "WireDelta",
+      "variants": [
+        {
+          "variant": "InsertPage",
+          "payload": "insert_page::InsertPage"
+        },
+        {
+          "variant": "RemovePage",
+          "payload": "remove_page::RemovePage"
+        }
+      ],
+      "expected": {
+        "implementations": 1,
+        "reference": "WireDoc",
+        "referenceDiff": "WireDelta",
+        "admissionCalls": 1,
+        "dispatchMethods": [
+          "diff",
+          "inverse",
+          "foreign_step_source"
+        ]
+      }
+    }
+  ]
+}

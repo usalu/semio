@@ -1,0 +1,21 @@
+/** 🗺️ Frozen physical transform layers reach every supported source leaf through one mapped traversal. */
+import {expect,test} from 'bun:test';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import Ajv from 'ajv/dist/2020';
+import cases from './mapping-cases.json';
+import schema from './mapping.schema.json';
+import {ifcMappingFixture,type IfcMappingKind} from './mapping-fixtures.ts';
+import {extractIfc4x3Triangles,type IfcTriangleMesh} from '../geometry.ts';
+import {IfcStepError,type IfcIoControl} from '../control.ts';
+const volume=(mesh:IfcTriangleMesh)=>{let sum=0;const origin=mesh.positions[0]!;for(let at=0;at<mesh.indices.length;at+=3){const[a,b,c]=[0,1,2].map(k=>mesh.positions[mesh.indices[at+k]!]!.map((n,i)=>n-origin[i]!));sum+=(a![0]!*(b![1]!*c![2]!-b![2]!*c![1]!)+a![1]!*(b![2]!*c![0]!-b![0]!*c![2]!)+a![2]!*(b![0]!*c![1]!-b![1]!*c![0]!))/6;}return sum;};
+test('mapping physical contract is unchanged and closed',async()=>{const valid=new Ajv({strict:true}).compile(schema);expect(valid(cases)).toBe(true);expect(valid({...cases,publish:true})).toBe(false);for(const[file,hash]of [['mapping-cases.json','39dd276d231abd8dcdffc7dc9242d4cbd392fcf22ea8e03d79fdfffc809ebe0e'],['mapping.schema.json','43758cbd406e5654d78c2d4daf39821c4d7f983cbdee3d7fcb21f5d92076612e']])expect(createHash('sha256').update(await readFile(new URL('./'+file,import.meta.url))).digest('hex')).toBe(hash);});
+for(const kind of ['faceted','triangles','rectangle','polyline','circle'] as IfcMappingKind[])for(const row of cases.cases)test('mapped '+kind+' '+row.id,async()=>{
+ const fixture=ifcMappingFixture(row,cases.baseBounds,kind),before=structuredClone(fixture.snapshot),outcome=await extractIfc4x3Triangles(fixture.snapshot,{batchSize:4096});expect(outcome.diagnostics).toEqual([]);expect(outcome.artifact).toHaveLength(row.repeatedSource?2:1);expect(fixture.snapshot).toEqual(before);
+ let baseVolume=6;if(kind==='circle'){const base=ifcMappingFixture(cases.cases[0]!,cases.baseBounds,kind);base.representation.args[3]={kind:'aggregate',value:[{kind:'reference',value:base.solid.id}]};baseVolume=volume((await extractIfc4x3Triangles(base.snapshot,{batchSize:4096})).artifact![0]!);}
+ for(const mesh of outcome.artifact!){expect(mesh.entityId).toBe(fixture.solid.id);expect(volume(mesh)).toBeCloseTo(baseVolume*row.expectedVolume/6,7);if(kind!=='circle')for(let side=0;side<2;side++)for(let axis=0;axis<3;axis++)expect((side?Math.max:Math.min)(...mesh.positions.map(point=>point[axis]!))).toBeCloseTo(row.expectedBounds[side]![axis]!,8);}
+});
+for(const row of cases.refusals)test('mapped refusal '+row.id,async()=>{const fixture=ifcMappingFixture(row,cases.baseBounds),before=structuredClone(fixture.snapshot),outcome=await extractIfc4x3Triangles(fixture.snapshot,{batchSize:4096});expect(outcome.artifact??[]).toEqual([]);expect(outcome.diagnostics.some(d=>d.severity==='error')).toBe(true);expect(fixture.snapshot).toEqual(before);});
+for(const fault of ['error','undefined','abort'])for(const frontier of ['initial','interior','completion'])test('mapped original '+fault+' '+frontier,async()=>{
+ const source=ifcMappingFixture(cases.cases.find(row=>row.id==='nested')!,cases.baseBounds).snapshot,events:number[]=[];await extractIfc4x3Triangles(source,{batchSize:1,progress:event=>{if(event.phase==='mappings')events.push(event.completed);}});expect(events.length).toBeGreaterThan(2);const target=frontier==='initial'?0:frontier==='interior'?1:events.length-1,abort=new AbortController(),original=fault==='error'?new Error('original observer'):undefined;let calls=0,redirected=0,caught=false;const control:IfcIoControl={batchSize:1,signal:abort.signal,progress(event){if(event.phase!=='mappings'||calls++!==target)return;control.progress=()=>redirected++;control.signal=new AbortController().signal;if(fault==='abort')abort.abort();else throw original;}};try{await extractIfc4x3Triangles(source,control);}catch(error){caught=true;if(fault==='abort'){expect(error).toBeInstanceOf(IfcStepError);expect(error).toHaveProperty('code','io.cancelled');}else expect(error).toBe(original);}expect(caught).toBe(true);expect(calls).toBe(target+1);expect(redirected).toBe(0);
+});

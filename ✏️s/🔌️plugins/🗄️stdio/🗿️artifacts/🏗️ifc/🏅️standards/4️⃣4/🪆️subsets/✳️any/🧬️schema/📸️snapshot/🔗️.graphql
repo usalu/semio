@@ -1,3 +1,12 @@
+"""🔑️ Unsigned 64-bit identity, transported as a canonical decimal string (0 through 18446744073709551615)."""
+scalar IfcUInt64
+
+"""🔢️ Signed 64-bit integer, transported as a canonical decimal string (-9223372036854775808 through 9223372036854775807)."""
+scalar IfcInt64
+
+"""📍️ Unsigned 64-bit coordinate, transported as a canonical decimal string; consumers check their addressable sequence bounds."""
+scalar IfcIndex
+
 # 🔤️ One typed value in IFC4's Part-21 argument-list syntax (own type, mirrors STEP's shape).
 enum IfcValueKind {
   UNSET
@@ -9,13 +18,16 @@ enum IfcValueKind {
   REFERENCE
   AGGREGATE
   TYPED_VALUE
+  BINARY
 }
 
 type IfcValue {
   kind: IfcValueKind!
-  intValue: Int
+  intValue: IfcInt64
+  referenceValue: IfcUInt64
   realValue: Float
   stringValue: String
+  binaryValue: String
   aggregate: [IfcValue!]
   typedName: String
   typedArgs: [IfcValue!]
@@ -29,10 +41,10 @@ type IfcComplexType {
 
 # 📦️ One `#N = TYPE(args...);` IFC4 instance — id-keyed strong entity.
 type IfcEntity {
-  id: Int!
+  id: IfcUInt64!
   name: String!
   args: [IfcValue!]!
-  complex: [IfcComplexType!]!
+  complex: [IfcComplexType!]
 }
 
 # 📇️ The three standard `HEADER;` records, typed via `IfcValue`.

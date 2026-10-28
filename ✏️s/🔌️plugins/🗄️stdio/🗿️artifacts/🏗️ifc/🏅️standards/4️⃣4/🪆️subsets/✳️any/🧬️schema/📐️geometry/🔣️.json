@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IFC Geometry Scene",
+  "type": "object",
+  "required": [
+    "meshes",
+    "issues",
+    "status",
+    "work"
+  ],
+  "properties": {
+    "meshes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "product",
+          "representation",
+          "label",
+          "vertices",
+          "triangles"
+        ],
+        "properties": {
+          "product": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "representation": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "label": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "triangles": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "entity",
+          "reason"
+        ],
+        "properties": {
+          "entity": {
+            "type": "integer"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "status": {
+      "enum": [
+        "complete",
+        "cancelled",
+        "limited"
+      ]
+    },
+    "work": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "additionalProperties": false
+}

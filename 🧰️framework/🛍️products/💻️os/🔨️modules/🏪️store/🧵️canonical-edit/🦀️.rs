@@ -51,6 +51,10 @@ pub struct ArtifactCanonicalJsonEncodeError {
 /// 🧭️ Exact serde field order over an immutable typed owner. Each lookup must perform bounded
 /// indexed access; scanning, serialization, cloning, and collection inside these methods are forbidden.
 pub trait ArtifactCanonicalJson: Sync {
+    /// 🪪️ A temporary borrowed projection names its stable retained original owner without transferring ownership.
+    fn canonical_json_original_owner(&self) -> Option<&dyn ArtifactCanonicalJson> {
+        None
+    }
     fn canonical_json_node(&self, _path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
         Err(invalid_path())
     }
@@ -319,6 +323,20 @@ impl Default for ArtifactCanonicalJsonCursor {
 }
 
 impl ArtifactCanonicalJsonCursor {
+    /// 🔁️ Quotes only the live root metadata needed after a complete stream.
+    pub fn restart_copy_bytes() -> usize { size_of::<JsonFrame>() + 4 * size_of::<usize>() }
+    /// 🔁️ Starts another source without clearing or copying the retained frame array.
+    pub fn restart_admitted(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ValueError> {
+        if !self.is_complete() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "canonical JSON restart requires a complete stream")); }
+        let bytes = Self::restart_copy_bytes();
+        if grant.maximum_items == 0 || grant.maximum_copy_bytes < bytes || grant.maximum_depth == 0 { return Ok(None); }
+        self.frames[0] = JsonFrame::default();
+        self.depth = 1;
+        self.scalar.length = 0;
+        self.escape_length = 0;
+        self.escape_offset = 0;
+        Ok(Some(RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }))
+    }
     /// 📏️ Starts a fresh encoder whose depth grant is `maximum_depth` frames instead of the full inline capacity.
     pub fn with_maximum_depth(maximum_depth:usize)->Result<Self,ValueError>{if maximum_depth==0||maximum_depth>ARTIFACT_CANONICAL_JSON_DEPTH{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"canonical source depth policy exceeds its retained frame capacity"));}Ok(Self{maximum_depth,..Default::default()})}
 
@@ -356,6 +374,27 @@ impl ArtifactCanonicalJsonCursor {
         let top = self.depth - 1;
         let kind = self.frames[top].kind;
         let phase = self.frames[top].phase;
+        if matches!((kind, phase), (1, 1) | (3, 2)) && self.escape_offset == self.escape_length {
+            let text = if kind == 1 {
+                match source.canonical_json_node(&self.path[..top]).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })? {
+                    ArtifactCanonicalJsonNode::String(text) => ArtifactCanonicalJsonText::Contiguous(text),
+                    ArtifactCanonicalJsonNode::Text(text) => text,
+                    _ => return Err(ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.source-shape-changed") }),
+                }
+            } else {
+                source.canonical_json_key(&self.path[..top], self.frames[top].index).map_err(|reason| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason })?
+            };
+            if let ArtifactCanonicalJsonText::Contiguous(text) = text {
+                let start = self.frames[top].offset;
+                let bytes = text.as_bytes().get(start..).ok_or_else(|| ArtifactCanonicalJsonEncodeError { written_bytes: 0, reason: ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "canonical-edit.text-offset") })?;
+                let count = bytes.iter().take(output.len().min(grant.maximum_copy_bytes).min(64)).take_while(|byte| **byte >= 0x20 && **byte != b'"' && **byte != b'\\').count();
+                if count != 0 {
+                    output[..count].copy_from_slice(&bytes[..count]);
+                    self.frames[top].offset += count;
+                    return Ok(ArtifactCanonicalJsonTreeStep { ownership: RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: count, ..Default::default() }), written_bytes: count });
+                }
+            }
+        }
         let mut copied = 0;
         let result = (|| -> Result<Option<u8>, ValueError> {
             if kind == 0 {

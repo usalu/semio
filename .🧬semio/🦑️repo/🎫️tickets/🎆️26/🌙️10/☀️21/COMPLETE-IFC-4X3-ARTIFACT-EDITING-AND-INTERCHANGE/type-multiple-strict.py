@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/type_input.ts');s=p.read_text(encoding='utf8');s=s.replace('StagedFormControl,StagedValue','StagedFormControl,StagedFormField,StagedFormDiagnostic,StagedValue');s=s.replace('opts,true),opts),response:StagedFormResponse={token:prepared.request.token,fields:[],diagnostics:[],ready:', 'opts,true),opts),fields:StagedFormField[]=[],diagnostics:StagedFormDiagnostic[]=[],response:StagedFormResponse={token:prepared.request.token,fields,diagnostics,ready:');s=s.replace('response.fields.push(','fields.push(').replace('response.diagnostics.push(','diagnostics.push(');data=s.encode();old=p.stat().st_size
+with p.open('r+b')as f:f.write(data);f.write(b' '*max(0,old-len(data)))

@@ -1,0 +1,82 @@
+{
+  "schema": "framework.original-child-editor-command.v1",
+  "originals": [
+    "parent-source",
+    "command-source",
+    "qualified-vector-read",
+    "current-member-read",
+    "registered-command"
+  ],
+  "steps": [
+    "bind-parent",
+    "bind-command",
+    "qualify-current",
+    "ready"
+  ],
+  "cases": [
+    {
+      "name": "original width",
+      "command": "setArtboard",
+      "accept": true
+    },
+    {
+      "name": "original height Unicode",
+      "unicode": true,
+      "command": "setArtboard",
+      "accept": true
+    },
+    {
+      "name": "substituted parent",
+      "substitute": "parent",
+      "accept": false
+    },
+    {
+      "name": "substituted parentProjection",
+      "substitute": "parentProjection",
+      "accept": false
+    },
+    {
+      "name": "substituted command",
+      "substitute": "command",
+      "accept": false
+    },
+    {
+      "name": "substituted commandProjection",
+      "substitute": "commandProjection",
+      "accept": false
+    },
+    {
+      "name": "substituted reference",
+      "substitute": "reference",
+      "accept": false
+    },
+    {
+      "name": "substituted member",
+      "substitute": "member",
+      "accept": false
+    },
+    {
+      "name": "substituted parentRevision",
+      "substitute": "parentRevision",
+      "accept": false
+    },
+    {
+      "name": "substituted childRevision",
+      "substitute": "childRevision",
+      "accept": false
+    },
+    {
+      "name": "substituted capability",
+      "substitute": "capability",
+      "accept": false
+    }
+  ],
+  "denials": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "cancellation": "every-prepared-boundary"
+}

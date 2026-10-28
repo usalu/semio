@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Orthographic STEP Edge And Geometric Curve Projection",
+  "type": "object",
+  "required": [
+    "curves",
+    "unitToPoints",
+    "issues"
+  ],
+  "properties": {
+    "curves": {
+      "type": "array",
+      "maxItems": 16384,
+      "items": {
+        "type": "object",
+        "required": [
+          "sourceId",
+          "points"
+        ],
+        "properties": {
+          "sourceId": {
+            "type": "integer"
+          },
+          "points": {
+            "type": "array",
+            "maxItems": 1025,
+            "items": {
+              "type": "array",
+              "prefixItems": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "number"
+                }
+              ],
+              "minItems": 3,
+              "maxItems": 3
+            },
+            "minItems": 2
+          }
+        }
+      }
+    },
+    "unitToPoints": {
+      "type": "number"
+    },
+    "issues": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  },
+  "description": "At most131072 total projected points; LINE/CIRCLE trim edges plus POLYLINE/CIRCLE geometric curve sets. Circular paths use at most64segments."
+}

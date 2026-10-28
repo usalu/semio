@@ -154,6 +154,16 @@ export function useDocumentTransferRefState({ exportDocumentArchive, importDocum
       currentDocumentRuntimeKey === null || currentDocumentEntry === undefined ? undefined : { runtimeKey: currentDocumentRuntimeKey, clientInstanceId: currentDocumentEntry.clientInstanceId },
     );
   const currentLocalDocumentOwner = currentLocalDocumentOwnerIdentity === null ? null : localDocumentOwnerRegistry.acquire(currentLocalDocumentOwnerIdentity);
+  core.localSourceOwnerRef.current = currentLocalDocumentOwner;
+  const sourcePlugin = session === null ? null : core.loadedPluginsRef.current.find(entry => entry.handle.pluginId === session.pluginId)?.handle ?? null;
+  useEffect(() => {
+    const owner = currentLocalDocumentOwnerIdentity === null ? null : localDocumentOwnerRegistry.acquire(currentLocalDocumentOwnerIdentity);
+    core.localSourceOwnerRef.current = owner;
+    if (owner && sourcePlugin) core.localSourceRefreshRef.current(sourcePlugin, owner.identity.sessionInstanceId);
+    return () => {
+      if (core.localSourceOwnerRef.current === owner) core.localSourceOwnerRef.current = null;
+    };
+  }, [currentLocalDocumentOwner, sourcePlugin, core.localSourceOwnerRef, core.localSourceRefreshRef, localDocumentOwnerRegistry]);
   useEffect(() => {
     localDocumentOwnerRegistry.retain([
       ...[...openDocumentSessionsRef.current.entries()].map(([runtimeKey, entry]) => ({ pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId })),

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout Interchange Contract",
+  "type": "object",
+  "required": [
+    "format",
+    "fidelity",
+    "diagnostics"
+  ],
+  "properties": {
+    "format": {
+      "enum": [
+        "json",
+        "svg",
+        "dxf",
+        "dwg",
+        "png",
+        "pdf",
+        "step",
+        "idml"
+      ]
+    },
+    "fidelity": {
+      "enum": [
+        "native",
+        "editable-subset",
+        "projection"
+      ]
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "code",
+          "message"
+        ],
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

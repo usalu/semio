@@ -27,8 +27,8 @@ impl RetainedDiffPreflightStep{pub fn progress(&self)->RetainedCloneProgress{mat
 /// Every frontier remains closeable without altering or destroying the original diff source.
 pub trait RetainedDiffApply<P,D:RetainedDiffFragment<P>>:Send+'static{
  fn new()->Self;
- fn preflight_demand(&self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>;
- fn preflight(&mut self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>;
+ fn preflight_demand(&self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize)->Result<RetirementDemand,ValueError>;
+ fn preflight(&mut self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightAdvance,ValueError>;
  fn take_messages(&mut self)->Vec<MutationMessage>;
  fn commit_demand(&self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>;
  fn commit(&mut self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&mut P,grant:RetainedCloneGrant,capability:ApplyCapability)->Result<RetainedCloneStep,ValueError>;
@@ -43,6 +43,7 @@ pub struct RetainedDiffOwner<P,D:RetainedDiffFragment<P>>{
  apply:ManuallyDrop<Option<Box<D::FragmentApply>>>,
  diff:Option<RetainedCloneBinding>,
  original:Option<RetainedCloneBinding>,
+ post_identity:Option<(u64,usize,usize,usize)>,
  admitted:bool,
  refused:bool,
  finished:bool,
@@ -67,16 +68,18 @@ impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
  }
 }
 /// 📦️ Quotes the fixed required plan before any diff content or projection is inspected.
-pub fn retained_diff_birth_demand<P,D:RetainedDiffFragment<P>>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<D::FragmentApply>(),capacity_bytes:size_of::<D::FragmentApply>(),depth:1,..Default::default()}}
+pub fn retained_diff_birth_demand<P,D:RetainedDiffFragment<P>>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<D::FragmentApply>()+2*size_of::<RetainedDiffOwner<P,D>>(),capacity_bytes:size_of::<D::FragmentApply>(),depth:1,..Default::default()}}
 /// 🌱️ An unfunded constructor creates no plan, child alias or payload copy.
-pub fn begin_retained_diff<P,D:RetainedDiffFragment<P>>(grant:RetainedCloneGrant)->Option<(RetainedDiffOwner<P,D>,RetainedCloneProgress)>{let demand=retained_diff_birth_demand::<P,D>();if !retained_mutation_demand_fits(demand,grant){return None;}Some((RetainedDiffOwner{apply:ManuallyDrop::new(Some(Box::new(D::FragmentApply::new()))),diff:None,original:None,admitted:false,refused:false,finished:false,closing:false,pending_preflight:None,messages:ManuallyDrop::new(None),message_index:0,message_refusal:false,projected:std::marker::PhantomData},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))}
+pub fn begin_retained_diff<P,D:RetainedDiffFragment<P>>(grant:RetainedCloneGrant)->Option<(RetainedDiffOwner<P,D>,RetainedCloneProgress)>{let demand=retained_diff_birth_demand::<P,D>();if !retained_mutation_demand_fits(demand,grant){return None;}Some((RetainedDiffOwner{apply:ManuallyDrop::new(Some(Box::new(D::FragmentApply::new()))),diff:None,original:None,post_identity:None,admitted:false,refused:false,finished:false,closing:false,pending_preflight:None,messages:ManuallyDrop::new(None),message_index:0,message_refusal:false,projected:std::marker::PhantomData},RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))}
 
 impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
  /// 📏️ Quotes original source capture or the next read-only typed preflight fragment.
- pub fn preflight_demand(&self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize)->Result<RetirementDemand,ValueError>{
+ pub fn preflight_demand(&self,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||self.admitted||self.refused{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"central diff preflight is already settled"));}
+  if self.post_identity.is_some_and(|identity|identity!=post.reference_identity()){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"central diff live post source or projection changed"));}
   if self.diff.is_none(){return Ok(RetirementDemand{copy_bytes:diff.binding_copy_bytes(),depth:1,..Default::default()});}
   if self.original.is_none(){return Ok(RetirementDemand{copy_bytes:original.binding_copy_bytes(),depth:1,..Default::default()});}
+  if self.post_identity.is_none(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<(u64,usize,usize,usize)>>(),depth:1,..Default::default()});}
   if self.pending_preflight.is_some(){
    if let Some(messages)=self.messages.as_ref(){
     return Ok(RetirementDemand{copy_bytes:if self.message_index<messages.retained_messages().len(){size_of::<semio_framework_diagnostic::Severity>()+size_of::<usize>()+size_of::<bool>()}else{size_of::<Vec<MutationMessage>>()+size_of::<bool>()*2},depth:1,..Default::default()});
@@ -119,10 +122,11 @@ impl<P,D:RetainedDiffFragment<P>> RetainedDiffOwner<P,D>{
 }
 
 /// 📖️ Central read-only preflight admits receipts before transferring original diagnostics or authorizing inversion.
-pub fn preflight_retained_diff<P,D:RetainedDiffFragment<P>>(owner:&mut RetainedDiffOwner<P,D>,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:&P,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightStep,ValueError>{
+pub fn preflight_retained_diff<P,D:RetainedDiffFragment<P>>(owner:&mut RetainedDiffOwner<P,D>,diff:RetainedCloneRef<'_,D>,original:RetainedCloneRef<'_,P>,post:RetainedCloneRef<'_,P>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<RetainedDiffPreflightStep,ValueError>{
  let demand=owner.preflight_demand(diff,original,post,body)?;if !retained_mutation_demand_fits(demand,grant){return Ok(RetainedDiffPreflightStep::Progress(Default::default()));}
  if let Some(progress)=diff.bind(&mut owner.diff,grant)?{return Ok(RetainedDiffPreflightStep::Progress(progress));}
  if let Some(progress)=original.bind(&mut owner.original,grant)?{return Ok(RetainedDiffPreflightStep::Progress(progress));}
+ if owner.post_identity.is_none(){owner.post_identity=Some(post.reference_identity());return Ok(RetainedDiffPreflightStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
  if let Some(requested)=owner.pending_preflight{
   let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
   if owner.messages.is_none(){let messages=owner.apply.as_mut().expect("original typed diff plan").take_messages();*owner.messages=Some(MutationMessageLedgerRetirement::new(String::new(),messages));return Ok(RetainedDiffPreflightStep::Progress(receipt));}

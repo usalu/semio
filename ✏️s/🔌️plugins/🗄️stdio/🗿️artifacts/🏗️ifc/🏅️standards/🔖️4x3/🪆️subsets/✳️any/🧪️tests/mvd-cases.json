@@ -1,0 +1,14 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "views": ["ReferenceView", "Alignment-basedReferenceView"],
+  "cases": [
+    {"entity": "IFCWALL", "view": "ReferenceView", "state": "universal"},
+    {"entity": "IFCWALL", "view": "Alignment-basedReferenceView", "state": "universal"},
+    {"entity": "IfcWall", "view": "ReferenceView", "state": "universal"},
+    {"entity": "IFCNOTADECLARATION", "view": "ReferenceView", "state": "unknown"}
+  ],
+  "concepts": [
+    {"id": "Object_Assignment", "view": "ReferenceView", "state": "included"},
+    {"id": "Object_Assignment", "view": "Alignment-basedReferenceView", "state": "included"}
+  ]
+}

@@ -1,0 +1,135 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty",
+      "kind": "difference",
+      "left": null,
+      "right": null,
+      "volume": 0
+    },
+    {
+      "id": "copy",
+      "kind": "difference",
+      "left": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "right": null,
+      "volume": 64
+    },
+    {
+      "id": "disjoint-empty",
+      "kind": "intersection",
+      "left": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "right": [
+        [
+          6,
+          0,
+          0
+        ],
+        [
+          10,
+          4,
+          4
+        ]
+      ],
+      "volume": 0
+    },
+    {
+      "id": "overlapping-cut",
+      "kind": "difference",
+      "left": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "right": [
+        [
+          2,
+          0,
+          0
+        ],
+        [
+          6,
+          4,
+          4
+        ]
+      ],
+      "volume": 32
+    },
+    {
+      "id": "disconnected-union",
+      "kind": "union",
+      "left": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "right": [
+        [
+          6,
+          0,
+          0
+        ],
+        [
+          10,
+          4,
+          4
+        ]
+      ],
+      "volume": 128
+    },
+    {
+      "id": "plane-cut",
+      "kind": "halfspace",
+      "left": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          4,
+          4,
+          4
+        ]
+      ],
+      "right": null,
+      "volume": 32
+    }
+  ]
+}

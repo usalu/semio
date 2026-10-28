@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout Drawing Member Birth",
+  "description": "Authored typed birth input is separate from the persistent reference-only parent. The original snapshot transfers to its member store after canonical admission.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "source",
+    "member",
+    "initial"
+  ],
+  "properties": {
+    "source": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "document"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "pageId"
+          ],
+          "properties": {
+            "kind": {
+              "const": "page"
+            },
+            "pageId": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "member": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "handle"
+      ],
+      "properties": {
+        "handle": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "childId",
+            "target"
+          ],
+          "properties": {
+            "childId": {
+              "type": "string",
+              "minLength": 1
+            },
+            "target": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "artifactId",
+                "dialect"
+              ],
+              "properties": {
+                "artifactId": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "dialect": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "artifactKind",
+                    "standard",
+                    "subset"
+                  ],
+                  "properties": {
+                    "artifactKind": {
+                      "const": "s.draw.drawing"
+                    },
+                    "standard": {
+                      "const": "1"
+                    },
+                    "subset": {
+                      "const": "*"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "initial": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/artifact.json"
+    }
+  }
+}

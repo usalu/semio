@@ -1,0 +1,335 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "encoding": "ifc-template-command",
+  "sources": {
+    "basic": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCSURFACESTYLEREFRACTION",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCPRESENTATIONITEM",
+              "args": []
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "name": "IFCORGANIZATION",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "source organization"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "unit": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCMATERIALCONSTITUENT",
+          "args": [
+            {
+              "kind": "string",
+              "value": "名称🌍"
+            },
+            {
+              "kind": "string",
+              "value": "exact description"
+            },
+            {
+              "kind": "reference",
+              "value": "6"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "category/🌍"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCMATERIALDEFINITION",
+              "args": []
+            }
+          ]
+        },
+        {
+          "id": "6",
+          "name": "IFCMATERIAL",
+          "args": [
+            {
+              "kind": "string",
+              "value": "steel"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "7",
+          "name": "IFCSIUNIT",
+          "args": [
+            {
+              "kind": "derived"
+            },
+            {
+              "kind": "enum",
+              "value": "LENGTHUNIT"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "enum",
+              "value": "METRE"
+            }
+          ],
+          "complex": []
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "mixed-reference-and-strings",
+      "source": "basic",
+      "target": "IFCAPPLICATION",
+      "required": [
+        {
+          "index": 0,
+          "kind": "reference"
+        },
+        {
+          "index": 1,
+          "kind": "string"
+        },
+        {
+          "index": 2,
+          "kind": "string"
+        },
+        {
+          "index": 3,
+          "kind": "string"
+        }
+      ],
+      "steps": [
+        {
+          "field": 3,
+          "text": "原 🧭 semio"
+        },
+        {
+          "field": 0,
+          "text": "7"
+        },
+        {
+          "field": 1,
+          "text": ""
+        },
+        {
+          "field": 2,
+          "text": "Caller application"
+        }
+      ],
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "string",
+          "value": ""
+        },
+        {
+          "kind": "string",
+          "value": "Caller application"
+        },
+        {
+          "kind": "string",
+          "value": "原 🧭 semio"
+        }
+      ],
+      "mutations": 5
+    },
+    {
+      "id": "reference-and-negative-integer",
+      "source": "unit",
+      "target": "IFCDERIVEDUNITELEMENT",
+      "required": [
+        {
+          "index": 0,
+          "kind": "reference"
+        },
+        {
+          "index": 1,
+          "kind": "integer"
+        }
+      ],
+      "steps": [
+        {
+          "field": 1,
+          "text": "-2"
+        },
+        {
+          "field": 0,
+          "text": "7"
+        }
+      ],
+      "args": [
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "integer",
+          "value": "-2"
+        }
+      ],
+      "mutations": 6
+    },
+    {
+      "id": "seven-exact-integers",
+      "source": "basic",
+      "target": "IFCDIMENSIONALEXPONENTS",
+      "required": [
+        {
+          "index": 0,
+          "kind": "integer"
+        },
+        {
+          "index": 1,
+          "kind": "integer"
+        },
+        {
+          "index": 2,
+          "kind": "integer"
+        },
+        {
+          "index": 3,
+          "kind": "integer"
+        },
+        {
+          "index": 4,
+          "kind": "integer"
+        },
+        {
+          "index": 5,
+          "kind": "integer"
+        },
+        {
+          "index": 6,
+          "kind": "integer"
+        }
+      ],
+      "steps": [
+        {
+          "field": 6,
+          "text": "0"
+        },
+        {
+          "field": 5,
+          "text": "0"
+        },
+        {
+          "field": 4,
+          "text": "0"
+        },
+        {
+          "field": 3,
+          "text": "0"
+        },
+        {
+          "field": 2,
+          "text": "0"
+        },
+        {
+          "field": 1,
+          "text": "-2"
+        },
+        {
+          "field": 0,
+          "text": "1"
+        }
+      ],
+      "args": [
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "integer",
+          "value": "-2"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "integer",
+          "value": "0"
+        }
+      ],
+      "mutations": 8
+    }
+  ],
+  "integerDrafts": [
+    "",
+    "-",
+    "-0",
+    "01",
+    "+1",
+    "9223372036854775808",
+    "-9223372036854775809",
+    "1.0"
+  ],
+  "integerValues": [
+    "-9223372036854775808",
+    "9223372036854775807",
+    "0",
+    "-2"
+  ]
+}

@@ -40,3 +40,4 @@ semio-framework-pack-json = { path = "../../../../../../../../../../../../../�
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 serde_json = { workspace = true }
+semio-s-artifact-stdio-step-test-oracle = { path = "../../../../../../../../🔮️oracles/📦️packages/🦀️rust" }

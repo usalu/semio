@@ -1,0 +1,192 @@
+{
+  "schema": "semio.ifc.fem.native-nodal-units.v1",
+  "dimensions": {
+    "force": [
+      1,
+      1,
+      -2,
+      0,
+      0,
+      0,
+      0
+    ],
+    "torque": [
+      2,
+      1,
+      -2,
+      0,
+      0,
+      0,
+      0
+    ]
+  },
+  "policy": "exact-one-unscaled-si",
+  "cases": [
+    {
+      "id": "force-newton",
+      "role": "force",
+      "form": "si",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "FORCEUNIT",
+      "lengthExponent": 0,
+      "assignments": 1,
+      "valid": true
+    },
+    {
+      "id": "force-kilonewton",
+      "role": "force",
+      "form": "si",
+      "name": "NEWTON",
+      "prefix": "KILO",
+      "tag": "FORCEUNIT",
+      "lengthExponent": 0,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "force-millinewton",
+      "role": "force",
+      "form": "si",
+      "name": "NEWTON",
+      "prefix": "MILLI",
+      "tag": "FORCEUNIT",
+      "lengthExponent": 0,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "force-pascal-wrong-tag",
+      "role": "force",
+      "form": "si",
+      "name": "PASCAL",
+      "prefix": null,
+      "tag": "FORCEUNIT",
+      "lengthExponent": 0,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "force-pascal",
+      "role": "force",
+      "form": "si",
+      "name": "PASCAL",
+      "prefix": null,
+      "tag": "PRESSUREUNIT",
+      "lengthExponent": 0,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "force-missing",
+      "role": "force",
+      "form": "si",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "FORCEUNIT",
+      "lengthExponent": 0,
+      "assignments": 0,
+      "valid": false
+    },
+    {
+      "id": "force-duplicate",
+      "role": "force",
+      "form": "si",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "FORCEUNIT",
+      "lengthExponent": 0,
+      "assignments": 2,
+      "valid": false
+    },
+    {
+      "id": "torque-newton-metre",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "TORQUEUNIT",
+      "lengthExponent": 1,
+      "assignments": 1,
+      "valid": true
+    },
+    {
+      "id": "torque-scaled-force",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": "KILO",
+      "tag": "TORQUEUNIT",
+      "lengthExponent": 1,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "torque-wrong-length-power",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "TORQUEUNIT",
+      "lengthExponent": -1,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "torque-wrong-tag",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "MOMENTOFINERTIAUNIT",
+      "lengthExponent": 1,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "torque-missing",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "TORQUEUNIT",
+      "lengthExponent": 1,
+      "assignments": 0,
+      "valid": false
+    },
+    {
+      "id": "torque-duplicate",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "TORQUEUNIT",
+      "lengthExponent": 1,
+      "assignments": 2,
+      "valid": false
+    },
+    {
+      "id": "torque-si-name",
+      "role": "torque",
+      "form": "si",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "TORQUEUNIT",
+      "lengthExponent": 0,
+      "assignments": 1,
+      "valid": false
+    },
+    {
+      "id": "torque-derived-density-zero-child",
+      "role": "torque",
+      "form": "derived",
+      "name": "NEWTON",
+      "prefix": null,
+      "tag": "TORQUEUNIT",
+      "lengthExponent": 1,
+      "assignments": 1,
+      "extraDerivedZero": true,
+      "valid": false
+    }
+  ]
+}

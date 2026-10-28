@@ -108,3 +108,84 @@ Feature: Produce every schema-expressible IFC4 mutation twice, in two independen
     Given the real input document shared://🏢️nakagin-capsule-tower/🏢️nakagin-capsule-tower.ifc
     When the document is decoded into each implementation's own model and re-encoded from it alone
     Then both independently re-encoded documents carry the same semantic projection
+
+  @id-differential-official-round-trip
+  @level-quick
+  @mode-differential
+  Scenario Outline: Preserve the full graph of an unchanged official IFC4 reference sample
+    Given the official input document shared://🏛️official/<file>
+    When the IFC4 boundary imports and exports the document through its own snapshot
+      """
+      {"input": "shared://🏛️official/<file>", "entityCount": <count>}
+      """
+    Then independent ruststep and IfcOpenShell readers agree on the complete exchange graph
+    Examples:
+      | file                                        | count |
+      | tessellation-with-individual-colors.ifc      | 32    |
+      | column-straight-rectangle-tessellation.ifc   | 26    |
+
+  @id-differential-geometry-placed-extrusion
+  @level-quick
+  @mode-differential
+  Scenario: Independently project placed-extrusion geometry
+    Given the language-neutral IFC4 representation graph
+    When both implementations independently tessellate and place the source representation
+      """
+      {"name":"placed-extrusion","data":"#1=IFCCARTESIANPOINT((10.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCLOCALPLACEMENT($,#2);\n#4=IFCCARTESIANPOINT((0.,20.,0.));\n#5=IFCDIRECTION((0.,1.,0.));\n#6=IFCAXIS2PLACEMENT3D(#4,#11,#5);\n#7=IFCLOCALPLACEMENT(#3,#6);\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,$,$);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#9,$);\n#11=IFCDIRECTION((0.,0.,1.));\n#12=IFCRECTANGLEPROFILEDEF(.AREA.,$,$,2.,4.);\n#13=IFCEXTRUDEDAREASOLID(#12,#9,#11,3.);\n#14=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#13));\n#15=IFCPRODUCTDEFINITIONSHAPE($,$,(#14));\n#16=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Extrusion',$,$,#7,#15,$,$);","expected":{"products":[16],"vertices":8,"triangles":12,"bounds":[[8,19,0],[12,21,3]],"volume":24}}
+      """
+    Then real vertices, triangles, world bounds and geometric measures agree
+
+  @id-differential-geometry-triangulated
+  @level-quick
+  @mode-differential
+  Scenario: Independently project triangulated geometry
+    Given the language-neutral IFC4 representation graph
+    When both implementations independently tessellate and place the source representation
+      """
+      {"name":"triangulated","data":"#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n#4=IFCPRODUCTDEFINITIONSHAPE($,$,(#3));\n#5=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Triangle',$,$,$,#4,$,$);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);","expected":{"products":[5],"vertices":3,"triangles":1,"bounds":[[0,0,0],[2,3,0]]}}
+      """
+    Then real vertices, triangles, world bounds and geometric measures agree
+
+  @id-differential-geometry-mapped-triangle
+  @level-quick
+  @mode-differential
+  Scenario: Independently project mapped-triangle geometry
+    Given the language-neutral IFC4 representation graph
+    When both implementations independently tessellate and place the source representation
+      """
+      {"name":"mapped-triangle","data":"#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);\n#9=IFCCARTESIANPOINT((1.,0.,0.));\n#10=IFCAXIS2PLACEMENT3D(#9,$,$);\n#11=IFCREPRESENTATIONMAP(#10,#3);\n#12=IFCCARTESIANPOINT((10.,0.,0.));\n#13=IFCCARTESIANTRANSFORMATIONOPERATOR3D($,$,#12,2.,$);\n#14=IFCMAPPEDITEM(#11,#13);\n#15=IFCSHAPEREPRESENTATION(#8,'Body','MappedRepresentation',(#14));\n#16=IFCPRODUCTDEFINITIONSHAPE($,$,(#15));\n#17=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Mapped Triangle',$,$,$,#16,$,$);","expected":{"products":[17],"vertices":3,"triangles":1,"bounds":[[12,0,0],[16,6,0]]}}
+      """
+    Then real vertices, triangles, world bounds and geometric measures agree
+
+  @id-differential-geometry-concave-polygon
+  @level-quick
+  @mode-differential
+  Scenario: Independently project concave-polygon geometry
+    Given the language-neutral IFC4 representation graph
+    When both implementations independently tessellate and place the source representation
+      """
+      {"name":"concave-polygon","data":"#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(2.,1.,0.),(1.,1.,0.),(1.,2.,0.),(0.,2.,0.)));\n#2=IFCINDEXEDPOLYGONALFACE((1,2,3,4,5,6));\n#9=IFCPOLYGONALFACESET(#1,.F.,(#2),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#9));\n#4=IFCPRODUCTDEFINITIONSHAPE($,$,(#3));\n#5=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Concave Polygon',$,$,$,#4,$,$);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);","expected":{"products":[5],"vertices":6,"triangles":4,"bounds":[[0,0,0],[2,2,0]],"area":3}}
+      """
+    Then real vertices, triangles, world bounds and geometric measures agree
+
+  @id-differential-geometry-pn-index
+  @level-quick
+  @mode-differential
+  Scenario: Independently project pn-index geometry
+    Given the language-neutral IFC4 representation graph
+    When both implementations independently tessellate and place the source representation
+      """
+      {"name":"pn-index","data":"#1=IFCCARTESIANPOINTLIST3D(((99.,99.,99.),(0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),(2,3,4));\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n#4=IFCPRODUCTDEFINITIONSHAPE($,$,(#3));\n#5=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Triangle',$,$,$,#4,$,$);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);","expected":{"products":[5],"vertices":3,"triangles":1,"bounds":[[0,0,0],[2,3,0]]}}
+      """
+    Then real vertices, triangles, world bounds and geometric measures agree
+
+  @id-differential-geometry-faceted-brep
+  @level-quick
+  @mode-differential
+  Scenario: Independently project faceted-brep geometry
+    Given the language-neutral IFC4 representation graph
+    When both implementations independently tessellate and place the source representation
+      """
+      {"name":"faceted-brep","data":"#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCCARTESIANPOINT((2.,0.,0.));\n#3=IFCCARTESIANPOINT((0.,3.,0.));\n#4=IFCCARTESIANPOINT((0.,0.,4.));\n#5=IFCPOLYLOOP((#1,#3,#2));\n#6=IFCPOLYLOOP((#1,#2,#4));\n#7=IFCPOLYLOOP((#1,#4,#3));\n#8=IFCPOLYLOOP((#2,#3,#4));\n#9=IFCFACEOUTERBOUND(#5,.T.);\n#10=IFCFACEOUTERBOUND(#6,.T.);\n#11=IFCFACEOUTERBOUND(#7,.T.);\n#12=IFCFACEOUTERBOUND(#8,.T.);\n#13=IFCFACE((#9));\n#14=IFCFACE((#10));\n#15=IFCFACE((#11));\n#16=IFCFACE((#12));\n#17=IFCCLOSEDSHELL((#13,#14,#15,#16));\n#18=IFCFACETEDBREP(#17);\n#19=IFCSHAPEREPRESENTATION(#102,'Body','Brep',(#18));\n#20=IFCPRODUCTDEFINITIONSHAPE($,$,(#19));\n#21=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Tetrahedron',$,$,$,#20,$,$);\n#100=IFCCARTESIANPOINT((0.,0.,0.));\n#101=IFCAXIS2PLACEMENT3D(#100,$,$);\n#102=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#101,$);","expected":{"products":[21],"vertices":4,"triangles":4,"bounds":[[0,0,0],[2,3,4]],"volume":4}}
+      """
+    Then real vertices, triangles, world bounds and geometric measures agree

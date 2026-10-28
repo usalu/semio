@@ -1,0 +1,11 @@
+# Minimum Owned Ordinary Control Port
+
+Read-only current source2026-10-21. Existing owned read hooks can supply exact per-node lease records; concrete ordinary interpreter remains UiDocumentStore-bound. No fulltree projection is required or acceptable as original ownership proof.
+
+For shared Input/Select/Button views,the minimum source-neutral port must provide: stable source identity for pending/draft scopes; exact surface/publication metadata; per-node subscribe/read snapshot; committed-issued read acknowledgement/unsubscribe; current node lookup by exact admitted ID/key; revision subscribe for blur publication lane; original intent construction from current node+authored binding+raw input and monotonic seq; stable DOM ID namespace. Preserve existing record presentation fields (component,accessibility,style,disabled,key,id,bindings) through a bounded node selector rather than capture whole tree.
+
+Actual dependencies: input-views:177/183 getNodeSnapshot and189 subscribeRevision; display-views:55 Button re-resolves exact current node before activation; action-dispatch:20 emitIntent→store.buildIntent; stable-dom-ids:29 depends source identity. UiNodeView:558 currently useUiNode concrete store. Select dispatches its rendered record through generic action-dispatch,so new owned port must revalidate current binding at dispatch,not trust an earlier record preview.
+
+Adapt ordinary views through shared narrow context/read+intent interface. Owned implementation uses useOwnedUiView/useOwnedUiNode's exact subscription/commit ack; existing store implementation delegates current methods. Do not implement a fake full UiDocumentStore or full snapshot clone. Container child traversal needs separately bounded child-ID selectors from issued resident record; tree/table/paging are a larger separate port and cannot be declared solved by three controls.
+
+Presentation overlay supplies only effective text/choice display; current resident bindings and source evidence remain unchanged. Reserved staging intent intercept runs before flattening; refusal consumes reserved intent and cannot fall through. Blur commit revision/read lane,Button busy lifetime,continuous gesture cancellation and native controlled selectors remain explicit parity tests. This is a minimum architecture map,not mounted runtime evidence.

@@ -26,14 +26,14 @@ impl<P: Send> MemberSnapshotOpenOperation for UnsupportedMemberSnapshotOpen<P> {
         Ok(Self { request: ManuallyDrop::new(Some(request)), diagnostic: None, marker: PhantomData })
     }
 
-    fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> MemberSnapshotOpenStep {
+    fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> Result<MemberSnapshotOpenStep,OriginalTurnFailure> {
         let diagnostic = self.diagnostic.or_else(|| self.request.as_ref().and_then(|request| request.check_step_authority(cx).err())).unwrap_or(MemberOpenDiagnostic::Decode);
         self.diagnostic = Some(diagnostic);
-        MemberSnapshotOpenStep::Rejected(diagnostic)
+        Ok(MemberSnapshotOpenStep::Rejected(diagnostic))
     }
 
-    fn take_ready(&mut self, _cx: &mut StepContext<'_>) -> Option<(P, MemberOpenRequest)> {
-        None
+    fn take_ready(&mut self, _cx: &mut StepContext<'_>) -> Result<Option<(P, MemberOpenRequest)>,OriginalTurnFailure> {
+        Ok(None)
     }
 }
 
@@ -75,7 +75,7 @@ impl<M: Send> MemberOpenOperation for UnsupportedMemberFactoryOpen<M> {
 
     fn step(&mut self, cx: &mut StepContext<'_>, _grant: RetainedCloneGrant) -> Result<MemberOpenStep<M>,OriginalTurnFailure> {
         self.source_loan.as_ref().ok_or_else(||member_admission_diagnostic(MemberOpenDiagnostic::Stale))?.validate_context(cx)?;
-        Ok(match self.snapshot.step(cx, _grant) {
+        Ok(match self.snapshot.step(cx, _grant)? {
             MemberSnapshotOpenStep::Rejected(diagnostic) => MemberOpenStep::Rejected(diagnostic),
             _ => MemberOpenStep::Rejected(MemberOpenDiagnostic::Decode),
         })

@@ -1,0 +1,20 @@
+{
+  "feature": "layout.retained.frame-membership",
+  "kinds": [
+    "CreateFrame",
+    "DeleteFrame"
+  ],
+  "sources": "sealed original mutation and snapshot projections",
+  "guards": [
+    "original page/local/global IDs",
+    "assigned parent collision",
+    "finite geometry/colors/insets",
+    "effective own layer override",
+    "original story/link targets",
+    "outgoing thread story and unique incoming edge",
+    "surviving incoming edges before removal"
+  ],
+  "forward": "move prepared original frame; retain displaced authored layer String in its mutation factory owner",
+  "inverse": "original identity Strings or only the original removed Frame",
+  "continuation": "numeric coordinates and original source bindings only; no candidate Snapshot"
+}

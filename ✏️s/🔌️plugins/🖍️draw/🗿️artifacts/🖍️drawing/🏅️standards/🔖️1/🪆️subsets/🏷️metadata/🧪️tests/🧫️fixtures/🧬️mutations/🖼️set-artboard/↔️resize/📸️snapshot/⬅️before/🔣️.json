@@ -1,0 +1,10 @@
+{
+  "schema": "drawing.document",
+  "id": "drawing-artboard-fixture",
+  "title": "Artboard",
+  "layers": [],
+  "artboard": {
+    "width": 640,
+    "height": 480
+  }
+}

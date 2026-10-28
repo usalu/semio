@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "limits",
+    "cases"
+  ],
+  "properties": {
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "leases",
+        "reads"
+      ],
+      "properties": {
+        "leases": {
+          "const": 64
+        },
+        "reads": {
+          "const": 64
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "state",
+          "acquire",
+          "current"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "state": {
+            "enum": [
+              "before-ack",
+              "acknowledged",
+              "pending-next-ack",
+              "next-ack-old-target",
+              "copied-target",
+              "foreign-instance",
+              "foreign-handle",
+              "closing",
+              "remounted"
+            ]
+          },
+          "acquire": {
+            "type": "boolean"
+          },
+          "current": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "schema":"semio.ifc4x3.template-tests.v1",
+  "counts":{"templates":760,"propertySets":645,"quantitySets":115,"entries":3988,"enumLiterals":3814},
+  "applicability":[
+    {"template":"Pset_WallCommon","entity":"IfcWall","predefinedType":"STANDARD","state":"applicable"},
+    {"template":"Pset_WallCommon","entity":"IfcDoor","state":"inapplicable"},
+    {"template":"Pset_WallCommon","entity":"IfcWallStandardCase","state":"applicable"},
+    {"template":"Pset_WallCommon","entity":"IfcMissingEntity","state":"unknownEntity"},
+    {"template":"Pset_ActuatorTypeElectricActuator","entity":"IfcActuator","state":"requiresPredefinedType"},
+    {"template":"Pset_ActuatorTypeElectricActuator","entity":"IfcActuator","predefinedType":"ELECTRICACTUATOR","state":"applicable"},
+    {"template":"Pset_ActuatorTypeElectricActuator","entity":"IfcActuator","predefinedType":"PNEUMATICACTUATOR","state":"inapplicable"},
+    {"template":"Qto_WallBaseQuantities","entity":"IfcWallType","state":"applicable"}
+  ],
+  "entries":[
+    {"template":"Pset_WallCommon","entry":"Status","kind":"P_ENUMERATEDVALUE","dataType":"IfcLabel","enumeration":"PEnum_ElementStatus","literal":"NEW"},
+    {"template":"Pset_WallCommon","entry":"IsExternal","kind":"P_SINGLEVALUE","dataType":"IfcBoolean"},
+    {"template":"Qto_WallBaseQuantities","entry":"NetSideArea","kind":"Q_AREA","dataType":"IfcAreaMeasure"}
+  ],
+  "locales":["en","de"]
+}

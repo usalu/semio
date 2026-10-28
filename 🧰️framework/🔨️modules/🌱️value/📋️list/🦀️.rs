@@ -419,6 +419,7 @@ impl<T, const N: usize> PagedList<T, N> {
         self.next_page_copy_byte_demand()
     }
     /// 📄️ Quotes the original page path of the next backing allocation toward a declared logical capacity.
+    /// 🧭️ Quotes traversal of the next original backing toward a declared capacity, including preadmission before current slots fill.
     pub fn next_capacity_depth_demand(&self,capacity:usize)->Result<usize,PagedListError>{
         if capacity>N{return Err(PagedListError{kind:PagedListRefusalKind::OwnershipLimit,reason:"fixed list logical capacity exhausted"})}
         if capacity<=self.capacity{return Ok(0)}

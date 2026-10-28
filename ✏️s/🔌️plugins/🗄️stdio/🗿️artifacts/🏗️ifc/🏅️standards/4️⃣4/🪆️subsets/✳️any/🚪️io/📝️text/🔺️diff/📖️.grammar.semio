@@ -14,10 +14,11 @@ file-name-tok = "file-name" "=" ifc-value-list
 file-schema-tok = "file-schema" "=" ifc-value-list
 entities-tok = "entities" "=" entities-diff
 
-# `enc_entities_diff`: `[removed-ids];[modified];[added]` — id-keyed collection triple (§1.4's
+# `enc_entities_diff`: `[removed-id:index];[modified];[added]` — id-keyed collection triple (§1.4's
 # copy-pasteable shape), same shape as the sibling STEP artifact's own `entities` diff.
-entities-diff = "[" u64-list "]" ";" "[" entity-modified-list "]" ";" "[" entity-added-list "]"
-u64-list = {INT {"," INT}*}?
+entities-diff = "[" entity-removed-list "]" ";" "[" entity-modified-list "]" ";" "[" entity-added-list "]"
+entity-removed-list = {entity-removed {"," entity-removed}*}?
+entity-removed = INT ":" INT
 entity-modified-list = {entity-modified {"," entity-modified}*}?
 entity-modified = INT ":" entity-diff
 entity-added-list = {entity-added {"," entity-added}*}?

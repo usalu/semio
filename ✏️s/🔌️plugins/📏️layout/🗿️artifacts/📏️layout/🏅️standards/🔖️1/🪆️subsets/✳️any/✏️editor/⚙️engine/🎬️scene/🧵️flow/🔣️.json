@@ -1,0 +1,126 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LayoutTextFlowFrame",
+  "description": "Ephemeral geometry admitted one frame at a time from the immutable resolved document. Inset is a relative content rectangle clipped to the frame. A region yields original UTF-8 source offsets; the paragraph owner returns its actual consumed line end before continuation.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageIndex",
+    "frameIndex",
+    "parent",
+    "storyIndex",
+    "next",
+    "columns",
+    "gutter",
+    "bounds",
+    "inset"
+  ],
+  "properties": {
+    "pageIndex": {
+      "$ref": "#/$defs/index"
+    },
+    "frameIndex": {
+      "$ref": "#/$defs/index"
+    },
+    "parent": {
+      "type": "boolean"
+    },
+    "storyIndex": {
+      "$ref": "#/$defs/index"
+    },
+    "next": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/index"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "columns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "gutter": {
+      "type": "number",
+      "minimum": 0
+    },
+    "bounds": {
+      "$ref": "#/$defs/bounds"
+    },
+    "inset": {
+      "$ref": "#/$defs/rect"
+    }
+  },
+  "$defs": {
+    "index": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967295
+    },
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "bounds": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height",
+        "rotation"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "height": {
+          "type": "number",
+          "minimum": 0
+        },
+        "rotation": {
+          "type": "number"
+        }
+      }
+    },
+    "sourceLength": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 4294967296,
+      "description": "Immutable scalar row count for FlowFrameSource; the last accepted ordinal remains4294967295. Lookup lends one copied scalar row without flattening the retained owner."
+    }
+  }
+}

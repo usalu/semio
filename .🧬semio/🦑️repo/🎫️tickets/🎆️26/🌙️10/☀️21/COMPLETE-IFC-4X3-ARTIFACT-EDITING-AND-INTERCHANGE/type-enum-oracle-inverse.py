@@ -1,0 +1,3 @@
+from pathlib import Path
+p=Path(__file__).with_name('type-enum-fixtures.ts');s=p.read_text(encoding='utf8');a="{id:'7',name:'IFCPOLYLINE',args:[a(r('9'),r('10'))],complex:[]},...points]";assert s.count(a)==1;s=s.replace(a,"{id:'7',name:'IFCPOLYLINE',args:[a(r('9'),r('10'))],complex:[]},{id:'11',name:'IFCCOMPOSITECURVE',args:[a(r('1')),e('F')],complex:[]},...points]");p.write_text(s,encoding='utf8')
+p=Path(__file__).with_name('type-enum-oracle.py');s=p.read_text(encoding='utf8');s=s.replace("#7=IFCPOLYLINE((#9,#10));\\n\"+points", "#7=IFCPOLYLINE((#9,#10));\\n#11=IFCCOMPOSITECURVE((#1),.F.);\\n\"+points");p.write_text(s,encoding='utf8')

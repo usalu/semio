@@ -1,0 +1,13 @@
+# Opaque Source Work Independent Audit
+
+Read-only current work.ts/cache/program-dispatch source checkpoint2026-10-21. No new confirmed P1/P2 within exact authentic channel/owner contract. No complete browser/native execution claim.
+
+Work subscribes exact plugin instance before handleAction; per-work bounded64-ID early evidence handles completion racing admission without reading global waiter ring. Registry is nested by exact source cache,owner object and plugin handle. Known operation release requires both host dispatch finish and matching channel completion; caller awaitOperationSettle/null is irrelevant. Undefined operation releases only after admitted synchronous dispatch finishes. Unknown/lost admission remains held until source owner/channel binding retirement. Duplicate live operation key marks registry null and fails closed rather than picking a release authority. Exact source subscription closes work if bound owner/plugin changes.
+
+Program-dispatch now calls admit(startedOperation.operation) from actual admission and finish only in finally. Early stale-effect wait correction remains separate. Direct actor route admits undefined only after actual dispatchDirectBrowserActorCommand promise returns. Thus normal local hold no longer reopens merely from watchdog null. Existing direct actor commit-promise semantics remain a dependency,not newly proved by this module.
+
+Cache holds are bounded256; saturation latches exhausted and keeps begin/read unresolved even if a new work cannot be retained. Per-work early completion overflow may lose matching evidence and remain unresolved—safe failure,not false readiness. A refresh attempted while sibling holds exist cannot begin; final actual release refreshes. Source close replaces hold-set,so old callbacks cannot release new owner tokens. Completion unsubscribe/callback exception handling conservatively retains unresolved work when admission is uncertain.
+
+Adjacent tests cover watchdog,dispatchfinish ordering,earlycompletion,lostadmission,retirement,overlap and forged replacement. Read source only; no duplicate suite run. Allocator u64-wrap caveat from operation-completion-authority-audit.md remains: source proves ordinary slotreuse freshID but not checked exhaustion. This module does not need a new wire generation under nonreused IDs/exact channel lifetime; formal allocator boundary should be handled separately.
+
+Remaining full-goal gates: all remote/archive/extension/service mutations must use same hold discipline; operation subscription authority must remain actual current plugin channel; actual source owner retirement must clear binding; native receiving/form body remains unmounted/unverified. No cache-ready claim from ordinary UI refresh/hash or partial native test source.

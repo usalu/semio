@@ -1,0 +1,19 @@
+{
+  "schema":"stdio.ifc.retained-event-admission/1",
+  "maximumRawBytes":16777216,
+  "maximumValueNodes":65536,
+  "maximumValueDepth":128,
+  "keyCompareBytes":64,
+  "grantLaws":{"axes":["items","copyBytes","capacityBytes","releaseBytes","depth"],"partialCodecCopyBytes":63,"originalOwnerStringBytes":1024,"noAuthorityMeansNoProgress":true,"zeroUndemandedCapacityAndReleasePermitProgress":true,"nativeExecution":false},
+  "exactBytes":[81,80,48,87,71,45],
+  "events":[
+    {"operation":"setValue","path":"/entities/0/args/3/value","value":"Grüße 😀"},
+    {"operation":"insertValue","path":"/entities/0/args/0","value":{"kind":"unset"}},
+    {"operation":"removeValue","path":"/entities/0"},
+    {"operation":"moveValue","from":"/entities/0/complex/0","path":"/entities/0/complex/1"},
+    {"operation":"renameKey","path":"/header/fileName","key":"quoted\"key"},
+    {"operation":"replaceSource","source":"A\nB"}
+  ],
+  "refusals":{"duplicateObjectKeys":["same","same"],"nonFinite":true,"nodes":65537,"depth":129,"oversizedStringBytes":16777216},
+  "assertions":["Exact raw event byte count equals native OpBinary encoding","One original turn advances one value metadata event or native encoder event","Original cancellation is checked before every advance","No encoded event Vec is created","Original event stays owned until admission and native codec closure finish"]
+}

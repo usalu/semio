@@ -1,0 +1,90 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "execution": false,
+  "scope": "same-name-primary-repair-local-where",
+  "outcomes": [
+    {
+      "records": [],
+      "status": "pass"
+    },
+    {
+      "records": [
+        "true"
+      ],
+      "status": "pass"
+    },
+    {
+      "records": [
+        "true",
+        "false"
+      ],
+      "status": "fail"
+    },
+    {
+      "records": [
+        "unknown"
+      ],
+      "status": "incomplete"
+    },
+    {
+      "records": [
+        "false",
+        "unknown"
+      ],
+      "status": "incomplete"
+    }
+  ],
+  "cases": [
+    {
+      "id": "alias-ratio-half",
+      "source": "ratio",
+      "case": "ratio-half",
+      "status": "pass",
+      "owner": "IFCNORMALISEDRATIOMEASURE",
+      "rule": "WR1"
+    },
+    {
+      "id": "alias-ratio-above",
+      "source": "ratio",
+      "case": "ratio-above-one",
+      "status": "fail",
+      "owner": "IFCNORMALISEDRATIOMEASURE",
+      "rule": "WR1"
+    },
+    {
+      "id": "binary-aligned",
+      "source": "binary",
+      "case": "binary-bytes",
+      "status": "pass",
+      "owner": "IFCBLOBTEXTURE",
+      "rule": "RASTERCODEBYTESTREAM"
+    },
+    {
+      "id": "binary-not-aligned",
+      "source": "binary",
+      "case": "31",
+      "status": "fail",
+      "owner": "IFCBLOBTEXTURE",
+      "rule": "RASTERCODEBYTESTREAM"
+    },
+    {
+      "id": "preserved-format-unknown",
+      "source": "binary",
+      "case": "binary-bytes",
+      "status": "incomplete",
+      "owner": "IFCBLOBTEXTURE",
+      "rule": "SUPPORTEDRASTERFORMAT"
+    }
+  ],
+  "refusals": [
+    "foreign-original-caller",
+    "substituted-source",
+    "substituted-prepared-batch",
+    "changed-original-address",
+    "set-entity-name",
+    "set-entity-complex",
+    "insert-entity-arg",
+    "remove-entity-arg",
+    "source-shape-incomplete"
+  ]
+}

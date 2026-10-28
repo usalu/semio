@@ -8,7 +8,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -44,10 +44,10 @@ pub fn diff_update_character_style(payload: &UpdateCharacterStyle, base: &Layout
     let Some(style) = base.character_styles.iter().find(|style| style.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Character style \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if payload.font_size.is_some_and(|size| !size.is_finite() || size <= 0.0) || payload.font_weight.is_some_and(|weight| weight == 0) || payload.tracking.is_some_and(|tracking| !tracking.is_finite()) {
+    if payload.font_size.is_some_and(|size| !size.is_finite() || size <= 0.0) || payload.font_weight.is_some_and(|weight| weight == 0) || payload.tracking.is_some_and(|tracking| !tracking.is_finite()) || payload.color.as_ref().is_some_and(|color| color.iter().any(|value| !value.is_finite())) {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A character style size must be positive, its weight non-zero, and its tracking finite.", std::iter::empty::<String>());
     }
-    if style.name == payload.name && style.font_family == payload.font_family && style.font_size == payload.font_size && style.font_weight == payload.font_weight && style.italic == payload.italic && style.color == payload.color && style.tracking == payload.tracking {
+    if style.name == payload.name && style.font_family == payload.font_family && semio_s_artifact_layout_layout_model::equality::equal_optional_f64(style.font_size, payload.font_size) && style.font_weight == payload.font_weight && style.italic == payload.italic && semio_s_artifact_layout_layout_model::equality::equal_color(&style.color, &payload.color) && semio_s_artifact_layout_layout_model::equality::equal_optional_f64(style.tracking, payload.tracking) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Character style is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -71,6 +71,7 @@ pub fn diff_update_character_style(payload: &UpdateCharacterStyle, base: &Layout
 }
 
 pub fn inverse_update_character_style<Op: From<crate::update_character_style::UpdateCharacterStyle>>(payload: &UpdateCharacterStyle, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_update_character_style(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(style) = base.character_styles.iter().find(|style| style.id == payload.id) else { return Vec::new() };
     vec![Op::from(UpdateCharacterStyle { id: style.id.clone(), name: style.name.clone(), font_family: style.font_family.clone(), font_size: style.font_size, font_weight: style.font_weight, italic: style.italic, color: style.color, tracking: style.tracking })]
@@ -78,3 +79,16 @@ pub fn inverse_update_character_style<Op: From<crate::update_character_style::Up
     })())
 }
 
+
+impl PartialEq for UpdateCharacterStyle {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.name == other.name
+            && self.font_family == other.font_family
+            && semio_s_artifact_layout_layout_model::equality::equal_optional_f64(self.font_size, other.font_size)
+            && self.font_weight == other.font_weight
+            && self.italic == other.italic
+            && semio_s_artifact_layout_layout_model::equality::equal_color(&self.color, &other.color)
+            && semio_s_artifact_layout_layout_model::equality::equal_optional_f64(self.tracking, other.tracking)
+    }
+}

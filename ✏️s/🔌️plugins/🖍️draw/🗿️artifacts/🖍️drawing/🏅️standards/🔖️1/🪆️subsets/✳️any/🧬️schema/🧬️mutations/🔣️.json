@@ -3,8 +3,15 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/drawing/drawing/mutations.json",
   "title": "DrawingMutation",
   "oneOf": [
-    {"$ref":"https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/import-image-asset/schema.json"},
-    {"$ref":"https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/remove-image-asset/schema.json"},
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-artboard/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/import-image-asset/schema.json"
+    },
+    {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/structure/mutation/remove-image-asset/schema.json"
+    },
     {
       "$ref": "https://json.schemas.assets.semio-tech.com/s/draw/drawing/1/metadata/mutation/set-layer-visible/schema.json"
     },

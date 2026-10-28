@@ -1,0 +1,17 @@
+{
+ "scope":"cooperative-solid-topology",
+ "cases":[
+  {"id":"box","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false}],"sharedPoints":false,"modifier":"none","expected":"accept","volume":1},
+  {"id":"void","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[0.2,0.2,0.2],"high":[0.8,0.8,0.8],"reverse":true}],"sharedPoints":false,"modifier":"none","expected":"accept","volume":0.784},
+  {"id":"compound","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[2,0,0],"high":[2.5,0.5,0.5],"reverse":false}],"sharedPoints":false,"modifier":"none","expected":"accept","volume":1.125},
+  {"id":"open","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false}],"sharedPoints":false,"modifier":"open","expected":"refuse"},
+  {"id":"reverse","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":true}],"sharedPoints":false,"modifier":"none","expected":"refuse"},
+  {"id":"outside-void","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[2,0,0],"high":[2.5,0.5,0.5],"reverse":true}],"sharedPoints":false,"modifier":"none","expected":"refuse"},
+  {"id":"overlap","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[0.5,0.5,0.5],"high":[1.5,1.5,1.5],"reverse":false}],"sharedPoints":false,"modifier":"none","expected":"refuse"},
+  {"id":"nested-voids","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[0.2,0.2,0.2],"high":[0.8,0.8,0.8],"reverse":true},{"low":[0.3,0.3,0.3],"high":[0.4,0.4,0.4],"reverse":true}],"sharedPoints":false,"modifier":"none","expected":"refuse"},
+  {"id":"pinched","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[1,1,1],"high":[2,2,2],"reverse":false}],"sharedPoints":true,"modifier":"none","expected":"refuse"},
+  {"id":"touching-distinct","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false},{"low":[1,1,1],"high":[2,2,2],"reverse":false}],"sharedPoints":false,"modifier":"none","expected":"refuse"},
+  {"id":"bad-index","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false}],"sharedPoints":false,"modifier":"bad-index","expected":"refuse"},
+  {"id":"degenerate","shells":[{"low":[0,0,0],"high":[1,1,1],"reverse":false}],"sharedPoints":false,"modifier":"degenerate","expected":"refuse"}
+ ]
+}

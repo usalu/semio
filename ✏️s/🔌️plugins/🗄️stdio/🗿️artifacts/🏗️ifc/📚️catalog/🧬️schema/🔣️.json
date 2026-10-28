@@ -1,0 +1,363 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/catalog.json",
+  "title": "IfcDeclarationCatalog",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "source",
+    "validation",
+    "entities",
+    "types",
+    "functions",
+    "rules"
+  ],
+  "properties": {
+    "schema": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "url",
+        "mirror",
+        "sha256"
+      ],
+      "properties": {
+        "url": {
+          "type": "string"
+        },
+        "mirror": {
+          "type": "string"
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[0-9a-f]{64}$"
+        }
+      }
+    },
+    "validation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "structural",
+        "whereRules",
+        "uniqueRules",
+        "inverseRules",
+        "contextualBounds",
+        "functions",
+        "globalRules",
+        "complexInstances",
+        "binaryValues"
+      ],
+      "properties": {
+        "structural": {
+          "type": "boolean"
+        },
+        "whereRules": {
+          "type": "boolean"
+        },
+        "uniqueRules": {
+          "type": "boolean"
+        },
+        "inverseRules": {
+          "type": "boolean"
+        },
+        "contextualBounds": {
+          "type": "boolean"
+        },
+        "functions": {
+          "type": "boolean"
+        },
+        "globalRules": {
+          "type": "boolean"
+        },
+        "complexInstances": {
+          "type": "boolean"
+        },
+        "binaryValues": {
+          "type": "boolean"
+        }
+      }
+    },
+    "entities": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Entity"
+      }
+    },
+    "types": {
+      "type": "object",
+      "additionalProperties": {
+        "$ref": "#/definitions/Type"
+      }
+    },
+    "functions": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    },
+    "rules": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "definitions": {
+    "Expression": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "name",
+            "width",
+            "fixed"
+          ],
+          "properties": {
+            "kind": {
+              "const": "named"
+            },
+            "name": {
+              "type": "string"
+            },
+            "width": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "fixed": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "aggregate",
+            "lower",
+            "upper",
+            "lowerExpression",
+            "upperExpression",
+            "unique",
+            "optional",
+            "item"
+          ],
+          "properties": {
+            "kind": {
+              "const": "aggregate"
+            },
+            "aggregate": {
+              "enum": [
+                "LIST",
+                "SET",
+                "BAG",
+                "ARRAY"
+              ]
+            },
+            "lower": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "upper": {
+              "type": [
+                "integer",
+                "null"
+              ]
+            },
+            "lowerExpression": {
+              "type": "string"
+            },
+            "upperExpression": {
+              "type": "string"
+            },
+            "unique": {
+              "type": "boolean"
+            },
+            "optional": {
+              "type": "boolean"
+            },
+            "item": {
+              "$ref": "#/definitions/Expression"
+            }
+          }
+        }
+      ]
+    },
+    "Attribute": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "typeExpr",
+        "optional",
+        "derived",
+        "declaredBy"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "typeExpr": {
+          "$ref": "#/definitions/Expression"
+        },
+        "optional": {
+          "type": "boolean"
+        },
+        "derived": {
+          "type": "boolean"
+        },
+        "declaredBy": {
+          "type": "string"
+        }
+      }
+    },
+    "Derived": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "typeExpr",
+        "redeclares",
+        "expression"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "typeExpr": {
+          "$ref": "#/definitions/Expression"
+        },
+        "redeclares": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "expression": {
+          "type": "string"
+        }
+      }
+    },
+    "Entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "abstractEntity",
+        "supertype",
+        "attributes",
+        "allAttributes",
+        "derived",
+        "inverse",
+        "whereRules",
+        "uniqueRules",
+        "supertypeExpression"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "abstractEntity": {
+          "type": "boolean"
+        },
+        "supertype": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Attribute"
+          }
+        },
+        "allAttributes": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Attribute"
+          }
+        },
+        "derived": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Derived"
+          }
+        },
+        "inverse": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "whereRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "uniqueRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "supertypeExpression": {
+          "type": "string"
+        }
+      }
+    },
+    "Type": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "kind",
+        "members",
+        "whereRules"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "kind": {
+          "enum": [
+            "defined",
+            "enum",
+            "select"
+          ]
+        },
+        "members": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "typeExpr": {
+          "$ref": "#/definitions/Expression"
+        },
+        "whereRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

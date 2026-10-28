@@ -53,3 +53,13 @@ fn typed_value_payload_record_keeps_the_former_named_variant_wire() {
     let former = Former::TypedValue { name: "IFCLENGTHMEASURE".into(), items: vec![Former::Real(3000.0), Former::Aggregate(vec![Former::Unset])] };
     assert_eq!(current.to_value(), former.to_value());
 }
+
+#[test]
+fn empty_ifc4_artifact_exports_its_declared_standard() {
+    let snapshot = IfcSnapshot::default();
+    assert_eq!(snapshot.header.file_schema, vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])]);
+    let text = semio_s_artifact_stdio_contract::part21::write_part21(&to_part21_document(&snapshot));
+    assert!(text.contains("FILE_SCHEMA(('IFC4'));"));
+    let document = parse_part21(&text).expect("empty IFC4 export parses");
+    assert_eq!(from_part21_document("stdio.ifc", &document), snapshot);
+}

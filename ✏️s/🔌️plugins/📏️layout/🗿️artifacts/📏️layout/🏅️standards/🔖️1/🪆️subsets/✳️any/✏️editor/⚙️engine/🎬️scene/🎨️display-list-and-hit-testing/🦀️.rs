@@ -3,11 +3,12 @@
 use super::*;
 
 //#region 🖼️Display
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayColor(pub [f32; 4]);
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayGlyph {
+    pub font: ui_render::text::FontHandle,
     pub glyph_id: u32,
     pub font_size: f32,
     pub x: f32,
@@ -16,7 +17,7 @@ pub struct DisplayGlyph {
     pub italic: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayRect {
     pub object_id: String,
     pub x: f32,
@@ -32,14 +33,20 @@ pub struct DisplayRect {
     pub stack: u32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayGuide {
     pub rect: LayoutRect,
     pub kind: String,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone,Copy,Debug)]
+pub struct DisplayParagraph{pub page_index:Option<usize>,pub parent:bool,pub frame_index:usize,pub story:usize,pub width:f64,pub height:f64}
+semio_framework_value::artifact_retire_leaf!(DisplayParagraph);
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayTextRun {
+    pub deferred:Option<DisplayParagraph>,
+    pub rotation: f32,
+    pub center: [f32; 2],
     pub object_id: String,
     pub glyphs: Vec<DisplayGlyph>,
     pub content: String,
@@ -50,8 +57,9 @@ pub struct DisplayTextRun {
     pub color: [f32; 4],
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayImage {
+    pub drawing_bounds:Option<[f64;5]>,
     pub object_id: String,
     pub x: f32,
     pub y: f32,
@@ -64,7 +72,7 @@ pub struct DisplayImage {
     pub stack: u32,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct DisplayStroke {
     pub points: Vec<(f32, f32)>,
     pub closed: bool,
@@ -74,6 +82,7 @@ pub struct DisplayStroke {
     pub stack: u32,
 }
 
+#[derive(semio_framework_value::RetireOwned)]
 pub struct DisplayList {
     pub page_id: String,
     pub page_width: f32,
@@ -144,27 +153,7 @@ impl DisplayList {
 /// Parent frames are tested first and page frames after, matching paint order.
 /// This does not construct a [`LayoutEngine`] and does not shape text.
 pub fn hit_test_page_frames(doc: &LayoutSnapshot, page: &Page, x: f32, y: f32) -> Option<String> {
-    let mut hit = None;
-    let mut consider = |frame: &Frame| {
-        if !frame.visible() {
-            return;
-        }
-        let bounds = frame.bounds();
-        if frame_bounds_contain(bounds, x, y) {
-            hit = Some(frame.id().to_string());
-        }
-    };
-    if let Some(parent_id) = &page.parent_page_id {
-        if let Some(parent) = doc.parent_pages.iter().find(|parent| parent.id == *parent_id) {
-            for frame in &parent.frames {
-                consider(frame);
-            }
-        }
-    }
-    for frame in &page.frames {
-        consider(frame);
-    }
-    hit
+    resolve_page(doc, page).into_iter().rev().find(|row| row.frame.visible() && frame_layer_visible(doc, page, &row.frame) && frame_bounds_contain(row.frame.bounds(), x, y)).map(|row| row.frame.id().to_string())
 }
 
 pub fn page_margin_guides(page: &Page) -> Vec<DisplayGuide> {

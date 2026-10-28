@@ -1,7 +1,6 @@
 //! 📐 `update-page-margins` — atomically sets a page's four margin fields together (a facet that's
 //! never meaningfully edited one field at a time — a margins dialog writes all four at once).
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
@@ -10,7 +9,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 📐UpdatePageMargins
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -53,7 +52,10 @@ pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapsh
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if page.margins.top == payload.top && page.margins.right == payload.right && page.margins.bottom == payload.bottom && page.margins.left == payload.left {
+    if ![payload.top, payload.right, payload.bottom, payload.left].iter().all(|value| value.is_finite()) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Page margins must be finite.", [payload.id.clone()]);
+    }
+    if semio_framework_value::equal_f64(page.margins.top, payload.top) && semio_framework_value::equal_f64(page.margins.right, payload.right) && semio_framework_value::equal_f64(page.margins.bottom, payload.bottom) && semio_framework_value::equal_f64(page.margins.left, payload.left) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has those margins.", payload.id));
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -71,6 +73,7 @@ pub fn diff_update_page_margins(payload: &UpdatePageMargins, base: &LayoutSnapsh
 
 //#region 📐UpdatePageMargins
 pub fn inverse_update_page_margins<Op: From<crate::update_page_margins::UpdatePageMargins>>(payload: &UpdatePageMargins, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_update_page_margins(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![Op::from(UpdatePageMargins { id: payload.id.clone(), top: page.margins.top, right: page.margins.right, bottom: page.margins.bottom, left: page.margins.left })],
@@ -81,3 +84,13 @@ pub fn inverse_update_page_margins<Op: From<crate::update_page_margins::UpdatePa
 }
 //#endregion 📐UpdatePageMargins
 
+
+impl PartialEq for UpdatePageMargins {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && semio_framework_value::equal_f64(self.top, other.top)
+            && semio_framework_value::equal_f64(self.right, other.right)
+            && semio_framework_value::equal_f64(self.bottom, other.bottom)
+            && semio_framework_value::equal_f64(self.left, other.left)
+    }
+}

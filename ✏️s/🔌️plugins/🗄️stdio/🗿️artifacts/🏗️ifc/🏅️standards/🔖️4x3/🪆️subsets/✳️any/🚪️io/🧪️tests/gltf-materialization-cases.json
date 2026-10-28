@@ -1,0 +1,11 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "routes": ["indexed", "implicit", "reflected"],
+  "boundaries": ["interior", "complete"],
+  "exportPhases": ["gltf-vertices", "gltf-indices", "gltf-buffer-bytes"],
+  "phases": ["gltf-materialize-positions", "gltf-materialize-indices", "gltf-materialize-triangles"],
+  "batchSize": 1,
+  "exportBatchSize": 4,
+  "interior": 2,
+  "cancellation": "io.cancelled"
+}

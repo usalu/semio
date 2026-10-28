@@ -1,0 +1,45 @@
+{
+  "oracle": "fast-json-patch@3.1.1",
+  "patch": [
+    {
+      "op": "add",
+      "path": "/backgroundDrawing/content/layers/-",
+      "value": {
+        "id": "oracle-layer",
+        "name": "UTF-8 Text",
+        "visible": true,
+        "root": {
+          "kind": "group",
+          "transform": {
+            "translation": {
+              "x": 0,
+              "y": 0,
+              "z": 0
+            },
+            "rotation": {
+              "x": 0,
+              "y": 0,
+              "z": 0,
+              "w": 1
+            },
+            "scale": {
+              "x": 1,
+              "y": 1,
+              "z": 1
+            }
+          },
+          "children": [
+            {
+              "kind": "text",
+              "value": "Layout Ääö ß 東京",
+              "at": {
+                "x": 4.5,
+                "y": 16.25
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

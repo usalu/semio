@@ -1,0 +1,7 @@
+{
+  "cases": [
+    {"family": "Layout Sans", "weight": 400, "italic": false, "hex": "004C00610079006F00750074002000530061006E0073"},
+    {"family": "Grüße 🌍", "weight": 700, "italic": true, "hex": "0047007200FC00DF00650020D83CDF0D"},
+    {"family": "A(\\)", "weight": 4294967295, "italic": false, "hex": "00410028005C0029"}
+  ]
+}

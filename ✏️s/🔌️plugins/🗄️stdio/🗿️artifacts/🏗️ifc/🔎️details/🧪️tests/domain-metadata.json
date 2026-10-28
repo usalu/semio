@@ -1,0 +1,73 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "names": [
+    {
+      "source": "IFCMATERIAL",
+      "canonical": "IFCMATERIAL"
+    },
+    {
+      "source": "ifcmaterial",
+      "canonical": "IFCMATERIAL"
+    },
+    {
+      "source": "IfcCartesianPoint",
+      "canonical": "IFCCARTESIANPOINT"
+    },
+    {
+      "source": "IfcMätérial",
+      "canonical": null
+    }
+  ],
+  "addresses": [
+    {
+      "path": "/entities/0/complex/0/args/0",
+      "position": 0,
+      "part": 0,
+      "argument": 0,
+      "suffix": ""
+    },
+    {
+      "path": "/entities/0/complex/0/args/0/value/1/value",
+      "position": 0,
+      "part": 0,
+      "argument": 0,
+      "suffix": "/value/1/value"
+    },
+    {
+      "path": "/entities/1/complex/0/args/0/value",
+      "position": 1,
+      "part": 0,
+      "argument": 0,
+      "suffix": "/value"
+    }
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "depth",
+    "fuel"
+  ],
+  "nativeExecution": false,
+  "membership": [
+    {
+      "expected": "IFCVALUE",
+      "actual": "IFCLABEL",
+      "admitted": true
+    },
+    {
+      "expected": "IFCVALUE",
+      "actual": "IFCACTOR",
+      "admitted": false
+    },
+    {
+      "expected": "IFCPROPERTYSETDEFINITIONSELECT",
+      "actual": "IFCPROPERTYSETDEFINITIONSET",
+      "admitted": true
+    },
+    {
+      "expected": "IFCPRODUCT",
+      "actual": "IFCWALL",
+      "admitted": true
+    }
+  ]
+}

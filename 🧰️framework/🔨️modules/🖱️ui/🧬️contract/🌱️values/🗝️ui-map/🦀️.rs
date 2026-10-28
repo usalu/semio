@@ -127,6 +127,23 @@ pub struct UiMapBuilder {
 }
 
 impl UiMapBuilder {
+    /// 🧷️ Transfers even an empty source collection to its explicit original retirement owner.
+    pub fn finish_initialized(mut self)->UiMap{UiMap{handle:self.handle.take(),len:self.len}}
+    /// 🎟️ Borrows existing collection authority without initializing global backing or blocking its owner.
+    pub fn try_new_initialized()->Result<Option<Self>,&'static str>{
+        let Some(mut arena)=collection_arena::initialized_arena()?else{return Ok(None)};
+        let handle=arena.reserve_collection(UiCollectionKind::Map).ok_or("UI map source capacity refused")?;Ok(Some(Self{handle:Some(handle),len:0}))
+    }
+    /// 🗝️ Moves one already bounded key and value without temporary String allocation or lost refusal custody.
+    pub fn insert_initialized(&mut self,donor:&mut Option<(UiText,UiValue)>)->Result<bool,&'static str>{
+        let handle=self.handle.ok_or("UI map source is closed")?;let next_len=self.len.checked_add(1).filter(|len|*len<=UI_VALUE_MAX_ITEMS).ok_or("UI map source capacity exceeded")?;
+        let Some(mut arena)=collection_arena::initialized_arena()?else{return Ok(false)};
+        let(key,_)=donor.as_ref().ok_or("UI map source donor is empty")?;
+        let position=match arena.search_map_key(handle,key){Ok(_)=>return Err("UI map source key is duplicated"),Err(position)=>position};
+        let prev=arena.map_prev_at_position(handle,position).ok_or("UI map source is unavailable")?;let(key,value)=donor.take().unwrap();
+        if let Err(pair)=arena.try_insert_map_page(handle,prev,key,value){*donor=Some(pair);return Err("UI map source capacity refused");}
+        self.len=next_len;Ok(true)
+    }
     pub fn try_new() -> Option<Self> {
         let handle = with_ui_value_arena(|arena| arena.reserve_collection(UiCollectionKind::Map))?;
         Some(Self { handle: Some(handle), len: 0 })

@@ -1,0 +1,14 @@
+{
+  "schema":"semio.ifc.contextual-derived-tests.v1",
+  "attribute":{"owner":"IFCNAMEDUNIT","name":"Dimensions","index":0,"type":"IFCDIMENSIONALEXPONENTS"},
+  "cases":[
+    {"name":"Same Primary Type","before":"IFCSIUNIT","after":"IFCSIUNIT","event":"primary","derived":true},
+    {"name":"Rename SI to Conversion","before":"IFCSIUNIT","after":"IFCCONVERSIONBASEDUNIT","event":"rename","derived":false},
+    {"name":"Rename Conversion to SI","before":"IFCCONVERSIONBASEDUNIT","after":"IFCSIUNIT","event":"rename","derived":true},
+    {"name":"Select SI to Conversion","before":"IFCSIUNIT","after":"IFCCONVERSIONBASEDUNIT","event":"variant","derived":false},
+    {"name":"Select Conversion to SI","before":"IFCCONVERSIONBASEDUNIT","after":"IFCSIUNIT","event":"variant","derived":true},
+    {"name":"Insert SI","before":null,"after":"IFCSIUNIT","event":"insert","derived":true},
+    {"name":"Remove SI","before":"IFCSIUNIT","after":null,"event":"remove","derived":false}
+  ],
+  "scope":"Retained component repair; semantic marker/declaration consistency does not establish physical external-mapping conformance."
+}

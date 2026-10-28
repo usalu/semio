@@ -238,3 +238,6 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: ZipAnalyzer,
     composer: ZipComposer,
 );
+
+#[path = "🧵️stream/🦀️.rs"]
+pub mod stream;

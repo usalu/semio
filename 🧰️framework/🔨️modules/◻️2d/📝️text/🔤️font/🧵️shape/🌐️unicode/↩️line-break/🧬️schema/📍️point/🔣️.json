@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:unicode-line-break-point:v1",
+  "title": "Unicode Line Break Point",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "at",
+    "mandatory"
+  ],
+  "properties": {
+    "at": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Original UTF-8 boundary offset."
+    },
+    "mandatory": {
+      "type": "boolean",
+      "description": "UAX14 mandatory break or end of text."
+    }
+  }
+}

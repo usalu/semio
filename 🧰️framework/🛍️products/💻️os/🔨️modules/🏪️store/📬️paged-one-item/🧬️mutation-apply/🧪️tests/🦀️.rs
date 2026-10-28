@@ -1,4 +1,7 @@
 //! 🧪️ The generic `Mutation<S>` structural edit prepares insert, remove, replace and multi-row removal over documents of any size, restores the base through its ordered inverse rows and conserves custody through every cancellation frontier.
+#[path="../../../../../../../🔨️modules/🌱️value/📽️projection/👁️post/🧪️testing/🦀️.rs"]
+mod post_fixture;
+use post_fixture::PostFixture;
 use semio_framework_os_spr::{ColdMutation,ColdMutationDiff,ColdDiffAlgebra};
 use semio_framework_os_store_one_item_batch::paged_one_item as paged;
 use semio_framework_os_spr as protocol;
@@ -241,8 +244,10 @@ impl Receiver {
 
 const EDIT_BODY: usize = 4096;
 
-fn step_edit(receiver: &mut Receiver, owner: &mut paged::MutationApplyEdit<Document, DocumentMutation>, before: &OriginalSource<Document>, mutation: &OriginalSource<DocumentMutation>, post: &mut Document, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<paged::PagedOneItemEditStep<DocumentMutation>, ValueError> {
-    receiver.run(grant, |control| owner.advance(before.borrow(), mutation.borrow(), post, EDIT_BODY, grant, control))
+fn step_edit(receiver: &mut Receiver, owner: &mut paged::MutationApplyEdit<Document, DocumentMutation>, before: &OriginalSource<Document>, mutation: &OriginalSource<DocumentMutation>, post: &mut PostFixture<Document>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<paged::PagedOneItemEditStep<DocumentMutation>, ValueError> {
+    let mode = PagedOneItemEdit::post_mode(owner);
+    if let Some(progress) = post.prepare_turn(mode, EDIT_BODY, grant)? { return Ok(paged::PagedOneItemEditStep::Progress(progress)); }
+    receiver.run(grant, |control| owner.advance(before.borrow(), mutation.borrow(), post.access(mode)?, EDIT_BODY, grant, control))
 }
 
 fn prepare(build: &dyn Fn() -> (Document, DocumentMutation), grant: ArtifactStoreOneItemGrant, cancel_at: Option<usize>) -> Outcome {
@@ -372,6 +377,8 @@ impl semio_framework_os_store_snapshot_clone::config_apply::ConfigApplyMutation<
 
 #[test]
 fn config_apply_reaches_prepared_with_independent_scalar_owner(){
+ let mut _original_receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+ let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1usize<<30,&mut _original_receiving_callback);
     let law:Value=serde_json::from_str(include_str!("./🧫️fixtures/🚦️admission/🔣️.json")).unwrap();
     let base=law["base"].as_i64().unwrap();let expected=base+law["diff"].as_i64().unwrap();
     let root=Arc::new(base);let registry=SnapshotReadRegistryHandle::new();let lease=registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_|panic!("scalar config source lease"));
@@ -511,8 +518,10 @@ fn paged_invalid_edit_receipt_retires_returned_inverse_with_original_issuer() {
         const PREFIX:&'static str="invalid-receipt-test";
         fn recognizes(_:&DocumentMutation)->bool { true }
         fn preflight(_:&DocumentMutation)->Result<usize,String> { Ok(1) }
-        fn advance_demands(&self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,_post:&Document,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
-        fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:&mut Document,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError> {
+        fn post_mode(&self)->semio_framework_os_store_one_item::PagedOneItemPostMode{semio_framework_os_store_one_item::PagedOneItemPostMode::Mutable}
+        fn advance_demands(&self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,_post:semio_framework_os_store_one_item::PagedOneItemPostRead<'_,Document>,_body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        fn advance(&mut self,_before:semio_framework_value::retained_clone::RetainedCloneRef<'_,Document>,_mutation:semio_framework_value::retained_clone::RetainedCloneRef<'_,DocumentMutation>,post:semio_framework_os_store_one_item::PagedOneItemPost<'_,Document>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError> {
+            let post=post.mutable()?;
             let inverse=vec![DocumentMutation::SetText {index:0,text:node_text(post,0).clone()}];
             Ok(PagedOneItemEditStep::CompleteRows(RetainedCloneProgress{copied_items:1,copied_bytes:grant.maximum_copy_bytes+1,..Default::default()},inverse))
         }
@@ -578,6 +587,8 @@ fn mutation_apply_refuses_semantic_errors_and_closes() {
 }
 #[test]
 fn mutation_apply_diagnostics_gate_atomic_publication() {
+    let mut _original_receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+    let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(WIDE*1024,&mut _original_receiving_callback);
     use paged::PagedOneItemEdit;
     use paged::PagedOneItemEditStep;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
@@ -591,7 +602,7 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
         let mut before_source=OriginalSource::new(document_from_plain(original.clone()));
         let mut mutation_source=OriginalSource::new(mutation.clone());
         let issuer=OwnedValueRetirementFactory::<DocumentMutation>::default();
-        let mut post = document_from_plain(original.clone());
+        let mut post = PostFixture::new(document_from_plain(original.clone()));
         APPLY_CALLS.set(0); INVERSE_CALLS.set(0); DIFF_CALLS.set(0);
         let (applied, messages) = loop {
             match step_edit(&mut receiver,&mut owner,&before_source,&mutation_source,&mut post,grant).unwrap() {
@@ -610,18 +621,20 @@ fn mutation_apply_diagnostics_gate_atomic_publication() {
         let mut expected = case.as_object().unwrap().clone();
         for key in ["applied", "post", "applyCalls", "inverseCalls"] { expected.remove(key); }
         assert_eq!(actual, Value::Object(expected));
-        if applied { assert_eq!(node_text(&post,0), "diagnostic applied"); } else { assert_eq!(plain_document(&post), original); }
+        if applied { assert_eq!(node_text(&post,0), "diagnostic applied"); } else { assert_eq!(plain_document(&*post), original); }
         let mut ledger = protocol::MutationMessageLedgerRetirement::new(String::new(), messages);
         while !matches!(ledger.close_step(grant).unwrap(), RetainedCloneStep::Complete(_)) {}
         owner.begin_close();
         while !matches!(owner.close_step(&issuer,grant).unwrap(), RetainedCloneStep::Complete(_)) {}
         assert!(owner.terminal_is_empty());
         receiver.finish();
-        drain_fixture(post);before_source.close();mutation_source.close();
+        drain_fixture(post.into_inner());before_source.close();mutation_source.close();
     }
 }
 #[test]
 fn mutation_apply_inverse_cancellation_uses_original_factory() {
+    let mut _original_receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+    let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(WIDE*1024,&mut _original_receiving_callback);
     use paged::{PagedOneItemEdit, PagedOneItemEditStep};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     let law: Value = serde_json::from_str(include_str!("./🧫️fixtures/♻️inverse-cancellation/🔣️.json")).unwrap();
@@ -631,7 +644,7 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
         let mut before_source = OriginalSource::new(document_from_plain(original.clone()));
         let mut mutation_source = OriginalSource::new(mutation);
         let issuer = OriginalMutationIssuer;
-        let mut post = document_from_plain(original.clone());
+        let mut post = PostFixture::new(document_from_plain(original.clone()));
         let mut owner = paged::MutationApplyEdit::<Document, DocumentMutation>::default();
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: WIDE, maximum_capacity_bytes: WIDE, maximum_release_bytes: WIDE, maximum_depth: 4096 };
         let mut receiver = Receiver::new(grant);
@@ -651,21 +664,23 @@ fn mutation_apply_inverse_cancellation_uses_original_factory() {
             assert!(step.progress().fits(quote));
             if matches!(step, RetainedCloneStep::Complete(_)) { assert!(owner.terminal_is_empty()); }
         }
-        assert_eq!(plain_document(&post), original);
+        assert_eq!(plain_document(&*post), original);
         assert_eq!(node_text(&post,0), case["postText"].as_str().unwrap());
         assert_eq!(plain_document(before_source.borrow().get()), original);
         assert_eq!(APPLY_CALLS.get(), 0);
         assert_eq!(ORIGINAL_ISSUER_RETIRES.get(), case["issuerCalls"].as_u64().unwrap() as usize);
         receiver.finish();
-        drain_fixture(post);before_source.close();mutation_source.close();
+        drain_fixture(post.into_inner());before_source.close();mutation_source.close();
     }
 }
 #[test]
 fn mutation_apply_cancellation_after_decision_preserves_base() {
+    let mut _original_receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+    let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(WIDE*1024,&mut _original_receiving_callback);
     use paged::{PagedOneItemEdit, PagedOneItemEditStep};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    let mut post = document(&fixture()["base"]);
-    let original = plain_document(&post);
+    let mut post = PostFixture::new(document(&fixture()["base"]));
+    let original = plain_document(&*post);
     let mutation = DocumentMutation::Diagnostic { level: "warning".into(), code: "mutation.partial".into(), message: "retained warning".into() };
     let mut before_source=OriginalSource::new(document_from_plain(original.clone()));
     let mut mutation_source=OriginalSource::new(mutation.clone());
@@ -687,22 +702,24 @@ fn mutation_apply_cancellation_after_decision_preserves_base() {
         assert!(step.progress().fits(quote));
         if matches!(step, RetainedCloneStep::Complete(_)) { assert!(owner.terminal_is_empty()); }
     }
-    assert_eq!(plain_document(&post), original);
+    assert_eq!(plain_document(&*post), original);
     assert_eq!((DIFF_CALLS.get(), INVERSE_CALLS.get(), APPLY_CALLS.get()), (1, 0, 0));
     receiver.finish();
-    drain_fixture(post);before_source.close();mutation_source.close();
+    drain_fixture(post.into_inner());before_source.close();mutation_source.close();
 }
 #[test]
 fn mutation_apply_rejects_same_data_different_method_table_inverse_issuer(){
+    let mut _original_receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+    let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(WIDE*1024,&mut _original_receiving_callback);
  use paged::{PagedOneItemEdit,PagedOneItemEditStep};use semio_framework_value::retained_clone::RetainedCloneGrant;
  let manifest=std::path::Path::new(env!("CARGO_MANIFEST_DIR"));let root=manifest.ancestors().find(|p|p.join(".🧬semio").is_dir()&&p.join("🧰️framework").is_dir()).expect("native fixture repository root");let law:Value=serde_json::from_str(&std::fs::read_to_string(root.join("🧰️framework/🔨️modules/🌱️value/♻️retirement/🏭️factory/📋️vector/🧪️tests/🧫️fixtures/🔣️.json")).unwrap()).unwrap();let law=&law["issuerAlias"];let index=law["pendingId"].as_u64().unwrap()as usize;
  let slot=EditIssuerSlot{original:ZstEditOriginal};let original_issuer=unsafe{&slot.original};let foreign=unsafe{&slot.other};assert_eq!(std::ptr::from_ref(original_issuer).cast::<()>(),std::ptr::from_ref(foreign).cast::<()>());OTHER_EDIT_ISSUER_CALLS.set(0);
- let original=plain_document_json(&fixture()["base"]);let mut before=OriginalSource::new(document_from_plain(original.clone()));let mut input=OriginalSource::new(DocumentMutation::SetText{index,text:"changed".into()});let mut post=document_from_plain(original.clone());let mut owner=paged::MutationApplyEdit::<Document,DocumentMutation>::default();let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:WIDE,maximum_capacity_bytes:WIDE,maximum_release_bytes:WIDE,maximum_depth:4096};let mut receiver=Receiver::new(wide);
+ let original=plain_document_json(&fixture()["base"]);let mut before=OriginalSource::new(document_from_plain(original.clone()));let mut input=OriginalSource::new(DocumentMutation::SetText{index,text:"changed".into()});let mut post=PostFixture::new(document_from_plain(original.clone()));let mut owner=paged::MutationApplyEdit::<Document,DocumentMutation>::default();let wide=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:WIDE,maximum_capacity_bytes:WIDE,maximum_release_bytes:WIDE,maximum_depth:4096};let mut receiver=Receiver::new(wide);
  for turn in 0..10000{if owner.stage()==paged::test_support::Stage::Commit{break;}assert!(matches!(step_edit(&mut receiver,&mut owner,&before,&input,&mut post,wide).unwrap(),PagedOneItemEditStep::Progress(_)));assert!(turn<9999);}
  let inverse=owner.inverse_rows().unwrap();let backing=inverse.as_ptr();let text=match &inverse[0]{DocumentMutation::SetText{index:actual,text}=>{assert_eq!(*actual,index);text.as_ptr()},_=>panic!("original inverse shape")};owner.begin_close();let d=owner.close_demands(original_issuer,WIDE).unwrap();let q=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};owner.close_step(original_issuer,q).unwrap();
- let(result,heap)=observe(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse_rows().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&post),original);
+ let(result,heap)=observe(||owner.close_step(foreign,q));assert!(result.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(OTHER_EDIT_ISSUER_CALLS.get(),law["providerCalls"].as_u64().unwrap()as usize);let inverse=owner.inverse_rows().unwrap();assert_eq!(inverse.as_ptr(),backing);match &inverse[0]{DocumentMutation::SetText{text:actual,..}=>assert_eq!(actual.as_ptr(),text),_=>panic!("original inverse row changed")};assert_eq!(plain_document(&*post),original);
  for turn in 0..100000{if owner.terminal_is_empty(){break;}let d=owner.close_demands(original_issuer,WIDE).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let s=owner.close_step(original_issuer,g).unwrap();assert!(s.progress().fits(g));assert!(turn<99999);}
- assert!(owner.terminal_is_empty());receiver.finish();drain_fixture(post);before.close();input.close();
+ assert!(owner.terminal_is_empty());receiver.finish();drain_fixture(post.into_inner());before.close();input.close();
 }
 
 }

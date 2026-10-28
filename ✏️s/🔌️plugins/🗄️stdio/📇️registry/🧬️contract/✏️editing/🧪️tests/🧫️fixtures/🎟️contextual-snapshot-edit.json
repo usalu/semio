@@ -1,0 +1,36 @@
+{
+  "cases": [
+    {
+      "name": "normal default delegate",
+      "fuel": 3,
+      "cancelled": false,
+      "consume": 1,
+      "emitted": 1,
+      "remaining": 2
+    },
+    {
+      "name": "original fuel exhausted",
+      "fuel": 0,
+      "cancelled": false,
+      "consume": 0,
+      "emitted": 0,
+      "remaining": 0
+    },
+    {
+      "name": "original cancellation",
+      "fuel": 3,
+      "cancelled": true,
+      "consume": 0,
+      "emitted": 0,
+      "remaining": 3
+    },
+    {
+      "name": "contextual reduction consumes original fuel",
+      "fuel": 1,
+      "cancelled": false,
+      "consume": 1,
+      "emitted": 0,
+      "remaining": 0
+    }
+  ]
+}

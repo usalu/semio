@@ -1,0 +1,13 @@
+{
+  "feature": "layout.import.genuine-drawing-lift",
+  "input": "framework.io.VectorScene + original target artifact identity",
+  "output": "draw.DrawingSnapshot",
+  "rules": [
+    "all source path commands retain coordinates and arc flags",
+    "nested transforms preserve hierarchy/reflection",
+    "straight RGB alpha and opacity remain separate",
+    "canvas backdrop becomes explicit nonzero paint",
+    "unsupported typography never invents a font",
+    "cold format preparation is separate from original-funded member-reference duplication/publication"
+  ]
+}

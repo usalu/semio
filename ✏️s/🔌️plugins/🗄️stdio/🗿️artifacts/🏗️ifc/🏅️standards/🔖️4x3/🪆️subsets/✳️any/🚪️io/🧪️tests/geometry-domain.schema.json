@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "nativeExecution",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ifc-consumed-geometry-domain"
+    },
+    "version": {
+      "const": 1
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "maxItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "primitive",
+          "target",
+          "carrier",
+          "value",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "primitive": {
+            "enum": [
+              "cylinder",
+              "cone"
+            ]
+          },
+          "target": {
+            "enum": [
+              "height",
+              "radius",
+              "point",
+              "axis",
+              "reference"
+            ]
+          },
+          "carrier": {
+            "enum": [
+              "integer",
+              "real"
+            ]
+          },
+          "value": {
+            "type": "number"
+          },
+          "expected": {
+            "enum": [
+              "supported",
+              "refuse"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

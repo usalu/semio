@@ -1,0 +1,15 @@
+{"cases":[
+{"id":"named-same","left":{"kind":"named","name":"IFCUNIT"},"right":{"kind":"named","name":"IFCUNIT"},"equal":true},
+{"id":"named-different","left":{"kind":"named","name":"IFCUNIT"},"right":{"kind":"named","name":"IFCNAMEDUNIT"},"equal":false},
+{"id":"aggregate-same","left":{"kind":"aggregate","aggregate":"LIST","lower":1,"upper":3,"lowerExpression":"1","upperExpression":"3","item":{"kind":"named","name":"REAL"}},"right":{"kind":"aggregate","aggregate":"LIST","lower":1,"upper":3,"lowerExpression":"1","upperExpression":"3","item":{"kind":"named","name":"REAL"}},"equal":true},
+{"id":"aggregate-child","left":{"kind":"aggregate","aggregate":"LIST","item":{"kind":"named","name":"REAL"}},"right":{"kind":"aggregate","aggregate":"LIST","item":{"kind":"named","name":"INTEGER"}},"equal":false},
+{"id":"aggregate-upper","left":{"kind":"aggregate","aggregate":"LIST","upper":3},"right":{"kind":"aggregate","aggregate":"LIST","upper":4},"equal":false},
+{"id":"expression-text","left":{"kind":"aggregate","aggregate":"LIST","lowerExpression":"1+1"},"right":{"kind":"aggregate","aggregate":"LIST","lowerExpression":"2"},"equal":false},
+{"id":"width","left":{"kind":"named","name":"STRING","width":22},"right":{"kind":"named","name":"STRING","width":23},"equal":false},
+{"id":"fixed","left":{"kind":"named","name":"STRING","fixed":true},"right":{"kind":"named","name":"STRING","fixed":false},"equal":false},
+{"id":"unique","left":{"kind":"aggregate","aggregate":"LIST","unique":true},"right":{"kind":"aggregate","aggregate":"LIST","unique":false},"equal":false},
+{"id":"optional-item","left":{"kind":"aggregate","aggregate":"ARRAY","optional":true},"right":{"kind":"aggregate","aggregate":"ARRAY","optional":false},"equal":false},
+{"id":"missing-child","left":{"kind":"aggregate","aggregate":"LIST"},"right":{"kind":"aggregate","aggregate":"LIST","item":{"kind":"named","name":"REAL"}},"equal":false},
+{"id":"text-after-boundary","left":{"kind":"aggregate","lowerExpression":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaax"},"right":{"kind":"aggregate","lowerExpression":"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaay"},"equal":false},
+{"id":"missing-versus-empty-name","left":{"kind":"named","name":null},"right":{"kind":"named","name":""},"equal":false}
+]}

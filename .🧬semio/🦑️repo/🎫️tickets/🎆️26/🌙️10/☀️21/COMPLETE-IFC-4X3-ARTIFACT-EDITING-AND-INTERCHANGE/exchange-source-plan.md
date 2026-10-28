@@ -1,0 +1,9 @@
+# Central Owned IFC Admission Before Projection
+
+The previous checkpoint fixed original control capture but IFC-to-BIM, IFC-to-FEM and public triangle extraction still inspect the caller's mutable graph directly. Their semantic progress callbacks can replace the original entity population or headers before conversion, and the projection constructors can silently overwrite duplicate identities or invoke input accessors. Configured entity/value/depth limits do not currently reach central IFC graph admission on these paths.
+
+Use the existing central `captureIfcGraphSteps` and `runIfcEditAsync` infrastructure, as STEP export already does, through one small internal exchange source interface. Capture and admit a private graph before the first semantic projection checkpoint or index construction. Keep original control authority during capture, normalize capture errors to `exchange.graph`, propagate cancellation as `io.cancelled`, and publish no projection on invalid source admission. This is structural/identity/reference admission, not a claim of full EXPRESS conformance.
+
+Neutral source cases and failing real-endpoint tests will cover post-capture callback mutation, duplicate identities, accessor refusal without getter invocation, all three finite graph limits, and cancellation during capture for the three IFC-source endpoints. Preserve the central capture contract: caller mutation during cooperative capture can be observed; exact start-state capture requires the caller to keep inputs stable until capture completes. After capture, semantic callbacks must affect only their caller graph, never the admitted private source.
+
+External BIM/FEM source-model admission, remaining cold index/filter traversals, native physical ownership and complete guided forms remain distinct open work. Do not replace those requirements with this narrower checkpoint.

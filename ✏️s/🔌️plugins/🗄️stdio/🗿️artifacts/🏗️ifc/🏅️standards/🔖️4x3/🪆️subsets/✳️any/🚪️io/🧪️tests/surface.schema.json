@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "points",
+          "faces",
+          "groups",
+          "expected",
+          "area",
+          "damage"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "points": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bounds"
+              ],
+              "properties": {
+                "bounds": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "loop",
+                      "orientation",
+                      "outer"
+                    ],
+                    "properties": {
+                      "loop": {
+                        "type": "array",
+                        "items": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "orientation": {
+                        "type": [
+                          "boolean",
+                          "null"
+                        ]
+                      },
+                      "outer": {
+                        "type": "boolean"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "groups": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "faces"
+              ],
+              "properties": {
+                "kind": {
+                  "enum": [
+                    "IFCCONNECTEDFACESET",
+                    "IFCOPENSHELL",
+                    "IFCCLOSEDSHELL"
+                  ]
+                },
+                "faces": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer",
+                    "minimum": 0
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "enum": [
+              "supported",
+              "unsupported"
+            ]
+          },
+          "area": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "damage": {
+            "enum": [
+              "none",
+              "duplicate-group-reference",
+              "wrong-bound",
+              "wrong-loop",
+              "wrong-point",
+              "empty-groups"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

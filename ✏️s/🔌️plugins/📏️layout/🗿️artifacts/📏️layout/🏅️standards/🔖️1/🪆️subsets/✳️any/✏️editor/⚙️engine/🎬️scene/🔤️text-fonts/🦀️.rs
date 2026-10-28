@@ -145,3 +145,30 @@ pub fn install_package_text_fonts(read: impl Fn(&str) -> Option<&'static [u8]>) 
     install_text_fonts(package_text_font_set(read)?)
 }
 //#endregion ⚙️Scene
+
+/// 📚️ Existing first-party bytes are compiled without UI registration or runtime file access.
+static HEADLESS_TEXT_FONTS:[&[u8];15]=[
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf"),
+    include_bytes!("../../../../../../../../../../../../../🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf"),
+];
+
+/// 📚️ Immutable built-in font sources for resumable CPU text jobs, with Layout Sans first.
+pub fn export_font_source(index: usize) -> Option<&'static [u8]> {if index==0{return Some(LAYOUT_SANS);}HEADLESS_TEXT_FONTS.get(index-1).copied()}
+
+/// 🔢️ The frozen installed source roster never performs font registration or host I/O.
+pub fn export_font_count() -> usize {1+HEADLESS_TEXT_FONTS.len()}
+
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod headless_tests;

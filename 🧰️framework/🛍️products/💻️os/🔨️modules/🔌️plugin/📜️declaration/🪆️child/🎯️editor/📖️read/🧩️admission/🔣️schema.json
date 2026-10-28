@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Qualified Original Child Admission Provider Laws",
+  "type": "object",
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.qualified-child-admission-provider.tests/v1"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "ordinal": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "deny": {
+            "type": "boolean"
+          },
+          "ready": {
+            "type": "boolean"
+          },
+          "capability": {
+            "const": "other"
+          },
+          "revision": {
+            "enum": [
+              "parent",
+              "child"
+            ]
+          },
+          "closing": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

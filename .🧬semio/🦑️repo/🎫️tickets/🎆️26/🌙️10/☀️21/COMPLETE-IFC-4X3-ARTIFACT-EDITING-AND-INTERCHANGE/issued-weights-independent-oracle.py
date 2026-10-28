@@ -1,0 +1,4 @@
+"""🧮 Invoke actual unchanged aggregate helper/arithmetic interfaces into independent evidence."""
+from pathlib import Path
+import importlib.util,json
+p=Path(__file__).parent;s=importlib.util.spec_from_file_location('aggregate_interface',p/'issued-express-weights-oracle.py');m=importlib.util.module_from_spec(s);s.loader.exec_module(m);o=m.GeneratedAggregateOracle();q=m.SqliteAggregateOracle(o.model);f=[o.observe(c) for c in m.data['functions']];a=[q.observe(c) for c in m.data['functions']];(p/'🗑️generated/issued-weights-independent-oracle.json').write_text(json.dumps({'version':m.ifcopenshell.version,'functions':f,'arithmetic':a},indent=2,default=str),encoding='utf8');print('[DEBUG]',sum(r['status']=='agree' for r in f),sum(r['status']=='unsupported' for r in f),sum(r['status']=='agree' for r in a))

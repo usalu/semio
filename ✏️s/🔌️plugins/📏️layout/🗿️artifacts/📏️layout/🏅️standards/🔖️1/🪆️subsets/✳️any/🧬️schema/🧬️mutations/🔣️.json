@@ -523,18 +523,6 @@
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "SetDrawingText"
-      ],
-      "properties": {
-        "SetDrawingText": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-drawing-text/schema.json"
-        }
-      }
-    },
-    {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
         "ReorderFrame"
       ],
       "properties": {
@@ -578,7 +566,138 @@
           "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/scale-frames/schema.json"
         }
       }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateParagraphStyle"
+      ],
+      "properties": {
+        "CreateParagraphStyle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-paragraph-style/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteParagraphStyle"
+      ],
+      "properties": {
+        "DeleteParagraphStyle": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-paragraph-style/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateParentPage"
+      ],
+      "properties": {
+        "CreateParentPage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-parent-page/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteParentPage"
+      ],
+      "properties": {
+        "DeleteParentPage": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-parent-page/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "CreateSpread"
+      ],
+      "properties": {
+        "CreateSpread": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-spread/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "DeleteSpread"
+      ],
+      "properties": {
+        "DeleteSpread": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/delete-spread/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPageSpread"
+      ],
+      "properties": {
+        "SetPageSpread": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-spread/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReorderLayer"
+      ],
+      "properties": {
+        "ReorderLayer": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-layer/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetParentPageContent"
+      ],
+      "properties": {
+        "SetParentPageContent": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-parent-page-content/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ReplaceDocument"
+      ],
+      "properties": {
+        "ReplaceDocument": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/replace-document/schema.json"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "SetPageBackgroundDrawing"
+      ],
+      "properties": {
+        "SetPageBackgroundDrawing": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/set-page-background-drawing/schema.json"
+        }
+      }
     }
   ]
 }
-

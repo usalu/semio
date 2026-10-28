@@ -1,0 +1,7 @@
+syntax = "proto3";
+package semio.stdio.idml.diff;
+message RemovedPart {}
+message IdmlPartPatch { string path = 1; oneof change { bytes value = 2; RemovedPart removed = 3; } }
+message PartOrder { repeated string paths = 1; }
+message IdmlPatch { optional string dom_version = 1; PartOrder part_order = 2; repeated IdmlPartPatch parts = 3; }
+message IdmlDiff { repeated IdmlPatch steps = 1; }

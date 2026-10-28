@@ -1,0 +1,111 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:unicode-line-break:v1",
+  "title": "Unicode 16 Line Break Authority",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "byteOrder",
+    "headerBytes",
+    "rangeBytes",
+    "classes",
+    "sources",
+    "license"
+  ],
+  "properties": {
+    "version": {
+      "const": "16.0.0"
+    },
+    "byteOrder": {
+      "const": "big-endian"
+    },
+    "headerBytes": {
+      "const": 24
+    },
+    "rangeBytes": {
+      "const": 12
+    },
+    "classes": {
+      "const": [
+        "AI",
+        "AK",
+        "AL",
+        "AP",
+        "AS",
+        "B2",
+        "BA",
+        "BB",
+        "BK",
+        "CB",
+        "CJ",
+        "CL",
+        "CM",
+        "CP",
+        "CR",
+        "EB",
+        "EM",
+        "EX",
+        "GL",
+        "H2",
+        "H3",
+        "HL",
+        "HY",
+        "ID",
+        "IN",
+        "IS",
+        "JL",
+        "JT",
+        "JV",
+        "LF",
+        "NL",
+        "NS",
+        "NU",
+        "OP",
+        "PO",
+        "PR",
+        "QU",
+        "RI",
+        "SA",
+        "SG",
+        "SP",
+        "SY",
+        "VF",
+        "VI",
+        "WJ",
+        "XX",
+        "ZW",
+        "ZWJ"
+      ]
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "url",
+          "sha256",
+          "bytes"
+        ],
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "license": {
+      "const": "https://www.unicode.org/license.txt"
+    }
+  }
+}

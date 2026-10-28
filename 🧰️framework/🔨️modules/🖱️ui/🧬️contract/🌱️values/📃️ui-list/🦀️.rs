@@ -109,6 +109,20 @@ pub struct UiListBuilder {
 }
 
 impl UiListBuilder {
+    /// 🧷️ Transfers even an empty source collection to its explicit original retirement owner.
+    pub fn finish_initialized(mut self)->UiList{UiList{handle:self.handle.take(),len:self.len}}
+    /// 🎟️ Borrows existing collection authority without initializing global backing or blocking its owner.
+    pub fn try_new_initialized()->Result<Option<Self>,&'static str>{
+        let Some(mut arena)=collection_arena::initialized_arena()?else{return Ok(None)};
+        let handle=arena.reserve_collection(UiCollectionKind::List).ok_or("UI list source capacity refused")?;Ok(Some(Self{handle:Some(handle),len:0}))
+    }
+    /// 📋️ Moves one original scalar or collection owner and retains its donor on every refusal.
+    pub fn push_initialized(&mut self,donor:&mut Option<UiValue>)->Result<bool,&'static str>{
+        let handle=self.handle.ok_or("UI list source is closed")?;let next_len=self.len.checked_add(1).filter(|len|*len<=UI_VALUE_MAX_ITEMS).ok_or("UI list source capacity exceeded")?;
+        let Some(mut arena)=collection_arena::initialized_arena()?else{return Ok(false)};let value=donor.take().ok_or("UI list source donor is empty")?;
+        if let Err(value)=arena.try_push_page(handle,UiPageValue::List(value)){*donor=Some(match value{UiPageValue::List(value)|UiPageValue::Map(_,value)=>value});return Err("UI list source capacity refused");}
+        self.len=next_len;Ok(true)
+    }
     pub fn try_new() -> Option<Self> {
         let handle = with_ui_value_arena(|arena| arena.reserve_collection(UiCollectionKind::List))?;
         Some(Self { handle: Some(handle), len: 0 })

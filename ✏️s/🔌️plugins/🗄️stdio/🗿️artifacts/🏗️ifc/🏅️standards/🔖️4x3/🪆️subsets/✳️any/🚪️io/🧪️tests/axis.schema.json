@@ -1,0 +1,159 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 18,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "dimension",
+          "origin",
+          "axis",
+          "ref"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dimension": {
+            "enum": [
+              2,
+              3
+            ]
+          },
+          "origin": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "kind",
+              "ratios"
+            ],
+            "properties": {
+              "kind": {
+                "enum": [
+                  "IFCCARTESIANPOINT",
+                  "IFCDIRECTION"
+                ]
+              },
+              "ratios": {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                },
+                "minItems": 2,
+                "maxItems": 3
+              }
+            }
+          },
+          "axis": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ratios"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "IFCCARTESIANPOINT",
+                      "IFCDIRECTION"
+                    ]
+                  },
+                  "ratios": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 3
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "ref": {
+            "anyOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ratios"
+                ],
+                "properties": {
+                  "kind": {
+                    "enum": [
+                      "IFCCARTESIANPOINT",
+                      "IFCDIRECTION"
+                    ]
+                  },
+                  "ratios": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 2,
+                    "maxItems": 3
+                  }
+                }
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "matrix": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 16,
+            "maxItems": 16
+          },
+          "error": {
+            "enum": [
+              "exchange.placement",
+              "exchange.axis"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "required": [
+              "matrix"
+            ],
+            "properties": {
+              "matrix": {}
+            }
+          },
+          {
+            "required": [
+              "error"
+            ],
+            "properties": {
+              "error": {}
+            }
+          }
+        ]
+      }
+    }
+  }
+}

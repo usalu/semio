@@ -11,3 +11,6 @@ export function parseQuestionDictionary(source:unknown,at="$"):QuestionDictionar
  return{entries};
 }
 
+
+export {BorrowedQuestionEquality,QuestionDictionaryEqualityCursor,QuestionValueEqualityCursor} from './🟰️equal/🟦️.ts';
+export type {QuestionEqualitySource,QuestionEqualityGrant,QuestionEqualityDemand,QuestionEqualityProgress,QuestionEqualityStep} from './🟰️equal/🟦️.ts';

@@ -1,0 +1,27 @@
+{
+  "schema": "stdio.zip.stream.tests.v1",
+  "cases": [
+    {
+      "id": "unicode-stored-descriptor",
+      "known": [
+        {
+          "name": "mimetype",
+          "text": "application/vnd.adobe.indesign-idml-package"
+        }
+      ],
+      "streamed": [
+        {
+          "name": "Stories/Grüße.xml",
+          "text": "<Story>Grüße &amp; 世界</Story>",
+          "chunkBytes": 7
+        },
+        {
+          "name": "empty.txt",
+          "text": "",
+          "chunkBytes": 1
+        }
+      ],
+      "maximumOutputChunkBytes": 4096
+    }
+  ]
+}

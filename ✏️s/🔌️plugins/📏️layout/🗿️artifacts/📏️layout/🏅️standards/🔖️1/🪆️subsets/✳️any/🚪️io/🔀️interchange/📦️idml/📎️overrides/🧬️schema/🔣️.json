@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout IDML Master Item Override Mapping",
+  "type": "object",
+  "required": [
+    "source",
+    "fields"
+  ],
+  "properties": {
+    "source": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256,
+      "pattern": "^\\S+$"
+    },
+    "fields": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "bounds",
+          "visible",
+          "locked"
+        ]
+      },
+      "uniqueItems": true,
+      "maxItems": 3
+    }
+  },
+  "additionalProperties": false
+}

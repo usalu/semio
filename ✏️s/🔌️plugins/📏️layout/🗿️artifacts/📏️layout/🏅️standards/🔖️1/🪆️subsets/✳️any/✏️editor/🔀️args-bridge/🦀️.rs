@@ -172,6 +172,8 @@ pub fn command_from_action(action: &str, args: Option<&DslValue>) -> Result<Layo
         "exportPng" => LayoutCommand::ExportPng(decode(action, fold(args, PAGE, &[]))?),
         "exportSvg" => LayoutCommand::ExportSvg(decode(action, fold(args, PAGE, &[]))?),
         "exportPdf" => LayoutCommand::ExportPdf(decode(action, fold(args, PAGE, &[]))?),
+        "exportStep" => LayoutCommand::ExportStep(decode(action, fold(args, PAGE, &[]))?),
+        "exportIdml" => LayoutCommand::ExportIdml(decode(action, plain())?),
         "exportPackage" => LayoutCommand::ExportPackage(decode(action, plain())?),
         "engagementSubmit" => LayoutCommand::EngagementSubmit(decode(action, with_text_value(fold(args, TEXT, &[("value", text(""))])))?),
         "deleteSelection" => LayoutCommand::DeleteSelection(decode(action, plain())?),

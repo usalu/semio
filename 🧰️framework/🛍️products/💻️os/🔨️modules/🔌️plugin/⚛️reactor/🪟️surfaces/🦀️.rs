@@ -2,10 +2,22 @@
 
 use semio_framework::{UiRefreshSection, ViewModel};
 
+#[doc(hidden)]
 pub struct SurfaceContext {
     pub body_key: String,
     pub view_state: ViewModel,
 }
+#[doc(hidden)]
+pub struct BorrowedSurfaceContext<'a> {
+    pub body_key:&'a str,
+    pub view_state:&'a ViewModel,
+}
+#[derive(Clone,Copy,Debug,PartialEq,Eq,semio_framework_value::RetireOwned)]
+#[doc(hidden)]
+pub struct SurfaceWindowLease {source:usize,context_version:u64,slot:usize,version:u64}
+#[path="lease.rs"]
+mod lease;
+pub use lease::SurfaceWindowLeaseCursor;
 
 /// 🎭️ What a mounted surface IS, fixed at mount and replayed on every later host refresh: one
 /// concrete window instance, an app-level panel, or a reserved section.
@@ -43,6 +55,7 @@ struct SurfaceBinding {
     pub body_key: String,
     role: SurfaceRole,
     pub view_state: ViewModel,
+    version:u64,
 }
 
 #[doc(hidden)]
@@ -53,11 +66,13 @@ pub struct SurfaceContexts {
     /// window-scoped background work only (`ArtifactApp::pending_effects`). Never the source a body
     /// is rendered from: that is each binding's own [`SurfaceBinding::view_state`].
     view_state: Option<ViewModel>,
+    version:u64,
+    leases_exhausted:bool,
 }
 
 impl Default for SurfaceContexts {
     fn default() -> Self {
-        Self { slots: std::array::from_fn(|_| None), view_state: None }
+        Self { slots: std::array::from_fn(|_| None), view_state: None,version:0,leases_exhausted:false }
     }
 }
 
@@ -97,8 +112,10 @@ impl SurfaceContexts {
             .position(|slot| slot.as_ref().is_some_and(|context| context.surface == surface))
             .or_else(|| self.slots.iter().position(|slot| slot.as_ref().is_none_or(|context| context.role.window_id().is_some_and(|id| !view_state.window_instances.iter().any(|window| window.id == id)))))
             .ok_or("surface context capacity exhausted")?;
+        let version=if self.leases_exhausted{None}else{self.version.checked_add(1)}.ok_or("surface context version exhausted")?;
         self.prune_windows(&view_state);
-        self.slots[index] = Some(SurfaceBinding { surface, body_key, role, view_state: projected });
+        self.version=version;
+        self.slots[index] = Some(SurfaceBinding { surface, body_key, role, view_state: projected,version });
         self.view_state = Some(view_state);
         Ok(())
     }
@@ -106,6 +123,24 @@ impl SurfaceContexts {
     pub fn get(&self, surface: &str) -> Option<SurfaceContext> {
         let binding = self.slots.iter().flatten().find(|context| context.surface == surface)?;
         Some(SurfaceContext { body_key: binding.body_key.clone(), view_state: binding.view_state.clone() })
+    }
+
+    /// 🧷️ Borrows the mounted immutable projection for the exact retained render turn.
+    pub fn borrow(&self,surface:&str)->Option<BorrowedSurfaceContext<'_>>{
+        let binding=self.slots.iter().flatten().find(|context|context.surface==surface)?;
+        Some(BorrowedSurfaceContext{body_key:&binding.body_key,view_state:&binding.view_state})
+    }
+    #[cfg(test)]
+    pub fn window_lease(&self,window:&str,locale:semio_framework::Locale)->Option<SurfaceWindowLease>{
+        let mut cursor=SurfaceWindowLeaseCursor::default();
+        for _ in 0..1_000_000{match cursor.step(self,window,locale){Ok(Some(lease))=>return Some(lease),Ok(None)=>{},Err(_)=>return None}}None
+    }
+    /// 🪟️ Validates the complete live source lease and borrows the actual view only for this turn.
+    pub fn borrow_window_lease(&self,lease:SurfaceWindowLease)->Option<BorrowedSurfaceContext<'_>>{
+        if self.leases_exhausted||lease.source!=self as*const _ as usize||lease.context_version!=self.version{return None;}
+        let binding=self.slots.get(lease.slot)?.as_ref()?;
+        if binding.version!=lease.version{return None;}
+        Some(BorrowedSurfaceContext{body_key:&binding.body_key,view_state:&binding.view_state})
     }
 
     /// 🪟️ The last host view this instance was refreshed or mounted with — the attached-window
@@ -119,6 +154,7 @@ impl SurfaceContexts {
     /// locale switch or a rearmed tool reaches every mounted surface without any of them borrowing a
     /// sibling's window identity. Reserved sections are deliberately untouched (see [`SurfaceRole`]).
     pub fn update_view(&mut self, view: &ViewModel) {
+        match self.version.checked_add(1){Some(version)if !self.leases_exhausted=>self.version=version,_=>self.leases_exhausted=true}
         self.prune_windows(view);
         for binding in self.slots.iter_mut().flatten() {
             if matches!(binding.role, SurfaceRole::Section) {
@@ -126,6 +162,7 @@ impl SurfaceContexts {
             }
             if let Some(projected) = binding.role.project(view) {
                 binding.view_state = projected;
+                binding.version=self.version;
             }
         }
         self.view_state = Some(view.clone());
@@ -164,6 +201,7 @@ impl SurfaceContexts {
 
     pub fn remove(&mut self, surface: &str) {
         if let Some(slot) = self.slots.iter_mut().find(|slot| slot.as_ref().is_some_and(|context| context.surface == surface)) {
+            match self.version.checked_add(1){Some(version)if !self.leases_exhausted=>self.version=version,_=>self.leases_exhausted=true}
             *slot = None;
         }
         if self.slots.iter().all(Option::is_none) {

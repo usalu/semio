@@ -1,3 +1,6 @@
+import {OriginalIndexedRecord,type OriginalRecord} from '../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️paged/📇️record/🟦️.ts';
+export {OriginalIndexedRecord as DrawingAssetsOwner} from '../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️paged/📇️record/🟦️.ts';
+export type DrawingAssets=OriginalRecord<DrawingImageAsset>;
 import {parseDrawingFontFamily,type DrawingFontFamily} from "./📝️text/🔤️family/🟦️.ts";
 import { binary64, type Binary64 } from "@semio-tech/framework/value/ieee754";
 import { parseBinary64 } from "@semio-tech/framework/value/ieee754";
@@ -14,7 +17,7 @@ export interface DrawingArtifact {
   /** 🥞️ @state artifact */
   layers: DrawingLayerNode[];
   /** 🎞️ @state artifact */
-  assets: Record<string, DrawingImageAsset>;
+  assets: DrawingAssets;
   /** 🗒️ @state artifact */
   artboard?: DrawingArtboard;
 }
@@ -112,9 +115,9 @@ export function parseDrawingArtifact(value: unknown, at = "$"): DrawingArtifact 
     id: drawingDrawingArtifactGuardString(row["id"], `${at}.id`),
     title: row["title"] === undefined ? undefined : drawingDrawingArtifactGuardString(row["title"], `${at}.title`),
     layers: drawingDrawingArtifactGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDrawingLayerNode(item, `${at}.layers[${index}]`)),
-    assets: Object.fromEntries(
+    assets: OriginalIndexedRecord.fromEntriesCold(
       Object.entries(drawingDrawingArtifactGuardObject(row["assets"], `${at}.assets`))
-        .map(([key, item]) => [key, parseDrawingImageAsset(item, `${at}.assets.${key}`)]),
+        .map(([key, item]) => [key, parseDrawingImageAsset(item, `${at}.assets.${key}`)] as const),
     ),
     artboard: row["artboard"] === undefined ? undefined : parseDrawingArtboard(row["artboard"], `${at}.artboard`),
   };

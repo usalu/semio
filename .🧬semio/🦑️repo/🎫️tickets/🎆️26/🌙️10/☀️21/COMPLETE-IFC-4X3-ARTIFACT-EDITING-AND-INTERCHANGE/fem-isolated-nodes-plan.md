@@ -1,0 +1,9 @@
+# FEM Isolated Node Export Plan
+
+The actual TypeScript FEM exporter currently emits every FEM node as an IfcStructuralPointConnection, even if no member references it. The independent full IfcOpenShell validation in exchange-source-oracle.txt confirms this violates the required ConnectsStructuralMembers inverse lower bound of one. This task owns fem.ts and new isolated-node neutral cases/tests/registration; the root worker separately corrects exchange-source-fixtures.ts.
+
+Chosen domain semantics: a supported analytical export requires at least one frame/bar member and every declared node must be an endpoint of at least one member. Zero-member analyses refuse with fem.empty. An unused node, including one carrying a support or nodal load, refuses with fem.isolated-node. Nodes are not silently discarded and no fictitious members or relationships are manufactured. Multiple disconnected member components remain valid when every node participates.
+
+Closed schema and language-neutral cases precede production changes. Tests retain input equality and assert refusal has no partial IFC artifact. A cooperative preflight scans actual member endpoints then node membership using the captured original controls and configured batch size, before output graph construction. Cancellation in that preflight must throw io.cancelled even if caller-owned options are replaced.
+
+The independent IfcOpenShell interface validates emitted connected models with complete EXPRESS and independently demonstrates the mandatory node inverse. Empty analysis export refusal is an explicit endpoint policy rather than a claim that IFC forbids every empty analysis container. Test/oracle inputs remain in the active ticket; generated STEP/results stay under 🗑️generated/fem-isolated. No native runtime, compiler guard, semantic gate, unrelated exchange source or ticket lifecycle change is in scope.

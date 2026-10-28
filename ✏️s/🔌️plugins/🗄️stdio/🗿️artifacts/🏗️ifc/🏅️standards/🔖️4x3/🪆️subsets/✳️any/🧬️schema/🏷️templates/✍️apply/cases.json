@@ -1,0 +1,13 @@
+{
+ "carriers":[
+  {"template":"Pset_ActionRequest","target":"IfcActionRequest","entry":"RequestSourceLabel","form":"P_SINGLEVALUE","carrier":"IFCPROPERTYSET","attachment":"IFCRELDEFINESBYPROPERTIES"},
+  {"template":"Pset_ActuatorPHistory","target":"IfcActuator","entry":"PositionHistory","form":"P_REFERENCEVALUE","carrier":"IFCPROPERTYSET","attachment":"IFCPERFORMANCEHISTORY"},
+  {"template":"Pset_ActuatorTypeCommon","target":"IfcActuatorType","entry":"Reference","form":"P_SINGLEVALUE","carrier":"IFCPROPERTYSET","attachment":"HasPropertySets"},
+  {"template":"Pset_MaterialCombustion","target":"IfcMaterial","entry":"SpecificHeatCapacity","form":"P_SINGLEVALUE","carrier":"IFCMATERIALPROPERTIES","attachment":"Material"},
+  {"template":"Pset_ProfileArbitraryDoubleT","target":"IfcArbitraryClosedProfileDef","entry":"OverallWidth","form":"P_SINGLEVALUE","carrier":"IFCPROFILEPROPERTIES","attachment":"ProfileDefinition"},
+  {"template":"Qto_ActuatorBaseQuantities","target":"IfcActuator","entry":"GrossWeight","form":"Q_WEIGHT","carrier":"IFCELEMENTQUANTITY","attachment":"IFCRELDEFINESBYPROPERTIES"},
+  {"template":"Qto_ArealStratumBaseQuantities","target":"IfcGeotechnicalStratum","entry":"Area","form":"Q_AREA","carrier":"IFCELEMENTQUANTITY","attachment":"IFCRELDEFINESBYPROPERTIES"}
+ ],
+ "forms":["P_SINGLEVALUE","P_REFERENCEVALUE","P_ENUMERATEDVALUE","P_LISTVALUE","P_BOUNDEDVALUE","P_TABLEVALUE","Q_LENGTH","Q_AREA","Q_VOLUME","Q_WEIGHT","Q_COUNT","Q_TIME"],
+ "rejections":["unknownTemplate","inapplicable","requiresPredefinedType","wrongCarrier","unknownEntry","duplicateEntry","wrongForm","invalidDomain","invalidUnit","enumConflict","identityMissing","identityUnexpected","identityCollision","duplicateGuid","tableDimensions","emptySelection","asyncRequired","staleRevision","cancelled","unknownField","prototype","overlappingTarget"]
+}

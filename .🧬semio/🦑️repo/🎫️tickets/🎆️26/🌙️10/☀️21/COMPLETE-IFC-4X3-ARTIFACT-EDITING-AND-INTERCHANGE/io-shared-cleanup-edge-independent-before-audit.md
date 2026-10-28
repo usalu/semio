@@ -1,0 +1,19 @@
+# Shared IO Cleanup Edge Before Audit
+
+Two separate actual public runIfcIoSteps boundaries are now reproduced, without reopening the correctly closed nine original observer-latch cases.
+
+First, the original AbortSignal is aborted without observer throw at callback2 after the generator entered/yielded. Its finally throws a distinct Error. Actual endpoint catches that cleanup Error, losing the genuine io.cancelled diagnostic. OriginalAborted=true, finallyclosed=true, cleanupReplacedCancel=true. Input io-abort-cleanup-independent.ts/output generated/io-abort-cleanup-independent.json.
+
+Second, an entered generator finally itself yields once before setting its closed flag. For both genuine original abort and opaque observer failure at callback2, runIfcIoSteps returns/rejects after a single iterator.return call while finallyEntered=true but closedAtReturn=false. A manual next afterward reaches closed=true, proving an unfinished retained cleanup continuation. Genuine abort still reports io.cancelled here and observer identity remains exact; the defect is incomplete generator cleanup rather than changed primary error. Input io-yielding-cleanup-independent-before.ts/output generated/io-yielding-cleanup-independent-before.json. Manual completion is probe cleanup only, not evidence that the actual runner drained it.
+
+These use actual exported shared runner and finite entered generators, not mocked internal calls. No artifact success/publication was observed. The API's current unconditional single return does not establish finally completion when return yields. A bounded fix should preserve first actual primary error/cancellation, enter cleanup exactly once and drive its yielded continuation without discarding it, retaining existing original host continuation semantics and avoiding observer reinvocation during terminal cleanup. Ordinary successful generator exhaustion and genuine cleanup-only failure need distinct expectations. Central edit runner has adjacent ownership and is being addressed by Semantics separately.
+
+Root was notified immediately. Production source remains unchanged by this audit; no prior output overwritten, all probe iterators were manually completed where needed and all processes exited. No native receipt/runtime or general arbitrary-internal-error precedence claim is inferred.
+
+## Finite Cleanup Edge AFTER Closure
+
+The next frozen shared runner revision closes both reproduced edges. io-abort-cleanup-independent-edge-replay.ts now observes genuine io.cancelled, finallyclosed=true and cleanupReplacedCancel=false. io-yielding-cleanup-independent-before-edge-replay.ts observes closedAtReturn=true for both abort and observer cases; manual next is no longer needed to finish finally. Original observer identity remains exact. New outputs are generated/io-abort-cleanup-independent-after.json and generated/io-yielding-cleanup-independent-after.json, distinct from preserved before files.
+
+The previous nine observer-versus-cleanup cases and twelve actual late class routes were replayed under the new source. All9 original values stay exact with finally executed; all12 actual routes stay exact. Outputs generated/io-shared-cleanup-edge-independent-after.json and generated/late-class-callback-edge-independent-after.json. All6owned hashes match refreshed roster (generated/io-cleanup-edge-independent-after-hashes.json).
+
+Source catch remembers whether the actual loop/checkpoint already failed. Finally enters return once, advances next until finite done and uses existing host continuation per captured batch without progress callbacks. A cleanup/host failure cannot replace an already observed primary. This closes actual observed cancellation and finite-yielding cleanup boundaries. It does not claim termination for infinite cleanup or any error not surfaced by next, and it introduces no separate scheduler or native receipt proof. No production changes or live probe processes remain.

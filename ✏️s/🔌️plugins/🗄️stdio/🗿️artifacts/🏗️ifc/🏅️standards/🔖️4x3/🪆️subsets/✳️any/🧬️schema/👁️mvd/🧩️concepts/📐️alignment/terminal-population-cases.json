@@ -1,0 +1,11 @@
+{
+ "version":1,"conformance":"not-evaluated",
+ "targets":[{"layout":"1","kind":"horizontal","applicable":true},{"layout":"99999","kind":"cant","applicable":false}],
+ "cases":[
+  {"id":"prepared","variant":"prepared","status":"pass","targets":["pass","not-applicable"],"diagnostics":[],"firstDiagnostics":[]},
+  {"id":"other-header","variant":"header","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":["mvd.source"],"firstDiagnostics":[]},
+  {"id":"zero-id","variant":"id","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":["mvd.source"],"firstDiagnostics":[]},
+  {"id":"zero-reference","variant":"reference","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":["mvd.source"],"firstDiagnostics":[]},
+  {"id":"late-unknown-discovery","variant":"unknown","status":"incomplete","targets":["incomplete","not-applicable"],"diagnostics":[],"firstDiagnostics":["mvd.nesting.unresolved"]}
+ ]
+}

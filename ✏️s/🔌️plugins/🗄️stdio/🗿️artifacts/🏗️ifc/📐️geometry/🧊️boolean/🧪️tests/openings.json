@@ -1,0 +1,45 @@
+{
+  "schema": "IFC4",
+  "cases": [
+    {
+      "file": "placed-opening.ifc",
+      "product": "17",
+      "representation": "11",
+      "openings": [
+        "30"
+      ],
+      "volume": 48
+    },
+    {
+      "file": "multiple-openings.ifc",
+      "product": "17",
+      "representation": "11",
+      "openings": [
+        "30",
+        "49"
+      ],
+      "volume": 47.75
+    },
+    {
+      "file": "translated-opening.ifc",
+      "product": "17",
+      "representation": "11",
+      "openings": [
+        "30"
+      ],
+      "volume": 48,
+      "bounds": [
+        [
+          -100,
+          50,
+          -20
+        ],
+        [
+          -96,
+          54,
+          -16
+        ]
+      ]
+    }
+  ]
+}

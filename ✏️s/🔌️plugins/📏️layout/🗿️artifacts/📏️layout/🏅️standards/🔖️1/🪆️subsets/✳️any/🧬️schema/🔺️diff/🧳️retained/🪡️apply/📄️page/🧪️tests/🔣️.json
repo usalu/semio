@@ -1,0 +1,189 @@
+{
+  "cases": [
+    {
+      "name": "repeated page patches preserve final identity versions",
+      "frames": [
+        {
+          "id": "a",
+          "layerId": "old",
+          "x": 1
+        },
+        {
+          "id": "b",
+          "layerId": "old",
+          "x": 2
+        }
+      ],
+      "patches": [
+        {
+          "frames": {
+            "removed": [
+              {
+                "id": "a",
+                "index": 0
+              }
+            ],
+            "inserted": [
+              {
+                "index": 1,
+                "row": {
+                  "id": "a",
+                  "layerId": "new",
+                  "x": 3
+                }
+              }
+            ],
+            "moved": [],
+            "modified": [
+              {
+                "id": "a",
+                "patch": {
+                  "x": 4
+                }
+              }
+            ]
+          }
+        },
+        {
+          "frames": {
+            "removed": [],
+            "inserted": [],
+            "moved": [
+              {
+                "id": "a",
+                "from": 1,
+                "to": 0
+              }
+            ],
+            "modified": [
+              {
+                "id": "a",
+                "patch": {
+                  "layerId": "final"
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "layerId": "final",
+          "x": 4
+        },
+        {
+          "id": "b",
+          "layerId": "old",
+          "x": 2
+        }
+      ],
+      "rfc6902": [
+        {
+          "op": "remove",
+          "path": "/0"
+        },
+        {
+          "op": "add",
+          "path": "/1",
+          "value": {
+            "id": "a",
+            "layerId": "new",
+            "x": 3
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/1/x",
+          "value": 4
+        },
+        {
+          "op": "move",
+          "from": "/1",
+          "path": "/0"
+        },
+        {
+          "op": "replace",
+          "path": "/0/layerId",
+          "value": "final"
+        }
+      ]
+    },
+    {
+      "name": "deleted identity modifications do not reach replacement",
+      "frames": [
+        {
+          "id": "a",
+          "layerId": "old",
+          "x": 1
+        }
+      ],
+      "patches": [
+        {
+          "frames": {
+            "removed": [],
+            "inserted": [],
+            "moved": [],
+            "modified": [
+              {
+                "id": "a",
+                "patch": {
+                  "x": 7
+                }
+              }
+            ]
+          }
+        },
+        {
+          "frames": {
+            "removed": [
+              {
+                "id": "a",
+                "index": 0
+              }
+            ],
+            "inserted": [
+              {
+                "index": 0,
+                "row": {
+                  "id": "a",
+                  "layerId": "new",
+                  "x": 9
+                }
+              }
+            ],
+            "moved": [],
+            "modified": []
+          }
+        }
+      ],
+      "expected": [
+        {
+          "id": "a",
+          "layerId": "new",
+          "x": 9
+        }
+      ],
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/0/x",
+          "value": 7
+        },
+        {
+          "op": "remove",
+          "path": "/0"
+        },
+        {
+          "op": "add",
+          "path": "/0",
+          "value": {
+            "id": "a",
+            "layerId": "new",
+            "x": 9
+          }
+        }
+      ]
+    }
+  ]
+}

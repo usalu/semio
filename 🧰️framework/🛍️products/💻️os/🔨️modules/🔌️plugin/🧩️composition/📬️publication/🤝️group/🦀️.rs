@@ -32,6 +32,9 @@ use semio_framework_plugin_decl_views::child_view::ChildContentRetainers;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework::FaultFrom;
 #[doc(hidden)]
+#[path="⚠️failure/🦀️.rs"]pub mod member_publication_failure;
+#[path="🪪️heads/🦀️.rs"]pub mod qualified_heads;
+#[doc(hidden)]
 pub mod private_publication_group {
     use super::*;
     use semio_framework_value::ValueError;
@@ -44,8 +47,13 @@ pub mod child { include!("🪆️child/🦀️.rs"); }
     pub use crate::group::private_publication_group::child::PrivateChildPublicationInput;
     #[doc(hidden)]
 pub mod owner { include!("📦️owner/🦀️.rs"); }
+    pub use super::member_publication_failure as failure;
+    pub use super::qualified_heads;
     pub use crate::group::private_publication_group::owner::{PrivateChildGroupSource, PrivateChildPublicationGroup, PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN};
 
+    fn advance_original_lane(lane:&mut PrivateOwnedPublicationLane,member:&mut impl SpaceMember,visibility:&Arc<vcs::ArtifactGroupVisibility>,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant,failure:&mut Option<failure::OriginalMemberPublicationFailure>)->Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep,semio_framework_job::OriginalTurnFailure>{
+        cx.with_retained_loan(grant,|same|{let original=same.retained_grant();let capture=2*size_of::<Option<failure::OriginalMemberPublicationFailure>>();if original.maximum_items==0||original.maximum_copy_bytes<capture{return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)}let item=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(RetainedCloneGrant{maximum_copy_bytes:original.maximum_copy_bytes-capture,..original});let result=same.with_native_receiving(|receiving|lane.advance(member,visibility,item.maximum_copy_bytes,item,receiving));let mut step=match result{Ok(step)=>step,Err(source)=>{let p=match &source{store::VcsError::InverseRefused(e)|store::VcsError::NativeEncoding(e)=>e.retained_progress(),_=>Default::default()};assert!(failure.is_none(),"original member failure cannot replace an unreported original cause");*failure=Some(failure::OriginalMemberPublicationFailure{source,effects:p,receipt_refusal:None});store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(lane.progress(),p)}};let mut p=step.ownership_progress();if p!=RetainedCloneProgress::default()||failure.is_some(){p.copied_bytes=p.copied_bytes.checked_add(capture).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original member failure capture extent overflow"))?;p.copied_items=p.copied_items.max(1);step=match step{store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(checkpoint,_)=>store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(checkpoint,p),_=>store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(lane.progress(),p)}}if let Some(source)=failure.as_mut(){source.effects=p}if let Err(receipt)=same.consume_receiving_retained(original,p){if let Some(source)=failure.as_mut(){source.receipt_refusal=Some(receipt)}else{return Err(receipt.into())}}Ok(step)})
+    }
     #[derive(Clone, Copy, PartialEq, Eq)]
     enum PrivateOwnedPublicationPhase { Admission, Preparation, Staging, Staged, Adopted, Closing, Complete }
 
@@ -75,31 +83,29 @@ pub struct PrivateOwnedPublicationLane {
             Ok(self.publication.as_ref().map_or(0, |publication| publication.next_group_byte_demand()))
         }
         /// 🪜️ Advances only one retained lane phase; staging never changes live authority.
-        pub fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
+        pub fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut store::os_store::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, store::VcsError> {
             if grant.maximum_items == 0 { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             match self.phase {
                 PrivateOwnedPublicationPhase::Admission => {
-                    let birth_bytes = member.owned_publication_birth_bytes(self.request.as_ref().expect("private admission retains its original request"))?;
-                    let Some(publication) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant)? else { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); };
+                    let birth_bytes = member.owned_publication_birth_bytes(self.request.as_ref().expect("private admission retains its original request")).map_err(store::VcsError::ValidationFailed)?;
+                    let Some(publication) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant).map_err(store::VcsError::ValidationFailed)? else { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); };
                     *self.publication = Some(publication);
                     self.phase = PrivateOwnedPublicationPhase::Preparation;
                     Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, ..Default::default() }))
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
-                    let mut proceed = |_| true;
-                    let mut receiving = semio_framework_value::NativeDecodeControl::new_retained(&mut proceed);
-                    let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), grant.maximum_copy_bytes, grant, &mut receiving)?;
+                    let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), body, grant, receiving)?;
                     if let store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(checkpoint, progress) = step { self.phase = PrivateOwnedPublicationPhase::Staging; return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, progress)); }
                     Ok(step)
                 }
                 PrivateOwnedPublicationPhase::Staging => {
                     self.grouped = true;
-                    let step = member.stage_one_item_publication(self.publication_mut().unwrap(), visibility, grant)?;
+                    let step = member.stage_one_item_publication(self.publication_mut().unwrap(), visibility, grant).map_err(store::VcsError::ValidationFailed)?;
                     if matches!(step, store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(_, _)) { self.phase = PrivateOwnedPublicationPhase::Staged; }
                     Ok(step)
                 }
                 PrivateOwnedPublicationPhase::Staged => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.progress(), Default::default())),
-                _ => Err("private publication preparation requires its original pending lane".into()),
+                _ => Err(store::VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"private publication preparation requires its original pending lane"))),
             }
         }
         /// 🔓️ Adopts the already staged root only after the exact common visibility commits.
@@ -119,7 +125,7 @@ pub struct PrivateOwnedPublicationLane {
             Ok(self.metadata.as_ref().map_or(Default::default(), |metadata| RetirementDemand { release_bytes: metadata.next_close_byte_demand(), depth: 2, ..Default::default() }))
         }
         /// ♻️ Returns staged authority before retiring original sources and whole physical frames.
-        pub fn close_step(&mut self, member: &mut impl SpaceMember, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        pub fn close_step(&mut self, member: &mut impl SpaceMember,cx:&mut semio_framework_job::StepContext<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
             use semio_framework_value::retained_clone::RetainedCloneProgress;
             if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
             if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
@@ -129,7 +135,7 @@ pub struct PrivateOwnedPublicationLane {
             let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
             self.phase = PrivateOwnedPublicationPhase::Closing;
             if let Some(publication) = self.publication.as_mut() {
-                if !publication.terminal_is_empty() { let step = member.abort_one_item_publication(publication.as_mut(), child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, publication.terminal_is_empty(), "private member publication")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+                if !publication.terminal_is_empty() { let step = cx.with_native_retirement(|retirement|retirement.with_original_close(|original|member.abort_one_item_publication(publication.as_mut(),original,child)))?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, publication.terminal_is_empty(), "private member publication")?; return Ok(RetainedCloneStep::Progress(step.progress())); }
                 self.publication.take();
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }));
             }

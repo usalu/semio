@@ -1,0 +1,9 @@
+# Native Zero-Slot Constituent Type Independent Audit
+
+Source-only checkpoint of constituent_roster.rs phases7/9/4, type_name/type_name_mut, Work retained original event dispatch and DomainWork draft/prior_component behavior. Worker reports neutral7/19 and focused23/53 plus strict TS; native authentic compiler ingress refuses before rustc.
+
+No new confirmed defect in this explicitly narrow route. Both old and requested declarations must have zero direct slots and actual source args must be empty. Candidate name is used by the surviving-source normalization guard before publication; other survivors retain the earlier conservative derived/GlobalId/name/value guard. Unsupported cases fall back before source command name ownership is consumed.
+
+Phase4 uppercases the actual retained request String within the existing bounded name envelope, swaps it into the cloned selected part, and moves the whole part into rebuilt roster. Displaced cloned old name remains owned by original event for its existing paid close. The canonical source snapshot is untouched. Post-swap DomainWork draft recognition depends on event path and request marker shape, not requested name equality; both name-string and sole $ifcType marker shapes survive the swap. Actual candidate domain is obtained from prepared SetEntityComplex. Existing prior_component maps the same selected ordinal; name comparison then correctly treats a real type change as changed domain. Central mutation/inverse publication remains authoritative.
+
+Cancellation after swap retains both candidate roster owner and displaced event String through existing Work close. This source review does not establish native type correctness, physical receipt sufficiency or runtime cancellation behavior. It does not approve nonzero-slot retyping or the eager fallback frontier.

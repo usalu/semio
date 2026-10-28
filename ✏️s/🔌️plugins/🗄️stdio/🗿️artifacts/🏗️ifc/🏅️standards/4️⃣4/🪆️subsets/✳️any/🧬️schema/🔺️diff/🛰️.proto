@@ -17,10 +17,20 @@ message IfcArgsDiff {
   repeated IfcArgAdded added = 3;
 }
 
+message IfcValues {
+  repeated semio.s_stdio_ifc.snapshot.IfcValue items = 1;
+}
+message IfcComplexTypes {
+  repeated semio.s_stdio_ifc.snapshot.IfcComplexType items = 1;
+}
 message IfcEntityDiff {
-  string name = 1;
+  optional string name = 1;
   IfcArgsDiff args = 2;
-  repeated semio.s_stdio_ifc.snapshot.IfcComplexType complex = 3;
+  IfcComplexTypes complex = 3;
+}
+message IfcEntityRemoved {
+  uint64 id = 1;
+  uint64 index = 2;
 }
 message IfcEntityModified {
   uint64 id = 1;
@@ -31,14 +41,14 @@ message IfcEntityAdded {
   semio.s_stdio_ifc.snapshot.IfcEntity entity = 2;
 }
 message IfcEntitiesDiff {
-  repeated uint64 removed = 1;
+  repeated IfcEntityRemoved removed = 1;
   repeated IfcEntityModified modified = 2;
   repeated IfcEntityAdded added = 3;
 }
 
 message IfcDiff {
-  repeated semio.s_stdio_ifc.snapshot.IfcValue file_description = 1;
-  repeated semio.s_stdio_ifc.snapshot.IfcValue file_name = 2;
-  repeated semio.s_stdio_ifc.snapshot.IfcValue file_schema = 3;
+  IfcValues file_description = 1;
+  IfcValues file_name = 2;
+  IfcValues file_schema = 3;
   IfcEntitiesDiff entities = 4;
 }

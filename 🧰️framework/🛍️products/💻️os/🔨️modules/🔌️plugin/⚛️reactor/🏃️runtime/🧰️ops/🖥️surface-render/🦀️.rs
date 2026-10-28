@@ -15,6 +15,8 @@ use crate::ops_wire_limits::find_instance;
 use semio_framework_plugin_reactor_app::app_runtime_helpers::plugin_internal_fault;
 use semio_framework_ui_contract as ui_contract;
 use semio_framework_plugin_runtime_instances::inst_wire_frames::{with_instances_mut, with_instances_turn_mut};
+#[path="staged.rs"]
+pub mod staged_context;
 /// 📏️ Both bounds are DERIVED from the one language-neutral view-context contract
 /// (`🛂️manifest/🪟️view-context/🧬️schema/🔣️.json`), not borrowed from the DFF public-action
 /// admission caps this used to reuse: `MAX_PUBLIC_ACTION_BODY_BYTES` (256 KiB) is smaller
@@ -79,8 +81,9 @@ pub async fn plugin_instance_background_surfaces<PA: PluginApp>(runtime: &Plugin
 pub async fn plugin_render_surface<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,surface:&str,receive:&mut dyn FnMut(&mut Option<ComponentTree>,&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Vec<ui_contract::PresenceUpdate>>,semio_framework_job::OriginalTurnFailure>{
     with_instances_turn_mut(runtime,|list|{
         let mut instance=find_instance(list,instance_id)?;
-        let context=instance.surface_contexts.get(surface).ok_or_else(||plugin_internal_fault(format!("surface {surface} has no host context")))?;
-        let original_render_result=::semio_framework_async::poll::resolve_ready(instance.app.render(&context.body_key,None,&context.view_state,cx));
+        let instance=&mut *instance;
+        let context=instance.surface_contexts.borrow(surface).ok_or_else(||plugin_internal_fault(format!("surface {surface} has no host context")))?;
+        let original_render_result=::semio_framework_async::poll::resolve_ready(instance.app.render(context.body_key,None,context.view_state,cx));
         let Some(())=original_render_result? else{return Ok(None)};
         if !receive(instance.app.original_render_tree_source(cx)?,cx)?{return Ok(None)};
         let mut presence=::semio_framework_async::poll::resolve_ready(instance.app.take_pending_presence());

@@ -1,0 +1,15 @@
+# Shared Full Details Provider Peer Review
+
+Read-only review of current IFC/🔎️details/🦀️.rs and both version profile wrappers, plus IFC4 editor integration. No concrete nominal-type/lifetime/API mismatch found in these seams. This is static review, not native compilation or full UI execution.
+
+Shared source imports parent IfcCatalog/IfcAttributeDeclaration/IfcTypeExpression aliases, so its separate profile mounts use their own version catalog nominal type consistently. The shared details source is not a separately compiled provider crate receiving a foreign catalog type. IFC4 and IFC4x3 wrappers both retain the actual IFC4 lossless snapshot and mutation type identity already used by IFC4x3; no graph conversion was added. IFC4 wrapper six-level path and IFC4x3 five-level path match their positions. Profile method returns static catalog; derived_keys can safely retain static declared_by/name slices. Provider entity/constituent helpers return original snapshot lifetime. SnapshotDetailPresentation profile customization preserves IFC4x3 MVD labels in both supported locales.
+
+IFC4 editor routes full generic details body through Ifc4DetailsProvider and retains the separate stable-ID semantic inspector. Admission tries semantic path classifier then shared details admission. Contextual planner returns existing IfcMutation primitives through original retained snapshot factory; semantic/full-details guards run before/after publication checks. ReplaceSource explicitly routes original source replacement behavior. Full-details controlled planner currently always returns Some for normal resolved events, so editor unwrap_or_default is not presently a fallback bypass, though an explicit unsupported error would better expose any future None regression.
+
+Control work is still in progress by High. Specific source areas flagged directly: resolve closure calls complex_edit, normalize_complex_changes and EDIT_RULES.resolve without per-node control; entity_changes and template construction may copy large tuple/complex values. A bounded incoming value-node walk plus ticks on original snapshot/identity scans and final originalcx guards is necessary; a tick merely at entry cannot bound these artifact-sized copies. Retained original publication remains final inverse authority. See ifc-edit-capacity-audit.md for the separate semantic command extent versus actual Store footprint distinction and required full retained batch proof.
+
+Review status is intentionally conditional on High's final control changes and tests; no completed cancellation coverage claim is made here.
+
+## Fresh Custom Work Review
+
+Original-context helper/final guard bypass is fixed in fresh work.rs by controlled callbacks, pending mutation custody and final pre/post publication checks. See latest ifc-contextual-edit-audit.md for remaining exact command-capacity underdeclaration on malformed tuples and the absence of an actual custom retained-work/mounted publication regression. Native move/borrow/API review found no obvious new issue in pending borrow/take; native compilation and execution are still unverified.

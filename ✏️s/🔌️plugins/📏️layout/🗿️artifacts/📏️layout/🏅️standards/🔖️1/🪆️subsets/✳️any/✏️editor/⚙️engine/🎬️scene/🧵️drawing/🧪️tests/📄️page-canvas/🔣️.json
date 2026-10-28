@@ -1,0 +1,275 @@
+{
+  "schema": "layout.page-drawing.v1",
+  "cases": [
+    {
+      "name": "page viewport preserves white margins",
+      "source": {
+        "kind": "page",
+        "page": 0
+      },
+      "placement": "canvas",
+      "canvas": {
+        "width": 200,
+        "height": 100
+      },
+      "target": {
+        "x": 10,
+        "y": 20,
+        "rotation": 0,
+        "width": 400,
+        "height": 300
+      },
+      "path": [
+        [
+          20,
+          10
+        ],
+        [
+          180,
+          90
+        ]
+      ],
+      "expectedAffine": {
+        "xx": 2,
+        "xy": 0,
+        "yx": 0,
+        "yy": 3,
+        "dx": 10,
+        "dy": 20
+      },
+      "expectedPoints": [
+        [
+          50,
+          50
+        ],
+        [
+          370,
+          290
+        ]
+      ]
+    },
+    {
+      "name": "second page remains source-qualified",
+      "source": {
+        "kind": "page",
+        "page": 1
+      },
+      "placement": "canvas",
+      "canvas": {
+        "width": 80,
+        "height": 40
+      },
+      "target": {
+        "x": 0,
+        "y": 0,
+        "rotation": 0,
+        "width": 160,
+        "height": 80
+      },
+      "path": [
+        [
+          4,
+          8
+        ],
+        [
+          60,
+          32
+        ]
+      ],
+      "expectedAffine": {
+        "xx": 2,
+        "xy": 0,
+        "yx": 0,
+        "yy": 2,
+        "dx": 0,
+        "dy": 0
+      },
+      "expectedPoints": [
+        [
+          8,
+          16
+        ],
+        [
+          120,
+          64
+        ]
+      ]
+    },
+    {
+      "name": "rotated viewport preserves independent axis scales",
+      "source": {
+        "kind": "page",
+        "page": 0
+      },
+      "placement": "canvas",
+      "canvas": {
+        "width": 200,
+        "height": 100
+      },
+      "target": {
+        "x": 10,
+        "y": 20,
+        "rotation": 1.5707963267948966,
+        "width": 400,
+        "height": 300
+      },
+      "path": [
+        [
+          20,
+          10
+        ],
+        [
+          180,
+          90
+        ]
+      ],
+      "expectedAffine": {
+        "xx": 0,
+        "xy": -3,
+        "yx": 2,
+        "yy": 0,
+        "dx": 360,
+        "dy": -30
+      },
+      "expectedPoints": [
+        [
+          330,
+          10
+        ],
+        [
+          90,
+          330
+        ]
+      ]
+    }
+  ],
+  "refusals": [
+    "negative page index",
+    "missing page",
+    "nonfinite canvas",
+    "zero canvas width",
+    "zero canvas height"
+  ],
+  "mutations": [
+    "set page child",
+    "replace page child",
+    "clear page child",
+    "page target missing",
+    "same child no-op"
+  ],
+  "sqlite": [
+    "document plus two page components",
+    "duplicate child content owned independently",
+    "orphan component refused"
+  ],
+  "canvasEdits": [
+    {
+      "before": {
+        "width": 0,
+        "height": 0
+      },
+      "after": {
+        "width": 200,
+        "height": 300
+      }
+    },
+    {
+      "before": {
+        "width": 200,
+        "height": 300
+      },
+      "after": {
+        "width": 80,
+        "height": 40
+      }
+    }
+  ],
+  "sqliteCases": [
+    {
+      "name": "document and distinct page roots",
+      "components": [
+        {
+          "owner": "document",
+          "page": null,
+          "root": 1,
+          "canvas": [
+            200,
+            100
+          ]
+        },
+        {
+          "owner": "page",
+          "page": 0,
+          "root": 2,
+          "canvas": [
+            200,
+            100
+          ]
+        },
+        {
+          "owner": "page",
+          "page": 1,
+          "root": 3,
+          "canvas": [
+            80,
+            40
+          ]
+        }
+      ]
+    },
+    {
+      "name": "equal child payloads remain independent",
+      "components": [
+        {
+          "owner": "page",
+          "page": 0,
+          "root": 1,
+          "canvas": [
+            200,
+            100
+          ]
+        },
+        {
+          "owner": "page",
+          "page": 1,
+          "root": 2,
+          "canvas": [
+            200,
+            100
+          ]
+        }
+      ]
+    }
+  ],
+  "sqliteRefusals": [
+    "unowned Drawing document",
+    "unowned Drawing geometry",
+    "one Drawing root owned by two pages",
+    "cross-component style reference",
+    "cross-component shared geometry",
+    "ambiguous document/page owner"
+  ],
+  "identityCases": [
+    {
+      "pageId": "page-1",
+      "sourceChildId": "document-child",
+      "sourceArtifactId": "document-artifact",
+      "expectedChildId": "page-drawing-child-ed81ab766d560cee",
+      "expectedArtifactId": "page-drawing-artifact-ed81ab766d560cee"
+    },
+    {
+      "pageId": "page-2",
+      "sourceChildId": "document-child",
+      "sourceArtifactId": "document-artifact",
+      "expectedChildId": "page-drawing-child-c69d383d8efce283",
+      "expectedArtifactId": "page-drawing-artifact-c69d383d8efce283"
+    },
+    {
+      "pageId": "Seite Ä😀",
+      "sourceChildId": "source\u0000child",
+      "sourceArtifactId": "target",
+      "expectedChildId": "page-drawing-child-937269c6b6632463",
+      "expectedArtifactId": "page-drawing-artifact-937269c6b6632463"
+    }
+  ]
+}

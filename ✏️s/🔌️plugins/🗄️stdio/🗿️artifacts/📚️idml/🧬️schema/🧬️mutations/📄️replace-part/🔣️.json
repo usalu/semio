@@ -1,0 +1,28 @@
+{
+  "schemaVersion": 1,
+  "owner": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📚️idml/🧬️schema/🧬️mutations/📄️replace-part",
+  "semanticKind": "replace-part",
+  "displayName": "Replace IDML Part",
+  "emoji": "📄️",
+  "aggregateVariant": "ReplacePart",
+  "payloadSchema": "🧬️schema/🔣️.json",
+  "textOpcode": "replace-part",
+  "binaryTag": 2,
+  "invertibility": "explicit-mutation",
+  "diffParticipation": "detect",
+  "outcomeClasses": [
+    "applied",
+    "no-op",
+    "rejected"
+  ],
+  "composition": "atomic",
+  "requiredLanguageSurfaces": [
+    "rust",
+    "typescript",
+    "graphql",
+    "json-schema",
+    "protobuf",
+    "text",
+    "binary"
+  ]
+}

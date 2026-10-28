@@ -1,6 +1,7 @@
 //! 🧷️ Actual paged owners retain genuine source bindings and the exact original issuer pair.
 use super::*;
 use semio_framework_os_store_one_item_batch::paged_one_item::{PagedOneItemEdit,PagedOneItemEditStep,PagedOneItemPreparationFactory};
+use semio_framework_os_store_one_item::{PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory,SnapshotRetirementFactory,RetirementDemand,ErasedSnapshotRetirement};
 use semio_framework_value::retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 
@@ -46,13 +47,17 @@ impl SnapshotRetirementFactory<Document> for ExactSnapshotIssuer{
 }
 
 #[derive(Default)]
-struct SourceProbeEdit{before:Option<RetainedCloneBinding>,mutation:Option<RetainedCloneBinding>,closing:bool}
+struct SourceProbeEdit{before:Option<RetainedCloneBinding>,mutation:Option<RetainedCloneBinding>,post:Option<RetainedCloneBinding>,closing:bool}
 impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
     const PREFIX:&'static str="original-source";
     fn recognizes(_:&DocumentMutation)->bool{true}
     fn preflight(_:&DocumentMutation)->Result<usize,String>{Ok(1)}
-    fn advance_demands(&self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,_:&Document,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:if self.before.is_none(){before.binding_copy_bytes()}else if self.mutation.is_none(){mutation.binding_copy_bytes()}else{0},depth:1,..Default::default()})}
-    fn advance(&mut self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,_:&mut Document,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError>{
+    fn post_mode(&self)->PagedOneItemPostMode{PagedOneItemPostMode::Original}
+    fn advance_demands(&self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,post:PagedOneItemPostRead<'_,Document>,_:usize)->Result<RetirementDemand,ValueError>{Ok(RetirementDemand{copy_bytes:if self.before.is_none(){before.binding_copy_bytes()}else if self.mutation.is_none(){mutation.binding_copy_bytes()}else if self.post.is_none(){post.original()?.binding_copy_bytes()}else{0},depth:1,..Default::default()})}
+    fn advance(&mut self,before:RetainedCloneRef<'_,Document>,mutation:RetainedCloneRef<'_,DocumentMutation>,post:PagedOneItemPost<'_,Document>,body:usize,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<PagedOneItemEditStep<DocumentMutation>,ValueError>{
+        let post=post.original()?;
+        assert_ne!(post.source_identity(),before.source_identity());
+        assert_eq!(post.get().title.identity(),TITLE_ROOT.get());
         if grant.maximum_items==0{return Ok(PagedOneItemEditStep::Progress(Default::default()));}
         EDIT_CALLS.set(EDIT_CALLS.get()+1);
         assert_eq!(before.get() as *const Document as usize,BEFORE.get());
@@ -60,20 +65,21 @@ impl PagedOneItemEdit<Document,DocumentMutation> for SourceProbeEdit{
         assert_eq!(text.as_ptr() as usize,PAYLOAD.get());
         if let Some(progress)=before.bind(&mut self.before,grant)?{return Ok(PagedOneItemEditStep::Progress(progress));}
         if let Some(progress)=mutation.bind(&mut self.mutation,grant)?{return Ok(PagedOneItemEditStep::Progress(progress));}
+        if let Some(progress)=post.bind(&mut self.post,grant)?{return Ok(PagedOneItemEditStep::Progress(progress));}
         Ok(if REFUSE_EDIT.get(){PagedOneItemEditStep::RefusedOutcome(RetainedCloneProgress{copied_items:1,..Default::default()},Vec::new())}else{PagedOneItemEditStep::CompleteRows(RetainedCloneProgress{copied_items:1,..Default::default()},Vec::new())})
     }
     fn begin_close(&mut self){self.closing=true;}
     fn close_demands(&self,factory:&dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>,body:usize)->Result<RetirementDemand,ValueError>{
         assert_eq!(std::ptr::from_ref(factory).cast::<()>() as usize,ISSUER.get());
-        let binding=if self.before.is_some(){&self.before}else{&self.mutation};
+        let binding=if self.before.is_some(){&self.before}else if self.mutation.is_some(){&self.mutation}else{&self.post};
         Ok(RetirementDemand{copy_bytes:RetainedCloneBinding::copy_demand(binding)?,capacity_bytes:RetainedCloneBinding::capacity_demand(binding,body)?,release_bytes:RetainedCloneBinding::release_demand(binding)?,depth:RetainedCloneBinding::depth_demand(binding)?})
     }
     fn close_step(&mut self,factory:&dyn ArtifactOwnedValueRetirementFactory<DocumentMutation>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         assert!(self.closing);self.close_demands(factory,grant.maximum_copy_bytes)?;
-        let step=semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else{&mut self.mutation},grant)?;
+        let step=semio_framework_value::retained_clone::close_retained_binding(if self.before.is_some(){&mut self.before}else if self.mutation.is_some(){&mut self.mutation}else{&mut self.post},grant)?;
         Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
-    fn terminal_is_empty(&self)->bool{self.closing&&self.before.is_none()&&self.mutation.is_none()}
+    fn terminal_is_empty(&self)->bool{self.closing&&self.before.is_none()&&self.mutation.is_none()&&self.post.is_none()}
 }
 
 fn law()->Value{serde_json::from_str(include_str!("../🧫️fixtures/🔗️source-custody/🔣️.json")).unwrap()}
@@ -105,6 +111,8 @@ fn close_exact(owner:&mut Box<dyn ArtifactStoreOneItemPreparation<Document,Docum
 
 #[test]
 fn paged_original_mutation_sources_keep_genuine_refs_and_exact_issuer_through_all_outcomes(){
+ let mut _original_receiving_callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;
+ let mut _original_receiving=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new(1usize<<30,&mut _original_receiving_callback);
     let law=law();let maximum=law["maximumTurns"].as_u64().unwrap() as usize;
     let schema:Value=serde_json::from_str(include_str!("../../🧬️schema/🔗️source-custody/🔣️.json")).unwrap();
     let mut oracle=std::process::Command::new("bun").args(["-e",r#"import Ajv from "ajv/dist/2020";import {Database} from "bun:sqlite";const {schema,law}=JSON.parse(await Bun.stdin.text());const validate=new Ajv({strict:true}).compile(schema);if(!validate(law)||validate({...law,cases:[]}))throw Error(JSON.stringify(validate.errors));const db=new Database(":memory:");const rows=law.base.nodes.map(row=>[row.id,row.text]);db.exec("create table nodes(id text primary key,payload text not null)");for(const row of rows)db.query("insert into nodes values (?,?)").run(...row);const original=db.query("select id,payload from nodes order by rowid").all();console.log(JSON.stringify(original.map(row=>({id:row.id,text:row.payload}))));"#]).stdin(std::process::Stdio::piped()).stdout(std::process::Stdio::piped()).spawn().unwrap();

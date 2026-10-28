@@ -1,0 +1,7 @@
+from pathlib import Path
+import hashlib,json
+root=Path('C:/git/semio');ticket=root/'.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️21/COMPLETE-IFC-4X3-ARTIFACT-EDITING-AND-INTERCHANGE';details='✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/';editor='✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/✏️editor/'
+paths=[details+name for name in ['type_input.ts','type_enum_input.test.ts','🧪️tests/type-enum-input.json','🧪️tests/type-enum-input.schema.json','🧪️tests/type-enum-input.feature','type_input_kind.rs','type_input.rs','type-guidance.rs','type_input_choices.rs','type_input_choices_tests.rs','type_enum_input_tests.rs','type_input_tests.rs','constituent_roster.rs','domain_work.rs','🦀️.rs']]+[editor+name for name in ['details.rs','guided-type-enum-tests.rs','render-work-tests.rs']]+['✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📜️script.ts']
+rows=[{'path':name,'sha256':hashlib.sha256((root/name).read_bytes()).hexdigest(),'bytes':(root/name).stat().st_size,'windowsPathUnits':len(str(root/name).encode('utf-16-le'))//2}for name in paths]
+result={'nativeExecution':False,'nativeTypeChecked':False,'nativePhysicalProof':False,'source':rows,'files':len(rows),'maximumWindowsPathUnits':max(row['windowsPathUnits']for row in rows)}
+(ticket/'🗑️generated/type-enum-source.json').write_text(json.dumps(result,ensure_ascii=False,indent=2)+'\n',encoding='utf8');print('[DEBUG]',len(rows),'source hashes; maximum Windows path units',result['maximumWindowsPathUnits'])

@@ -1,0 +1,81 @@
+{
+  "fields": {
+    "IfcEntity.id": "IfcUInt64!",
+    "IfcValue.intValue": "IfcInt64",
+    "IfcValue.referenceValue": "IfcUInt64",
+    "IfcArgModified.index": "IfcIndex!",
+    "IfcArgAdded.index": "IfcIndex!",
+    "IfcArgsDiff.removed": "[IfcIndex!]!",
+    "IfcEntityRemoved.id": "IfcUInt64!",
+    "IfcEntityRemoved.index": "IfcIndex!",
+    "IfcEntityModified.id": "IfcUInt64!",
+    "IfcEntityAdded.index": "IfcIndex!",
+    "IfcMutation.id": "IfcUInt64",
+    "IfcMutation.index": "IfcIndex",
+    "IfcEntity.complex": "[IfcComplexType!]"
+  },
+  "valid": [
+    {
+      "scalar": "IfcUInt64",
+      "value": "0"
+    },
+    {
+      "scalar": "IfcUInt64",
+      "value": "18446744073709551615"
+    },
+    {
+      "scalar": "IfcInt64",
+      "value": "-9223372036854775808"
+    },
+    {
+      "scalar": "IfcInt64",
+      "value": "9223372036854775807"
+    },
+    {
+      "scalar": "IfcIndex",
+      "value": "4294967296"
+    },
+    {
+      "scalar": "IfcIndex",
+      "value": "18446744073709551615"
+    }
+  ],
+  "invalid": [
+    {
+      "scalar": "IfcUInt64",
+      "value": "-1"
+    },
+    {
+      "scalar": "IfcUInt64",
+      "value": "18446744073709551616"
+    },
+    {
+      "scalar": "IfcInt64",
+      "value": "-9223372036854775809"
+    },
+    {
+      "scalar": "IfcInt64",
+      "value": "9223372036854775808"
+    },
+    {
+      "scalar": "IfcIndex",
+      "value": "-1"
+    },
+    {
+      "scalar": "IfcUInt64",
+      "value": "01"
+    },
+    {
+      "scalar": "IfcInt64",
+      "value": "-0"
+    },
+    {
+      "scalar": "IfcUInt64",
+      "value": "1.0"
+    },
+    {
+      "scalar": "IfcUInt64",
+      "value": 9007199254740992
+    }
+  ]
+}

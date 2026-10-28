@@ -1,0 +1,187 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "nativeExecution",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ifc-csg-circular-supplemental"
+    },
+    "version": {
+      "const": 1
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 18,
+      "maxItems": 18,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "base",
+          "damage",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "base": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "primitive",
+              "height",
+              "radius",
+              "position",
+              "unitPrefix"
+            ],
+            "properties": {
+              "primitive": {
+                "const": "cylinder"
+              },
+              "height": {
+                "const": 3
+              },
+              "radius": {
+                "const": 1
+              },
+              "position": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "location",
+                  "axis",
+                  "refDirection"
+                ],
+                "properties": {
+                  "location": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    },
+                    "minItems": 3,
+                    "maxItems": 3
+                  },
+                  "axis": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "refDirection": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "type": "number"
+                        },
+                        "minItems": 3,
+                        "maxItems": 3
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                }
+              },
+              "unitPrefix": {
+                "type": "null"
+              }
+            }
+          },
+          "damage": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "target",
+              "operation",
+              "realWord"
+            ],
+            "properties": {
+              "target": {
+                "enum": [
+                  "primitive",
+                  "root",
+                  "position",
+                  "point",
+                  "direction"
+                ]
+              },
+              "operation": {
+                "enum": [
+                  "appendUnset",
+                  "removeLast",
+                  "complexConstituent",
+                  "unsetPosition",
+                  "pointPosition",
+                  "realBits",
+                  "translateAll1e20"
+                ]
+              },
+              "realWord": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "pattern": "^[0-9]+$"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              }
+            }
+          },
+          "expected": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "formal",
+              "admission"
+            ],
+            "properties": {
+              "formal": {
+                "enum": [
+                  "invalid-arity",
+                  "not-asserted",
+                  "invalid-required",
+                  "invalid-role",
+                  "nonphysical-source",
+                  "valid-physical"
+                ]
+              },
+              "admission": {
+                "enum": [
+                  "refuse",
+                  "refuse-selected-declaration",
+                  "refuse-nonfinite",
+                  "refuse-projected-degeneracy"
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

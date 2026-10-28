@@ -38,7 +38,7 @@ class SegmentedJsonText implements JsonTextSource {
   readonly length: number;
   private part = 0;
   private start = 0;
-  constructor(readonly parts: readonly string[]) { this.length = parts.reduce((size, part) => size + part.length, 0); }
+  constructor(readonly parts: readonly string[],length:number) { this.length = length; }
   charAt(index: number): string {
     if (index < 0 || index >= this.length) return "";
     while (this.part > 0 && index < this.start) this.start -= this.parts[--this.part]!.length;
@@ -162,5 +162,5 @@ export async function decodeJsonSyntaxSegments(segments: readonly string[], poli
     if (part.length) parts.push(part);
     if ((index + 1) % control.chunk === 0) await control.yield();
   }
-  return await new JsonSyntaxReader(new SegmentedJsonText(parts), policy, control).read();
+  return await new JsonSyntaxReader(new SegmentedJsonText(parts,units), policy, control).read();
 }

@@ -1,0 +1,48 @@
+{
+  "cases": [
+    {
+      "file": "csg-wrapper.ifc",
+      "volume": 48
+    },
+    {
+      "file": "block.ifc",
+      "volume": 24
+    },
+    {
+      "file": "rounded-rectangle.ifc",
+      "volume": 60.55042695566277
+    }
+  ],
+  "radiusBoundaryCases": [
+    {
+      "x": 4,
+      "y": 4,
+      "r": 2,
+      "valid": true
+    },
+    {
+      "x": 4,
+      "y": 2,
+      "r": 1,
+      "valid": true
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "r": 0,
+      "valid": false
+    },
+    {
+      "x": 4,
+      "y": 4,
+      "r": 2.1,
+      "valid": false
+    },
+    {
+      "x": 4,
+      "y": 2,
+      "r": 1.1,
+      "valid": false
+    }
+  ]
+}

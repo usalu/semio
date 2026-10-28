@@ -1,0 +1,17 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"stdio.ifc.gltf-accessor",
+  "type":"object","additionalProperties":false,"required":["schema","invalid","cancellation","invalidBytes","invalidByteCounts","binaryCancellation"],
+  "properties":{
+    "schema":{"const":"stdio.ifc.gltf-accessor"},
+    "invalidBytes":{"type":"array","minItems":1,"items":{"type":"number"}},
+    "invalidByteCounts":{"type":"array","minItems":1,"items":{"const":0}},
+    "binaryCancellation":{"type":"object","additionalProperties":false,"required":["count","minimumCompleted","phase"],"properties":{"count":{"type":"integer","minimum":8192},"minimumCompleted":{"type":"integer","minimum":4096},"phase":{"const":"glb-bytes"}}},
+    "invalid":{"type":"array","minItems":1,"items":{
+      "type":"object","additionalProperties":false,"required":["name","edit"],
+      "properties":{"name":{"type":"string","minLength":1},"edit":{"enum":["misalignedViews","shortDeclaredBuffer","wrongPositionTarget","nonbyteBufferValue"]}}
+    }},
+    "cancellation":{"type":"object","additionalProperties":false,"required":["count","minimumCompleted","phase"],
+      "properties":{"count":{"type":"integer","minimum":1024},"minimumCompleted":{"type":"integer","minimum":1},"phase":{"const":"gltf-accessor"}}}
+  }
+}

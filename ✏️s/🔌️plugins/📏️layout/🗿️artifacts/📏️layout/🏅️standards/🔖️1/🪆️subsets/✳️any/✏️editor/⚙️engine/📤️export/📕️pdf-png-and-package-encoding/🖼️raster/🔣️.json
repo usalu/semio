@@ -1,0 +1,49 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LayoutPdfRasterTurn",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "height",
+    "rgba",
+    "plane",
+    "cursor",
+    "maximumBytes"
+  ],
+  "properties": {
+    "width": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "height": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4294967295
+    },
+    "rgba": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "plane": {
+      "enum": [
+        "rgb",
+        "alpha"
+      ]
+    },
+    "cursor": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "maximumBytes": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 4096
+    }
+  }
+}

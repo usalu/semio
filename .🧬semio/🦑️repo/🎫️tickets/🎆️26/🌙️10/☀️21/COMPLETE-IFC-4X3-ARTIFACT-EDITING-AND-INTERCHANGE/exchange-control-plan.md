@@ -1,0 +1,7 @@
+# Original Controls Across Every Exchange Endpoint
+
+The STEP and glTF entry points capture original cancellation, progress callbacks and control limits before invoking caller code. Current `bim.ts`, `fem.ts` and public `extractIfc4x3Triangles` still use the caller's mutable options object directly. A progress callback can replace its signal and escape the original cancellation authority. Some imports also construct indexes and inspect semantics before reaching their first cancellation checkpoint.
+
+Add neutral endpoint vectors and failing tests for all five public entry points: both BIM directions, both FEM directions, and represented-triangle extraction. Capture through the existing shared interface at entry. Run the initial checkpoint before graph construction or semantic inspection, preserve original callback identity, and retain cancellation as an exception rather than swallowing it into an unsupported projection result. Native retained exchange workers already use their original `StepContext` authority; this change does not claim native runtime proof or fix every remaining cold traversal.
+
+While inspecting geometry entry, the TS product loop also assumes any entity with a shape at argument six is an `IfcProduct`. The native exchange worker independently identified the same classification requirement. Address that separately with the complete ADD2 subtype catalog and a neutral malformed non-product case, preserving legitimate product subtypes and unbound-item diagnostics.

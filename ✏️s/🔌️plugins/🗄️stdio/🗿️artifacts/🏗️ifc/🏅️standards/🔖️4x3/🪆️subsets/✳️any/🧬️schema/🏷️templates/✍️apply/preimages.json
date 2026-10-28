@@ -1,0 +1,11 @@
+{
+ "source":[{"id":"1","arguments":2}],
+ "cases":[
+  {"name":"distinct original field and final insertion","operations":[{"kind":"insert","id":"2","index":1},{"kind":"set","id":"1","index":0}],"admitted":true},
+  {"name":"two writes to one original slot","operations":[{"kind":"set","id":"1","index":0},{"kind":"set","id":"1","index":0}],"admitted":false},
+  {"name":"insert then edit the inserted entity","operations":[{"kind":"insert","id":"2","index":1},{"kind":"set","id":"2","index":0}],"admitted":false},
+  {"name":"two inserts with one identity","operations":[{"kind":"insert","id":"2","index":1},{"kind":"insert","id":"2","index":2}],"admitted":false},
+  {"name":"out of original append order","operations":[{"kind":"insert","id":"2","index":0}],"admitted":false},
+  {"name":"distinct original fields","operations":[{"kind":"set","id":"1","index":0},{"kind":"set","id":"1","index":1}],"admitted":true}
+ ]
+}

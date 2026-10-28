@@ -1,0 +1,9 @@
+# Constituent Collection Routing Independent Audit
+
+Small read-only source checkpoint during parent serial test run,2026-10-21. No test command run, no native execution, no production changes. No new confirmed P1/P2 in this narrow routing review.
+
+Shared details/work.rs:10 retained_constituent_argument requires PathAdmission's actual native address and native.part.is_some(). SetValue preserves its previous admitted argument path; InsertValue/RemoveValue/MoveValue additionally require field_count greater than native.field, excluding whole-argument structural edits. The later reference-completion condition uses this helper only when a real admitted argument is retained; reference and enumeration requests keep their existing specialized paths. It does not add a replacement event or bypass admission.
+
+Existing value_edit owns the complete argument, parses only its admitted bounded suffix, rebuilds collection slots progressively and rejects cross-collection Move. Parts cursor retains the complex roster for SetEntityComplex. DomainWork still runs on request-none result before emission, so collection lower/upper bounds,ARRAY/unique/optional/derived constraints are not waived by routing. Central mutation/inverse remains the authority. Insert/remove/move of whole arguments,constituent rosters and retyping remain outside this hook.
+
+Read worker host-constituent-collection-implementation.md and15-case neutral roster scope. Worker reports16TS tests/56expect with actual declared mutation plus independent fast-json-patch output and central inverse. These are reported results, not an independent rerun here. Native tests require zero eager ticks and every measured accepted prefix cancellation/close but remain authored/uncompiled/unexecuted. This condition review does not recertify existing value-editor accounting, actual native type checking, Store publication or rendered interaction.

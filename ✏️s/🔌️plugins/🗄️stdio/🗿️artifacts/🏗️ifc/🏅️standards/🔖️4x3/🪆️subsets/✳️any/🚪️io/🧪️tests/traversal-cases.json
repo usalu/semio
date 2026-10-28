@@ -1,0 +1,33 @@
+{
+  "schema": "semio.ifc.exchange-traversal.v1",
+  "endpoints": [
+    "bim",
+    "fem"
+  ],
+  "frontiers": [
+    "initial",
+    "interior",
+    "completion"
+  ],
+  "failures": [
+    "abort",
+    "undefined",
+    "error"
+  ],
+  "irrelevantRows": 1024,
+  "propertyRows": 257,
+  "phases": {
+    "prepare": "exchange-relations",
+    "lookup": "exchange-relations-lookup",
+    "attribute": "exchange-attribute",
+    "bimProperties": "bim-properties",
+    "bimOccurrenceProperties": "bim-occurrence-properties",
+    "femProperties": "fem-properties"
+  },
+  "preserve": {
+    "sourceOrder": true,
+    "duplicateRelatedOccurrences": true,
+    "partialPublication": false,
+    "ignoredUnrelatedPayloads": true
+  }
+}

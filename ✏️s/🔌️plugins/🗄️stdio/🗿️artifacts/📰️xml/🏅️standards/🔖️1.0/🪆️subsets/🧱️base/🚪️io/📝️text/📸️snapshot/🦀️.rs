@@ -968,3 +968,7 @@ pub fn xml_document_from_text(text: &str) -> Result<XmlDocument, String> {
 //#endregion 🔖️XmlTextCodec
 }
 pub use native_xml_codec::*;
+
+/// 🧵 Borrowed no-DTD UTF8 syntax validation with per-turn work authority.
+#[path = "🧵️validation/🦀️.rs"]
+pub mod validation;

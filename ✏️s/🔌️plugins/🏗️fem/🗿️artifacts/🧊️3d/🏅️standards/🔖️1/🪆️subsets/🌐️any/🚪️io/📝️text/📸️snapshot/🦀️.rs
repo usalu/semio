@@ -76,9 +76,7 @@ impl pack::snapshot::ArtifactDsl for Fem3dSnapshot {
             Err(_) => text,
         };
         let record = semio_framework_dsl_record::parse(body, &Self::__dsl_spec(), &semio_framework_dsl_record::ParseOptions { limits: semio_framework_diagnostic::Limits::default(), mode: semio_framework_dsl_record::SourceMode::Document })?;
-        let snapshot = Self::__dsl_from_record(&record)?;
-        if let Err(error) = snapshot.validate_interaction_identities() { <Self as semio_framework_value::FromValue>::retire_decoded(snapshot); return Err(semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::default())); }
-        Ok(snapshot)
+        Self::__dsl_from_record(&record)
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);

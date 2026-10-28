@@ -1,0 +1,29 @@
+{
+  "id": "Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry",
+  "source": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_SurfaceModel_Geometry/content.html",
+    "sha256": "f4ac42de0851bd18e4a3ca56104a6ec69dd547b5c3a3fff1ddc4a5912239cc95"
+  },
+  "predicates": [
+    {
+      "attribute": "RepresentationIdentifier",
+      "kind": "equals-string",
+      "value": "Body"
+    },
+    {
+      "attribute": "RepresentationType",
+      "kind": "equals-string",
+      "value": "SurfaceModel"
+    },
+    {
+      "attribute": "Items",
+      "kind": "every-subtype",
+      "value": [
+        "IFCTESSELLATEDITEM",
+        "IFCSHELLBASEDSURFACEMODEL",
+        "IFCFACEBASEDSURFACEMODEL"
+      ]
+    }
+  ]
+}

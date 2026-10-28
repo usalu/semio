@@ -1,0 +1,11 @@
+# Released Template Authoring Controls
+
+The latest source exposes `applyIfcTemplate` through the original retained-command factory and the editor action catalog. Its `template` field is free text; `entries`, `identities`, owner history and performance inputs are unconstrained values. The details renderer can edit the resulting native graph, but there is no released-template entry builder in that renderer yet. This remains a full end-to-end authoring gap.
+
+The existing manifest infrastructure derives a real select control from a string argument with declared options. The first concrete change is to populate the template argument from all 760 immutable released template records, keep official names as data labels, require explicit selection, and preserve the existing retained semantic validation gate. This selector includes all seven PSET/QTO carrier kinds. It does not imply that raw entry payloads have become guided forms.
+
+The schema-first selector contract and tests must require complete unique release coverage, exact option values/labels, an explicit required argument, and no automatic default. The independent IfcOpenShell template distribution will check the full option roster, including each of the seven carrier populations. Native action tests will check the real action control and both supported locales; authentic native execution remains a separate pending gate while compiler ingress is unavailable.
+
+Next, guided template entry forms must use the existing draft/action infrastructure and retain exact values, references, identities and publication revisions. The current manifest `ArgSchema` has no general recursive union form: objects and arrays can be expanded by the time-travel form, while union grouping is selected at the top level. Do not replace the application schema with a permissive flattened union or bypass the complete semantic transaction gate.
+
+For existing enumerated properties, contextual choices can be read from the actual referenced `IfcPropertyEnumeration`; official PSD literals are suggestions only when the model has no explicit definition. That subsequent work must preserve declared scalar types and use the central mutation/diff/inverse path.

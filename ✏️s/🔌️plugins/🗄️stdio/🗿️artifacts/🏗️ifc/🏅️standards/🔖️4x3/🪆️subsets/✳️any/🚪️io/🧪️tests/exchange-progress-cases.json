@@ -1,0 +1,173 @@
+{
+  "cases": [
+    {
+      "route": "bim-to-ifc",
+      "phase": "bim-sites",
+      "occurrence": 1,
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "bim-to-ifc",
+      "phase": "bim-sites",
+      "occurrence": 1,
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "bim-to-ifc",
+      "phase": "bim-sites",
+      "occurrence": 1,
+      "fault": "step-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "route": "bim-to-ifc",
+      "phase": "bim-sites",
+      "occurrence": 1,
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "bim-to-ifc",
+      "phase": "bim-sites",
+      "occurrence": 1,
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "route": "bim-to-ifc",
+      "phase": "bim-sites",
+      "occurrence": 1,
+      "fault": "number",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-bim",
+      "phase": "bim-import",
+      "occurrence": 2,
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-bim",
+      "phase": "bim-import",
+      "occurrence": 2,
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-bim",
+      "phase": "bim-import",
+      "occurrence": 2,
+      "fault": "step-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-bim",
+      "phase": "bim-import",
+      "occurrence": 2,
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-bim",
+      "phase": "bim-import",
+      "occurrence": 2,
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-bim",
+      "phase": "bim-import",
+      "occurrence": 2,
+      "fault": "number",
+      "expected": "reject-original"
+    },
+    {
+      "route": "fem-to-ifc",
+      "phase": "fem-export",
+      "occurrence": 2,
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "fem-to-ifc",
+      "phase": "fem-export",
+      "occurrence": 2,
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "fem-to-ifc",
+      "phase": "fem-export",
+      "occurrence": 2,
+      "fault": "step-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "route": "fem-to-ifc",
+      "phase": "fem-export",
+      "occurrence": 2,
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "fem-to-ifc",
+      "phase": "fem-export",
+      "occurrence": 2,
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "route": "fem-to-ifc",
+      "phase": "fem-export",
+      "occurrence": 2,
+      "fault": "number",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-fem",
+      "phase": "fem-materials",
+      "occurrence": 1,
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-fem",
+      "phase": "fem-materials",
+      "occurrence": 1,
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-fem",
+      "phase": "fem-materials",
+      "occurrence": 1,
+      "fault": "step-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-fem",
+      "phase": "fem-materials",
+      "occurrence": 1,
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-fem",
+      "phase": "fem-materials",
+      "occurrence": 1,
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "route": "ifc-to-fem",
+      "phase": "fem-materials",
+      "occurrence": 1,
+      "fault": "number",
+      "expected": "reject-original"
+    }
+  ]
+}
+

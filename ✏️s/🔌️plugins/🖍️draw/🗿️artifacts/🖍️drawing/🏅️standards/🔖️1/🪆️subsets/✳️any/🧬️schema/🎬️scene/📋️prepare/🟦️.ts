@@ -1,3 +1,4 @@
+import {DrawingAssetsOwner} from '../../🟦️.ts';
 import { parseDrawingFontFamily } from "../../📝️text/🔤️family/🟦️.ts";
 /** 📋️ Complete authored documents become private typed preparation plans under work grants. */
 import {binary64Value} from "@semio-tech/framework/value/ieee754";
@@ -71,7 +72,7 @@ export class DocumentVectorPreparationJob{
  admitFontSources(sources:FontByteSource[],unicodeBytes:Uint8Array):void{this.job.admitFontSources(sources,unicodeBytes);}
  cancel():void{this.job.cancel();}
  result():DocumentScenePlan{return this.job.result();}
- intoRetirement():{job:WorkRetirement;output:DocumentScenePlan|null}{const moved=this.job.intoRetirement();this.layers=[];this.assets={};return moved;}
+ intoRetirement():{job:WorkRetirement;output:DocumentScenePlan|null}{const moved=this.job.intoRetirement();this.layers=[];this.assets=DrawingAssetsOwner.fromEntriesCold([]);return moved;}
 }/** 🧺️ Keeps completed or refused producer ownership until explicit yielded close finishes. */
 async function completeSceneProducer<T,P extends {done:boolean}>(job:{advance:(grant:number)=>P;cancel:()=>void;needsFontSources?:()=>boolean;fontSourceFamily?:()=>string;admitFontSources?:(sources:FontByteSource[],unicodeBytes:Uint8Array)=>void;intoRetirement:()=>{job:WorkRetirement;output:T|null}},options:{signal?:AbortSignal;workBudget?:number;fontProvider?:FontByteProvider;onProgress?:(progress:P)=>void},check:()=>void):Promise<T>{
  let close:WorkRetirement|null=null,transferred=false;
@@ -186,7 +187,7 @@ export class DocumentSceneJob {
  private step():void{
   if(this.phase==="assets"){
    if(this.assetCurrent){const asset=this.assetCurrent,source=this.source[asset.id]!;if(this.assetChar===source.samples.length){this.plan.assets.push(asset);this.assetIds.add(asset.id);this.assets++;this.assetCurrent=null;return;}const sample=source.samples[this.assetChar++]!;if(!Array.isArray(sample)||sample.length!==4||sample.some(component=>!Number.isInteger(component)||component<0||component>255))fail("Invalid intrinsic RGBA sample");asset.image.pixels.set(sample,(this.assetChar-1)*4);this.sourceBytes+=4;return;}
-   const key=this.assetKeys[this.assetAt++];if(key===undefined){this.source={};this.assetKeys=[];this.phase="layers";return;}const asset=this.source[key]!;id(key);const count=asset.width*asset.height;if(!Number.isSafeInteger(count)||count<1||count>16777216||!Array.isArray(asset.samples)||asset.samples.length!==count||count*4>this.limits.maxSourceBytes-this.sourceBytes)fail("Invalid intrinsic image extent or sample byte limit");this.assetCurrent={id:key,image:{width:asset.width,height:asset.height,pixels:new Uint8Array(count*4)}};this.assetChar=0;return;
+   const key=this.assetKeys[this.assetAt++];if(key===undefined){this.source=DrawingAssetsOwner.fromEntriesCold([]);this.assetKeys=[];this.phase="layers";return;}const asset=this.source[key]!;id(key);const count=asset.width*asset.height;if(!Number.isSafeInteger(count)||count<1||count>16777216||!Array.isArray(asset.samples)||asset.samples.length!==count||count*4>this.limits.maxSourceBytes-this.sourceBytes)fail("Invalid intrinsic image extent or sample byte limit");this.assetCurrent={id:key,image:{width:asset.width,height:asset.height,pixels:new Uint8Array(count*4)}};this.assetChar=0;return;
   }
   if(this.phase==="layers"){const f=this.frames.at(-1);if(!f){this.phase="validation";return;}if(f.at===f.layers.length){if(!f.groups.pop())this.frames.pop();return;}this.start(f.layers[f.at++]!,f);return;}
   if(this.phase==="paint"){this.paint();return;}
@@ -214,7 +215,7 @@ export class DocumentSceneJob {
    case 2:{const frame=this.frames.at(-1);if(frame){if(!frame.groups.pop())this.frames.pop();return false;}this.frames=[];break;}
    case 3:if(this.removeEntry(this.ids))return false;this.ids.clear();break;case 4:if(this.removeEntry(this.assetIds))return false;this.assetIds.clear();break;
    case 5:if(this.removeEntry(this.visited))return false;this.visited.clear();break;case 6:if(this.removeEntry(this.visiting))return false;this.visiting.clear();break;
-   case 7:this.graph=[];break;case 8:this.current=null;break;case 9:this.assetKeys=[];this.assetCurrent=null;break;case 10:this.source={};break;case 11:this.plan={assets:[],nodes:[]};break;
+   case 7:this.graph=[];break;case 8:this.current=null;break;case 9:this.assetKeys=[];this.assetCurrent=null;break;case 10:this.source=DrawingAssetsOwner.fromEntriesCold([]);break;case 11:this.plan={assets:[],nodes:[]};break;
   }return ++slot===12;});return{job,output};
  }
  cancel():void{this.aborted=true;}

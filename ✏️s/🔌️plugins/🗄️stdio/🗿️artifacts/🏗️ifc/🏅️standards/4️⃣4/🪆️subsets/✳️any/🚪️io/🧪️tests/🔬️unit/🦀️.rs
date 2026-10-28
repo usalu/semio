@@ -171,3 +171,64 @@ fn the_ifc4_document_codec_round_trips_an_ifc4_file_and_refuses_other_schemas() 
     twice.instances.push(twice.instances[0].clone());
     assert!(encode_ifc4_document(&twice).is_err(), "a repeated instance id is refused");
 }
+
+#[test]
+fn official_ifc4_exchange_samples_round_trip_and_match_neutral_counts() {
+    use semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::{decode_ifc4_document, encode_ifc4_document};
+    let manifest: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏛️official/🔣️.json")).expect("official sample contract");
+    for (name, bytes) in [
+        ("tessellation-with-individual-colors.ifc", include_bytes!("../../../🧪️tests/🧫️fixtures/🏛️official/tessellation-with-individual-colors.ifc").as_slice()),
+        ("column-straight-rectangle-tessellation.ifc", include_bytes!("../../../🧪️tests/🧫️fixtures/🏛️official/column-straight-rectangle-tessellation.ifc").as_slice()),
+    ] {
+        let expected = manifest["samples"].as_array().unwrap().iter().find(|item| item["file"] == name).unwrap();
+        assert_eq!(bytes.len() as u64, expected["bytes"].as_u64().unwrap());
+        let document = decode_ifc4_document(bytes).unwrap_or_else(|error| panic!("{name}: {error}"));
+        assert_eq!(document.instances.len() as u64, expected["entityCount"].as_u64().unwrap());
+        let output = encode_ifc4_document(&document).expect("official graph export");
+        assert_ne!(output, bytes, "official writer formatting is regenerated");
+        assert_eq!(decode_ifc4_document(&output).expect("regenerated graph"), document);
+    }
+}
+
+#[test]
+fn neutral_ifc4_boundary_cases_apply_equally_on_import_and_export() {
+    use semio_s_artifact_stdio_contract::part21::parse_part21;
+    use semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::{decode_ifc4_document, encode_ifc4_document};
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏛️official/🔣️.json")).expect("boundary contract");
+    for case in contract["boundaryCases"].as_array().unwrap() {
+        let text = case["text"].as_str().map(str::to_owned).unwrap_or_else(|| format!("ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA{};\nENDSEC;\nDATA;\n{}\nENDSEC;\nEND-ISO-10303-21;\n", case["schema"].as_str().unwrap(), case["data"].as_str().unwrap()));
+        let expected = case["valid"].as_bool().unwrap();
+        let export_expected = case["exportValid"].as_bool().unwrap_or(expected);
+        assert_eq!(decode_ifc4_document(text.as_bytes()).is_ok(), expected, "{} import", case["id"]);
+        let document = parse_part21(&text).expect("boundary cases are generic STEP graphs");
+        assert_eq!(encode_ifc4_document(&document).is_ok(), export_expected, "{} export", case["id"]);
+        use semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::{export::serializers::artifacts as exporters, import::deserializers::artifacts as importers};
+        let mut binary = exporters::binary::v_raw::any::serialize(&demo_ifc_snapshot()).expect("valid IFC4 seed");
+        binary.bytes = text.as_bytes().to_vec();
+        let mut txt = exporters::txt::v_utf_8::any::serialize(&demo_ifc_snapshot()).expect("valid IFC4 seed");
+        txt.lines = text.lines().map(str::to_owned).collect();
+        txt.trailing_newline = true;
+        assert_eq!(importers::binary::v_raw::any::deserialize(&binary).is_ok(), expected, "{} binary import", case["id"]);
+        assert_eq!(importers::txt::v_utf_8::any::deserialize(&txt).is_ok(), expected, "{} text import", case["id"]);
+        let snapshot = semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::snapshot::from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document);
+        assert_eq!(exporters::binary::v_raw::any::serialize(&snapshot).is_ok(), export_expected, "{} binary export", case["id"]);
+        assert_eq!(exporters::txt::v_utf_8::any::serialize(&snapshot).is_ok(), export_expected, "{} text export", case["id"]);
+    }
+}
+
+#[test]
+fn neutral_ifc4_binary_literals_have_identical_import_export_validity() {
+    use semio_s_artifact_stdio_contract::part21::Part21Value;
+    use semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::{decode_ifc4_document, encode_ifc4_document};
+    let contract: serde_json::Value = serde_json::from_str(include_str!("../../../🧪️tests/🧫️fixtures/🏛️official/🔣️.json")).expect("binary literal contract");
+    let frame = |value: &str| format!("ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('IFC4'));ENDSEC;DATA;#1=IFCPROPERTYBOUNDEDVALUE(\"{value}\");ENDSEC;END-ISO-10303-21;");
+    let mut seed = decode_ifc4_document(frame("0").as_bytes()).expect("empty bit string");
+    for (key, valid) in [("valid", true), ("invalid", false)] {
+        for literal in contract["binaryLiterals"][key].as_array().expect("literal rows") {
+            let literal = literal.as_str().expect("literal");
+            assert_eq!(decode_ifc4_document(frame(literal).as_bytes()).is_ok(), valid, "{literal} import");
+            seed.instances[0].entities[0].1 = vec![Part21Value::Binary(literal.into())];
+            assert_eq!(encode_ifc4_document(&seed).is_ok(), valid, "{literal} export");
+        }
+    }
+}

@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/part21/alphabets.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "version", "shiftedStart", "shiftedEnd", "pages"],
+  "properties": {
+    "schema": {"const": "stdio.part21.alphabets"},
+    "version": {"const": 1},
+    "shiftedStart": {"const": 160},
+    "shiftedEnd": {"const": 254},
+    "pages": {"type": "array", "minItems": 9, "maxItems": 9, "items": {"type": "object", "additionalProperties": false, "required": ["selector", "encoding", "url", "sha256", "scalars"], "properties": {
+      "selector": {"type": "string", "pattern": "^[A-I]$"},
+      "encoding": {"type": "string", "pattern": "^ISO-8859-[1-9]$"},
+      "url": {"type": "string", "pattern": "^https://www\\.unicode\\.org/Public/MAPPINGS/ISO8859/8859-[1-9]\\.TXT$"},
+      "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+      "scalars": {"type": "array", "minItems": 95, "maxItems": 95, "items": {"anyOf": [{"type": "null"}, {"type": "integer", "minimum": 160, "maximum": 1114111}]}}
+    }}}
+  }
+}

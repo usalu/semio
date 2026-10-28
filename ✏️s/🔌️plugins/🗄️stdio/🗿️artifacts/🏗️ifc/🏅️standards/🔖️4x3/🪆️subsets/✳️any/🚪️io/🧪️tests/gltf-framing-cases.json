@@ -1,0 +1,27 @@
+{
+  "schema": "stdio.ifc.glb-framing",
+  "json": "{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}]}",
+  "cases": [
+    {"name": "Space and Zero Padding", "jsonTail": " ", "binPadding": 0, "unknownChunk": false, "accepted": true},
+    {"name": "Nonzero Binary Padding", "jsonTail": " ", "binPadding": 1, "unknownChunk": false, "accepted": false},
+    {"name": "NUL JSON Tail", "jsonTail": "\u0000", "binPadding": 0, "unknownChunk": false, "accepted": false},
+    {"name": "JSON Tab Text", "jsonTail": "\t", "binPadding": 0, "unknownChunk": false, "accepted": true},
+    {"name": "JSON Line Text", "jsonTail": "\n", "binPadding": 0, "unknownChunk": false, "accepted": true},
+    {"name": "Ignored Future Chunk", "jsonTail": " ", "binPadding": 0, "unknownChunk": true, "accepted": true}
+  ],
+  "scales": [1, 0.000001, 1e-200, -1e-200],
+  "cancellationRoutes": ["readGlb", "writeGlb", "importGltf", "exportGltf"],
+  "orientations": [
+    {"name":"Identity","linear":[1,0,0,0,1,0,0,0,1],"sign":1},
+    {"name":"Tiny Positive","linear":[1e-200,0,0,0,1e-200,0,0,0,1e-200],"sign":1},
+    {"name":"Tiny Reflection","linear":[-1e-200,0,0,0,1e-200,0,0,0,1e-200],"sign":-1},
+    {"name":"Overflowing Products","linear":[1e308,0,0,0,1e308,0,0,0,1e308],"sign":1},
+    {"name":"Subnormal Positive","linear":[5e-324,0,0,0,5e-324,0,0,0,5e-324],"sign":1},
+    {"name":"Subnormal Reflection","linear":[5e-324,0,0,0,-5e-324,0,0,0,5e-324],"sign":-1},
+    {"name":"Huge Singular","linear":[1e308,1e308,1e308,1e308,1e308,1e308,1e308,1e308,1e308],"sign":0},
+    {"name":"Huge Cancellation","linear":[1e308,1e308,0,1e308,9.999999999999998e307,0,0,0,1],"sign":-1},
+    {"name":"Near Singular Positive","linear":[1,1,1,1,1.0000000000000002,1,1,1,1.0000000000000002],"sign":1},
+    {"name":"Near Singular Reflection","linear":[1,1.0000000000000002,1,1,1,1,1,1,1.0000000000000002],"sign":-1},
+    {"name":"Mixed Exponents","linear":[1e308,0,0,0,5e-324,0,0,0,-1],"sign":-1}
+  ]
+}

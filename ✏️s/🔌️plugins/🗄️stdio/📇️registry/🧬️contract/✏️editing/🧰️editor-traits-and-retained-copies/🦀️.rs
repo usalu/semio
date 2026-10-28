@@ -3,13 +3,31 @@
 use super::*;
 
 pub trait SnapshotEditingEditor: ArtifactEditor {
+    /// 🧮️ Declares retained transaction capacity in the Store's staged row units.
+    fn snapshot_edit_work_capacity() -> semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity { semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity::for_invertible_items(1) }
+    /// 🧵️ Supplies resumable domain preparation through the common wire and publication route.
+    fn snapshot_edit_work(tool_id: &'static str) -> Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>> where Self: Sized { Box::new(crate::tool_job_factories::SnapshotEditWork::<Self>::new(tool_id)) }
     /// 📦️ Declares exact borrowed operation-wire authority for retained prestage host receipts.
     fn snapshot_operation_wire_source(_mutation: &Self::Mutation) -> Option<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource<'_>> { None }
 
     fn snapshot_edit_event(command: &Self::Command) -> Option<&SnapshotEditEvent>;
+    /// 🫴️ Transfers an admitted original event into resumable native work before immutable views.
+    fn snapshot_edit_event_mut(_command: &mut Self::Command) -> Option<&mut SnapshotEditEvent> { None }
+    /// 📨️ Wraps a retained received event by moving its original owner into the actual editor command.
+    fn snapshot_edit_command_from_original(_event:&mut Option<SnapshotEditEvent>)->Option<Self::Command>{None}
     fn snapshot_edit_is_admitted(event: &SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
         snapshot_edit_value_is_admitted(event, snapshot)
     }
+    /// 🎟️ Reserves conservative rows for a worker that completes original retained admission before emission.
+    fn snapshot_edit_retained_extent(event:&SnapshotEditEvent,snapshot:&Self::Snapshot)->Option<usize> {
+        Self::snapshot_edit_is_admitted(event,snapshot).then(||Self::snapshot_edit_work_capacity().work_items())
+    }
+    /// 🧭️ Checks snapshot addressing after the worker has admitted the original event's bytes and values.
+    fn snapshot_edit_retained_path_is_admitted(event:&SnapshotEditEvent,snapshot:&Self::Snapshot)->bool {
+        snapshot_edit_path_is_admitted(event,snapshot)
+    }
+    /// 🪟️ Admits a declared virtual inspector address independently of native tree pointers.
+    fn snapshot_edit_semantic_path_is_admitted(_event:&SnapshotEditEvent,_snapshot:&Self::Snapshot)->Option<bool>{None}
     /// 🧭️ The pointer → kind table of this artifact's details pane: which JSON-pointer edit raises which ONE concrete kind.
     fn snapshot_edit_rules() -> &'static EditRules;
 
@@ -18,6 +36,9 @@ pub trait SnapshotEditingEditor: ArtifactEditor {
     fn snapshot_edit_special(_event: &SnapshotEditEvent, _snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
         Ok(None)
     }
+
+    /// 🎟️ Reduce through the original initiating request; ordinary scalar editors keep their existing emission.
+    fn snapshot_edit_emit_in_context(event:&SnapshotEditEvent,snapshot:&Self::Snapshot,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Emit<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>,Fault>{Self::snapshot_edit_emit(event,snapshot)}
 
     /// ⚖️ What one snapshot edit publishes: replacing the whole source loads the document (no history row, no differencing), every other
     /// edit resolves to the concrete kind its pointer names or is refused naming the unsupported path.

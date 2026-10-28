@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical Part21 Streaming Writer Parts",
+  "type": "object",
+  "required": [
+    "kind"
+  ],
+  "properties": {
+    "kind": {
+      "enum": [
+        "header",
+        "instance",
+        "footer"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

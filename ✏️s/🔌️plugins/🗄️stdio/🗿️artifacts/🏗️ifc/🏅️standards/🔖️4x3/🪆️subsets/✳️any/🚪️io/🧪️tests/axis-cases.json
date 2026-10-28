@@ -1,0 +1,543 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "default-3d",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          2,
+          3,
+          4
+        ]
+      },
+      "axis": null,
+      "ref": null,
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        3,
+        4,
+        1
+      ]
+    },
+    {
+      "id": "negative-x",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          -1,
+          0,
+          0
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "matrix": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        -1,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "positive-x",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "matrix": [
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "large-finite",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1.7e+308,
+          1.7e+308,
+          0
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          0,
+          1.7e+308
+        ]
+      },
+      "matrix": [
+        0,
+        0,
+        1,
+        0,
+        0.7071067811865476,
+        -0.7071067811865476,
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "subnormal",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          5e-324,
+          5e-324,
+          0
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          0,
+          5e-324
+        ]
+      },
+      "matrix": [
+        0,
+        0,
+        1,
+        0,
+        0.7071067811865476,
+        -0.7071067811865476,
+        0,
+        0,
+        0.7071067811865476,
+        0.7071067811865476,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "axis-only",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "ref": null,
+      "error": "exchange.placement"
+    },
+    {
+      "id": "ref-only",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": null,
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "error": "exchange.placement"
+    },
+    {
+      "id": "direction-origin",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          0,
+          1
+        ]
+      },
+      "axis": null,
+      "ref": null,
+      "error": "exchange.placement"
+    },
+    {
+      "id": "short-origin",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0
+        ]
+      },
+      "axis": null,
+      "ref": null,
+      "error": "exchange.placement"
+    },
+    {
+      "id": "short-axis",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          1
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "error": "exchange.placement"
+    },
+    {
+      "id": "point-axis",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          1
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "error": "exchange.placement"
+    },
+    {
+      "id": "zero-axis",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "error": "exchange.axis"
+    },
+    {
+      "id": "parallel-axes",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1,
+          1,
+          0
+        ]
+      },
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          2,
+          2,
+          0
+        ]
+      },
+      "error": "exchange.axis"
+    },
+    {
+      "id": "default-2d",
+      "dimension": 2,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          2,
+          3
+        ]
+      },
+      "axis": null,
+      "ref": null,
+      "matrix": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "rotated-2d",
+      "dimension": 2,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          2,
+          3
+        ]
+      },
+      "axis": null,
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          1
+        ]
+      },
+      "matrix": [
+        0,
+        1,
+        0,
+        0,
+        -1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        1,
+        0,
+        2,
+        3,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "long-origin-2d",
+      "dimension": 2,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": null,
+      "ref": null,
+      "error": "exchange.placement"
+    },
+    {
+      "id": "long-ref-2d",
+      "dimension": 2,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0
+        ]
+      },
+      "axis": null,
+      "ref": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "error": "exchange.placement"
+    },
+    {
+      "id": "point-ref",
+      "dimension": 3,
+      "origin": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          0,
+          0,
+          0
+        ]
+      },
+      "axis": {
+        "kind": "IFCDIRECTION",
+        "ratios": [
+          0,
+          0,
+          1
+        ]
+      },
+      "ref": {
+        "kind": "IFCCARTESIANPOINT",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "error": "exchange.placement"
+    }
+  ]
+}
+

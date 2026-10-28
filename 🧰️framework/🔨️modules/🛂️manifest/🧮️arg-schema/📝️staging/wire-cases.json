@@ -1,0 +1,6 @@
+{
+  "framingBytesPerNode":32,
+  "recordFramingBytes":32,
+  "frameworkMaximumBytes":3145760,
+  "values":[null,true,0,"",{"a":"ä","b":"ä"},[{"":null},{"key":"x"}],{"long":"0123456789","values":[0,-1,1.25]}]
+}

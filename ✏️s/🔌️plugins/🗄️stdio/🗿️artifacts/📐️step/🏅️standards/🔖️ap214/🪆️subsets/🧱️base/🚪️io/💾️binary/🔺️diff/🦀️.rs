@@ -83,7 +83,7 @@ pub(crate) fn read_str_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Ve
     (0..count).map(|_| read_str_bin(reader)).collect()
 }
 
-/// 🧪️ P2-FG1: real recursive binary twin of [`enc_value`]/[`dec_value`] — same 0-8 ordinal order
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_value`]/[`dec_value`] — same 0-9 ordinal order
 /// as `StepValue`'s own declaration (`Unset`,`Derived`,`Integer`,`Real`,`String`,`Enum`,
 /// `Reference`,`Aggregate`,`TypedValue`), backing the upgraded `OpBinary`/`DiffCodec` frames below.
 /// `Aggregate`/`TypedValue` recurse via plain Rust function recursion — the DSL derive machinery's
@@ -103,6 +103,7 @@ pub fn enc_value_bin(v: &StepValue, out: &mut Vec<u8>) {
             out.push(3);
             write_f64_bin(out, *r);
         }
+        StepValue::Binary(s) => {out.push(9);write_str_bin(out,s);}
         StepValue::String(s) => {
             out.push(4);
             write_str_bin(out, s);
@@ -139,6 +140,7 @@ pub fn dec_value_bin(reader: &mut store::ByteReader<'_>) -> Result<StepValue, St
         2 => Ok(StepValue::Integer(reader.read_varint_i64().map_err(|e| e.to_string())?)),
         3 => Ok(StepValue::Real(read_f64_bin(reader)?)),
         4 => Ok(StepValue::String(read_str_bin(reader)?)),
+        9 => {let content=read_str_bin(reader)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(&content){return Err("invalid canonical STEP binary content".into());}Ok(StepValue::Binary(content))},
         5 => Ok(StepValue::Enum(read_str_bin(reader)?)),
         6 => Ok(StepValue::Reference(reader.read_varint_u64().map_err(|e| e.to_string())?)),
         7 => {

@@ -1,0 +1,39 @@
+{
+  "standards": [
+    "IFC4",
+    "IFC2X3"
+  ],
+  "tree": {
+    "type": "IFCCSGSOLID",
+    "arguments": 1,
+    "allowedRootKinds": [
+      "IFCBOOLEANRESULT",
+      "IFCBLOCK"
+    ],
+    "cycle": "Original representation path and depth limits apply."
+  },
+  "block": {
+    "type": "IFCBLOCK",
+    "arguments": 4,
+    "position": "Required IFCAXIS2PLACEMENT3D",
+    "dimensions": "Three strictly positive finite lengths in the positive local axes; one corner is local origin."
+  },
+  "roundedRectangle": {
+    "type": "IFCROUNDEDRECTANGLEPROFILEDEF",
+    "arguments": 6,
+    "profileType": "AREA",
+    "position": "Optional IFCAXIS2PLACEMENT2D",
+    "radius": "Strictly positive; <= XDim/2 and <= YDim/2",
+    "sampling": {
+      "maximumAngularStep": 0.08726646259971647,
+      "quarterSegments": 18,
+      "exactTangentEndpoints": true
+    }
+  },
+  "control": "Every emitted point, triangle and source step consumes original projection control. Failed/incomplete operands publish no product.",
+  "exclusions": [
+    "Halfspaces",
+    "Other CSG primitive kinds",
+    "Exact analytic curved Boolean surfaces"
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "coordinates",
+          "faces",
+          "pnIndex",
+          "closed",
+          "expected",
+          "bounds",
+          "volume",
+          "damage",
+          "qualification"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "coordinates": {
+            "type": "array",
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "faces": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "outer",
+                "holes"
+              ],
+              "properties": {
+                "outer": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "holes": {
+                  "type": "array",
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "pnIndex": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "array",
+                "items": {
+                  "type": "number"
+                }
+              }
+            ]
+          },
+          "closed": {
+            "type": [
+              "boolean",
+              "null"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "supported",
+              "unsupported",
+              "qualified"
+            ]
+          },
+          "bounds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "volume": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "damage": {
+            "enum": [
+              "none",
+              "duplicate-face-reference",
+              "wrong-face-role",
+              "wrong-coordinate-role"
+            ]
+          },
+          "qualification": {
+            "enum": [
+              "normal-backend-only",
+              "geometric-contract"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

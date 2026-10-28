@@ -142,3 +142,9 @@ impl<'a> DrawingLayerLookupCursor<'a> {
 impl Drop for DrawingLayerLookupCursor<'_> {
     fn drop(&mut self) { assert!(self.terminal_is_empty() || std::thread::panicking(), "Drawing lookup reached Drop before granted closure"); }
 }
+
+#[path="🫴️original/🦀️.rs"]pub mod original;
+
+#[path="📝️original-text/🦀️.rs"]pub mod original_text;
+
+#[path="⚖️equality/🦀️.rs"]pub mod equality;

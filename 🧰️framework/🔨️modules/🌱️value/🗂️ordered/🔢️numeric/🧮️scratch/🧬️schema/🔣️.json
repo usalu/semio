@@ -2,12 +2,82 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://semio.tech/framework/value/ordered/numeric-scratch",
   "type": "object",
-  "required": ["operations", "expected"],
+  "required": [
+    "operations",
+    "expected"
+  ],
   "additionalProperties": false,
   "properties": {
-    "operations": {"type": "array", "items": {"type": "object", "required": ["kind"], "additionalProperties": false, "properties": {"kind": {"enum": ["set", "remove", "get", "first", "reset"]}, "key": {"type": "integer", "minimum": -9007199254740991, "maximum": 9007199254740991}, "value": {"type": "integer"}}}},
-    "expected": {"type": "array", "items": {"type": ["integer", "null", "array"], "items": {"type": "integer"}}},
-    "closeReleaseBytes": {"type": "integer", "minimum": 1},
-    "maximumCloseTurns": {"type": "integer", "minimum": 1}
+    "operations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "kind"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "set",
+              "remove",
+              "get",
+              "first",
+              "reset"
+            ]
+          },
+          "key": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+          },
+          "value": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "expected": {
+      "type": "array",
+      "items": {
+        "type": [
+          "integer",
+          "null",
+          "array"
+        ],
+        "items": {
+          "type": "integer"
+        }
+      }
+    },
+    "closeReleaseBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "maximumCloseTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "retained": {
+      "type": "object",
+      "required": [
+        "keys",
+        "pageRows",
+        "zeroGrants"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "keys": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "pageRows": {
+          "const": 16
+        },
+        "zeroGrants": {
+          "const": true
+        }
+      }
+    }
   }
 }

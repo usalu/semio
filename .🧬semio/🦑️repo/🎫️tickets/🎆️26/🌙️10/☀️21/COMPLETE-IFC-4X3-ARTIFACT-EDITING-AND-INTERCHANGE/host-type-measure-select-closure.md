@@ -1,0 +1,7 @@
+# MeasureValue Source Closure
+
+NativeMeasure86 independently closed at native-measure-select-independent-audit.md. The reviewer rehashed all86 exact paths and reported no confirmed new P1/P2 in the bounded kind/receiver/copier/quote/path/body/candidate/controller review. This releases the native feature's source-audit freeze; the parent subsequently requested a separate bounded broad verification hold on current production bytes. No native type/runtime/physical accounting proof follows from this closure. The authentic selector still exits101 before rustc, and every native capability/publication flag remains unchanged.
+
+The current public Measure TS5 had independently closed at type-measure-select-independent-audit.md with29 tests/2034 assertions, unchanged source hashes,17 exact external physical carriers and an explicitly retained raw one-item ARRAY validator gap. External bounds plus Ajv corroborated exact cardinality without relabeling the parser's raw result. NUMBER's integer graph arm is distinct from Part21's REAL-token mapping requirement. The parent owns registration and broad snapshot accounting.
+
+The next substantive frontier is ticket/host-type-value-select-plan.md and host-type-value-select-native-design.md. New unregistered neutral/test files expose the actual109-leaf recursive SELECT gap. They do not change this closed Measure source or create a readiness/capability shortcut.

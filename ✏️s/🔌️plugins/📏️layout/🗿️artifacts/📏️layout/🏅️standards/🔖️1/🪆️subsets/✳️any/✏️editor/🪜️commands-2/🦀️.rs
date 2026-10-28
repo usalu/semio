@@ -40,3 +40,8 @@ pub mod patch_document;
 pub mod set_active_page;
 #[path = "../🎮️commands/📷️set-camera/🦀️.rs"]
 pub mod set_camera;
+
+#[path = "../🎮️commands/📐️export-step/🦀️.rs"]
+pub mod export_step;
+#[path = "../🎮️commands/📚️export-idml/🦀️.rs"]
+pub mod export_idml;

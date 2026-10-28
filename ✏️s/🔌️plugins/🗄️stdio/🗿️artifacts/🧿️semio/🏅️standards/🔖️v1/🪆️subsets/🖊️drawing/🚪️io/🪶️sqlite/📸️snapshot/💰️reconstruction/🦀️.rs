@@ -6,13 +6,13 @@ use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::wo
 #[derive(semio_framework_value::RetireOwned)]
 enum Task{Node(i64),Group{position:usize,start:usize,end:usize}}
 #[derive(semio_framework_value::RetireOwned)]
-struct Prefix{snapshot:Option<SemioDrawingSnapshot>,validation:transfer::SchemaValidationStorage,rows:indexed::Storage,styles:Vec<usize>,layers:Vec<usize>,names:Vec<usize>,links:Vec<usize>,built:Vec<Option<DrawNode>>,pending:Vec<Task>}
-impl Prefix{fn empty()->Self{Self{snapshot:Some(native_decoding::empty()),validation:transfer::SchemaValidationStorage::empty(),rows:indexed::Storage::empty(),styles:Vec::new(),layers:Vec::new(),names:Vec::new(),links:Vec::new(),built:Vec::new(),pending:Vec::new()}}}
+struct Prefix{components:Vec<(i64,SemioDrawingSnapshot)>,snapshot:Option<SemioDrawingSnapshot>,validation:transfer::SchemaValidationStorage,rows:indexed::Storage,styles:Vec<usize>,layers:Vec<usize>,names:Vec<usize>,links:Vec<usize>,built:Vec<Option<DrawNode>>,pending:Vec<Task>}
+impl Prefix{fn empty()->Self{Self{components:Vec::new(),snapshot:Some(native_decoding::empty()),validation:transfer::SchemaValidationStorage::empty(),rows:indexed::Storage::empty(),styles:Vec::new(),layers:Vec::new(),names:Vec::new(),links:Vec::new(),built:Vec::new(),pending:Vec::new()}}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 fn extent(left:usize,right:usize)->Result<usize,ValueError>{left.checked_add(right).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"drawing reconstruction frontier overflow"))}
 fn push(values:&mut Vec<Task>,value:Task)->Result<(),ValueError>{if values.len()==values.capacity(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing task backing was not admitted"))}values.push(value);Ok(())}
-fn style_into(output:&mut Option<String>,row:SqliteRow<'_>,column:usize,rows:&indexed::Rows<'_,'_>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
- if row.is_null(column)?{return Ok(())}let position=rows.position("semio_drawing_style",row.integer(column)?)?;let name=rows.get("semio_drawing_style",position)?.text(3)?;*output=Some(String::new());reconstruct_text_into(output.as_mut().unwrap(),control,name)
+fn style_into(output:&mut Option<String>,row:SqliteRow<'_>,column:usize,document:i64,rows:&indexed::Rows<'_,'_>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+ if row.is_null(column)?{return Ok(())}let position=rows.position("semio_drawing_style",row.integer(column)?)?;let style=rows.get("semio_drawing_style",position)?;if style.integer(1)?!=document{return Err(invalid("cross-component Drawing style"))}let name=style.text(3)?;*output=Some(String::new());reconstruct_text_into(output.as_mut().unwrap(),control,name)
 }
 fn unique_names(rows:&indexed::Rows<'_,'_>,table:&str,order:&[usize],scratch:&mut Vec<usize>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  scratch.clear();if scratch.capacity()<order.len(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"drawing name backing was not admitted"))}scratch.extend_from_slice(order);
@@ -30,21 +30,22 @@ fn segment(rows:&mut indexed::Rows<'_,'_>,row:SqliteRow<'_>)->Result<PathSegment
  })
 }
 pub(super)fn reconstruct(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str)->Result<SemioDrawingSnapshot,ValueError>{
- workspace::reconstruct_projected(control,Prefix::empty,|prefix,control|reconstruct_into(prefix,db,control,schema),|prefix|prefix.snapshot.take().expect("complete Drawing snapshot"))
+ workspace::reconstruct_projected(control,Prefix::empty,|prefix,control|reconstruct_into(prefix,db,control,schema,true),|prefix|prefix.components.pop().expect("one Drawing snapshot").1)
 }
-fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str)->Result<(),ValueError>{
+pub(super)fn reconstruct_components(db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str)->Result<Vec<(i64,SemioDrawingSnapshot)>,ValueError>{workspace::reconstruct_projected(control,Prefix::empty,|prefix,control|reconstruct_into(prefix,db,control,schema,false),|prefix|std::mem::take(&mut prefix.components))}
+fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,schema:&str,single:bool)->Result<(),ValueError>{
  control.check_database(db,SqliteSnapshotPhase::ReconstructSnapshot)?;
  transfer::validate_database_into(&mut prefix.validation,db,schema,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- transfer::validate_component_into(&mut prefix.validation,db,<SemioDrawingSnapshot as pack::snapshot::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
- let Prefix{snapshot,validation:_,rows:storage,styles,layers,names,links,built,pending}=prefix;
- let snapshot=snapshot.as_mut().expect("original Drawing snapshot");let mut rows=indexed::Rows::new(db,storage,control)?;
- if rows.len("semio_drawing_document")?!=1{return Err(invalid("drawing document must be a singleton"))}let doc=rows.take("semio_drawing_document",1)?;
+ transfer::validate_component_into(&mut prefix.validation,db,<SemioDrawingSnapshot as ArtifactSqliteSnapshotHost>::SQLITE_SCHEMA,SqliteSnapshotPhase::ReconstructSnapshot,control)?;
+ let Prefix{components,snapshot:slot,validation:_,rows:storage,styles,layers,names,links,built,pending}=prefix;
+ let mut rows=indexed::Rows::new(db,storage,control)?;let documents=rows.len("semio_drawing_document")?;if single&&documents!=1{return Err(invalid("drawing document must be a singleton"))}*components=transfer::reserve(documents,control)?;
  let style_count=rows.len("semio_drawing_style")?;let layer_count=rows.len("semio_drawing_layer")?;let count=rows.len("semio_drawing_node")?;let child_count=rows.len("semio_drawing_child")?;let segment_count=rows.len("semio_drawing_segment")?;
  *styles=transfer::reserve(style_count,control)?;*layers=transfer::reserve(layer_count,control)?;*names=transfer::reserve(style_count.max(layer_count),control)?;
- rows.children_into("semio_drawing_style",1,styles,control)?;rows.children_into("semio_drawing_layer",1,layers,control)?;
- unique_names(&rows,"semio_drawing_style",styles,names,control)?;unique_names(&rows,"semio_drawing_layer",layers,names,control)?;
+
  *links=transfer::reserve(extent(child_count,segment_count)?,control)?;*built=transfer::reserve(count,control)?;for _ in 0..count{built.push(None);}
- *pending=transfer::reserve(extent(extent(count,child_count)?,layer_count)?,control)?;for position in layers.iter().rev(){push(pending,Task::Node(rows.get("semio_drawing_layer",*position)?.integer(6)?))?;}
+ *pending=transfer::reserve(extent(extent(count,child_count)?,layer_count)?,control)?;
+ for document_at in 0..documents{let document=rows.get("semio_drawing_document",document_at)?.rowid;if single&&document!=1{return Err(invalid("standalone Drawing document identity"))}let doc=rows.take("semio_drawing_document",document)?;let snapshot=slot.as_mut().expect("original Drawing snapshot");styles.clear();layers.clear();links.clear();rows.children_into("semio_drawing_style",document,styles,control)?;rows.children_into("semio_drawing_layer",document,layers,control)?;unique_names(&rows,"semio_drawing_style",styles,names,control)?;unique_names(&rows,"semio_drawing_layer",layers,names,control)?;
+ for position in layers.iter().rev(){push(pending,Task::Node(rows.get("semio_drawing_layer",*position)?.integer(6)?))?;}
  while let Some(task)=pending.pop(){
   control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,count)?;
   match task{
@@ -57,12 +58,12 @@ fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSna
       let DrawNode::Path{segments,style}=built[position].as_mut().unwrap()else{unreachable!()};
       *segments=transfer::reserve(end-start,control)?;
       for index in start..end{let row=rows.get("semio_drawing_segment",links[index])?;segments.push(segment(&mut rows,row)?);control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index-start,end-start)?;}
-      style_into(style,path,1,&rows,control)?;
+      style_into(style,path,1,document,&rows,control)?;
      },
      "text"=>{
       built[position]=Some(DrawNode::Text{value:String::new(),at:SemioPoint2::default(),style:None});
       let row=rows.take("semio_drawing_text",id)?;let DrawNode::Text{value,at,style}=built[position].as_mut().unwrap()else{unreachable!()};
-      reconstruct_text_into(value,control,row.text(1)?)?;*at=point(row,2)?;style_into(style,row,4,&rows,control)?;
+      reconstruct_text_into(value,control,row.text(1)?)?;*at=point(row,2)?;style_into(style,row,4,document,&rows,control)?;
      },
      "image"=>{
       built[position]=Some(DrawNode::Image{at:SemioPoint2::default(),width:0.0,height:0.0,mime:String::new(),bytes:Vec::new()});
@@ -90,21 +91,22 @@ fn reconstruct_into(prefix:&mut Prefix,db:&SqliteDatabase,control:&mut SqliteSna
    }
   }
  }
- snapshot.styles=transfer::reserve(style_count,control)?;
+ snapshot.styles=transfer::reserve(styles.len(),control)?;
  for position in styles.iter(){
   let row=rows.get("semio_drawing_style",*position)?;snapshot.styles.push(DrawStyle{name:String::new(),fill:None,stroke:None,stroke_width:None,opacity:None});let target=snapshot.styles.last_mut().unwrap();
   reconstruct_text_into(&mut target.name,control,row.text(3)?)?;target.fill=rgba(row,4)?;target.stroke=rgba(row,8)?;target.stroke_width=optional_real(row,12)?;target.opacity=if row.is_null(13)?{None}else{Some(row.binary32(13)?)};
   control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,*position,style_count)?;
  }
- snapshot.layers=transfer::reserve(layer_count,control)?;
+ snapshot.layers=transfer::reserve(layers.len(),control)?;
  for position in layers.iter(){
   let row=rows.get("semio_drawing_layer",*position)?;let root=rows.position("semio_drawing_node",row.integer(6)?)?;
   snapshot.layers.push(DrawLayer{id:String::new(),name:String::new(),visible:false,root:DrawNode::Group{transform:SemioTransform::identity(),children:Vec::new()}});
   let target=snapshot.layers.last_mut().unwrap();reconstruct_text_into(&mut target.id,control,row.text(3)?)?;reconstruct_text_into(&mut target.name,control,row.text(4)?)?;target.visible=boolean(row.integer(5)?)?;
   target.root=built[root].take().ok_or_else(||invalid("missing drawing layer root"))?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,*position,layer_count)?;
  }
- if built.iter().any(Option::is_some){return Err(invalid("orphan reconstructed drawing node"))}rows.finish(control)?;
+ if built.iter().any(Option::is_some){return Err(invalid("orphan reconstructed drawing node"))}
  reconstruct_text_into(&mut snapshot.schema,control,doc.text(1)?)?;snapshot.canvas=DrawCanvas{width:doc.real(2)?,height:doc.real(3)?,background:rgba(doc,4)?};
- control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,count)
+ components.push((document,slot.take().expect("complete Drawing component")));*slot=Some(native_decoding::empty());control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,document_at+1,documents)?;
+ }rows.finish(control)?;control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,count,count)
 }
                                                                                                                         

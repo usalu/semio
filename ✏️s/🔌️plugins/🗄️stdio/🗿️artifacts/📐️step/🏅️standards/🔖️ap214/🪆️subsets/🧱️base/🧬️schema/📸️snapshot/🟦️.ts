@@ -12,6 +12,7 @@ export type StepValue =
   | { integer: bigint }
   | { real: Binary64 }
   | { string: string }
+  | { binary: string }
   | { enum: string }
   | { reference: bigint }
   | { aggregate: StepValue[] }

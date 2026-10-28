@@ -1,0 +1,5 @@
+# Retained Constituent Collection Edits Plan
+
+Extend the admitted constituent argument route to nested insert/remove/move below the argument root. The existing retained value editor already owns original-funded allocation, one-slot rebuild, displaced parent retirement and original cancellation; reuse it instead of eager constituent Vec insert/remove/rotate in owned_entity_edit. Keep whole constituent/argument structure and type switching separate. Require a move to stay within its exact owning collection, preserve all current declaration/cardinality/ARRAY/uniqueness checks through DomainWork, and publish the same central SetEntityComplex/inverse.
+
+Extend neutral constituent-value cases first with accepted nested insertion/removal/movement, out-of-bounds and cross-owner refusal. Use the same exact expected whole argument in executable TS/native fixtures and independent fast-json-patch output/undo. Extend original actual Work every-prefix cancellation tests to accepted collection events. Native compilation/execution/accounting remains false.

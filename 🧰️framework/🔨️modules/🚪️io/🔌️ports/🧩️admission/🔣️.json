@@ -1,0 +1,27 @@
+{
+  "title": "Original Child Snapshot Admission",
+  "version": 1,
+  "source": "Issued immutable Any + Send + Sync retained projection",
+  "cursor": [
+    "Funded opaque owner birth",
+    "Exact original issuer and projected-path binding",
+    "Bounded canonical typed owner graph admission",
+    "Optional admitted authored canvas",
+    "Cancellation and paired close"
+  ],
+  "grant": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "laws": [
+    "No raw parent content decode or child tree materialization",
+    "No vector-lowering substitute for canonical owner admission",
+    "No quote-derived grant",
+    "One exact source until funded close",
+    "Actual cursor box backing released only after child terminal emptiness",
+    "Page viewport is a parent-specific rule after owner canvas admission"
+  ]
+}

@@ -440,6 +440,8 @@ pub trait ArtifactStoreOneItemPreparation<P, Mutation>: Send {
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, Mutation>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
+    /// 🧷️ Native wire owners retain this exact original decoder cleanup capability across cancellation.
+    fn close_original_step(&mut self,original:&mut semio_framework_value::OriginalRetirementCloseLoan<'_>,grant:ArtifactStoreOneItemGrant)->Result<RetainedCloneStep,ValueError>{let g=grant.retained_grant();let demand=semio_framework_value::RetirementDemand{copy_bytes:self.next_close_copy_byte_demand()?,capacity_bytes:self.next_close_capacity_byte_demand(g.maximum_copy_bytes)?,release_bytes:self.next_close_release_byte_demand()?,depth:self.next_close_depth_demand()?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}original.charge(demand.capacity_bytes)?;self.close_step(grant)}
     fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError>;
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;

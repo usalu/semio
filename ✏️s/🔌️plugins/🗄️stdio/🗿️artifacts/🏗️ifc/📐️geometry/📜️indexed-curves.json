@@ -1,0 +1,8 @@
+{
+  "schema": "IFC4",
+  "profilePoints": "IFCCARTESIANPOINTLIST2D CoordList exactly2 coordinates; original1basedindices",
+  "segments": "Optional LIST of IFCLINEINDEX (2+) or IFCARCINDEX (3) typed aggregate. Explicit connectivity and closure use shared sourceindex identity. Omitted segments connect listed points and close by pointcoordinate equality.",
+  "arc": "Start,onarc,end; orientation and major/minor span through middle; exact collinearity is polyline. Bounded chord sampling with maximumangularstep2pi/72; retain original middle and endpoints.",
+  "control": "Work tick for each sourceindex, point and arc sample; existing limits/cancellation unchanged.",
+  "capability": "IFC4 only; not IFC2X3."
+}

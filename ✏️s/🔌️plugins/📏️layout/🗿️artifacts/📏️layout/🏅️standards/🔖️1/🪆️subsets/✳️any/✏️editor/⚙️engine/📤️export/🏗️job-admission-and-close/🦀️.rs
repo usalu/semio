@@ -10,38 +10,54 @@ pub struct LayoutExportJob {
     pub(super) stage: ExportStage,
     pub(super) validation_group: u8,
     pub(super) validation_index: usize,
-    pub(super) validation_total_frames: usize,
+    pub(super) validation_nested: NestedValidationCursor,
     pub(super) validation_total_items: usize,
     pub json_validation: Option<JsonValidationCursor>,
     pub typed_validation: Option<TypedJsonCursor>,
     pub(super) target_page: Option<usize>,
-    pub(super) plan_cursor: usize,
-    pub(super) parent_frame_count: usize,
-    pub rects: Vec<ExportRect>,
+    pub(super) pdf_background_cursor: u8,
     pub(super) encode_cursor: usize,
     pub output: ChunkRope,
     pub encoded: ChunkRope,
     pub(super) base64_cursor: usize,
-    pub base64_tail: Vec<u8>,
     pub(super) png_adler_s1: u32,
     pub(super) png_adler_s2: u32,
     pub(super) png_idat_crc: u32,
     pub png_row: Vec<u8>,
     pub(super) png_row_section: PngRowSection,
     pub(super) png_row_byte_cursor: usize,
-    pub(super) png_rect_cursor: usize,
+    pub(super) png_shape_cursor: usize,
     pub(super) png_fill_x: u32,
-    pub pdf_offsets: Vec<u32>,
+    pub pdf_offsets: PlanOffsets,
     pub(super) pdf_section: PdfSection,
     pub(super) pdf_cursor: usize,
     pub(super) pdf_xref_offset: usize,
-    pub(super) pdf_items: Vec<PdfItem>,
-    pub(super) pdf_pages: Vec<PdfPagePlan>,
+    pub(super) pdf_items: PlanItems,
+    pub(super) pdf_pages: PlanPages,
     pub(super) pdf_page_cursor: usize,
+    pub(super) pdf_page_started: bool,
+    pub(super) pdf_plan_items: usize,
     pub(super) pdf_item_cursor: usize,
     pub(super) pdf_font_cursor: usize,
     pub(super) pdf_content_start: usize,
-    pub(super) pdf_engine: Option<semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::LayoutEngine>,
+    pub(super) interchange_session: Option<InterchangeExportSession>,
+    pub(super) fidelity: Option<FidelityState>,
+    pub(super) fidelity_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    pub(super) drawing: Option<DrawingCompositionState>,
+    pub(super) drawing_source:Option<DrawingSourceAddress>,
+    pub(super) drawing_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    pub(super) frame_plan: Option<super::frame_planning::FramePlanState>,
+    pub(super) frame_plan_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    pub(super) text: Option<ExportTextState>,
+    pub(super) plan_work_demand:semio_framework_value::RetirementDemand,
+    pub(super) text_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
+    pub(super) pdf_primitive_cursor: usize,
+    pub(super) pdf_text_phase: u8,
+    pub(super) pdf_text_byte: usize,
+    pub(super) pdf_text_count: usize,
+    pub(super) pdf_text_marked: bool,
+    pub(super) pdf_path_current: [f64; 2],
+    pub(super) pdf_path_first: [f64; 2],
     pub(super) package_section: PackageSection,
     pub(super) package_index: usize,
     pub(super) package_byte_cursor: usize,
@@ -52,7 +68,8 @@ pub struct LayoutExportJob {
     pub output_chunks: Option<ArtifactOutputChunks>,
     pub(super) output_retirement:Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pub(super) commit_cursor: usize,
-    pub(super) completed_units: u64,
+    pub(super) work_units: u64,
+    pub(super) committed_units: u64,
     pub(super) restore_target: Option<LayoutExportCheckpoint>,
     pub(super) snapshot_close: Option<ArtifactSnapshotCloseLease<LayoutSnapshot>>,
     pub(super) slot: LayoutPublicationSlot,
@@ -69,38 +86,54 @@ impl LayoutExportJob {
             stage: ExportStage::Validate,
             validation_group: 0,
             validation_index: 0,
-            validation_total_frames: 0,
+            validation_nested: NestedValidationCursor::default(),
             validation_total_items: 0,
             json_validation: None,
             typed_validation: None,
             target_page: None,
-            plan_cursor: 0,
-            parent_frame_count: 0,
-            rects: Vec::new(),
+            pdf_background_cursor: 0,
             encode_cursor: 0,
             output: ChunkRope::new(),
             encoded: ChunkRope::new(),
             base64_cursor: 0,
-            base64_tail: Vec::new(),
             png_adler_s1: 1,
             png_adler_s2: 0,
             png_idat_crc: 0,
             png_row: Vec::new(),
             png_row_section: PngRowSection::Initialize,
             png_row_byte_cursor: 0,
-            png_rect_cursor: 0,
+            png_shape_cursor: 0,
             png_fill_x: 0,
-            pdf_offsets: Vec::new(),
+            pdf_offsets: PlanOffsets::new(),
             pdf_section: PdfSection::Header,
             pdf_cursor: 0,
             pdf_xref_offset: 0,
-            pdf_items: Vec::new(),
-            pdf_pages: Vec::new(),
+            pdf_items: PlanItems::new(),
+            pdf_pages: PlanPages::new(),
             pdf_page_cursor: 0,
+            pdf_page_started: false,
+            pdf_plan_items: 0,
             pdf_item_cursor: 0,
             pdf_font_cursor: 0,
             pdf_content_start: 0,
-            pdf_engine: None,
+            interchange_session: None,
+            fidelity: None,
+            fidelity_retirement: None,
+            drawing: None,
+            drawing_source:None,
+            drawing_retirement: None,
+            frame_plan: None,
+            frame_plan_retirement: None,
+            text: None,
+            plan_work_demand:Default::default(),
+            text_retirement: None,
+            pdf_primitive_cursor: 0,
+            pdf_text_phase: 0,
+            pdf_text_byte: 0,
+            pdf_text_count: 0,
+            pdf_text_marked: false,
+            pdf_path_current: [0.0; 2],
+            pdf_path_first: [0.0; 2],
             package_section: PackageSection::Begin,
             package_index: 0,
             package_byte_cursor: 0,
@@ -111,7 +144,8 @@ impl LayoutExportJob {
             output_chunks:Some(output_chunks),
             output_retirement:None,
             commit_cursor: 0,
-            completed_units: 0,
+            work_units: 0,
+            committed_units: 0,
             restore_target: None,
             snapshot_close: None,
             slot: LayoutPublicationSlot::default(),
@@ -130,37 +164,26 @@ impl LayoutExportJob {
         self
     }
 
-    fn close_string(value: &mut String, maximum_bytes: usize) -> Option<usize> {
-        if value.is_empty() {
-            return None;
-        }
-        let mut start = value.len().saturating_sub(maximum_bytes.min(value.len()));
-        while start < value.len() && !value.is_char_boundary(start) {
-            start += 1;
-        }
-        if start == value.len() {
-            return Some(0);
-        }
-        let released = value.len() - start;
-        value.truncate(start);
-        Some(released)
-    }
+    
+    pub(super) fn next_manual_close_release_bytes(&self)->usize{match self.close_stage{
+        LayoutExportCloseStage::JsonValidation=>self.json_validation.as_ref().map_or(0,JsonValidationCursor::retirement_bytes),
+        LayoutExportCloseStage::TypedValidation=>self.typed_validation.as_ref().map_or(0,|cursor|cursor.stack.last().map_or_else(||cursor.retirement_stack_bytes(),typed_json_node_owned_bytes)),
+        LayoutExportCloseStage::PackageJson=>self.package_json.as_ref().map_or(0,|cursor|cursor.stack.last().map_or_else(||cursor.retirement_stack_bytes(),typed_json_node_owned_bytes)),
+        LayoutExportCloseStage::PngRow=>self.png_row.capacity(),
+        LayoutExportCloseStage::PdfOffsets=>0,
+        LayoutExportCloseStage::PdfItems=>0,
+        LayoutExportCloseStage::PdfPages=>0,
+        LayoutExportCloseStage::ZipEntries=>0,
+        LayoutExportCloseStage::ZipCurrentMember=>0,
+        LayoutExportCloseStage::PageAuthority=>self.request.as_ref().and_then(|request|request.page_id.as_ref()).map_or(0,String::capacity),
+        LayoutExportCloseStage::Preflight=>self.request.as_ref().and_then(|request|request.preflight_json.as_ref()).map_or(0,String::capacity),
+        LayoutExportCloseStage::ParentAuthority=>self.request.as_ref().map_or(0,|request|request.parent_document_id.capacity()),
+        LayoutExportCloseStage::RevisionAuthority=>self.request.as_ref().map_or(0,|request|request.canonical_base_revision_hex.capacity()),_=>0}}
 
-    fn close_byte_buffer(value: &mut Vec<u8>, maximum_bytes: usize) -> Option<usize> {
-        if value.is_empty() {
-            return None;
-        }
-        let released = maximum_bytes.min(value.len());
-        value.truncate(value.len() - released);
-        Some(released)
-    }
-
-    fn close_usize_buffer(value: &mut Vec<usize>, maximum_bytes: usize) -> usize {
-        let released_items = (maximum_bytes / size_of::<usize>()).min(value.len());
-        value.truncate(value.len() - released_items);
-        released_items.saturating_mul(size_of::<usize>())
-    }
-
+    fn close_string(value:&mut String,maximum_bytes:usize)->Option<usize>{let bytes=value.capacity();if bytes==0{return None;}if bytes>maximum_bytes{return Some(0);}drop(std::mem::take(value));Some(bytes)}
+    fn close_copy_buffer<T:Copy>(value:&mut Vec<T>,maximum_bytes:usize)->Option<usize>{let bytes=value.capacity().saturating_mul(size_of::<T>());if bytes==0{return None;}if bytes>maximum_bytes{return Some(0);}drop(std::mem::take(value));Some(bytes)}
+    fn close_byte_buffer(value:&mut Vec<u8>,maximum_bytes:usize)->Option<usize>{Self::close_copy_buffer(value,maximum_bytes)}
+    fn close_usize_buffer(value:&mut Vec<usize>,maximum_bytes:usize)->usize{Self::close_copy_buffer(value,maximum_bytes).unwrap_or(0)}
     fn close_string_source(source: &mut StringSource, maximum_bytes: usize) -> usize {
         match source {
             StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => Self::close_usize_buffer(path, maximum_bytes),
@@ -180,18 +203,7 @@ impl LayoutExportJob {
         }
     }
 
-    fn close_json_cursor(cursor: &mut Option<JsonValidationCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage) -> LayoutCloseTurn {
-        if let Some(cursor) = cursor.as_mut() {
-            if cursor.stack.pop().is_some() {
-                return LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 };
-            }
-            debug_assert!(cursor.stack.is_empty());
-        }
-        drop(cursor.take());
-        *stage = next;
-        LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 }
-    }
-
+    fn close_json_cursor(cursor:&mut Option<JsonValidationCursor>,next:LayoutExportCloseStage,stage:&mut LayoutExportCloseStage,maximum_bytes:usize)->LayoutCloseTurn{if let Some(cursor)=cursor.as_mut(){if let Some(released)=cursor.close_one(maximum_bytes){return LayoutCloseTurn::Pending{released_items:usize::from(released!=0),released_bytes:released};}}cursor.take();*stage=next;LayoutCloseTurn::Pending{released_items:1,released_bytes:0}}
     fn close_typed_cursor(cursor: &mut Option<TypedJsonCursor>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> LayoutCloseTurn {
         if let Some(cursor) = cursor.as_mut() {
             if let Some(node) = cursor.stack.last() {
@@ -205,9 +217,10 @@ impl LayoutExportJob {
             }
             debug_assert!(cursor.stack.is_empty());
         }
+        let bytes=cursor.as_ref().map_or(0,|cursor|cursor.retirement_stack_bytes());if bytes>maximum_bytes{return LayoutCloseTurn::Pending{released_items:0,released_bytes:0};}
         drop(cursor.take());
         *stage = next;
-        LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 }
+        LayoutCloseTurn::Pending { released_items: 1, released_bytes: bytes }
     }
 
     fn close_optional_string(value: &mut Option<String>, next: LayoutExportCloseStage, stage: &mut LayoutExportCloseStage, maximum_bytes: usize) -> LayoutCloseTurn {
@@ -255,52 +268,15 @@ impl LayoutExportJob {
     }
 
     pub(super) fn close_export_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<LayoutCloseTurn, Fault> {
-        if maximum_items == 0 {
+        if maximum_items == 0 || maximum_bytes<self.next_manual_close_release_bytes() {
             return Ok(LayoutCloseTurn::Pending { released_items: 0, released_bytes: 0 });
         }
         match self.close_stage {
             LayoutExportCloseStage::Publication => Err(Fault::from("layout-export-publication-close-not-dispatched")),
-            LayoutExportCloseStage::JsonValidation => Ok(Self::close_json_cursor(&mut self.json_validation, LayoutExportCloseStage::TypedValidation, &mut self.close_stage)),
+            LayoutExportCloseStage::JsonValidation => Ok(Self::close_json_cursor(&mut self.json_validation, LayoutExportCloseStage::TypedValidation, &mut self.close_stage, maximum_bytes)),
             LayoutExportCloseStage::TypedValidation => Ok(Self::close_typed_cursor(&mut self.typed_validation, LayoutExportCloseStage::PackageJson, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::PackageJson => Ok(Self::close_typed_cursor(&mut self.package_json, LayoutExportCloseStage::Rects, &mut self.close_stage, maximum_bytes)),
-            LayoutExportCloseStage::Rects => {
-                if self.rects.pop().is_some() {
-                    return Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 });
-                }
-                debug_assert!(self.rects.is_empty());
-                drop(std::mem::take(&mut self.rects));
-                self.close_stage = LayoutExportCloseStage::Output;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
-            LayoutExportCloseStage::Output => match self.output.close_take_chunk(maximum_bytes) {
-                Some(Ok(bytes)) => Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: bytes }),
-                Some(Err(())) => Ok(LayoutCloseTurn::Pending { released_items: 0, released_bytes: 0 }),
-                None => {
-                    debug_assert!(self.output.chunks.is_empty());
-                    drop(std::mem::take(&mut self.output.chunks));
-                    self.close_stage = LayoutExportCloseStage::Encoded;
-                    Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-                }
-            },
-            LayoutExportCloseStage::Encoded => match self.encoded.close_take_chunk(maximum_bytes) {
-                Some(Ok(bytes)) => Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: bytes }),
-                Some(Err(())) => Ok(LayoutCloseTurn::Pending { released_items: 0, released_bytes: 0 }),
-                None => {
-                    debug_assert!(self.encoded.chunks.is_empty());
-                    drop(std::mem::take(&mut self.encoded.chunks));
-                    self.close_stage = LayoutExportCloseStage::Base64Tail;
-                    Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-                }
-            },
-            LayoutExportCloseStage::Base64Tail => {
-                if let Some(released) = Self::close_byte_buffer(&mut self.base64_tail, maximum_bytes) {
-                    return Ok(LayoutCloseTurn::Pending { released_items: usize::from(released != 0), released_bytes: released });
-                }
-                debug_assert!(self.base64_tail.is_empty());
-                drop(std::mem::take(&mut self.base64_tail));
-                self.close_stage = LayoutExportCloseStage::PngRow;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
+            LayoutExportCloseStage::PackageJson => Ok(Self::close_typed_cursor(&mut self.package_json, LayoutExportCloseStage::Output, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded=>Err(Fault::from("layout-output-original-close-not-dispatched")),
             LayoutExportCloseStage::PngRow => {
                 if let Some(released) = Self::close_byte_buffer(&mut self.png_row, maximum_bytes) {
                     return Ok(LayoutCloseTurn::Pending { released_items: usize::from(released != 0), released_bytes: released });
@@ -310,53 +286,27 @@ impl LayoutExportJob {
                 self.close_stage = LayoutExportCloseStage::PdfOffsets;
                 Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
             }
-            LayoutExportCloseStage::PdfOffsets => {
-                if self.pdf_offsets.pop().is_some() {
-                    return Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 });
+            LayoutExportCloseStage::PdfOffsets=>Err(Fault::from("layout plan requires original paired close")),
+            LayoutExportCloseStage::PdfItems=>Err(Fault::from("layout plan requires original paired close")),
+            LayoutExportCloseStage::PdfPages=>Err(Fault::from("layout plan requires original paired close")),
+            LayoutExportCloseStage::Interchange => {
+                if let Some(session) = self.interchange_session.as_mut() {
+                    if !session.terminal_is_empty() {
+                        let bytes = session.next_release_bytes();
+                        let released = session.close_one(maximum_bytes);
+                        return Ok(LayoutCloseTurn::Pending { released_items: usize::from(released), released_bytes: if released { bytes } else { 0 } });
+                    }
                 }
-                debug_assert!(self.pdf_offsets.is_empty());
-                drop(std::mem::take(&mut self.pdf_offsets));
-                self.close_stage = LayoutExportCloseStage::PdfItems;
+                self.interchange_session = None;
+                self.close_stage = LayoutExportCloseStage::Fidelity;
                 Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
             }
-            LayoutExportCloseStage::PdfItems => {
-                if self.pdf_items.pop().is_some() {
-                    return Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 });
-                }
-                debug_assert!(self.pdf_items.is_empty());
-                drop(std::mem::take(&mut self.pdf_items));
-                self.close_stage = LayoutExportCloseStage::PdfPages;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
-            LayoutExportCloseStage::PdfPages => {
-                if self.pdf_pages.pop().is_some() {
-                    return Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 });
-                }
-                debug_assert!(self.pdf_pages.is_empty());
-                drop(std::mem::take(&mut self.pdf_pages));
-                self.close_stage = LayoutExportCloseStage::PdfEngine;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
-            LayoutExportCloseStage::PdfEngine => {
-                let released = usize::from(self.pdf_engine.take().is_some());
-                self.close_stage = LayoutExportCloseStage::ZipEntries;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: released * size_of::<semio_s_artifact_layout_layout_engine::scene::layout_engine_and_views::LayoutEngine>() })
-            }
-            LayoutExportCloseStage::ZipEntries => {
-                let bytes = self.zip.entries.last().map_or(0, |entry| entry.name.len());
-                if bytes > maximum_bytes {
-                    let released = Self::close_string(&mut self.zip.entries.last_mut().expect("zip close entry remains owned").name, maximum_bytes).unwrap_or(0);
-                    return Ok(LayoutCloseTurn::Pending { released_items: usize::from(released != 0), released_bytes: released });
-                }
-                if self.zip.entries.pop().is_some() {
-                    return Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: bytes });
-                }
-                debug_assert!(self.zip.entries.is_empty());
-                drop(std::mem::take(&mut self.zip.entries));
-                self.close_stage = LayoutExportCloseStage::ZipCurrentName;
-                Ok(LayoutCloseTurn::Pending { released_items: 1, released_bytes: 0 })
-            }
-            LayoutExportCloseStage::ZipCurrentName => Ok(Self::close_optional_string(&mut self.zip.current_name, LayoutExportCloseStage::PageAuthority, &mut self.close_stage, maximum_bytes)),
+            LayoutExportCloseStage::FramePlanning => Err(Fault::from("layout frame plan requires its original quoted close")),
+            LayoutExportCloseStage::Drawing => Err(Fault::from("layout drawing requires its original quoted close")),
+            LayoutExportCloseStage::Fidelity => Err(Fault::from("layout fidelity requires its original quoted close")),
+            LayoutExportCloseStage::Paragraphs => Err(Fault::from("layout paragraphs require their original quoted close")),
+            LayoutExportCloseStage::ZipEntries=>{if self.zip.pop().is_none(){self.close_stage=LayoutExportCloseStage::ZipCurrentMember}Ok(LayoutCloseTurn::Pending{released_items:1,released_bytes:0})},
+            LayoutExportCloseStage::ZipCurrentMember=>{self.zip.current=None;self.close_stage=LayoutExportCloseStage::PageAuthority;Ok(LayoutCloseTurn::Pending{released_items:1,released_bytes:0})},
             LayoutExportCloseStage::PageAuthority => Ok(Self::close_optional_string(&mut self.request.as_mut().unwrap().page_id, LayoutExportCloseStage::Preflight, &mut self.close_stage, maximum_bytes)),
             LayoutExportCloseStage::Preflight => Ok(Self::close_optional_string(&mut self.request.as_mut().unwrap().preflight_json, LayoutExportCloseStage::ParentAuthority, &mut self.close_stage, maximum_bytes)),
             LayoutExportCloseStage::ParentAuthority => Ok(Self::close_required_string(&mut self.request.as_mut().unwrap().parent_document_id, LayoutExportCloseStage::RevisionAuthority, &mut self.close_stage, maximum_bytes)),
@@ -371,17 +321,20 @@ impl LayoutExportJob {
             && self.json_validation.is_none()
             && self.typed_validation.is_none()
             && self.package_json.is_none()
-            && self.rects.is_empty()
-            && self.output.chunks.is_empty()
-            && self.encoded.chunks.is_empty()
-            && self.base64_tail.is_empty()
-            && self.png_row.is_empty()
-            && self.pdf_offsets.is_empty()
-            && self.pdf_items.is_empty()
-            && self.pdf_pages.is_empty()
-            && self.pdf_engine.is_none()
-            && self.zip.entries.is_empty()
-            && self.zip.current_name.is_none()
+            && self.output.terminal_is_empty()
+            && self.encoded.terminal_is_empty()
+            && self.png_row.capacity()==0
+            && self.pdf_offsets.terminal_is_empty()
+            && self.pdf_items.terminal_is_empty()
+            && self.pdf_pages.terminal_is_empty()
+            && self.interchange_session.is_none()
+            && self.text.is_none()
+            && self.frame_plan.is_none() && self.frame_plan_retirement.is_none()
+            && self.drawing.is_none() && self.drawing_retirement.is_none() && self.drawing_source.is_none()
+            && self.text_retirement.is_none()
+            && self.fidelity.is_none()
+            && self.fidelity_retirement.is_none()
+            && self.zip.terminal_is_empty()
             && self.request.is_none()
             && self.output_chunks.is_none() && self.output_retirement.is_none()
             && self.media_output_credit.is_none()
@@ -406,9 +359,9 @@ impl LayoutExportJob {
     }
 
     pub(super) fn checkpoint_publication(&self) -> Result<LayoutExportPublication, String> {
-        let checkpoint = LayoutExportCheckpoint { completed_units: self.completed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
+        let checkpoint = LayoutExportCheckpoint { work_units: self.work_units, committed_units:self.committed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
         let state = encode_checkpoint(&self.operation, self.request.as_ref().unwrap(), &checkpoint)?;
-        LayoutExportPublication::new(LayoutExportPublicationKind::Checkpoint { applied_progress: self.completed_units }, &state)
+        LayoutExportPublication::new(LayoutExportPublicationKind::Checkpoint { applied_progress: self.work_units }, &state)
     }
 
     pub(super) fn preview_publication(&self) -> Result<LayoutExportPublication, String> {

@@ -1,0 +1,197 @@
+{
+  "cases": [
+    {
+      "name": "exact-large-scene",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 8388608,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "enter"
+    },
+    {
+      "name": "spent-current-capacity",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 8388608,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 4096,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "pending"
+    },
+    {
+      "name": "original-capacity-refused",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 33554432,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "refused"
+    },
+    {
+      "name": "copy-is-independent",
+      "demand": {
+        "copyBytes": 513,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 1
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "refused"
+    },
+    {
+      "name": "release-is-independent",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 513,
+        "depth": 1
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "refused"
+    },
+    {
+      "name": "depth-is-independent",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 33
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "refused"
+    },
+    {
+      "name": "spent-item",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 0
+      },
+      "remaining": {
+        "maximumItems": 0,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "expected": "pending"
+    },
+    {
+      "name": "cancelled-source",
+      "demand": {
+        "copyBytes": 0,
+        "capacityBytes": 0,
+        "releaseBytes": 0,
+        "depth": 0
+      },
+      "remaining": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "total": {
+        "maximumItems": 1,
+        "maximumCopyBytes": 512,
+        "maximumCapacityBytes": 16777216,
+        "maximumReleaseBytes": 512,
+        "maximumDepth": 32
+      },
+      "cancelled": true,
+      "expected": "cancelled"
+    }
+  ]
+}

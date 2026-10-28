@@ -1,11 +1,13 @@
 //! 🧵️ Retained command job: the retained command inputs and payload, the phase and publication enums, the job record, its admission, close, checkpoint, restore and reducer advance and the interactive job implementation. See [`super`].
 
 use super::*;
+use crate::producer::custody::ArtifactRetainedCommandCustody;
+use semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalToolCommand;
 
 //#region 🧳️Payload
 /// 🧳️ Owned command roots and completion authority admitted into a retained payload.
-pub struct ArtifactRetainedCommandInputs<A: ArtifactApp> {
-    pub command: A::Command,
+pub struct ArtifactRetainedCommandInputs<A:ArtifactApp,C=<A as ArtifactApp>::Command>{
+    pub command:C,
     pub snapshot: Arc<A::Snapshot>,
     pub snapshot_read: store::os_store::snapshot_read::SnapshotRead<A::Snapshot>,
     pub config: Arc<A::Config>,
@@ -18,7 +20,7 @@ pub struct ArtifactRetainedCommandInputs<A: ArtifactApp> {
 }
 
 pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
-    pub command: A::Command,
+    pub command:ArtifactRetainedCommandCustody<A::Command>,
     pub snapshot: Arc<A::Snapshot>,
     pub snapshot_read: store::os_store::snapshot_read::SnapshotRead<A::Snapshot>,
     pub config: Arc<A::Config>,
@@ -41,13 +43,12 @@ pub struct ArtifactRetainedCommandPayload<A: ArtifactApp> {
     pub(crate) producer_payload_schema_id:Option<String>,
 }
 
-impl<A: ArtifactApp> ArtifactRetainedCommandPayload<A> {
-    pub fn new(inputs: ArtifactRetainedCommandInputs<A>, command_id: fn(&A::Command) -> &'static str, maximum_raw_bytes: usize, maximum_work_items: usize, work: Box<dyn ArtifactCommandWork<A>>) -> Self {
-        let admission_refusal=admission::admit_limits(maximum_raw_bytes,maximum_work_items);
-        let ArtifactRetainedCommandInputs { command, snapshot, snapshot_read, config, history, interaction_state, interaction_hover, context, operation, completion } = inputs;
-        Self { command, snapshot, snapshot_read, config, history, interaction_state, interaction_hover, context, operation, completion, command_id, maximum_raw_bytes, maximum_work_items, admission_refusal,work,producer_window_config:None,producer_instance_operation_owner:None,producer_output_chunks:None,producer_controller_id:None,producer_tool_id:None,producer_payload_schema_id:None }
-
-    }
+impl<A:ArtifactApp> ArtifactRetainedCommandPayload<A>{
+ pub fn new(inputs:ArtifactRetainedCommandInputs<A>,command_id:fn(&A::Command)->&'static str,maximum_raw_bytes:usize,maximum_work_items:usize,work:Box<dyn ArtifactCommandWork<A>>)->Self{Self::from_inputs(inputs,command_id,maximum_raw_bytes,maximum_work_items,work,ArtifactRetainedCommandCustody::received)}
+ pub(super) fn from_original(inputs:ArtifactRetainedCommandInputs<A,ArtifactOriginalToolCommand<A::Command>>,command_id:fn(&A::Command)->&'static str,maximum_raw_bytes:usize,maximum_work_items:usize,work:Box<dyn ArtifactCommandWork<A>>)->Self{Self::from_inputs(inputs,command_id,maximum_raw_bytes,maximum_work_items,work,ArtifactRetainedCommandCustody::original)}
+ fn from_inputs<C>(inputs:ArtifactRetainedCommandInputs<A,C>,command_id:fn(&A::Command)->&'static str,maximum_raw_bytes:usize,maximum_work_items:usize,work:Box<dyn ArtifactCommandWork<A>>,receive:impl FnOnce(C)->ArtifactRetainedCommandCustody<A::Command>)->Self{
+  let admission_refusal=admission::admit_limits(maximum_raw_bytes,maximum_work_items);let ArtifactRetainedCommandInputs{command,snapshot,snapshot_read,config,history,interaction_state,interaction_hover,context,operation,completion}=inputs;Self{command:receive(command),snapshot,snapshot_read,config,history,interaction_state,interaction_hover,context,operation,completion,command_id,maximum_raw_bytes,maximum_work_items,admission_refusal,work,producer_window_config:None,producer_instance_operation_owner:None,producer_output_chunks:None,producer_controller_id:None,producer_tool_id:None,producer_payload_schema_id:None}
+ }
 }
 //#endregion 🧳️Payload
 
@@ -78,8 +79,9 @@ pub struct ArtifactRetainedCommandJob<A: ArtifactApp> {
     pub(super) producer_controller_id:Option<String>,
     pub(super) producer_tool_id:Option<String>,
     pub(super) producer_payload_schema_id:Option<String>,
-    pub(crate) source_binding:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
-    pub command: Option<A::Command>,
+    pub(super) source_binding:Option<semio_framework::action_bus::OriginalToolSourceBinding>,
+    original_command_admitted:bool,
+    pub command:Option<ArtifactRetainedCommandCustody<A::Command>>,
     pub(super) command_received:bool,
     pub snapshot: Option<Arc<A::Snapshot>>,
     pub snapshot_read: std::cell::RefCell<Option<store::os_store::snapshot_read::SnapshotRead<A::Snapshot>>>,
@@ -136,6 +138,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         if let Some(owner)=self.fault_retirement.as_mut(){if owner.terminal_is_empty(){self.fault_retirement.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Self::controlled_close_step(owner.step(grant))}
         if self.decode_error.is_some(){return Self::controlled_close_step(protocol::close_protocol_error_one(&mut self.decode_error,grant))}
         if self.admission_refusal.take().is_some(){return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
+        if let Some(work)=self.work.as_mut().filter(|work|work.retains_original_wire()){return work.close_step(cx);}
         if self.raw.capacity()!=0{let bytes=self.raw.capacity();drop(std::mem::take(&mut self.raw));return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:bytes,..Default::default()}})}
         for input in[&mut self.checkpoint_input,&mut self.raw_input]{if let Some(owner)=input.as_mut(){if owner.terminal_is_empty(){input.take();return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}return Ok(match owner.close_step(grant)?{InteractiveJobCloseStep::Complete{progress}=>InteractiveJobCloseStep::Pending{progress},step=>step})}}
         if let Some(download)=self.download.take(){match ControlledRetirement::new(download){Ok(owner)=>self.download_retirement=Some(owner),Err((error,original))=>{self.download=Some(original);return Err(error.into())}}return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,..Default::default()}})}
@@ -167,6 +170,7 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
         if let Some(owner)=self.fault_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Ok(owner.selected_demand(copy)?)};}
         if self.decode_error.is_some(){return protocol::protocol_error_retirement_demand(&self.decode_error);}
         if self.admission_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
+        if let Some(work)=self.work.as_ref().filter(|work|work.retains_original_wire()){return Ok(RetirementDemand{copy_bytes:work.next_close_copy_byte_demand()?,capacity_bytes:work.next_close_capacity_byte_demand(copy)?,release_bytes:work.next_close_release_byte_demand()?,depth:work.next_close_depth_demand()?});}
         if self.raw.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.raw.capacity(),depth:1,..Default::default()});}
         for input in [&self.checkpoint_input,&self.raw_input]{if let Some(owner)=input.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{Ok(RetirementDemand{copy_bytes:owner.next_close_copy_byte_demand()?,capacity_bytes:owner.next_close_capacity_byte_demand(copy)?,release_bytes:owner.next_close_release_byte_demand()?,depth:owner.next_close_depth_demand()?})};}}
         if self.download.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
@@ -220,19 +224,22 @@ impl<A: ArtifactApp> ArtifactRetainedCommandJob<A> {
     }
     pub fn from_payload(payload: ArtifactRetainedCommandPayload<A>, raw_input: Option<RetainedToolWireInput>, checkpoint_input: Option<RetainedToolWireInput>) -> Self {
 
+        let original_command_admitted=payload.command.is_original();
         let (raw,admission_refusal)=match (payload.admission_refusal,raw_input.as_ref()) {
+            (None,Some(input))if original_command_admitted=>(Vec::new(),(input.declared_bytes()>payload.maximum_raw_bytes).then_some(ArtifactRetainedAdmissionRefusal::RawCapacityRejected)),
             (None,Some(input))=>admission::admit_raw(input.declared_bytes(),payload.maximum_raw_bytes),
             (refusal,_)=>(Vec::new(),refusal),
         };
         let phase = if admission_refusal.is_some(){ArtifactRetainedCommandPhase::Fault}else if checkpoint_input.is_some() {
             ArtifactRetainedCommandPhase::CheckpointPages
-        } else if raw_input.is_some() {
+        } else if raw_input.is_some()&&!original_command_admitted {
             ArtifactRetainedCommandPhase::WirePages
         } else {
             ArtifactRetainedCommandPhase::Preflight
         };
         Self {
             source_binding:None,
+            original_command_admitted,
             command: Some(payload.command),
             command_received:false,
             snapshot: Some(payload.snapshot),
@@ -474,7 +481,7 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                 }
                 if Self::metadata(cx)? {
                     self.checkpoint_input.take();
-                    self.phase = ArtifactRetainedCommandPhase::WirePages;
+                    self.phase = if self.original_command_admitted{ArtifactRetainedCommandPhase::Preflight}else{ArtifactRetainedCommandPhase::WirePages};
                     self.checkpoint_due();
                 }
             }
@@ -508,16 +515,22 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
             }
             ArtifactRetainedCommandPhase::Decode => {
                 cx.set_stage("retained-command-decode");
-                if !Self::metadata(cx)? { return Ok(None); }
-                let decoded = match <A::Command as protocol::OpBinary>::decode_op(&self.raw) {
-                    Ok(command) => command,
-                    Err(error) => { self.decode_error=Some(error); self.fault(b"retained command wire payload is malformed"); return Ok(None); }
+                let demand=self.work.as_ref().ok_or_else(Self::unadmitted_input)?.original_wire_demands(&self.raw,cx.retained_grant().maximum_copy_bytes)?;
+                let decoded=if let Some(demand)=demand{
+                    if !cx.retained_work_can_enter(demand){if !semio_framework_job::retained_work::RetainedWorkBudget::new(cx.original_total_retained_grant()).can_enter(demand){self.fault(b"retained command decoding demand exceeds its original funding");}return Ok(None);}
+                    let Some(command)=self.work.as_mut().ok_or_else(Self::unadmitted_input)?.receive_original_wire(&self.raw,cx)? else{return Ok(None);};command
+                }else{
+                    if !Self::metadata(cx)? { return Ok(None); }
+                    match <A::Command as protocol::OpBinary>::decode_op(&self.raw) {
+                        Ok(command) => command,
+                        Err(error) => { self.decode_error=Some(error); self.fault(b"retained command wire payload is malformed"); return Ok(None); }
+                    }
                 };
                 let work = self.work.as_ref().ok_or_else(Self::unadmitted_input)?;
                 if (self.command_id)(&decoded) != work.tool_id() {
                     return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "received command does not match original app work authority").into());
                 }
-                self.command = Some(decoded);
+                self.command=Some(ArtifactRetainedCommandCustody::received(decoded));
                 self.phase = ArtifactRetainedCommandPhase::Preflight;
                 self.preview(b"{\"en\":\"Validating command\",\"de\":\"Befehl wird gepr\xC3\xBCft\"}");
             }
@@ -542,11 +555,13 @@ impl<A:ArtifactApp> ArtifactRetainedCommandJob<A>{
                     let (Some(command),Some(operation),Some(work))=(self.command.as_mut(),self.operation.as_ref(),self.work.as_mut())else{return Err(Self::unadmitted_input().into())};
                     if !self.source_binding.is_some_and(|source|source.matches(cx)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command receiving requires its original physical source binding").into())}
                     let before=cx.retained_progress();let fuel=cx.fuel_remaining();
+                    let Some(command)=command.original_mut(cx)?else{return Ok(None)};
                     if !work.receive_original_command(command,cx)?{return Ok(None)}
                     if cx.retained_progress()==before&&!Self::metadata(cx)?{return Ok(None)}
                     if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
                     self.command_received=true;return Ok(None)
                 }
+                {let work=self.work.as_mut().ok_or_else(Self::unadmitted_input)?;let before=cx.retained_progress();if !work.receive_original_output_chunks(&mut self.producer_output_chunks,cx)?{return Ok(None)}if cx.retained_progress()!=before{return Ok(None)}}
                 let (Some(command), Some(snapshot), Some(config), Some(history), Some(interaction), Some(hover), Some(operation), Some(work)) = (self.command.as_ref(), self.snapshot.as_ref(), self.config.as_ref(), self.history.as_ref(), self.interaction_state.as_ref(), self.interaction_hover.as_ref(), self.operation.as_ref(), self.work.as_mut()) else { return Err(Self::unadmitted_input().into()); };
                 let before = cx.retained_progress();
                 let fuel = cx.fuel_remaining();

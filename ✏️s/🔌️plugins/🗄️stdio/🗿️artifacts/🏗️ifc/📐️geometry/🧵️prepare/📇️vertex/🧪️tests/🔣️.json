@@ -1,0 +1,30 @@
+{
+  "cases": [
+    {
+      "index": 0,
+      "vertex": 1,
+      "generation": 1
+    },
+    {
+      "index": 511,
+      "vertex": 2,
+      "generation": 1
+    },
+    {
+      "index": 512,
+      "vertex": 3,
+      "generation": 1
+    },
+    {
+      "index": 1000000000,
+      "vertex": 4,
+      "generation": 1
+    },
+    {
+      "index": 4294967295,
+      "vertex": 5,
+      "generation": 1
+    }
+  ],
+  "maximumAllocatedBytes": 50000
+}

@@ -1,0 +1,35 @@
+# Direct IFC Source Mesh Writer
+
+Current source90 checkpoint owns14files and references76, max147UTF16 full-path units. Actual affected tests:557pass/0fail/96,540 Bun assertions/15files/8.44seconds. Strict15-test consumer graph exits0. New direct writer tests account for37/21,232 assertions and new source-authority tests10/20; the other510 existing source/geometry laws remain. No native producer, funding/runtime proof or capability/publication flag is added.
+
+## Actual Endpoint and Source Algorithms
+
+`geometry/mesh-writer.ts` defines `IfcMeshWriter<T>` (`point`, `triangle`, `finish`, `close`) and `IfcMeshWriterFactory<T>=(vertexCount,triangleCount)=>writer`. The default array factory validates exact `3*(vertexCount+triangleCount)` against the original remaining maxValues before its positions/flat-index arrays are born. Counts fit actual array representation. Fixed setters reject duplicate/out-of-range/nonfinite rows, finish requires every row, first failure remains latched and close is idempotent. Finish clears the writer's private backing captures while moving the actual result. This is a buffer owner, not a mesh/schema/source certificate.
+
+Six modules now expose the agreed generic WriteSteps methods: `ifcCsgPrimitiveWriteSteps`, `ifcRectangleExtrusionWriteSteps`, `ifcCircleExtrusionWriteSteps`, `ifcRoundedRectangleExtrusionWriteSteps`, `ifcCircularSolidWriteSteps`, `ifcConvexSolidWriteSteps`. Existing raw endpoints delegate to the same algorithm with the array factory. Raw rectangle takes one required trailing maxValues; root updated its sole dispatcher call. There is no compatibility default or second source algorithm.
+
+The convex algorithm computes one indexed point formula in the original transform/displacement/SI arithmetic order. It streams that point's primitive words immediately into the endpoint. Triangle precision checks recompute only three fixed scratch points from the same formula. The generic source retains no full positions or triangle buffer. Block and rectangle likewise stream directly to the endpoint. Writer entry precedes every emitted numeric row; all completion/failure/return paths close entered writers. Cleanup cannot replace an original body failure, including undefined. A finished opaque session mesh remains owned after sink close, because its underlying builder has moved its backing to the original private session record.
+
+Block/rectangle are8points12triangles60values. At72circle chords, cone is73/142/645; cylinder and circle sweep144/284/1284. Current rounded fixture's complete76-point boundary emits152/300/1356. These are genuine source counts before factory birth. No defaults, fabricated source entities, raw-mesh-plus-copy construction or renewed Boolean budget was added.
+
+The source emits represented indices with its existing negative transverse-direction reversal. It does not reverse world reflection. Root's owned factory flips the actual represented frame sign once; raw publication retains its original sign owner. Tests exercise identity/reflected frames and actual direct owned output under the same source formula. Generic Boolean/kernel source remains root-owned and unchanged by this refactor; parent has separately extended indexed publication after the earlier69 audit.
+
+## Source Authority Correction
+
+The first generic writer checkpoint passed37tests but retained an older rectangle source weakness: raw X/Y/Depth used ifcNumber directly, and a same-ID cloned rectangle row was accepted. New neutral9cases produced6pass/4fail before correction. Rectangle and circle now read SweptArea, ProfileType, profile/solid Position, ExtrudedDirection, DirectionRatios and consumed dimensions through the actual catalog owner-qualified source helper before writer birth. Original entity/ordinal identity is mandatory. INTEGER values are refused for the declared REAL aliases; no scalar retag/coercion is performed. All9 cases now refuse as expected before any writer birth, plus the closed-schema law passes10/20.
+
+This uses the existing released metadata/type matcher and actual graph source index. No new catalog, side index, compatibility layer, unbound SELF/candidate or schema-validity assertion is introduced. Existing positive/precision/dimension checks remain. The source helper checks consumed structural domains; this is not full EXPRESS/MVD conformance.
+
+## Preserved Words and Original Turns
+
+Before any source change, twelve actual raw programs captured binary64 point words, exact indices, hashes and yield counts: six source families in identity/reflected frames. All12 word/index hashes remain identical. `generated/mesh-writer-baseline.json` retains the exact original baseline. Initial generic streaming preserved all12 turn counts too. The subsequent genuine metadata/source-domain correction adds real source-query turns: rectangle21→1017 and circle650→1285 in each frame. The4 neutral rows explicitly retain originalTurns alongside current turns; other8 rows are unchanged. `generated/mesh-writer-after-source-query.json` records current output. No query work is replaced by artificial fuel ticks or claimed constant timing.
+
+New-module red was0pass/1missing-module error. Final focused writer37 tests include exact hashes/turns, source unchanged, one writer birth, prebirth one-less refusal for every family, direct prepaid session construction, ordinal row order, source checkpoints while entered, single reflection, no duplicate/hole acceptance, completion/close, partial-return retirement and exact undefined first failure. Actual Manifold cylinder/cone outputs independently agree on volume/status. Existing Three/Manifold source geometry laws and IFC source/roundtrip/cancellation tests remain in the557 affected run. No runtime external dependency was added.
+
+Four exact physical rectangle STEP inputs are emitted separately: REAL baseline and INTEGER X/Y/Depth, with raw source lines and hashes in `generated/mesh-writer-rectangle-physical.json`. The serializer leaves carrier spelling unchanged; external physical/EXP validation is requested independently and is not yet claimed in this report.
+
+## Frozen Scope and Coordination
+
+`generated/mesh-writer-source.json` pins the current90 files. Owned production7: mesh-writer.ts, csg.ts, convex-solid.ts, circular-solid.ts, circle.ts, rounded.ts, rectangle.ts. Owned tests/data7: mesh-writer fixture/test/cases/schema and mesh-writer-authority test/cases/schema. Root owns geometry.ts, control.ts, Boolean AST/policy/indexed publication and package registrations; those are contextual references. Semantics owns triangulated/tessellated source integration consuming this unchanged factory. No modifications to those owned areas were made here.
+
+New test entry paths are `🚪️io/🧪️tests/mesh-writer.test.ts` and `mesh-writer-authority.test.ts`, unregistered by this worker. Root will register after independent closure. Native source/runtime/funding/receipt proof stays false; no native follow-on, compiler ingress workaround or full IFC/MVD completion is implied.

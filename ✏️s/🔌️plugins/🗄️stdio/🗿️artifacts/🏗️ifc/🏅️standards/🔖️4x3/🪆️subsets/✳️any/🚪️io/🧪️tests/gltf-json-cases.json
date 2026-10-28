@@ -1,0 +1,13 @@
+{
+ "schema":"stdio.ifc.gltf-json",
+ "cases":[
+  {"name":"Integral Decimal","prefix":"","json":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1.0}]}","accepted":true},
+  {"name":"Integral Exponent","prefix":"","json":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1e0}]}","accepted":true},
+  {"name":"Last Duplicate Member","prefix":"","json":"{\"asset\":{\"version\":\"1.0\"},\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}]}","accepted":true},
+  {"name":"Ignored UTF8 BOM","prefix":"﻿","json":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1}]}","accepted":true},
+  {"name":"Fractional Integer","prefix":"","json":"{\"asset\":{\"version\":\"2.0\"},\"buffers\":[{\"byteLength\":1.5}]}","accepted":false},
+  {"name":"Duplicate Last Value Is Authoritative","prefix":"","json":"{\"asset\":{\"version\":\"2.0\"},\"asset\":{\"version\":\"1.0\"},\"buffers\":[{\"byteLength\":1}]}","accepted":false},
+  {"name":"Supported Minimum Version","prefix":"","json":"{\"asset\":{\"version\":\"2.0\",\"minVersion\":\"2.0\"},\"buffers\":[{\"byteLength\":1}]}","accepted":true},
+  {"name":"Unsupported Minimum Version","prefix":"","json":"{\"asset\":{\"version\":\"2.0\",\"minVersion\":\"2.1\"},\"buffers\":[{\"byteLength\":1}]}","accepted":false}
+ ]
+}

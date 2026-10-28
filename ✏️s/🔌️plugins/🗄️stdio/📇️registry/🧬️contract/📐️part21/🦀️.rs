@@ -18,6 +18,10 @@ use std::fmt::Write as _;
 #[path = "🚦️controlled/🦀️.rs"]
 mod controlled;
 
+#[path="🫴️receiving/🦀️.rs"]
+mod receiving;
+pub use receiving::Part21ValueReceiver;
+
 #[path = "🔢️values/🦀️.rs"]
 mod values;
 pub use values::*;

@@ -738,9 +738,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> P
         Ok(())
     }
 
+    fn render_demand(&self,body_key:&str,maximum_body_bytes:usize)->Result<RetirementDemand,ValueError>{if self.pending.pending_render_failure.is_some()||self.pending.pending_render_tree.is_some(){return self.pending.render_failure_demands(maximum_body_bytes);}if A::uses_render_work(body_key){if let Some(work)=self.pending.pending_render_work.as_ref(){return work.query_demand(|work|A::render_work_demand(work,maximum_body_bytes));}}Ok(Default::default())}
     async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure> { self.render(body_key, snapshot_override_json, view_state, cx).await }
 
     fn original_render_tree_source<'a>(&'a mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<&'a mut Option<ComponentTree>,semio_framework_job::OriginalTurnFailure> { self.pending.original_render_tree_source(cx) }
+    fn receive_render_work_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{self.receive_render_request(body_key,request,view,cx)}
+    fn close_render_work_request(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{let grant=cx.retained_grant();cx.with_original_retirement(|cx|{self.pending.close_render_failure(cx,grant).map_err(semio_framework_job::OriginalTurnFailure::from)?;Ok(self.pending.render_failure_terminal_is_empty().then_some(true))})}
 
     async fn window_engagements(&mut self, view_state: &ViewModel) -> HashMap<String, WindowEngagement> { self.window_engagements(view_state).await }
 

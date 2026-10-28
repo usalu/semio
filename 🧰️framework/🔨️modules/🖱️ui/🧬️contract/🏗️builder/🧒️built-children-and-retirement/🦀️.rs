@@ -49,9 +49,12 @@ impl Default for BuiltChildRetireAuthority {
 }
 
 pub(super) static BUILT_CHILD_RETIRE_AUTHORITY: LazyLock<Mutex<BuiltChildRetireAuthority>> = LazyLock::new(|| Mutex::new(BuiltChildRetireAuthority::default()));
+static BUILT_CHILD_AUTHORITY_PUBLISHED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
 
 fn with_built_child_retire_authority<T>(f: impl FnOnce(&mut BuiltChildRetireAuthority) -> T) -> T {
-    let mut authority = BUILT_CHILD_RETIRE_AUTHORITY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
+    let source=&*BUILT_CHILD_RETIRE_AUTHORITY;
+    BUILT_CHILD_AUTHORITY_PUBLISHED.store(true,std::sync::atomic::Ordering::Release);
+    let mut authority = source.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     f(&mut authority)
 }
 
@@ -178,6 +181,33 @@ impl fmt::Debug for BuiltChildren {
 }
 
 impl BuiltChildren {
+    /// 🎟️ Declares the next exact native backing or child box before original receiving may construct it.
+    pub fn initialized_push_demand(&self)->semio_framework_value::RetirementDemand{
+        use std::mem::size_of;
+        let backing=UI_BUILT_CHILDREN_MAX*size_of::<Option<Box<BuiltNode>>>();
+        semio_framework_value::RetirementDemand{copy_bytes:if self.backing.is_none(){backing+size_of::<Self>()}else{2*size_of::<BuiltNode>()+size_of::<Option<Box<BuiltNode>>>()},capacity_bytes:if self.backing.is_none(){backing}else{size_of::<BuiltNode>()},depth:2,..Default::default()}
+    }
+    /// 🧷️ Retains every born owner before returning its original receipt; never reclaims unrelated children.
+    pub fn push_initialized(&mut self,donor:&mut Option<BuiltNode>,native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,semio_framework_value::ValueError>{
+        use semio_framework_value::{RetainedCloneProgress,ValueError,ValueRefusalKind};
+        let invalid=|reason|ValueError::literal(ValueRefusalKind::OwnershipLimit,reason);
+        if donor.is_none()||self.len==UI_BUILT_CHILDREN_MAX{return Err(invalid("staging child source capacity refused"));}
+        let demand=self.initialized_push_demand();
+        if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Default::default());}
+        if self.backing.is_none(){
+            if !BUILT_CHILD_AUTHORITY_PUBLISHED.load(std::sync::atomic::Ordering::Acquire){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"staging child source is not initialized"));}
+            let mut authority=match BUILT_CHILD_RETIRE_AUTHORITY.try_lock(){Ok(authority)=>authority,Err(std::sync::TryLockError::WouldBlock)=>return Ok(Default::default()),Err(std::sync::TryLockError::Poisoned(_))=>return Err(invalid("staging child source is poisoned"))};
+            let key=authority.reserve().ok_or_else(||invalid("staging child retirement capacity refused"))?;
+            let mut backing=match native.allocate_vec::<Option<Box<BuiltNode>>>(UI_BUILT_CHILDREN_MAX){Ok(backing)=>backing,Err(error)=>{authority.release(key);return Err(error);}};
+            let capacity=backing.capacity()*std::mem::size_of::<Option<Box<BuiltNode>>>();backing.resize_with(UI_BUILT_CHILDREN_MAX,||None);
+            self.backing=Some(backing.into_boxed_slice());self.handback=Some(key);
+            return Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:capacity,..Default::default()});
+        }
+        let mut owner=native.allocate_vec::<BuiltNode>(1)?;let capacity=owner.capacity()*std::mem::size_of::<BuiltNode>();
+        owner.push(donor.take().unwrap());let raw=Box::into_raw(owner.into_boxed_slice())as*mut BuiltNode;
+        let node=unsafe{Box::from_raw(raw)};self.backing.as_mut().unwrap()[self.len]=Some(node);self.len+=1;
+        Ok(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:capacity,..Default::default()})
+    }
     #[expect(clippy::result_large_err, reason = "A refused child admission returns the exact unboxed node before obtaining backing or retirement credit.")]
     pub fn try_push(&mut self, node: BuiltNode) -> Result<(), BuiltNode> {
         if self.len == UI_BUILT_CHILDREN_MAX {

@@ -13,9 +13,11 @@ pub fn inverse<Op: From<crate::update_layer_transform::mutation::UpdateLayerTran
     let (mut moved, mut restore) = (std::collections::BTreeSet::new(), Vec::new());
     for entry in drawing_placed_layers(base, &ids) {
         let source = layer_base(entry.layer);
-        if !entry.editable || entry.addressed_ancestor.is_some_and(|ancestor| moved.contains(ancestor)) {
+        if entry.addressed_ancestor.is_some_and(|ancestor| moved.contains(ancestor)) {
+            moved.insert(&source.id);
             continue;
         }
+        if !entry.editable { continue; }
         let Some(next) = drawing_dragged_transform(&source.transform, entry.parent, [payload.dx, payload.dy]) else { continue };
         moved.insert(&source.id);
         if next != source.transform {

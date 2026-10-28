@@ -47,15 +47,17 @@ import {
   uiTextInputKey,
   uiTextInputKeyOf
 } from "@semio-tech/ui-contract/component";
-import { interpLabel, type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
-import { dispatchTrigger, resolveControlIconNode, toUiValue, useContinuousTriggerLane } from "../⚡️action-dispatch/🟦️.tsx";
-import { nodeDomId } from "../🪪️stable-dom-ids/🟦️.ts";
+import { interpLabel } from "../🧷️interpreter-context/🟦️.ts";
+import { resolveControlIconNode, toUiValue, useContinuousTriggerLane } from "../⚡️action-dispatch/🟦️.tsx";
+import { controlDomId } from "../🪪️stable-dom-ids/🟦️.ts";
+import { dispatchControlTrigger as dispatchTrigger, type UiControlCompletion, type UiControlContext } from "../🎛️control-port/🟦️.ts";
+import { selectOptionDomId } from "../🎛️control-port/label-target.ts";
 
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
 /** 🖊️ Queues commits for one authored target and preserves newer drafts across acknowledgements.
  * External changes retain a conflicting draft until discarded; a target change starts a fresh draft. */
-function useCommitDraft(published: string, scope: string, guard: string, revision: string | null, send: (value: string, active: () => boolean, subscribeActive: (listener: () => void) => () => void) => ReturnType<UiInterpreterContext["onIntent"]>, publication: (value: string) => string, lifetime?: object | null): [string, (next: string) => void, (value: string) => void, () => void, boolean] {
+function useCommitDraft(published: string, scope: string, guard: string, revision: string | null, send: (value: string, active: () => boolean, subscribeActive: (listener: () => void) => () => void) => UiControlCompletion, publication: (value: string) => string, lifetime?: object | null): [string, (next: string) => void, (value: string) => void, () => void, boolean] {
   type Pending = { value: string; baseRevision: string | null; cancelled: boolean; settled: boolean; outcome: InputOutcomeV1 | undefined };
   const [, render] = useState(0);
   const create = () => ({ scope, lifetime, listeners: new Set<() => void>(), guard, revision, published, draft: published, committed: published, queue: [] as { value: string; publication: string }[], awaiting: null as Pending | null, busy: false, conflicted: false });
@@ -147,16 +149,17 @@ function usePickerRelease(enabled: boolean, lane: ContinuousGestureLane<UiValue>
   return ref;
 }
 
-export function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function InputView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "input" }>;
   const commitOnBlur = component.commit === "blur";
   const draftScope = inputDraftScope(record);
   const draftConflictLabel = useLabel("ui.host.inputDraftConflict");
   const draftDiscardLabel = useLabel("ui.host.inputDraftDiscard");
   const factor = component.kind === "number" ? (component.displayFactor ?? null) : null;
-  const storedNumber = Number(component.value);
+  const value = context.controls.value(record) ?? component.value;
+  const storedNumber = Number(value);
   const shownText = (stored: number): string => (factor == null ? (component.precision == null ? formatUiNumber(stored) : formatUiNumberFixed(stored, component.precision)) : uiNumberDisplayText(stored, factor, component.precision));
-  const published = factor != null && component.value.trim() !== "" && Number.isFinite(storedNumber) ? shownText(storedNumber) : component.value;
+  const published = factor != null && value.trim() !== "" && Number.isFinite(storedNumber) ? shownText(storedNumber) : value;
   const [refusal, setRefusal] = useState<{ readonly message: string | null } | null>(null);
   const lane = useContinuousTriggerLane(context, record);
   /** 🚧️ The stored number a typed text means, or the refusal it earns: unreadable text, or a value crossing a hard bound (the
@@ -174,21 +177,21 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   };
   const [draft, setDraft, commitDraft, discardDraft, draftConflict] = useCommitDraft(published, JSON.stringify([context.localDocumentOwner?.id, draftScope]), JSON.stringify(record.bindings), component.publicationRevision ?? null, (raw, active, subscribeActive) => {
     const read = () => {
-      const current = context.store.getNodeSnapshot(record.id);
-      if (!current || current.disabled || current.component.type !== "input" || inputDraftScope(current) !== draftScope) return null;
+      const current = context.controls.read(record.id);
+      if (!current || context.controls.disabled(current) || current.component.type !== "input" || inputDraftScope(current) !== draftScope) return null;
       const input = current.component;
       return { target: JSON.stringify([draftScope, input.kind, input.displayFactor, input.precision]), value: factor != null && input.value.trim() !== "" && Number.isFinite(Number(input.value)) ? shownText(Number(input.value)) : input.value, revision: input.publicationRevision ?? "" };
     };
     const send = () => {
-      const current = context.store.getNodeSnapshot(record.id);
+      const current = context.controls.read(record.id);
       if (!active() || !read() || !current) throw new Error("Input command target changed");
       const number = component.kind === "number" ? typedNumber(raw) : null;
       return dispatchTrigger(context, current, "commit", toUiValue(typeof number === "number" ? number : raw));
     };
     return context.localDocumentOwner && component.publicationRevision != null
-      ? inputCommitLaneV1(context.localDocumentOwner).submit({ read, send, active, expected: draftPublication(raw), subscribe: (listener) => { const publication = context.store.subscribeRevision(listener); const lifecycle = subscribeActive(listener); return () => { publication(); lifecycle(); }; } })
+      ? inputCommitLaneV1(context.localDocumentOwner).submit({ read, send, active, expected: draftPublication(raw), subscribe: (listener) => { const publication = context.controls.subscribe(listener); const lifecycle = subscribeActive(listener); return () => { publication(); lifecycle(); }; } })
       : send();
-  }, draftPublication, context.localDocumentOwner);
+  }, draftPublication, context.localDocumentOwner ?? context.controls.identity);
   const continuous = (component.kind === "number" || component.kind === "color") && !commitOnBlur;
   const picker = continuous && component.kind === "color";
   const pickerRef = usePickerRelease(picker, lane);
@@ -235,7 +238,7 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
     else commitValue(text);
     return true;
   };
-  const draftConflictId = `${nodeDomId(context.store, record, context.domScope)}-draft-conflict`;
+  const draftConflictId = `${controlDomId(context, record)}-draft-conflict`;
   const recovery = draftConflict ? <>
     <span id={draftConflictId} role="alert" className="sr-only">{draftConflictLabel}</span>
     <Popover>
@@ -249,14 +252,17 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   if (component.kind === "longText") {
     return (<>
       <Textarea
-        id={nodeDomId(context.store, record, context.domScope)}
+        id={controlDomId(context, record)}
         data-ui-node-id={record.id} data-ui-node-key={record.key}
         aria-label={record.accessibility.label ?? undefined}
-        aria-invalid={draftConflict || undefined}
-        aria-describedby={draftConflict ? draftConflictId : undefined}
-        disabled={record.disabled}
+        aria-labelledby={context.field?.label}
+        aria-required={context.field?.required || undefined}
+        aria-invalid={draftConflict || context.field?.invalid || undefined}
+        aria-errormessage={context.field?.invalid ? context.field.error : undefined}
+        aria-describedby={[context.field?.describedBy, draftConflict ? draftConflictId : undefined].filter(Boolean).join(" ") || undefined}
+        disabled={context.controls.disabled(record)}
         className="min-h-[4.5rem] w-full min-w-0"
-        value={commitOnBlur ? draft : component.value}
+        value={commitOnBlur ? draft : published}
         placeholder={component.placeholder ?? undefined}
         onChange={commitOnBlur ? (event) => setDraft(event.target.value) : (event) => commitValue(event.target.value)}
         onKeyDown={commitOnBlur ? draftKey : undefined}
@@ -267,15 +273,18 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
   }
   const inputType = component.kind === "number" ? "number" : component.kind === "date" ? "date" : component.kind === "color" ? "color" : component.kind === "file" ? "file" : "text";
   const shown = (value: number | null | undefined): number | undefined => (value == null ? undefined : factor == null ? value : value * factor);
-  const refusalId = `${nodeDomId(context.store, record, context.domScope)}-refusal`;
+  const refusalId = `${controlDomId(context, record)}-refusal`;
   const input = (
     <Input
-      id={nodeDomId(context.store, record, context.domScope)}
+      id={controlDomId(context, record)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
-      aria-invalid={refusal || draftConflict ? true : undefined}
-      aria-describedby={[refusal?.message ? refusalId : null, draftConflict ? draftConflictId : null].filter(Boolean).join(" ") || undefined}
-      disabled={record.disabled}
+      aria-labelledby={context.field?.label}
+      aria-required={context.field?.required || undefined}
+      aria-invalid={refusal || draftConflict || context.field?.invalid ? true : undefined}
+      aria-errormessage={context.field?.invalid ? context.field.error : undefined}
+      aria-describedby={[context.field?.describedBy, refusal?.message ? refusalId : null, draftConflict ? draftConflictId : null].filter(Boolean).join(" ") || undefined}
+      disabled={context.controls.disabled(record)}
       type={inputType}
       className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0"
       value={component.kind === "file" ? undefined : commitOnBlur ? draft : published}
@@ -306,27 +315,32 @@ export function InputView({ record, context }: { readonly record: UiNodeRecord; 
 /** 🔽️ A select as its `appearance` says: a menu that opens its options, or — `segmented` — every option at once as a radio
  * group (`ToggleGroup` under radio semantics): one checked option, arrow keys move the choice, the chosen one never presses
  * off. Both dispatch the picked value on `Trigger::Change`. */
-export function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function SelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "select" }>;
   if (component.appearance === "segmented") {
     return (
       <ToggleGroup
-        id={nodeDomId(context.store, record, context.domScope)}
+        id={controlDomId(context, record)}
         kind="single"
         semantics="radio"
         data-ui-node-id={record.id}
         data-ui-node-key={record.key}
         aria-label={record.accessibility.label ?? undefined}
-        disabled={record.disabled}
-        value={component.value}
+        aria-labelledby={context.field?.label}
+        aria-describedby={context.field?.describedBy}
+        aria-required={context.field?.required || undefined}
+        aria-invalid={context.field?.invalid || undefined}
+        aria-errormessage={context.field?.invalid ? context.field.error : undefined}
+        disabled={context.controls.disabled(record)}
+        value={context.controls.value(record) ?? component.value}
         onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}
-        items={component.items.map((item) => ({ value: item.value, icon: "circle-dot" as const, text: item.label }))}
+        items={component.items.map((item, index) => ({ id: selectOptionDomId(controlDomId(context, record), index), value: item.value, icon: "circle-dot" as const, text: item.label }))}
       />
     );
   }
   return (
-    <Select id={`${nodeDomId(context.store, record, context.domScope)}-select`} disabled={record.disabled} value={component.value || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
-      <SelectTrigger id={nodeDomId(context.store, record, context.domScope)} aria-label={record.accessibility.label ?? undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
+    <Select id={`${controlDomId(context, record)}-select`} disabled={context.controls.disabled(record)} value={(context.controls.value(record) ?? component.value) || undefined} onValueChange={(value) => dispatchTrigger(context, record, "change", toUiValue(value))}>
+      <SelectTrigger id={controlDomId(context, record)} aria-label={record.accessibility.label ?? undefined} aria-labelledby={context.field?.label} aria-describedby={context.field?.describedBy} aria-required={context.field?.required || undefined} aria-invalid={context.field?.invalid || undefined} aria-errormessage={context.field?.invalid ? context.field.error : undefined} data-ui-node-id={record.id} data-ui-node-key={record.key} className="h-[var(--tree-inline-control-height,var(--size-medium))] w-full min-w-0" size="sm">
         <SelectValue placeholder={component.placeholder ?? interpLabel("ui.common.select")} />
       </SelectTrigger>
       <SelectContent>
@@ -340,22 +354,23 @@ export function SelectView({ record, context }: { readonly record: UiNodeRecord;
   );
 }
 
-export function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function ToggleView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "toggle" }>;
-  if (component.appearance === "checkbox") return <TreeCheckbox id={nodeDomId(context.store, record, context.domScope)} checked={component.on} disabled={record.disabled} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
-  return <Toggle id={nodeDomId(context.store, record, context.domScope)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={record.disabled} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
+  if (component.appearance === "checkbox") return <TreeCheckbox id={controlDomId(context, record)} checked={component.on} disabled={context.controls.disabled(record)} ariaLabel={record.accessibility.label ?? component.text ?? undefined} onCheckedChange={(checked) => dispatchTrigger(context, record, "change", toUiValue(checked))} />;
+  return <Toggle id={controlDomId(context, record)} data-ui-node-id={record.id} data-ui-node-key={record.key} pressed={component.on} text={component.text ?? undefined} icon={resolveControlIconNode(component.icon)} disabled={context.controls.disabled(record)} aria-label={record.accessibility.label ?? component.text ?? undefined} onPressedChange={(pressed) => dispatchTrigger(context, record, "change", toUiValue(pressed))} />;
 }
 
-export function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function SliderView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "slider" }>;
   const lane = useContinuousTriggerLane(context, record);
   const slider = (
     <Slider
-      id={nodeDomId(context.store, record, context.domScope)}
+      id={controlDomId(context, record)}
       data-ui-node-id={record.id} data-ui-node-key={record.key}
       aria-label={record.accessibility.label ?? undefined}
       aria-valuetext={uiAccessibilityValueV1(component).valueText ?? undefined}
       className="w-full min-w-0"
+      disabled={context.controls.disabled(record)}
       max={component.max}
       min={component.min}
       step={component.step}
@@ -384,14 +399,14 @@ export function SliderView({ record, context }: { readonly record: UiNodeRecord;
   );
 }
 
-export function NumberStepperView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function NumberStepperView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "numberStepper" }>;
   const lane = useContinuousTriggerLane(context, record);
   return (
     <Stepper
-      id={nodeDomId(context.store, record, context.domScope)}
+      id={controlDomId(context, record)}
       aria-label={record.accessibility.label ?? undefined}
-      disabled={record.disabled}
+      disabled={context.controls.disabled(record)}
       step={component.step}
       min={component.min ?? undefined}
       max={component.max ?? undefined}
@@ -414,7 +429,7 @@ export function NumberStepperView({ record, context }: { readonly record: UiNode
 /** 💍️ A dragged orb IS a continuous control (design §13.1 of ticket 26/09/30/NON-DESTRUCTIVE-HISTORY-EDITING): every
  * position rides the press lane, the pointer's release ends the press on the value last offered (deferred past `Ring`'s
  * own release handler, which reports the final position), and a cancelled pointer drops it with zero trace. */
-export function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function RingView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "ring" }>;
   const lane = useContinuousTriggerLane(context, record);
   useEffect(() => {
@@ -429,14 +444,14 @@ export function RingView({ record, context }: { readonly record: UiNodeRecord; r
       window.removeEventListener("pointercancel", cancel);
     };
   }, [lane]);
-  return <Ring id={nodeDomId(context.store, record, context.domScope)} onOrbChange={(_orbId, _oldT, newT) => lane.offer(toUiValue(newT))} orbs={[{ disabled: record.disabled, id: component.orbId, selected: true, t: component.t }]} />;
+  return <Ring id={controlDomId(context, record)} onOrbChange={(_orbId, _oldT, newT) => lane.offer(toUiValue(newT))} orbs={[{ disabled: context.controls.disabled(record), id: component.orbId, selected: true, t: component.t }]} />;
 }
 
 /** 🖼️ An icon picker named by its record's label (its kind select and its field both read it) and locked while the record
  * is disabled — an editor control like any other, dispatching the picked icon on `Trigger::Change`. */
-export function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function IconSelectView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "iconSelect" }>;
-  const id = nodeDomId(context.store, record, context.domScope);
+  const id = controlDomId(context, record);
   const label = record.accessibility.label ?? null;
   return (
     <>
@@ -448,11 +463,11 @@ export function IconSelectView({ record, context }: { readonly record: UiNodeRec
       <IconSelector
         aria-labelledby={label === null ? undefined : `${id}.label`}
         classifyIconSelectorMode={component.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
-        disabled={record.disabled}
+        disabled={context.controls.disabled(record)}
         id={id}
         onChange={(next) => dispatchTrigger(context, record, "change", toUiValue(next))}
         uniform={component.uniform}
-        value={component.value}
+        value={context.controls.value(record) ?? component.value}
       />
     </>
   );

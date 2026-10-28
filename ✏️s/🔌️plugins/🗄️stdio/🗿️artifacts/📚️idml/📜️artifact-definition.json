@@ -1,0 +1,185 @@
+{
+  "definition_version": 1,
+  "id": "s.stdio.idml",
+  "artifact": "idml",
+  "directory": "📚️idml",
+  "dependencies": [
+    "s.stdio.zip",
+    "s.stdio.xml"
+  ],
+  "standards": [
+    {
+      "id": "s.stdio.idml.standard.8-0",
+      "revision": "8-0",
+      "normative_source": null,
+      "publication_date": null,
+      "source_checksum": null,
+      "redistribution_status": "unknown",
+      "clauses_or_features": [],
+      "status": "unverified"
+    }
+  ],
+  "profiles": [
+    {
+      "id": "s.stdio.idml.standard.8-0.profile.any",
+      "standard": "s.stdio.idml.standard.8-0",
+      "profile": "any",
+      "status": "implemented"
+    }
+  ],
+  "source_dialects": [
+    {
+      "id": "s.stdio.idml.standard.8-0.dialect.source",
+      "standard": "s.stdio.idml.standard.8-0",
+      "dialect": "source",
+      "registered_code_points": [],
+      "status": "implemented"
+    }
+  ],
+  "representations": [
+    {
+      "id": "s.stdio.idml.standard.8-0.representation.document",
+      "standard": "s.stdio.idml.standard.8-0",
+      "representation": "document",
+      "mimes": [
+        "application/vnd.adobe.indesign-idml-package"
+      ],
+      "extensions": [
+        ".idml"
+      ],
+      "is_binary": true,
+      "aliases": [],
+      "neutral": true,
+      "status": "declared"
+    }
+  ],
+  "codecs": [
+    {
+      "id": "s.stdio.idml.standard.8-0.codec.native-document.v1",
+      "status": "implemented",
+      "from": "s.stdio.idml.standard.8-0.dialect.source",
+      "to": "s.stdio.idml.standard.8-0.dialect.source",
+      "executable_registration": true,
+      "native_factory": {
+        "factory_id": "stdio.native.idml.v1",
+        "artifact_kind": "s.stdio.idml",
+        "artifact_schema": "stdio.idml",
+        "extension": "idml",
+        "pack_schema_hash": "32afdfb0a01bab498e3b3e63cc557cb8e1b9e5619be657d6bfdbd0993997757e",
+        "runtime_capability_id": "s.stdio.idml.standard.8-0.codec.codec-stdio-idml-extension-idml.v1"
+      }
+    }
+  ],
+  "mutations": [
+    {
+      "id": "s.stdio.idml.mutation.replace-package.v1",
+      "status": "implemented",
+      "executable_registration": true
+    },
+    {
+      "id": "s.stdio.idml.mutation.replace-part.v1",
+      "status": "implemented",
+      "executable_registration": true
+    }
+  ],
+  "inferences": [],
+  "resources": [
+    {
+      "id": "s.stdio.idml.resource.external-references",
+      "external_reference_policy": "deny",
+      "status": "unimplemented"
+    }
+  ],
+  "localized_descriptors": [
+    {
+      "id": "s.stdio.idml.localization.en",
+      "locale": "en",
+      "name": "InDesign Markup Language",
+      "description": "Ordered IDML package members and validated document XML.",
+      "status": "declared"
+    },
+    {
+      "id": "s.stdio.idml.localization.de",
+      "locale": "de",
+      "name": "InDesign-Markup-Sprache",
+      "description": "Geordnete IDML-Paketbestandteile und geprüftes Dokument-XML.",
+      "status": "declared"
+    }
+  ],
+  "conformance_suites": [
+    {
+      "id": "s.stdio.idml.conformance-suite.package-oracle",
+      "status": "unimplemented",
+      "fixtures": [
+        "s.stdio.idml.fixture.package-events"
+      ]
+    }
+  ],
+  "runtime_capabilities": [
+    {
+      "id": "s.stdio.idml.schema.package.v1",
+      "category": "schema",
+      "descriptor": "runtime-capability:schema:schema:s.stdio.idml",
+      "claims": [
+        {
+          "namespace": "schema",
+          "value": "s.stdio.idml"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.idml.standard.8-0.codec.codec-stdio-idml-extension-idml.v1",
+      "category": "codec",
+      "descriptor": "runtime-capability:codec:codec-extension:10:stdio.idml:idml|codec:stdio.idml",
+      "claims": [
+        {
+          "namespace": "codec",
+          "value": "stdio.idml"
+        },
+        {
+          "namespace": "codec-extension",
+          "value": "10:stdio.idml:idml"
+        }
+      ]
+    },
+    {
+      "id": "s.stdio.idml.standard.8-0.representation.mime-idml-extension-idml",
+      "category": "representation",
+      "descriptor": "runtime-capability:representation:mime:application/vnd.adobe.indesign-idml-package|extension:.idml",
+      "claims": [
+        {
+          "namespace": "mime",
+          "value": "application/vnd.adobe.indesign-idml-package"
+        },
+        {
+          "namespace": "extension",
+          "value": ".idml"
+        }
+      ]
+    }
+  ],
+  "support_ledger": {
+    "normative_source": null,
+    "publication_date": null,
+    "source_checksum": null,
+    "redistribution_status": "unknown",
+    "clauses_or_features": [],
+    "profiles": [
+      "s.stdio.idml.standard.8-0.profile.any"
+    ],
+    "registered_code_points": [],
+    "read": "opaque",
+    "write": "opaque",
+    "lossless": "opaque",
+    "canonical": "opaque",
+    "validators": [],
+    "mutations": [
+      "s.stdio.idml.mutation.replace-package.v1",
+      "s.stdio.idml.mutation.replace-part.v1"
+    ],
+    "inferences": [],
+    "fixtures": [
+      "s.stdio.idml.fixture.package-events"
+    ]
+  }
+}

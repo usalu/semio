@@ -1,0 +1,24 @@
+{
+  "maximum": 3,
+  "slots": 8,
+  "entries": [
+    [
+      7,
+      70
+    ],
+    [
+      11,
+      110
+    ],
+    [
+      19,
+      190
+    ]
+  ],
+  "probeStart": 0,
+  "retirementOrder": [
+    19,
+    11,
+    7
+  ]
+}

@@ -1,0 +1,6 @@
+import pathlib,json,hashlib
+p=pathlib.Path(__file__).resolve().parent;runtime=json.loads((p/'🗑️generated/bim-properties-runtime.json').read_text(encoding="utf-8-sig"));oracle=json.loads((p/'🗑️generated/bim-properties-oracle.json').read_text(encoding="utf-8-sig"));observed={(r['holder'],r['id']):r for r in oracle['physical']};rows=[]
+for r in runtime:
+ data=pathlib.Path(r['path']).read_bytes();hash=hashlib.sha256(data).hexdigest();o=observed[(r['holder'],r['id'])];rows.append({'holder':r['holder'],'id':r['id'],'hashMatchesRuntime':hash==r['inputSha256'],'hashMatchesPhysical':hash==o['sha256'],'agree':o['agree'],'occurrenceOnlyAgree':o['occurrenceOnlyAgree'],'fullExpressDiagnostics':o['fullExpressDiagnostics']})
+result={'scope':'independent current-byte custody check of final worker-owned physical oracle, no duplicate full27 validation','rows':rows};(p/'🗑️generated/bim-properties-independent-physical-custody.json').write_text(json.dumps(result,indent=2),encoding='utf8');assert len(rows)==27 and all(r['hashMatchesRuntime']and r['hashMatchesPhysical']and r['agree']and r['occurrenceOnlyAgree']and not r['fullExpressDiagnostics']for r in rows);print('[DEBUG] 27 final physical inputs match actual observed bytes/exact values/occurrence-only/EXP0')
+

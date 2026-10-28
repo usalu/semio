@@ -1,0 +1,102 @@
+{
+  "schema": "layout.package.zip.original.v1",
+  "chunkExtents": [
+    1,
+    257,
+    4096
+  ],
+  "cases": [
+    {
+      "name": "empty-members",
+      "members": [
+        {
+          "length": 0,
+          "multiplier": 13,
+          "offset": 0,
+          "crc32": 0
+        },
+        {
+          "length": 0,
+          "multiplier": 17,
+          "offset": 11,
+          "crc32": 0
+        },
+        {
+          "length": 0,
+          "multiplier": 21,
+          "offset": 22,
+          "crc32": 0
+        }
+      ]
+    },
+    {
+      "name": "tiny-binary-members",
+      "members": [
+        {
+          "length": 3,
+          "multiplier": 13,
+          "offset": 17,
+          "crc32": 2589513418
+        },
+        {
+          "length": 7,
+          "multiplier": 17,
+          "offset": 28,
+          "crc32": 637734971
+        },
+        {
+          "length": 1,
+          "multiplier": 21,
+          "offset": 39,
+          "crc32": 1997036262
+        }
+      ]
+    },
+    {
+      "name": "chunk-boundary-members",
+      "members": [
+        {
+          "length": 4097,
+          "multiplier": 13,
+          "offset": 34,
+          "crc32": 769080925
+        },
+        {
+          "length": 8193,
+          "multiplier": 17,
+          "offset": 45,
+          "crc32": 129711690
+        },
+        {
+          "length": 67,
+          "multiplier": 21,
+          "offset": 56,
+          "crc32": 330072122
+        }
+      ]
+    },
+    {
+      "name": "large-binary-members",
+      "members": [
+        {
+          "length": 16384,
+          "multiplier": 13,
+          "offset": 51,
+          "crc32": 681664502
+        },
+        {
+          "length": 0,
+          "multiplier": 17,
+          "offset": 62,
+          "crc32": 0
+        },
+        {
+          "length": 8192,
+          "multiplier": 21,
+          "offset": 73,
+          "crc32": 2331789044
+        }
+      ]
+    }
+  ]
+}

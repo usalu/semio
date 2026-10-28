@@ -1,0 +1,86 @@
+{
+  "cases": [
+    {
+      "name": "run extension then truncation reads previous prefix",
+      "before": [
+        {
+          "start": 0,
+          "end": 1
+        }
+      ],
+      "steps": [
+        {
+          "len": 3,
+          "rows": [
+            {
+              "index": 1,
+              "value": {
+                "start": 1,
+                "end": 2
+              }
+            },
+            {
+              "index": 2,
+              "value": {
+                "start": 2,
+                "end": 3
+              }
+            }
+          ]
+        },
+        {
+          "len": 2,
+          "rows": [
+            {
+              "index": 0,
+              "value": {
+                "start": 0,
+                "end": 2
+              }
+            }
+          ]
+        }
+      ],
+      "expected": [
+        {
+          "start": 0,
+          "end": 2
+        },
+        {
+          "start": 1,
+          "end": 2
+        }
+      ],
+      "rfc6902": [
+        {
+          "op": "add",
+          "path": "/1",
+          "value": {
+            "start": 1,
+            "end": 2
+          }
+        },
+        {
+          "op": "add",
+          "path": "/2",
+          "value": {
+            "start": 2,
+            "end": 3
+          }
+        },
+        {
+          "op": "remove",
+          "path": "/2"
+        },
+        {
+          "op": "replace",
+          "path": "/0",
+          "value": {
+            "start": 0,
+            "end": 2
+          }
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "vectors",
+    "selectedCases",
+    "route",
+    "semantics",
+    "units",
+    "phases",
+    "laws"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.native-nodal-load.v1"
+    },
+    "vectors": {
+      "const": "cases.json#dofs-times-values"
+    },
+    "selectedCases": {
+      "const": 18
+    },
+    "route": {
+      "const": {
+        "from": "s.fem.fem3d@1/*",
+        "through": "s.stdio.ifc@4x3/*",
+        "into": "s.fem.fem3d@1/*",
+        "serializer": "IfcIntoFem",
+        "deserializer": "FemIntoIfc",
+        "query": "with_ifc4x3_native_attribute"
+      }
+    },
+    "semantics": {
+      "const": {
+        "inactive": "unset",
+        "explicitZero": "present-exact-bits",
+        "caseIdentity": "actual-ifc-id",
+        "loadIdentity": "actual-action-id-and-component-in-case",
+        "allUnset": "projection-refusal",
+        "selfWeight": false,
+        "coefficient": "one",
+        "nativeProof": false
+      }
+    },
+    "units": {
+      "const": [
+        {
+          "type": "FORCEUNIT",
+          "name": "NEWTON",
+          "dimensions": [
+            1,
+            1,
+            -2,
+            0,
+            0,
+            0,
+            0
+          ],
+          "scale": "one"
+        },
+        {
+          "type": "TORQUEUNIT",
+          "name": "derived",
+          "dimensions": [
+            2,
+            1,
+            -2,
+            0,
+            0,
+            0,
+            0
+          ],
+          "scale": "one"
+        }
+      ]
+    },
+    "phases": {
+      "const": [
+        "source-preflight",
+        "checked-capacity",
+        "original-build",
+        "source-roster",
+        "borrowed-query-and-units",
+        "owned-case-and-load-receiving",
+        "publication-and-paid-close"
+      ]
+    },
+    "laws": {
+      "const": [
+        "selected-component-roundtrip",
+        "actual-declared-slot",
+        "foreign-explicit-components",
+        "empty-case",
+        "case-scoped-load-ids",
+        "component-unit-refusals",
+        "canonical-edit-inverse",
+        "original-all-axis-denial",
+        "every-prefix-cancel",
+        "retained-partial-owner-close"
+      ]
+    }
+  }
+}

@@ -218,10 +218,6 @@ message SetFrameLayer {
   string frame_id = 2;
   string layer_id = 3;
 }
-message SetDrawingText {
-  uint32 index = 1;
-  string text = 2;
-}
 message ReorderFrame {
   string page_id = 1;
   string frame_id = 2;
@@ -294,7 +290,6 @@ message LayoutMutation {
     SetPageOverrides set_page_overrides = 41;
     CreateLayer create_layer = 42;
     SetFrameLayer set_frame_layer = 43;
-    SetDrawingText set_drawing_text = 44;
     ReorderFrame reorder_frame = 45;
     DragFrames drag_frames = 46;
     RotateFrames rotate_frames = 47;

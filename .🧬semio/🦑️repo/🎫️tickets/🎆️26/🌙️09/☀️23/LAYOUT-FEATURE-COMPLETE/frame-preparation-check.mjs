@@ -1,0 +1,5 @@
+import path from "node:path";import fs from "node:fs";import {fileURLToPath,pathToFileURL} from "node:url";
+let root=path.dirname(fileURLToPath(import.meta.url));while(!fs.existsSync(path.join(root,"🧰️framework"))) {const parent=path.dirname(root);if(parent===root)throw Error("Repository root unavailable");root=parent;}
+const frame=await import(pathToFileURL(path.join(root,"✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/🖼️frame-planning/🧪️tests/🔮️oracle.mjs")).href),projection=await import(pathToFileURL(path.join(root,"✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️flow/📇️projection/🧪️tests/oracle.mjs")).href);
+const numeric=await import(pathToFileURL(path.join(root,"🧰️framework/🔨️modules/🌱️value/🗂️ordered/🔢️numeric/🧮️scratch/🎟️reservation/🧪️tests/🔮️oracle.mjs")).href);
+export const result={numeric:numeric.run(root),frames:frame.run(root),projection:projection.runProjection(root)};

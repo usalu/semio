@@ -1,0 +1,3 @@
+/** 🔮️ Node Buffer, crypto and lodash independently witness the neutral byte patterns and transfer output. */
+import {createRequire} from 'node:module';const require=createRequire(import.meta.url),{sumBy}=require('lodash'),Ajv=require('ajv/dist/2020.js');import {createHash} from 'node:crypto';
+export function outputOracle(){const ajv=new Ajv({strict:false});return{validate:(schema,value)=>ajv.validate(schema,value),bytes:row=>Uint8Array.from(Buffer.from(Array.from({length:row.length},(_,at)=>(at*row.multiplier+row.offset)&255))),identity:bytes=>({sha256:createHash('sha256').update(bytes).digest('hex'),base64:Buffer.from(bytes).toString('base64'),length:sumBy([bytes],value=>value.byteLength)})};}

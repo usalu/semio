@@ -1,0 +1,14 @@
+import {join} from "node:path";
+import {pathToFileURL} from "node:url";
+const ticket=import.meta.dir,base=join(process.cwd(),"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io");
+const {parseIfc4x3Step,ifcReal,ifcNumber}=await import(pathToFileURL(join(base,"step.ts")).href);
+const {ifc4x3ToFem3d}=await import(pathToFileURL(join(base,"fem.ts")).href);
+const {ifc4x3ToBimSpatial}=await import(pathToFileURL(join(base,"bim.ts")).href);
+const read=async(name:string)=>parseIfc4x3Step(await Bun.file(join(ticket,"🗑️generated/ifc-inputs",name+"-export.ifc")).text());
+const out=[];
+let f=await read("fem");const inertia=f.entities.find((e:any)=>e.name==="IFCDERIVEDUNIT"&&e.args[1].value==="MOMENTOFINERTIAUNIT")!;const elem=f.entities.find((e:any)=>e.id===inertia.args[0].value[0].value)!;elem.args[1]={kind:"integer",value:1n};out.push(["inertia_m1_mislabeled_m4",(await ifc4x3ToFem3d(f)).fidelity]);
+f=await read("fem");f.entities=f.entities.filter((e:any)=>!(e.name==="IFCRELASSIGNSTOGROUP"&&e.args[6].kind==="reference"&&f.entities.find((v:any)=>v.id===e.args[6].value)?.name==="IFCSTRUCTURALANALYSISMODEL"));let r=await ifc4x3ToFem3d(f);out.push(["no_analysis_members",r.fidelity,r.artifact?.elements.length]);
+f=await read("fem");let group=f.entities.find((e:any)=>e.name==="IFCRELASSIGNSTOGROUP"&&e.args[6].kind==="reference"&&f.entities.find((v:any)=>v.id===e.args[6].value)?.name==="IFCSTRUCTURALLOADCASE")!;group.name="IFCRELASSIGNSTOGROUPBYFACTOR";group.args.push(ifcReal(2));r=await ifc4x3ToFem3d(f);out.push(["group_factor_2",r.fidelity,r.artifact?.loadCases.map((c:any)=>c.loads.length)]);
+let b=await read("bim");const site=b.entities.find((e:any)=>e.name==="IFCSITE")!,placement=b.entities.find((e:any)=>e.id===site.args[5].value)!,axis=b.entities.find((e:any)=>e.id===placement.args[1].value)!,point=b.entities.find((e:any)=>e.id===axis.args[0].value)!;point.args[0].value[0]=ifcReal(100);const br=await ifc4x3ToBimSpatial(b);out.push(["site_translate100",br.fidelity,Object.values(br.artifact?.buildings??{}).map((v:any)=>v.origin)]);
+b=await read("bim");const storey=b.entities.find((e:any)=>e.name==="IFCBUILDINGSTOREY")!,sp=b.entities.find((e:any)=>e.id===storey.args[5].value)!,sa=b.entities.find((e:any)=>e.id===sp.args[1].value)!,pt=b.entities.find((e:any)=>e.id===sa.args[0].value)!;pt.args[0].value[2]=ifcReal(99);out.push(["storey_translate99",(await ifc4x3ToBimSpatial(b)).fidelity]);
+console.log(JSON.stringify(out));

@@ -35,6 +35,7 @@
   },
   "devDependencies": {
     "@semio-tech/framework-pixels-ts": "workspace:*",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@cto.af/linebreak": "3.0.5"
   }
 }

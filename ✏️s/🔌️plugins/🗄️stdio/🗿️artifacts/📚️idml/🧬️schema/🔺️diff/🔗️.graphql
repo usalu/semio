@@ -1,0 +1,5 @@
+scalar IdmlDiffByte
+
+type IdmlPartPatch { path: String!, bytes: [IdmlDiffByte!] }
+type IdmlPatch { domVersion: String, partOrder: [String!], parts: [IdmlPartPatch!]! }
+type IdmlDiff { steps: [IdmlPatch!]! }

@@ -1,0 +1,9 @@
+{
+  "schema":"semio.ifc.retained-edit-tests.v1",
+  "typeRows":{"entity":"IFCPROPERTYSINGLEVALUE","existingTextBytes":1000000,"maximumCommandBytes":256},
+  "argument":{"entity":"IFCPROPERTYLISTVALUE","attribute":"ListValues","count":2000,"textBytes":256,"editedIndex":1999,"replacement":"changed","path":"/entities/0/args/2/value/1999/value/items/0/value"},
+  "cancellation":{"afterTurns":8,"publishedMutations":0,"sourceUnchanged":true,"controlledCloseRequired":true},
+  "reductionCustody":{"from":"IFCWALL","to":"IFCORGANIZATION","attribute":"Description","textBytes":1000000,"cancelAtEveryReductionTick":true,"sourceUnchanged":true,"controlledCloseRequired":true},
+  "identityRepair":{"entity":"IFCWALL","globalId":"","request":{"$ifcType":"IFCWALL"},"generatedGlobalIdEmitted":true,"directAndRetainedEqualExceptGeneratedIdentity":true,"inverseRestoresEmpty":true},
+  "scope":"Original-captured-snapshot cursor preparation; actual Store publication and native scheduler need execution before closure can be claimed."
+}

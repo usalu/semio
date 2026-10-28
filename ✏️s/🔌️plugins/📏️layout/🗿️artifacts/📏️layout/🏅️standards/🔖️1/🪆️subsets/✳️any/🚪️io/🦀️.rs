@@ -3,15 +3,16 @@
 
 #![allow(clippy::result_large_err)]
 #![allow(unexpected_cfgs)]
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as schema;
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.svg"]
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.svg", "stdio.pdf", "stdio.step", "stdio.idml"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.png", "stdio.svg"]
+    &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.png", "stdio.svg", "stdio.pdf", "stdio.step", "stdio.idml"]
 }
 pub fn layout_to_wire(from: &LayoutSnapshot) -> Vec<u8> {
     pack::snapshot::ArtifactPack::encode_pack(from)
@@ -31,6 +32,11 @@ pub mod derived_composition {
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_SVG: Dialect = Dialect { artifact_kind: "s.stdio.svg", standard: StandardId("1.1"), subset: SubsetId("*") };
 
+    const DEP_PDF: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
+    const DEP_STEP: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
+
+    const DEP_IDML: Dialect = Dialect { artifact_kind: "s.stdio.idml", standard: StandardId("8.0"), subset: SubsetId("*") };
+
     pub struct LayoutComposerComposition;
 
     impl ArtifactComposition for LayoutComposerComposition {
@@ -38,11 +44,12 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_SVG]
+            &[DIALECT, DEP_DWG, DEP_DXF, DEP_JSON, DEP_SVG, DEP_PDF, DEP_STEP, DEP_IDML]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
             for source in sources {
+                if [DEP_PDF,DEP_STEP,DEP_IDML,DEP_SVG,DEP_DXF,DEP_DWG].contains(&source.dialect){return Err(ComposeError{message:"layout.import.retained-preparation-required".into(),diagnostics:Vec::new()})}
                 if source.dialect == DIALECT {
                     let native = match &source.payload {
                         AnalyzeSource::Text(t) => AnalyzeSource::Text(t),
@@ -51,48 +58,6 @@ pub mod derived_composition {
                     let analysis = LayoutAnalyzer::analyze(&[native]);
                     if let Some(snapshot) = analysis.parts.snapshot {
                         return Ok(Composition { snapshot, confidence: analysis.confidence, diagnostics: analysis.diagnostics });
-                    }
-                }
-                if source.dialect == DEP_DWG {
-                    let bytes: Vec<u8> = match &source.payload {
-                        AnalyzeSource::Text(t) => t.as_bytes().to_vec(),
-                        AnalyzeSource::Binary(b) => b.to_vec(),
-                    };
-                    if let Ok(snapshot) = crate::import::deserializers::artifacts::dwg::v_ac1018::any::deserialize_bytes(&bytes) {
-                        return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
-                    }
-                }
-                if source.dialect == DEP_DXF {
-                    let text: Option<String> = match &source.payload {
-                        AnalyzeSource::Text(t) => Some(t.to_string()),
-                        AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
-                    };
-                    if let Some(text) = text {
-                        if let Ok(snapshot) = crate::import::deserializers::artifacts::dxf::v_r12::any::deserialize_text(&text) {
-                            return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
-                        }
-                    }
-                }
-                if source.dialect == DEP_JSON {
-                    let text: Option<String> = match &source.payload {
-                        AnalyzeSource::Text(t) => Some(t.to_string()),
-                        AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
-                    };
-                    if let Some(text) = text {
-                        if let Ok(snapshot) = crate::import::deserializers::artifacts::json::v_rfc8259::any::deserialize_text(&text) {
-                            return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
-                        }
-                    }
-                }
-                if source.dialect == DEP_SVG {
-                    let text: Option<String> = match &source.payload {
-                        AnalyzeSource::Text(t) => Some(t.to_string()),
-                        AnalyzeSource::Binary(b) => std::str::from_utf8(b).ok().map(|s| s.to_string()),
-                    };
-                    if let Some(text) = text {
-                        if let Ok(snapshot) = crate::import::deserializers::artifacts::svg::v1_1::any::deserialize_text(&text) {
-                            return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
-                        }
                     }
                 }
             }
@@ -130,44 +95,6 @@ pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<Vector
     ]
 }
 
-/// ▭️ The bounds of a path that is a closed axis-aligned rectangle — the page frames of a trace.
-fn rectangle_bounds(segments: &[VectorSegment]) -> Option<(f64, f64, f64, f64)> {
-    let corners: Vec<_> = segments.iter().filter_map(|segment| match segment {
-        VectorSegment::MoveTo { to } | VectorSegment::LineTo { to } => Some(*to),
-        _ => None,
-    }).collect();
-    let only_lines = segments.iter().all(|segment| matches!(segment, VectorSegment::MoveTo { .. } | VectorSegment::LineTo { .. } | VectorSegment::Close));
-    let closed = matches!(segments.last(), Some(VectorSegment::Close)) || (corners.len() == 5 && (corners[0].x - corners[4].x).abs() < 1e-6 && (corners[0].y - corners[4].y).abs() < 1e-6);
-    if !only_lines || !closed || !(4..=5).contains(&corners.len()) {
-        return None;
-    }
-    let (x, y, width, height) = path_bounds(segments)?;
-    let on_edge = corners.iter().all(|c| ((c.x - x).abs() < 1e-6 || (c.x - x - width).abs() < 1e-6) && ((c.y - y).abs() < 1e-6 || (c.y - y - height).abs() < 1e-6));
-    (on_edge && width > 0.0 && height > 0.0).then_some((x, y, width, height))
-}
-
-fn path_bounds(segments: &[VectorSegment]) -> Option<(f64, f64, f64, f64)> {
-    let mut min_x = f64::INFINITY;
-    let mut min_y = f64::INFINITY;
-    let mut max_x = f64::NEG_INFINITY;
-    let mut max_y = f64::NEG_INFINITY;
-    let mut any = false;
-    for segment in segments {
-        let point = match segment {
-            VectorSegment::MoveTo { to } | VectorSegment::LineTo { to } | VectorSegment::QuadTo { to, .. } | VectorSegment::CubicTo { to, .. } | VectorSegment::ArcTo { to, .. } => Some(*to),
-            VectorSegment::Close => None,
-        };
-        if let Some(point) = point {
-            any = true;
-            min_x = min_x.min(point.x);
-            max_x = max_x.max(point.x);
-            min_y = min_y.min(point.y);
-            max_y = max_y.max(point.y);
-        }
-    }
-    any.then_some((min_x, min_y, max_x - min_x, max_y - min_y))
-}
-
 fn rgba_from_channels(channels: [f32; 4]) -> VectorRgba {
     VectorRgba { r: channels[0], g: channels[1], b: channels[2], a: channels[3] }
 }
@@ -176,54 +103,65 @@ fn drawing_codec() -> Result<&'static dyn semio_framework_io_ports::EmbeddedChil
     semio_s_artifact_layout_layout_model::drawing_codec().map_err(|error| error.to_string())
 }
 
-/// 🖍️ Maps this document's pages onto one translated group per page, each nesting the page boundary plus every visible
-/// frame as a rect-shaped path — `Frame::Rect` keeps its real fill/stroke, `Text`/`Image` frames get a neutral outline (mirrors the blueprint
-/// chrome colors the scene module uses for the same frame kinds). When the document has a composed `background_drawing`, its layers are merged in
-/// first (behind every page layer), so an imported trace an author draws pages on top of actually reaches the export.
+/// 🖍️ Printable page content becomes translated scene groups with actual text, image bytes and center rotations.
+/// Parent-page overrides and layer visibility are applied; imported background layers remain behind native content.
 pub fn layout_snapshot_to_scene(doc: &LayoutSnapshot) -> Result<VectorScene, String> {
     const PAGE_GAP: f64 = 24.0;
-    let mut styles = vec![VectorStyle { name: "page".into(), fill: None, stroke: Some(VectorRgba { r: 0.58, g: 0.65, b: 0.72, a: 1.0 }), stroke_width: Some(2.0), opacity: None }];
-    let mut layers = Vec::with_capacity(doc.pages.len());
-
+    let mut styles = Vec::new();
+    let mut layers = Vec::new();
     if let Some(background) = semio_s_artifact_layout_layout_model::background_drawing_scene(doc).map_err(|error| error.to_string())? {
-        for mut layer in background.layers {
-            layer.id = format!("background-{}", layer.id);
-            layers.push(layer);
-        }
+        for mut layer in background.layers { layer.id = format!("background-{}", layer.id); layers.push(layer); }
         styles.extend(background.styles);
     }
-
     let mut x_offset = 0.0f64;
     let mut canvas_width = 0.0f64;
     let mut canvas_height = 0.0f64;
-
     for page in &doc.pages {
-        let mut children = vec![VectorNode::Path { segments: rect_path_segments(0.0, 0.0, page.width, page.height), style: Some("page".into()) }];
-        for frame in &page.frames {
-            if !frame.visible() {
-                continue;
+        let mut children = Vec::new();
+        let parent = page.parent_page_id.as_ref().and_then(|id| doc.parent_pages.iter().find(|parent| &parent.id == id));
+        let frames = parent.into_iter().flat_map(|parent| &parent.frames).chain(&page.frames);
+        for frame in frames {
+            let inherited = parent.is_some_and(|parent| parent.frames.iter().any(|candidate| std::ptr::eq(candidate, frame)));
+            let override_value = inherited.then(|| page.overrides.iter().find(|value| value.object_id == frame.id())).flatten();
+            if !override_value.and_then(|value| value.visible).unwrap_or_else(|| frame.visible()) { continue; }
+            let visible_layer = page.layers.iter().chain(parent.into_iter().flat_map(|parent| &parent.layers)).find(|layer| layer.id == frame.layer_id()).is_none_or(|layer| layer.visible);
+            if !visible_layer { continue; }
+            let bounds = override_value.and_then(|value| value.bounds.as_ref()).unwrap_or_else(|| frame.bounds());
+            let style_name = format!("frame-{}-{}", page.id, frame.id());
+            let mut nodes = Vec::new();
+            match frame {
+                Frame::Rect { fill, stroke, .. } => {
+                    styles.push(VectorStyle { name: style_name.clone(), fill: fill.map(rgba_from_channels), stroke: stroke.map(rgba_from_channels), stroke_width: stroke.map(|_| 1.0), opacity: None });
+                    nodes.push(VectorNode::Path { segments: rect_path_segments(-bounds.width * 0.5, -bounds.height * 0.5, bounds.width, bounds.height), style: Some(style_name) });
+                },
+                Frame::Text { story_id, inset, .. } => {
+                    let story = doc.stories.iter().find(|story| &story.id == story_id).ok_or_else(|| format!("layout export: missing story {story_id}"))?;
+                    let paragraph = story.style_runs.first().and_then(|run| run.paragraph_style_id.as_ref()).and_then(|id| doc.paragraph_styles.iter().find(|style| &style.id == id));
+                    let size = paragraph.map_or(12.0, |style| style.font_size);
+                    let leading = paragraph.map_or(size * 1.2, |style| style.leading);
+                    let color = story.style_runs.first().and_then(|run| run.character_style_id.as_ref()).and_then(|id| doc.character_styles.iter().find(|style| &style.id == id)).and_then(|style| style.color).unwrap_or([0.0, 0.0, 0.0, 1.0]);
+                    styles.push(VectorStyle { name: style_name.clone(), fill: Some(rgba_from_channels(color)), stroke: None, stroke_width: None, opacity: None });
+                    for (index, value) in story.content.split('\n').enumerate() {
+                        nodes.push(VectorNode::Text { value: value.into(), at: VectorPoint2 { x: -bounds.width * 0.5 + inset.x, y: -bounds.height * 0.5 + inset.y + size + index as f64 * leading }, style: Some(style_name.clone()) });
+                    }
+                },
+                Frame::Image { link_id, .. } => {
+                    let link = doc.links.iter().find(|link| &link.id == link_id).ok_or_else(|| format!("layout export: missing link {link_id}"))?;
+                    let data = link.proxy_data_url.as_deref().ok_or_else(|| format!("layout export: unresolved image {link_id}"))?;
+                    let (header, data) = data.split_once(",").ok_or("layout export: image data URL")?;
+                    let mime = header.strip_prefix("data:").and_then(|header| header.strip_suffix(";base64")).filter(|mime| matches!(*mime, "image/png" | "image/jpeg" | "image/gif" | "image/svg+xml")).ok_or("layout export: unsupported image data URL")?;
+                    let bytes = store::pack_rt::pack_value_from_base64(data).map_err(|error| error.to_string())?;
+                    nodes.push(VectorNode::Image { at: VectorPoint2 { x: -bounds.width * 0.5, y: -bounds.height * 0.5 }, width: bounds.width, height: bounds.height, mime: mime.into(), bytes });
+                },
             }
-            let bounds = frame.bounds();
-            let segments = rect_path_segments(bounds.x, bounds.y, bounds.width, bounds.height);
-            let (fill, stroke) = match frame {
-                Frame::Rect { fill, stroke, .. } => (fill.map(rgba_from_channels), stroke.map(rgba_from_channels)),
-                Frame::Text { .. } => (None, Some(VectorRgba { r: 0.2, g: 0.55, b: 0.9, a: 0.9 })),
-                Frame::Image { .. } => (None, Some(VectorRgba { r: 0.85, g: 0.45, b: 0.2, a: 0.9 })),
-            };
-            if fill.is_none() && stroke.is_none() {
-                children.push(VectorNode::Path { segments, style: None });
-                continue;
-            }
-            let style_name = format!("frame-{}", frame.id());
-            styles.push(VectorStyle { name: style_name.clone(), fill, stroke, stroke_width: stroke.map(|_| 1.0), opacity: None });
-            children.push(VectorNode::Path { segments, style: Some(style_name) });
+            let half = bounds.rotation * 0.5;
+            children.push(VectorNode::Group { transform: VectorTransform { translation: VectorPoint3 { x: bounds.x + bounds.width * 0.5, y: bounds.y + bounds.height * 0.5, z: 0.0 }, rotation: semio_framework_io_ports::VectorQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() }, scale: VectorPoint3 { x: 1.0, y: 1.0, z: 1.0 } }, children: nodes });
         }
         layers.push(VectorLayer { id: page.id.clone(), name: page.name.clone(), visible: true, root: VectorNode::Group { transform: VectorTransform { translation: VectorPoint3 { x: x_offset, y: 0.0, z: 0.0 }, ..VectorTransform::identity() }, children } });
         canvas_width = (x_offset + page.width).max(canvas_width);
         canvas_height = page.height.max(canvas_height);
         x_offset += page.width + PAGE_GAP;
     }
-
     Ok(VectorScene { schema: String::new(), canvas: VectorCanvas { width: canvas_width.max(1.0), height: canvas_height.max(1.0), background: Some(VectorRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) }, styles, layers })
 }
 
@@ -248,76 +186,16 @@ pub fn layout_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), 
     Ok((svg, width, height))
 }
 
-/// 📥️ Reads one external document of `format` as a drawing and frames a layout document on it; see [`layout_document_json_from_drawing`].
-pub fn layout_document_json_from_format(format: &str, bytes: &[u8], name: &str) -> Result<Value, String> {
-    let content = drawing_codec()?.import(format, bytes)?;
-    layout_document_json_from_drawing(&content, format, name)
-}
-
-/// 📥️ Frames one page per closed axis-aligned rectangle of an imported drawing (a dwg, dxf or svg
-/// trace) and keeps the whole drawing as the document's background, so an author lays pages out on
-/// top of the real plan.
-pub fn layout_document_json_from_drawing(content: &Value, source: &str, name: &str) -> Result<Value, String> {
-    let scene: VectorScene = drawing_codec()?.lower(content).map_err(|error| error.to_string())?;
-    let background_child = semio_s_artifact_layout_layout_model::background_drawing_child_handle(source, content);
-    let mut rects: Vec<(f64, f64, f64, f64)> = Vec::new();
-    for layer in &scene.layers {
-        let nodes: Vec<&VectorNode> = match &layer.root {
-            VectorNode::Group { children, .. } => children.iter().collect(),
-            other => vec![other],
-        };
-        for node in nodes {
-            if let VectorNode::Path { segments, .. } = node {
-                if let Some(bounds) = rectangle_bounds(segments) {
-                    rects.push(bounds);
-                }
-            }
-        }
-    }
-    if rects.is_empty() && scene.canvas.width > 0.0 && scene.canvas.height > 0.0 {
-        rects.push((0.0, 0.0, scene.canvas.width, scene.canvas.height));
-    }
-    let pages: Vec<Page> = rects
-        .into_iter()
-        .enumerate()
-        .map(|(index, (_x, _y, width, height))| {
-            let id = format!("page-{}", index + 1);
-            let layer_id = format!("layer-{id}");
-            Page {
-                id,
-                name: format!("Page {}", index + 1),
-                spread_id: "spread-1".into(),
-                parent_page_id: None,
-                width,
-                height,
-                margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
-                columns: PageColumns { count: 1, gutter: 0.0 },
-                guides: Vec::new(),
-                layer_ids: vec![layer_id.clone()],
-                layers: vec![Layer { id: layer_id, name: "Content".into(), visible: true, locked: false, object_ids: Vec::new() }],
-                frames: Vec::new(),
-                overrides: Vec::new(),
-            }
-        })
-        .collect();
-    let page_ids = pages.iter().map(|page| page.id.clone()).collect();
-    let document = LayoutSnapshot {
-        schema: LAYOUT_DOCUMENT_SCHEMA.into(),
-        name: name.into(),
-        grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
-        paragraph_styles: Vec::new(),
-        character_styles: Vec::new(),
-        stories: Vec::new(),
-        links: Vec::new(),
-        parent_pages: Vec::new(),
-        spreads: vec![Spread { id: "spread-1".into(), name: "Spread 1".into(), page_ids }],
-        pages,
-        print_target: None,
-        data_fields: None,
-        background_drawing: Some(background_child),
-        referenced_model: None,
-    };
-    Ok(document.to_value())
+/// 🧭️ Cold external analysis preserves original encoded bytes before identity, native decoding and publication.
+pub fn layout_import_sources_from_format(format:&str,bytes:&[u8],name:&str,control:&mut crate::interchange::InterchangeControl<'_>)->Result<crate::interchange::LayoutImportSourcePlan,String>{
+    use crate::interchange::{LayoutExternalDrawingFormat,LayoutImportSourcePlan,InterchangeProgress,MAX_INTERCHANGE_BYTES};
+    let format=match format{"svg"=>LayoutExternalDrawingFormat::Svg,"dxf"=>LayoutExternalDrawingFormat::Dxf,"dwg"=>LayoutExternalDrawingFormat::Dwg,_=>return Err("layout.import.drawing-format".into())};
+    if bytes.len()>MAX_INTERCHANGE_BYTES{return Err("layout.interchange.byte-limit".into())}
+    if !control(InterchangeProgress{completed:0,total:bytes.len()}){return Err("layout.interchange.cancelled".into())}
+    let mut source=Vec::new();source.try_reserve_exact(bytes.len()).map_err(|_|"layout.import.source-allocation")?;
+    for(at,chunk)in bytes.chunks(4096).enumerate(){if !control(InterchangeProgress{completed:at*4096,total:bytes.len()}){return Err("layout.interchange.cancelled".into())}source.extend_from_slice(chunk)}
+    if !control(InterchangeProgress{completed:bytes.len(),total:bytes.len()}){return Err("layout.interchange.cancelled".into())}
+    Ok(LayoutImportSourcePlan::External{format,source,name:name.into()})
 }
 //#endregion 🔖️MediaImportExport
 
@@ -406,6 +284,33 @@ pub mod io_registry {
             Ok(ComposedArtifact { dialect: EXPORT_JSON_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
         })
     }
+    const EXPORT_PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId("*") };
+    fn compose_export_pdf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let result = crate::interchange::export_document("pdf", &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            let diagnostics = result.diagnostics.into_iter().map(|diagnostic| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(diagnostic.code), severity: semio_framework_diagnostic::Severity::Warning, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: diagnostic.message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }).collect();
+            Ok(ComposedArtifact { dialect: EXPORT_PDF_DIALECT, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_framework_plugin::io::Confidence::Medium })
+        })
+    }
+    const EXPORT_STEP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.step", standard: StandardId("ap214"), subset: SubsetId("*") };
+    fn compose_export_step(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let result = crate::interchange::export_document("step", &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            let diagnostics = result.diagnostics.into_iter().map(|diagnostic| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(diagnostic.code), severity: semio_framework_diagnostic::Severity::Warning, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: diagnostic.message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }).collect();
+            Ok(ComposedArtifact { dialect: EXPORT_STEP_DIALECT, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_framework_plugin::io::Confidence::Medium })
+        })
+    }
+    const EXPORT_IDML_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.idml", standard: StandardId("8.0"), subset: SubsetId("*") };
+    fn compose_export_idml(sources: &[ErasedComposeSource]) -> semio_framework_plugin::io::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let result = crate::interchange::export_document("idml", &snapshot, &mut |_| true).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            let diagnostics = result.diagnostics.into_iter().map(|diagnostic| semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(diagnostic.code), severity: semio_framework_diagnostic::Severity::Warning, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: diagnostic.message, expected: None, scope: semio_framework_diagnostic::FaultScope::default() }).collect();
+            Ok(ComposedArtifact { dialect: EXPORT_IDML_DIALECT, payload: IoPayload::Binary(result.value), diagnostics, confidence: semio_framework_plugin::io::Confidence::Medium })
+        })
+    }
     //#endregion 🔖️ExportEntries
 
     pub fn entries() -> &'static [ComposerEntry] {
@@ -413,6 +318,9 @@ pub mod io_registry {
             .get_or_init(|| {
                 vec![
                     composer_entry_of::<LayoutAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_PDF_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_pdf },
+                    ComposerEntry { writes: EXPORT_STEP_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_step },
+                    ComposerEntry { writes: EXPORT_IDML_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_idml },
                     ComposerEntry { writes: EXPORT_SVG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_svg },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_json },
                     ComposerEntry { writes: EXPORT_PNG_DIALECT, reads: &[LAYOUT_DIALECT], compose: compose_export_png },
@@ -637,3 +545,6 @@ pub mod import {
     }
 }
 //#endregion 🪢️TaxonomyMounts
+
+#[path = "🔀️interchange/🦀️.rs"]
+pub mod interchange;

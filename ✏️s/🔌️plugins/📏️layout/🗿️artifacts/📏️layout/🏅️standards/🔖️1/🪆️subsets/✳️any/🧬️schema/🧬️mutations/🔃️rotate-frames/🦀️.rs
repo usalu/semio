@@ -15,7 +15,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 //#region 🔃️RotateFrames
 /// 🔃️ `rotate-frames` payload — the page, the frames it turns (literal ids), the pivot and the counter-clockwise angle
 /// in radians.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -76,6 +76,7 @@ pub fn diff_rotate_frames(payload: &RotateFrames, base: &LayoutSnapshot) -> prot
 //#region ↩️Inverse
 /// ↩️ Per frame the turn moves, the absolute origin and rotation setters restoring the BASE pose.
 pub fn inverse_rotate_frames<Op: From<crate::move_frame::MoveFrame> + From<crate::rotate_frame::RotateFrame>>(payload: &RotateFrames, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_rotate_frames(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     if !(payload.pivot_x.is_finite() && payload.pivot_y.is_finite() && payload.angle.is_finite()) || layout_frame_targets_invariant(&payload.targets).is_err() {
         return Ok(Vec::new());
     }
@@ -93,3 +94,13 @@ pub fn inverse_rotate_frames<Op: From<crate::move_frame::MoveFrame> + From<crate
 }
 //#endregion ↩️Inverse
 
+
+impl PartialEq for RotateFrames {
+    fn eq(&self, other: &Self) -> bool {
+        self.page_id == other.page_id
+            && self.targets == other.targets
+            && semio_framework_value::equal_f64(self.pivot_x, other.pivot_x)
+            && semio_framework_value::equal_f64(self.pivot_y, other.pivot_y)
+            && semio_framework_value::equal_f64(self.angle, other.angle)
+    }
+}

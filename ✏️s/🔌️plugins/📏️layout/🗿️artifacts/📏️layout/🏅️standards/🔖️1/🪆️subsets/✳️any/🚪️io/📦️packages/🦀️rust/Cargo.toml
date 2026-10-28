@@ -18,6 +18,7 @@ path = "../../🦀️.rs"
 [dependencies]
 semio-framework-ui-locale = { workspace = true }
 semio-framework-schema-state = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-s-artifact-draw-drawing-model = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-async = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
@@ -34,8 +35,31 @@ semio-s-artifact-layout-layout-mutations = { workspace = true }
 semio-framework-io-ports = { workspace = true }
 semio-framework-pack = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust" }
 
+semio-s-artifact-stdio-pdf = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-step-snapshot = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract = { path = "../../../../../../../../../../🗄️stdio/📇️registry/🧬️contract/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-zip = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🎒️zip/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-xml = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📰️xml/📦️packages/🦀️rust" }
+
+semio-s-artifact-stdio-png = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust" }
+
+semio-s-artifact-stdio-idml = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📚️idml/📦️packages/🦀️rust" }
+
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+semio-s-artifact-layout-drawing-composition = { path = "../../../../../../../🔨️modules/🧩️drawing-composition/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 serde_json = { workspace = true }
+
+semio-s-artifact-stdio-pdf-test-oracle = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📖️pdf/🔮️oracles/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-step-test-oracle = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📐️step/🔮️oracles/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-zip-test-oracle = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🎒️zip/🔮️oracles/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-xml-test-oracle = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/📰️xml/🔮️oracles/📦️packages/🦀️rust" }
+
+semio-repo-test-host = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust", default-features = false }
+
+semio-s-artifact-stdio-svg = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust" }
+
+lopdf = { version = "0.44", default-features = false }

@@ -1,0 +1,6 @@
+from pathlib import Path
+p=Path('.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️21/COMPLETE-IFC-4X3-ARTIFACT-EDITING-AND-INTERCHANGE/native-expression-cases.ts');s=p.read_text(encoding='utf-8');s+='''
+const binding=await Bun.file(resolve(base,'binding-expression-cases.json')).json();
+await writeFile(resolve(base,'binding-cases.rs'),'//! 🧪 Canonical binding AST fixtures share derived attribute and local shadow contracts.\\nstatic BINDING_READS:&[(&str,ExpressExpression)]=&['+binding.reads.map((source:string)=>`(${JSON.stringify(source)},${expression(parseExpressExpression(source))})`).join(',')+'];\\nstatic BINDING_QUERY:ExpressExpression='+expression(parseExpressExpression(binding.query))+';\\nstatic SHADOW_PROGRAM:ExpressProgram=ExpressProgram{schema:"IFC4X3_ADD2",functions:'+array(binding.shadows.map((row:any)=>new ExpressParser(row.source).function(row.name)),fn)+',global_rules:&[],rules:&[],derived:&[],unique:&[],bounds:&[],inverse:&[]};\\nstatic SHADOW_CASES:&[(&str,&[i128],i128)]=&['+binding.shadows.map((row:any)=>`(${JSON.stringify(row.name)},&[${row.arguments.join(',')}],${row.expected})`).join(',')+'];\\n');
+console.log('[DEBUG] native binding fixture reads',binding.reads.length);
+''';p.write_text(s,encoding='utf-8',newline='\n')

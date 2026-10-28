@@ -191,25 +191,35 @@ fn conditions_rows(snapshot: &ModelSnapshot, ids: &[&str], labels: &BimLabels) -
 //#endregion 🔖️Actions
 
 //#region 🔖️PropertySets
+/// 🏷️ Compact display captions preserve complete source names in action arguments.
+fn property_caption(value: &str) -> String {
+    if value.len() <= 160 { return value.to_owned(); }
+    let mut end = 157;
+    while !value.is_char_boundary(end) { end -= 1; }
+    format!("{}…", &value[..end])
+}
+
 /// 🧾️ The input and the remove row of one property of one element.
-fn property_pair(id: &str, pset: &str, name: &str, value: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue, labels: &BimLabels) -> UiAssemblyResult<Vec<BuiltNode>> {
-    let row_id = format!("{ROOT}.property.{pset}.{name}");
+fn property_pair(id: &str, pset: &str, name: &str, value: &semio_s_artifact_bim_model_schema::standards::v1::subsets::any::schema::snapshot::values::PropertyValue, ordinal: usize, labels: &BimLabels) -> UiAssemblyResult<Vec<BuiltNode>> {
+    let row_id = format!("{ROOT}.property.{ordinal}");
     let args = || ui_value_map([("ids", ui_value_list([ui_value_text(id)?])?), ("pset", ui_value_text(pset)?), ("property", ui_value_text(name)?)]);
-    let label = format!("{pset} · {name} ({})", semio_s_artifact_bim_model_entities::editor::bim::entities::property_type(value));
+    let caption = format!("{} · {}", property_caption(pset), property_caption(name));
+    let label = format!("{caption} ({})", semio_s_artifact_bim_model_entities::editor::bim::entities::property_type(value));
     let set = input_row(&row_id, &label, &property_text(value), None, bim_action("setProperty", Some(args()?)))?;
-    let remove = tree_item_with_icon(format!("{row_id}.remove"), Label::data(BimLabels::named(labels.action_remove_property, &format!("{pset}.{name}"))), "trash", bim_action("removeProperty", Some(args()?)))?;
+    let remove = tree_item_with_icon(format!("{row_id}.remove"), Label::data(BimLabels::named(labels.action_remove_property, &caption)), "trash", bim_action("removeProperty", Some(args()?)))?;
     Ok(vec![set, remove])
 }
 
-/// 🧾️ The rows of the property sets of one element: an input and a remove row per property, then the add row. A property whose names overflow the fixed UI capacity is left out rather than
-/// failing the panel.
+/// 🧾️ Exact source names remain in action arguments; bounded captions and render ordinals keep UI admission explicit.
 fn property_rows(snapshot: &ModelSnapshot, id: &str, labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
     let mut rows: Vec<UiAssemblyResult<BuiltNode>> = Vec::new();
+    let mut ordinal = 0;
     for (pset, properties) in snapshot.properties.get(id).into_iter().flatten() {
         for (name, value) in properties {
-            if let Ok(pair) = property_pair(id, pset, name, value, labels) {
+            if let Ok(pair) = property_pair(id, pset, name, value, ordinal, labels) {
                 rows.extend(pair.into_iter().map(Ok));
             }
+            ordinal += 1;
         }
     }
     rows.push(ids_args(&[id]).and_then(|args| input_row(&format!("{ROOT}.property.add"), labels.action_add_property.as_str(), "", None, bim_action("setProperty", Some(args)))));

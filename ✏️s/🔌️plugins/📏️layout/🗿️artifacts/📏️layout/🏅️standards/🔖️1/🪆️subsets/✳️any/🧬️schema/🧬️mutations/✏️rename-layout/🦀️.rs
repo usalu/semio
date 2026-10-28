@@ -1,6 +1,5 @@
 //! ✏️ `rename-layout` — changes the document's identity `name` field.
 
-
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};

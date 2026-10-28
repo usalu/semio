@@ -1,0 +1,657 @@
+{
+  "schema": "stdio.ifc.declaration-domain",
+  "revision": 1,
+  "policy": {
+    "depth": 128,
+    "reference": "positive exact u64, exactly one declared target including complex constituents",
+    "unique": "EXPRESS primitive equality; SET implicit; BAG unordered; LIST/ARRAY ordered",
+    "repair": "changed subtree strict, ancestors do not worsen cardinality or duplicate multiplicity, unrelated invalid siblings retained",
+    "draft": "type variants explicitly create incomplete drafts; value edits are strict"
+  },
+  "cases": [
+    {
+      "name": "unicode scalar width",
+      "expression": {
+        "kind": "named",
+        "name": "STRING",
+        "width": 2
+      },
+      "value": {
+        "kind": "string",
+        "value": "A😀"
+      },
+      "admitted": true
+    },
+    {
+      "name": "unicode over width",
+      "expression": {
+        "kind": "named",
+        "name": "STRING",
+        "width": 1
+      },
+      "value": {
+        "kind": "string",
+        "value": "A😀"
+      },
+      "admitted": false
+    },
+    {
+      "name": "fixed string width",
+      "expression": {
+        "kind": "named",
+        "name": "STRING",
+        "width": 2,
+        "fixed": true
+      },
+      "value": {
+        "kind": "string",
+        "value": "A"
+      },
+      "admitted": false
+    },
+    {
+      "name": "finite real",
+      "expression": {
+        "kind": "named",
+        "name": "REAL"
+      },
+      "value": {
+        "kind": "real",
+        "value": "3ff0000000000000"
+      },
+      "admitted": true
+    },
+    {
+      "name": "infinite real",
+      "expression": {
+        "kind": "named",
+        "name": "REAL"
+      },
+      "value": {
+        "kind": "real",
+        "value": "7ff0000000000000"
+      },
+      "admitted": false
+    },
+    {
+      "name": "binary declared width",
+      "expression": {
+        "kind": "named",
+        "name": "BINARY",
+        "width": 3,
+        "fixed": true
+      },
+      "value": {
+        "kind": "binary",
+        "value": "17"
+      },
+      "admitted": true
+    },
+    {
+      "name": "binary unused high bit",
+      "expression": {
+        "kind": "named",
+        "name": "BINARY"
+      },
+      "value": {
+        "kind": "binary",
+        "value": "1F"
+      },
+      "admitted": false
+    },
+    {
+      "name": "enum literal",
+      "expression": {
+        "kind": "named",
+        "name": "IFCWALLTYPEENUM"
+      },
+      "value": {
+        "kind": "enum",
+        "value": "standard"
+      },
+      "admitted": true
+    },
+    {
+      "name": "wrong enum literal",
+      "expression": {
+        "kind": "named",
+        "name": "IFCWALLTYPEENUM"
+      },
+      "value": {
+        "kind": "enum",
+        "value": "banana"
+      },
+      "admitted": false
+    },
+    {
+      "name": "select typed measure",
+      "expression": {
+        "kind": "named",
+        "name": "IFCVALUE"
+      },
+      "value": {
+        "kind": "typedValue",
+        "value": {
+          "name": "IFCLENGTHMEASURE",
+          "items": [
+            {
+              "kind": "real",
+              "value": "3ff0000000000000"
+            }
+          ]
+        }
+      },
+      "admitted": true
+    },
+    {
+      "name": "select rejects extra payload",
+      "expression": {
+        "kind": "named",
+        "name": "IFCVALUE"
+      },
+      "value": {
+        "kind": "typedValue",
+        "value": {
+          "name": "IFCLENGTHMEASURE",
+          "items": [
+            {
+              "kind": "real",
+              "value": "3ff0000000000000"
+            },
+            {
+              "kind": "real",
+              "value": "4000000000000000"
+            }
+          ]
+        }
+      },
+      "admitted": false
+    },
+    {
+      "name": "select rejects arbitrary constructor",
+      "expression": {
+        "kind": "named",
+        "name": "IFCVALUE"
+      },
+      "value": {
+        "kind": "typedValue",
+        "value": {
+          "name": "IFCWALL",
+          "items": [
+            {
+              "kind": "integer",
+              "value": "1"
+            }
+          ]
+        }
+      },
+      "admitted": false
+    },
+    {
+      "name": "reference exact maximum identity",
+      "expression": {
+        "kind": "named",
+        "name": "IFCUNIT"
+      },
+      "value": {
+        "kind": "reference",
+        "value": "18446744073709551615"
+      },
+      "admitted": true
+    },
+    {
+      "name": "reference missing",
+      "expression": {
+        "kind": "named",
+        "name": "IFCUNIT"
+      },
+      "value": {
+        "kind": "reference",
+        "value": "3"
+      },
+      "admitted": false
+    },
+    {
+      "name": "reference wrong type",
+      "expression": {
+        "kind": "named",
+        "name": "IFCWALL"
+      },
+      "value": {
+        "kind": "reference",
+        "value": "18446744073709551615"
+      },
+      "admitted": false
+    },
+    {
+      "name": "reference zero",
+      "expression": {
+        "kind": "named",
+        "name": "IFCUNIT"
+      },
+      "value": {
+        "kind": "reference",
+        "value": "0"
+      },
+      "admitted": false
+    },
+    {
+      "name": "required unset",
+      "expression": {
+        "kind": "named",
+        "name": "STRING"
+      },
+      "value": {
+        "kind": "unset"
+      },
+      "admitted": false
+    },
+    {
+      "name": "optional unset",
+      "expression": {
+        "kind": "named",
+        "name": "STRING",
+        "optional": true
+      },
+      "value": {
+        "kind": "unset"
+      },
+      "admitted": true
+    },
+    {
+      "name": "set implicit numeric uniqueness",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "SET",
+        "lower": 1,
+        "item": {
+          "kind": "named",
+          "name": "NUMBER"
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "integer",
+            "value": "1"
+          },
+          {
+            "kind": "real",
+            "value": "3ff0000000000000"
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "name": "negative zero uniqueness",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "LIST",
+        "unique": true,
+        "item": {
+          "kind": "named",
+          "name": "REAL"
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": "0000000000000000"
+          },
+          {
+            "kind": "real",
+            "value": "8000000000000000"
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "name": "exact mixed integer equality",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "SET",
+        "item": {
+          "kind": "named",
+          "name": "NUMBER"
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "integer",
+            "value": "9007199254740993"
+          },
+          {
+            "kind": "real",
+            "value": "4340000000000000"
+          }
+        ]
+      },
+      "admitted": true
+    },
+    {
+      "name": "array cardinality",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": 2,
+        "upper": 3,
+        "item": {
+          "kind": "named",
+          "name": "INTEGER"
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "integer",
+            "value": "1"
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "name": "nested BAG semantic uniqueness",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "SET",
+        "item": {
+          "kind": "aggregate",
+          "aggregate": "BAG",
+          "item": {
+            "kind": "named",
+            "name": "NUMBER"
+          }
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "integer",
+                "value": "1"
+              },
+              {
+                "kind": "integer",
+                "value": "2"
+              }
+            ]
+          },
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "integer",
+                "value": "2"
+              },
+              {
+                "kind": "real",
+                "value": "3ff0000000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "name": "ordered LIST remains distinct",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "SET",
+        "item": {
+          "kind": "aggregate",
+          "aggregate": "LIST",
+          "item": {
+            "kind": "named",
+            "name": "NUMBER"
+          }
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "integer",
+                "value": "1"
+              },
+              {
+                "kind": "integer",
+                "value": "2"
+              }
+            ]
+          },
+          {
+            "kind": "aggregate",
+            "value": [
+              {
+                "kind": "integer",
+                "value": "2"
+              },
+              {
+                "kind": "real",
+                "value": "3ff0000000000000"
+              }
+            ]
+          }
+        ]
+      },
+      "admitted": true
+    },
+    {
+      "name": "ARRAY optional items do not make collection optional",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": 1,
+        "upper": 2,
+        "optional": true,
+        "item": {
+          "kind": "named",
+          "name": "INTEGER"
+        }
+      },
+      "value": {
+        "kind": "unset"
+      },
+      "admitted": false
+    },
+    {
+      "name": "ARRAY optional items retain unset slots",
+      "expression": {
+        "kind": "aggregate",
+        "aggregate": "ARRAY",
+        "lower": 1,
+        "upper": 2,
+        "optional": true,
+        "item": {
+          "kind": "named",
+          "name": "INTEGER"
+        }
+      },
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "unset"
+          },
+          {
+            "kind": "integer",
+            "value": "2"
+          }
+        ]
+      },
+      "admitted": true
+    }
+  ],
+  "targets": [
+    {
+      "id": "18446744073709551615",
+      "types": [
+        "IFCDERIVEDUNIT",
+        "IFCSIUNIT"
+      ]
+    }
+  ],
+  "repairs": [
+    {
+      "name": "repair list deficit",
+      "aggregate": "LIST",
+      "lower": 3,
+      "before": [
+        "1"
+      ],
+      "after": [
+        "1",
+        "2"
+      ],
+      "route": [
+        1
+      ],
+      "operation": "insert",
+      "admitted": true
+    },
+    {
+      "name": "do not worsen list deficit",
+      "aggregate": "LIST",
+      "lower": 3,
+      "before": [
+        "1",
+        "2"
+      ],
+      "after": [
+        "1"
+      ],
+      "route": [
+        1
+      ],
+      "operation": "remove",
+      "admitted": false
+    },
+    {
+      "name": "ignore unrelated invalid sibling",
+      "aggregate": "LIST",
+      "before": [
+        "invalid",
+        "1"
+      ],
+      "after": [
+        "invalid",
+        "2"
+      ],
+      "route": [
+        1
+      ],
+      "operation": "set",
+      "admitted": true
+    },
+    {
+      "name": "reject changed invalid leaf",
+      "aggregate": "LIST",
+      "before": [
+        "invalid",
+        "1"
+      ],
+      "after": [
+        "invalid",
+        "invalid"
+      ],
+      "route": [
+        1
+      ],
+      "operation": "set",
+      "admitted": false
+    },
+    {
+      "name": "repair duplicate set",
+      "aggregate": "SET",
+      "before": [
+        "1",
+        "1",
+        "2"
+      ],
+      "after": [
+        "1",
+        "3",
+        "2"
+      ],
+      "route": [
+        1
+      ],
+      "operation": "set",
+      "admitted": true
+    },
+    {
+      "name": "reject new duplicate group",
+      "aggregate": "SET",
+      "before": [
+        "1",
+        "1",
+        "2"
+      ],
+      "after": [
+        "1",
+        "2",
+        "2"
+      ],
+      "route": [
+        1
+      ],
+      "operation": "set",
+      "admitted": false
+    },
+    {
+      "name": "repair excess list",
+      "aggregate": "LIST",
+      "upper": 1,
+      "before": [
+        "1",
+        "2",
+        "3"
+      ],
+      "after": [
+        "1",
+        "2"
+      ],
+      "route": [
+        2
+      ],
+      "operation": "remove",
+      "admitted": true
+    },
+    {
+      "name": "array partial removal forbidden",
+      "aggregate": "ARRAY",
+      "lower": 0,
+      "upper": 2,
+      "before": [
+        "1",
+        "2",
+        "3"
+      ],
+      "after": [
+        "1",
+        "2"
+      ],
+      "route": [
+        2
+      ],
+      "operation": "remove",
+      "admitted": false
+    }
+  ]
+}

@@ -53,6 +53,9 @@ pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protoc
     let Some(at) = page.frames.iter().position(|frame| frame.id() == payload.frame_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
     };
+    if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_frame_removal(base, [payload.frame_id.as_str()]) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.frame_id.clone()]);
+    }
     protocol::MutationOutcome::new(LayoutDiff {
         pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { frames: PageFramesDelta::removal_by_id(payload.frame_id.clone(), at), ..Default::default() } }], ..Default::default() }),
         ..Default::default()
@@ -62,6 +65,7 @@ pub fn diff_delete_frame(payload: &DeleteFrame, base: &LayoutSnapshot) -> protoc
 
 //#region ➖️DeleteFrame
 pub fn inverse_delete_frame<Op: From<crate::create_frame::CreateFrame>>(payload: &DeleteFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_delete_frame(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();

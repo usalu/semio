@@ -1,0 +1,3 @@
+//! 🧪️ Built-in headless sources are stationary and independent of UI font installation.
+use super::*;
+#[test]fn neutral_compiled_catalog_is_available_without_registration(){let catalog:serde_json::Value=serde_json::from_str(include_str!("../📦️catalog/🔣️.json")).unwrap();let fonts=catalog["fonts"].as_array().unwrap();assert_eq!(export_font_count(),fonts.len());for(index,record)in fonts.iter().enumerate(){let source=export_font_source(index).unwrap();assert_eq!(source.len()as u64,record["size"].as_u64().unwrap());assert_eq!(&source[..4],&[0,1,0,0]);if index!=0{assert!(std::ptr::eq(source,HEADLESS_TEXT_FONTS[index-1]));}}assert!(export_font_source(fonts.len()).is_none());assert!(export_font_source(usize::MAX).is_none());}

@@ -678,3 +678,8 @@ use std::mem::ManuallyDrop;
 #[path = "🛬️lifted/👁️read/🦀️.rs"]
 mod lifted_read;
 pub use lifted_read::*;
+
+#[path="🎯️editor/🦀️.rs"]
+pub mod editor;
+
+#[path="📖️vector/🦀️.rs"]pub mod vector_read;

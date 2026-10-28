@@ -1,0 +1,1133 @@
+{
+  "schema": "ifc-csg-circular-primitive-neutral",
+  "version": 1,
+  "nativeExecution": false,
+  "matrixComposition": "product*mappingTarget*mappingOrigin*primitivePosition",
+  "cases": [
+    {
+      "id": "cylinder-default",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            3
+          ]
+        ],
+        "polygonVolume": 9.412820216747082,
+        "idealVolume": 9.42477796076938,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cone-default",
+      "source": {
+        "primitive": "cone",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            3
+          ]
+        ],
+        "polygonVolume": 3.1376067389156943,
+        "idealVolume": 3.141592653589793,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cylinder-positioned",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            2,
+            3,
+            4
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            0,
+            1,
+            0
+          ]
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            3,
+            4,
+            7
+          ]
+        ],
+        "polygonVolume": 9.412820216747082,
+        "idealVolume": 9.42477796076938,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cone-tilted",
+      "source": {
+        "primitive": "cone",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            2,
+            3,
+            4
+          ],
+          "axis": [
+            1,
+            0,
+            0
+          ],
+          "refDirection": [
+            0,
+            1,
+            0
+          ]
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            2,
+            2,
+            3
+          ],
+          [
+            5,
+            4,
+            5
+          ]
+        ],
+        "polygonVolume": 3.1376067389156943,
+        "idealVolume": 3.141592653589793,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cylinder-millimetres",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3000,
+        "radius": 1000,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": "MILLI",
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            3
+          ]
+        ],
+        "polygonVolume": 9.412820216747082,
+        "idealVolume": 9.42477796076938,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cone-millimetres",
+      "source": {
+        "primitive": "cone",
+        "height": 3000,
+        "radius": 1000,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": "MILLI",
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            3
+          ]
+        ],
+        "polygonVolume": 3.1376067389156943,
+        "idealVolume": 3.141592653589793,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cylinder-mapped-reflected",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": {
+          "origin": {
+            "location": [
+              0,
+              0,
+              0
+            ],
+            "axis": null,
+            "refDirection": null
+          },
+          "target": [
+            5,
+            -2,
+            7
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            4
+          ]
+        },
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            3,
+            -5,
+            7
+          ],
+          [
+            7,
+            1,
+            19
+          ]
+        ],
+        "polygonVolume": 225.90768520192998,
+        "idealVolume": 226.1946710584651,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cone-mapped-origin",
+      "source": {
+        "primitive": "cone",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": {
+          "origin": {
+            "location": [
+              1,
+              2,
+              0
+            ],
+            "axis": [
+              0,
+              0,
+              1
+            ],
+            "refDirection": [
+              0,
+              1,
+              0
+            ]
+          },
+          "target": [
+            3,
+            4,
+            5
+          ],
+          "axes": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 1,
+          "secondary": [
+            1,
+            1
+          ]
+        },
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 72,
+        "bounds": [
+          [
+            3,
+            5,
+            5
+          ],
+          [
+            5,
+            7,
+            8
+          ]
+        ],
+        "polygonVolume": 3.1376067389156943,
+        "idealVolume": 3.141592653589793,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cylinder-absolute-tight",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0.0001,
+          "relativeChordError": 0,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 224,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            3
+          ]
+        ],
+        "polygonVolume": 9.42354210869197,
+        "idealVolume": 9.42477796076938,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cone-absolute-coarse",
+      "source": {
+        "primitive": "cone",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0.1,
+          "relativeChordError": 0,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "supported",
+        "segments": 8,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            3
+          ]
+        ],
+        "polygonVolume": 2.8284271247461903,
+        "idealVolume": 3.141592653589793,
+        "reason": "Exact declared circular CSG primitive"
+      }
+    },
+    {
+      "id": "cylinder-integer-carriers",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "integer",
+        "radiusKind": "integer",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "Declared Height and Radius use REAL source carriers; INTEGER tokens remain editable but are not admitted geometry"
+      }
+    },
+    {
+      "id": "height-zero",
+      "source": {
+        "primitive": "cylinder",
+        "height": 0,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "IfcPositiveLengthMeasure WHERE false"
+      }
+    },
+    {
+      "id": "height-negative",
+      "source": {
+        "primitive": "cylinder",
+        "height": -3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "IfcPositiveLengthMeasure WHERE false"
+      }
+    },
+    {
+      "id": "radius-zero",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 0,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "IfcPositiveLengthMeasure WHERE false"
+      }
+    },
+    {
+      "id": "radius-negative",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": -1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "IfcPositiveLengthMeasure WHERE false"
+      }
+    },
+    {
+      "id": "radius-string",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "string",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "Invalid REAL defined-domain carrier"
+      }
+    },
+    {
+      "id": "foreign-position",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "foreign-position"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "Position requires actual Axis2Placement3D"
+      }
+    },
+    {
+      "id": "segment-cap",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "Source valid; original sampling grant cannot certify tolerance"
+      }
+    },
+    {
+      "id": "subnormal-radius",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 5e-324,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": null,
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "Source positive; selected finite normal SI/precision admission refuses"
+      }
+    },
+    {
+      "id": "mapping-zero-scale",
+      "source": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "heightKind": "real",
+        "radiusKind": "real",
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "productPlacement": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": null,
+          "refDirection": null
+        },
+        "unitPrefix": null,
+        "mapping": {
+          "origin": {
+            "location": [
+              0,
+              0,
+              0
+            ],
+            "axis": null,
+            "refDirection": null
+          },
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 0,
+          "secondary": [
+            1,
+            1
+          ]
+        },
+        "policy": {
+          "absoluteChordErrorMetres": 0,
+          "relativeChordError": 0.001,
+          "maxSegments": 4096
+        },
+        "damage": "none"
+      },
+      "expected": {
+        "status": "refuse",
+        "segments": null,
+        "bounds": null,
+        "polygonVolume": null,
+        "idealVolume": null,
+        "reason": "TransformationOperator ScaleGreaterZero false"
+      }
+    }
+  ]
+}

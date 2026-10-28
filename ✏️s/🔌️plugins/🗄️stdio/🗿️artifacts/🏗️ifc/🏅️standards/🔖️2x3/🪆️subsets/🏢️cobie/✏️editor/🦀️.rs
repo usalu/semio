@@ -2,6 +2,7 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `Ifc2x3CobieEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
+use semio_s_artifact_stdio_ifc_2x3_base::standards::v2x3::subsets::base::io::{inspector,details};
 use crate::editor::ifc2x3_cobie::modes::edit;
 use crate::editor::ifc2x3_cobie::modes::edit::windows::main;
 use crate::standards::v2x3::subsets::cobie::schema::mutations::Ifc2x3Mutation;
@@ -156,6 +157,7 @@ impl ArtifactOwnedToolJobFactory for Ifc2x3CobieEditorExampleFactory {
     type Owner = EditorApp<Ifc2x3CobieEditor>;
     const TOOL_IDS: &'static [&'static str] = IFC2X3_COBIE_DOCUMENT_SCHEMA_EXAMPLE_TOOL_IDS;
     const DOCUMENT_SCHEMA: &'static str = IFC2X3_COBIE_DOCUMENT_SCHEMA;
+    fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(inspector::topology(doc.snapshot))}
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[IFC2X3_COBIE_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 //#region 🔖️Editor
@@ -245,10 +247,27 @@ impl ArtifactEditor for Ifc2x3CobieEditor {
         }
     }
 
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        if body_key==inspector::BODY_KEY{return inspector::render(doc,_interaction,view_state,"s.stdio.ifc@2x3/cobie#editor",true,cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);}
+        if body_key == main::BODY_KEY {
+            return main::render_selected_in_context(doc.snapshot,cx,_interaction,inspector::DOMAIN,inspector::GRANULARITY).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+        }
+        Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
+    }
+
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.ifc@2x3/cobie#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(&details::Ifc2x3DetailsProvider::new(doc.snapshot),semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,view_state.locale,"s.stdio.ifc@2x3/cobie#editor",&semio_framework_plugin::TreeWindows::for_body(view_state,editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -257,27 +276,26 @@ impl ArtifactEditor for Ifc2x3CobieEditor {
 
 
 impl editing::SnapshotEditingEditor for Ifc2x3CobieEditor {
-    fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
-        match command { Ifc2x3CobieEditCommand::EditSnapshot { event } => Some(event), _ => None }
-    }
-    fn snapshot_edit_rules() -> &'static editing::EditRules {
-        &edit_rules::EDIT_RULES
-    }
-    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
-        edit_rules::special(event, snapshot).map_err(|error| Fault::from(error.to_string()))
-    }
+    fn snapshot_edit_work_capacity()->semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity{inspector::edit_capacity()}
+    fn snapshot_edit_work(tool:&'static str)->Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>>{Box::new(details::Ifc2x3DetailsWork::<Self>::new(tool))}
+    fn snapshot_edit_event_mut(command:&mut Self::Command)->Option<&mut editing::SnapshotEditEvent>{match command{Ifc2x3CobieEditCommand::EditSnapshot{event}=>Some(event),_=>None}}
+    fn snapshot_edit_event(command:&Self::Command)->Option<&editing::SnapshotEditEvent>{match command{Ifc2x3CobieEditCommand::EditSnapshot{event}=>Some(event),_=>None}}
+    fn snapshot_edit_is_admitted(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->bool{inspector::edit_is_admitted(event,snapshot)}
+    fn snapshot_edit_emit_in_context(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<Emit<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>,Fault>{if matches!(event,editing::SnapshotEditEvent::ReplaceSource{..}){return Self::snapshot_edit_emit(event,snapshot);}Ok(Emit{artifact_mutations:inspector::edit_in_context(event,snapshot,cx)?,..Default::default()})}
+    fn snapshot_edit_rules()->&'static editing::EditRules{&edit_rules::EDIT_RULES}
+    fn snapshot_edit_special(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->Result<Option<Vec<Self::Mutation>>,Fault>{inspector::edit_special(event,snapshot)}
 }
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_ifc2x3_cobie_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(IFC2X3_COBIE_DIALECT).document(["stdio", "ifc2x3"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC2X3_COBIE_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(IFC2X3_COBIE_DIALECT).document(["stdio", "ifc2x3"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC2X3_COBIE_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).window_kind_def(inspector::window_definition(true)).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID, semio_s_artifact_stdio_ifc_2x3_base::examples::demo::label())], semio_s_artifact_stdio_ifc_2x3_base::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         ;
-    editing::snapshot_edit_actions_with(builder).build_definition()
+    let mut definition=editing::snapshot_edit_actions_with(builder).build_definition();inspector::install_interaction(&mut definition);definition
 }
 //#endregion 🔖️Manifest
 

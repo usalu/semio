@@ -12,6 +12,7 @@ import { foldIdentityEvent } from "@semio-tech/framework/backbone/config-lane";
 import { decodeLocalCatalogArchiveV1, foldLocalCatalogEnvelopesV1 } from "../../🗂️local-catalog/🟦️.ts";
 import { decodeIdentityValue } from "@semio-tech/framework/config/mutations";
 import { type ActiveSession } from "../../../🐚️Shell/📦️program-sessions/🟦️.ts";
+import { beginDocumentSourceWorkV1 } from "../../../🛠️ShellHelpers/📝️source-revision/document.ts";
 import { documentTransferNoticeTextV1, documentLoadCancelledV1 } from "../../../🛠️ShellHelpers/🧾️transfer-checkin-tutorial/🟦️.ts";
 import { commandRejectionNoticeV1, appFaultNoticeV1, historyLaneNoticeV1, historyRefusalCodeV1, historyRefusalNoticeV1 } from "../../../🛠️ShellHelpers/🛣️route-and-chrome/🟦️.tsx";
 import { EMPTY_SHELL_HISTORY_PROJECTION_V1 } from "../../../🛠️ShellHelpers/🔩️plumbing/🟦️.ts";
@@ -85,6 +86,10 @@ export function handleDocumentEventMessage({ openDocumentSessionsRef, dispatch, 
   } else if (event.kind === "documentBackbone") {
     receiveDocumentBackbone(runtimeKey, entry, event.message);
   } else if (event.kind === "documentArchiveReplaced") {
+    const sourceWork = beginDocumentSourceWorkV1({
+      owners: core.localDocumentOwnerRegistry, sources: core.localSourceRevisions,
+      refresh: (plugin, instanceId) => core.localSourceRefreshRef.current(plugin, instanceId),
+    }, { pluginId: entry.session.pluginId, appId: entry.session.app.id, sessionInstanceId: entry.session.instanceId, runtimeKey, clientInstanceId: entry.clientInstanceId }, entry.plugin);
     const archiveBytes = new Uint8Array(event.archive);
     void (async () => {
       try {
@@ -111,6 +116,7 @@ export function handleDocumentEventMessage({ openDocumentSessionsRef, dispatch, 
           }
         };
         const outcome = await entry.readBack.archive(archive, held, { ...documentArchivePorts(entry.plugin, entry.session, held), merge, cancelled: documentLoadCancelledV1, detach });
+        sourceWork?.admit(undefined);
         if (outcome === "cancelled" && held()) core.documentTransferRef.current.notifyDocumentTransfer("load-cancelled", file, "info");
         if (outcome !== "held") return;
         if (openDocumentSessionsRef.current.get(runtimeKey) !== entry) return;
@@ -138,6 +144,8 @@ export function handleDocumentEventMessage({ openDocumentSessionsRef, dispatch, 
             ?? documentTransferNoticeTextV1("load-failed", resolveManifestLabel(entry.session.app.label, uiTerminologyRef.current, uiLocaleRef.current) || entry.session.app.id, uiLocaleRef.current),
           retryable: false,
         }));
+      } finally {
+        sourceWork?.finish();
       }
     })();
   } else if (event.kind === "documentArchiveAbsent") {

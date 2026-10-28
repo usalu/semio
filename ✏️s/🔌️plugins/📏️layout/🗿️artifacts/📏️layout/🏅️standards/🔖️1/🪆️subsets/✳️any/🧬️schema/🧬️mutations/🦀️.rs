@@ -24,7 +24,11 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 use semio_s_artifact_layout_layout_mutations_content::{change_data_fields, change_link_path, change_page_height, change_page_width, change_print_target, create_link, create_page, create_story, delete_link, delete_page, delete_story, edit_story, rename_layout, rename_page, reorder_pages, create_character_style, delete_character_style, set_page_guides, set_page_parent, set_story_runs, update_link, set_page_overrides, update_character_style, update_page_columns, update_page_margins, update_paragraph_style, update_parent_page, update_spread};
-use semio_s_artifact_layout_layout_mutations_frames::{change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, create_frame, delete_frame, drag_frames, move_frame, rotate_frames, scale_frames, resize_frame, rotate_frame, set_frame_flags, update_grid, create_layer, set_frame_layer, set_drawing_text, reorder_frame, update_layer, update_text_frame};
+use semio_s_artifact_layout_layout_mutations_frames::{change_frame_columns, change_frame_fill, change_frame_stroke, change_frame_wrap_mode, create_frame, delete_frame, drag_frames, move_frame, rotate_frames, scale_frames, resize_frame, rotate_frame, set_frame_flags, update_grid, create_layer, set_frame_layer, reorder_frame, update_layer, update_text_frame};
+
+use semio_s_artifact_layout_layout_mutations_content::{replace_document, set_parent_page_content, create_paragraph_style, delete_paragraph_style, create_parent_page, delete_parent_page, create_spread, delete_spread, set_page_spread, reorder_layer};
+
+use semio_s_artifact_layout_layout_mutations_content::set_page_background_drawing;
 
 //#region 🔖️Mutations
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<LayoutSnapshot, LayoutMutation>`
@@ -77,11 +81,21 @@ pub enum LayoutMutation {
     SetPageOverrides(set_page_overrides::SetPageOverrides),
     CreateLayer(create_layer::CreateLayer),
     SetFrameLayer(set_frame_layer::SetFrameLayer),
-    SetDrawingText(set_drawing_text::SetDrawingText),
     ReorderFrame(reorder_frame::ReorderFrame),
     DragFrames(drag_frames::DragFrames),
     RotateFrames(rotate_frames::RotateFrames),
     ScaleFrames(scale_frames::ScaleFrames),
+    CreateParagraphStyle(create_paragraph_style::CreateParagraphStyle),
+    DeleteParagraphStyle(delete_paragraph_style::DeleteParagraphStyle),
+    CreateParentPage(create_parent_page::CreateParentPage),
+    DeleteParentPage(delete_parent_page::DeleteParentPage),
+    CreateSpread(create_spread::CreateSpread),
+    DeleteSpread(delete_spread::DeleteSpread),
+    SetPageSpread(set_page_spread::SetPageSpread),
+    ReorderLayer(reorder_layer::ReorderLayer),
+    SetParentPageContent(set_parent_page_content::SetParentPageContent),
+    ReplaceDocument(replace_document::ReplaceDocument),
+    SetPageBackgroundDrawing(set_page_background_drawing::SetPageBackgroundDrawing),
 }
 
 //#endregion 🔖️Mutations
@@ -153,6 +167,17 @@ pub const KINDS: &[&str] = &[
     "drag-frames",
     "rotate-frames",
     "scale-frames",
+    "create-paragraph-style",
+    "delete-paragraph-style",
+    "create-parent-page",
+    "delete-parent-page",
+    "create-spread",
+    "delete-spread",
+    "set-page-spread",
+    "reorder-layer",
+    "set-parent-page-content",
+    "replace-document",
+    "set-page-background-drawing",
 ];
 //#endregion 🔖️Kinds
 
@@ -168,3 +193,18 @@ pub mod binary;
 #[path = "../../🚪️io/📝️text/🧬️mutations/🦀️.rs"]
 pub mod text;
 //#endregion 🪢️TaxonomyMounts
+
+#[cfg(test)]
+#[path = "🧪️tests/🏗️structure/🦀️.rs"]
+mod structure_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/✅️validation/🦀️.rs"]
+mod validation_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/🕸️graph/🦀️.rs"]
+mod semantic_graph_tests;
+
+#[path="🧳️retained/🦀️.rs"]
+pub mod retained;

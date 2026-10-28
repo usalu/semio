@@ -1,5 +1,6 @@
 //! 🎚️ Persisted local configuration for one exact Layout Blueprint or Preview window.
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use semio_s_artifact_layout_layout_model::LayoutCamera;
 use semio_framework_value_derive::{FromValue, ToValue};
 

@@ -1,0 +1,17 @@
+{
+  "feature": "original-member-publication-failure",
+  "owner": "whole original VcsError",
+  "projection": {
+    "kind": "exhaustive original variant",
+    "detail": "borrowed complete variant payload including ValueError receipts, rejected diagnostics and targets"
+  },
+  "publication": "retained slot then admitted original domain frame",
+  "cases": [
+    "value-refusal-with-paid-receipt",
+    "native-encoding-original",
+    "stale-generations",
+    "rejected-message-targets",
+    "whole-original-string",
+    "cancel-retained-failure"
+  ]
+}

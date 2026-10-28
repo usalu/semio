@@ -1,0 +1,130 @@
+{
+  "schema": "stdio.ifc2x3.retained-publication",
+  "snapshot": {
+    "schema": "stdio.ifc.2x3",
+    "document": {
+      "header": {
+        "fileDescription": [],
+        "fileName": [],
+        "fileSchema": []
+      },
+      "instances": [
+        {
+          "id": "1",
+          "entities": [
+            {
+              "typeName": "IFCCARTESIANPOINT",
+              "arguments": [
+                {
+                  "kind": "list",
+                  "values": [
+                    {
+                      "kind": "real",
+                      "value": {
+                        "negative": false,
+                        "coefficient": "123456789012345678901234567890",
+                        "scale": 18,
+                        "exponent": 99
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "name": "replace existing exact native instance",
+      "mutation": {
+        "mutation": "upsertInstance",
+        "instance": {
+          "id": "1",
+          "entities": [
+            {
+              "typeName": "IFCCARTESIANPOINT",
+              "arguments": [
+                {
+                  "kind": "list",
+                  "values": [
+                    {
+                      "kind": "real",
+                      "value": {
+                        "negative": false,
+                        "coefficient": "5",
+                        "scale": 0
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "insert new exact native instance",
+      "mutation": {
+        "mutation": "upsertInstance",
+        "instance": {
+          "id": "18446744073709551615",
+          "entities": [
+            {
+              "typeName": "IFCCARTESIANPOINT",
+              "arguments": [
+                {
+                  "kind": "list",
+                  "values": [
+                    {
+                      "kind": "real",
+                      "value": {
+                        "negative": true,
+                        "coefficient": "7",
+                        "scale": 5,
+                        "exponent": -900
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "remove existing instance preserves exact insertion position",
+      "mutation": {
+        "mutation": "removeInstance",
+        "id": "1"
+      }
+    },
+    {
+      "name": "remove absent instance has no inverse",
+      "mutation": {
+        "mutation": "removeInstance",
+        "id": "9"
+      }
+    },
+    {
+      "name": "header inverse borrows original native values",
+      "mutation": {
+        "mutation": "setHeader",
+        "header": {
+          "fileDescription": [
+            {
+              "kind": "str",
+              "value": "Changed"
+            }
+          ],
+          "fileName": [],
+          "fileSchema": []
+        }
+      }
+    }
+  ]
+}

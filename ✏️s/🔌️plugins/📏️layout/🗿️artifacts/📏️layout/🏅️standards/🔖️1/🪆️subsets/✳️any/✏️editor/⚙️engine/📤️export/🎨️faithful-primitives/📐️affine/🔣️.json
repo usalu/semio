@@ -1,0 +1,11 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LayoutExportAffine",
+  "type": "array",
+  "minItems": 6,
+  "maxItems": 6,
+  "items": {
+    "type": "number"
+  },
+  "description": "Column-vector affine[a,b,c,d,e,f]: world=(a*x+c*y+e,b*x+d*y+f). Local geometry, round-stroke width and image rectangles remain local; singular transforms have no raster area."
+}

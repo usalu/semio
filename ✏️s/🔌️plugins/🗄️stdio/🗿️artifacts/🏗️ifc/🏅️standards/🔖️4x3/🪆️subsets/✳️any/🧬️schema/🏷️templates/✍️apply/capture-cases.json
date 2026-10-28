@@ -1,0 +1,6 @@
+{
+ "policy":"Own fields must be enumerable data properties. Arrays contain every numeric index from zero to length minus one, plus the intrinsic non-enumerable length. Symbols, accessors, non-enumerable data fields and additional array keys are refused.",
+ "reject":["hiddenGetter","hiddenAllowedData","hiddenUnknownData","objectSymbol","arrayUnknownData","arrayGetter","arrayHiddenData","arrayHiddenGetter","arraySymbol","arrayIndexGetter","arrayHiddenIndex","arrayNoncanonicalIndex","arrayHole"],
+ "expected":{"accepted":false,"getterInvocations":0,"publishedRevision":0,"publishedEvents":0,"sourceChanged":false},
+ "accept":["plainObject","denseArray","frozenDenseArray"]
+}

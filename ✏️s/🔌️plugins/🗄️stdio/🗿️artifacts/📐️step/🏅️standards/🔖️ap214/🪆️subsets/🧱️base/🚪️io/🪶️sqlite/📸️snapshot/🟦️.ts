@@ -65,7 +65,7 @@ CREATE TABLE step_argument (
 );
 CREATE TABLE step_value (
   id INTEGER PRIMARY KEY,
-  kind TEXT NOT NULL CHECK (kind IN ('unset','derived','integer','real','string','enum','reference','aggregate','typedValue')),
+  kind TEXT NOT NULL CHECK (kind IN ('unset','derived','integer','real','string','binary','enum','reference','aggregate','typedValue')),
   integer_value INTEGER,
   real_value REAL,
   string_value TEXT,
@@ -75,7 +75,7 @@ CREATE TABLE step_value (
   real_bits INTEGER,
   real_class TEXT CHECK (real_class IN ('finite','positiveInfinity','negativeInfinity','nan')),
   CHECK ((kind = 'integer') = (integer_value IS NOT NULL)),
-  CHECK ((kind = 'string') = (string_value IS NOT NULL)),
+  CHECK ((kind IN ('string','binary')) = (string_value IS NOT NULL)),
   CHECK ((kind = 'enum') = (enum_value IS NOT NULL)),
   CHECK ((kind = 'reference') = (reference_instance_id IS NOT NULL)),
   CHECK ((kind = 'reference') = (reference_entity_id IS NOT NULL)),
@@ -98,6 +98,7 @@ CREATE TABLE step_typed_value (
 `;
 const REAL=[{index:3,width:64 as const}] as const;
 function signed(value:bigint):bigint{if(typeof value!=="bigint"||value<-(1n<<63n)||value>=(1n<<63n))throw Error("STEP integer exceeds signed64");return value;}
+function binary(value:string):string{if(typeof value!=="string"||!/^(?:0[0-9A-F]*|1[0-7][0-9A-F]*|2[0-3][0-9A-F]*|3[01][0-9A-F]*)$/.test(value))throw Error("invalid canonical STEP binary content");return value;}
 function unsigned(value:bigint):string{if(typeof value!=="bigint"||value<0n||value>=(1n<<64n))throw Error("STEP instance exceeds unsigned64");return value.toString();}
 function readUnsigned(row:SqliteRow,index:number):bigint{const text=artifactSqliteText(row,index);if(text.length>20||!/^(0|[1-9][0-9]*)$/.test(text))throw Error("STEP unsigned field must be canonical decimal text");const value=BigInt(text);unsigned(value);return value;}
 function identity(row:SqliteRow,columns:number):void{if(row.rowid<=0n||artifactSqliteInteger(row,0)!==row.rowid||row.values.length!==columns)throw Error("invalid STEP entity identity or column count");}
@@ -111,6 +112,7 @@ async function projectValue(value:StepValue,owner:Owner,entities:ReadonlyMap<big
     else if("integer" in v){cells[1]="integer";cells[2]=signed(v.integer);}
     else if("real" in v){cells[1]="real";cells[3]=parseBinary64(v.real);}
     else if("string" in v){cells[1]="string";cells[4]=v.string;}
+    else if("binary" in v){cells[1]="binary";cells[4]=binary(v.binary);}
     else if("enum" in v){cells[1]="enum";cells[5]=v.enum;}
     else if("reference" in v){cells[1]="reference";cells[6]=unsigned(v.reference);const target=entities.get(v.reference);if(target===undefined)throw Error("dangling STEP entity reference");cells[7]=target;}
     else if("aggregate" in v)cells[1]="aggregate";
@@ -140,8 +142,8 @@ async function restoreValues(rows:readonly SqliteRow[],arguments_:readonly Sqlit
   for(const parent of aggregates.keys()){const row=values.get(parent);if(!row||artifactSqliteText(row,1)!=="aggregate")throw Error("STEP aggregate relationship has wrong parent kind");}
   const seen=new Set<bigint>(),complete=new Map<bigint,StepValue>();let count=0;function take(id:bigint):StepValue{const value=complete.get(id);if(value===undefined)throw Error("invalid STEP structural ownership");complete.delete(id);return value;}
   for(const argument of arguments_){const pending:{id:bigint;exit:boolean}[]=[{id:artifactSqliteInteger(argument,4),exit:false}];while(pending.length){if(++count%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",count,0);const {id,exit}=pending.pop()!,row=values.get(id);if(!row)throw Error("dangling STEP value ownership edge");if(!exit){if(seen.has(id))throw Error("cyclic or multiply owned STEP value");seen.add(id);pending.push({id,exit:true});const children=aggregates.get(id);if(children)for(let i=children.length-1;i>=0;i--){pending.push({id:artifactSqliteInteger(children[i]!,3),exit:false});if(children.length>=256&&i%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",i,children.length);}const wrapper=wrappers.get(id);if(wrapper)pending.push({id:wrapper.child,exit:false});continue;}
-      const kind=artifactSqliteText(row,1),active=kind==="integer"?2:kind==="real"?3:kind==="string"?4:kind==="enum"?5:kind==="reference"?6:undefined;for(let i=2;i<8;i++)if(i!==active&&!(kind==="reference"&&i===7))absent(row,i);if(kind!=="real"&&!ieee754IsNull(row,3,REAL))throw Error("inactive STEP real companions");let value:StepValue;
-      switch(kind){case "unset":case "derived":value=kind;break;case "integer":value={integer:artifactSqliteInteger(row,2)};break;case "real":value={real:readBinary64(row,3,REAL)};break;case "string":value={string:artifactSqliteText(row,4)};break;case "enum":value={enum:artifactSqliteText(row,5)};break;case "reference":{const reference=readUnsigned(row,6);if(entities.get(artifactSqliteInteger(row,7))!==reference)throw Error("STEP reference word differs from related entity identity");value={reference};break;}case "aggregate":{const children=aggregates.get(id)??[];aggregates.delete(id);const aggregate:StepValue[]=[];for(let i=0;i<children.length;i++){aggregate.push(take(artifactSqliteInteger(children[i]!,3)));if(children.length>=256&&i%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",i,children.length);}value={aggregate};break;}case "typedValue":{const wrapper=wrappers.get(id);if(!wrapper)throw Error("missing STEP typed wrapper");wrappers.delete(id);value={typedValue:{typeName:wrapper.name,value:take(wrapper.child)}};break;}default:throw Error("unknown STEP value kind");}complete.set(id,value);
+      const kind=artifactSqliteText(row,1),active=kind==="integer"?2:kind==="real"?3:(kind==="string"||kind==="binary")?4:kind==="enum"?5:kind==="reference"?6:undefined;for(let i=2;i<8;i++)if(i!==active&&!(kind==="reference"&&i===7))absent(row,i);if(kind!=="real"&&!ieee754IsNull(row,3,REAL))throw Error("inactive STEP real companions");let value:StepValue;
+      switch(kind){case "unset":case "derived":value=kind;break;case "integer":value={integer:artifactSqliteInteger(row,2)};break;case "real":value={real:readBinary64(row,3,REAL)};break;case "string":value={string:artifactSqliteText(row,4)};break;case "binary":value={binary:binary(artifactSqliteText(row,4))};break;case "enum":value={enum:artifactSqliteText(row,5)};break;case "reference":{const reference=readUnsigned(row,6);if(entities.get(artifactSqliteInteger(row,7))!==reference)throw Error("STEP reference word differs from related entity identity");value={reference};break;}case "aggregate":{const children=aggregates.get(id)??[];aggregates.delete(id);const aggregate:StepValue[]=[];for(let i=0;i<children.length;i++){aggregate.push(take(artifactSqliteInteger(children[i]!,3)));if(children.length>=256&&i%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",i,children.length);}value={aggregate};break;}case "typedValue":{const wrapper=wrappers.get(id);if(!wrapper)throw Error("missing STEP typed wrapper");wrappers.delete(id);value={typedValue:{typeName:wrapper.name,value:take(wrapper.child)}};break;}default:throw Error("unknown STEP value kind");}complete.set(id,value);
     }}if(seen.size!==values.size||aggregates.size||wrappers.size)throw Error("unowned STEP value entity");return complete;
 }
 /** 🌳️ Restores only the owned STEP model after validating every relationship. */

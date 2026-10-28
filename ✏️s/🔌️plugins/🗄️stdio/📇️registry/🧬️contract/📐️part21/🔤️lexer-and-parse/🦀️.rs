@@ -2,26 +2,42 @@
 
 use super::*;
 
+#[path = "alphabets/🦀️.rs"]
+mod alphabets;
+pub use alphabets::part21_alphabet_character;
+
 //#region 🔖️Lexer
-struct Lexer {
-    pub(super) chars: Vec<char>,
+struct Lexer<'a,'c> {
+    text: &'a str,
     pos: usize,
+    unterminated_comment: Option<usize>,
+    comment_observer: Option<&'c mut dyn FnMut(usize,usize)>,
 }
 
-impl Lexer {
-    pub(super) fn new(text: &str) -> Self {
-        Self { chars: text.chars().collect(), pos: 0 }
+impl<'a,'c> Lexer<'a,'c> {
+    pub(super) fn new(text: &'a str) -> Self {
+        let mut lexer = Self { text, pos: 0, unterminated_comment: None, comment_observer: None };
+        lexer.advance(0);
+        lexer
     }
     fn peek(&self) -> Option<char> {
-        self.chars.get(self.pos).copied()
+        self.text[self.pos..].chars().next()
     }
     fn peek_at(&self, offset: usize) -> Option<char> {
-        self.chars.get(self.pos + offset).copied()
+        self.text[self.pos..].chars().filter(|value| !value.is_ascii_control()).nth(offset)
+    }
+    fn advance(&mut self, count: usize) {
+        let mut remaining = count;
+        while let Some(value) = self.peek() {
+            if value.is_ascii_control() { self.pos += value.len_utf8(); }
+            else if remaining == 0 { break; }
+            else { self.pos += value.len_utf8(); remaining -= 1; }
+        }
     }
     fn bump(&mut self) -> Option<char> {
         let c = self.peek();
         if c.is_some() {
-            self.pos += 1;
+            self.advance(1);
         }
         c
     }
@@ -29,16 +45,24 @@ impl Lexer {
     fn skip_ws_and_comments(&mut self) {
         loop {
             match self.peek() {
-                Some(c) if c.is_whitespace() => self.pos += 1,
+                Some(' ') => self.advance(1),
+                Some('\\') if self.peek_at(2) == Some('\\') && matches!(self.peek_at(1), Some('N' | 'F')) => self.advance(3),
                 Some('/') if self.peek_at(1) == Some('*') => {
-                    self.pos += 2;
+                    let comment_start=self.pos;
+                    let mut closed=false;
+                    let mut comment_end=comment_start;
+                    self.advance(2);
                     while let Some(c) = self.peek() {
                         if c == '*' && self.peek_at(1) == Some('/') {
-                            self.pos += 2;
+                            comment_end=self.pos+2;
+                            self.advance(2);
+                            closed=true;
                             break;
                         }
-                        self.pos += 1;
+                        self.advance(1);
                     }
+                    if !closed {self.unterminated_comment=Some(comment_start);}
+                    else if let Some(observer)=self.comment_observer.as_deref_mut(){observer(comment_start,comment_end);}
                 }
                 _ => break,
             }
@@ -49,7 +73,7 @@ impl Lexer {
         self.skip_ws_and_comments();
         for c in lit.chars() {
             if self.peek() == Some(c) {
-                self.pos += 1;
+                self.advance(1);
             } else {
                 return Err(Part21Error::MissingLiteral { at: self.pos, literal: lit });
             }
@@ -62,7 +86,7 @@ impl Lexer {
         self.skip_ws_and_comments();
         for c in lit.chars() {
             if self.peek() == Some(c) {
-                self.pos += 1;
+                self.advance(1);
             } else {
                 self.pos = save;
                 return false;
@@ -78,7 +102,7 @@ impl Lexer {
         while let Some(c) = self.peek() {
             if c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_' {
                 s.push(c);
-                self.pos += 1;
+                self.advance(1);
             } else {
                 break;
             }
@@ -94,50 +118,37 @@ impl Lexer {
         if self.peek() != Some('\'') {
             return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "'" });
         }
-        self.pos += 1;
+        self.advance(1);
         let mut out = String::new();
         let mut alphabet = 'A';
         loop {
+            let start = self.pos;
             match self.bump() {
                 None => return Err(Part21Error::UnexpectedEof { at: self.pos, expected: "closing '" }),
                 Some('\'') => {
                     if self.peek() == Some('\'') {
-                        self.pos += 1;
+                        self.advance(1);
                         out.push('\'');
                     } else {
                         break;
                     }
                 }
-                Some('\\') => self.read_escape(&mut out, &mut alphabet)?,
+                Some('\\') => self.read_escape(start, &mut out, &mut alphabet)?,
                 Some(c) => out.push(c),
             }
         }
         Ok(out)
     }
 
-    /// 🔤️ ISO 10303-21 §6.4.2's COMPLETE `control_directive` set, plus the STRING production's own
-    /// doubled reverse solidus — called with the opening `\` already consumed.
-    ///
-    /// * `\\` — one literal REVERSE SOLIDUS. The string production escapes it by doubling exactly
-    ///   as it escapes the apostrophe by doubling, and real exporters emit it: IfcOpenShell writes
-    ///   `'\\'` for a one-character backslash name at byte 138718 of the committed
-    ///   `🏗️nakagin-capsule-tower.ifc`. Rejecting it failed EVERY `🏗️mutate-ifc-4` subject scenario
-    ///   (22 of 22 executable rows) until this wave, while `ruststep` — the registered independent
-    ///   reader for that same case — read the file without complaint.
-    /// * `\X\HH` — `arbitrary`: EXACTLY two hex digits and no terminator (`arbitrary = "\X\"
-    ///   hex_one`). This lexer used to demand a trailing `\`, which would mis-parse a conformant
-    ///   `\X\41\S\A` by eating the next directive's own opener.
-    /// * `\X2\HHHH…\X0\` / `\X4\HHHHHHHH…\X0\` — `extended2`/`extended4` UCS-2 / UCS-4 runs.
-    /// * `\S\c` — `page`: the character at `code(c) + 128` in the selected alphabet.
-    /// * `\PA\`…`\PI\` — `alphabet`: which ISO 8859 part `\S\` shifts into. Only `A` (ISO 8859-1,
-    ///   the one part where `code + 128` IS the Unicode codepoint) is decoded; `B`..`I` need
-    ///   per-part mapping tables this codec does not carry, and a typed error naming the page is
-    ///   the honest answer rather than a silently wrong character.
-    fn read_escape(&mut self, out: &mut String, alphabet: &mut char) -> Result<(), Part21Error> {
-        let start = self.pos - 1;
+    /// 🔤 Decode clause 6.4.3 control directives and clause 13 print directives after their opener.
+    fn read_escape(&mut self, start: usize, out: &mut String, alphabet: &mut char) -> Result<(), Part21Error> {
         match self.bump() {
             Some('\\') => {
                 out.push('\\');
+                Ok(())
+            }
+            Some('N' | 'F') => {
+                if self.bump() != Some('\\') { return Err(Part21Error::UnsupportedEscape { at: start, detail: "unterminated print directive".into() }); }
                 Ok(())
             }
             Some('P') => {
@@ -155,64 +166,63 @@ impl Lexer {
                 if self.bump() != Some('\\') {
                     return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected \\ after \\S".into() });
                 }
-                if *alphabet != 'A' {
-                    return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("\\S\\ on ISO 8859 page {alphabet} needs a mapping table this codec does not carry") });
-                }
                 match self.bump() {
-                    Some(c) if (c as u32) < 0x80 => {
-                        out.push(char::from_u32(c as u32 + 128).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "bad \\S\\ character".into() })?);
+                    Some(c) => {
+                        out.push(part21_alphabet_character(*alphabet, c).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("undefined ISO 8859 page {alphabet} character") })?);
                         Ok(())
                     }
                     other => Err(Part21Error::UnsupportedEscape { at: start, detail: format!("bad \\S\\ character {other:?}") }),
                 }
             }
             Some('X') => match self.peek() {
-                Some(width) if width == '2' || width == '4' => {
+                Some(width @ ('2' | '4')) => {
                     let group = if width == '2' { 4 } else { 8 };
-                    self.pos += 1;
-                    if self.bump() != Some('\\') {
-                        return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("expected \\ after \\X{width}") });
-                    }
+                    self.advance(1);
+                    if self.bump() != Some('\\') { return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("expected \\ after \\X{width}") }); }
+                    let mut high = None;
+                    let mut count = 0usize;
                     loop {
-                        let mut hex = String::new();
-                        for _ in 0..group {
-                            match self.bump() {
-                                Some(c) if c.is_ascii_hexdigit() => hex.push(c),
-                                _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: format!("bad \\X{width}\\ hex group") }),
-                            }
-                        }
-                        let code = u32::from_str_radix(&hex, 16).map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
-                        let ch = char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad codepoint {code}") })?;
-                        out.push(ch);
-                        if self.peek() == Some('\\') && self.peek_at(1) == Some('X') && self.peek_at(2) == Some('0') {
-                            self.pos += 3;
-                            if self.bump() != Some('\\') {
-                                return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected trailing \\ after \\X0".into() });
-                            }
+                        self.skip_print_directives();
+                        if self.peek() == Some('\\') && self.peek_at(1) == Some('X') && self.peek_at(2) == Some('0') && self.peek_at(3) == Some('\\') {
+                            if count == 0 || high.is_some() { return Err(Part21Error::UnsupportedEscape { at: start, detail: "empty Unicode run or unpaired UTF-16 surrogate".into() }); }
+                            self.advance(4);
                             break;
                         }
+                        let code = self.read_hex(group, start)?;
+                        count += 1;
+                        if width == '2' {
+                            if let Some(previous) = high.take() {
+                                if !(0xDC00..=0xDFFF).contains(&code) { return Err(Part21Error::UnsupportedEscape { at: start, detail: "unpaired UTF-16 surrogate".into() }); }
+                                out.push(char::from_u32(0x10000 + ((previous - 0xD800) << 10) + code - 0xDC00).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "invalid surrogate pair".into() })?);
+                            } else if (0xD800..=0xDBFF).contains(&code) { high = Some(code); }
+                            else { out.push(char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "unpaired UTF-16 surrogate".into() })?); }
+                        } else { out.push(char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "invalid Unicode scalar".into() })?); }
                     }
                     Ok(())
                 }
                 _ => {
-                    if self.bump() != Some('\\') {
-                        return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected \\ after \\X".into() });
-                    }
-                    let mut hex = String::new();
-                    for _ in 0..2 {
-                        match self.bump() {
-                            Some(c) if c.is_ascii_hexdigit() => hex.push(c),
-                            _ => return Err(Part21Error::UnsupportedEscape { at: start, detail: "bad \\X\\ hex".into() }),
-                        }
-                    }
-                    let code = u32::from_str_radix(&hex, 16).map_err(|_| Part21Error::UnsupportedEscape { at: start, detail: "bad hex".into() })?;
-                    let ch = char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: format!("bad byte {code}") })?;
-                    out.push(ch);
+                    if self.bump() != Some('\\') { return Err(Part21Error::UnsupportedEscape { at: start, detail: "expected \\ after \\X".into() }); }
+                    let code = self.read_hex(2, start)?;
+                    out.push(char::from_u32(code).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "invalid arbitrary byte".into() })?);
                     Ok(())
                 }
             },
             other => Err(Part21Error::UnsupportedEscape { at: start, detail: format!("unsupported escape start {other:?}") }),
         }
+    }
+
+    fn skip_print_directives(&mut self) {
+        while self.peek() == Some('\\') && matches!(self.peek_at(1), Some('N' | 'F')) && self.peek_at(2) == Some('\\') { self.advance(3); }
+    }
+
+    fn read_hex(&mut self, width: usize, start: usize) -> Result<u32, Part21Error> {
+        let mut code = 0u32;
+        for _ in 0..width {
+            self.skip_print_directives();
+            let digit = self.bump().and_then(|value| value.is_ascii_hexdigit().then(|| value.to_digit(16)).flatten()).ok_or_else(|| Part21Error::UnsupportedEscape { at: start, detail: "invalid hexadecimal escape".into() })?;
+            code = code * 16 + digit;
+        }
+        Ok(code)
     }
 
     fn read_number(&mut self) -> Result<Part21Value, Part21Error> {
@@ -222,10 +232,11 @@ impl Lexer {
         if matches!(self.peek(), Some('-') | Some('+')) {
             s.push(self.bump().unwrap());
         }
+        if !self.peek().is_some_and(|value| value.is_ascii_digit()) { return Err(Part21Error::InvalidNumber { at: start, text: s }); }
         while let Some(c) = self.peek() {
             if c.is_ascii_digit() {
                 s.push(c);
-                self.pos += 1;
+                self.advance(1);
             } else {
                 break;
             }
@@ -234,27 +245,27 @@ impl Lexer {
         if self.peek() == Some('.') {
             is_real = true;
             s.push('.');
-            self.pos += 1;
+            self.advance(1);
             while let Some(c) = self.peek() {
                 if c.is_ascii_digit() {
                     s.push(c);
-                    self.pos += 1;
+                    self.advance(1);
                 } else {
                     break;
                 }
             }
         }
         if matches!(self.peek(), Some('E') | Some('e')) {
-            is_real = true;
+            if !is_real { return Err(Part21Error::InvalidNumber { at: start, text: s }); }
             s.push('E');
-            self.pos += 1;
+            self.advance(1);
             if matches!(self.peek(), Some('+') | Some('-')) {
                 s.push(self.bump().unwrap());
             }
             while let Some(c) = self.peek() {
                 if c.is_ascii_digit() {
                     s.push(c);
-                    self.pos += 1;
+                    self.advance(1);
                 } else {
                     break;
                 }
@@ -272,12 +283,12 @@ impl Lexer {
         if self.peek() != Some('.') {
             return Err(Part21Error::UnexpectedChar { at: self.pos, found: self.peek().unwrap_or('\0'), expected: "." });
         }
-        self.pos += 1;
+        self.advance(1);
         let mut s = String::new();
         while let Some(c) = self.peek() {
             if c.is_ascii_uppercase() || c.is_ascii_digit() || c == '_' {
                 s.push(c);
-                self.pos += 1;
+                self.advance(1);
             } else {
                 break;
             }
@@ -288,25 +299,42 @@ impl Lexer {
         Ok(s)
     }
 
+    fn read_binary(&mut self) -> Result<Part21Value, Part21Error> {
+        let start = self.pos;
+        self.advance(1);
+        let mut content = String::new();
+        loop {
+            self.skip_print_directives();
+            match self.bump() {
+                Some('"') => break,
+                Some(value) if value.is_ascii_hexdigit() => content.push(value.to_ascii_uppercase()),
+                Some(found) => return Err(Part21Error::UnexpectedChar { at: self.pos - 1, found, expected: "STEP binary hexadecimal digit or closing quote" }),
+                None => return Err(Part21Error::UnexpectedEof { at: self.pos, expected: "closing binary quote" }),
+            }
+        }
+        if !is_part21_binary(&content) { return Err(Part21Error::InvalidNumber { at: start, text: content }); }
+        Ok(Part21Value::Binary(content))
+    }
+
     fn read_value(&mut self) -> Result<Part21Value, Part21Error> {
         self.skip_ws_and_comments();
         match self.peek() {
             Some('$') => {
-                self.pos += 1;
+                self.advance(1);
                 Ok(Part21Value::Unset)
             }
             Some('*') => {
-                self.pos += 1;
+                self.advance(1);
                 Ok(Part21Value::Derived)
             }
             Some('#') => {
-                self.pos += 1;
+                self.advance(1);
                 let start = self.pos;
                 let mut s = String::new();
                 while let Some(c) = self.peek() {
                     if c.is_ascii_digit() {
                         s.push(c);
-                        self.pos += 1;
+                        self.advance(1);
                     } else {
                         break;
                     }
@@ -315,8 +343,9 @@ impl Lexer {
             }
             Some('\'') => self.read_string().map(Part21Value::Str),
             Some('.') => self.read_enum().map(Part21Value::Enum),
+            Some('"') => self.read_binary(),
             Some('(') => {
-                self.pos += 1;
+                self.advance(1);
                 let items = self.read_value_list()?;
                 self.expect_literal(")")?;
                 Ok(Part21Value::List(items))
@@ -326,7 +355,7 @@ impl Lexer {
                 let kw = self.read_keyword()?;
                 self.skip_ws_and_comments();
                 if self.peek() == Some('(') {
-                    self.pos += 1;
+                    self.advance(1);
                     let items = self.read_value_list()?;
                     self.expect_literal(")")?;
                     Ok(Part21Value::Typed { name: kw, items })
@@ -349,7 +378,7 @@ impl Lexer {
             out.push(self.read_value()?);
             self.skip_ws_and_comments();
             if self.peek() == Some(',') {
-                self.pos += 1;
+                self.advance(1);
                 continue;
             }
             break;
@@ -372,7 +401,7 @@ impl Lexer {
         while let Some(c) = self.peek() {
             if c.is_ascii_digit() {
                 id_s.push(c);
-                self.pos += 1;
+                self.advance(1);
             } else {
                 break;
             }
@@ -382,7 +411,7 @@ impl Lexer {
         self.skip_ws_and_comments();
         let mut entities = Vec::new();
         if self.peek() == Some('(') {
-            self.pos += 1;
+            self.advance(1);
             loop {
                 self.skip_ws_and_comments();
                 if self.peek() == Some(')') {
@@ -405,35 +434,26 @@ impl Lexer {
 /// 📥️ Parses a full ISO 10303-21 physical file into the generic graph. Real tokenizer,
 /// not a scraper — every header record and every data instance/argument round-trips.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {
+pub fn parse_part21(text: &str) -> Result<Part21Document, Part21Error> {parse_part21_inner(text,None)}
+
+/// 💬️ Observe actual comment ranges in the original UTF-8 source while tokenizing the same strict exchange.
+pub fn parse_part21_with_comments(text:&str,observer:&mut dyn FnMut(usize,usize))->Result<Part21Document,Part21Error>{parse_part21_inner(text,Some(observer))}
+
+fn parse_part21_inner(text:&str,observer:Option<&mut dyn FnMut(usize,usize)>)->Result<Part21Document,Part21Error>{
     let mut lex = Lexer::new(text);
-    lex.expect_literal("ISO-10303-21;")?;
-    lex.expect_literal("HEADER;")?;
-    let mut header = Part21Header::default();
-    loop {
-        lex.skip_ws_and_comments();
-        if lex.try_literal("ENDSEC;") {
-            break;
-        }
-        let (name, args) = lex.read_record()?;
-        lex.expect_literal(";")?;
-        match name.as_str() {
-            "FILE_DESCRIPTION" => header.file_description = args,
-            "FILE_NAME" => header.file_name = args,
-            "FILE_SCHEMA" => header.file_schema = args,
-            _ => {}
-        }
-    }
-    lex.expect_literal("DATA;")?;
-    let mut instances = Vec::new();
-    loop {
-        lex.skip_ws_and_comments();
-        if lex.try_literal("ENDSEC;") {
-            break;
-        }
-        instances.push(lex.read_instance()?);
-    }
-    let _ = lex.try_literal("END-ISO-10303-21;");
-    Ok(Part21Document { header, instances })
+    lex.comment_observer=observer;
+    lex.expect_literal("ISO-10303-21")?;lex.expect_literal(";")?;
+    lex.expect_literal("HEADER")?;lex.expect_literal(";")?;
+    let mut mandatory=|expected|{let(name,args)=lex.read_record()?;if name!=expected{return Err(Part21Error::MissingLiteral{at:lex.pos,literal:expected});}lex.expect_literal(";")?;Ok(args)};
+    let header=Part21Header{file_description:mandatory("FILE_DESCRIPTION")?,file_name:mandatory("FILE_NAME")?,file_schema:mandatory("FILE_SCHEMA")?};
+    lex.expect_literal("ENDSEC")?;lex.expect_literal(";")?;
+    lex.expect_literal("DATA")?;lex.expect_literal(";")?;
+    let mut instances=Vec::new();
+    loop {lex.skip_ws_and_comments();if lex.try_literal("ENDSEC"){lex.expect_literal(";")?;break;}instances.push(lex.read_instance()?);}
+    lex.expect_literal("END-ISO-10303-21")?;lex.expect_literal(";")?;
+    lex.skip_ws_and_comments();
+    if let Some(at)=lex.unterminated_comment{return Err(Part21Error::UnexpectedEof{at,expected:"closing */"});}
+    if let Some(found)=lex.peek(){return Err(Part21Error::UnexpectedChar{at:lex.pos,found,expected:"end of exchange"});}
+    Ok(Part21Document{header,instances})
 }
 //#endregion 🔖️Parse

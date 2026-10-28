@@ -59,7 +59,8 @@ import {
 } from "@semio-tech/ui-react";
 import { readUiPreferences, resolveUiPreferences, subscribeUiPreferences } from "../../🎚️UiPreferences/🟦️.ts";
 import { type TreeWindowContextValue } from "../../🗣️Interpreter/🪟️tree-windows/🟦️.ts";
-import { LocalDocumentOwnerRegistryV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+import { LocalDocumentOwnerRegistryV1, type LocalDocumentOwnerV1 } from "../../🗣️Interpreter/🧭️local-document-owner/🟦️.ts";
+import { LocalSourceRevisionRegistryV1 } from "../../🛠️ShellHelpers/📝️source-revision/registry.ts";
 import { UiDocumentStore } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type SpawnedAppEntry } from "../../🛠️ShellHelpers/📌️panel/🟦️.ts";
 import { type ActiveSession, type LoadedProgramState, localProgramsV1, type SpaceProgramEntry } from "../../🐚️Shell/📦️program-sessions/🟦️.ts";
@@ -196,6 +197,14 @@ export function useShellCoreState({
   /** 🕹️ This shell's local interaction ({@link createLocalInteractionStoreV1}) — outside `shellState`, so a hover never
    * re-renders the shell. */
   const [localInteraction] = useState(createLocalInteractionStoreV1);
+  const [localSourceRevisions] = useState(() => new LocalSourceRevisionRegistryV1());
+  const localSourceOwnerRef = useRef<LocalDocumentOwnerV1 | null>(null);
+  const localSourceRefreshRef = useRef<(plugin: PluginWasmHandle, instanceId: number) => void>(() => {});
+  useEffect(() => () => {
+    localSourceOwnerRef.current = null;
+    localSourceRefreshRef.current = () => {};
+    localSourceRevisions.retireAll();
+  }, [localSourceRevisions]);
   /** 🧾️ One history projection PER PROGRAM ({@link programHistoryKeyV1}), never one for the window.
    * A spawned program is a member of this session with a document and a cursor of its own, and the
    * cursor rule below is what decides whether a patch is a step forward — taken against the wrong
@@ -632,7 +641,7 @@ export function useShellCoreState({
   return {
     catalog, pluginFilter, plugins, surfaceSessionFactories, backboneWorkerFactory, documentServices, hostPorts, appId, appRole,
     brand, suppressAutoIntroduction, scope, localDocumentOwnerRegistry, shellContextMenuTitleLabel, hostConfig, hostMode,
-    measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, historyStore,
+    measuredDevice, mobile, locks, defaults, ephemeral, shellState, dispatch, localInteraction, localSourceRevisions, localSourceOwnerRef, localSourceRefreshRef, historyStore,
     historyOrderRef, historyOrderByProgramRef, exampleOptionsRef, lastDispatchedExampleIdRef, localHistoryOrderRef,
     loadedPlugins, pluginStatusById, pluginSupervisorById, session, error, sessionFault, instanceFault, localPrograms,
     uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId,

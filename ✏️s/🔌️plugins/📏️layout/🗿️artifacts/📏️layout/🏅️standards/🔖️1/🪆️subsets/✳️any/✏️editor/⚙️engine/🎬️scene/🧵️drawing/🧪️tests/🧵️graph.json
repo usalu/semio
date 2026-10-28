@@ -1,0 +1,69 @@
+{
+  "cases": [
+    {
+      "name": "originalSevenKinds",
+      "kinds": [
+        "group",
+        "path",
+        "text",
+        "shape",
+        "image",
+        "boolean",
+        "trace"
+      ]
+    },
+    {
+      "name": "gradientDashBinary64"
+    },
+    {
+      "name": "qualifiedSourceIdentity"
+    },
+    {
+      "name": "authoredFontMetadata"
+    },
+    {
+      "name": "everyOriginalGrantAxis"
+    },
+    {
+      "name": "cancellationAtEveryTurn"
+    },
+    {
+      "name": "originalRasterSamples"
+    },
+    {
+      "name": "exactShearReflection"
+    },
+    {
+      "name": "activeTextOriginalParentAndMember"
+    },
+    {
+      "name": "fundedTextLoanAndUtf8Scalar"
+    },
+    {
+      "name": "paidChildErrorConsumerReceipt"
+    },
+    {
+      "name": "minimumRouteAndTextCopyItems"
+    }
+  ],
+  "cuts": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    9,
+    17,
+    31,
+    63
+  ],
+  "textLoanCases": [
+    "Plan",
+    "Aé🌍"
+  ],
+  "paidError": {
+    "childItems": 1,
+    "childCopyBytes": 16
+  }
+}

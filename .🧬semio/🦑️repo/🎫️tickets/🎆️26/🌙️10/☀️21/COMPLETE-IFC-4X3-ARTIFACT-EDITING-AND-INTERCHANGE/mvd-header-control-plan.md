@@ -1,0 +1,7 @@
+# Released View Header Control Correction Plan
+
+Read mvd-header-control-gap.md and the actual retained four-route before probe. All four wrappers pass raw caller options into lazy nested planning, allowing depth0 to be raised to256 and falsely finish; unchanged baselines refuse depthLimit. The canonical private control helper is already implemented and independently audited.
+
+Add closed header-control cases/schema/feature and actual declaration/selection sync/async tests first, preserving original zero/nonnegative entity/value/depth and async scheduling policy. Reuse the same captured options for readSteps/selectSteps and runIfcEdit/Async. The only required production edit is header.ts importing captureIfcEditOptions and capturing at each public entry. No error/options class duplication, new authority, API, source copy, compatibility layer, external runtime or change to canonical eight/exchange twenty is needed.
+
+Tests exercise caller closure limit replacement, six getters once, original unbound callback/signal/failure, zero entity/value policy and original capture failure. A real selected command executes through central mutation and independent fast-json-patch comparison. Run authentic red, narrow production/test strict and existing header+canonical control focus after the fix. Preserve before output unchanged; retain owned roster/report for independent review and root registration. Native/conformance/publication gates remain false.

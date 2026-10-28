@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout Drawing Canvas Publication",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "kind",
+    "transform"
+  ],
+  "properties": {
+    "id": {
+      "type": "string"
+    },
+    "kind": {
+      "enum": [
+        "path",
+        "image"
+      ]
+    },
+    "transform": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "number"
+      }
+    },
+    "fillRule": {
+      "enum": [
+        "nonzero",
+        "evenodd"
+      ]
+    },
+    "segments": {
+      "type": "array"
+    },
+    "fill": {
+      "type": "object",
+      "required": [
+        "color"
+      ],
+      "properties": {
+        "color": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "stroke": {
+      "type": "object",
+      "required": [
+        "color",
+        "width",
+        "cap",
+        "join"
+      ],
+      "properties": {
+        "color": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        },
+        "width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cap": {
+          "enum": [
+            "butt",
+            "round",
+            "square"
+          ]
+        },
+        "join": {
+          "enum": [
+            "miter",
+            "round",
+            "bevel"
+          ]
+        }
+      }
+    },
+    "image": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "src",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "src": {
+          "type": "string"
+        },
+        "width": {
+          "const": 1
+        },
+        "height": {
+          "const": 1
+        }
+      }
+    }
+  }
+}

@@ -66,3 +66,31 @@ impl<K:RetireOwned> RetireOwned for ScratchHashSet<K>{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+/// 👁️ A fixed-address immutable scratch view supports one original-funded probe per turn.
+pub struct ScratchHashSlots<'a,K,V>{slots:&'a [Slot<K,V>]}
+impl<K,V> Copy for ScratchHashSlots<'_,K,V>{}
+impl<K,V> Clone for ScratchHashSlots<'_,K,V>{fn clone(&self)->Self{*self}}
+impl<'a,K,V> ScratchHashSlots<'a,K,V>{
+ pub fn len(self)->usize{self.slots.len()}
+ pub fn is_empty(self)->bool{self.slots.is_empty()}
+ pub fn get(self,index:usize)->Option<(&'a K,&'a V)>{match self.slots.get(index){Some(Slot::Occupied((key,value)))=>Some((key,value)),_=>None}}
+ pub fn is_vacant(self,index:usize)->bool{matches!(self.slots.get(index),Some(Slot::Empty)|Some(Slot::Deleted))}
+}
+impl<K,V> ScratchHashMap<K,V>{
+ /// 🎟️ Reservation prices backing before incremental vacancy initialization.
+ pub fn reservation_demands(maximum:usize)->Result<RetirementDemand,ValueError>{let mut demand=Self::allocation_demands(maximum)?;demand.copy_bytes=0;Ok(demand)}
+ /// 🪜️ Reserves one fixed backing; callers fund each subsequent vacancy separately.
+ pub fn try_reserve_uninitialized(maximum:usize)->Result<Self,ValueError>{let count=Self::slots_for(maximum)?;let mut slots=Vec::new();slots.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"scratch hash vector reservation failed"))?;Ok(Self{slots,maximum,len:0})}
+ pub fn initialized_slots(&self)->usize{self.slots.len()}
+ pub fn required_slots(&self)->Result<usize,ValueError>{Self::slots_for(self.maximum)}
+ pub fn slot_bytes()->usize{size_of::<Slot<K,V>>()}
+ pub fn backing_bytes(&self)->usize{self.slots.capacity()*Self::slot_bytes()}
+ pub fn initialize_one(&mut self)->Result<bool,ValueError>{if self.slots.len()==self.required_slots()?{return Ok(false)}self.slots.push(Slot::Empty);Ok(true)}
+ pub fn slots(&self)->ScratchHashSlots<'_,K,V>{ScratchHashSlots{slots:&self.slots}}
+ /// 🧩️ A bounded caller owns hash and collision comparison before placing this exact vacant slot.
+ pub fn insert_vacant(&mut self,index:usize,key:K,value:V)->Result<(),(K,V)>{if self.len==self.maximum||!matches!(self.slots.get(index),Some(Slot::Empty)|Some(Slot::Deleted)){return Err((key,value))}self.slots[index]=Slot::Occupied((key,value));self.len+=1;Ok(())}
+ /// ♻️ Returns one original slot operand for caller-funded retirement without traversing the table.
+ pub fn pop_last_slot(&mut self)->Option<Option<(K,V)>>{self.slots.pop().map(|slot|match slot{Slot::Occupied(entry)=>{self.len-=1;Some(entry)},_=>None})}
+ pub fn release_empty_backing(&mut self)->Result<usize,ValueError>{if !self.slots.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"scratch hash backing still contains slots"))}let bytes=self.backing_bytes();self.slots=Vec::new();self.maximum=0;Ok(bytes)}
+}

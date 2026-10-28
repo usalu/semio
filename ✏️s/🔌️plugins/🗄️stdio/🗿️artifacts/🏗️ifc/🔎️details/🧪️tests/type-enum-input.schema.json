@@ -1,0 +1,383 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "nativeExecution",
+    "encoding",
+    "choiceCap",
+    "window",
+    "sources",
+    "cases",
+    "invalidWords",
+    "invalidPages",
+    "draftSibling"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "encoding": {
+      "const": "ifc-template-command"
+    },
+    "choiceCap": {
+      "const": 32
+    },
+    "window": {
+      "const": 31
+    },
+    "sources": {
+      "type": "object",
+      "minProperties": 4,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "entities"
+        ],
+        "properties": {
+          "entities": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "#/definitions/entity"
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "target",
+          "required",
+          "steps",
+          "args",
+          "mutations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "boolean",
+              "logical",
+              "derived",
+              "sensor"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "required": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "domain",
+                "members"
+              ],
+              "properties": {
+                "index": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "domain": {
+                  "type": "string"
+                },
+                "members": {
+                  "type": "array",
+                  "uniqueItems": true,
+                  "minItems": 2,
+                  "items": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "member",
+                "offset"
+              ],
+              "properties": {
+                "field": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 15
+                },
+                "member": {
+                  "type": "string"
+                },
+                "offset": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                }
+              }
+            }
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "$ref": "#/definitions/value"
+            }
+          },
+          "mutations": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    },
+    "invalidWords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "invalidPages": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    },
+    "draftSibling": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "source",
+        "index",
+        "missing",
+        "text"
+      ],
+      "properties": {
+        "source": {
+          "const": "logical"
+        },
+        "index": {
+          "const": 4
+        },
+        "missing": {
+          "const": 3
+        },
+        "text": {
+          "type": "string",
+          "minLength": 64
+        }
+      }
+    }
+  },
+  "definitions": {
+    "value": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unset"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "derived"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "enum"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "integer"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^(0|-?[1-9][0-9]{0,18})$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reference"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^[1-9][0-9]{0,19}$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "real"
+            },
+            "value": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "bits"
+              ],
+              "properties": {
+                "bits": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]{0,19})$"
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "aggregate"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/value"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "part": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "args"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/value"
+          }
+        }
+      }
+    },
+    "entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "args",
+        "complex"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[1-9][0-9]{0,19}$"
+        },
+        "name": {
+          "type": "string"
+        },
+        "args": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/value"
+          }
+        },
+        "complex": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/part"
+          }
+        }
+      }
+    }
+  }
+}

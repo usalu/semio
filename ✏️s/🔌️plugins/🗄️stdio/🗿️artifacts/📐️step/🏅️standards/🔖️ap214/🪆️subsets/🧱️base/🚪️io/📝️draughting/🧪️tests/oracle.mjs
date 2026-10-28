@@ -1,0 +1,2 @@
+/** 🔮️ Independent Three geometry stays behind a numeric-only test port. */
+export function createDraughtingGeometryOracle(three){return{circle(center,radius){return new three.EllipseCurve(center[0],center[1],radius,radius,0,Math.PI*2,false,0).getPoints(64).map(point=>[point.x,point.y,center[2]]);},midpoint(a,b){return new three.Vector3(...a).lerp(new three.Vector3(...b),0.5).toArray();},direction(angle){return new three.Vector3(1,0,0).applyAxisAngle(new three.Vector3(0,0,1),angle).toArray();}};}

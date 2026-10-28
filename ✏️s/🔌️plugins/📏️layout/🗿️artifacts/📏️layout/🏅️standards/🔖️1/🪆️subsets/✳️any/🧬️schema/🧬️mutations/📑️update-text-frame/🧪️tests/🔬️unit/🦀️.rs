@@ -1,3 +1,4 @@
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use protocol::{ColdMutation, Mutation, MutationDiff};

@@ -5,6 +5,7 @@ use semio_framework_dsl_record::DslField;
 use semio_framework_dsl_record::{BorrowedDslField,BorrowedShape};
 
 #[path="🛫️encoding/🦀️.rs"]pub mod encoding;
+#[path="geometry.rs"]pub mod geometry;
 #[derive(semio_framework_dsl_record_derive::DslRecord)]
 pub struct Attribute{semantic:String,accessor:usize}
 #[derive(semio_framework_dsl_record_derive::DslRecord)]

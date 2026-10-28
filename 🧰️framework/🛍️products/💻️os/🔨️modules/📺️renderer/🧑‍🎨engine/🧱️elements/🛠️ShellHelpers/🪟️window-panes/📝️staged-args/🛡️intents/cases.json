@@ -1,0 +1,21 @@
+{
+  "token":{"action":"attachPropertySet","window":"detail-left","generation":"9007199254740993","revision":"ef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd"},
+  "args":{"target":"18446744073709551615","count":"0","entries":[],"unchanged":{"bits":"9223372036854775808"}},
+  "drafts":["","-","1.","1e-","9223372036854775807","-9223372036854775808"],
+  "choice":{"key":"typed-red","value":{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"Red"}]}}},
+  "attacks":[
+    {"id":"other-surface","field":"surface","value":"form-right"},
+    {"id":"old-tree","field":"revision","value":"previous-publication"},
+    {"id":"missing-node","field":"node","value":"unknown"},
+    {"id":"other-key","field":"nodeKey","value":"other-control"},
+    {"id":"other-trigger","field":"trigger","value":"activate"},
+    {"id":"other-action","field":"action","value":{"scope":"ifc","name":"deleteEntity","version":1}},
+    {"id":"other-controller","field":"action","value":{"scope":"other","name":"framework.stageActionForm","version":1}},
+    {"id":"other-version","field":"action","value":{"scope":"ifc","name":"framework.stageActionForm","version":2}},
+    {"id":"numeric-sequence","field":"seq","value":1},
+    {"id":"map-input","field":"input","value":{"token":{"generation":"1"},"path":["target"],"value":"1"}},
+    {"id":"numeric-input","field":"input","value":3},
+    {"id":"boolean-input","field":"input","value":false},
+    {"id":"missing-input","field":"input","value":null}
+  ]
+}

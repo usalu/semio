@@ -2,7 +2,7 @@ use super::*;
 struct OriginalPages{pages:Vec<Vec<u8>>,extent:usize}
 struct BorrowedPages<'a>{owner:&'a OriginalPages,authority:Option<(u64,u64)>}
 impl RetainedWireByteSource for BorrowedPages<'_>{
- fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.owner as*const OriginalPages as usize,extent:self.owner.extent,authority:self.authority}}
+ fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{range_start:0,address:self.owner as*const OriginalPages as usize,extent:self.owner.extent,authority:self.authority}}
  fn byte_at(&self,index:usize)->Option<u8>{let mut remaining=index;for page in &self.owner.pages{if remaining<page.len(){return page.get(remaining).copied()}remaining-=page.len()}None}
 }
 #[test]

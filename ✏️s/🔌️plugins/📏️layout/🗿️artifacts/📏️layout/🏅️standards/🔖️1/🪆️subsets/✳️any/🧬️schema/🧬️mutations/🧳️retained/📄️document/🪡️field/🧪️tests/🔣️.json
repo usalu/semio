@@ -1,0 +1,60 @@
+{
+  "cuts": [
+    0,
+    1,
+    2,
+    7,
+    31,
+    99,
+    800
+  ],
+  "cases": [
+    {
+      "name": "complete original typed document"
+    },
+    {
+      "name": "long Unicode original",
+      "nameRepeat": "親🌍",
+      "repeat": 180
+    },
+    {
+      "name": "intrinsic bytes and IEEE words",
+      "dictionary": true
+    },
+    {
+      "name": "deep original intrinsic array",
+      "depth": 80
+    },
+    {
+      "name": "reference-only child and artifact links",
+      "references": true,
+      "backgroundDrawing": {
+        "handle": {
+          "childId": "existing-drawing-member",
+          "target": {
+            "artifactId": "existing-drawing-artifact",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      },
+      "referencedModel": {
+        "target": {
+          "artifactId": "existing-model-artifact",
+          "dialect": {
+            "artifactKind": "s.model.model",
+            "standard": "1",
+            "subset": "*"
+          }
+        },
+        "pin": {
+          "kind": "head"
+        },
+        "role": "model"
+      }
+    }
+  ]
+}

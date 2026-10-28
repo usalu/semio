@@ -1,0 +1,17 @@
+{
+  "source": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/annex/annex-e/bath-csg-solid.ifc",
+  "commit": "a8664407b63d42651e48a78a252c76d09dd6274c",
+  "schema": "IFC4 ADD2 TC1",
+  "license": "CC-BY-ND-4.0",
+  "bytes": 3290,
+  "sha256": "afb2fc8f0702c3d90ab9395ea0897301c98499160bb69dcda88484fec0375fbd",
+  "scope": "Finite closed CSG expression containing IfcBlock, IfcBooleanResult and rounded rectangle extrusion; no other primitive or halfspace support is implied.",
+  "expected": {
+    "product": "225",
+    "representation": "223",
+    "sampledVolume": 548147011.3103606,
+    "absoluteTolerance": 0.001,
+    "unit": "source millimetre cubed",
+    "sampling": "Four quarter arcs, 18 segments each; exact tangent endpoints."
+  }
+}

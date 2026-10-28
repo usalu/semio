@@ -1,0 +1,199 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "numericEquality",
+    "source",
+    "functions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "numericEquality": {
+      "const": "finite-real-value-with-zero-sign-equivalence"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schema",
+        "file",
+        "expSha256",
+        "physical"
+      ],
+      "properties": {
+        "schema": {
+          "const": "IFC4X3_ADD2"
+        },
+        "file": {
+          "const": "source.ifc"
+        },
+        "expSha256": {
+          "const": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+        },
+        "physical": {
+          "type": "string"
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 41,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "owner",
+          "args",
+          "expected",
+          "tolerance"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "owner": {
+            "enum": [
+              "IFCBUILD2AXES",
+              "IFCBUILDAXES",
+              "IFCCROSSPRODUCT",
+              "IFCDOTPRODUCT",
+              "IFCNORMALISE",
+              "IFCORTHOGONALCOMPLEMENT"
+            ]
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "string",
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                {
+                  "type": "null"
+                }
+              ]
+            }
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "unknown"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "real"
+                  },
+                  "value": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ratios"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "direction"
+                  },
+                  "ratios": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "orientation",
+                  "magnitude"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "vector"
+                  },
+                  "orientation": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  },
+                  "magnitude": {
+                    "type": "number"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "items"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "directions"
+                  },
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "array",
+                      "minItems": 2,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1e-15
+          }
+        }
+      }
+    }
+  }
+}

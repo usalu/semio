@@ -6,6 +6,10 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_value_derive as value_derive;
 
+#[cfg(test)]
+#[global_allocator]
+static IFC_ORIGINAL_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
 #[path = "."]
 pub mod standards {
     #[path = "."]
@@ -19,6 +23,12 @@ pub mod standards {
                     #[path = "../../🚪️io/🦀️.rs"]
                     mod component;
                     pub use component::*;
+                    #[path = "../../🚪️io/📐️geometry/🦀️.rs"]
+                    pub mod geometry;
+                    #[path = "../../🚪️io/🔎️inspector/🦀️.rs"]
+                    pub mod inspector;
+                    #[path = "../../🚪️io/🪟️details/🦀️.rs"]
+                    pub mod details;
                     #[path = "."]
                     pub mod import {
                         #[path = "."]

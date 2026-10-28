@@ -1,0 +1,20 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🟦️.ts');s=p.read_text(encoding='utf-8').replace('prepareIfcDiffSteps,validateIfcGraphSteps','prepareIfcDiffSteps,captureIfcGraphSteps,validateIfcGraphSteps')
+needle='function* mutationDiffSteps('
+insert=r'''interface IfcCommandTransaction extends IfcDiffTransaction {mutation:Ifc4x3Mutation}
+function proposal(mutation:Ifc4x3Mutation):IfcDiff{const field=(id:bigint,diff:IfcEntityDiff):IfcDiff=>({entities:{modified:[{id,diff}]}});switch(mutation.mutation){
+ case"setFileDescription":return{fileDescription:mutation.values};case"setFileName":return{fileName:mutation.values};case"setFileSchema":return{fileSchema:mutation.values};
+ case"insertEntity":return{entities:{added:[{index:mutation.index,entity:mutation.entity}]}};case"removeEntity":return{entities:{removed:[{id:mutation.id,index:0}]}};
+ case"setEntityName":return field(mutation.id,{name:mutation.name});case"setEntityComplex":return field(mutation.id,{complex:mutation.complex});
+ case"setEntityArg":case"setEntityValue":return field(mutation.id,{args:{modified:[{index:mutation.index,value:mutation.value}]}});
+ case"insertEntityArg":return field(mutation.id,{args:{added:[{index:mutation.index,value:mutation.value}]}});case"removeEntityArg":return field(mutation.id,{args:{removed:[mutation.index]}});
+ default:return refusal("unknownMutation","unknown IFC mutation");
+}}
+function* captureMutation(source:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<Ifc4x3Mutation>{const mutation=yield* copyIfcOwnedSteps(source,options,true);if(mutation.mutation==="setEntityValue"){if(!Array.isArray(mutation.path)||mutation.path.length>(options.maxDepth??512))refusal("invalidPath","nested paths require bounded index arrays");for(const index of mutation.path){if(!Number.isSafeInteger(index)||index<0)refusal("invalidIndex","path coordinates require nonnegative safe integers");yield{phase:"admitInput",completed:0,total:mutation.path.length};}}yield* admitIfcDiffSteps(proposal(mutation),options);return mutation;}
+'''
+s=s.replace(needle,insert+needle)
+s=s.replace('function* mutationDiffSteps(snapshot:IfcSnapshot,mutation:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<IfcDiff>{yield* validateIfcGraphSteps(snapshot,"validateBase",options);const diff=yield* mutationPlan(snapshot,mutation,options);return yield* copyIfcOwnedSteps(diff,options);}', 'function* mutationDiffSteps(source:IfcSnapshot,input:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<IfcDiff>{const snapshot=yield* captureIfcGraphSteps(source,"validateBase",options),mutation=yield* captureMutation(input,options),diff=yield* mutationPlan(snapshot,mutation,options);return yield* copyIfcOwnedSteps(diff,options);}')
+s=s.replace('function commandSteps(snapshot:IfcSnapshot,mutation:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<IfcDiffTransaction>{return prepareIfcDiffSteps(snapshot,()=>mutationPlan(snapshot,mutation,options),options);}', 'function* commandSteps(snapshot:IfcSnapshot,source:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<IfcCommandTransaction>{const mutation=yield* captureMutation(source,options),transaction=yield* prepareIfcDiffSteps(snapshot,owned=>mutationPlan(owned,mutation,options),options);return{...transaction,mutation};}')
+s=s.replace('function* inverseMutationSteps(snapshot:IfcSnapshot,mutation:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<Ifc4x3Mutation>{yield* validateIfcGraphSteps(snapshot,"validateBase",options);yield* mutationPlan(snapshot,mutation,options);', 'function* inverseMutationSteps(source:IfcSnapshot,input:Ifc4x3Mutation,options:IfcApplyOptions):IfcEditSteps<Ifc4x3Mutation>{const snapshot=yield* captureIfcGraphSteps(source,"validateBase",options),mutation=yield* captureMutation(input,options);yield* mutationPlan(snapshot,mutation,options);')
+s=s.replace('...(mutation?{mutation:yield* copyIfcOwnedSteps(mutation,options)}:{})','...(kind==="mutation"?{mutation:(transaction as IfcCommandTransaction).mutation}:{})')
+p.write_text(s,encoding='utf-8',newline='\n')

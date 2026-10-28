@@ -20,11 +20,14 @@ import { createRetainedUiCloseLadderV1, PLUGIN_UI_CONTINUATION_LIMIT, PLUGIN_UI_
 import { yieldPluginUiContinuation } from "../⏩️continuation-yield/🟦️.ts";
 import { retainedUiRefreshEffects, sectionValueFromBuiltNode, uiRefreshSectionTargets, uiRefreshSectionUnchanged } from "../🖼️surface-refresh/🟦️.ts";
 import { createInstanceTable, type PluginHandleScope } from "../🪢️handle-scope/🟦️.ts";
+import {createAcknowledgedUiSurfaceLeases} from './lease.ts';
+
+const UI_INTAKE_GRANT=Object.freeze({maxItems:256,maxBytes:65536});
 
 //#region 🔖️plugin-runtime
 /** 🧺️ Phase 4a of {@link loadPluginModule}: retained-UI patch admission — the per-instance intake lane, the round-wise
  * admission and acknowledgement of a turn's patch page, surface installation and publication announcements. */
-function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>) {
+function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>, reads:ReturnType<typeof createAcknowledgedUiSurfaceLeases>) {
   const { pluginId, lifecycleByInstance, uiOwnerByInstance, uiSurfaceByInstance, uiIntakesByInstance } = scope;
   const { requireActorId } = instances;
   /** 🩺️ When each retained surface last became CURRENT — the instant its newest patch finished
@@ -63,7 +66,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
   /** 🎟️ Per-step intake slice. One item per step made the 4 096-step continuation budget a hard
    * 4 096-item ceiling on a single surface patch (a 180-object world scene exhausts it); 256 items /
    * 64 KiB per step keeps each slice sub-millisecond while the budget bounds a patch at ~1 M items. */
-  const uiGrant = Object.freeze({ maxItems: 256, maxBytes: 65_536 });
+  const uiGrant = UI_INTAKE_GRANT;
   /** 🚦 The instance's ONE owning intake. Every path that accepts UI patches for an instance — the
    * `settlePluginTurn` accept callback of a command turn, the owed/drain settle, the ShellHost progress
    * subscription's refresh, a job completion, the hot-swap close — enters through here, so a patch
@@ -88,7 +91,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
    * and closes its intake — the shape the patch-batching lane bought, now applied per round instead of
    * per turn. `submitUiAcknowledgements` admits any non-empty SUBSET of a turn's patches (it is the same
    * path the one-patch case took before batching), so a round is a legal acknowledgement unit. */
-  const installUiPatchRound = async (instanceId: number, lease: ShardInstanceLifecycleLease, admitted: readonly AdmittedUiPatch[]): Promise<WireTurnResult> => {
+  const installUiPatchRound = async (instanceId: number, lease: ShardInstanceLifecycleLease, owner:OwnedUiInstance, admitted: readonly AdmittedUiPatch[]): Promise<WireTurnResult> => {
     const acknowledged = await submitPluginLifecycleTurn(lease, { kind: "issued-ui-acks", entries: admitted.map(({ entry }) => entry) }, "Interactive");
     if (!acknowledged.submissions || acknowledged.submissions.length !== admitted.length) throw new Error("plugin-ui.acknowledgement-refused");
     const installed: string[] = [];
@@ -103,12 +106,11 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
       }
       const surface = intake.takeSurface();
       if (!surface) throw new Error("plugin-ui.surface-missing");
-      const surfaces = uiSurfaceByInstance.get(instanceId) ?? new Map<string, OwnedUiInstanceSurface>();
-      surfaces.set(surfaceId, surface); uiSurfaceByInstance.set(instanceId, surfaces);
-      const installedAtMs = performance.now();
-      uiSurfaceInstalledAtMs.set(`${instanceId}:${surfaceId}`, installedAtMs);
-      hopTrace.record("patch.install", startedMs, installedAtMs - startedMs, { instanceId, surfaceId });
-      installed.push(surfaceId);
+      if(!scope.state.disposing&&!scope.closingInstances.has(instanceId)&&lifecycleByInstance.get(instanceId)===lease&&uiOwnerByInstance.get(instanceId)===owner&&scope.actorIdByInstance.get(instanceId)===lease.activation.actorId){
+        const surfaces=uiSurfaceByInstance.get(instanceId)??new Map<string,OwnedUiInstanceSurface>(),previous=surfaces.get(surfaceId);surfaces.set(surfaceId,surface);uiSurfaceByInstance.set(instanceId,surfaces);
+        if(reads.install(instanceId,surfaceId,surface,intake)){const installedAtMs=performance.now();uiSurfaceInstalledAtMs.set(`${instanceId}:${surfaceId}`,installedAtMs);hopTrace.record("patch.install",startedMs,installedAtMs-startedMs,{instanceId,surfaceId});installed.push(surfaceId);}
+        else if(uiSurfaceByInstance.get(instanceId)===surfaces&&surfaces.get(surfaceId)===surface){if(previous)surfaces.set(surfaceId,previous);else surfaces.delete(surfaceId);}
+      }
       await closeIntake(instanceId, intake);
     }
     announceSurfacePublications(instanceId, installed);
@@ -118,10 +120,10 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
    * acknowledgement still crosses (a subset is a legal batch) so every cell they hold is released. One
    * admission fault can therefore never leave a surface with an open wire, input page or receipt outbox —
    * the state that made `beginPatch` answer busy for the rest of the instance's life. */
-  const retireAdmittedUiPatches = async (instanceId: number, lease: ShardInstanceLifecycleLease, admitted: readonly AdmittedUiPatch[]): Promise<void> => {
+  const retireAdmittedUiPatches = async (instanceId: number, lease: ShardInstanceLifecycleLease, owner:OwnedUiInstance, admitted: readonly AdmittedUiPatch[]): Promise<void> => {
     if (admitted.length === 0) return;
     try {
-      await installUiPatchRound(instanceId, lease, admitted);
+      await installUiPatchRound(instanceId, lease, owner, admitted);
     } catch (error) {
       console.error(`plugin-ui.intake-retirement-failed: instance ${instanceId} could not retire ${admitted.length} admitted patch(es) (${admitted.map(({ surfaceId }) => surfaceId).join(", ")})`, error);
     }
@@ -150,6 +152,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
           const source = lease.captureUiPatchAuthority(turn.original, index);
           const startedMs = performance.now();
           const intake = new OwnedUiPatchIntake(owner, source);
+          reads.beginPatch(instanceId,surfaceId,intake);
           pending = intake;
           const intakes = uiIntakesByInstance.get(instanceId) ?? new Set<OwnedUiPatchIntake>();
           intakes.add(intake); uiIntakesByInstance.set(instanceId, intakes);
@@ -167,10 +170,10 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
         }
       } catch (error) {
         if (pending) await closeIntake(instanceId, pending).catch((closeError) => console.error(`plugin-ui.intake-retirement-failed: instance ${instanceId} could not close the intake that faulted`, closeError));
-        await retireAdmittedUiPatches(instanceId, lease, admitted);
+        await retireAdmittedUiPatches(instanceId, lease, owner, admitted);
         throw error;
       }
-      const acknowledgedTurn = await installUiPatchRound(instanceId, lease, admitted);
+      const acknowledgedTurn = await installUiPatchRound(instanceId, lease, owner, admitted);
       supplemental.push(acknowledgedTurn);
       const nested = await acceptOwnedUiPatches(instanceId, acknowledgedTurn);
       supplemental.push(...nested.turns);
@@ -182,7 +185,7 @@ function createUiPatchAdmission(scope: PluginHandleScope, instances: ReturnType<
 }
 
 /** 🧺️ Phase 4b of {@link loadPluginModule}: reads the retained surfaces back as built nodes and answers a refresh request. */
-function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnType<typeof createUiPatchAdmission>) {
+function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnType<typeof createUiPatchAdmission>,reads:ReturnType<typeof createAcknowledgedUiSurfaceLeases>) {
   const { state, actorIdByInstance, closingInstances, lifecycleByInstance, uiOwnerByInstance, uiSurfaceByInstance, uiReadsByInstance, turnOutcomes } = scope;
   const { uiGrant, uiSurfaceInstalledAtMs } = admission;
   const advanceUiMaintenance = async (owner: OwnedUiInstance, budget: { steps: number }, phase: string): Promise<void> => {
@@ -239,9 +242,9 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
     const project = async (targets: PluginUiRefreshRequest["windows"]): Promise<PluginUiRefreshSectionResponse[]> => {
       const result: PluginUiRefreshSectionResponse[] = [];
       for (const target of targets ?? []) {
-        const surface = surfaces.get(retainedSurfaceId(instanceId, target.key));
-        if (surface && uiRefreshSectionUnchanged(target.hash, surface.view)) {
-          result.push({ key: target.key, hash: target.hash! });
+        const surfaceId=retainedSurfaceId(instanceId,target.key),surface=surfaces.get(surfaceId),view=surface?.view;
+        if (surface && view&&uiRefreshSectionUnchanged(target.hash, view)) {
+          const response={key:target.key,hash:target.hash!};reads.issueTarget(instanceId,surfaceId,response,view);result.push(response);
           continue;
         }
         if (!surface) {
@@ -249,7 +252,7 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
           continue;
         }
         const projected = await projectOwnedUiSurface(instanceId, actorId, lease, owner, surface);
-        if (projected) { notePaint(retainedSurfaceId(instanceId, target.key), target.key); result.push({ key: target.key, ...projected }); }
+        if (projected&&view) { notePaint(surfaceId, target.key);const response={key:target.key,...projected};reads.issueTarget(instanceId,surfaceId,response,view);result.push(response); }
         else console.error(`refreshUi dropped requested body ${JSON.stringify(target.key)}: retained surface has no root on instance ${instanceId}`);
       }
       return result;
@@ -257,15 +260,15 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
     const projectSections = async (): Promise<{ [key in UiRefreshSectionKey]?: PluginUiRefreshSectionResponse }> => {
       const sections: { [key in UiRefreshSectionKey]?: PluginUiRefreshSectionResponse } = {};
       for (const section of uiRefreshSectionTargets(request)) {
-        const surface = surfaces.get(retainedSurfaceId(instanceId, section.bodyKey));
+        const surfaceId=retainedSurfaceId(instanceId,section.bodyKey),surface=surfaces.get(surfaceId),view=surface?.view;
         if (!surface) continue;
         const cached = request[section.key]?.hash;
-        if (uiRefreshSectionUnchanged(cached, surface.view)) {
-          sections[section.key] = { key: section.key, hash: cached! };
+        if (view&&uiRefreshSectionUnchanged(cached, view)) {
+          const response={key:section.key,hash:cached!};reads.issueTarget(instanceId,surfaceId,response,view);sections[section.key]=response;
           continue;
         }
         const projected = await projectOwnedUiSurface(instanceId, actorId, lease, owner, surface);
-        if (projected) { notePaint(retainedSurfaceId(instanceId, section.bodyKey), section.key); sections[section.key] = { key: section.key, hash: projected.hash, value: sectionValueFromBuiltNode(section.bodyKey, projected.value, `${actorId} instance ${instanceId}`) }; }
+        if (projected&&view) { notePaint(surfaceId, section.key);const response={key:section.key,hash:projected.hash,value:sectionValueFromBuiltNode(section.bodyKey,projected.value,`${actorId} instance ${instanceId}`)};reads.issueTarget(instanceId,surfaceId,response,view);sections[section.key]=response; }
       }
       return sections;
     };
@@ -283,7 +286,7 @@ function createUiSurfaceProjection(scope: PluginHandleScope, admission: ReturnTy
 }
 
 /** 🧺️ Phase 4c of {@link loadPluginModule}: retires one instance — its UI owner behind the intake queue, then its lifecycle lease. */
-function createUiInstanceClose(scope: PluginHandleScope, admission: ReturnType<typeof createUiPatchAdmission>) {
+function createUiInstanceClose(scope: PluginHandleScope, admission: ReturnType<typeof createUiPatchAdmission>,reads:ReturnType<typeof createAcknowledgedUiSurfaceLeases>) {
   const { uiRetirementByInstance, uiSurfaceByInstance, uiIntakesByInstance, uiReadsByInstance } = scope;
   const { uiGrant, serializeInstanceUiIntake, closeIntake } = admission;
   const closeUiOwner = (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => serializeInstanceUiIntake(instanceId, () => closeOwnedUiInstance(instanceId, owner));
@@ -292,8 +295,9 @@ function createUiInstanceClose(scope: PluginHandleScope, admission: ReturnType<t
   const closeOwnedUiInstance = async (instanceId: number, owner: OwnedUiInstance): Promise<OwnedUiInstanceRetirement> => {
     const retained = uiRetirementByInstance.get(instanceId);
     if (retained) return retained;
-    if ((uiReadsByInstance.get(instanceId)?.size ?? 0) !== 0) throw new Error("plugin-ui.read-retirement-pending");
     for (const intake of uiIntakesByInstance.get(instanceId) ?? []) await closeIntake(instanceId, intake);
+    await reads.closeInstance(instanceId);
+    if ((uiReadsByInstance.get(instanceId)?.size ?? 0) !== 0) throw new Error("plugin-ui.read-retirement-pending");
     const retainedSurfaces = uiSurfaceByInstance.get(instanceId)?.size ?? 0;
     uiSurfaceByInstance.get(instanceId)?.clear();
     const ladder = createRetainedUiCloseLadderV1(retainedSurfaces);
@@ -353,8 +357,9 @@ function createUiInstanceClose(scope: PluginHandleScope, admission: ReturnType<t
 /** 🧺️ Phase 4 of {@link loadPluginModule}: retained-UI patch intake, projection and close — every path that accepts,
  * reads or retires an instance's retained surfaces. */
 export function createRetainedUiIntake(scope: PluginHandleScope, instances: ReturnType<typeof createInstanceTable>) {
-  const admission = createUiPatchAdmission(scope, instances);
-  const { ownedUiRefreshResponse } = createUiSurfaceProjection(scope, admission);
-  const { retireInstanceLifecycle } = createUiInstanceClose(scope, admission);
-  return { acceptUiPatches: admission.acceptUiPatches, ownedUiRefreshResponse, retireInstanceLifecycle };
+  const reads=createAcknowledgedUiSurfaceLeases(scope,UI_INTAKE_GRANT,yieldPluginUiContinuation,run=>{hostContinuations.schedule(run,0);});
+  const admission = createUiPatchAdmission(scope, instances,reads);
+  const { ownedUiRefreshResponse } = createUiSurfaceProjection(scope, admission,reads);
+  const { retireInstanceLifecycle } = createUiInstanceClose(scope, admission,reads);
+  return { acceptUiPatches: admission.acceptUiPatches, ownedUiRefreshResponse, retireInstanceLifecycle,acquireOwnedUiSurface:reads.acquireOwnedUiSurface,beginOwnedUiSurfaceClose:reads.beginClose };
 }

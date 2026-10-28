@@ -76,13 +76,28 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
  }
  /// ♻️ Every partial value remains resident when admission refuses or cancellation starts closure.
  pub fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  self.validate_control(native)?;if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}native.charge(demand.capacity_bytes)?;self.closing=true;
+  self.validate_control(native)?;if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}native.charge(demand.capacity_bytes)?;self.retire_step(grant)
+ }
+ fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+  if self.closed{return Ok(RetainedCloneStep::Complete(Default::default()))}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()))}self.closing=true;
   if !self.output.terminal_is_empty(){return self.output.close_step(child(grant)).map(RetainedCloneStep::Progress)}if !self.binding.terminal_is_empty(){return self.binding.close_step(child(grant)).map(RetainedCloneStep::Progress)}if !self.generic.terminal_is_empty(){return self.generic.close_step(child(grant)).map(RetainedCloneStep::Progress)}if let Some(record)=&mut self.record{if !record.terminal_is_empty(){return record.close_step(child(grant))}self.record=None;return Ok(RetainedCloneStep::Progress(receipt(demand)))}self.closed=true;Ok(RetainedCloneStep::Complete(receipt(demand)))
  }
  /// 🕳️ Terminal means no typed, generic or Pack backing can be released by implicit destruction.
  pub fn terminal_is_empty(&self)->bool{self.closed&&self.record.is_none()&&self.generic.terminal_is_empty()&&self.binding.terminal_is_empty()&&self.output.terminal_is_empty()}
 }
 impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> Drop for OriginalSnapshotRecordReceiving<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original snapshot receiver abandoned paid source or partial typed owners")}}
+
+impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::RetireOwned for OriginalSnapshotRecordReceiving<T>{
+ fn retirement(mut self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{self.closing=true;Box::new(self)}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirement::RetirementCursor for OriginalSnapshotRecordReceiving<T>{
+ fn next_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{match self.retire_step(grant){Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress()),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error)}}
+ fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
+ fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+}
 
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]

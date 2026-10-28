@@ -91,3 +91,5 @@ export function parseSemioDrawingSnapshot(value: unknown, at = "$"): SemioDrawin
     layers: row["layers"] === undefined ? [] : stdioSemioV1DrawingSnapshotGuardArray(row["layers"], `${at}.layers`).map((item, index) => parseDrawLayer(item, `${at}.layers[${index}]`)),
   };
 }
+
+export {withCanvasSize} from "./🖼️canvas/🟦️.ts";

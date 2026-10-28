@@ -7,7 +7,22 @@
   "stories": null,
   "links": null,
   "parentPages": null,
-  "spreads": null,
+  "spreads": {
+    "inserted": [],
+    "removed": [],
+    "moved": [],
+    "modified": [
+      {
+        "id": "spread-1",
+        "patch": {
+          "name": null,
+          "pageIds": [
+            "page-1"
+          ]
+        }
+      }
+    ]
+  },
   "pages": {
     "inserted": [],
     "removed": [
@@ -20,8 +35,5 @@
     "modified": []
   },
   "printTarget": null,
-  "backgroundDrawing": null,
-  "drawingTexts": [],
-  "referencedModel": null,
   "dataFields": null
 }

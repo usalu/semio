@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "actualProgramRequired",
+    "zeroDepth",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "actualProgramRequired": {
+      "const": true
+    },
+    "zeroDepth": {
+      "type":"object","additionalProperties":false,
+      "required":["expressionRecords","inverseMetadata","helperAcceptsExpression"],
+      "properties":{"expressionRecords":{"const":0},"inverseMetadata":{"const":7},"helperAcceptsExpression":{"const":false}}
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "endpoint",
+          "phase",
+          "boundary",
+          "fault",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "endpoint": {
+            "enum": [
+              "compiler",
+              "population",
+              "domains",
+              "evaluator"
+            ]
+          },
+          "phase": {
+            "enum": [
+              "admit",
+              "normalize",
+              "structure",
+              "evaluate",
+              "validation-result",
+              "compile",
+              "compile-seal",
+              "compile-index"
+            ]
+          },
+          "boundary": {
+            "enum": [
+              "first",
+              "completion"
+            ]
+          },
+          "fault": {
+            "enum": [
+              "error",
+              "edit-invalid",
+              "edit-cancelled",
+              "evaluation-cancelled",
+              "undefined",
+              "number"
+            ]
+          },
+          "expected": {
+            "const": "original-refusal"
+          }
+        }
+      }
+    }
+  }
+}

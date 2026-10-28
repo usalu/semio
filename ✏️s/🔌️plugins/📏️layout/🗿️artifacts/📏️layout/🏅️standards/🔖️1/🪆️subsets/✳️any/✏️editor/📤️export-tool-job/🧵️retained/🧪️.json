@@ -1,0 +1,123 @@
+{
+  "contract": {
+    "source": "actual retained command",
+    "output": "same supplied queue",
+    "parent": "actual original snapshot read",
+    "drawing": "qualified actual member source",
+    "closeOrder": [
+      "core-consumers",
+      "drawing-custodies",
+      "original-parent",
+      "remaining-metadata-and-output"
+    ],
+    "maximumDrawingSources": 65
+  },
+  "cases": [
+    {
+      "name": "svg supplied output identity",
+      "kind": "svg",
+      "drawings": 0,
+      "accept": true
+    },
+    {
+      "name": "pdf actual drawing reads",
+      "kind": "pdf",
+      "drawings": 2,
+      "accept": true
+    },
+    {
+      "name": "png page fallback borrowed from window",
+      "kind": "png",
+      "drawings": 1,
+      "accept": true
+    },
+    {
+      "name": "step output authority",
+      "kind": "step",
+      "drawings": 1,
+      "accept": true
+    },
+    {
+      "name": "idml whole document",
+      "kind": "idml",
+      "drawings": 0,
+      "accept": true
+    },
+    {
+      "name": "package whole document",
+      "kind": "package",
+      "drawings": 0,
+      "accept": true
+    },
+    {
+      "name": "changed original output refused",
+      "kind": "svg",
+      "drawings": 0,
+      "replaceOutput": true,
+      "accept": false
+    },
+    {
+      "name": "missing genuine member refused",
+      "kind": "pdf",
+      "drawings": 1,
+      "missingMember": true,
+      "accept": false
+    },
+    {
+      "name": "changed original parent refused",
+      "kind": "svg",
+      "drawings": 1,
+      "replaceParent": true,
+      "accept": false
+    },
+    {
+      "name": "changed canonical revision refused",
+      "kind": "png",
+      "drawings": 1,
+      "replaceRevision": true,
+      "accept": false
+    },
+    {
+      "name": "cancel during metadata",
+      "kind": "pdf",
+      "drawings": 1,
+      "cancel": "metadata",
+      "accept": false
+    },
+    {
+      "name": "cancel during read qualification",
+      "kind": "pdf",
+      "drawings": 1,
+      "cancel": "read",
+      "accept": false
+    },
+    {
+      "name": "cancel during core composition",
+      "kind": "svg",
+      "drawings": 1,
+      "cancel": "core",
+      "accept": false
+    },
+    {
+      "name": "denied output transfer preserves original",
+      "kind": "svg",
+      "drawings": 0,
+      "deny": "output",
+      "accept": true
+    },
+    {
+      "name": "denied original source birth",
+      "kind": "pdf",
+      "drawings": 1,
+      "deny": "read",
+      "accept": true
+    },
+    {
+      "name": "denied download transfer",
+      "kind": "png",
+      "drawings": 0,
+      "deny": "download",
+      "accept": true
+    }
+  ]
+}

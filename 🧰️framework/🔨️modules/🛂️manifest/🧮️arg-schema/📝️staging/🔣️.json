@@ -1,0 +1,755 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/framework/action-staging.schema.json",
+  "$defs": {
+    "Value": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "boolean"
+        },
+        {
+          "type": "number"
+        },
+        {
+          "type": "string"
+        },
+        {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Value"
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Value"
+          }
+        }
+      ]
+    },
+    "Token": {
+      "type": "object",
+      "required": [
+        "action",
+        "generation",
+        "revision",
+        "window"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "type": "string",
+          "minLength": 1
+        },
+        "generation": {
+          "type": "string",
+          "maxLength": 20,
+          "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$"
+        },
+        "revision": {
+          "type": "string",
+          "minLength": 1
+        },
+        "window": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Path": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "not": {
+          "enum": [
+            "__proto__",
+            "prototype",
+            "constructor"
+          ]
+        }
+      }
+    },
+    "Label": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "Choice": {
+      "type": "object",
+      "required": [
+        "id",
+        "label",
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "value": {
+          "$ref": "#/$defs/Value"
+        }
+      }
+    },
+    "Field": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/Text"
+        },
+        {
+          "$ref": "#/$defs/ChoiceField"
+        },
+        {
+          "$ref": "#/$defs/Constant"
+        },
+        {
+          "$ref": "#/$defs/Record"
+        },
+        {
+          "$ref": "#/$defs/Array"
+        }
+      ]
+    },
+    "Text": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path",
+        "label",
+        "required",
+        "format"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "format": {
+          "enum": [
+            "text",
+            "decimal-i64",
+            "decimal-u64",
+            "binary64",
+            "guid"
+          ]
+        },
+        "pattern": {
+          "type": "string"
+        },
+        "description": {
+          "$ref": "#/$defs/Label"
+        }
+      }
+    },
+    "ChoiceField": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path",
+        "label",
+        "required",
+        "provenance",
+        "choices"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "choice"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "required": {
+          "type": "boolean"
+        },
+        "provenance": {
+          "enum": [
+            "declaration",
+            "source"
+          ]
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Choice"
+          }
+        },
+        "description": {
+          "$ref": "#/$defs/Label"
+        },
+        "resets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Path"
+          }
+        }
+      }
+    },
+    "Constant": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path",
+        "label",
+        "value"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "constant"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "value": {
+          "$ref": "#/$defs/Value"
+        }
+      }
+    },
+    "Record": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path",
+        "label",
+        "fields"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "record"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Field"
+          }
+        },
+        "create": {
+          "$ref": "#/$defs/Value"
+        },
+        "optional": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Array": {
+      "type": "object",
+      "required": [
+        "kind",
+        "path",
+        "label",
+        "rows",
+        "add"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "array"
+        },
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        },
+        "rows": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Field"
+          }
+        },
+        "add": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Choice"
+          }
+        }
+      }
+    },
+    "Diagnostic": {
+      "type": "object",
+      "required": [
+        "path",
+        "code",
+        "label"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "$ref": "#/$defs/Path"
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "label": {
+          "$ref": "#/$defs/Label"
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "required": [
+        "token",
+        "args",
+        "locale"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/Token"
+        },
+        "args": {
+          "type": "object",
+          "additionalProperties": {
+            "$ref": "#/$defs/Value"
+          }
+        },
+        "locale": {
+          "enum": [
+            "en",
+            "de"
+          ]
+        },
+        "page": {
+          "$ref": "#/$defs/Page"
+        }
+      }
+    },
+    "Response": {
+      "type": "object",
+      "required": [
+        "token",
+        "fields",
+        "diagnostics",
+        "ready"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/Token"
+        },
+        "fields": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Field"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        },
+        "ready": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Edit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "path",
+            "value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "enum": [
+                "set",
+                "append"
+              ]
+            },
+            "path": {
+              "$ref": "#/$defs/Path"
+            },
+            "value": {
+              "$ref": "#/$defs/Value"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "path"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "kind": {
+              "const": "remove"
+            },
+            "path": {
+              "$ref": "#/$defs/Path"
+            }
+          }
+        }
+      ]
+    },
+    "Limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "utf8Bytes",
+        "nodes",
+        "depth"
+      ],
+      "properties": {
+        "utf8Bytes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 1048576
+        },
+        "nodes": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65536
+        },
+        "depth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      }
+    },
+    "Binding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "token",
+        "layout",
+        "edits"
+      ],
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "layout": {
+                "const": "preserve"
+              }
+            },
+            "required": [
+              "layout"
+            ]
+          },
+          "then": {
+            "properties": {
+              "edits": {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "source",
+                    "path"
+                  ],
+                  "properties": {
+                    "source": {
+                      "const": "text"
+                    },
+                    "path": {
+                      "$ref": "#/$defs/Path"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/Token"
+        },
+        "layout": {
+          "enum": [
+            "preserve",
+            "replace"
+          ]
+        },
+        "edits": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/BindingEdit"
+          }
+        }
+      }
+    },
+    "BindingEdit": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "edit"
+          ],
+          "properties": {
+            "source": {
+              "const": "fixed"
+            },
+            "edit": {
+              "$ref": "#/$defs/Edit"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "path"
+          ],
+          "properties": {
+            "source": {
+              "const": "text"
+            },
+            "path": {
+              "$ref": "#/$defs/Path"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "source",
+            "kind",
+            "path",
+            "options"
+          ],
+          "properties": {
+            "source": {
+              "const": "choice"
+            },
+            "kind": {
+              "enum": [
+                "set",
+                "append"
+              ]
+            },
+            "path": {
+              "$ref": "#/$defs/Path"
+            },
+            "options": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 32,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "key",
+                  "value"
+                ],
+                "properties": {
+                  "key": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "value": {
+                    "$ref": "#/$defs/Value"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    "Status": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "token",
+        "ready",
+        "diagnostics",
+        "diagnosticOffset",
+        "diagnosticTotal"
+      ],
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/Token"
+        },
+        "ready": {
+          "type": "boolean"
+        },
+        "diagnostics": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/Diagnostic"
+          }
+        },
+        "diagnosticOffset": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        },
+        "diagnosticTotal": {
+          "type": "string",
+          "pattern": "^(0|[1-9][0-9]*)$"
+        }
+      }
+    },
+    "ActionStaging": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bodyKey"
+      ],
+      "properties": {
+        "bodyKey": {
+          "type": "string",
+          "minLength": 1
+        },
+        "limits": {
+          "$ref": "#/$defs/Limits"
+        }
+      }
+    },
+    "Event": {
+      "type": "object",
+      "required": [
+        "token",
+        "edits"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/Token"
+        },
+        "edits": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Edit"
+          }
+        }
+      }
+    },
+    "Page": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "fieldOffset": {
+          "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$",
+          "maxLength": 20,
+          "type": "string"
+        },
+        "choice": {
+          "additionalProperties": false,
+          "type": "object",
+          "properties": {
+            "path": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/Path"
+                },
+                {
+                  "maxItems": 64,
+                  "type": "array"
+                }
+              ]
+            },
+            "offset": {
+              "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$",
+              "maxLength": 20,
+              "type": "string"
+            }
+          },
+          "required": [
+            "path",
+            "offset"
+          ]
+        },
+        "diagnosticOffset": {
+          "pattern": "^(0|[1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]{1}|1844674407370955161[0-4]|18446744073709551615)$",
+          "maxLength": 20,
+          "type": "string"
+        }
+      },
+      "required": [
+        "fieldOffset",
+        "diagnosticOffset"
+      ]
+    },
+    "PageBinding": {
+      "additionalProperties": false,
+      "type": "object",
+      "properties": {
+        "token": {
+          "$ref": "#/$defs/Token"
+        },
+        "page": {
+          "$ref": "#/$defs/Page"
+        }
+      },
+      "required": [
+        "token",
+        "page"
+      ]
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Response"
+    },
+    {
+      "$ref": "#/$defs/Event"
+    }
+  ]
+}

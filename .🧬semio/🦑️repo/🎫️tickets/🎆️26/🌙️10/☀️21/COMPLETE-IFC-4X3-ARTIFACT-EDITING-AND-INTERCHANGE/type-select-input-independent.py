@@ -1,0 +1,7 @@
+"""🔀 Independently verify frozen SELECT source and exact physical constructors."""
+import ast,hashlib,json
+from pathlib import Path
+p=Path(__file__).parent;repo=p.parents[6];manifest=json.loads((p/'🗑️generated/type-select-input-source.json').read_text(encoding='utf-8'));files=[]
+for row in manifest['files']:
+ path=repo/row['path'];actual=hashlib.sha256(path.read_bytes()).hexdigest();assert actual==row['sha256'],row['path'];files.append(dict(path=row['path'],sha256=actual))
+source=p/'type-select-input-oracle.py';tree=ast.parse(source.read_text(encoding='utf-8-sig'));cut=next(i for i,n in enumerate(tree.body)if isinstance(n,ast.Assign)and any(isinstance(t,ast.Name)and t.id=='root'for t in n.targets));ns={'__file__':str(source)};exec(compile(ast.Module(body=tree.body[:cut],type_ignores=[]),str(source),'exec'),ns);oracle=ns['IfcOpenShellSelect']();law=json.loads((repo/'✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/🧪️tests/type-select-input.json').read_text(encoding='utf-8'));rows=[oracle.observe(row)for row in law['cases']];assert all(row['exact']and row['admitted']==row['expectedAdmitted']for row in rows if row['physical']);(p/'🗑️generated/type-select-input-independent.json').write_text(json.dumps(dict(files=files,version=oracle.version,rows=rows,nativeExecuted=False),indent=2)+'\n',encoding='utf-8');print('[DEBUG] '+str(len(files))+' frozen hashes; '+str(sum(r['physical']for r in rows))+' exact physical SELECT observations match; '+str(sum(not r['physical']for r in rows))+' drafts not serialized')

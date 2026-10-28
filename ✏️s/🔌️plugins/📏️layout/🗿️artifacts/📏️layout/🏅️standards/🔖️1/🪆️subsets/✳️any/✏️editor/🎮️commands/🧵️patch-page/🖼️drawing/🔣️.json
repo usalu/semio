@@ -1,0 +1,82 @@
+{
+  "schema": "layout.page-drawing.artboard.v1",
+  "fields": [
+    {
+      "name": "pageDrawingWidth",
+      "axis": "width"
+    },
+    {
+      "name": "pageDrawingHeight",
+      "axis": "height"
+    }
+  ],
+  "source": "original-qualified-page-member",
+  "command": "setArtboard",
+  "mutation": "SetArtboard",
+  "requires": [
+    "original-parent-read",
+    "original-command-source",
+    "original-child-read",
+    "actual-child-store-publication"
+  ],
+  "cases": [
+    {
+      "field": "pageDrawingWidth",
+      "value": "300",
+      "before": [
+        200,
+        100
+      ],
+      "after": [
+        300,
+        100
+      ]
+    },
+    {
+      "field": "pageDrawingHeight",
+      "value": "80",
+      "before": [
+        200,
+        100
+      ],
+      "after": [
+        200,
+        80
+      ]
+    },
+    {
+      "field": "pageDrawingWidth",
+      "value": "100.125",
+      "before": [
+        200,
+        75.125
+      ],
+      "after": [
+        100.125,
+        75.125
+      ]
+    }
+  ],
+  "refusals": [
+    "0",
+    "-1",
+    "NaN",
+    "inf",
+    ""
+  ],
+  "denials": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ],
+  "substitutions": [
+    "original-parent",
+    "page-member",
+    "child-revision",
+    "command-source",
+    "registration"
+  ],
+  "cancellation": "every-prepared-boundary"
+}

@@ -1,0 +1,5 @@
+{
+  "extends":"../../../../../../../tsconfig.json",
+  "include":[],"exclude":[],
+  "files":["../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📐️geometry/🧊️boolean/🧪️tests/admission.test.ts"]
+}

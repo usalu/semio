@@ -1,0 +1,22 @@
+{
+  "feature": "layout.retained.edit-story",
+  "selection": "unselected pending genuine output/inverse/diagnostic orchestration",
+  "source": "original EditStory command and original immutable TextStory fields under original m/b binding",
+  "decision": [
+    "bounded original story lookup",
+    "Unicode scalar offset+delete to original UTF8 byte boundaries",
+    "bounded original replaced-slice equality before style interval overflow checks",
+    "bounded inserted Unicode scalar count",
+    "one numeric authored style interval transform at a time"
+  ],
+  "output": "actual contiguous original prefix/insert/suffix String builder; changed style rows retain original style references and transformed UTF8 offsets",
+  "inverse": "original deleted slice and original affected style-run vector; stored SetStoryRuns then EditStory, replayed in reverse",
+  "cancellation": "original roots and field loans outlive all partial output/text/header/prepared field custody",
+  "finalGate": "actual-post central semantic graph mandatory",
+  "prohibitions": [
+    "no cold byte_range/splice/diff/inverse inside retained turns",
+    "no copied identifier arrays",
+    "no whole snapshot inverse",
+    "no child Drawing payload"
+  ]
+}

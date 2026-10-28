@@ -1,0 +1,23 @@
+{
+  "feature": "layout.retained.page-spread-assignment",
+  "source": "genuine original mutation and baseline references",
+  "decision": [
+    "bounded original Page ordinal",
+    "bounded target Spread ordinal",
+    "bounded target membership and original-position/default admission"
+  ],
+  "output": [
+    "prepare only affected original Spread.page_ids Vec<String> and necessary identity Strings with original retained field grants",
+    "reserve actual sparse root headers and final affected Vec<String> headers before transfer",
+    "move one paid original prepared String per turn into target/previous lists",
+    "transfer authored page and destination identities into sparse PagePatch"
+  ],
+  "inverse": "prepare original authored metadata and only original Page.spread_id String; resolve original old-spread membership in bounded turns",
+  "closure": "all original bindings, fields, skipped original prepared rows, partial outputs and factory mutation vectors close with original issuer grants",
+  "prohibitions": [
+    "no candidate Snapshot",
+    "no cold mutation/diff/validation calls",
+    "no unbounded Vec.remove/insert shift or iteration",
+    "no unrelated Spread name clone"
+  ]
+}

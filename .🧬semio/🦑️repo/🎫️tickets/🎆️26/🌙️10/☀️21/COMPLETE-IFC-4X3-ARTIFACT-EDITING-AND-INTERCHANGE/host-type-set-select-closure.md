@@ -1,0 +1,7 @@
+# SET SELECT Closure
+
+The corrected native79 checkpoint is independently closed in native-set-producer-independent-audit.md. Low verified all79 final hashes, the corrected pure demand/actual advance separation, and the explicit operation-quote law. No additional confirmed P1/P2 was found in the bounded member-copy, retained custody, seven-member window, structural binding and controller review. The initial duplicate-demand P2 remains documented in host-type-set-demand-audit-correction.md with its before-manifest.
+
+The executable TypeScript checkpoint remains20 tests/7040 assertions focused,101 tests/28222 assertions across six consumers, strict exit0, and independent20/7040 plus bounded mixed regressions. Its actual registry entry is present once and was included in the parent's green broad135. Physical oracle evidence still distinguishes exact nine carrier outputs from the external raw uniqueness gap: IfcOpenShell retains duplicate SET references and admits that one invalid case, giving raw8/9; the independently released collection metadata plus Ajv composite gives9/9. Six incomplete drafts remain unserialized.
+
+Native79 has50 syntax checks exit0 and authentic Cargo101 before rustc. No native typecheck, execution, physical accounting, receipt/denial/cancellation/close sufficiency or capability publication is certified. The next editing frontier is actual mixed INTEGER/NUMBER/fixed-aggregate SELECT guidance, not a claim that recursive or oversized SELECTs are covered.

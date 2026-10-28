@@ -1,0 +1,1210 @@
+{
+  "base": {
+    "schema": "drawing.document",
+    "id": "drawing-1",
+    "title": "Original Drawing",
+    "artboard": {
+      "width": 200,
+      "height": 100
+    },
+    "assets": {
+      "pixel": {
+        "width": 1,
+        "height": 1,
+        "samples": [
+          [
+            0,
+            64,
+            128,
+            255
+          ]
+        ]
+      }
+    },
+    "layers": [
+      {
+        "id": "group",
+        "kind": "group",
+        "name": "group",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "isolation": true,
+        "children": [
+          {
+            "id": "path",
+            "kind": "path",
+            "name": "path",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "evenodd",
+              "fill": {
+                "kind": "linearGradient",
+                "x1": 0,
+                "y1": 0,
+                "x2": 20,
+                "y2": 0,
+                "stops": [
+                  {
+                    "offset": 0,
+                    "color": [
+                      0,
+                      0,
+                      0,
+                      1
+                    ]
+                  },
+                  {
+                    "offset": 1,
+                    "color": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ]
+                  }
+                ]
+              },
+              "stroke": {
+                "color": [
+                  1,
+                  0,
+                  0,
+                  1
+                ],
+                "width": 2,
+                "cap": "round",
+                "join": "round",
+                "dash": [
+                  2,
+                  1
+                ]
+              }
+            },
+            "segments": [
+              {
+                "kind": "move",
+                "to": [
+                  0,
+                  0
+                ]
+              },
+              {
+                "kind": "line",
+                "to": [
+                  10,
+                  10
+                ]
+              }
+            ]
+          },
+          {
+            "id": "text",
+            "kind": "text",
+            "name": "text",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "x": 1,
+            "y": 2,
+            "content": "Aé🌍",
+            "size": 12,
+            "fontFamily": "shareTechMono"
+          }
+        ]
+      },
+      {
+        "id": "shape",
+        "kind": "shape",
+        "name": "shape",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "shapeKind": "circle",
+        "circle": {
+          "cx": 2,
+          "cy": 2,
+          "r": 2
+        }
+      },
+      {
+        "id": "image",
+        "kind": "image",
+        "name": "image",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "imageKey": "pixel",
+        "width": 10,
+        "height": 10
+      },
+      {
+        "id": "boolean",
+        "kind": "boolean",
+        "name": "boolean",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "operation": "union",
+        "children": [
+          "path",
+          "shape"
+        ]
+      },
+      {
+        "id": "trace",
+        "kind": "trace",
+        "name": "trace",
+        "visible": true,
+        "locked": false,
+        "opacity": 1,
+        "blendMode": "normal",
+        "transform": {
+          "x": 0,
+          "y": 0,
+          "scaleX": 1,
+          "scaleY": 1,
+          "shear": 0,
+          "rotation": 0
+        },
+        "attributes": {
+          "fillRule": "nonzero"
+        },
+        "sourceKey": "pixel",
+        "params": {
+          "threshold": 0.5,
+          "simplifyEpsilon": 1
+        }
+      }
+    ]
+  },
+  "cases": [
+    {
+      "name": "Valid Complete Drawing",
+      "patch": [],
+      "valid": true
+    },
+    {
+      "name": "Unsupported Schema",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/schema",
+          "value": "wrong"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Empty Document Identity",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/id",
+          "value": ""
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Duplicate Nested Layer Identity",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/id",
+          "value": "path"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Empty Layer Identity",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/id",
+          "value": ""
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Opacity",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/opacity",
+          "value": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Unsupported Blend Mode",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/blendMode",
+          "value": "unknown"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Negative Circle Radius",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/circle/r",
+          "value": -1
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Mismatched Shape Geometry",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/shapeKind",
+          "value": "rect"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Gradient Offset",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill/stops/0/offset",
+          "value": -1
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Color Channel",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill/stops/0/color/0",
+          "value": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Empty Gradient Stops",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill/stops",
+          "value": []
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Negative Stroke Width",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke/width",
+          "value": -1
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Negative Dash Length",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/stroke/dash/0",
+          "value": -1
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Missing Image Asset",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/2/imageKey",
+          "value": "missing"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Image Size",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/2/width",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Missing Trace Asset",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/4/sourceKey",
+          "value": "missing"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Trace Threshold",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/4/params/threshold",
+          "value": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Trace Epsilon",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/4/params/simplifyEpsilon",
+          "value": -1
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Missing Boolean Operand",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/3/children/0",
+          "value": "missing"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Unsupported Boolean Operation",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/3/operation",
+          "value": "unknown"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Self Referencing Boolean",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/3/children",
+          "value": [
+            "boolean"
+          ]
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Ancestor Dependency Cycle",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children",
+          "value": [
+            {
+              "id": "loop",
+              "kind": "boolean",
+              "name": "loop",
+              "visible": true,
+              "locked": false,
+              "opacity": 1,
+              "blendMode": "normal",
+              "transform": {
+                "x": 0,
+                "y": 0,
+                "scaleX": 1,
+                "scaleY": 1,
+                "shear": 0,
+                "rotation": 0
+              },
+              "attributes": {
+                "fillRule": "nonzero"
+              },
+              "operation": "union",
+              "children": [
+                "group"
+              ]
+            }
+          ]
+        },
+        {
+          "op": "replace",
+          "path": "/layers/3/children/0",
+          "value": "loop"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Text Size",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/1/size",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Authored Canvas",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/artboard/width",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Invalid Asset Sample Count",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/assets/pixel/width",
+          "value": 2
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Empty Asset Extent",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/assets/pixel/height",
+          "value": 0
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Independent Layer and Asset Namespaces",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/id",
+          "value": "pixel"
+        },
+        {
+          "op": "replace",
+          "path": "/layers/3/children/1",
+          "value": "pixel"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Canvas Is Optional for Content Fit",
+      "patch": [
+        {
+          "op": "remove",
+          "path": "/artboard"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Valid rect Primitive",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 1,
+              "y": 2,
+              "width": 0,
+              "height": 10
+            }
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Valid ellipse Primitive",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "ellipse",
+            "ellipse": {
+              "cx": 0,
+              "cy": 0,
+              "rx": 0,
+              "ry": 2
+            }
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Valid line Primitive",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "line",
+            "line": {
+              "x1": 0,
+              "y1": 0,
+              "x2": 10,
+              "y2": 20
+            }
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Valid polygon Primitive",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "polygon",
+            "polygon": {
+              "points": [
+                [
+                  0,
+                  0
+                ],
+                [
+                  10,
+                  0
+                ],
+                [
+                  10,
+                  10
+                ]
+              ]
+            }
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Empty Polygon Is Authored Geometry",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "polygon",
+            "polygon": {
+              "points": []
+            }
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Multiple Shape Geometries",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "circle",
+            "circle": {
+              "cx": 2,
+              "cy": 2,
+              "r": 2
+            },
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            }
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Negative Rectangle Extent",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "rect",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": -1,
+              "height": 1
+            }
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Negative Ellipse Radius",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1",
+          "value": {
+            "id": "shape",
+            "kind": "shape",
+            "name": "shape",
+            "visible": true,
+            "locked": false,
+            "opacity": 1,
+            "blendMode": "normal",
+            "transform": {
+              "x": 0,
+              "y": 0,
+              "scaleX": 1,
+              "scaleY": 1,
+              "shear": 0,
+              "rotation": 0
+            },
+            "attributes": {
+              "fillRule": "nonzero"
+            },
+            "shapeKind": "ellipse",
+            "ellipse": {
+              "cx": 0,
+              "cy": 0,
+              "rx": -1,
+              "ry": 1
+            }
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Radial Gradient",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "radialGradient",
+            "cx": 1,
+            "cy": 2,
+            "r": 3,
+            "stops": [
+              {
+                "offset": 1,
+                "color": [
+                  1,
+                  0,
+                  1,
+                  1
+                ]
+              },
+              {
+                "offset": 0,
+                "color": [
+                  0,
+                  0,
+                  0,
+                  0
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Zero Radial Gradient Radius",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "radialGradient",
+            "cx": 0,
+            "cy": 0,
+            "r": 0,
+            "stops": [
+              {
+                "offset": 0,
+                "color": [
+                  0,
+                  0,
+                  0,
+                  1
+                ]
+              }
+            ]
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Solid Paint",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "solid",
+            "color": [
+              0,
+              1,
+              0,
+              0
+            ]
+          }
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Invalid Solid Paint",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/attributes/fill",
+          "value": {
+            "kind": "solid",
+            "color": [
+              0,
+              1,
+              -1,
+              0
+            ]
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Empty Path Is Authored Geometry",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/segments",
+          "value": []
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Curved Path Geometry",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/segments",
+          "value": [
+            {
+              "kind": "move",
+              "to": [
+                0,
+                0
+              ]
+            },
+            {
+              "kind": "quad",
+              "ctrl": [
+                1,
+                1
+              ],
+              "to": [
+                2,
+                2
+              ]
+            },
+            {
+              "kind": "cubic",
+              "ctrl1": [
+                1,
+                1
+              ],
+              "ctrl2": [
+                2,
+                2
+              ],
+              "to": [
+                3,
+                3
+              ]
+            },
+            {
+              "kind": "arc",
+              "rx": 3,
+              "ry": 4,
+              "rotation": 1,
+              "largeArc": false,
+              "sweep": true,
+              "to": [
+                5,
+                5
+              ]
+            },
+            {
+              "kind": "close"
+            }
+          ]
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Negative Arc Radius",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/segments",
+          "value": [
+            {
+              "kind": "arc",
+              "rx": -1,
+              "ry": 1,
+              "rotation": 0,
+              "largeArc": false,
+              "sweep": true,
+              "to": [
+                0,
+                0
+              ]
+            }
+          ]
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Repeated Boolean Operand Is Acyclic",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/3/children",
+          "value": [
+            "path",
+            "path"
+          ]
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Empty Boolean Is Acyclic",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/3/children",
+          "value": []
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Empty Asset Identity",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/assets",
+          "value": {
+            "": {
+              "width": 1,
+              "height": 1,
+              "samples": [
+                [
+                  0,
+                  64,
+                  128,
+                  255
+                ]
+              ]
+            }
+          }
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Finite Affine Composition Overflow",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/0/transform/scaleX",
+          "value": 1e+308
+        },
+        {
+          "op": "replace",
+          "path": "/layers/0/children/0/transform/scaleX",
+          "value": 1e+308
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Finite Large Coordinates Are Admitted",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/circle/cx",
+          "value": 1e+308
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Degenerate Shape Extent Is Authored",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/circle/r",
+          "value": 0
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "Degenerate And Reflected Transform Is Authored",
+      "patch": [
+        {
+          "op": "replace",
+          "path": "/layers/1/transform/scaleX",
+          "value": 0
+        },
+        {
+          "op": "replace",
+          "path": "/layers/1/transform/scaleY",
+          "value": -1
+        }
+      ],
+      "valid": true
+    }
+  ]
+}

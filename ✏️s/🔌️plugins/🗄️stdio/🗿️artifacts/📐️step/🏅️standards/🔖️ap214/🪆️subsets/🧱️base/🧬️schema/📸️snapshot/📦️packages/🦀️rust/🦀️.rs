@@ -36,6 +36,10 @@ pub mod standards {
                 pub mod io {
                     #[path = "../../../../🚪️io/🧱️brep/🦀️.rs"]
                     pub mod brep;
+                    #[path = "../../../../🚪️io/📽️projection/🦀️.rs"]
+                    pub mod projection;
+                    #[path = "../../../../🚪️io/📝️draughting/🦀️.rs"]
+                    pub mod draughting;
                     #[path = "../../../../🚪️io/🪶️sqlite/🦀️.rs"]
                     pub mod sqlite;
                     #[path = "."]

@@ -1,0 +1,29 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://semio.tech/s/stdio/ifc/4x3/diff.schema.json",
+  "title":"Ifc4x3Diff Decimal Transport",
+  "description":"Sparse diff with base coordinates for removals/modifications and final coordinates for additions. Entity removal records retain the original identity and position. Native bigint leaves use decimal strings in JSON.",
+  "$defs":{
+    "Id":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/EntityId"},
+    "Value":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcValue"},
+    "Entity":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcEntity"},
+    "Complex":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcComplexType"},
+    "Index":{"type":"integer","minimum":0,"maximum":9007199254740991},
+    "Argument":{"type":"object","properties":{"index":{"$ref":"#/$defs/Index"},"value":{"$ref":"#/$defs/Value"}},"required":["index","value"],"additionalProperties":false},
+    "Args":{"type":"object","properties":{"removed":{"type":"array","items":{"$ref":"#/$defs/Index"},"uniqueItems":true},"modified":{"type":"array","items":{"$ref":"#/$defs/Argument"}},"added":{"type":"array","items":{"$ref":"#/$defs/Argument"}}},"additionalProperties":false},
+    "EntityDiff":{"type":"object","properties":{"name":{"type":"string","pattern":"^[A-Z][A-Z0-9_]*$"},"args":{"$ref":"#/$defs/Args"},"complex":{"type":"array","items":{"$ref":"#/$defs/Complex"}}},"additionalProperties":false},
+    "Entities":{"type":"object","properties":{
+      "removed":{"type":"array","items":{"type":"object","required":["id","index"],"properties":{"id":{"$ref":"#/$defs/Id"},"index":{"$ref":"#/$defs/Index"}},"additionalProperties":false}},
+      "modified":{"type":"array","items":{"type":"object","required":["id","diff"],"properties":{"id":{"$ref":"#/$defs/Id"},"diff":{"$ref":"#/$defs/EntityDiff"}},"additionalProperties":false}},
+      "added":{"type":"array","items":{"type":"object","required":["index","entity"],"properties":{"index":{"$ref":"#/$defs/Index"},"entity":{"$ref":"#/$defs/Entity"}},"additionalProperties":false}}
+    },"additionalProperties":false}
+  },
+  "type":"object",
+  "properties":{
+    "fileDescription":{"type":"array","items":{"$ref":"#/$defs/Value"}},
+    "fileName":{"type":"array","items":{"$ref":"#/$defs/Value"}},
+    "fileSchema":{"type":"array","items":{"$ref":"#/$defs/Value"}},
+    "entities":{"$ref":"#/$defs/Entities"}
+  },
+  "additionalProperties":false
+}

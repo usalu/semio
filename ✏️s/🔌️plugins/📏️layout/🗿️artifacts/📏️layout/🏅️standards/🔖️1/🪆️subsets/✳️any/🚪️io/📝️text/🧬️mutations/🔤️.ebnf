@@ -49,7 +49,6 @@ line = rename layout
      | set page overrides
      | create layer
      | set frame layer
-     | set drawing text
      | reorder frame
      | drag frames
      | rotate frames
@@ -109,7 +108,6 @@ update link = 'update-link', space, id, space, number, space, number, space, num
 set page overrides = 'set-page-overrides', space, id, space, block ;
 create layer = 'create-layer', space, id, space, id, space, text, space, [ number ], space, [ boolean ] ;
 set frame layer = 'set-frame-layer', space, id, space, id, space, id ;
-set drawing text = 'set-drawing-text', space, number, space, text ;
 reorder frame = 'reorder-frame', space, id, space, id, space, boolean ;
 drag frames = 'drag-frames', space, id, space, block, space, number, space, number ;
 rotate frames = 'rotate-frames', space, id, space, block, space, number, space, number, space, number ;

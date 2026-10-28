@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PDF Variable-Width Unicode CMap Witness",
+  "type": "object",
+  "required": [
+    "encoding",
+    "toUnicode",
+    "text",
+    "codes",
+    "expected"
+  ],
+  "properties": {
+    "encoding": {
+      "type": "string"
+    },
+    "toUnicode": {
+      "type": "string"
+    },
+    "text": {
+      "type": "string"
+    },
+    "codes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    "expected": {
+      "type": "object",
+      "properties": {
+        "codeWidth": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4
+        },
+        "rangeStorage": {
+          "type": "integer"
+        }
+      }
+    }
+  },
+  "description": "Composite code widths come from Encoding CMap; ToUnicode ranges stay compact and are resolved lazily, including supplementary scalars."
+}

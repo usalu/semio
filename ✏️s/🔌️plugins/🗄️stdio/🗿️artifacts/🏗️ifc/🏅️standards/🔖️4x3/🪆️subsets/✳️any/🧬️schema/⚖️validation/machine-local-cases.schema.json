@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "execution",
+    "scope",
+    "outcomes",
+    "cases",
+    "refusals"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "execution": {
+      "const": false
+    },
+    "scope": {
+      "const": "same-name-primary-repair-local-where"
+    },
+    "outcomes": {
+      "type": "array",
+      "minItems": 5,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "records",
+          "status"
+        ],
+        "properties": {
+          "records": {
+            "type": "array",
+            "items": {
+              "enum": [
+                "true",
+                "false",
+                "unknown"
+              ]
+            }
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "incomplete"
+            ]
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "case",
+          "status",
+          "owner",
+          "rule"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "case": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "owner": {
+            "type": "string"
+          },
+          "rule": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

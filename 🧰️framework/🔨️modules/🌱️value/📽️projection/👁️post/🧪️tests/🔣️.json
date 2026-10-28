@@ -1,0 +1,82 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "empty-document",
+      "value": {
+        "pages": []
+      },
+      "reads": 0,
+      "cancel": false
+    },
+    {
+      "id": "same-original-fields",
+      "value": {
+        "pages": [
+          {
+            "id": "p",
+            "name": "Original",
+            "frames": []
+          }
+        ]
+      },
+      "reads": 1,
+      "cancel": false
+    },
+    {
+      "id": "two-live-aliases",
+      "value": {
+        "pages": [
+          {
+            "id": "p",
+            "name": "😀",
+            "frames": [
+              {
+                "id": "f"
+              }
+            ]
+          }
+        ]
+      },
+      "reads": 2,
+      "cancel": false
+    },
+    {
+      "id": "cancel-before-read",
+      "value": {
+        "pages": []
+      },
+      "reads": 0,
+      "cancel": true
+    },
+    {
+      "id": "cancel-after-bind",
+      "value": {
+        "pages": [
+          {
+            "id": "p"
+          }
+        ]
+      },
+      "reads": 1,
+      "cancel": true
+    },
+    {
+      "id": "cancel-with-two-bindings",
+      "value": {
+        "pages": [
+          {
+            "id": "p",
+            "frames": [
+              {
+                "id": "f"
+              }
+            ]
+          }
+        ]
+      },
+      "reads": 2,
+      "cancel": true
+    }
+  ]
+}

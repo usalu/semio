@@ -7,6 +7,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
+use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::io::text::diff::{enc_complex_list, dec_complex_list};
 use crate::standards::v4::subsets::any::schema::mutations::*;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff;
 use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::diff::IfcDiff;
@@ -62,6 +63,7 @@ pub(crate) fn print_ifc_mutation(m: &IfcMutation) -> String {
         IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id, index, value }) => format!("set-entity-arg id={id} index={index} value={}", enc_ifc_value(value)),
         IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id, index, value }) => format!("insert-entity-arg id={id} index={index} value={}", enc_ifc_value(value)),
         IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id, index }) => format!("remove-entity-arg id={id} index={index}"),
+        IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id, complex }) => format!("set-entity-complex id={id} complex={}", enc_complex_list(complex)),
     }
 }
 
@@ -81,6 +83,7 @@ pub(crate) fn parse_ifc_mutation(line: &str) -> Result<IfcMutation, String> {
         "set-entity-arg" => Ok(IfcMutation::SetEntityArg(set_entity_arg::SetEntityArg { id: u64_arg("id")?, index: usize_arg("index")?, value: dec_ifc_value(arg("value")?)? })),
         "insert-entity-arg" => Ok(IfcMutation::InsertEntityArg(insert_entity_arg::InsertEntityArg { id: u64_arg("id")?, index: usize_arg("index")?, value: dec_ifc_value(arg("value")?)? })),
         "remove-entity-arg" => Ok(IfcMutation::RemoveEntityArg(remove_entity_arg::RemoveEntityArg { id: u64_arg("id")?, index: usize_arg("index")? })),
+        "set-entity-complex" => Ok(IfcMutation::SetEntityComplex(set_entity_complex::SetEntityComplex { id: u64_arg("id")?, complex: dec_complex_list(arg("complex")?)? })),
         other => Err(format!("ifc mutation: unknown keyword {other:?}")),
     }
 }

@@ -1,0 +1,36 @@
+{
+  "title": "Borrowed Layout Graph Admission",
+  "version": 1,
+  "source": "Genuine immutable LayoutSnapshot original projection; no payload copies",
+  "turn": {
+    "maximumKeyBytes": 256,
+    "maximumScalarVisits": 64,
+    "actualOriginalGrant": true,
+    "depth": 1
+  },
+  "laws": [
+    "No grant currency synthesized from demand",
+    "Source issuer and projected path remain identical",
+    "Every key and UTF-8 boundary is paginated",
+    "Every frame edge is individually visited",
+    "No cold document validation or child materialization",
+    "Cancellation retains paired cursor backing until funded close",
+    "Every capacity allocation has exact funded release"
+  ],
+  "coverage": [
+    "ids",
+    "typography",
+    "UTF-8 style ranges",
+    "layers and paint-order caches",
+    "spread membership",
+    "parents and overrides",
+    "text thread identity, unique predecessors, acyclicity",
+    "Drawing child identity indexes; typed admission requires a genuine registered child source provider"
+  ],
+  "childAdmission": {
+    "producer": "s.draw.drawing@1/* model validation::DRAWING_ADMITTER",
+    "status": "Genuine typed owner implemented; Layout raw content is explicitly refused until member/ref/genesis migration supplies original sources"
+  },
+  "graphRead": "All key-address and semantic reads use validation::graph::LayoutGraphRead; LayoutSnapshot implements this directly and virtual readers must be genuinely owned immutable original sources, not stack loans.",
+  "finalSources": "FinalGraphSourceBindings separately binds actual live-post and authored original tokens before virtual-reader birth; central final reader/protocol integration is not completed by this interface."
+}

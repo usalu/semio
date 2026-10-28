@@ -11,15 +11,15 @@ use protocol::{Identified, Patchable};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_s_artifact_layout_layout_model::set_frame_layer;
-use semio_s_artifact_layout_layout_model::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingChild, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};
+use semio_s_artifact_layout_layout_model::{CharacterStyle, Frame, GridSettings, ImageLink, Layer, LayoutDrawingMember, LayoutRect, Page, PageOverride, ParagraphStyle, ParentPage, Spread, TextStory, TextStyleRun};
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::list_delta::RowPatch;
-use protocol::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
+use protocol::{ApplyCapability, ColdDiffAlgebra, ColdMutationDiff, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationDiff};
 use schema::ArtifactSchema;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse delta for the layout artifact: id-keyed collection rows, owned-field patches and positional list rows.
-#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default, deny_unknown_fields)]
 #[artifact_schema(id = "s.layout.layout")]
 pub struct LayoutDiff {
@@ -51,12 +51,11 @@ pub struct LayoutDiff {
     /// `Option` = "is it now present" — the same double-`Option` shape `✳️object`'s own `mesh` diff
     /// already established, per the migration recipe's §8 diff-shape convention.
     #[state(artifact)]
-    pub background_drawing: Option<Option<LayoutDrawingChild>>,
-    /// ✏️ Text edits of the imported plan, one row per text index, applied after any `background_drawing` replacement.
-    #[state(artifact)]
-    pub drawing_texts: Vec<LayoutDrawingTextRow>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    pub background_drawing: Option<Option<LayoutDrawingMember>>,
     /// 🔗️ Same double-`Option` shape as `background_drawing`, for the forward link slot.
     #[state(artifact)]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
     pub referenced_model: Option<Option<store::ArtifactLink>>,
 }
 //#endregion 🔖️Diff
@@ -101,3 +100,40 @@ pub mod io {
     pub mod text;
 }
 //#endregion 🪢️TaxonomyMounts
+
+/// 🫙️ A present nullable patch field retains its presence when the value is null.
+pub(crate) fn deserialize_double_option<T: semio_framework_value::FromValue>(value: semio_framework_value::DslValue) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value(value).map(Some)
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/⚖️portable/🦀️.rs"]
+mod portable_diff_tests;
+
+#[cfg(any(test, feature = "testkit"))]
+fn deserialize_double_option_serde<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where D: serde::Deserializer<'de>, T: serde::Deserialize<'de> {
+    <Option<T> as serde::Deserialize>::deserialize(deserializer).map(Some)
+}
+
+/// 🚦️ Decodes a present nullable setter under cumulative ownership admission.
+pub(crate) fn deserialize_double_option_controlled<T: semio_framework_value::FromValue>(value: &semio_framework_value::DslValue, control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<T> as semio_framework_value::FromValue>::from_value_controlled(value, control).map(Some)
+}
+
+/// 🫥️ Admits an absent nullable setter without turning it into an explicit clear.
+pub(crate) fn default_double_option_controlled<T: semio_framework_value::FromValue>(control: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Option<Option<T>>, semio_framework_value::ValueError> {
+    <Option<Option<T>> as semio_framework_value::FromValue>::default_value_controlled(control)
+}
+
+/// 🧹️ Retires nullable setter owners through their declared value contracts.
+pub(crate) fn retire_double_option<T: semio_framework_value::FromValue>(value: Option<Option<T>>) {
+    <Option<Option<T>> as semio_framework_value::FromValue>::retire_decoded(value);
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/🫙️nullable/🦀️.rs"]
+mod nullable_controlled_tests;
+
+#[path="🧳️retained/🦀️.rs"]
+pub mod retained;

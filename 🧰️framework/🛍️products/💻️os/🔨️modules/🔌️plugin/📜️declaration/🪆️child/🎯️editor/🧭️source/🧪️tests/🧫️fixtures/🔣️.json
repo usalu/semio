@@ -1,0 +1,570 @@
+{
+  "version": 1,
+  "grant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 0,
+    "maximumReleaseBytes": 0,
+    "maximumDepth": 1
+  },
+  "cases": [
+    {
+      "name": "Document Genuine Drawing",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": true
+    },
+    {
+      "name": "Page Genuine Drawing",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "pages",
+        "childId": "drawing-page-a",
+        "artifactId": "drawing-artifact-page-a",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "pages",
+        "childId": "drawing-page-a",
+        "artifactId": "drawing-artifact-page-a",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": true
+    },
+    {
+      "name": "Nested Escaped Owner",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "pages/page%2Fa%25",
+        "slot": "pages",
+        "childId": "drawing-page-a",
+        "artifactId": "drawing-artifact-page-a",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "pages/page%2Fa%25",
+        "slot": "pages",
+        "childId": "drawing-page-a",
+        "artifactId": "drawing-artifact-page-a",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": true
+    },
+    {
+      "name": "Unicode Identifier",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "pages",
+        "childId": "Zeichnung-🌍-ü",
+        "artifactId": "drawing-artifact-page-a",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "pages",
+        "childId": "Zeichnung-🌍-ü",
+        "artifactId": "drawing-artifact-page-a",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": true
+    },
+    {
+      "name": "Refuse slot",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "pages",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse childId",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "sibling",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse artifactId",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "sibling-artifact",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse artifactKind",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.stdio.semio",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse standard",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "v1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse subset",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "drawing",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse editorId",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.stdio.semio@v1/drawing#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse commandId",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editFill",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse parentRevision",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "5555555555555555555555555555555555555555555555555555555555555555",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse childRevision",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "6666666666666666666666666666666666666666666666666666666666666666"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse parentArtifact",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "another-parent",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse owner",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "sibling/owner",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.draw.drawing",
+        "standard": "1",
+        "subset": "*",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    },
+    {
+      "name": "Refuse Neutral Child With Draw Editor",
+      "request": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "drawing",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "current": {
+        "parentArtifact": "layout-1",
+        "owner": "",
+        "slot": "backgroundDrawing",
+        "childId": "drawing-document",
+        "artifactId": "drawing-artifact-document",
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "drawing",
+        "editorId": "s.draw.drawing@1/*#editor",
+        "commandId": "editPath",
+        "parentRevision": "3131313131313131313131313131313131313131313131313131313131313131",
+        "childRevision": "4242424242424242424242424242424242424242424242424242424242424242"
+      },
+      "accepted": false
+    }
+  ],
+  "capability": {
+    "artifactKind": "s.draw.drawing",
+    "standard": "1",
+    "subset": "*",
+    "editorId": "s.draw.drawing@1/*#editor",
+    "commandId": "editPath"
+  },
+  "custodyGrant": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 16777216,
+    "maximumCapacityBytes": 16777216,
+    "maximumReleaseBytes": 16777216,
+    "maximumDepth": 128
+  }
+}

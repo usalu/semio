@@ -1,0 +1,14 @@
+{
+  "cases": [
+    { "id": "latest-admitted-capture", "events": ["begin", "publish"], "ready": true },
+    { "id": "pending-is-unready", "events": ["begin"], "ready": false },
+    { "id": "invalidation-retires-ready", "events": ["begin", "publish", "invalidate"], "ready": false },
+    { "id": "late-publish-after-invalidation", "events": ["begin", "invalidate", "publish"], "ready": false },
+    { "id": "latest-request-invalidates-older", "events": ["begin", "begin", "publish-old"], "ready": false },
+    { "id": "newest-result-survives-older", "events": ["begin", "begin", "publish", "publish-old"], "ready": true },
+    { "id": "same-fields-new-owner", "events": ["begin", "replace-owner", "publish-old"], "ready": false },
+    { "id": "same-fields-new-plugin", "events": ["begin", "replace-plugin", "publish-old"], "ready": false },
+    { "id": "owner-retirement", "events": ["begin", "publish", "retire"], "ready": false },
+    { "id": "returning-same-hash-needs-new-capture", "events": ["begin", "publish", "invalidate", "begin", "publish"], "ready": true }
+  ]
+}

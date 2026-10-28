@@ -1,0 +1,9 @@
+# Original Native STEP Receiving
+
+Own new `native-step-read.rs`, `native-step-lex.rs`, `native-step-parse.rs` and receiving tests beside existing IFC4x3 compact IO. Preserve root emitter/writer/export modules. Mount/reexport the reader from step.rs; add the normal TXT import entry beside the eighth export without replacing its registration.
+
+The actual TXT ArtifactPackReceiving supplies the source under the original decoder. An inline byte cursor traverses original lines and their declared endings without joining/flattening. All source scans, token decoding, numeric conversion, graph/list/header/entity admission and reference indexes use a borrowed original NativeDecodeControl plus the same five-axis NativeSnapshotBodyWallet. Every owned partial token/list/entity/snapshot/index remains in one actual retained receiving state. Collection capacities come from funded lexical/list census passes, never native demands promoted to grants. Tokens, records, nesting, population and original source extents are bounded explicitly.
+
+Decode STEP strings through the owned nine-page alphabet API, literal UTF-8 and the full escape grammar. Record original byte offsets directly; do not allocate token-origin mirrors or invoke cold Part21 parsing. Mandatory headers and structural/reference checks occur before final publication. Use the existing original IFC encode_exchange_pack for the returned native artifact.
+
+Test-first language-neutral cases cover real registered TXT Pack → IFC Pack, complete headers/complex/nested/binary/signed-zero values, original UTF-8 error offsets and all denial/cancellation axes with same-recipient drain. Existing 855 alphabet cases, neutral lexical cases and official corpus remain the lexical/reader witnesses. Actual Rust execution stays unverified until authentic compiler ingress works; no reference output substitutes for native oracle output. No build/enforcement changes or generated cleanup.

@@ -179,3 +179,16 @@ fn set_file_description_name_and_schema_round_trip() {
 fn unknown_kind_is_an_error_not_a_silent_no_op() {
     assert!(oracle_apply_mutation(fixture(), &wire("no-mutation", "{}")).is_err());
 }
+
+#[test]
+fn complex_constituents_are_observable_and_restore_the_simple_instance() {
+    let before = project_ifc_4_any(fixture()).unwrap();
+    let mutated = oracle_apply_mutation(fixture(), &spec("set-entity-complex", row("set-entity-complex"))).unwrap();
+    let after = project_ifc_4_any(&mutated).unwrap();
+    let complex = find_entity(&after, 16976.0).unwrap().get("complex").expect("complex constituent is visible");
+    assert_ne!(after, before);
+    assert_eq!(complex, &Json::Array(vec![Json::Object(vec![("name".into(), Json::String("IFCOBJECT".into())), ("args".into(), Json::Array(vec![projected("string", Json::String("Complex proxy".into()))]))])]));
+    assert_eq!(args_of(&after, 16976.0), args_of(&before, 16976.0));
+    let restored = oracle_apply_mutation(&mutated, &wire("set-entity-complex", r#"{"id": 16976, "complex": []}"#)).unwrap();
+    assert_eq!(project_ifc_4_any(&restored).unwrap(), before);
+}

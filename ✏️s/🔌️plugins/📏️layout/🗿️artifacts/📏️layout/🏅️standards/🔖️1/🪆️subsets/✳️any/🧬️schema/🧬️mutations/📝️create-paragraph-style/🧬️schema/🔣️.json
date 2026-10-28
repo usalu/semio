@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-paragraph-style/schema.json",
+  "title": "CreateParagraphStyle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "style"
+  ],
+  "properties": {
+    "style": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/artifact.json#/$defs/ParagraphStyle"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}

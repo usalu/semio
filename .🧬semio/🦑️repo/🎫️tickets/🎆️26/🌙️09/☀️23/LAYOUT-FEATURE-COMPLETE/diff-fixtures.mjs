@@ -1,0 +1,34 @@
+import { readFile, mkdir, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
+import { resolve } from 'node:path';
+export async function generate(root) {
+ const require=createRequire(resolve(root,'package.json')), oracle=require('fast-json-patch');
+ const owner=resolve(root,'✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any');
+ const base=JSON.parse(await readFile(resolve(owner,'🧪️tests/🧫️fixtures/🧬️structure/🔣️.json'),'utf8')).cases[0].before;
+ const delta=()=>({removed:[],inserted:[],moved:[],modified:[]});
+ const diff=()=>({schema:null,name:null,grid:null,paragraphStyles:null,characterStyles:null,stories:null,links:null,parentPages:null,spreads:null,pages:null,printTarget:null,dataFields:null,drawingTexts:[]});
+ const page=()=>({name:null,width:null,height:null,margin_top:null,margin_right:null,margin_bottom:null,margin_left:null,columns_count:null,columns_gutter:null,overrides:{removed:[],inserted:[],moved:[]},frames:delta(),layers:delta()});
+ const frame=()=>({x:null,y:null,width:null,height:null,wrap_mode:null,columns:null});
+ const pageDiff=patch=>({...diff(),pages:{...delta(),modified:[{id:'page-1',patch}]}});
+ const frameDiff=patch=>pageDiff({...page(),frames:{...delta(),modified:[{id:'frame-rect',patch}]}});
+ const cases=[];
+ const add=(name,event,patch,setup=[])=>{const before=oracle.applyPatch(structuredClone(base),setup,true,false).newDocument;const after=oracle.applyPatch(structuredClone(before),patch,true,false).newDocument;cases.push({name,before,diff:event,patch,after});};
+ add('rename and baseline snap',{...diff(),name:'Print Sheet',grid:{snapToBaseline:false}},[{op:'replace',path:'/name',value:'Print Sheet'},{op:'replace',path:'/grid/snapToBaseline',value:false}]);
+ add('move frame preserves omitted paint',frameDiff({...frame(),x:44,y:55}),[{op:'replace',path:'/pages/0/frames/0/bounds/x',value:44},{op:'replace',path:'/pages/0/frames/0/bounds/y',value:55}]);
+ add('explicit null clears fill',frameDiff({...frame(),fill:null}),[{op:'replace',path:'/pages/0/frames/0/fill',value:null}]);
+ add('frame visibility normalizes flags',frameDiff({...frame(),locked:true,visible:false}),[{op:'replace',path:'/pages/0/frames/0/locked',value:true},{op:'replace',path:'/pages/0/frames/0/visible',value:false}]);
+ add('page guides expand positionally',pageDiff({...page(),guides:{len:2,rows:[{index:0,guide:{x:0,y:10,w:200,h:0}},{index:1,guide:{x:10,y:0,w:0,h:300}}]}}),[{op:'replace',path:'/pages/0/guides',value:[{x:0,y:10,w:200,h:0},{x:10,y:0,w:0,h:300}]}]);
+ add('parent page assignment clears',pageDiff({...page(),parent_page_id:null}),[{op:'replace',path:'/pages/0/parentPageId',value:null}],[{op:'replace',path:'/pages/0/parentPageId',value:'parent-1'}]);
+ add('simultaneous story replacement and patch',{...diff(),stories:{removed:[{id:'story-1',index:0}],inserted:[{index:0,row:{id:'story-new',content:'New story',styleRuns:[]}}],moved:[{id:'story-2',from:1,to:1}],modified:[{id:'story-2',patch:{content:'Edited survivor'}}]}},[{op:'remove',path:'/stories/0'},{op:'add',path:'/stories/0',value:{id:'story-new',content:'New story',styleRuns:[]}},{op:'replace',path:'/stories/1/content',value:'Edited survivor'}]);
+ add('style runs add paragraph and character references',{...diff(),stories:{...delta(),modified:[{id:'story-1',patch:{content:null,style_runs:{len:1,rows:[{index:0,run:{start:0,end:5,paragraphStyleId:'body',characterStyleId:'emphasis'}}]}}}]}},[{op:'replace',path:'/stories/0/styleRuns',value:[{start:0,end:5,paragraphStyleId:'body',characterStyleId:'emphasis'}]}]);
+ const character={id:'emphasis',name:'Emphasis',fontFamily:'Sans',fontSize:18,fontWeight:700,italic:true,color:[1,0,0,1],tracking:0};
+ add('character overrides return to inheritance',{...diff(),characterStyles:{...delta(),modified:[{id:'emphasis',patch:{name:null,fontFamily:null,fontSize:null,fontWeight:null,italic:null,color:null,tracking:null}}]}},Object.keys(character).filter(k=>k!=='id').map(k=>({op:'replace',path:'/characterStyles/0/'+k,value:null})),[{op:'add',path:'/characterStyles/0',value:character}]);
+ add('layer reassignment derives membership',pageDiff({...page(),frames:{...delta(),modified:[{id:'frame-rect',patch:{...frame(),layer_id:'layer-2'}}]}}),[{op:'replace',path:'/pages/0/frames/0/layerId',value:'layer-2'},{op:'replace',path:'/pages/0/layers/0/objectIds',value:['frame-text']},{op:'replace',path:'/pages/0/layers/1/objectIds',value:['frame-rect']}]);
+ add('clear print target',{...diff(),printTarget:{target:null}},[{op:'replace',path:'/printTarget',value:null}],[{op:'replace',path:'/printTarget',value:'print'}]);
+ const entries=[{questionId:'title',value:{kind:'text',value:'Sheet'}},{questionId:'author',value:{kind:'text',value:'Author'}}];
+ add('attach typed data dictionary',{...diff(),dataFields:{presence:'created',entries:{removed:[],inserted:entries.map((row,index)=>({index,row})),moved:[]}}},[{op:'add',path:'/dataFields',value:{entries}}]);
+ add('delete typed data dictionary',{...diff(),dataFields:{presence:'deleted',entries:null}},[{op:'remove',path:'/dataFields'}],[{op:'add',path:'/dataFields',value:{entries}}]);
+ add('replace typed data dictionary',{...diff(),dataFields:{presence:'replaced',entries:{removed:[],inserted:[{index:0,row:entries[1]}],moved:[]}}},[{op:'replace',path:'/dataFields/entries',value:[entries[1]]}],[{op:'add',path:'/dataFields',value:{entries}}]);
+ add('reorder typed data entries',{...diff(),dataFields:{presence:null,entries:{removed:[],inserted:[],moved:[{id:'title',from:0,to:1}]}}},[{op:'move',from:'/dataFields/entries/0',path:'/dataFields/entries/1'}],[{op:'add',path:'/dataFields',value:{entries}}]);
+ const out=resolve(owner,'🧪️tests/🧫️fixtures/🧮️diff-algebra/🔣️.json');await mkdir(resolve(out,'..'),{recursive:true});await writeFile(out,JSON.stringify({oracle:'fast-json-patch@3 RFC 6902',cases},null,2)+'\n');return {cases:cases.length,path:out};
+}

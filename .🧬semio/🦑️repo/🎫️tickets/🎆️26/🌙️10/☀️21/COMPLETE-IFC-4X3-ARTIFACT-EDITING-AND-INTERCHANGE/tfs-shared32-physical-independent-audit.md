@@ -1,0 +1,9 @@
+# Shared TFS32 Physical Admission Oracle
+
+The retained ticket input `tfs-shared32-physical-oracle.py` independently constructs the exact declared source topology used by the public767/768 output-grant test, without importing production TypeScript or using Bun. It consumes the unchanged neutral tetra coordinates/triangles and matches createIfc4x3ExchangeGraph's original context/metre project/axis structure and the test fixture's identity LocalPlacement.
+
+The first product has GlobalId0000000000000000000002. Its31 copies use the exact JavaScript construction `(at+2).toString(36).padStart(22,'0')` for at1..31; the Python builder implements the same base36 digits. All32 product identities are distinct. They share one ProductDefinitionShape, one ShapeRepresentation and its SINGLE TFS item, rather than duplicating references inside an Items SET. All product placements reference the same original identity placement, which is valid here.
+
+Actual installed IfcOpenShell0.8.5 parses the written original ADD2 physical file (43 entities,32 products) and full EXPRESS emits zero statements. `generated/tfs-admission/shared32-oracle.json` retains exact file SHA256, header, each product GUID/placement/shape/representation/item identity and diagnostics. `generated/tfs-admission/shared32.ifc` is authored test output, not an original corpus asset.
+
+Logical mesh output is32×(4×3+4×3)=768 scalar positions/indices. This confirms source physical/formal admission and valid shared representation topology independently of the new implementation. It does not independently execute the public767/768 grant frontier, claim native receipts, prove all informal geometry rules, or imply MVD conformance. The actual TypeScript grant test remains the implementation's before/after law. No production source was imported or modified.

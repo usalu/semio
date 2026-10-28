@@ -62,3 +62,7 @@ pub use json_validation::JsonValidationCursor;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🧩️child/🦀️.rs"]
+mod child_json;
+pub use child_json::ChildJsonCursor;

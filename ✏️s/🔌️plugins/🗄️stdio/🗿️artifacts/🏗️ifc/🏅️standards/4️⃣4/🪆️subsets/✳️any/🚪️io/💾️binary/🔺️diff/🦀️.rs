@@ -62,7 +62,7 @@ pub(crate) fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     store::pack_rt::write_varint_u64(out, zigzag);
 }
 
-/// 🧪️ P2-FG1: real recursive binary twin of [`enc_ifc_value`]/[`dec_ifc_value`] above — same 0-8
+/// 🧪️ P2-FG1: real recursive binary twin of [`enc_ifc_value`]/[`dec_ifc_value`] above — same 0-9
 /// ordinal order as the text codec's `U`-`T` tag range, backing the upgraded `DiffCodec`
 /// (below)/`OpBinary` (`../../🧬️mutations/🦀️.rs`) frames. `Aggregate`/`TypedValue` recurse
 /// into [`enc_ifc_value_list_bin`] exactly like their text-codec twins recurse into
@@ -82,6 +82,7 @@ pub fn enc_ifc_value_bin(v: &IfcValue, out: &mut Vec<u8>) {
             out.push(3);
             out.extend_from_slice(&r.to_le_bytes());
         }
+        IfcValue::Binary(s) => { out.push(9); write_str_bin(out, s); }
         IfcValue::String(s) => {
             out.push(4);
             write_str_bin(out, s);
@@ -115,6 +116,7 @@ pub fn dec_ifc_value_bin(reader: &mut store::ByteReader<'_>) -> Result<IfcValue,
         2 => Ok(IfcValue::Integer(reader.read_varint_i64().map_err(|e| e.to_string())?)),
         3 => Ok(IfcValue::Real(reader.read_f64_le().map_err(|e| e.to_string())?)),
         4 => Ok(IfcValue::String(read_str_bin(reader)?)),
+        9 => {let content=read_str_bin(reader)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(&content){return Err("invalid canonical IFC binary content".into());}Ok(IfcValue::Binary(content))},
         5 => Ok(IfcValue::Enum(read_str_bin(reader)?)),
         6 => Ok(IfcValue::Reference(reader.read_varint_u64().map_err(|e| e.to_string())?)),
         7 => Ok(IfcValue::Aggregate(dec_ifc_value_list_bin(reader)?)),
@@ -160,7 +162,7 @@ pub(crate) fn dec_complex_type_bin(reader: &mut store::ByteReader<'_>) -> Result
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_complex_list_bin(list: &[IfcComplexType], out: &mut Vec<u8>) {
+pub fn enc_complex_list_bin(list: &[IfcComplexType], out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, list.len() as u64);
     for c in list {
         enc_complex_type_bin(c, out);
@@ -168,7 +170,7 @@ pub(crate) fn enc_complex_list_bin(list: &[IfcComplexType], out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_complex_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcComplexType>, String> {
+pub fn dec_complex_list_bin(reader: &mut store::ByteReader<'_>) -> Result<Vec<IfcComplexType>, String> {
     let count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     (0..count).map(|_| dec_complex_type_bin(reader)).collect()
 }
@@ -257,8 +259,9 @@ pub(crate) fn dec_entity_diff_bin(reader: &mut store::ByteReader<'_>) -> Result<
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_entities_diff_bin(d: &IfcEntitiesDiff, out: &mut Vec<u8>) {
     store::pack_rt::write_varint_u64(out, d.removed.len() as u64);
-    for id in &d.removed {
-        store::pack_rt::write_varint_u64(out, *id);
+    for entry in &d.removed {
+        store::pack_rt::write_varint_u64(out, entry.id);
+        store::pack_rt::write_varint_u64(out, entry.index as u64);
     }
     store::pack_rt::write_varint_u64(out, d.modified.len() as u64);
     for m in &d.modified {
@@ -277,7 +280,7 @@ pub(crate) fn dec_entities_diff_bin(reader: &mut store::ByteReader<'_>) -> Resul
     let removed_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut removed = Vec::with_capacity(removed_count as usize);
     for _ in 0..removed_count {
-        removed.push(reader.read_varint_u64().map_err(|e| e.to_string())?);
+        removed.push(IfcEntityRemoved { id: reader.read_varint_u64().map_err(|e| e.to_string())?, index: reader.read_varint_u64().map_err(|e| e.to_string())? as usize });
     }
     let modified_count = reader.read_varint_u64().map_err(|e| e.to_string())?;
     let mut modified = Vec::with_capacity(modified_count as usize);
@@ -328,12 +331,15 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     let mut reader = store::ByteReader::new(bytes);
     let malformed = |what: &'static str, offset: usize, detail: String| protocol::ProtocolError::Malformed { what, offset: offset as u64, detail };
-    let _format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+    let format = reader.read_u8().map_err(|e| malformed("diff format", 0, e.to_string()))?;
+    if format != 1 { return Err(malformed("diff format", 0, "expected format 1".into())); }
     let flags = reader.read_u8().map_err(|e| malformed("diff flags", 1, e.to_string()))?;
+    if flags & !15 != 0 { return Err(malformed("diff flags", 1, "unknown field flags".into())); }
     let file_description = if flags & 1 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_description", reader.position(), e))?) } else { None };
     let file_name = if flags & 2 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_name", reader.position(), e))?) } else { None };
     let file_schema = if flags & 4 != 0 { Some(dec_ifc_value_list_bin(&mut reader).map_err(|e| malformed("diff file_schema", reader.position(), e))?) } else { None };
     let entities = if flags & 8 != 0 { Some(dec_entities_diff_bin(&mut reader).map_err(|e| malformed("diff entities", reader.position(), e))?) } else { None };
+    if reader.position() != bytes.len() { return Err(malformed("diff payload", reader.position(), "unexpected trailing bytes".into())); }
     Ok(IfcDiff { file_description, file_name, file_schema, entities })
 }
 }

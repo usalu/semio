@@ -49,3 +49,6 @@ impl PartialEq for QuestionDictionaryEntry{fn eq(&self,other:&Self)->bool{if sel
 impl serde::Serialize for QuestionDictionary{fn serialize<S:serde::Serializer>(&self,serializer:S)->Result<S::Ok,S::Error>{serde::Serialize::serialize(&serde_json::Value::from(self.to_value()),serializer)}}
 #[cfg(test)]
 impl<'de>serde::Deserialize<'de>for QuestionDictionary{fn deserialize<D:serde::Deserializer<'de>>(deserializer:D)->Result<Self,D::Error>{let value=<serde_json::Value as serde::Deserialize>::deserialize(deserializer)?;Self::from_value(DslValue::from(&value)).map_err(serde::de::Error::custom)}}
+
+#[path="🟰️equal/🦀️.rs"]pub mod equal;
+pub use equal::{BorrowedQuestionEquality,QuestionDictionaryEqualityCursor,QuestionValueEqualityCursor};

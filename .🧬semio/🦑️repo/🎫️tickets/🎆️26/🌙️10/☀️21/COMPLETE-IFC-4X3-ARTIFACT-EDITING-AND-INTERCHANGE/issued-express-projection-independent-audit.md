@@ -1,0 +1,13 @@
+# Issued Projection Owner Independent Audit
+
+The frozen11owned/22reference33-path production-free slice is closed. All33before/after hashes match. Independent actual npm Bun1.4.2 replay completes44pass/0fail/603assertions in1138ms. Independent strict compilation of the actual consumer under unchanged repository options exits0/empty. All reviewer processes are terminal and source released. No additional P1/P2 identified.
+
+The39cases execute exact compiler-issued BaseAxis/FirstProjAxis/SecondProjAxis function pointers through a genuine initialized context and actual unchanged direction source. Full context populations remain unchanged after each query. Partial axes preserve ordered explicit indeterminate members; null is not omitted. Owner-specific argument counts, source identifiers/integer/unknown descriptors and finite output components remain schema-closed. Non3/unknown Dim follows the exact function ELSE branch and is not a claim of valid entity dimension semantics.
+
+Independent primary inspection of FirstProjAxis12989–13024 confirms normalized positiveX equals the aggregate[1,0,0], selecting defaultY; negativeX takes the other branch. This exact law—not a preferred orthonormal construction—supports the three retained default-branch SDK discrepancies. Nested original cancellation/undefined/object/work-budget laws pass against actual projection work and retain canonical source values.
+
+Fresh independent invocation of the unchanged installed IfcOpenShell0.8.5 interface reproduces32exact/3divergent/4unsupported results and2source mutations. The actual tuple/list comparison discrepancy and tuple indexed-assignment TypeErrors remain raw helper observations; no helper replacement forces agreement. SQLite independently agrees31/31 within its declared scalar projection/2D-basis interface;8Base3D cases remain outside it. The two negative SecondProjAxis external mutations are separate from numeric agreement and do not permit canonical source mutation here.
+
+The reused source's earlier exact full EXPRESS0 evidence remains at that scope. This slice's artificial function arguments and partial-axis results are not physical whole-project validity or geometric completeness. Three directly scored owners do not imply full branches or extra scores for nested calls. Existing native root-read parity gap, native type/runtime/funding/capability/publication gates and complete-view requirement authority remain unchanged.
+
+Evidence: issued-projection-independent-oracle.py and -tsconfig.json; generated/issued-projection-independent-{before.json,after.json,tests.txt,strict.txt,oracle.json}. No production/frozen source/data edits were made and no broad snapshot was rerun.

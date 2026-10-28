@@ -9,6 +9,7 @@
 //! `.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️30/NON-DESTRUCTIVE-HISTORY-EDITING/📋️design.md` §5, §13).
 #![allow(unexpected_cfgs)]
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use semio_s_artifact_layout_layout_mutations_frames::drag_frames::DragFrames;
 use semio_s_artifact_layout_layout_mutations_frames::rotate_frames::RotateFrames;
 use semio_s_artifact_layout_layout_mutations_frames::scale_frames::ScaleFrames;

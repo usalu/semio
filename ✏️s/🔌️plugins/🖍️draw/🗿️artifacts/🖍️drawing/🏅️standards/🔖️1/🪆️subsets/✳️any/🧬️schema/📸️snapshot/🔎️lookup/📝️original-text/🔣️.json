@@ -1,0 +1,23 @@
+{
+  "contract": "DrawingOriginalText",
+  "input": "RetainedCloneRef<DrawingNativeText>",
+  "output": "String",
+  "phases": [
+    "bind-original",
+    "admit-output-capacity",
+    "copy-original-UTF8-chunks",
+    "ready",
+    "fund-output-transfer"
+  ],
+  "close": [
+    "partial-output",
+    "typed-retirement",
+    "original-binding"
+  ],
+  "cases": [
+    "",
+    "π\u0000🍃",
+    "__proto__",
+    "雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪雪"
+  ]
+}

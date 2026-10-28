@@ -1,0 +1,13 @@
+[
+  {"name":"point","entities":[{"id":"1","name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[{"kind":"real","value":{"bits":"0"}},{"kind":"real","value":{"bits":"4607182418800017408"}}]}],"complex":[]}],"codes":[]},
+  {"name":"coordinate-count","entities":[{"id":"1","name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[]}],"complex":[]}],"codes":["aggregate-bounds"]},
+  {"name":"coordinate-type","entities":[{"id":"1","name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[{"kind":"string","value":"x"}]}],"complex":[]}],"codes":["attribute-type"]},
+  {"name":"reference","entities":[{"id":"1","name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[{"kind":"real","value":{"bits":"0"}}]}],"complex":[]},{"id":"2","name":"IFCAXIS2PLACEMENT3D","args":[{"kind":"reference","value":"1"},{"kind":"unset"},{"kind":"unset"}],"complex":[]}],"codes":[]},
+  {"name":"dangling","entities":[{"id":"1","name":"IFCAXIS2PLACEMENT3D","args":[{"kind":"reference","value":"99"},{"kind":"unset"},{"kind":"unset"}],"complex":[]}],"codes":["dangling-reference"]},
+  {"name":"reference-type","entities":[{"id":"1","name":"IFCDIRECTION","args":[{"kind":"aggregate","value":[{"kind":"real","value":{"bits":"4607182418800017408"}},{"kind":"real","value":{"bits":"0"}}]}],"complex":[]},{"id":"2","name":"IFCAXIS2PLACEMENT3D","args":[{"kind":"reference","value":"1"},{"kind":"unset"},{"kind":"unset"}],"complex":[]}],"codes":["attribute-type"]},
+  {"name":"abstract","entities":[{"id":"1","name":"IFCROOT","args":[{"kind":"string","value":"0000000000000000000000"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"}],"complex":[]}],"codes":["abstract-entity"]},
+  {"name":"unknown","entities":[{"id":"1","name":"IFCNOTREAL","args":[],"complex":[]}],"codes":["unknown-entity"]},
+  {"name":"duplicate","entities":[{"id":"1","name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[{"kind":"real","value":{"bits":"0"}}]}],"complex":[]},{"id":"1","name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[{"kind":"real","value":{"bits":"0"}}]}],"complex":[]}],"codes":["duplicate-id"]}
+]
+
+

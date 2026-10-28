@@ -1,0 +1,18 @@
+{
+  "owner": "s.draw.drawing@1/*",
+  "persistentAuthority": "LayoutDrawingMember.handle",
+  "currentAuthority": "same qualified live ChildEditorRead original custody",
+  "admission": "DRAWING_ADMITTER",
+  "vector": "DRAWING_VECTOR_SOURCE",
+  "laws": [
+    "No inline child content",
+    "No raw codec binding",
+    "Original immutable source read",
+    "Same actual registration admission and vector facets",
+    "Separate typed authored birth outside parent snapshot"
+  ],
+  "limits": [
+    "Authored vector graph is not a resolved scene or prepared export",
+    "Live source provider must retain parent and child read custody"
+  ]
+}

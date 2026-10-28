@@ -9,6 +9,7 @@ use semio_framework_value_snapshot_read::{artifact_retirement_admit_owned, artif
 use semio_framework_pack_json::ArtifactCanonicalJsonTree;
 use semio_framework_value::{ArtifactOwnedValueRetirementFactory, ErasedSnapshotRetirement, SnapshotRetirementFactory};
 pub use semio_framework_os_store_one_item::{PagedOneItemEdit,PagedOneItemEditStep};
+use semio_framework_os_store_one_item::{OriginalPostRead,PagedOneItemPostMode};
 use semio_framework_os_store_one_item::{ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparationStep, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES};
 use semio_framework_os_store_one_item_publication::{ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPrepared};
 use semio_framework_os_store_one_item_publication::lifted_canonical_edit::ArtifactStoreOneItemSealer;
@@ -110,7 +111,7 @@ use returned_custody::{close_returned_edit, close_returned_post, retain_seal_ret
 #[cfg(feature = "test-support")]
 #[doc(hidden)]
 pub mod test_support {
-    pub use super::mutation_apply::Stage;
+    pub use super::mutation_apply::{Stage,inverse_rows};
     pub use super::returned_custody::{close_returned_edit, close_returned_post, retain_seal_returns, returned_edit_demands, returned_post_demands};
 }
 
@@ -196,6 +197,8 @@ where
                 source: ManuallyDrop::new(None),
                 cursor: ManuallyDrop::new(None),
                 post: ManuallyDrop::new(None),
+                projected: ManuallyDrop::new(None),
+                post_read: OriginalPostRead::default(),
                 edit: E::default(),
                 pending_inverse: ManuallyDrop::new(None),
                 inverse_retirement: ManuallyDrop::new(None),
@@ -233,6 +236,7 @@ enum Phase {
     Cursor,
     Project,
     TakeProjection,
+    PlaceProjection,
     CloseProjection,
     Edit,
     CloseEdit,
@@ -248,6 +252,8 @@ struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync
     pub source: ManuallyDrop<Option<RetainedCloneSource<S, SnapshotRead<S>>>>,
     pub cursor: ManuallyDrop<Option<S::Projection>>,
     pub post: ManuallyDrop<Option<S>>,
+    projected: ManuallyDrop<Option<S::Output>>,
+    post_read: OriginalPostRead<S>,
     pub edit: E,
     pending_inverse: ManuallyDrop<Option<Vec<M>>>,
     inverse_retirement: ManuallyDrop<Option<semio_framework_value_factory::vector::FactoryVectorRetirement<M>>>,
@@ -271,6 +277,29 @@ struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync
     pub phase: Phase,
     pub cancelled: bool,
     pub closing: bool,
+}
+
+impl<S:SnapshotProjection,M:semio_framework_value::retirement::RetireOwned+Send+Sync+'static,E:PagedOneItemEdit<S,M>> PagedOneItemPreparation<S,M,E>{
+    fn placement_demand(&self)->Result<RetirementDemand,ValueError>{
+        let mut demand=S::Output::placement_demand();
+        demand.copy_bytes=demand.copy_bytes.checked_add(2*size_of::<Option<S::Output>>()+2*size_of::<S>()).ok_or_else(||fault(E::PREFIX,"projection-placement-quote"))?;
+        demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(E::PREFIX,"projection-placement-depth"))?;
+        Ok(demand)
+    }
+    fn place_projected(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+        let demand=self.placement_demand()?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Default::default());}
+        if self.post.is_some(){return Err(fault(E::PREFIX,"projection-placement-target"));}
+        let movement=2*size_of::<Option<S::Output>>()+2*size_of::<S>();
+        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-movement,maximum_depth:grant.maximum_depth-1,..grant};
+        let output=self.projected.take().ok_or_else(||fault(E::PREFIX,"projection-placement-source"))?;
+        let mut target=std::mem::MaybeUninit::<S>::uninit();
+        let mut progress=match output.place(&mut target,child){Ok(progress)=>progress,Err((error,output))=>{*self.projected=Some(output);return Err(error);}};
+        *self.post=Some(unsafe{target.assume_init()});
+        progress.copied_items=progress.copied_items.max(1);progress.copied_bytes+=movement;
+        semio_framework_value::retained_clone::admit_retained_clone_progress(grant,progress,"structural original projection placement")
+    }
+
 }
 
 impl<S, M, E> PagedOneItemPreparation<S, M, E>
@@ -472,10 +501,15 @@ where
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
                 let Some((post,progress))=cursor.take(child)?else{return Err(fault(prefix,"projection-result"));};
-                *self.post=Some(post);
+                *self.projected=Some(post);
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"structural immutable projection output")?;
                 cursor.begin_close();
-                self.phase=Phase::CloseProjection;
+                self.phase=Phase::PlaceProjection;
+                Ok(self.record(progress))
+            }
+            Phase::PlaceProjection => {
+                let progress=self.place_projected(clone_grant)?;
+                if self.projected.is_none(){self.phase=Phase::CloseProjection;}
                 Ok(self.record(progress))
             }
             Phase::CloseProjection => {
@@ -496,7 +530,9 @@ where
                 Ok(self.record(step.progress()))
             }
             Phase::Edit => {
-                let post = self.post.as_mut().ok_or_else(|| fault(prefix, "post"))?;
+                let mode=self.edit.post_mode();
+                if let Some(progress)=self.post_read.prepare(&mut self.post,mode,body,clone_grant)?{return Ok(self.record(progress));}
+                let post=self.post_read.access(&mut self.post,mode)?;
                 let before=self.source.as_ref().ok_or_else(||fault(prefix,"before-source"))?.try_borrow()?;
                 let mutation=self.mutation_source.as_ref().ok_or_else(||fault(prefix,"mutation-source"))?.try_borrow()?;
                 match self.edit.advance(before,mutation,post,body,clone_grant,receiving)? {
@@ -519,7 +555,7 @@ where
                 }
             }
             Phase::CloseEdit => {
-                if self.edit.terminal_is_empty(){self.phase=Phase::TakeMutationSource;return Ok(self.record(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+                if self.edit.terminal_is_empty(){if !self.post_read.terminal_is_empty(){let progress=self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,body,clone_grant)?.ok_or_else(||fault(prefix,"completed-post-return"))?;return Ok(self.record(progress));}self.phase=Phase::TakeMutationSource;return Ok(self.record(RetainedCloneProgress{copied_items:1,..Default::default()}));}
                 let factory=original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?;
                 let mut demand=self.edit.close_demands(factory,clone_grant.maximum_copy_bytes)?;
                 demand.depth=demand.depth.checked_add(1).ok_or_else(||fault(prefix,"edit-close-depth"))?;
@@ -624,6 +660,8 @@ where
             let factory=original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?;
             return self.edit.close_step(factory,child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
+        if self.projected.is_some(){return self.place_projected(child).map(RetainedCloneStep::Progress);}
+        if !self.post_read.terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.post_read.prepare(&mut self.post,PagedOneItemPostMode::Mutable,child.maximum_copy_bytes,child)?.ok_or_else(||fault(E::PREFIX,"post-source-return"))?));}
         if let Some(sealer) = self.sealer.as_mut() {
             if !sealer.terminal_is_empty() {
                 return sealer.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress()));
@@ -756,6 +794,8 @@ where
             && self.source.is_none()
             && self.cursor.is_none()
             && self.post.is_none()
+            && self.projected.is_none()
+            && self.post_read.terminal_is_empty()
             && self.pending_inverse.is_none()
             && self.inverse_retirement.is_none()
             && self.outcome_messages.is_none()
@@ -792,6 +832,8 @@ where
         if !self.edit.terminal_is_empty() {
             return child(self.edit.close_demands(original_mutation_factory(&self.mutation_retirement,&self.mutation_authority,&self.mutation_source)?,body)?);
         }
+        if self.projected.is_some(){return child(self.placement_demand()?);}
+        if !self.post_read.terminal_is_empty(){return child(self.post_read.demand(&self.post,PagedOneItemPostMode::Mutable,body)?.ok_or_else(||fault(E::PREFIX,"post-source-return-quote"))?);}
         if let Some(owner) = self.sealer.as_ref() {
             return if owner.terminal_is_empty() { Ok(RetirementDemand { copy_bytes:size_of::<ArtifactStoreOneItemSealer<S,M>>(), depth: 1, ..Default::default() }) } else { child(owner.retirement_demands(body)?) };
         }

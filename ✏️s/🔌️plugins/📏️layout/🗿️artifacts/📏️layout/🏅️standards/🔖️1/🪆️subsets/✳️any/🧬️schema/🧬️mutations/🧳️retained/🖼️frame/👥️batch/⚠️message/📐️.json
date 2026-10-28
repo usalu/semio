@@ -1,0 +1,25 @@
+{
+  "feature": "layout.retained.batch-dynamic-diagnostic",
+  "source": "original LayoutMutation + LayoutSnapshot projections and constant-time numeric-fragment source interface",
+  "pieces": [
+    "finite declared UTF8 literal",
+    "genuine original String projection",
+    "unsigned decimal scalar from fixed stack digits",
+    "genuine original String Debug body, measured and emitted one Unicode scalar per turn"
+  ],
+  "stages": [
+    "bind original mutation/baseline and numeric source signature",
+    "one fragment length, or one escaped original scalar, per turn with checked total",
+    "reserve exact contiguous final String and code/target/row headers with actual receipts",
+    "copy at most256originalUTF8bytes per turn without intermediate collected text",
+    "prepare each original target under its genuine retained field owner",
+    "transfer final MutationMessage through original ledger owner"
+  ],
+  "cancel": "every partial text, target, original binding and diagnostic ledger uses original-funded typed close",
+  "prohibitions": [
+    "no format! or join of target Strings inside retained turn",
+    "no copied identifier array for decisions",
+    "no cold PagedUtf8 flatten",
+    "no self-minted source authority"
+  ]
+}

@@ -1,0 +1,44 @@
+{
+  "schema": "semio.qualified-child-admission-provider.tests/v1",
+  "cases": [
+    {
+      "name": "Original Custody And Registered Pair",
+      "ordinal": 7,
+      "accept": true
+    },
+    {
+      "name": "Unfunded Birth Never Reads Custody",
+      "deny": true
+    },
+    {
+      "name": "Unissued Custody Refused",
+      "ready": false,
+      "accept": false
+    },
+    {
+      "name": "Another Registered Capability Refused",
+      "capability": "other",
+      "accept": false
+    },
+    {
+      "name": "Foreign Ordinal Refused",
+      "ordinal": 8,
+      "accept": false
+    },
+    {
+      "name": "Foreign Parent Revision Refused",
+      "revision": "parent",
+      "accept": false
+    },
+    {
+      "name": "Foreign Child Revision Refused",
+      "revision": "child",
+      "accept": false
+    },
+    {
+      "name": "Closing Custody Refused",
+      "closing": true,
+      "accept": false
+    }
+  ]
+}

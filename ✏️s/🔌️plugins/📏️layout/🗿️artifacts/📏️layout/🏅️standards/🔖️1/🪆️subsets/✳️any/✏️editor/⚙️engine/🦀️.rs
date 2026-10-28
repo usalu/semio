@@ -47,8 +47,8 @@ pub fn layout_io() -> semio_framework_plugin::AppIo {
                 multiplicity: semio_framework::PortMultiplicity::Many,
             },
         ],
-        export_formats: vec![],
-        import_formats: vec![],
+        export_formats: ["json", "svg", "png", "pdf", "step", "idml", "dxf", "dwg"].into_iter().map(str::to_string).collect(),
+        import_formats: ["json", "svg", "pdf", "step", "idml", "dxf", "dwg"].into_iter().map(str::to_string).collect(),
         artifact: semio_framework_plugin::ArtifactPresentation { id: "2d.layout".into(), name: "2D Layout".into(), dimension: "2d".into(), component_kind: "layout".into() },
     }
 }

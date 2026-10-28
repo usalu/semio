@@ -1,0 +1,20 @@
+# Shared Boolean Cumulative Session Implementation
+
+The shared TypeScript kernel now exposes SolidBooleanEvaluation under the same owned SolidBooleanOptions. It owns one private captured Control across sequential Boolean/halfspace stages and fixed-cost checkpoint() source turns. Existing standalone sync/step/async APIs create one such session for their operation and reuse the same private kernel; no second geometric implementation is added. No public cost/refund/reset/spent-counter parameter exists.
+
+Control has a first-failure presence bit and original unknown failure value, private grants/counter, unbound callbacks and observer-entry protection. Work refuses before exceeding the grant. A caught reentrant refusal still poisons subsequent completion. Session close retires further work without resetting spend; failed scopes can perform entered cleanup without replacing the first Error/undefined/other original value. JSON numeric/default/callback policies and original getter captures remain tested.
+
+Protected public cursors wrap a private native generator behind a fixed nonextensible protocol object. Original iterator methods are not exposed; Symbol.iterator returns the protected cursor itself. Method entry guards catch callbacks closing over the live cursor before native-generator recursive-entry TypeErrors can bypass the latch. Unique cursor tokens reserve ownership on first next; multiple lazy cursors may exist, but only one can enter. Returning an unentered/stale cursor cannot release a different active cursor. Retired cursors perform inert terminal operations, including during later observers, without altering current ownership. Every original raw kernel turn remains metered, and root source adapters must explicitly checkpoint their actual bounded turns.
+
+## Actual Tests and Red Attribution
+
+Closed three-case language-neutral nested programs cover tunnel/half cut, disconnected retained components and identity/covering empty output. The session constructor is a new API: the initial18-test red is1schema pass/17missing-entry failures/23 assertions, not an alleged defect in the old standalone operation. The existing real IFC public finite31 red remains separate evidence of missing adapter evaluation.
+
+After first implementation31 tests passed. An added meaningful retired-cursor cleanup law genuinely failed against that implementation (31pass1fail); the engine now treats retired return/throw as inert. Final32 session tests pass, including nested W−1/W, source-turn exact work deltas, actual independent Manifold nested volumes/status, exact first-failure latching, caught session/cursor reentrancy, lazy/stale ownership, return retirement, hidden native receivers, no refunds, same-session halfspace+finite work and closed/lazy admission.
+
+Complete nine-file actual run is794pass/149409 Bun expect calls/0fail9.18s: previous762 standalone/control/Manifold/Three/official-opening laws plus new32 session laws. Real strict9 public consumers with unchanged repository compiler options exit0/empty. Node assertions in older suites remain additional; they are not inferred from Bun expect counts. All parent readers are terminal. Frozen generated/boolean-session-source.json is4owned49refs53 (exact max path in census), preserving older50 source history.
+
+## Explicit Remaining Boundary
+
+This stage establishes cumulative work and private lifecycle authority. Live intermediate mesh reservations, dynamic kernel output allocation frontiers and final IFC AST/frame/winding/publication integration are still required before the adapter. Stable borrowed mesh inputs remain the generic API contract; the IFC adapter will borrow only its private admitted graph/owned leaf outputs. The request owner must share the session across all of its Boolean expressions instead of minting per-node/per-product fresh grants. Native Rust session/physical funding/runtime proof is absent; native flags remain false. New session.test.ts remains unregistered until independent closure. Full IFC4x3/all-MVD goal remains active and incomplete.
+

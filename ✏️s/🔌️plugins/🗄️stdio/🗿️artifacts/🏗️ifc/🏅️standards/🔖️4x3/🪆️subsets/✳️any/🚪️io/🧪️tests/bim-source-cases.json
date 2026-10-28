@@ -1,0 +1,34 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "semanticPhases": [
+    "bim-spatial",
+    "bim-sites",
+    "bim-buildings"
+  ],
+  "accessors": [
+    "project",
+    "name",
+    "latitude",
+    "origin",
+    "constructor",
+    "array-constructor"
+  ],
+  "limits": [
+    {
+      "maxEntities": 1
+    },
+    {
+      "maxValues": 1
+    },
+    {
+      "maxDepth": 1
+    }
+  ],
+  "sourceRefusal": "exchange.source",
+  "cancellation": "io.cancelled",
+  "capturePhases": [
+    "capture-external",
+    "index-external"
+  ]
+}
+

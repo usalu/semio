@@ -9,7 +9,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -62,15 +62,13 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
     if !base.stories.iter().any(|story| story.id == payload.story_id) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.story_id), [payload.story_id.clone()]);
     }
-    if let Some(next) = &payload.thread_next {
-        if next == &payload.frame_id || !base.pages.iter().any(|page| page.frames.iter().any(|frame| frame.id() == next && matches!(frame, Frame::Text { .. }))) {
-            return protocol::MutationOutcome::error("mutation.target-missing", format!("Thread target \"{}\" is not another text frame.", next), [next.clone()]);
-        }
+    if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_thread_edge(base, &payload.frame_id, &payload.story_id, payload.thread_next.as_deref()) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, [payload.frame_id.clone()]);
     }
     if !payload.inset_x.is_finite() || !payload.inset_y.is_finite() || !payload.inset_width.is_finite() || !payload.inset_height.is_finite() || payload.inset_width < 0.0 || payload.inset_height < 0.0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "Text inset origin must be finite and the inset size must be finite and non-negative.", std::iter::empty::<String>());
     }
-    if story_id == &payload.story_id && thread_next == &payload.thread_next && inset.x == payload.inset_x && inset.y == payload.inset_y && inset.width == payload.inset_width && inset.height == payload.inset_height {
+    if story_id == &payload.story_id && thread_next == &payload.thread_next && semio_framework_value::equal_f64(inset.x, payload.inset_x) && semio_framework_value::equal_f64(inset.y, payload.inset_y) && semio_framework_value::equal_f64(inset.width, payload.inset_width) && semio_framework_value::equal_f64(inset.height, payload.inset_height) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Text frame is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -97,6 +95,7 @@ pub fn diff_update_text_frame(payload: &UpdateTextFrame, base: &LayoutSnapshot) 
 }
 
 pub fn inverse_update_text_frame<Op: From<crate::update_text_frame::UpdateTextFrame>>(payload: &UpdateTextFrame, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_update_text_frame(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else { return Vec::new() };
     let Some(Frame::Text { story_id, thread_next, inset, .. }) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else { return Vec::new() };
@@ -117,3 +116,16 @@ pub fn inverse_update_text_frame<Op: From<crate::update_text_frame::UpdateTextFr
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+impl PartialEq for UpdateTextFrame {
+    fn eq(&self, other: &Self) -> bool {
+        self.page_id == other.page_id
+            && self.frame_id == other.frame_id
+            && self.story_id == other.story_id
+            && self.thread_next == other.thread_next
+            && semio_framework_value::equal_f64(self.inset_x, other.inset_x)
+            && semio_framework_value::equal_f64(self.inset_y, other.inset_y)
+            && semio_framework_value::equal_f64(self.inset_width, other.inset_width)
+            && semio_framework_value::equal_f64(self.inset_height, other.inset_height)
+    }
+}

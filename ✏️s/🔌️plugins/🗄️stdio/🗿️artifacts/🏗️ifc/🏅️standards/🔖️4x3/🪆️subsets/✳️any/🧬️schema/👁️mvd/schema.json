@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:ifc4x3:mvd-scope",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "sourceCommit", "sources", "conformanceEvaluated", "views", "entities", "concepts"],
+  "properties": {
+    "schema": {"const": "IFC4X3_ADD2"},
+    "sourceCommit": {"type": "string", "pattern": "^[a-f0-9]{40}$"},
+    "sources": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["url", "sha256"], "properties": {"url": {"type": "string"}, "sha256": {"type": "string", "pattern": "^[a-f0-9]{64}$"}}}},
+    "conformanceEvaluated": {"const": false},
+    "views": {"type": "array", "minItems": 2, "maxItems": 2, "items": {"type": "object", "additionalProperties": false, "required": ["id", "label"], "properties": {"id": {"$ref": "#/$defs/view"}, "label": {"type": "object", "additionalProperties": false, "required": ["en", "de"], "properties": {"en": {"type": "string", "minLength": 1}, "de": {"type": "string", "minLength": 1}}}}}},
+    "entities": {"type": "array", "minItems": 876, "maxItems": 876, "items": {"$ref": "#/$defs/entry"}},
+    "concepts": {"type": "array", "minItems": 1, "items": {"$ref": "#/$defs/entry"}}
+  },
+  "$defs": {
+    "view": {"enum": ["ReferenceView", "Alignment-basedReferenceView"]},
+    "causes": {"type": "array", "items": {"type": "string"}},
+    "entry": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "name", "href", "universal", "views"],
+      "properties": {
+        "id": {"type": "string", "minLength": 1}, "name": {"type": "string", "minLength": 1}, "href": {"type": "string", "minLength": 1}, "universal": {"type": "boolean"},
+        "views": {"type": "object", "additionalProperties": false, "properties": {"ReferenceView": {"$ref": "#/$defs/causes"}, "Alignment-basedReferenceView": {"$ref": "#/$defs/causes"}}}
+      }
+    }
+  }
+}

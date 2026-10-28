@@ -1,0 +1,22 @@
+{
+  "title": "Final Graph Original Pair Laws",
+  "cancelCuts": [
+    0,
+    1,
+    2
+  ],
+  "substitutions": [
+    "live identity",
+    "live projection",
+    "live value",
+    "authored identity",
+    "authored projection",
+    "authored value"
+  ],
+  "denialAxes": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "depth"
+  ]
+}

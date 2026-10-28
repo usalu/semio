@@ -1,0 +1,209 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "STEP AP214 Draughting Primitive",
+  "oneOf": [
+    {
+      "$ref": "#/$defs/path"
+    },
+    {
+      "$ref": "#/$defs/text"
+    },
+    {
+      "$ref": "#/$defs/circle"
+    }
+  ],
+  "$defs": {
+    "point": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number"
+      }
+    },
+    "color": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 1
+      }
+    },
+    "path": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "points"
+      ],
+      "properties": {
+        "kind": {
+          "const": "path"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "points": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 65,
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        },
+        "stroke": {
+          "$ref": "#/$defs/color"
+        },
+        "fill": {
+          "$ref": "#/$defs/color"
+        },
+        "strokeWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Physical positive curve width in the declared millimetre context."
+        }
+      },
+      "additionalProperties": false
+    },
+    "text": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "text",
+        "position",
+        "rotation",
+        "width",
+        "height",
+        "fontSize"
+      ],
+      "properties": {
+        "kind": {
+          "const": "text"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "text": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "position": {
+          "$ref": "#/$defs/point"
+        },
+        "rotation": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "fontSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "color": {
+          "$ref": "#/$defs/color"
+        }
+      },
+      "additionalProperties": false
+    },
+    "circle": {
+      "type": "object",
+      "required": [
+        "kind",
+        "name",
+        "center",
+        "radius"
+      ],
+      "properties": {
+        "kind": {
+          "const": "circle"
+        },
+        "name": {
+          "type": "string",
+          "maxLength": 512
+        },
+        "center": {
+          "$ref": "#/$defs/point"
+        },
+        "radius": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "stroke": {
+          "$ref": "#/$defs/color"
+        },
+        "strokeWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "description": "Physical positive curve width in the declared millimetre context."
+        }
+      },
+      "additionalProperties": false
+    },
+    "readProjection": {
+      "type": "object",
+      "required": [
+        "texts",
+        "paints",
+        "unitToPoints",
+        "issues"
+      ],
+      "properties": {
+        "texts": {
+          "type": "array",
+          "maxItems": 16384,
+          "items": {
+            "type": "object",
+            "required": [
+              "sourceId",
+              "name",
+              "literal",
+              "position",
+              "xAxis",
+              "yAxis",
+              "width",
+              "height",
+              "fontSize",
+              "color"
+            ],
+            "description": "Owned positioned Unicode annotation. Coordinates, extents and character height in typographic points; normalized placement axes preserve orientation."
+          }
+        },
+        "paints": {
+          "type": "array",
+          "maxItems": 16384,
+          "items": {
+            "type": "object",
+            "required": [
+              "sourceId",
+              "fill",
+              "stroke",
+              "strokeWidth"
+            ],
+            "description": "Source curve appearance, RGB colors and optional positive stroke width in points."
+          }
+        },
+        "unitToPoints": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "issues": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

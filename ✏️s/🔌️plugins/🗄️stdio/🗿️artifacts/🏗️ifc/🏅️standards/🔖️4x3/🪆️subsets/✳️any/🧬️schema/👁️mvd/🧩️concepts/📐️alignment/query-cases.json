@@ -1,0 +1,180 @@
+{
+  "version": 1,
+  "physicalConformance": "not-evaluated",
+  "cases": [
+    {
+      "id": "horizontal-baseline",
+      "kind": "horizontal",
+      "variant": "baseline",
+      "expected": "pass"
+    },
+    {
+      "id": "horizontal-foreign-relationship-owner",
+      "kind": "horizontal",
+      "variant": "foreign-relationship-owner",
+      "expected": "pass"
+    },
+    {
+      "id": "horizontal-foreign-relationship-owner-late-unknown",
+      "kind": "horizontal",
+      "variant": "foreign-relationship-owner-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-relation-late-unknown",
+      "kind": "horizontal",
+      "variant": "relation-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-target-late-unknown",
+      "kind": "horizontal",
+      "variant": "target-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-segment-late-unknown",
+      "kind": "horizontal",
+      "variant": "segment-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-parameter-late-unknown",
+      "kind": "horizontal",
+      "variant": "parameter-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-discovery-unknown-only",
+      "kind": "horizontal",
+      "variant": "discovery-unknown-only",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-duplicate-relationship-owner",
+      "kind": "horizontal",
+      "variant": "duplicate-relationship-owner",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-baseline",
+      "kind": "vertical",
+      "variant": "baseline",
+      "expected": "pass"
+    },
+    {
+      "id": "vertical-foreign-relationship-owner",
+      "kind": "vertical",
+      "variant": "foreign-relationship-owner",
+      "expected": "pass"
+    },
+    {
+      "id": "vertical-foreign-relationship-owner-late-unknown",
+      "kind": "vertical",
+      "variant": "foreign-relationship-owner-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-relation-late-unknown",
+      "kind": "vertical",
+      "variant": "relation-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-target-late-unknown",
+      "kind": "vertical",
+      "variant": "target-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-segment-late-unknown",
+      "kind": "vertical",
+      "variant": "segment-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-parameter-late-unknown",
+      "kind": "vertical",
+      "variant": "parameter-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-discovery-unknown-only",
+      "kind": "vertical",
+      "variant": "discovery-unknown-only",
+      "expected": "incomplete"
+    },
+    {
+      "id": "vertical-duplicate-relationship-owner",
+      "kind": "vertical",
+      "variant": "duplicate-relationship-owner",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-baseline",
+      "kind": "cant",
+      "variant": "baseline",
+      "expected": "pass"
+    },
+    {
+      "id": "cant-foreign-relationship-owner",
+      "kind": "cant",
+      "variant": "foreign-relationship-owner",
+      "expected": "pass"
+    },
+    {
+      "id": "cant-foreign-relationship-owner-late-unknown",
+      "kind": "cant",
+      "variant": "foreign-relationship-owner-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-relation-late-unknown",
+      "kind": "cant",
+      "variant": "relation-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-target-late-unknown",
+      "kind": "cant",
+      "variant": "target-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-segment-late-unknown",
+      "kind": "cant",
+      "variant": "segment-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-parameter-late-unknown",
+      "kind": "cant",
+      "variant": "parameter-late-unknown",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-discovery-unknown-only",
+      "kind": "cant",
+      "variant": "discovery-unknown-only",
+      "expected": "incomplete"
+    },
+    {
+      "id": "cant-duplicate-relationship-owner",
+      "kind": "cant",
+      "variant": "duplicate-relationship-owner",
+      "expected": "incomplete"
+    },
+    {
+      "id": "horizontal-foreign-parameter-owner",
+      "kind": "horizontal",
+      "variant": "foreign-parameter-owner",
+      "expected": "pass"
+    },
+    {
+      "id": "horizontal-foreign-parameter-owner-late-unknown",
+      "kind": "horizontal",
+      "variant": "foreign-parameter-owner-late-unknown",
+      "expected": "incomplete"
+    }
+  ]
+}

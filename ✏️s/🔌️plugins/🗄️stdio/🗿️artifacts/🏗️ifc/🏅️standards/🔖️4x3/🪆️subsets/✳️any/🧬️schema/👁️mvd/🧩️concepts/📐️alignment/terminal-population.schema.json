@@ -1,0 +1,5 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"semio:ifc:alignment:terminal-population:cases",
+ "type":"object","additionalProperties":false,"required":["version","conformance","targets","cases"],
+ "properties":{"version":{"const":1},"conformance":{"const":"not-evaluated"},"targets":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["layout","kind","applicable"],"properties":{"layout":{"type":"string","pattern":"^[1-9][0-9]*$"},"kind":{"enum":["horizontal","vertical","cant"]},"applicable":{"type":["boolean","null"]}}}},"cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["id","variant","status","targets","diagnostics","firstDiagnostics"],"properties":{"id":{"type":"string","minLength":1},"variant":{"enum":["prepared","header","id","reference","unknown"]},"status":{"enum":["pass","incomplete"]},"targets":{"type":"array","items":{"enum":["pass","incomplete","not-applicable"]}},"diagnostics":{"type":"array","items":{"const":"mvd.source"}},"firstDiagnostics":{"type":"array","items":{"const":"mvd.nesting.unresolved"}}}}}}
+}

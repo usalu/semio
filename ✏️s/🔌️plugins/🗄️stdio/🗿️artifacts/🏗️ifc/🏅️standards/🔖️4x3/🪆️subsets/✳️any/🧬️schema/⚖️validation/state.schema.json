@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "scope",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "scope": {
+      "const": "standalone-evaluator"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 8,
+      "maxItems": 8,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "mutation",
+          "mode",
+          "source",
+          "maximumWork",
+          "maximumDepth",
+          "maximumIterations",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mutation": {
+            "enum": [
+              "work",
+              "depth",
+              "control"
+            ]
+          },
+          "mode": {
+            "enum": [
+              "set",
+              "shadow"
+            ]
+          },
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "maximumWork": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "maximumDepth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 256
+          },
+          "maximumIterations": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "expected": {
+            "enum": [
+              "work-budget",
+              "depth",
+              "iteration-budget"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

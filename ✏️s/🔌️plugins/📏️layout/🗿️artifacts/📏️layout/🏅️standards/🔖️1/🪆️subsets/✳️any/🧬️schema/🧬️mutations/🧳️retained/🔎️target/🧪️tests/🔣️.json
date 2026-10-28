@@ -1,0 +1,57 @@
+{
+  "cases": [
+    {
+      "name": "first target",
+      "keys": [
+        "a",
+        "b"
+      ],
+      "target": "a",
+      "index": 0
+    },
+    {
+      "name": "last target",
+      "keys": [
+        "a",
+        "b",
+        "c"
+      ],
+      "target": "c",
+      "index": 2
+    },
+    {
+      "name": "equal-length miss",
+      "keys": [
+        "ab",
+        "cd"
+      ],
+      "target": "ef",
+      "index": null
+    },
+    {
+      "name": "Unicode exact key",
+      "keys": [
+        "über",
+        "世界",
+        "🌍"
+      ],
+      "target": "世界",
+      "index": 1
+    },
+    {
+      "name": "empty collection",
+      "keys": [],
+      "target": "none",
+      "index": null
+    },
+    {
+      "name": "empty literal is an exact key",
+      "keys": [
+        "x",
+        ""
+      ],
+      "target": "",
+      "index": 1
+    }
+  ]
+}

@@ -1,0 +1,867 @@
+{
+  "title": "Exact Original Question Dictionary Equality",
+  "cases": [
+    {
+      "name": "Absent Both",
+      "left": null,
+      "right": null,
+      "equal": true
+    },
+    {
+      "name": "Absent Versus Empty",
+      "left": null,
+      "right": {
+        "entries": []
+      },
+      "equal": false
+    },
+    {
+      "name": "Empty Both",
+      "left": {
+        "entries": []
+      },
+      "right": {
+        "entries": []
+      },
+      "equal": true
+    },
+    {
+      "name": "Complete Intrinsic Corpus",
+      "left": {
+        "entries": [
+          {
+            "questionId": "",
+            "value": {
+              "kind": "null"
+            }
+          },
+          {
+            "questionId": "flag",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          },
+          {
+            "questionId": "wide",
+            "value": {
+              "kind": "unsigned",
+              "high": 4294967295,
+              "low": 4294967295
+            }
+          },
+          {
+            "questionId": "narrow",
+            "value": {
+              "kind": "signed",
+              "high": 2147483648,
+              "low": 0
+            }
+          },
+          {
+            "questionId": "nan-payload",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 17
+            }
+          },
+          {
+            "questionId": "text\u0000語",
+            "value": {
+              "kind": "text",
+              "value": "literal\u0000😀"
+            }
+          },
+          {
+            "questionId": "octets",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                127,
+                255
+              ]
+            }
+          },
+          {
+            "questionId": "list",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "null"
+                },
+                {
+                  "kind": "text",
+                  "value": "x"
+                }
+              ]
+            }
+          },
+          {
+            "questionId": "map",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "b",
+                  "value": {
+                    "kind": "null"
+                  }
+                },
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "boolean",
+                    "value": true
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "",
+            "value": {
+              "kind": "null"
+            }
+          },
+          {
+            "questionId": "flag",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          },
+          {
+            "questionId": "wide",
+            "value": {
+              "kind": "unsigned",
+              "high": 4294967295,
+              "low": 4294967295
+            }
+          },
+          {
+            "questionId": "narrow",
+            "value": {
+              "kind": "signed",
+              "high": 2147483648,
+              "low": 0
+            }
+          },
+          {
+            "questionId": "nan-payload",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 17
+            }
+          },
+          {
+            "questionId": "text\u0000語",
+            "value": {
+              "kind": "text",
+              "value": "literal\u0000😀"
+            }
+          },
+          {
+            "questionId": "octets",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                127,
+                255
+              ]
+            }
+          },
+          {
+            "questionId": "list",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "null"
+                },
+                {
+                  "kind": "text",
+                  "value": "x"
+                }
+              ]
+            }
+          },
+          {
+            "questionId": "map",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "b",
+                  "value": {
+                    "kind": "null"
+                  }
+                },
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "boolean",
+                    "value": true
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Null Is Member Ownership",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "null"
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": []
+      },
+      "equal": false
+    },
+    {
+      "name": "Exact Integer Variant",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "unsigned",
+              "high": 0,
+              "low": 1
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "signed",
+              "high": 0,
+              "low": 1
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Negative Zero Bits",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 0,
+              "low": 0
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 2147483648,
+              "low": 0
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Same NaN Payload",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 17
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 17
+            }
+          }
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Different NaN Payload",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 17
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 18
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "NaN Sign Bits",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 2146959360,
+              "low": 17
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "float",
+              "high": 4294443008,
+              "low": 17
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Boolean Change",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "boolean",
+              "value": true
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "boolean",
+              "value": false
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Text Unicode Identity",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "text",
+              "value": "Aé🌍\u0000"
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "text",
+              "value": "Aé🌎\u0000"
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Bytes Identity",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                255,
+                128
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                255,
+                128
+              ]
+            }
+          }
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Bytes Change",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                255,
+                128
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "bytes",
+              "value": [
+                0,
+                255,
+                129
+              ]
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Array Order",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "null"
+                },
+                {
+                  "kind": "unsigned",
+                  "high": 0,
+                  "low": 1
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "unsigned",
+                  "high": 0,
+                  "low": 1
+                },
+                {
+                  "kind": "null"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Array Length",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "null"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "null"
+                },
+                {
+                  "kind": "null"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Object Order",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "null"
+                  }
+                },
+                {
+                  "name": "b",
+                  "value": {
+                    "kind": "unsigned",
+                    "high": 0,
+                    "low": 1
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "b",
+                  "value": {
+                    "kind": "unsigned",
+                    "high": 0,
+                    "low": 1
+                  }
+                },
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Object Literal Key",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "b",
+                  "value": {
+                    "kind": "null"
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Duplicate Object Keys Retain Order",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "null"
+                  }
+                },
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "unsigned",
+                    "high": 0,
+                    "low": 1
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "object",
+              "members": [
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "null"
+                  }
+                },
+                {
+                  "name": "a",
+                  "value": {
+                    "kind": "unsigned",
+                    "high": 0,
+                    "low": 1
+                  }
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": true
+    },
+    {
+      "name": "Question Order",
+      "left": {
+        "entries": [
+          {
+            "questionId": "a",
+            "value": {
+              "kind": "null"
+            }
+          },
+          {
+            "questionId": "b",
+            "value": {
+              "kind": "unsigned",
+              "high": 0,
+              "low": 1
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "b",
+            "value": {
+              "kind": "unsigned",
+              "high": 0,
+              "low": 1
+            }
+          },
+          {
+            "questionId": "a",
+            "value": {
+              "kind": "null"
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Question Literal Identity",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "null"
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "r",
+            "value": {
+              "kind": "null"
+            }
+          }
+        ]
+      },
+      "equal": false
+    },
+    {
+      "name": "Nested Variant",
+      "left": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "object",
+                  "members": [
+                    {
+                      "name": "x",
+                      "value": {
+                        "kind": "bytes",
+                        "value": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "right": {
+        "entries": [
+          {
+            "questionId": "q",
+            "value": {
+              "kind": "array",
+              "items": [
+                {
+                  "kind": "object",
+                  "members": [
+                    {
+                      "name": "x",
+                      "value": {
+                        "kind": "array",
+                        "items": []
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          }
+        ]
+      },
+      "equal": false
+    }
+  ],
+  "scaling": {
+    "textScalars": 8192,
+    "depth": 512,
+    "cancellationCuts": [
+      0,
+      1,
+      2,
+      3,
+      4,
+      10,
+      100,
+      300
+    ]
+  },
+  "reuse": {
+    "pairs": 256,
+    "law": "One original-funded cursor retains empty frontier pages across pair bindings; false-result frontier and previous source aliases close before reset; final capacity release occurs once"
+  }
+}

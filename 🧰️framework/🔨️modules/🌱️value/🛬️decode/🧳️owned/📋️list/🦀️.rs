@@ -3,7 +3,7 @@ use super::{NativeReceive,NativeReceiver,receiving_child_body_budget};
 use crate::{DslValue,NativeDecodeControl,RetirementDemand,ValueError,ValueRefusalKind,list::persistent::{PersistentList,PersistentListBuilder},retained_clone::{RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,retained_clone_grant_admits},shared_issuance::{SealedShared,SharedIssuer}};
 use std::mem::{ManuallyDrop,size_of};
 /// 👓️ Existing original native array owners lend constant-cost cardinality and ranked typed child references.
-pub trait NativeListSource:Sync+'static{type Row:Sync+'static;fn row_count(&self)->Result<usize,ValueError>;fn row(&self,index:usize)->Result<&Self::Row,ValueError>;}
+pub trait NativeListSource:Sync+'static{type Row:Sync+'static+?Sized;fn row_count(&self)->Result<usize,ValueError>;fn row(&self,index:usize)->Result<&Self::Row,ValueError>;}
 fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,"native persistent receiving requires the exact original ranked typed list")}
 fn phase_error()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"native persistent receiving has closed or transferred its required owner")}
 impl<I:Sync+'static> NativeListSource for Vec<I>{type Row=I;fn row_count(&self)->Result<usize,ValueError>{Ok(self.len())}fn row(&self,index:usize)->Result<&I,ValueError>{self.get(index).ok_or_else(invalid)}}
@@ -11,8 +11,8 @@ impl NativeListSource for DslValue{type Row=Self;fn row_count(&self)->Result<usi
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Bind,Count,Initialize,RowBirth,RowAdvance,RowTake,RowClose,RowSeal,RowAdopt,Build,Finish,FinalTake,Ready,Spent}
 /// 🌳️ One required child receiver and a fixed-height page builder retain every original partial owner.
-pub struct NativePersistentListReceiver<I:NativeListSource,T:NativeReceive<I::Row>+Sync>{
- binding:Option<RetainedCloneBinding>,builder:ManuallyDrop<Option<Box<PersistentListBuilder<T>>>>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,sealed:ManuallyDrop<Option<SealedShared<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,retirement:RetainedCloneClose,count:usize,index:usize,phase:Phase,closing:bool,input:std::marker::PhantomData<fn()->I>,
+pub struct NativePersistentListReceiver<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync>{
+ binding:Option<RetainedCloneBinding>,builder:ManuallyDrop<Option<Box<PersistentListBuilder<T>>>>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,sealed:ManuallyDrop<Option<SealedShared<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,retirement:RetainedCloneClose,count:usize,index:usize,phase:Phase,closing:bool,input:std::marker::PhantomData<fn(&I)>,
 }
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
@@ -20,19 +20,19 @@ fn nested(mut d:RetirementDemand,extra:usize)->Result<RetirementDemand,ValueErro
 fn child_grant(g:RetainedCloneGrant,extra:usize)->RetainedCloneGrant{RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-extra,maximum_depth:g.maximum_depth-1,..g}}
 fn enlarge(mut p:RetainedCloneProgress,extra:usize)->Result<RetainedCloneProgress,ValueError>{p.copied_bytes=p.copied_bytes.checked_add(extra).ok_or_else(phase_error)?;p.copied_items=p.copied_items.max(usize::from(extra>0));Ok(p)}
 fn retained_error(error:ValueError,extra:usize)->ValueError{let p=error.retained_progress();match enlarge(p,extra){Ok(p)=>error.with_retained_progress(p),Err(error)=>error.with_retained_progress(p)}}
-impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativePersistentListReceiver<I,T>{
+impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> NativePersistentListReceiver<I,T>{
  fn metadata()->usize{size_of::<usize>()*4+size_of::<Phase>()}
  fn row_source<'a>(&self,original:RetainedCloneRef<'a,I>)->Result<RetainedCloneRef<'a,I::Row>,ValueError>{original.get().row(self.index)?;let index=self.index;Ok(original.project(index,move|input|input.row(index).expect("original validated native list child")))}
  fn builder(&self)->Result<&PersistentListBuilder<T>,ValueError>{self.builder.as_deref().ok_or_else(phase_error)}
  fn child(&self)->Result<&T::Receiver,ValueError>{self.child.as_deref().ok_or_else(phase_error)}
  fn next_row_phase(&self)->Result<Phase,ValueError>{Ok(if !self.builder()?.accepts_row(){Phase::Build}else if self.index<self.count{Phase::RowBirth}else{Phase::Finish})}
 }
-impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativeReceive<I> for PersistentList<T>{
+impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> NativeReceive<I> for PersistentList<T>{
  type Receiver=NativePersistentListReceiver<I,T>;
  fn receive_birth_demand()->RetirementDemand{fixed(size_of::<Self::Receiver>()*2)}
  fn begin_receive(g:RetainedCloneGrant)->Result<(Self::Receiver,RetainedCloneProgress),ValueError>{let d=<Self as NativeReceive<I>>::receive_birth_demand();if !retained_clone_grant_admits(g,d){return Err(phase_error());}Ok((NativePersistentListReceiver{binding:None,builder:ManuallyDrop::new(None),child:ManuallyDrop::new(None),raw:ManuallyDrop::new(None),sealed:ManuallyDrop::new(None),output:ManuallyDrop::new(None),retirement:Default::default(),count:0,index:0,phase:Phase::Bind,closing:false,input:std::marker::PhantomData},receipt(d)))}
 }
-impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,PersistentList<T>> for NativePersistentListReceiver<I,T>{
+impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,PersistentList<T>> for NativePersistentListReceiver<I,T>{
  fn demands(&self,original:RetainedCloneRef<'_,I>,body:usize)->Result<RetirementDemand,ValueError>{
   if self.closing||matches!(self.phase,Phase::Ready|Phase::Spent){return Err(phase_error());}original.check_binding(&self.binding)?;let m=Self::metadata();
   match self.phase{
@@ -86,4 +86,6 @@ impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Persisten
  }
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.builder.is_none()&&self.raw.is_none()&&self.sealed.is_none()&&self.output.is_none()&&self.retirement.is_empty()&&self.binding.is_none()}
 }
-impl<I:NativeListSource,T:NativeReceive<I::Row>+Sync> Drop for NativePersistentListReceiver<I,T>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"native persistent receiving retains original physical owners until funded closure");}}
+impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> Drop for NativePersistentListReceiver<I,T>{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"native persistent receiving retains original physical owners until funded closure");}}
+
+impl NativeListSource for dyn super::tree::NativeValueSource{type Row=dyn super::tree::NativeValueSource;fn row_count(&self)->Result<usize,ValueError>{self.sequence_len()}fn row(&self,index:usize)->Result<&Self::Row,ValueError>{self.sequence_child(index)}}

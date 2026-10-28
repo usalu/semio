@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "scope": "retained-original-prepared-procedural-root",
+  "arithmetic": "🧪️vector-arithmetic/cases.json",
+  "isolation": "🧪️vector-arithmetic/isolation.json",
+  "source": "🧪️vector/source.ifc",
+  "laws": ["canonical-identity", "nested-root-alias", "aggregate-replacement", "qualified-derived-self", "memo-mutation-version", "memo-distinct-root", "returned-view-lifetime", "original-source-unchanged", "five-axis-denial-stationary", "original-environment-substitution", "every-view-prefix-cancel-paid-close"],
+  "nativeExecutionProven": false
+}

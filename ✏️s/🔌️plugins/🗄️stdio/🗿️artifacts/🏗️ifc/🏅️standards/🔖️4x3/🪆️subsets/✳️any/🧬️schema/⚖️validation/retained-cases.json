@@ -1,0 +1,7 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "authority": "original-captured-source-and-final-mutations",
+  "states": ["overlay", "receive", "evaluate", "population", "complete", "close"],
+  "result": {"complete": false, "valid": false, "nativeExecution": false},
+  "limits": {"depth": 256, "textQuantum": 64, "sourceClone": false, "coldEvaluation": false}
+}

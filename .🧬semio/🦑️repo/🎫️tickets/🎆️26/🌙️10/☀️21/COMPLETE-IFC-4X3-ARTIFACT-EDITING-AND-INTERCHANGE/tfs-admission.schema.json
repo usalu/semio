@@ -1,0 +1,157 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "nativeExecution",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ifc-tfs-admission-neutral"
+    },
+    "version": {
+      "const": 1
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "expected",
+          "reason"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "points",
+              "triangles",
+              "normals",
+              "pnIndex",
+              "closed",
+              "coordinateKind",
+              "indexKind",
+              "pnKind",
+              "normalKind",
+              "coordinateRole",
+              "closedKind"
+            ],
+            "properties": {
+              "points": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              },
+              "triangles": {
+                "type": "array",
+                "items": {
+                  "type": "array",
+                  "items": {
+                    "type": "integer"
+                  }
+                }
+              },
+              "normals": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                ]
+              },
+              "pnIndex": {
+                "anyOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "type": "array",
+                    "items": {
+                      "type": "integer"
+                    }
+                  }
+                ]
+              },
+              "closed": {
+                "type": [
+                  "boolean",
+                  "null"
+                ]
+              },
+              "coordinateKind": {
+                "enum": [
+                  "integer",
+                  "real"
+                ]
+              },
+              "indexKind": {
+                "enum": [
+                  "integer",
+                  "real"
+                ]
+              },
+              "pnKind": {
+                "enum": [
+                  "integer",
+                  "real"
+                ]
+              },
+              "normalKind": {
+                "enum": [
+                  "integer",
+                  "real"
+                ]
+              },
+              "coordinateRole": {
+                "enum": [
+                  "IfcCartesianPointList3D",
+                  "IfcCartesianPointList2D"
+                ]
+              },
+              "closedKind": {
+                "enum": [
+                  "boolean",
+                  "logical"
+                ]
+              }
+            }
+          },
+          "expected": {
+            "enum": [
+              "accept",
+              "refuse"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

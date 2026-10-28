@@ -1,5 +1,6 @@
 //! 🗂️ Data entries delta of the layout diff: the keyed data entry rows and their removal, insertion and relocation records. See [`super`].
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 
 //#region 🔖️DeltaHelpers
@@ -15,7 +16,7 @@ impl protocol::list_delta::Keyed for LayoutDataEntryRow {
 }
 
 /// ➖️ One `entries` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryRemoval {
     pub id: String,
@@ -23,7 +24,7 @@ pub struct LayoutDataEntryRemoval {
 }
 
 /// ➕️ One `entries` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryInsertion {
     pub index: usize,
@@ -31,7 +32,7 @@ pub struct LayoutDataEntryInsertion {
 }
 
 /// ↕️ One `entries` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct LayoutDataEntryRelocation {
     pub id: String,
@@ -40,7 +41,7 @@ pub struct LayoutDataEntryRelocation {
 }
 
 /// 🧩 Positional keyed rows of the `entries` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 pub struct LayoutDataEntriesDelta {
     pub removed: Vec<LayoutDataEntryRemoval>,

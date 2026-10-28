@@ -1,0 +1,149 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "zero-length",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "pass"
+    },
+    {
+      "id": "zero-parameter",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "pass"
+    },
+    {
+      "id": "integer-zero",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "pass"
+    },
+    {
+      "id": "negative-zero",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "pass"
+    },
+    {
+      "id": "mixed-case-tag",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "pass"
+    },
+    {
+      "id": "nonterminal-zero",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "pass"
+    },
+    {
+      "id": "not-applicable",
+      "kind": "horizontal",
+      "applicable": false,
+      "expected": "not-applicable"
+    },
+    {
+      "id": "wrong-kind",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "fail"
+    },
+    {
+      "id": "wrong-segment",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "fail"
+    },
+    {
+      "id": "business-nonzero",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "fail"
+    },
+    {
+      "id": "curve-nonzero-decoy",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "fail"
+    },
+    {
+      "id": "missing-representation",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "parent-only",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "missing-curve",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "two-items",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "repeated-curve",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "two-representations",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "raw-select",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "unknown-select",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "select-arity",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "nonfinite-select",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "unknown-constituent",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "ambiguous-owner",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    },
+    {
+      "id": "duplicate-id",
+      "kind": "horizontal",
+      "applicable": true,
+      "expected": "incomplete"
+    }
+  ]
+}

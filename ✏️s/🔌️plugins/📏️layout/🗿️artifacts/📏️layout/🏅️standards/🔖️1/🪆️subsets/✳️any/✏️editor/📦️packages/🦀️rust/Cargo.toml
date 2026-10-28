@@ -19,6 +19,10 @@ path = "../../🦀️.rs"
 testkit = []
 
 [dependencies]
+semio-s-artifact-draw-drawing-editor = { workspace = true }
+semio-s-artifact-draw-drawing-mutations = { workspace = true }
+semio-s-artifact-draw-drawing-model = { workspace = true }
+semio-framework-io-ports = { workspace = true }
 pack = { workspace = true }
 semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
 semio-framework-job-worker = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/👷️worker/📦️packages/🦀️rust" }
@@ -56,6 +60,7 @@ semio-framework-pixels = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-s-artifact-forms-forms = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["mutation-testing", "protocol-laws"] }

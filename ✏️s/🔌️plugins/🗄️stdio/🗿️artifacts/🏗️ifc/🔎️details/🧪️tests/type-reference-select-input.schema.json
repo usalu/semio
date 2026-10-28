@@ -1,0 +1,22 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+  "required":["schema","encoding","nativeExecution","domains","sources","cases","controls","originalControl"],
+  "properties":{
+    "schema":{"const":"IFC4X3_ADD2"},"encoding":{"const":"ifc-template-command"},"nativeExecution":{"const":false},
+    "domains":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["source","entity","index","attribute","select","members","direct","full"],"properties":{"source":{"enum":["units","actors"]},"entity":{"enum":["IFCMEASUREWITHUNIT","IFCACTOR"]},"index":{"enum":["0","1"]},"attribute":{"type":"string","minLength":1},"select":{"enum":["IFCUNIT","IFCACTORSELECT"]},"members":{"type":"array","minItems":3,"maxItems":3,"uniqueItems":true,"items":{"type":"string","pattern":"^IFC[A-Z]+$"}},"direct":{"enum":[1,2]},"full":{"enum":[2,6]}}}},
+    "sources":{"type":"object","additionalProperties":false,"required":["units","actors"],"properties":{"units":{"$ref":"#/definitions/source"},"actors":{"$ref":"#/definitions/source"}}},
+    "cases":{"type":"array","minItems":12,"items":{"type":"object","additionalProperties":false,"required":["id","source","reference","admitted"],"properties":{"id":{"type":"string","minLength":1},"source":{"enum":["units","actors"]},"reference":{"type":"string"},"admitted":{"type":"boolean"}}}},
+    "controls":{"const":{"noDefaultReference":true,"noEntityTypedWrapper":true,"keepEditable":true,"maximumPhysical":16}},"originalControl":{"const":{"cancelEveryProgressPrefix":true,"preserveObserverFailureIdentity":true,"preserveSourceAndRequest":true}}
+  },
+  "definitions":{
+    "source":{"type":"object","additionalProperties":false,"required":["entities"],"properties":{"entities":{"type":"array","minItems":4,"maxItems":5,"items":{"type":"object","additionalProperties":false,"required":["id","name","args","complex"],"properties":{"id":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"},"name":{"type":"string","pattern":"^IFC[A-Z]+$"},"args":{"type":"array","maxItems":8,"items":{"$ref":"#/definitions/value"}},"complex":{"type":"array","maxItems":3,"items":{"type":"object","additionalProperties":false,"required":["name","args"],"properties":{"name":{"type":"string","pattern":"^IFC[A-Z]+$"},"args":{"type":"array","maxItems":4,"items":{"$ref":"#/definitions/value"}}}}}}}}}},
+    "value":{"oneOf":[
+      {"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"enum":["unset","derived"]}}},
+      {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"enum":["string","enum"]},"value":{"type":"string"}}},
+      {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"reference"},"value":{"type":"string","pattern":"^[1-9][0-9]{0,19}$"}}},
+      {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"real"},"value":{"type":"object","additionalProperties":false,"required":["bits"],"properties":{"bits":{"type":"string","pattern":"^(0|[1-9][0-9]{0,19})$"}}}}},
+      {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"aggregate"},"value":{"type":"array","minItems":2,"maxItems":2,"items":{"$ref":"#/definitions/value"}}}},
+      {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"typedValue"},"value":{"type":"object","additionalProperties":false,"required":["name","items"],"properties":{"name":{"type":"string","pattern":"^IFC[A-Z]+$"},"items":{"type":"array","minItems":1,"maxItems":1,"items":{"$ref":"#/definitions/value"}}}}}}
+    ]}
+  }
+}

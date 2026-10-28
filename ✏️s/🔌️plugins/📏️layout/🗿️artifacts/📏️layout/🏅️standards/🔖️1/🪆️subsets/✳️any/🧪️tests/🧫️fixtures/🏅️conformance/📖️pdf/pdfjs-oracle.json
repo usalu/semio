@@ -1,0 +1,89 @@
+{
+  "oracle": "pdfjs-dist",
+  "version": "5.7.284",
+  "fixtures": [
+    {
+      "file": "implementation-limit.pdf",
+      "pageCount": 1,
+      "pages": [
+        {
+          "number": 1,
+          "view": [
+            0,
+            0,
+            500,
+            500
+          ],
+          "rotate": 0,
+          "text": [],
+          "textTransforms": []
+        }
+      ]
+    },
+    {
+      "file": "file-trailer.pdf",
+      "pageCount": 1,
+      "pages": [
+        {
+          "number": 1,
+          "view": [
+            0,
+            0,
+            500,
+            500
+          ],
+          "rotate": 0,
+          "text": [],
+          "textTransforms": []
+        }
+      ]
+    },
+    {
+      "file": "text-state-negative.pdf",
+      "pageCount": 1,
+      "pages": [
+        {
+          "number": 1,
+          "view": [
+            0,
+            0,
+            500,
+            500
+          ],
+          "rotate": 0,
+          "text": [
+            "Hello",
+            " ",
+            "World"
+          ],
+          "textTransforms": [
+            [
+              12,
+              0,
+              0,
+              12,
+              50,
+              150
+            ],
+            [
+              12,
+              0,
+              0,
+              12,
+              86.00000000000001,
+              150
+            ],
+            [
+              12,
+              0,
+              0,
+              12,
+              93.20000000000002,
+              150
+            ]
+          ]
+        }
+      ]
+    }
+  ]
+}

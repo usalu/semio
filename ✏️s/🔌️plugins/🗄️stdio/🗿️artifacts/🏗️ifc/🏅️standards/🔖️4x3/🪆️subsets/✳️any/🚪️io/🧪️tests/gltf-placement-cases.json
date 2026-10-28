@@ -1,0 +1,1 @@
+{"schema":"IFC4X3_ADD2","rule":"IfcProduct.PlacementForShapeRepresentation","cases":[{"file":"box.glb","expected":"valid"}]}

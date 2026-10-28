@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testkit = ["dep:serde"]
 
 [dependencies]
+semio-framework-io-ports = { workspace = true }
 semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
@@ -49,3 +50,7 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 semio-framework-test-original-snapshot-owners = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/📦️packages/🦀️rust" }
 semio-s-artifact-draw-drawing-io = { workspace = true }
+
+semio-framework-value-testing-allocator = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🧪️testing/💾️allocator/📦️packages/🦀️rust" }
+
+semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

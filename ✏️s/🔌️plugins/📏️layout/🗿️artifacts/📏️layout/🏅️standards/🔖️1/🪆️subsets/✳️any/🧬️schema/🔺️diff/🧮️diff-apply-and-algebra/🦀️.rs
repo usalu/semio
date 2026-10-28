@@ -1,5 +1,6 @@
 //! 🧮️ Apply and algebra of the layout diff: the diff absorption, the mutation diff application and the diff algebra implementation. See [`super`].
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 
 //#region 🔖️Apply
@@ -58,11 +59,6 @@ impl protocol::ColdMutationDiff<LayoutSnapshot> for LayoutDiff {
         }
         if other.background_drawing.is_some() {
             self.background_drawing = other.background_drawing;
-            self.drawing_texts = other.drawing_texts;
-        } else {
-            let mut rows: std::collections::BTreeMap<u32, String> = std::mem::take(&mut self.drawing_texts).into_iter().map(|row| (row.index, row.text)).collect();
-            rows.extend(other.drawing_texts.into_iter().map(|row| (row.index, row.text)));
-            self.drawing_texts = rows.into_iter().map(|(index, text)| LayoutDrawingTextRow { index, text }).collect();
         }
         if other.referenced_model.is_some() {
             self.referenced_model = other.referenced_model;
@@ -108,17 +104,6 @@ impl protocol::ColdMutationDiff<LayoutSnapshot> for LayoutDiff {
         next.data_fields = self.apply_data_fields(&next.data_fields, capability)?;
         if let Some(value) = &self.background_drawing {
             next.background_drawing = value.clone();
-        }
-        if !self.drawing_texts.is_empty() {
-            let child = next.background_drawing.take().ok_or_else(|| MutationApplyError::new("mutation.apply.missing-target", "the document has no imported plan").at(["drawingTexts"]))?;
-            let mut content = child.content.clone();
-            for row in &self.drawing_texts {
-                let edited = semio_s_artifact_layout_layout_model::set_drawing_text(&mut content, row.index, &row.text).map_err(|error| MutationApplyError::new("mutation.apply.invalid-target", error.to_string()).at(["drawingTexts".to_string(), row.index.to_string()]))?;
-                if !edited {
-                    return Err(MutationApplyError::new("mutation.apply.missing-target", "the imported plan has no text at that index").at(["drawingTexts".to_string(), row.index.to_string()]));
-                }
-            }
-            next.background_drawing = Some(semio_s_artifact_layout_layout_model::background_drawing_child_handle("edit", &content));
         }
         if let Some(value) = &self.referenced_model {
             next.referenced_model = value.clone();
@@ -168,7 +153,6 @@ impl DiffAlgebra<LayoutSnapshot> for LayoutDiff {
             && self.print_target.is_none()
             && self.data_fields.as_ref().is_none_or(|delta| delta == &LayoutDataFieldsDelta::default())
             && self.background_drawing.is_none()
-            && self.drawing_texts.is_empty()
             && self.referenced_model.is_none()
     }
 }
@@ -185,7 +169,6 @@ impl protocol::ColdDiffAlgebra<LayoutSnapshot> for LayoutDiff {
                 None => LayoutDataFieldsDelta { presence: None, entries: delta.entries.as_ref().map(|entries| entries.inverse(base_entries)) },
             }
         });
-        let labels = semio_s_artifact_layout_layout_model::drawing_labels(base);
         Self {
             schema: self.schema.as_ref().map(|_| base.schema.clone()),
             name: self.name.as_ref().map(|_| base.name.clone()),
@@ -200,7 +183,6 @@ impl protocol::ColdDiffAlgebra<LayoutSnapshot> for LayoutDiff {
             print_target: self.print_target.as_ref().map(|_| PrintTargetChange { target: base.print_target.clone() }),
             data_fields,
             background_drawing: self.background_drawing.as_ref().map(|_| base.background_drawing.clone()),
-            drawing_texts: self.drawing_texts.iter().filter_map(|row| labels.get(row.index as usize).map(|text| LayoutDrawingTextRow { index: row.index, text: text.clone() })).collect(),
             referenced_model: self.referenced_model.as_ref().map(|_| base.referenced_model.clone()),
         }
     }

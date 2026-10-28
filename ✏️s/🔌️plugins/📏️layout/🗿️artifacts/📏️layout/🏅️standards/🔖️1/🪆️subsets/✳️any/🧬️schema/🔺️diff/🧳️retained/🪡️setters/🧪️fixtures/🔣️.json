@@ -1,0 +1,448 @@
+{
+  "schema": "s.layout.layout.retained.setters.v1",
+  "cases": [
+    {
+      "id": "owned-string-displaced",
+      "before": {
+        "name": "old",
+        "unrelated": [
+          "live"
+        ]
+      },
+      "patch": {
+        "name": "new"
+      },
+      "after": {
+        "name": "new",
+        "unrelated": [
+          "live"
+        ]
+      },
+      "displaced": {
+        "name": "old"
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/name",
+          "value": "new"
+        }
+      ]
+    },
+    {
+      "id": "nullable-missing",
+      "before": {
+        "name": "old",
+        "color": [
+          1,
+          0,
+          0,
+          0.5
+        ]
+      },
+      "patch": {},
+      "after": {
+        "name": "old",
+        "color": [
+          1,
+          0,
+          0,
+          0.5
+        ]
+      },
+      "displaced": {},
+      "rfc6902": []
+    },
+    {
+      "id": "nullable-clear",
+      "before": {
+        "name": "old",
+        "color": [
+          1,
+          0,
+          0,
+          0.5
+        ]
+      },
+      "patch": {
+        "color": null
+      },
+      "after": {
+        "name": "old",
+        "color": null
+      },
+      "displaced": {
+        "color": [
+          1,
+          0,
+          0,
+          0.5
+        ]
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/color",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "nullable-set",
+      "before": {
+        "name": "old",
+        "color": null
+      },
+      "patch": {
+        "color": [
+          0,
+          1,
+          0,
+          0.25
+        ]
+      },
+      "after": {
+        "name": "old",
+        "color": [
+          0,
+          1,
+          0,
+          0.25
+        ]
+      },
+      "displaced": {
+        "color": null
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/color",
+          "value": [
+            0,
+            1,
+            0,
+            0.25
+          ]
+        }
+      ]
+    },
+    {
+      "id": "image-profile-null-missing",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {},
+      "after": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {},
+      "rfc6902": []
+    },
+    {
+      "id": "image-profile-null-clear",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": null
+      },
+      "after": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": null
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "image-profile-null-empty",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": ""
+      },
+      "after": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": null
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "image-profile-null-named",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": "Display P3"
+      },
+      "after": {
+        "colorProfile": "Display P3",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": null
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": "Display P3"
+        }
+      ]
+    },
+    {
+      "id": "image-profile-empty-missing",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {},
+      "after": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {},
+      "rfc6902": []
+    },
+    {
+      "id": "image-profile-empty-clear",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": null
+      },
+      "after": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": ""
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "image-profile-empty-empty",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": ""
+      },
+      "after": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": ""
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "image-profile-empty-named",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": "Display P3"
+      },
+      "after": {
+        "colorProfile": "Display P3",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": ""
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": "Display P3"
+        }
+      ]
+    },
+    {
+      "id": "image-profile-named-missing",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "Adobe RGB",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {},
+      "after": {
+        "colorProfile": "Adobe RGB",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {},
+      "rfc6902": []
+    },
+    {
+      "id": "image-profile-named-clear",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "Adobe RGB",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": null
+      },
+      "after": {
+        "colorProfile": null,
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": "Adobe RGB"
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "image-profile-named-empty",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "Adobe RGB",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": ""
+      },
+      "after": {
+        "colorProfile": "",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": "Adobe RGB"
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "image-profile-named-named",
+      "kind": "imageProfile",
+      "before": {
+        "colorProfile": "Adobe RGB",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "patch": {
+        "colorProfile": "Display P3"
+      },
+      "after": {
+        "colorProfile": "Display P3",
+        "unrelated": [
+          "pixels"
+        ]
+      },
+      "displaced": {
+        "colorProfile": "Adobe RGB"
+      },
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/colorProfile",
+          "value": "Display P3"
+        }
+      ]
+    }
+  ]
+}

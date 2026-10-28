@@ -11,11 +11,23 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "🏷️metadata",
       "kinds": [
+        "set-artboard",
         "rename-layer",
         "set-layer-locked",
         "set-layer-visible"
       ],
       "vectors": [
+        {
+          "mutationId": "set-artboard",
+          "sourceMutationDirectoryName": "🖼️set-artboard",
+          "mutationDirectoryName": "🖼️set-artboard",
+          "scenarios": [
+            {
+              "id": "resize-artboard",
+              "directoryName": "↔️resize"
+            }
+          ]
+        },
         {
           "mutationId": "rename-layer",
           "sourceMutationDirectoryName": "✏️rename-layer",
@@ -65,6 +77,36 @@
       "standardDirectoryName": "🔖️1",
       "subsetDirectoryName": "🏷️metadata",
       "mutations": [
+        {
+          "id": "set-artboard",
+          "capability": "drawing-1-metadata-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-artboard",
+            "bridgeVersion": 1,
+            "variant": "SetArtboard"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "drawing-1-mutate-carrier",
+              "qualifyingKind": "third-party-library",
+              "oracle": "json-rust-drawing-carrier-reader"
+            }
+          ],
+          "invariants": {
+            "local": [
+              "artboard-dimensions-preserved-by-carrier"
+            ],
+            "enclosing": [
+              "node-order-preserved-except-where-the-mutation-changes-it"
+            ]
+          }
+        },
         {
           "id": "set-layer-visible",
           "capability": "drawing-1-metadata-mutate",

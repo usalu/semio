@@ -1,0 +1,53 @@
+{
+  "textStrideBytes": 252,
+  "textMaximumSpanBytes": 256,
+  "inputMaximumBytes": 512,
+  "byteStride": 128,
+  "choicePageRows": 16,
+  "offsetUnit": "utf8-bytes",
+  "cases": [
+    {
+      "name": "513 ASCII bytes",
+      "unit": "a",
+      "repeat": 513
+    },
+    {
+      "name": "multibyte boundaries",
+      "unit": "😀é",
+      "repeat": 300
+    },
+    {
+      "name": "long story",
+      "unit": "Aé🌍",
+      "repeat": 200000
+    }
+  ],
+  "choiceTotals": [
+    33,
+    80,
+    1000000
+  ],
+  "inheritedScopes": {
+    "instance": [
+      "x",
+      "y",
+      "width",
+      "height",
+      "rotation",
+      "locked",
+      "visible"
+    ],
+    "shared": [
+      "storyContent",
+      "addStyleRun",
+      "clearStyleRuns",
+      "linkPath",
+      "linkWidth",
+      "linkHeight",
+      "dpi",
+      "colorProfile",
+      "open"
+    ],
+    "parentPrefix": "parent."
+  }
+}

@@ -117,6 +117,11 @@ impl Default for UiValueArena {
 }
 
 pub static UI_VALUE_ARENA: LazyLock<Mutex<UiValueArena>> = LazyLock::new(|| Mutex::new(UiValueArena::default()));
+static UI_VALUE_ARENA_PUBLISHED:std::sync::atomic::AtomicBool=std::sync::atomic::AtomicBool::new(false);
+pub(super) fn initialized_arena()->Result<Option<std::sync::MutexGuard<'static,UiValueArena>>,&'static str>{
+    if !UI_VALUE_ARENA_PUBLISHED.load(std::sync::atomic::Ordering::Acquire){return Err("UI value arena source is not initialized");}
+    match UI_VALUE_ARENA.try_lock(){Ok(arena)=>Ok(Some(arena)),Err(std::sync::TryLockError::WouldBlock)=>Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>Err("UI value arena source is poisoned")}
+}
 
 pub const fn resident_static_backing_bytes() -> usize {
     size_of::<LazyLock<Mutex<UiValueArena>>>()
@@ -129,7 +134,9 @@ pub const fn resident_static_backing_bytes() -> usize {
 /// authority through a panic, so every later `try_lock` (retirement, copy, compare) admits the arena again instead of refusing it
 /// as poisoned forever.
 pub fn with_ui_value_arena<T>(f: impl FnOnce(&mut UiValueArena) -> T) -> T {
-    let mut arena = UI_VALUE_ARENA.lock().unwrap_or_else(|poisoned| {
+    let source=&*UI_VALUE_ARENA;
+    UI_VALUE_ARENA_PUBLISHED.store(true,std::sync::atomic::Ordering::Release);
+    let mut arena = source.lock().unwrap_or_else(|poisoned| {
         UI_VALUE_ARENA.clear_poison();
         poisoned.into_inner()
     });

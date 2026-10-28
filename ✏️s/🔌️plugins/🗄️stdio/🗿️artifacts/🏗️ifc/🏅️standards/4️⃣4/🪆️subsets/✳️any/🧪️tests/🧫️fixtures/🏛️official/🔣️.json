@@ -1,0 +1,202 @@
+{
+  "schemaVersion": 1,
+  "source": "https://github.com/buildingSMART/Certification-datasets",
+  "revision": "80d976a9b193a26a8e928c3e79bff67af1de68a8",
+  "license": "CC-BY-4.0",
+  "attribution": "Copyright buildingSMART International Ltd.",
+  "scope": "Unchanged official IFC4 ADD2 TC1 certification and published release samples. Tests cover STEP exchange syntax, preserved graph semantics and selected geometry measures; full EXPRESS/MVD compliance is not implied.",
+  "samples": [
+    {
+      "file": "tessellation-with-individual-colors.ifc",
+      "upstreamPath": "IFC 4.0.2.1 (IFC 4 ADD2 TC1)/ISO Spec - ReferenceView_V1.2/tessellation-with-individual-colors.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.0.2.1%20(IFC%204%20ADD2%20TC1)/ISO%20Spec%20-%20ReferenceView_V1.2/tessellation-with-individual-colors.ifc",
+      "bytes": 2593,
+      "sha256": "3ab1290207d8538da9d8ebc14826b769eeb79fce7d75aaa85c35ed7a5a8dbd92",
+      "schema": "IFC4",
+      "entityCount": 32
+    },
+    {
+      "file": "column-straight-rectangle-tessellation.ifc",
+      "upstreamPath": "IFC 4.0.2.1 (IFC 4 ADD2 TC1)/ISO Spec - ReferenceView_V1.2/column-straight-rectangle-tessellation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.0.2.1%20(IFC%204%20ADD2%20TC1)/ISO%20Spec%20-%20ReferenceView_V1.2/column-straight-rectangle-tessellation.ifc",
+      "bytes": 4594,
+      "sha256": "58bb9b2cae96edf2c368de95f526650f3f282e4e7fc37c0065c501bdbeed00a1",
+      "schema": "IFC4",
+      "entityCount": 26
+    },
+    {
+      "file": "polygonal-face-tessellation.ifc",
+      "source": "https://github.com/buildingSMART/Standards-builds",
+      "revision": "a8664407b63d42651e48a78a252c76d09dd6274c",
+      "upstreamPath": "IFC/RELEASE/IFC4/ADD2_TC1/HTML/annex/annex-e/polygonal-face-tessellation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/annex/annex-e/polygonal-face-tessellation.ifc",
+      "bytes": 4203,
+      "sha256": "a76afccde57b9c5e21d797352beb309106037fcaed261ce61fbee413c9460bea",
+      "schema": "IFC4",
+      "entityCount": 52,
+      "license": "CC-BY-ND-4.0",
+      "attribution": "buildingSMART International Ltd.; source producer attribution retained in original FILE_NAME",
+      "geometry": {
+        "vertices": 16,
+        "triangles": 28,
+        "volume": 6500000000000,
+        "area": 3000000000
+      }
+    }
+  ],
+  "boundaryCases": [
+    {
+      "id": "forward-reference",
+      "schema": "(('IFC4'))",
+      "data": "#1=IFCAXIS2PLACEMENT3D(#2,$,$);\n#2=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": true
+    },
+    {
+      "id": "foreign-schema",
+      "schema": "(('IFC2X3'))",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": false
+    },
+    {
+      "id": "mixed-schema",
+      "schema": "(('IFC4','IFC2X3'))",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": false
+    },
+    {
+      "id": "duplicate-schema",
+      "schema": "(('IFC4','IFC4'))",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": false
+    },
+    {
+      "id": "malformed-schema",
+      "schema": "('IFC4')",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": false
+    },
+    {
+      "id": "duplicate-instance",
+      "schema": "(('IFC4'))",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#1=IFCCARTESIANPOINT((1.,1.,1.));",
+      "valid": false
+    },
+    {
+      "id": "zero-instance",
+      "schema": "(('IFC4'))",
+      "data": "#0=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": false
+    },
+    {
+      "id": "dangling-reference",
+      "schema": "(('IFC4'))",
+      "data": "#1=IFCAXIS2PLACEMENT3D(#2,$,$);",
+      "valid": false
+    },
+    {
+      "id": "nested-dangling-reference",
+      "schema": "(('IFC4'))",
+      "data": "#1=IFCUNITASSIGNMENT((IFCFAKEDEFINEDTYPE((#2))));",
+      "valid": false
+    },
+    {
+      "id": "missing-exchange-terminator",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\n\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "trailing-exchange-garbage",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n#2=IFCCARTESIANPOINT((0.,0.,0.));",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "missing-file-name",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "missing-file-description",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "duplicate-file-name",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_NAME('second','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "duplicate-file-schema",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "markers-inside-strings-and-comments",
+      "text": "ISO-10303-21;\nHEADER;\n/* ENDSEC; FILE_NAME(); */\nFILE_DESCRIPTION(('ENDSEC; FILE_NAME(); END-ISO-10303-21;'),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n/* trailing comment ENDSEC; */",
+      "valid": true,
+      "exportValid": true
+    },
+    {
+      "id": "missing-file-schema",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": false
+    },
+    {
+      "id": "duplicate-file-description",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_DESCRIPTION(('second'),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "malformed-file-name-arity",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME();\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": false
+    },
+    {
+      "id": "empty-description-list",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": false
+    },
+    {
+      "id": "unsupported-header-preservation",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('IFC4'));\nFILE_POPULATION('IFC4','SECTION_BOUNDARY',('DATA'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    },
+    {
+      "id": "required-header-order",
+      "text": "ISO-10303-21;\nHEADER;\nFILE_NAME('','',(''),(''),'','','');\nFILE_DESCRIPTION((''),'2;1');\nFILE_SCHEMA(('IFC4'));\nENDSEC;\nDATA;\n#1=IFCCARTESIANPOINT((0.,0.,0.));\nENDSEC;\nEND-ISO-10303-21;\n",
+      "valid": false,
+      "exportValid": true
+    }
+  ],
+  "binaryLiterals": {
+    "valid": [
+      "0",
+      "0FF",
+      "30",
+      "31",
+      "200",
+      "17F"
+    ],
+    "invalid": [
+      "",
+      "1",
+      "2",
+      "3",
+      "3F",
+      "28",
+      "1F",
+      "0ff",
+      "4FF"
+    ]
+  }
+}

@@ -1,0 +1,24 @@
+{
+  "title": "Qualified Layout Drawing Member Read",
+  "source": [
+    "Document backgroundDrawing.handle",
+    "Page(index) backgroundDrawing.handle"
+  ],
+  "provider": "Prepared original ChildAdmissionProviderV1 qualified against the exact original handle identity",
+  "lookup": {
+    "complexity": "One original numeric source address and one opaque prepared provider address",
+    "currency": "Fixed actual items/copy/depth guard before any source lookup; no storage birth"
+  },
+  "outcomes": [
+    "Denied grants yield done=false with zero effects",
+    "Funded missing child yields done=true and the fixed actual receipt",
+    "Funded present child returns source plus actual registered admission producer together",
+    "Reference replacement and invalid Page address refuse with original paid effects"
+  ],
+  "forbidden": [
+    "Inline child content",
+    "Whole child scene lowering",
+    "Typed genesis used as current edited head",
+    "Unbounded string/hash/map lookup"
+  ]
+}

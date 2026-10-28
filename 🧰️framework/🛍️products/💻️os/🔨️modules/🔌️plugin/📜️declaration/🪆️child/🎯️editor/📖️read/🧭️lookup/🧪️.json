@@ -1,0 +1,89 @@
+{
+  "schema": "semio.original-child-member-lookup.tests/v1",
+  "cases": [
+    {
+      "name": "Exact Root Member",
+      "accept": true
+    },
+    {
+      "name": "Exact Nested Member",
+      "owner": "parent-member",
+      "accept": true
+    },
+    {
+      "name": "Unicode Original Key",
+      "unicode": true,
+      "accept": true
+    },
+    {
+      "name": "One Probe Collision",
+      "collisions": 1,
+      "accept": true
+    },
+    {
+      "name": "Seven Probe Collisions",
+      "collisions": 7,
+      "accept": true
+    },
+    {
+      "name": "Missing Live Member",
+      "missing": true,
+      "accept": false
+    },
+    {
+      "name": "Different Root Source",
+      "substitute": "root",
+      "accept": false
+    },
+    {
+      "name": "Different Parent Source",
+      "substitute": "parent",
+      "accept": false
+    },
+    {
+      "name": "Different Parent Projection",
+      "substitute": "projection",
+      "accept": false
+    },
+    {
+      "name": "Different Key Reference",
+      "substitute": "key",
+      "accept": false
+    },
+    {
+      "name": "Oversize Original Key",
+      "oversize": true,
+      "accept": false
+    },
+    {
+      "name": "Denied Turn Observes No Original Payload",
+      "denied": true,
+      "accept": true
+    },
+    {
+      "name": "Cancellation Keeps Caller Original",
+      "cancel": true,
+      "accept": true
+    },
+    {
+      "name": "Genuine Render Operation",
+      "render": true,
+      "accept": true
+    },
+    {
+      "name": "Different Original Operation",
+      "substitute": "operation",
+      "accept": false
+    },
+    {
+      "name": "Different Original Operation Revision",
+      "substitute": "operationRevision",
+      "accept": false
+    },
+    {
+      "name": "Different Operation Facet",
+      "substitute": "facet",
+      "accept": false
+    }
+  ]
+}

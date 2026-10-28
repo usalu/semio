@@ -22,6 +22,10 @@ use std::any::Any;
 use std::error::Error;
 use semio_framework_kernel_identity::ArtifactKind;
 
+#[path = "📝️staging/🦀️.rs"]
+mod staging;
+pub use staging::*;
+
 #[path = "📐️arg-format-and-schema/🦀️.rs"]
 mod arg_format_and_schema;
 pub use arg_format_and_schema::*;

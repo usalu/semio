@@ -1,0 +1,11 @@
+# CSG Primitive Factor Independent Audit
+
+Fresh npm Bun 1.4.2 replay: direct-entry eight tests passed (28 assertions), then the four-file primitive/Block/circular/domain regression passed 203 tests and 54,320 assertions (1.60 s). Existing ten-consumer CSG strict runner exited zero with empty diagnostics. All readers are terminal.
+
+The two owned and 59 referenced paths matched their pinned SHA before and after this bounded run (61/61). The shared Boolean core was explicitly coordinated as unchanged during the replay window. It is now released to its separate workspace implementation owner; this report does not claim continuing stationarity of that reference. The ongoing frozen source cut is the two owned plus 58 other references (60), not a hold on the shared Boolean core.
+
+Source review found no additional P1/P2 defect. The genuine CsgSolid path checks its actual declaration and owner-qualified TreeRootExpression, resolves the actual borrowed primitive, then delegates directly. The primitive entry checks exact Block/Cylinder/Cone declaration and inherited required Position, current graph/source row authority, exact placement roles, raw declared REAL measures, finite normal SI dimensions, nonsingular frame and existing output preflight. No fake source wrapper, second graph or source index is constructed. A same-ID cloned row fails the common source field admission.
+
+Block reservation remains 60 scalar coordinate/index entries before retained mesh construction. Cone/cylinder use the existing finite circular evaluator and captured policy; representative exact totals are 645/1284 and one-less refuses. Profile/frame and reflection ownership remain unchanged: local outward indices are not incorrectly pre-flipped for arbitrary represented frames. Both ordinary and reflected nonuniform frames match the genuine wrapper output. Initial observer Error and thrown undefined retain exact identity. There is no added wrapper scheduling yield or claim of historical turn-count equality.
+
+Evidence is retained in generated/csg-primitive-independent-before.json, after.json, tests.txt and regression.txt. The actual strict runner output is generated/csg-round-strict.txt. This is a focused post-full154 factor checkpoint, not a replacement full-suite result, IFC Boolean adapter completion, native execution or funding proof. No production edits were made.

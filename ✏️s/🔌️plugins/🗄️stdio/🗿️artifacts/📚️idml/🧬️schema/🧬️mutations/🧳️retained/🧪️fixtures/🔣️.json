@@ -1,0 +1,126 @@
+{
+  "schema": "idml.retained.mutation.v1",
+  "base": {
+    "domVersion": "8.0",
+    "parts": [
+      {
+        "path": "mimetype",
+        "text": "application/vnd.adobe.indesign-idml-package"
+      },
+      {
+        "path": "designmap.xml",
+        "text": "<Document DOMVersion=\"8.0\"/>"
+      },
+      {
+        "path": "Stories/A.xml",
+        "text": "<Story>A 😀</Story>"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "replace-unicode-story",
+      "kind": "replacePart",
+      "path": "Stories/A.xml",
+      "text": "<Story>Grüße 🌍</Story>",
+      "admitted": true,
+      "changed": true
+    },
+    {
+      "id": "same-part",
+      "kind": "replacePart",
+      "path": "Stories/A.xml",
+      "text": "<Story>A 😀</Story>",
+      "admitted": true,
+      "changed": false,
+      "diagnostic": "mutation.no-op"
+    },
+    {
+      "id": "designmap-version",
+      "kind": "replacePart",
+      "path": "designmap.xml",
+      "text": "<Document DOMVersion=\"9.0\"/>",
+      "admitted": true,
+      "changed": true
+    },
+    {
+      "id": "invalid-xml",
+      "kind": "replacePart",
+      "path": "Stories/A.xml",
+      "text": "<Story>",
+      "admitted": false,
+      "diagnostic": "xml.validation.unclosed"
+    },
+    {
+      "id": "missing-part",
+      "kind": "replacePart",
+      "path": "Stories/Missing.xml",
+      "text": "<Story/>",
+      "admitted": false,
+      "diagnostic": "stdio.idml.missing-member"
+    },
+    {
+      "id": "package-with-insert",
+      "kind": "replacePackage",
+      "append": {
+        "path": "Links/photo.bin",
+        "bytes": [
+          1,
+          2,
+          3
+        ]
+      },
+      "admitted": true,
+      "changed": true
+    },
+    {
+      "id": "package-no-op",
+      "kind": "replacePackage",
+      "order": [
+        0,
+        1,
+        2
+      ],
+      "admitted": true,
+      "changed": false,
+      "diagnostic": "mutation.no-op"
+    },
+    {
+      "id": "package-remove",
+      "kind": "replacePackage",
+      "removePath": "Stories/A.xml",
+      "admitted": true,
+      "changed": true
+    }
+  ],
+  "lifecycle": {
+    "bodyBytes": [
+      1024,
+      4096,
+      65536
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      5,
+      50,
+      100,
+      250
+    ],
+    "underfundedAxes": [
+      "items",
+      "copy",
+      "capacity",
+      "release",
+      "depth"
+    ]
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes",
+      "fast-json-patch"
+    ],
+    "method": "production canonical typed mutation decision/diff/inverse compared with independent physical ZIP/XML admission and RFC6902; native central semantic+diff+generic issuer source custody laws"
+  }
+}

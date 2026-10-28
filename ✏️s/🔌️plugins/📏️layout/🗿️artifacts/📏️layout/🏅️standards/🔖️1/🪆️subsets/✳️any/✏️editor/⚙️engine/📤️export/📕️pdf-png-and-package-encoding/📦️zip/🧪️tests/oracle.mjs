@@ -1,0 +1,2 @@
+/** 🔮️ Fflate unzips actual package bytes and crc-32 independently validates the source and descriptor checksums. */
+import{createRequire}from'node:module';const require=createRequire(import.meta.url),Ajv=require('ajv'),{unzipSync}=require('fflate'),crc=require('crc-32');export function packageZipOracle(){return{validate:(schema,value)=>new Ajv({strict:false}).validate(schema,value)===true,bytes:row=>Uint8Array.from({length:row.length},(_,i)=>(i*row.multiplier+row.offset)&255),crc32:bytes=>crc.buf(bytes)>>>0,unzip:unzipSync};}

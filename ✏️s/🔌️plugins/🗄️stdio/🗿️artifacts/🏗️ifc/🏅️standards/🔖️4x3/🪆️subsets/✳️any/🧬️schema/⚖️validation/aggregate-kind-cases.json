@@ -1,0 +1,23 @@
+{
+ "$schema":"./aggregate-kind.schema.json","schema":"IFC4X3_ADD2","nativeExecution":false,
+ "functions":[
+  {"name":"BAGVALUES","source":"FUNCTION BAGVALUES():BAG OF STRING; RETURN(['x','x','y']); END_FUNCTION;"},
+  {"name":"OTHERBAG","source":"FUNCTION OTHERBAG():BAG OF STRING; RETURN(['x','x','z']); END_FUNCTION;"},
+  {"name":"SETVALUES","source":"FUNCTION SETVALUES():SET OF STRING; RETURN(['x','z']); END_FUNCTION;"},
+  {"name":"OTHERSET","source":"FUNCTION OTHERSET():SET OF STRING; RETURN(['x','y']); END_FUNCTION;"}
+ ],
+ "cases":[
+  {"id":"scalar-set-union","expression":"'INTEGER' + TYPEOF(1)","aggregate":"SET","values":["INTEGER","NUMBER","REAL"]},
+  {"id":"set-scalar-union","expression":"TYPEOF(1) + 'INTEGER'","aggregate":"SET","values":["INTEGER","NUMBER","REAL"]},
+  {"id":"bag-set-intersection","expression":"BAGVALUES() * SETVALUES()","aggregate":"SET","values":["x"]},
+  {"id":"set-bag-intersection","expression":"SETVALUES() * BAGVALUES()","aggregate":"SET","values":["x"]},
+  {"id":"mixed-intersection-nested-union","expression":"(BAGVALUES() * SETVALUES()) + ['x']","aggregate":"SET","values":["x"]},
+  {"id":"bag-bag-intersection","expression":"BAGVALUES() * OTHERBAG()","aggregate":"BAG","values":["x","x"]},
+  {"id":"bag-intersection-nested-union","expression":"(BAGVALUES() * OTHERBAG()) + ['x']","aggregate":"BAG","values":["x","x","x"]},
+  {"id":"set-set-intersection","expression":"SETVALUES() * OTHERSET()","aggregate":"SET","values":["x"]},
+  {"id":"set-bag-union","expression":"SETVALUES() + BAGVALUES()","aggregate":"SET","values":["x","y","z"]},
+  {"id":"bag-set-union","expression":"BAGVALUES() + SETVALUES()","aggregate":"BAG","values":["x","x","x","y","z"]}
+ ],
+ "pending":["typeof-containing-select-closure","uncertain-aggregate-output-membership"],
+ "admission":false
+}

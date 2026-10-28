@@ -1,0 +1,7 @@
+# BIM Interchange Frontiers After Normal Transport
+
+The current real `bimSpatialToIfc4x3` and `ifc4x3ToBimSpatial` routes project authored project/site/building/storey data, explicit hierarchy/placements/true north, authored level/height/cut-height properties and separately audited project phases. They use original source/control capture and prepared relation/source queries. Existing refusals intentionally avoid inventing site coordinates, storey heights or family parameters from arbitrary IFC geometry.
+
+The current exporter explicitly omits nonempty site boundaries and unsupported BIM family records. Import accepts only supported spatial kinds and authored conventions, with explicit diagnostics for product geometry. These limitations are visible in actual current code and existing tests; spatial projection is not full BIM artifact interchange. A future site-boundary or authored family mapping must inspect the canonical BIM schema, create a language-neutral declaration/placement/unit contract, and test actual IFC/BIM mutations/inverses and physical files before producer changes. It must not silently infer semantic families from arbitrary GLB triangles or relabel current partial results lossless.
+
+Root is pursuing the next bounded CSG round-primitive admission/geometry research while the independently closed normal slice and active SET/native/EXPRESS owner work are integrated. This prioritization does not close the BIM interchange frontier or the full IFC goal.

@@ -1,9 +1,10 @@
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use crate::text::mutations_codec::bridge_decode_pair;
 use super::*;
 use semio_s_artifact_layout_layout_model::{Frame, LayoutBounds, LayoutRect, TextStory};
 use protocol::{ColdMutation, Mutation, ColdMutationDiff, MutationDiff, SemanticMutation};
 
-const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
+const SAMPLE: &str = r#"{"schema":"layout.layout","name":"t","grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[{"id":"story-1","content":"Hello","styleRuns":[]}],"links":[{"id":"link-1","path":"a.png","hash":"h","width":10,"height":10,"dpi":300}],"parentPages":[],"spreads":[{"id":"s","name":"Spread","pageIds":["page-1"]}],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}],"printTarget":null}"#;
 
 fn sample_doc() -> LayoutSnapshot {
     semio_framework_pack_json::from_json_str(SAMPLE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("sample doc")
@@ -32,7 +33,7 @@ fn round_trip(doc: &LayoutSnapshot, operation: &LayoutMutation) -> LayoutSnapsho
     let forward = protocol::apply_diff_cold(operation.diff(doc).diff(), doc).expect("valid mutation diff");
     let backs = operation.inverse(doc).expect("valid retained mutation inverse fixture");
     let mut restored = forward.clone();
-    for back in &backs {
+    for back in backs.iter().rev() {
         restored = protocol::apply_diff_cold(back.diff(&restored).diff(), &restored).expect("valid mutation diff");
     }
     assert_eq!(&restored, doc, "inverse must restore the pre-operation document");
@@ -64,6 +65,8 @@ async fn pages_create_rename_resize_delete_round_trip() {
     let doc = sample_doc();
     let mut page_2 = doc.pages[0].clone();
     page_2.id = "page-2".into();
+    page_2.frames.clear();
+    for layer in &mut page_2.layers { layer.object_ids.clear(); }
     let create = LayoutMutation::CreatePage(semio_s_artifact_layout_layout_mutations_content::create_page::CreatePage { page: page_2, index: Some(1) });
     let with_page = round_trip(&doc, &create);
     assert_eq!(with_page.pages.len(), 2);
@@ -98,9 +101,14 @@ async fn reorder_pages_round_trips() {
     let mut doc = sample_doc();
     let mut page_2 = doc.pages[0].clone();
     page_2.id = "page-2".into();
+    page_2.frames.clear();
+    for layer in &mut page_2.layers { layer.object_ids.clear(); }
     let mut page_3 = doc.pages[0].clone();
     page_3.id = "page-3".into();
+    page_3.frames.clear();
+    for layer in &mut page_3.layers { layer.object_ids.clear(); }
     doc.pages = vec![doc.pages[0].clone(), page_2, page_3];
+    doc.spreads[0].page_ids = doc.pages.iter().map(|page| page.id.clone()).collect();
     let reorder = LayoutMutation::ReorderPages(semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages { id: "page-1".into(), to_index: 2 });
     let reordered = round_trip(&doc, &reorder);
     assert_eq!(reordered.pages.iter().map(|page| page.id.clone()).collect::<Vec<_>>(), vec!["page-2", "page-3", "page-1"]);
@@ -278,6 +286,8 @@ async fn delete_page_obeys_the_inverse_law() {
     let mut base = sample_doc();
     let mut page_2 = base.pages[0].clone();
     page_2.id = "page-2".into();
+    page_2.frames.clear();
+    for layer in &mut page_2.layers { layer.object_ids.clear(); }
     base.pages.push(page_2);
     let delete = LayoutMutation::DeletePage(semio_s_artifact_layout_layout_mutations_content::delete_page::DeletePage { id: "page-2".into() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &delete).await;
@@ -290,8 +300,12 @@ async fn reorder_pages_obeys_the_inverse_law() {
     let mut base = sample_doc();
     let mut page_2 = base.pages[0].clone();
     page_2.id = "page-2".into();
+    page_2.frames.clear();
+    for layer in &mut page_2.layers { layer.object_ids.clear(); }
     let mut page_3 = base.pages[0].clone();
     page_3.id = "page-3".into();
+    page_3.frames.clear();
+    for layer in &mut page_3.layers { layer.object_ids.clear(); }
     base.pages = vec![base.pages[0].clone(), page_2, page_3];
     let reorder = LayoutMutation::ReorderPages(semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages { id: "page-1".into(), to_index: 2 });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_law(&base, &reorder).await;

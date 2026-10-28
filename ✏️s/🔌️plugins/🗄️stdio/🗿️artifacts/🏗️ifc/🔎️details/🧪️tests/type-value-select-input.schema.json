@@ -1,0 +1,23 @@
+{
+ "$schema":"http://json-schema.org/draft-07/schema#","type":"object","additionalProperties":false,
+ "required":["schema","entity","select","index","preserved","source","pages","members","ancestry","cases"],
+ "properties":{
+  "schema":{"const":"IFC4X3_ADD2"},"entity":{"const":"IFCMEASUREWITHUNIT"},"select":{"const":"IFCVALUE"},"index":{"const":"0"},
+  "preserved":{"type":"object","required":["UnitComponent"],"additionalProperties":false,"properties":{"UnitComponent":{"const":"7"}}},
+  "source":{"type":"object","required":["entities"],"additionalProperties":false,"properties":{"entities":{"type":"array","minItems":2,"maxItems":2,"items":{"$ref":"#/$defs/entity"}}}},
+  "members":{"type":"array","minItems":109,"maxItems":109,"uniqueItems":true,"items":{"$ref":"#/$defs/name"}},
+  "ancestry":{"type":"array","minItems":109,"maxItems":109,"items":{"type":"object","additionalProperties":false,"required":["name","path"],"properties":{"name":{"$ref":"#/$defs/name"},"path":{"type":"array","minItems":2,"maxItems":2,"items":{"$ref":"#/$defs/name"}}}}},
+  "pages":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"object","additionalProperties":false,"required":["offset","ordinary","first","last"],"properties":{"offset":{"enum":["0","31","62","93"]},"ordinary":{"enum":[16,31]},"first":{"$ref":"#/$defs/name"},"last":{"$ref":"#/$defs/name"}}}},
+  "cases":{"type":"array","minItems":23,"items":{"type":"object","required":["id","member","items","domain","physical"],"additionalProperties":false,"properties":{"id":{"type":"string","pattern":"^[a-z0-9-]+$"},"member":{"anyOf":[{"$ref":"#/$defs/name"},{"type":"null"}]},"items":{"anyOf":[{"type":"array","maxItems":1,"items":{"$ref":"#/$defs/value"}},{"type":"null"}]},"domain":{"type":["boolean","null"]},"physical":{"type":"boolean"}}}}
+ },
+ "$defs":{
+  "name":{"type":"string","pattern":"^IFC[A-Z0-9]+$"},
+  "entity":{"type":"object","additionalProperties":false,"required":["id","name","args","complex"],"properties":{"id":{"type":"string","pattern":"^[1-9][0-9]*$"},"name":{"$ref":"#/$defs/name"},"args":{"type":"array","items":{"$ref":"#/$defs/value"}},"complex":{"type":"array","maxItems":0}}},
+  "value":{"oneOf":[
+   {"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"enum":["unset","derived"]}}},
+   {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"enum":["string","reference","integer","enum","binary"]},"value":{"type":"string"}}},
+   {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"real"},"value":{"type":"object","additionalProperties":false,"required":["bits"],"properties":{"bits":{"type":"string"}}}}},
+   {"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"aggregate"},"value":{"type":"array","items":{"$ref":"#/$defs/value"}}}}
+  ]}
+ }
+}

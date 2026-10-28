@@ -59,8 +59,8 @@ pub fn diff_create_layer(payload: &CreateLayer, base: &LayoutSnapshot) -> protoc
         }
         return protocol::MutationOutcome::new(LayoutDiff { pages: Some(LayoutPagesDelta { modified: vec![LayoutPagesModification { id: payload.page_id.clone(), patch: PagePatch { layers: PageLayersDelta::removal_by_id(payload.id.clone(), at), ..Default::default() } }], ..Default::default() }), ..Default::default() });
     }
-    if payload.id.is_empty() || payload.name.is_empty() || payload.name.len() > 256 || page.layers.len() >= 16 || page.layers.iter().any(|layer| layer.id == payload.id) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "A page holds at most 16 layers, and each new layer needs a fresh id and a short name.", std::iter::empty::<String>());
+    if payload.id.trim().is_empty() || payload.name.trim().is_empty() || page.layers.iter().any(|layer| layer.id == payload.id) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Each new layer needs a fresh id and a non-empty name.", std::iter::empty::<String>());
     }
     if payload.index.is_some_and(|at| at > page.layers.len()) {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Insert index {} is past the end of {} rows.", payload.index.unwrap_or_default(), page.layers.len()), [payload.id.clone()]);

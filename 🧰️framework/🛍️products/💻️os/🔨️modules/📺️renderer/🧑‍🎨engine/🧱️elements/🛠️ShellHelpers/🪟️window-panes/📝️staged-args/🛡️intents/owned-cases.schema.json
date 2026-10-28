@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false, "required": ["cases"],
+  "properties": { "cases": {
+    "type": "array", "minItems": 8,
+    "items": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "state", "sent"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "state": { "enum": ["current", "replaced", "publication", "unsubscribed", "closed", "unsupported", "disabled", "foreign"] },
+        "sent": { "type": "boolean" }
+      }
+    }
+  } }
+}

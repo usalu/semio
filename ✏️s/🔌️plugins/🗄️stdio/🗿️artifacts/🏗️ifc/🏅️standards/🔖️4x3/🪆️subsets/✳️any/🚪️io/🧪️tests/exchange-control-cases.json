@@ -1,0 +1,10 @@
+{
+  "$schema": "./exchange-control.schema.json",
+  "schema": "IFC4X3_ADD2",
+  "endpoints": ["bim-to-ifc", "ifc-to-bim", "fem-to-ifc", "ifc-to-fem", "ifc-triangles"],
+  "cutoff": "first-progress",
+  "replacement": "fresh-signal-and-callback",
+  "code": "io.cancelled",
+  "callbacksBeforeCancellation": 1,
+  "invalidBatchSizes": [0, -1, 0.5]
+}

@@ -1,0 +1,7 @@
+import {strictEqual,throws} from 'node:assert/strict';
+import {committedMilestone,replayPosition,type ExportMilestone} from '../🟦️.ts';
+import corpus from './🔣️.json' with {type:'json'};
+import schema from '../🧬️schema/🔣️.json' with {type:'json'};
+export interface MilestoneOracle{validate(schema:unknown,value:unknown):boolean;changes(marks:readonly ExportMilestone[]):number}
+/** 🧪️ Preparation and transfer work may vary while committed output/stage prefixes remain replayable. */
+export function checkExportMilestones(oracle:MilestoneOracle){strictEqual(oracle.validate(schema,corpus),true);let refusals=0;for(const row of corpus.cases){const prefix=row.source.slice(0,row.checkpointAt+1),target=prefix.at(-1)!;let count=0;for(let i=1;i<prefix.length;i++)count+=Number(committedMilestone(prefix[i-1]!,prefix[i]!));strictEqual(count,row.expectedCommitted);strictEqual(count,oracle.changes(prefix));let current=0,matched=false;for(let i=0;i<row.replay.length;i++){if(i>0)current+=Number(committedMilestone(row.replay[i-1]!,row.replay[i]!));const m=row.replay[i]!,result=replayPosition(current,count,JSON.stringify(m)===JSON.stringify(target));if(result){strictEqual(current,count);matched=true;break;}}strictEqual(matched,true);strictEqual(oracle.changes(row.source),oracle.changes(row.replay));throws(()=>replayPosition(count+1,count,true));throws(()=>replayPosition(count,count,false));throws(()=>replayPosition(count,count+1,false,true));refusals+=3;}return{cases:corpus.cases.length,refusals};}

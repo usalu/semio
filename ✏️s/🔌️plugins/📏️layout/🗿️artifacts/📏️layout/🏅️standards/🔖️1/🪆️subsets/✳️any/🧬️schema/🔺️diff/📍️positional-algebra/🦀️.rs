@@ -38,9 +38,15 @@ pub fn apply_positional<D: Positional>(items: &[D::Item], delta: &D) -> Mutation
     if let Some((index, _)) = rows.iter().find(|(index, _)| *index >= target) {
         return Err(MutationApplyError::new("mutation.apply.invalid-order", "positional row lies beyond the final length").at(["rows".to_string(), index.to_string()]));
     }
+    let mut supplied = std::collections::BTreeMap::new();
+    for (index, value) in &rows {
+        if supplied.insert(*index, *value).is_some() {
+            return Err(MutationApplyError::new("mutation.apply.duplicate-target", "positional index is supplied twice").at(["rows".to_string(), index.to_string()]));
+        }
+    }
     let mut next = Vec::with_capacity(target);
     for index in 0..target {
-        match rows.iter().rev().find(|(row, _)| *row == index).map(|(_, value)| (*value).clone()).or_else(|| items.get(index).cloned()) {
+        match supplied.get(&index).map(|value| (*value).clone()).or_else(|| items.get(index).cloned()) {
             Some(value) => next.push(value),
             None => return Err(MutationApplyError::new("mutation.apply.missing-target", "extended position carries no row").at(["rows".to_string(), index.to_string()])),
         }

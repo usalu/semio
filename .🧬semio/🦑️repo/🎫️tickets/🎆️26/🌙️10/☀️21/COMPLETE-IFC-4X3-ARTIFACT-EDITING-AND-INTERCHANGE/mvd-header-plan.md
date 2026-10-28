@@ -1,0 +1,7 @@
+# Released View Declarations in the File Header
+
+The [buildingSMART header guide](https://standards.buildingsmart.org/documents/Implementation/ImplementationGuide_IFCHeaderData_Version_1.0.2.pdf) defines ViewDefinition in FILE_DESCRIPTION. The [pinned ADD2 release scope](https://github.com/buildingSMART/Standards-builds/tree/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts) supplies the exact ReferenceView and Alignment-basedReferenceView identifiers. This is a declaration of intended exchange scope, not evidence of population conformance.
+
+Implement schema-first neutral selection cases, owned TypeScript/native header helpers, and explicit EN/DE native variants on existing string payloads. Preserve comments, options and implementation level. Read unknown view names verbatim without substituting names from another schema or development release. An explicit selection replaces complete ViewDefinition entries; malformed declarations require a clear refusal so arbitrary damaged text is not silently discarded. Clearing declarations retains a nonempty description list. Use existing setFileDescription commands, central application/inverse and revision history.
+
+Tests must exercise exact data preservation, multiple declarations, unknown identifiers, malformed input, no-op detection, undo/redo, STEP export/reimport, admission and cancellation inside long text. Independently compare authored header values with IfcOpenShell. Written native tests and source parsing do not establish host execution while compiler ingress is unavailable.

@@ -40,3 +40,49 @@ async fn diff_codec_text_binary_roundtrip_law() {
         assert_eq!(decoded, d, "encode_diff/decode_diff round-trip mismatch");
     }
 }
+
+#[test]
+fn absorb_preserves_insert_position_when_later_removal_is_after_it() {
+    let original = base();
+    let mut first = diff_insert_entity(0, entity(99, "IFCSITE", vec![]));
+    let middle = protocol::apply_diff(&first, &original).unwrap();
+    let later = diff_remove_entity(2, 2);
+    let expected = protocol::apply_diff(&later, &middle).unwrap();
+    first.absorb(later);
+    assert_eq!(protocol::apply_diff(&first, &original).unwrap(), expected);
+}
+
+#[test]
+fn absorb_preserves_insert_position_when_earlier_insert_is_annihilated() {
+    let original = base();
+    let mut first = diff_insert_entity(0, entity(99, "IFCSITE", vec![]));
+    first.absorb(diff_insert_entity(2, entity(100, "IFCBUILDING", vec![])));
+    let middle = protocol::apply_diff(&first, &original).unwrap();
+    let later = diff_remove_entity(99, 0);
+    let expected = protocol::apply_diff(&later, &middle).unwrap();
+    first.absorb(later);
+    assert_eq!(protocol::apply_diff(&first, &original).unwrap(), expected);
+}
+
+#[test]
+fn removed_identity_must_match_original_position() {
+    let original = base();
+    assert!(protocol::apply_diff(&diff_remove_entity(2, 0), &original).is_err());
+}
+
+#[test]
+fn remove_and_reinsert_identity_composes_and_inverts() {
+    let original = base();
+    let mut combined = diff_remove_entity(1, 0);
+    combined.absorb(diff_insert_entity(1, entity(1, "IFCSITE", vec![])));
+    let changed = protocol::apply_diff(&combined, &original).unwrap();
+    assert_eq!(changed.entities.iter().map(|entity| entity.id).collect::<Vec<_>>(), vec![2, 1]);
+    assert_eq!(protocol::apply_diff(&combined.inverse(&original), &changed).unwrap(), original);
+}
+
+#[test]
+fn diff_binary_rejects_unknown_framing_and_trailing_payload() {
+    for bytes in [vec![0, 0], vec![1, 16], vec![1, 0, 0]] {
+        assert!(IfcDiff::decode_diff(&bytes).is_err());
+    }
+}

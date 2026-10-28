@@ -1,0 +1,75 @@
+{
+  "token": {
+    "action": "fixture.apply",
+    "generation": "7",
+    "revision": "source:19",
+    "window": "main"
+  },
+  "args": {
+    "target": "18446744073709551615",
+    "entries": [
+      {
+        "kind": "A",
+        "name": "Exact",
+        "value": {
+          "kind": "real",
+          "value": {
+            "bits": "9223372036854775808"
+          }
+        }
+      }
+    ],
+    "identities": [
+      {
+        "key": "entry:0",
+        "id": "9007199254740993"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "nested-exact",
+      "path": [
+        "entries",
+        "0",
+        "value",
+        "value",
+        "bits"
+      ],
+      "value": "18442240474082181120"
+    },
+    {
+      "id": "i64-exact",
+      "path": [
+        "count"
+      ],
+      "value": "-9223372036854775808"
+    }
+  ],
+  "stale": [
+    {
+      "action": "fixture.apply",
+      "generation": "6",
+      "revision": "source:19",
+      "window": "main"
+    },
+    {
+      "action": "fixture.apply",
+      "generation": "7",
+      "revision": "source:18",
+      "window": "main"
+    },
+    {
+      "action": "other",
+      "generation": "7",
+      "revision": "source:19",
+      "window": "main"
+    },
+    {
+      "action": "fixture.apply",
+      "revision": "source:19",
+      "generation": "7",
+      "window": "sibling"
+    }
+  ]
+}

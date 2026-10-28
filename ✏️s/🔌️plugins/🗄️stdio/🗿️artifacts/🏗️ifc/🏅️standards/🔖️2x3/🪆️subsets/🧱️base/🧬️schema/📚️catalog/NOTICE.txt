@@ -1,0 +1,7 @@
+Copyright buildingSMART International Ltd.,1996–2020.
+The retained IFC2X3_TC1.exp input is unchanged and contains its original copyright notice.
+The pinned Standards-builds repository README identifies final IFC releases as CC BY-ND4.0; retain both notices.
+https://github.com/buildingSMART/Standards-builds/blob/a8664407b63d42651e48a78a252c76d09dd6274c/README.md
+https://creativecommons.org/licenses/by-nd/4.0/
+Source bytes and provenance are pinned in source.json.
+Independent test metadata facts are from IfcOpenShell0.9.0.post1, LGPL-3.0-or-later; source filenames and hashes are in the fixture.

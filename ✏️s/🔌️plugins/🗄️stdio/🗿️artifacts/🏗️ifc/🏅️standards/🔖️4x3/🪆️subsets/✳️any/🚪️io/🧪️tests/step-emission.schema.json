@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/step-emission-cases.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "fragmentBytes", "maximumDepth", "cases"],
+  "properties": {
+    "schema": {"const": "stdio.ifc.step-emission"},
+    "fragmentBytes": {"const": 64},
+    "maximumDepth": {"const": 64},
+    "cases": {"type": "array", "minItems": 5, "items": {"type": "object", "additionalProperties": false, "required": ["name", "data"], "properties": {"name": {"type": "string", "minLength": 1}, "data": {"type": "string"}}}}
+  }
+}

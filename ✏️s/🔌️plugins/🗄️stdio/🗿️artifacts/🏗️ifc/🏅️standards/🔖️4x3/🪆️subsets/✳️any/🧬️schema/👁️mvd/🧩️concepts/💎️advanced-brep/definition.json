@@ -1,0 +1,28 @@
+{
+  "id": "Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_AdvancedBrep_Geometry",
+  "source": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_AdvancedBrep_Geometry/content.html",
+    "sha256": "368bf65e75dcf96e3a6c778fc6ac29be57b8f1bea2f4315e8df0ea68fa4eb5a1"
+  },
+  "predicates": [
+    {
+      "attribute": "RepresentationIdentifier",
+      "kind": "equals-string",
+      "value": "Body"
+    },
+    {
+      "attribute": "RepresentationType",
+      "kind": "equals-string",
+      "value": "AdvancedBrep"
+    },
+    {
+      "attribute": "Items",
+      "kind": "every-subtype",
+      "value": [
+        "IFCADVANCEDBREP",
+        "IFCFACETEDBREP"
+      ]
+    }
+  ]
+}

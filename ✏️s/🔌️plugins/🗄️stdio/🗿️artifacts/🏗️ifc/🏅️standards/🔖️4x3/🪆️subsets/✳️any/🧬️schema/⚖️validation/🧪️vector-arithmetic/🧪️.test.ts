@@ -1,0 +1,14 @@
+/** ➕ Real issued vector arithmetic preserves source values and raw result orientation. */
+import {test,expect} from 'bun:test';
+import Ajv from 'ajv/dist/2020';
+import cases from './cases.json';
+import schema from './cases.schema.json';
+import {compileIfc4x3Express,IfcExpressContext} from '../index.ts';
+import {parseIfc4x3Step} from '../../../🚪️io/step.ts';
+import {placementOwnerArguments} from '../🧪️placement/fixture.ts';
+import {vectorOwnerValue} from '../🧪️vector/fixture.ts';
+import {numericOwnerSnapshot} from '../🧪️numeric/fixture.ts';
+const issued=compileIfc4x3Express();
+test('closed arithmetic cases bind three unchanged issued owners and pinned source',async()=>{expect(new Ajv({strict:true}).compile(schema)(cases)).toBe(true);expect(new Set(cases.functions.map(row=>row.owner)).size).toBe(3);expect((await issued).complete).toBe(true);expect(new Bun.CryptoHasher('sha256').update(await Bun.file(new URL('../../📚️catalog/IFC4X3_ADD2.exp',import.meta.url)).arrayBuffer()).digest('hex')).toBe(cases.source.expSha256);});
+for(const row of cases.functions)test('issued arithmetic '+row.owner+' '+row.id,async()=>{const context=new IfcExpressContext(await parseIfc4x3Step(await Bun.file(new URL(cases.source.file,import.meta.url)).text()),(await issued).program);await context.initialize();const args=placementOwnerArguments(context,row.args),before=[...context.entities].map(([id,value])=>[String(id),numericOwnerSnapshot(value)]);expect(context.evaluator.functions.get(row.owner)).toBe((await issued).program.functions.find(fn=>fn.name===row.owner));const actual=await vectorOwnerValue(context,await context.evaluator.call(row.owner,args)) as {kind:string;orientation?:number[];magnitude?:number};expect(actual.kind).toBe(row.expected.kind);if(row.expected.kind==='vector'){expect(actual.orientation).toHaveLength(row.expected.orientation!.length);for(let i=0;i<row.expected.orientation!.length;i++)expect(Math.abs(actual.orientation![i]!-row.expected.orientation![i]!)).toBeLessThanOrEqual(row.tolerance);expect(Math.abs(actual.magnitude!-row.expected.magnitude!)).toBeLessThanOrEqual(row.tolerance);}expect([...context.entities].map(([id,value])=>[String(id),numericOwnerSnapshot(value)])).toEqual(before);});
+for(const family of ['direction','vector'])test('a negative '+family+' query cannot change a later positive issued query',async()=>{const context=new IfcExpressContext(await parseIfc4x3Step(await Bun.file(new URL(cases.source.file,import.meta.url)).text()),(await issued).program);await context.initialize();const negative=cases.functions.find(row=>row.id===family+'-negative')!,positive=cases.functions.find(row=>row.id===family+'-positive')!;await context.evaluator.call(negative.owner,placementOwnerArguments(context,negative.args));expect(await vectorOwnerValue(context,await context.evaluator.call(positive.owner,placementOwnerArguments(context,positive.args)))).toEqual(positive.expected);});

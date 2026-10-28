@@ -1,0 +1,17 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,
+  "required":["schema","entity","attribute","index","select","members","direct","full","source","cases"],
+  "properties":{
+    "schema":{"const":"IFC4X3_ADD2"},"entity":{"const":"IFCFILLAREASTYLEHATCHING"},"attribute":{"const":"StartOfNextHatchLine"},"index":{"const":"1"},"select":{"const":"IFCHATCHLINEDISTANCESELECT"},
+    "members":{"const":["IFCPOSITIVELENGTHMEASURE","IFCVECTOR"]},"direct":{"const":5},"full":{"const":5},
+    "source":{"type":"object","additionalProperties":false,"required":["entities"],"properties":{"entities":{"type":"array","minItems":5,"maxItems":5,"items":{"type":"object","additionalProperties":false,"required":["id","name","args","complex"],"properties":{"id":{"type":"string","pattern":"^[1-9][0-9]*$"},"name":{"type":"string","pattern":"^IFC[A-Z0-9]+$"},"args":{"type":"array","items":{"$ref":"#/$defs/value"}},"complex":{"type":"array","maxItems":2,"uniqueItems":true,"items":{"type":"object","additionalProperties":false,"required":["name","args"],"properties":{"name":{"enum":["IFCGEOMETRICREPRESENTATIONITEM","IFCREPRESENTATIONITEM"]},"args":{"const":[]}}}}}}}}},
+    "cases":{"type":"array","minItems":12,"maxItems":12,"items":{"type":"object","additionalProperties":false,"required":["id","input","ready","physical"],"properties":{"id":{"type":"string","minLength":1},"input":{"anyOf":[{"type":"null"},{"$ref":"#/$defs/reference"},{"$ref":"#/$defs/typed"}]},"ready":{"type":"boolean"},"physical":{"type":"boolean"}}}}
+  },
+  "$defs":{
+    "reference":{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"reference"},"value":{"type":"string"}}},
+    "real":{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"real"},"value":{"type":"object","additionalProperties":false,"required":["bits"],"properties":{"bits":{"type":"string","pattern":"^(0|[1-9][0-9]*)$"}}}}},
+    "typed":{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"typedValue"},"value":{"type":"object","additionalProperties":false,"required":["name","items"],"properties":{"name":{"const":"IFCPOSITIVELENGTHMEASURE"},"items":{"type":"array","maxItems":1,"items":{"$ref":"#/$defs/real"}}}}}},
+    "value":{"anyOf":[{"type":"object","additionalProperties":false,"required":["kind"],"properties":{"kind":{"const":"unset"}}},{"$ref":"#/$defs/reference"},{"$ref":"#/$defs/real"},{"$ref":"#/$defs/typed"},{"type":"object","additionalProperties":false,"required":["kind","value"],"properties":{"kind":{"const":"aggregate"},"value":{"type":"array","minItems":2,"maxItems":3,"items":{"$ref":"#/$defs/real"}}}}]}
+  }
+}

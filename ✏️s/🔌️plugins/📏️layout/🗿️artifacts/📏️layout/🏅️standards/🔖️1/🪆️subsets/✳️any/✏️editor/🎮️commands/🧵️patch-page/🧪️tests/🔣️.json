@@ -1,0 +1,48 @@
+{
+  "commands": [
+    {
+      "field": "clearPageDrawing",
+      "value": "true",
+      "expected": "empty"
+    }
+  ],
+  "locales": [
+    {
+      "tag": "en",
+      "copy": "Use Document Drawing",
+      "clear": "Clear Page Drawing"
+    },
+    {
+      "tag": "de",
+      "copy": "Dokumentzeichnung übernehmen",
+      "clear": "Seitenzeichnung entfernen"
+    }
+  ],
+  "refusals": [
+    {
+      "field": "pageDrawingWidth",
+      "value": "0"
+    },
+    {
+      "field": "pageDrawingHeight",
+      "value": "-1"
+    },
+    {
+      "field": "pageDrawingWidth",
+      "value": "NaN"
+    },
+    {
+      "field": "pageDrawingHeight",
+      "value": "inf"
+    }
+  ],
+  "schema": "layout.page-drawing.parent-events.v2",
+  "qualifiedChildCommands": [
+    "pageDrawingWidth",
+    "pageDrawingHeight"
+  ],
+  "unavailableCapabilities": [
+    "copyDocumentDrawing"
+  ],
+  "artboardLaws": "../🖼️drawing/🔣️.json"
+}

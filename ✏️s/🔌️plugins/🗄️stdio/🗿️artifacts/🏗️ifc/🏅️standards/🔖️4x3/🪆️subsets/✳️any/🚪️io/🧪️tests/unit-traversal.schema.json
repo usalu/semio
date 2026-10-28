@@ -1,0 +1,121 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "units",
+    "refusals",
+    "operations",
+    "frontiers",
+    "faults"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "units": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "scale",
+          "dimensions"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "metre",
+              "millimetre",
+              "foot",
+              "inch-via-foot",
+              "density-kg-per-mm3",
+              "pressure-kg-per-m-s2"
+            ]
+          },
+          "scale": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "dimensions": {
+            "type": "array",
+            "minItems": 7,
+            "maxItems": 7,
+            "items": {
+              "type": "integer"
+            }
+          }
+        }
+      }
+    },
+    "refusals": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "enum": [
+          "assignment-kind",
+          "assignment-member",
+          "duplicate-length",
+          "derived-child-role",
+          "derived-single-exp1",
+          "derived-noninteger",
+          "conversion-wrapper",
+          "conversion-cycle",
+          "conversion-dimensions",
+          "conversion-factor-kind",
+          "offset-conversion",
+          "placement-cycle"
+        ]
+      }
+    },
+    "operations": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "enum": [
+          "length",
+          "derived",
+          "conversion",
+          "placement"
+        ]
+      }
+    },
+    "frontiers": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "initial",
+          "interior",
+          "completion"
+        ]
+      }
+    },
+    "faults": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "enum": [
+          "abort",
+          "error",
+          "step-error",
+          "edit-error",
+          "undefined",
+          "number"
+        ]
+      }
+    }
+  }
+}

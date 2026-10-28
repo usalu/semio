@@ -37,7 +37,7 @@ async fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent(
     let mut doc = base_doc();
     doc.parent_pages.push(ParentPage { id: "parent-1".into(), name: "Master".into(), width: 100.0, height: 100.0, layer_ids: vec!["layer-1".into()], layers: Vec::new(), frames: vec![rect_frame("frame-a", None), rect_frame("frame-b", None)] });
 
-    let page_with_parent = Page {
+    let page_with_parent = Page {background_drawing:None,
         id: "page-1".into(),
         name: "P1".into(),
         spread_id: "spread-1".into(),

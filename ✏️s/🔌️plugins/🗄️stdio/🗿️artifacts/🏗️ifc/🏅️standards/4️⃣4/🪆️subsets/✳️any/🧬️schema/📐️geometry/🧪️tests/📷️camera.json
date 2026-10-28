@@ -1,0 +1,158 @@
+{
+  "cases": [
+    {
+      "name": "ordinary",
+      "min": [
+        0,
+        0,
+        0
+      ],
+      "max": [
+        2,
+        4,
+        6
+      ],
+      "status": "complete",
+      "target": [
+        1,
+        2,
+        3
+      ],
+      "position": [
+        10,
+        -7,
+        10.2
+      ]
+    },
+    {
+      "name": "large positive center",
+      "min": [
+        1e+308,
+        2e+307,
+        3e+307
+      ],
+      "max": [
+        1.001e+308,
+        2.01e+307,
+        3.01e+307
+      ],
+      "status": "complete",
+      "target": [
+        1.0005e+308,
+        2.005e+307,
+        3.005e+307
+      ],
+      "position": [
+        1.002e+308,
+        1.99e+307,
+        3.017e+307
+      ]
+    },
+    {
+      "name": "large negative center",
+      "min": [
+        -1.001e+308,
+        -2.01e+307,
+        -3.01e+307
+      ],
+      "max": [
+        -1e+308,
+        -2e+307,
+        -3e+307
+      ],
+      "status": "complete",
+      "target": [
+        -1.0005e+308,
+        -2.005e+307,
+        -3.005e+307
+      ],
+      "position": [
+        -9.99e+307,
+        -2.02e+307,
+        -2.993e+307
+      ]
+    },
+    {
+      "name": "choose finite camera direction",
+      "min": [
+        1.7e+308,
+        0,
+        0
+      ],
+      "max": [
+        1.75e+308,
+        1e+307,
+        1e+307
+      ],
+      "status": "complete",
+      "target": [
+        1.725e+308,
+        5e+306,
+        5e+306
+      ],
+      "position": [
+        1.575e+308,
+        -1e+307,
+        1.7e+307
+      ]
+    },
+    {
+      "name": "unrepresentable extent",
+      "min": [
+        -1.7e+308,
+        0,
+        0
+      ],
+      "max": [
+        1.7e+308,
+        1,
+        1
+      ],
+      "status": "limited",
+      "reason": "unrepresentable-camera-range"
+    }
+  ],
+  "invalid": [
+    {
+      "name": "out of range index",
+      "triangle": [
+        0,
+        1,
+        99
+      ],
+      "reason": "invalid-mesh-index"
+    },
+    {
+      "name": "negative index",
+      "triangle": [
+        0,
+        1,
+        -1
+      ],
+      "reason": "invalid-mesh-index"
+    },
+    {
+      "name": "fractional index",
+      "triangle": [
+        0,
+        1,
+        0.5
+      ],
+      "reason": "invalid-mesh-index"
+    },
+    {
+      "name": "duplicate index",
+      "triangle": [
+        0,
+        1,
+        1
+      ],
+      "reason": "invalid-mesh-index"
+    }
+  ],
+  "oracle": {
+    "name": "decimal.js",
+    "version": "10.6.0",
+    "purpose": "Independent decimal midpoint, extent and finite camera position"
+  }
+}

@@ -1,0 +1,8 @@
+{
+  "feature": "layout.retained.nested-groups",
+  "grouping": "paid root modification targets map final page/story rows to numeric ordered sparse source indices",
+  "complexity": "linear grouping and exact index reservation; bounded child prefix validation",
+  "custody": "page/story typed movers close before root sparse delta source owners",
+  "preflight": "all child plans, frame setter admission and derived caches complete without touching post",
+  "commit": "nested memberships then nested fields, before root membership and root scalar patches"
+}

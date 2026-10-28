@@ -1,0 +1,169 @@
+{
+  "schema": "IFC4",
+  "domain": "ifc-entities",
+  "granularity": "entity",
+  "identity": "ifc-DECIMAL_U64",
+  "maximumTextBytes": 8192,
+  "attributes": [
+    {
+      "id": "globalId",
+      "family": "root",
+      "index": 0,
+      "label": {
+        "en": "Global ID",
+        "de": "Globale ID"
+      },
+      "kind": "global-id",
+      "optional": false,
+      "editable": true,
+      "maxCharacters": 22
+    },
+    {
+      "id": "ownerHistory",
+      "family": "root",
+      "index": 1,
+      "label": {
+        "en": "Owner History",
+        "de": "Besitzerhistorie"
+      },
+      "kind": "reference",
+      "optional": true,
+      "editable": false
+    },
+    {
+      "id": "name",
+      "family": "root",
+      "index": 2,
+      "label": {
+        "en": "Name",
+        "de": "Name"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true,
+      "maxCharacters": 255
+    },
+    {
+      "id": "description",
+      "family": "root",
+      "index": 3,
+      "label": {
+        "en": "Description",
+        "de": "Beschreibung"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true
+    },
+    {
+      "id": "objectType",
+      "family": "object",
+      "index": 4,
+      "label": {
+        "en": "Object Type",
+        "de": "Objekttyp"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true,
+      "maxCharacters": 255
+    },
+    {
+      "id": "objectPlacement",
+      "family": "product",
+      "index": 5,
+      "label": {
+        "en": "Object Placement",
+        "de": "Objektplatzierung"
+      },
+      "kind": "reference",
+      "optional": true,
+      "editable": false
+    },
+    {
+      "id": "representation",
+      "family": "product",
+      "index": 6,
+      "label": {
+        "en": "Representation",
+        "de": "Repräsentation"
+      },
+      "kind": "reference",
+      "optional": true,
+      "editable": false
+    },
+    {
+      "id": "tag",
+      "family": "element",
+      "index": 7,
+      "label": {
+        "en": "Tag",
+        "de": "Kennzeichen"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true,
+      "maxCharacters": 255
+    },
+    {
+      "id": "longName",
+      "family": "spatial",
+      "index": 7,
+      "label": {
+        "en": "Long Name",
+        "de": "Langname"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true,
+      "maxCharacters": 255
+    },
+    {
+      "id": "longName",
+      "family": "context",
+      "index": 5,
+      "label": {
+        "en": "Long Name",
+        "de": "Langname"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true,
+      "maxCharacters": 255
+    },
+    {
+      "id": "phase",
+      "family": "context",
+      "index": 6,
+      "label": {
+        "en": "Phase",
+        "de": "Phase"
+      },
+      "kind": "string",
+      "optional": true,
+      "editable": true,
+      "maxCharacters": 255
+    }
+  ],
+  "families": {
+    "root": [
+      "IFCROOT"
+    ],
+    "object": [
+      "IFCOBJECT",
+      "IFCCONTEXT"
+    ],
+    "product": [
+      "IFCPRODUCT"
+    ],
+    "element": [
+      "IFCELEMENT"
+    ],
+    "spatial": [
+      "IFCSPATIALELEMENT"
+    ],
+    "context": [
+      "IFCCONTEXT"
+    ]
+  }
+}

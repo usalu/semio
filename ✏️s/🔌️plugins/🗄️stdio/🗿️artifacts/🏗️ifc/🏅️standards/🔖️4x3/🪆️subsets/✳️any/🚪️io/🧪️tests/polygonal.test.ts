@@ -1,0 +1,20 @@
+/** 🧩️ Unchanged indexed polygonal source retains real holes through canonical editing and GLB. */
+import {expect,test} from 'bun:test';
+import {readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import Ajv from 'ajv/dist/2020';
+import cases from './polygonal-cases.json';
+import schema from './polygonal.schema.json';
+import {extractIfc4x3Triangles,type IfcTriangleMesh} from '../geometry.ts';
+import {parseIfc4x3Step,writeIfc4x3Step,ifcNumber,ifcReal} from '../step.ts';
+import {ifc4x3ToGltf,writeIfcGltfGlb,readIfcGltfGlb,gltfToIfc4x3} from '../gltf.ts';
+import {ifcMutationDiff,inverseIfcMutation,applyIfcMutation} from '../../🧬️schema/🧬️mutations/🟦️.ts';
+import {applyIfcDiff,absorbIfcDiff,inverseIfcDiff,type IfcDiff} from '../../🧬️schema/🔺️diff/🟦️.ts';
+const volume=(mesh:IfcTriangleMesh)=>{let sum=0;const origin=mesh.positions[0]!;for(let at=0;at<mesh.indices.length;at+=3){const[a,b,c]=[0,1,2].map(k=>mesh.positions[mesh.indices[at+k]!]!.map((n,i)=>n-origin[i]!));sum+=(a![0]!*(b![1]!*c![2]!-b![2]!*c![1]!)+a![1]!*(b![2]!*c![0]!-b![0]!*c![2]!)+a![2]!*(b![0]!*c![1]!-b![1]!*c![0]!))/6;}return sum;};
+test('official polygonal contract is closed',()=>{const valid=new Ajv({strict:true}).compile(schema);expect(valid(cases)).toBe(true);expect(valid({...cases,publish:true})).toBe(false);});
+for(const row of cases.official){
+ const load=async()=>{const bytes=await readFile(new URL('../../🧪️fixtures/official/'+row.file,import.meta.url));expect(createHash('sha256').update(bytes).digest('hex')).toBe(row.sha256);return parseIfc4x3Step(bytes.toString('utf8'),{batchSize:4096});};
+ test('official polygonal represented hole '+row.file,async()=>{const source=await load(),before=structuredClone(source),outcome=await extractIfc4x3Triangles(source,{batchSize:4096});expect(outcome.diagnostics).toEqual([]);expect(source).toEqual(before);expect(outcome.artifact).toHaveLength(1);const mesh=outcome.artifact![0]!;expect(mesh.productId).toBe(BigInt(row.product));expect(mesh.entityId).toBe(BigInt(row.faceSet));expect(mesh.positions).toHaveLength(row.vertices);expect(mesh.indices.length/3).toBe(row.triangles);expect(volume(mesh)).toBeCloseTo(row.volume,8);for(let side=0;side<2;side++)for(let axis=0;axis<3;axis++)expect((side?Math.max:Math.min)(...mesh.positions.map(p=>p[axis]!))).toBeCloseTo(row.bounds[side]![axis]!,10);});
+ test('official polygonal edits and both inverses restore STEP '+row.file,async()=>{const source=await load(),step=await writeIfc4x3Step(source,{batchSize:4096}),points=source.entities.find(entity=>entity.id===BigInt(row.coordinates))!.args[0];if(points?.kind!=='aggregate')throw Error('Authored point list');let changed=source,diff:IfcDiff={};for(let at=0;at<points.value.length;at++){const point=points.value[at];if(point?.kind!=='aggregate'||ifcNumber(point.value[0])!==10000)continue;const mutation={mutation:'setEntityValue' as const,id:BigInt(row.coordinates),index:0,path:[at,0],value:ifcReal(12000)},patch=ifcMutationDiff(changed,mutation),inverse=inverseIfcMutation(changed,mutation),next=applyIfcDiff(changed,patch);expect(applyIfcMutation(next,inverse)).toEqual(changed);diff=absorbIfcDiff(diff,patch);changed=next;}const mesh=(await extractIfc4x3Triangles(changed,{batchSize:4096})).artifact![0]!;expect(mesh).toBeDefined();expect(volume(mesh)).toBeCloseTo(row.editedVolume,8);expect(applyIfcDiff(source,diff)).toEqual(changed);const restored=applyIfcDiff(changed,inverseIfcDiff(source,diff));expect(restored).toEqual(source);expect(await writeIfc4x3Step(restored,{batchSize:4096})).toBe(step);});
+ test('official polygonal actual GLB exchange '+row.file,async()=>{const source=await load(),outcome=await ifc4x3ToGltf(source,{batchSize:4096});expect(outcome.artifact).toBeDefined();const bytes=await writeIfcGltfGlb(outcome.artifact!,{batchSize:4096}),imported=await gltfToIfc4x3(await readIfcGltfGlb(bytes,{batchSize:4096}),{batchSize:4096}),mesh=(await extractIfc4x3Triangles(imported.artifact!,{batchSize:4096})).artifact![0]!;expect(mesh).toBeDefined();expect(volume(mesh)).toBeCloseTo(row.volume,5);});
+}

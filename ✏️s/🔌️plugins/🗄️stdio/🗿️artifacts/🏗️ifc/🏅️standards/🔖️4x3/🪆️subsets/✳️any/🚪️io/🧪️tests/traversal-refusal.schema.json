@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.exchange-relation-refusals.v1"
+    },
+    "cases": {
+      "const": [
+        {
+          "id": "ignored-unrelated-payload",
+          "endpoints": [
+            "bim",
+            "fem"
+          ],
+          "artifact": true
+        },
+        {
+          "id": "first-predicate-refusal-before-late-aggregate",
+          "endpoints": [
+            "bim",
+            "fem"
+          ],
+          "artifact": false,
+          "message": "exchange.reference"
+        },
+        {
+          "id": "duplicate-related-target-occurrence",
+          "endpoints": [
+            "bim",
+            "fem"
+          ],
+          "artifact": true
+        },
+        {
+          "id": "duplicate-aggregate-parent",
+          "endpoints": [
+            "bim"
+          ],
+          "artifact": false,
+          "message": "bim.hierarchy"
+        },
+        {
+          "id": "conflicting-engineering-property",
+          "endpoints": [
+            "fem"
+          ],
+          "artifact": false,
+          "message": "fem.property-definition"
+        }
+      ]
+    }
+  }
+}

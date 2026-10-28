@@ -1,0 +1,1948 @@
+{
+  "schema": "ifc-tfs-admission-neutral",
+  "version": 1,
+  "nativeExecution": false,
+  "cases": [
+    {
+      "id": "closed-tetra",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Closed oriented tetrahedron"
+    },
+    {
+      "id": "open-single-triangle",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": false,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Surface, no imposed solid closure"
+    },
+    {
+      "id": "unknown-single-triangle",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": null,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Closed omitted has no affirmative closure claim"
+    },
+    {
+      "id": "closed-open-triangle",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Informal Closed topology"
+    },
+    {
+      "id": "closed-inward",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            2,
+            3,
+            1
+          ],
+          [
+            4,
+            2,
+            1
+          ],
+          [
+            4,
+            3,
+            2
+          ],
+          [
+            4,
+            1,
+            3
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Topological normal must be outward"
+    },
+    {
+      "id": "closed-duplicate-face",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ],
+          [
+            1,
+            3,
+            2
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Closed faces must be unique"
+    },
+    {
+      "id": "real-coordinate-index",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "real",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "PositiveInteger requires integer carrier"
+    },
+    {
+      "id": "zero-coordinate-index",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            0,
+            2,
+            3
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "PositiveInteger lower bound"
+    },
+    {
+      "id": "negative-coordinate-index",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            -1,
+            2,
+            3
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "PositiveInteger lower bound"
+    },
+    {
+      "id": "index-out-of-range",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            5
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Coordinate lookup absent"
+    },
+    {
+      "id": "index-row-two",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Exactly3 indices"
+    },
+    {
+      "id": "empty-triangles",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "LIST1 lower bound"
+    },
+    {
+      "id": "empty-points",
+      "source": {
+        "points": [],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "LIST1 lower bound"
+    },
+    {
+      "id": "point-two-components",
+      "source": {
+        "points": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Exactly3 coordinates"
+    },
+    {
+      "id": "integer-coordinate-value",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "integer",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "IfcLengthMeasure REAL accepts integer numeric input"
+    },
+    {
+      "id": "foreign-coordinate-role",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList2D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Coordinates exact declared point-list role"
+    },
+    {
+      "id": "closed-logical-unknown",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": null,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "logical"
+      },
+      "expected": "refuse",
+      "reason": "OPTIONAL Boolean differs from Logical.UNKNOWN"
+    },
+    {
+      "id": "pn-permutation",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            4,
+            2,
+            3
+          ],
+          [
+            4,
+            3,
+            1
+          ],
+          [
+            3,
+            2,
+            1
+          ],
+          [
+            2,
+            4,
+            1
+          ]
+        ],
+        "normals": null,
+        "pnIndex": [
+          4,
+          3,
+          2,
+          1
+        ],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Raw CoordIndex indexes mapping table"
+    },
+    {
+      "id": "real-pn-entry",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": [
+          1,
+          2,
+          3,
+          4
+        ],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "real",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "PnIndex PositiveInteger carrier"
+    },
+    {
+      "id": "unused-invalid-pn",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": [
+          1,
+          2,
+          3,
+          4,
+          0
+        ],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Validate entire declared mapping including unused entries"
+    },
+    {
+      "id": "unused-oob-pn",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": [
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "All mapping locations must exist"
+    },
+    {
+      "id": "empty-pn",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": [],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Optional present LIST1 not empty"
+    },
+    {
+      "id": "pn-alias-coordinate",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": [
+          1,
+          2,
+          3,
+          4,
+          1
+        ],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "PnIndex is not UNIQUE"
+    },
+    {
+      "id": "unused-valid-point",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ],
+          [
+            8,
+            9,
+            10
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Projection policy retains source and admits unused valid coordinates"
+    },
+    {
+      "id": "coordinate-alias-closed",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            4,
+            5,
+            6
+          ],
+          [
+            7,
+            8,
+            9
+          ],
+          [
+            10,
+            11,
+            12
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Exact geometry identities may close distinct source indices"
+    },
+    {
+      "id": "degenerate-alias-triangle",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            5,
+            2
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": false,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Three indices alone do not establish nondegenerate geometry"
+    },
+    {
+      "id": "normals-valid",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            1,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            -1,
+            -1,
+            1
+          ]
+        ],
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Normals are per raw index, finite REAL triples"
+    },
+    {
+      "id": "normals-short",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            -1
+          ]
+        ],
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Referenced raw normal index absent"
+    },
+    {
+      "id": "normals-empty",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": [],
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Optional present LIST1 lower bound"
+    },
+    {
+      "id": "normals-two-components",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "refuse",
+      "reason": "Exactly3 parameter values"
+    },
+    {
+      "id": "normals-extra-valid",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            3,
+            2
+          ],
+          [
+            1,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            1,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            1,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            -1,
+            -1,
+            1
+          ],
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "pnIndex": null,
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "No formal equality cardinality rule"
+    },
+    {
+      "id": "pn-normal-domain",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            3
+          ]
+        ],
+        "triangles": [
+          [
+            5,
+            3,
+            2
+          ],
+          [
+            5,
+            2,
+            4
+          ],
+          [
+            2,
+            3,
+            4
+          ],
+          [
+            3,
+            5,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            -1
+          ],
+          [
+            1,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            1
+          ],
+          [
+            -1,
+            -1,
+            1
+          ],
+          [
+            0,
+            0,
+            -1
+          ]
+        ],
+        "pnIndex": [
+          1,
+          2,
+          3,
+          4,
+          1
+        ],
+        "closed": true,
+        "coordinateKind": "real",
+        "indexKind": "integer",
+        "pnKind": "integer",
+        "normalKind": "real",
+        "coordinateRole": "IfcCartesianPointList3D",
+        "closedKind": "boolean"
+      },
+      "expected": "accept",
+      "reason": "Normals use raw indices before point mapping"
+    }
+  ]
+}

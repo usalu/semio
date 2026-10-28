@@ -1,0 +1,571 @@
+{
+  "schema": "ifc-gltf-authored-normal-neutral",
+  "version": 1,
+  "nativeExecution": false,
+  "basis": "ifc-z-up-to-gltf-y-up:[x,z,-y]",
+  "cases": [
+    {
+      "id": "smooth-unit",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0.6,
+            0.8
+          ],
+          [
+            0.6,
+            0,
+            0.8
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "pnIndex": null,
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "present",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "Raw point and normal domains align"
+      }
+    },
+    {
+      "id": "pn-permutation",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            2,
+            4,
+            1
+          ],
+          [
+            2,
+            1,
+            3
+          ]
+        ],
+        "normals": [
+          [
+            0.6,
+            0,
+            0.8
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0.6,
+            0.8
+          ]
+        ],
+        "pnIndex": [
+          3,
+          1,
+          4,
+          2
+        ],
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "present",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "Normals use raw indices and points use PnIndex"
+      }
+    },
+    {
+      "id": "pn-hard-edge",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            4,
+            5,
+            6
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "pnIndex": [
+          1,
+          2,
+          3,
+          1,
+          3,
+          4
+        ],
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "present",
+        "vertices": 6,
+        "triangles": 2,
+        "reason": "Six exact point-normal pairs preserve two source normal groups"
+      }
+    },
+    {
+      "id": "nonunit-normalize",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            5
+          ],
+          [
+            0,
+            3,
+            4
+          ],
+          [
+            3,
+            0,
+            4
+          ],
+          [
+            0,
+            0,
+            2
+          ]
+        ],
+        "pnIndex": null,
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "present",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "Finite nonunit source directions normalize only derived output"
+      }
+    },
+    {
+      "id": "referenced-zero",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            0,
+            0.6,
+            0.8
+          ],
+          [
+            0.6,
+            0,
+            0.8
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "pnIndex": null,
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "omitted-zero",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "One referenced zero omits complete authored NORMAL with explicit diagnostic"
+      }
+    },
+    {
+      "id": "unused-zero",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0.6,
+            0.8
+          ],
+          [
+            0.6,
+            0,
+            0.8
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "pnIndex": null,
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "present",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "Unused zero does not erase usable referenced normal domain"
+      }
+    },
+    {
+      "id": "extra-valid-unused",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            4
+          ]
+        ],
+        "normals": [
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0.6,
+            0.8
+          ],
+          [
+            0.6,
+            0,
+            0.8
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            2,
+            3
+          ]
+        ],
+        "pnIndex": null,
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "present",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "Unused valid normal row does not fabricate an attribute-count equality"
+      }
+    },
+    {
+      "id": "missing-normals",
+      "source": {
+        "points": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            1,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "triangles": [
+          [
+            1,
+            2,
+            3
+          ],
+          [
+            1,
+            3,
+            4
+          ]
+        ],
+        "normals": null,
+        "pnIndex": null,
+        "closed": false
+      },
+      "expected": {
+        "normalStatus": "absent",
+        "vertices": 4,
+        "triangles": 2,
+        "reason": "No authored directions and no fabricated smoothing"
+      }
+    }
+  ]
+}

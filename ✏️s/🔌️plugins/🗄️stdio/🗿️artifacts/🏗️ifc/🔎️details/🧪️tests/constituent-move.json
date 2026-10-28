@@ -1,0 +1,11 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"names":["IFCGEOMETRICREPRESENTATIONITEM","IFCPOINT","IFCCARTESIANPOINT"],"cases":[
+{"id":"forward","from":"/entities/0/complex/0","path":"/entities/0/complex/2","admitted":true,"order":[1,2,0]},
+{"id":"backward","from":"/entities/0/complex/2","path":"/entities/0/complex/0","admitted":true,"order":[2,0,1]},
+{"id":"dash","from":"/entities/0/complex/0","path":"/entities/0/complex/-","admitted":true,"order":[1,2,0]},
+{"id":"self","from":"/entities/0/complex/1","path":"/entities/0/complex/1","admitted":true,"order":[0,1,2]},
+{"id":"maximum-id","entityId":"18446744073709551615","from":"/entities/0/complex/1","path":"/entities/0/complex/2","admitted":true,"order":[0,2,1]},
+{"id":"foreign-owner","from":"/entities/1/complex/0","path":"/entities/0/complex/0","admitted":false},
+{"id":"missing-origin","from":"/entities/0/complex/3","path":"/entities/0/complex/0","admitted":false},
+{"id":"missing-destination","from":"/entities/0/complex/0","path":"/entities/0/complex/3","admitted":false},
+{"id":"duplicate-selected-id","duplicate":true,"from":"/entities/0/complex/0","path":"/entities/0/complex/1","admitted":false}
+]}

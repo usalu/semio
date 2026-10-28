@@ -1,0 +1,7 @@
+from pathlib import Path
+ticket=Path(__file__).parent
+path=ticket/"boolean-cooperation-implementation.md"
+with path.open("a",encoding="utf8")as stream:
+ stream.write("\n## Independent Receiver Escape Correction\n\nLow actual execution exposed a source-level P2: invoking the captured observer as a Control property gave ordinary callbacks the live Control receiver, allowing reflection to rewrite public work/budget fields. Independent six-route before evidence is preserved in generated/boolean-receiver-before.json. Parent added24 language-neutral four-operation/sync-step-async/tick-progress receiver obligations plus schema; the unchanged cooperative source genuinely failed24 of25 tests (schema passed). generated/boolean-receiver-red.txt preserves that baseline.\n\nControl grants/counters/observer handles are now actual ECMAScript-private fields; copied local callbacks are invoked unbound. No private engine object escapes through callback receivers. Actual final383tests/7files/57 Bun expect calls/zero failures8.30s, including all24 receiver laws, and real strict7consumers exit0/empty. Expanded frozen roster is9owned38refs47, max118UTF16. Before44 manifest remains generated/boolean-cooperation-before-receiver-source.json. New three Boolean suites remain unregistered pending corrected independent closure. All root readers terminal.\n")
+print("[DEBUG] receiver red and expanded47 freeze recorded")
+

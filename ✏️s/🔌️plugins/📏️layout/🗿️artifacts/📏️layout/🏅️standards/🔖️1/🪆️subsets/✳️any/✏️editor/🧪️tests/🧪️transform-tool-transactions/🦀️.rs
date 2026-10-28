@@ -4,6 +4,7 @@
 //! open transaction (previewed by that window, never history), and a cancelled gesture leaves zero trace. Time travel edits
 //! the yielded leaf's inputs (offset, pivot, targets) through the real `historyEdit*` verbs and replays the downstream.
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use semio_s_artifact_layout_layout_editor_commands::modes::edit::windows::blueprint::LAYOUT_PLAY_BODY_BLUEPRINT;
 use crate::{LayoutCommand, LayoutPlayApp, layout_entity_label};
 use semio_s_artifact_layout_layout_editor_commands::layout_select_action_args;

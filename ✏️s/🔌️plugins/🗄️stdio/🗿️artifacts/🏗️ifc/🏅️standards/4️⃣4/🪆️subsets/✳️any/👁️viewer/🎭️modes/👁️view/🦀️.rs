@@ -20,13 +20,6 @@ pub fn definition() -> ModeDefinition {
 /// 🪟️ Single full-pane Main window — the read-only viewer has no quadrant layout to allocate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn layout() -> WindowLayout {
-    WindowLayout {
-        root: WindowLayoutRoot::Stack(WindowLayoutStackNode {
-            kind: "stack".into(),
-            size: None,
-            active_window_kind_id: None,
-            children: vec![WindowLayoutWindowNode { kind: "window".into(), window_kind_id: main::WINDOW_KIND_ID.into(), title: Some("Main".into()), instance_id: None, template_id: None, corner: None }],
-        }),
-    }
+    crate::standards::v4::subsets::any::io::inspector::layout(main::WINDOW_KIND_ID,false)
 }
 //#endregion 🔖️Definition

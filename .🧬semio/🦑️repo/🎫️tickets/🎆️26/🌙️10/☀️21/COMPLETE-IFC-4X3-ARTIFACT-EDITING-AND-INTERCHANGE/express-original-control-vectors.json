@@ -1,0 +1,419 @@
+{
+  "nativeExecution": false,
+  "cases": [
+    {
+      "operation": "throw",
+      "id": "population-admit-Error",
+      "fault": "Error",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-admit-IfcEditError-invalid",
+      "fault": "IfcEditError-invalid",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-admit-IfcEditError-cancelled",
+      "fault": "IfcEditError-cancelled",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-admit-ExpressEvaluationError-cancelled",
+      "fault": "ExpressEvaluationError-cancelled",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-admit-undefined",
+      "fault": "undefined",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-admit-number-23",
+      "fault": "number-23",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-normalize-Error",
+      "fault": "Error",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-normalize-IfcEditError-invalid",
+      "fault": "IfcEditError-invalid",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-normalize-IfcEditError-cancelled",
+      "fault": "IfcEditError-cancelled",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-normalize-ExpressEvaluationError-cancelled",
+      "fault": "ExpressEvaluationError-cancelled",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-normalize-undefined",
+      "fault": "undefined",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-normalize-number-23",
+      "fault": "number-23",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-structure-Error",
+      "fault": "Error",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-structure-IfcEditError-invalid",
+      "fault": "IfcEditError-invalid",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-structure-IfcEditError-cancelled",
+      "fault": "IfcEditError-cancelled",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-structure-ExpressEvaluationError-cancelled",
+      "fault": "ExpressEvaluationError-cancelled",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-structure-undefined",
+      "fault": "undefined",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-structure-number-23",
+      "fault": "number-23",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-evaluate-Error",
+      "fault": "Error",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-evaluate-IfcEditError-invalid",
+      "fault": "IfcEditError-invalid",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-evaluate-IfcEditError-cancelled",
+      "fault": "IfcEditError-cancelled",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-evaluate-ExpressEvaluationError-cancelled",
+      "fault": "ExpressEvaluationError-cancelled",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-evaluate-undefined",
+      "fault": "undefined",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "population-evaluate-number-23",
+      "fault": "number-23",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "population"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-first-progress-Error",
+      "fault": "Error",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-first-progress-IfcEditError-invalid",
+      "fault": "IfcEditError-invalid",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-first-progress-IfcEditError-cancelled",
+      "fault": "IfcEditError-cancelled",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-first-progress-ExpressEvaluationError-cancelled",
+      "fault": "ExpressEvaluationError-cancelled",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-first-progress-undefined",
+      "fault": "undefined",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-first-progress-number-23",
+      "fault": "number-23",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-completion-Error",
+      "fault": "Error",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-completion-IfcEditError-invalid",
+      "fault": "IfcEditError-invalid",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-completion-IfcEditError-cancelled",
+      "fault": "IfcEditError-cancelled",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-completion-ExpressEvaluationError-cancelled",
+      "fault": "ExpressEvaluationError-cancelled",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-completion-undefined",
+      "fault": "undefined",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "throw",
+      "id": "compiler-completion-number-23",
+      "fault": "number-23",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "exact-original-refusal",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "abort-original",
+      "id": "population-admit-abort",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "no-complete-valid-publication",
+      "endpoint": "population"
+    },
+    {
+      "operation": "abort-original",
+      "id": "population-normalize-abort",
+      "phase": "normalize",
+      "boundary": "first-progress",
+      "expectation": "no-complete-valid-publication",
+      "endpoint": "population"
+    },
+    {
+      "operation": "abort-original",
+      "id": "population-structure-abort",
+      "phase": "structure",
+      "boundary": "first-progress",
+      "expectation": "no-complete-valid-publication",
+      "endpoint": "population"
+    },
+    {
+      "operation": "abort-original",
+      "id": "population-evaluate-abort",
+      "phase": "evaluate",
+      "boundary": "first-progress",
+      "expectation": "no-complete-valid-publication",
+      "endpoint": "population"
+    },
+    {
+      "operation": "abort-original",
+      "id": "compiler-first-progress-abort",
+      "phase": "compile",
+      "boundary": "first-progress",
+      "expectation": "no-complete-publication",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "abort-original",
+      "id": "compiler-interior-abort",
+      "phase": "compile",
+      "boundary": "interior",
+      "expectation": "no-complete-publication",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "abort-original",
+      "id": "compiler-completion-abort",
+      "phase": "compile",
+      "boundary": "completion",
+      "expectation": "no-complete-publication",
+      "endpoint": "compiler"
+    },
+    {
+      "operation": "replace-progress",
+      "id": "population-progress-replacement",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "original-callback-only",
+      "endpoint": "population"
+    },
+    {
+      "operation": "replace-signal-then-abort-original-in-normalize",
+      "id": "population-signal-replacement",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "no-complete-valid-publication",
+      "endpoint": "population"
+    },
+    {
+      "operation": "replace-work-limit-1000-with-100000",
+      "id": "population-work-limit-replacement",
+      "phase": "admit",
+      "boundary": "first-progress",
+      "expectation": "original-work-limit",
+      "endpoint": "population"
+    }
+  ],
+  "schema": "IFC4X3_ADD2",
+  "actualProgramRequired": true,
+  "baseline": {
+    "validationComplete": true,
+    "source": "actual direct-fixture zero-length",
+    "validationValid": true,
+    "functionCount": 48,
+    "ruleCount": 777,
+    "compileComplete": true
+  }
+}

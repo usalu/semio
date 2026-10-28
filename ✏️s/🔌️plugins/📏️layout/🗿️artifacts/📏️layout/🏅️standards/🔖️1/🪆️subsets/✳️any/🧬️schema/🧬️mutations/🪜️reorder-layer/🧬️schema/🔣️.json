@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/reorder-layer/schema.json",
+  "title": "ReorderLayer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "pageId",
+    "layerId",
+    "toIndex"
+  ],
+  "properties": {
+    "pageId": {
+      "type": "string"
+    },
+    "layerId": {
+      "type": "string"
+    },
+    "toIndex": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

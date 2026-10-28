@@ -1,0 +1,37 @@
+{
+  "cases": [
+    {
+      "scalarBytes": 8,
+      "items": 400,
+      "expectedLast": [
+        399,
+        400,
+        401
+      ]
+    },
+    {
+      "scalarBytes": 4,
+      "items": 700,
+      "expectedLast": [
+        699,
+        700,
+        701
+      ]
+    }
+  ],
+  "deniedGrants": [
+    "work",
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    8,
+    300
+  ]
+}

@@ -1,6 +1,5 @@
 //! ↕️ `change-page-height` — sets a page's `height` scalar.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;
@@ -9,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region ↕️ChangePageHeight
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -49,7 +48,10 @@ pub fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if page.height == payload.new_height {
+    if !payload.new_height.is_finite() || payload.new_height <= 0.0 {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Page dimensions must be finite and positive.", [payload.id.clone()]);
+    }
+    if semio_framework_value::equal_f64(page.height, payload.new_height) {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Page \"{}\" already has height {}.", payload.id, payload.new_height));
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -61,6 +63,7 @@ pub fn diff_change_page_height(payload: &ChangePageHeight, base: &LayoutSnapshot
 
 //#region ↕️ChangePageHeight
 pub fn inverse_change_page_height<Op: From<crate::change_page_height::ChangePageHeight>>(payload: &ChangePageHeight, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_change_page_height(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     match base.pages.iter().find(|page| page.id == payload.id) {
         Some(page) => vec![Op::from(ChangePageHeight { id: payload.id.clone(), new_height: page.height })],
@@ -71,3 +74,10 @@ pub fn inverse_change_page_height<Op: From<crate::change_page_height::ChangePage
 }
 //#endregion ↕️ChangePageHeight
 
+
+impl PartialEq for ChangePageHeight {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && semio_framework_value::equal_f64(self.new_height, other.new_height)
+    }
+}

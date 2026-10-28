@@ -1,0 +1,23 @@
+{
+  "feature": "layout.import.original-drawing-birth-preparation",
+  "source": "RetainedCloneSource<LayoutDrawingMember,LayoutDrawingBirth<S>>",
+  "prepared": [
+    "original-funded parent member duplicate",
+    "same original LayoutDrawingBirth<S>"
+  ],
+  "phases": [
+    "admit original birth authority",
+    "prepare only member projection",
+    "take parent member",
+    "close member projection aliases",
+    "extract original birth authority",
+    "transfer both owners"
+  ],
+  "forbidden": [
+    "snapshot clone",
+    "member.clone",
+    "raw content hash identity",
+    "minted replacement source",
+    "cold source decode"
+  ]
+}

@@ -1,0 +1,510 @@
+{
+  "owners": [
+    {
+      "issuedIndex": 0,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCASSOCIATEDSURFACE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12306
+    },
+    {
+      "issuedIndex": 1,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCBASEAXIS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12319
+    },
+    {
+      "issuedIndex": 2,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCBOOLEANCHOOSE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12361
+    },
+    {
+      "issuedIndex": 3,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCBUILD2AXES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12372
+    },
+    {
+      "issuedIndex": 4,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCBUILDAXES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12383
+    },
+    {
+      "issuedIndex": 5,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCONSECUTIVESEGMENTS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12395
+    },
+    {
+      "issuedIndex": 6,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCONSTRAINTSPARAMBSPLINE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12416
+    },
+    {
+      "issuedIndex": 7,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCONVERTDIRECTIONINTO2D",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12467
+    },
+    {
+      "issuedIndex": 8,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCORRECTDIMENSIONS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12482
+    },
+    {
+      "issuedIndex": 9,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCORRECTFILLAREASTYLE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12638
+    },
+    {
+      "issuedIndex": 10,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12689
+    },
+    {
+      "issuedIndex": 11,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCORRECTUNITASSIGNMENT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12716
+    },
+    {
+      "issuedIndex": 12,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCROSSPRODUCT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12745
+    },
+    {
+      "issuedIndex": 13,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCURVEDIM",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12779
+    },
+    {
+      "issuedIndex": 14,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12838
+    },
+    {
+      "issuedIndex": 15,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCDERIVEDIMENSIONALEXPONENTS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12856
+    },
+    {
+      "issuedIndex": 16,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCDIMENSIONSFORSIUNIT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12890
+    },
+    {
+      "issuedIndex": 17,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCDOTPRODUCT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12959
+    },
+    {
+      "issuedIndex": 18,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCFIRSTPROJAXIS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 12989
+    },
+    {
+      "issuedIndex": 19,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCGETBASISSURFACE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13026
+    },
+    {
+      "issuedIndex": 20,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "array-one",
+        "array-zero",
+        "array-negative",
+        "array-single",
+        "array-mismatch"
+      ],
+      "owner": "IFCLISTTOARRAY",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13073
+    },
+    {
+      "issuedIndex": 21,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCLOOPHEADTOTAIL",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13094
+    },
+    {
+      "issuedIndex": 22,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "matrix-one",
+        "matrix-shifted",
+        "matrix-outer-mismatch",
+        "matrix-first-row-mismatch",
+        "matrix-late-ragged"
+      ],
+      "owner": "IFCMAKEARRAYOFARRAY",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13110
+    },
+    {
+      "issuedIndex": 23,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCMLSTOTALTHICKNESS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13139
+    },
+    {
+      "issuedIndex": 24,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCNORMALISE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13154
+    },
+    {
+      "issuedIndex": 25,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCORTHOGONALCOMPLEMENT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13214
+    },
+    {
+      "issuedIndex": 26,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCPATHHEADTOTAIL",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13229
+    },
+    {
+      "issuedIndex": 27,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCPOINTDIM",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13244
+    },
+    {
+      "issuedIndex": 28,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCPOINTLISTDIM",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13264
+    },
+    {
+      "issuedIndex": 29,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13278
+    },
+    {
+      "issuedIndex": 30,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSAMECARTESIANPOINT",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13288
+    },
+    {
+      "issuedIndex": 31,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSAMEDIRECTION",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13315
+    },
+    {
+      "issuedIndex": 32,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "precision-default",
+        "precision-equal",
+        "precision-zero",
+        "precision-upper",
+        "precision-ratio"
+      ],
+      "owner": "IFCSAMEVALIDPRECISION",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13341
+    },
+    {
+      "issuedIndex": 33,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "same-default",
+        "same-inside",
+        "same-boundary",
+        "same-zero-epsilon"
+      ],
+      "owner": "IFCSAMEVALUE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13357
+    },
+    {
+      "issuedIndex": 34,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSCALARTIMESVECTOR",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13370
+    },
+    {
+      "issuedIndex": 35,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSECONDPROJAXIS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13401
+    },
+    {
+      "issuedIndex": 36,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSEGMENTDIM",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13424
+    },
+    {
+      "issuedIndex": 37,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSHAPEREPRESENTATIONTYPES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13438
+    },
+    {
+      "issuedIndex": 38,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13660
+    },
+    {
+      "issuedIndex": 39,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCTAPEREDSWEPTAREAPROFILES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13681
+    },
+    {
+      "issuedIndex": 40,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCTOPOLOGYREPRESENTATIONTYPES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13707
+    },
+    {
+      "issuedIndex": 41,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "definition-empty",
+        "definition-duplicate-name",
+        "definition-shared-identity"
+      ],
+      "owner": "IFCUNIQUEDEFINITIONNAMES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13748
+    },
+    {
+      "issuedIndex": 42,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "propertyname-distinct",
+        "propertyname-duplicate"
+      ],
+      "owner": "IFCUNIQUEPROPERTYNAME",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13784
+    },
+    {
+      "issuedIndex": 43,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "pset-distinct",
+        "pset-duplicate",
+        "pset-other-definition"
+      ],
+      "owner": "IFCUNIQUEPROPERTYSETNAMES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13800
+    },
+    {
+      "issuedIndex": 44,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "propertytemplatenames-distinct",
+        "propertytemplatenames-duplicate"
+      ],
+      "owner": "IFCUNIQUEPROPERTYTEMPLATENAMES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13821
+    },
+    {
+      "issuedIndex": 45,
+      "state": "selected-boundaries",
+      "kind": "function",
+      "selectedCases": [
+        "quantitynames-distinct",
+        "quantitynames-duplicate"
+      ],
+      "owner": "IFCUNIQUEQUANTITYNAMES",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13836
+    },
+    {
+      "issuedIndex": 46,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCVECTORDIFFERENCE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13851
+    },
+    {
+      "issuedIndex": 47,
+      "state": "existing-evidence-unscored",
+      "kind": "function",
+      "selectedCases": [],
+      "owner": "IFCVECTORSUM",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13901
+    },
+    {
+      "issuedIndex": 0,
+      "state": "selected-boundaries",
+      "kind": "global",
+      "selectedCases": [
+        "context-none",
+        "context-one",
+        "context-same-identity",
+        "context-equal-distinct",
+        "context-displaced",
+        "context-precision-mismatch"
+      ],
+      "owner": "IFCREPRESENTATIONCONTEXTSAMEWCS",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13951
+    },
+    {
+      "issuedIndex": 1,
+      "state": "selected-boundaries",
+      "kind": "global",
+      "selectedCases": [
+        "project-none",
+        "project-one",
+        "project-two"
+      ],
+      "owner": "IFCSINGLEPROJECTINSTANCE",
+      "totalBranchCoverage": false,
+      "sourceStartLine": 13977
+    }
+  ],
+  "schema": "semio.ifc4x3.issued-owner-matrix.v1",
+  "globals": 2,
+  "sourceSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+  "nativeExecuted": false,
+  "functions": 48
+}

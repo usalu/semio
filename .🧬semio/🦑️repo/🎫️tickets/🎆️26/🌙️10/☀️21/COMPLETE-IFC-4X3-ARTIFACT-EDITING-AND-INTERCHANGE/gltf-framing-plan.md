@@ -1,0 +1,7 @@
+# IFC glTF Boundary Parity
+
+Review of the real TypeScript GLB boundary found gaps relative to the already-written native checks: BIN padding is silently discarded without checking zero bytes, and transform determinant evaluation still underflows for represented nonsingular tiny scales. Both native and TypeScript readers currently reject every unknown GLB chunk, while the [Khronos glTF 2.0 specification, section 4.4.3](https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#chunks) requires clients to ignore unknown chunk types after the defined chunks. The same source requires BIN as chunk two and zero-filled binary padding.
+
+Add shared neutral framing/transform inputs and first run them against the official Khronos validator through a ticket-local test-only interface. Preserve the existing pinned original Khronos Box GLB for real geometry comparisons with three.js. Check JSON trailing-whitespace behavior with the actual validator before introducing a guessed canonical-only restriction; a legal JSON text can itself contain whitespace, so treating every byte after the last closing brace as distinguishable padding is not established by JSON syntax alone.
+
+Then align both language implementations on demonstrated normative cases and robust represented-binary64 orientation signs. Keep source-owned/cancellable capture and any remaining cold glTF allocation boundaries explicit rather than treating framing correctness as complete native physical ownership. The native STEP import worker owns its separate new sources, not these glTF files.

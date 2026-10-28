@@ -19,6 +19,9 @@ pub struct ActionDefinition {
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[value(skip_serializing_if = "Option::is_none")]
+    pub staging: Option<semio_framework_manifest_arg_schema::StagedActionDefinition>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[value(skip_serializing_if = "Option::is_none")]
     pub keys: Option<String>,
     #[serde(default)]
     #[value(default)]
@@ -37,7 +40,7 @@ pub struct ActionDefinition {
 
 impl ActionDefinition {
     pub fn new(id: impl Into<String>, label: impl Into<LocalizedLabel>, kind: ActionKind, icon_id: impl Into<IconName>) -> Self {
-        Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind) }
+        Self { id: id.into(), label: label.into(), kind, icon_id: icon_id.into(), args: Vec::new(), staging: None, keys: None, in_palette: true, category: None, semantics: ActionSemantics::for_kind(kind) }
     }
 
     /// 📚️ Declares an action with the neutral icon for its kind.
@@ -62,6 +65,12 @@ impl ActionDefinition {
     /// 📎️ Attaches typed argument declarations to this action.
     pub fn with_args(mut self, args: impl IntoIterator<Item = ActionArgDef>) -> Self {
         self.args = args.into_iter().collect();
+        self
+    }
+
+    /// 📝️ Declares the source-owned body that stages this action's ephemeral arguments.
+    pub fn with_staging(mut self, body_key: impl Into<String>) -> Self {
+        self.staging = Some(semio_framework_manifest_arg_schema::StagedActionDefinition { body_key: body_key.into(), limits:Some(semio_framework_manifest_arg_schema::StagedFormLimits::FRAMEWORK) });
         self
     }
 

@@ -118,5 +118,10 @@
     null
   ],
   "closeReleaseBytes": 1,
-  "maximumCloseTurns": 100000
+  "maximumCloseTurns": 100000,
+  "retained": {
+    "keys": 4097,
+    "pageRows": 16,
+    "zeroGrants": true
+  }
 }

@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/geometry-product-cases.schema.json",
+  "title": "IFC Represented Product Classification Cases",
+  "type": "object", "additionalProperties": false, "required": ["$schema", "schema", "cases"],
+  "properties": {
+    "$schema": { "const": "./geometry-product.schema.json" },
+    "schema": { "const": "IFC4X3_ADD2" },
+    "cases": {
+      "type": "array", "minItems": 10,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["entity", "isProduct"],
+        "properties": { "entity": { "type": "string", "pattern": "^IFC[A-Z0-9_]+$" }, "isProduct": { "type": "boolean" } }
+      }
+    }
+  }
+}

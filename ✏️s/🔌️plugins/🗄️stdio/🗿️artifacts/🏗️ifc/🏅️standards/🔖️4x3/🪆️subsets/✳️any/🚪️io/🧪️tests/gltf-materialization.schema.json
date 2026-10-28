@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema", "routes", "boundaries", "exportPhases", "phases", "batchSize", "exportBatchSize", "interior", "cancellation"],
+  "properties": {
+    "schema": {"const": "IFC4X3_ADD2"},
+    "routes": {"const": ["indexed", "implicit", "reflected"]},
+    "boundaries": {"const": ["interior", "complete"]},
+    "exportPhases": {"const": ["gltf-vertices", "gltf-indices", "gltf-buffer-bytes"]},
+    "phases": {"const": ["gltf-materialize-positions", "gltf-materialize-indices", "gltf-materialize-triangles"]},
+    "batchSize": {"const": 1},
+    "exportBatchSize": {"const": 4},
+    "interior": {"const": 2},
+    "cancellation": {"const": "io.cancelled"}
+  }
+}

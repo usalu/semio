@@ -242,4 +242,4 @@ pub enum ArtifactStoreOneItemAdvance {
 
 #[path="🧬️semantic/🦀️.rs"]
 pub mod semantic;
-pub use semantic::{PagedOneItemEdit,PagedOneItemEditStep};
+pub use semantic::{PagedOneItemEdit,PagedOneItemEditStep,OriginalPostRead,PagedOneItemPostMode,PagedOneItemPostRead,PagedOneItemPost};

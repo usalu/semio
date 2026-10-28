@@ -1,0 +1,2404 @@
+{
+  "cases": [
+    {
+      "name": "RenameLayout",
+      "input": {
+        "RenameLayout": {
+          "newName": "Neu"
+        }
+      },
+      "output": {
+        "RenameLayout": {
+          "newName": "Neu"
+        }
+      }
+    },
+    {
+      "name": "ChangePrintTarget",
+      "input": {
+        "ChangePrintTarget": {
+          "newPrintTarget": "PDF"
+        }
+      },
+      "output": {
+        "ChangePrintTarget": {
+          "newPrintTarget": "PDF"
+        }
+      }
+    },
+    {
+      "name": "ChangeDataFields",
+      "input": {
+        "ChangeDataFields": {
+          "newFields": null
+        }
+      },
+      "output": {
+        "ChangeDataFields": {
+          "newFields": null
+        }
+      }
+    },
+    {
+      "name": "CreatePage",
+      "input": {
+        "CreatePage": {
+          "page": {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "text-1",
+                  "text-2"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "text-1",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "text-2",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "text-2",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-frame",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0,
+                  "rotation": 0
+                },
+                "visible": false,
+                "locked": null
+              }
+            ]
+          },
+          "index": 0
+        }
+      },
+      "output": {
+        "CreatePage": {
+          "page": {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": "parent-1",
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "text-1",
+                  "text-2"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "text",
+                "id": "text-1",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": "text-2",
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              },
+              {
+                "kind": "text",
+                "id": "text-2",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 50,
+                  "h": 50,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "none"
+              }
+            ],
+            "overrides": [
+              {
+                "objectId": "parent-frame",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0,
+                  "rotation": 0
+                },
+                "visible": false,
+                "locked": null
+              }
+            ]
+          },
+          "index": 0
+        }
+      }
+    },
+    {
+      "name": "DeletePage",
+      "input": {
+        "DeletePage": {
+          "id": "page-1"
+        }
+      },
+      "output": {
+        "DeletePage": {
+          "id": "page-1"
+        }
+      }
+    },
+    {
+      "name": "RenamePage",
+      "input": {
+        "RenamePage": {
+          "id": "page-1",
+          "newName": "Titel"
+        }
+      },
+      "output": {
+        "RenamePage": {
+          "id": "page-1",
+          "newName": "Titel"
+        }
+      }
+    },
+    {
+      "name": "ChangePageWidth",
+      "input": {
+        "ChangePageWidth": {
+          "id": "page-1",
+          "newWidth": 210
+        }
+      },
+      "output": {
+        "ChangePageWidth": {
+          "id": "page-1",
+          "newWidth": 210
+        }
+      }
+    },
+    {
+      "name": "ChangePageHeight",
+      "input": {
+        "ChangePageHeight": {
+          "id": "page-1",
+          "newHeight": 297
+        }
+      },
+      "output": {
+        "ChangePageHeight": {
+          "id": "page-1",
+          "newHeight": 297
+        }
+      }
+    },
+    {
+      "name": "UpdatePageMargins",
+      "input": {
+        "UpdatePageMargins": {
+          "id": "page-1",
+          "top": 10,
+          "right": 11,
+          "bottom": 12,
+          "left": 13
+        }
+      },
+      "output": {
+        "UpdatePageMargins": {
+          "id": "page-1",
+          "top": 10,
+          "right": 11,
+          "bottom": 12,
+          "left": 13
+        }
+      }
+    },
+    {
+      "name": "UpdatePageColumns",
+      "input": {
+        "UpdatePageColumns": {
+          "id": "page-1",
+          "count": 2,
+          "gutter": 4
+        }
+      },
+      "output": {
+        "UpdatePageColumns": {
+          "id": "page-1",
+          "count": 2,
+          "gutter": 4
+        }
+      }
+    },
+    {
+      "name": "ReorderPages",
+      "input": {
+        "ReorderPages": {
+          "id": "page-1",
+          "toIndex": 0
+        }
+      },
+      "output": {
+        "ReorderPages": {
+          "id": "page-1",
+          "toIndex": 0
+        }
+      }
+    },
+    {
+      "name": "CreateStory",
+      "input": {
+        "CreateStory": {
+          "story": {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          "index": null
+        }
+      },
+      "output": {
+        "CreateStory": {
+          "story": {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          "index": null
+        }
+      }
+    },
+    {
+      "name": "DeleteStory",
+      "input": {
+        "DeleteStory": {
+          "id": "story-1"
+        }
+      },
+      "output": {
+        "DeleteStory": {
+          "id": "story-1"
+        }
+      }
+    },
+    {
+      "name": "EditStory",
+      "input": {
+        "EditStory": {
+          "id": "story-1",
+          "offset": 1,
+          "delete": 2,
+          "insert": "é🌍"
+        }
+      },
+      "output": {
+        "EditStory": {
+          "id": "story-1",
+          "offset": 1,
+          "delete": 2,
+          "insert": "é🌍"
+        }
+      }
+    },
+    {
+      "name": "CreateLink",
+      "input": {
+        "CreateLink": {
+          "link": {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          "index": null
+        }
+      },
+      "output": {
+        "CreateLink": {
+          "link": {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          "index": null
+        }
+      }
+    },
+    {
+      "name": "DeleteLink",
+      "input": {
+        "DeleteLink": {
+          "id": "link-1"
+        }
+      },
+      "output": {
+        "DeleteLink": {
+          "id": "link-1"
+        }
+      }
+    },
+    {
+      "name": "ChangeLinkPath",
+      "input": {
+        "ChangeLinkPath": {
+          "id": "link-1",
+          "newPath": "neu.png"
+        }
+      },
+      "output": {
+        "ChangeLinkPath": {
+          "id": "link-1",
+          "newPath": "neu.png"
+        }
+      }
+    },
+    {
+      "name": "CreateFrame",
+      "input": {
+        "CreateFrame": {
+          "pageId": "page-1",
+          "frame": {
+            "kind": "text",
+            "id": "text-1",
+            "layerId": "layer-1",
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "w": 50,
+              "h": 50,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "storyId": "story-1",
+            "threadNext": "text-2",
+            "columns": 1,
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "wrapMode": "none"
+          },
+          "index": 0,
+          "layerId": null
+        }
+      },
+      "output": {
+        "CreateFrame": {
+          "pageId": "page-1",
+          "frame": {
+            "kind": "text",
+            "id": "text-1",
+            "layerId": "layer-1",
+            "bounds": {
+              "x": 0,
+              "y": 0,
+              "w": 50,
+              "h": 50,
+              "rotation": 0
+            },
+            "locked": null,
+            "visible": null,
+            "storyId": "story-1",
+            "threadNext": "text-2",
+            "columns": 1,
+            "inset": {
+              "x": 0,
+              "y": 0,
+              "w": 0,
+              "h": 0
+            },
+            "wrapMode": "none"
+          },
+          "index": 0,
+          "layerId": null
+        }
+      }
+    },
+    {
+      "name": "DeleteFrame",
+      "input": {
+        "DeleteFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1"
+        }
+      },
+      "output": {
+        "DeleteFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1"
+        }
+      }
+    },
+    {
+      "name": "MoveFrame",
+      "input": {
+        "MoveFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newX": 3,
+          "newY": 4
+        }
+      },
+      "output": {
+        "MoveFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newX": 3,
+          "newY": 4
+        }
+      }
+    },
+    {
+      "name": "ResizeFrame",
+      "input": {
+        "ResizeFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newWidth": 50,
+          "newHeight": 70
+        }
+      },
+      "output": {
+        "ResizeFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newWidth": 50,
+          "newHeight": 70
+        }
+      }
+    },
+    {
+      "name": "RotateFrame",
+      "input": {
+        "RotateFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newRotation": 1.5
+        }
+      },
+      "output": {
+        "RotateFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newRotation": 1.5
+        }
+      }
+    },
+    {
+      "name": "ChangeFrameFill",
+      "input": {
+        "ChangeFrameFill": {
+          "pageId": "page-1",
+          "frameId": "rect-1",
+          "newFill": [
+            1,
+            0.25,
+            0.5,
+            1
+          ]
+        }
+      },
+      "output": {
+        "ChangeFrameFill": {
+          "pageId": "page-1",
+          "frameId": "rect-1",
+          "newFill": [
+            1,
+            0.25,
+            0.5,
+            1
+          ]
+        }
+      }
+    },
+    {
+      "name": "ChangeFrameStroke",
+      "input": {
+        "ChangeFrameStroke": {
+          "pageId": "page-1",
+          "frameId": "rect-1",
+          "newStroke": null
+        }
+      },
+      "output": {
+        "ChangeFrameStroke": {
+          "pageId": "page-1",
+          "frameId": "rect-1",
+          "newStroke": null
+        }
+      }
+    },
+    {
+      "name": "ChangeFrameWrapMode",
+      "input": {
+        "ChangeFrameWrapMode": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newWrapMode": "bounds"
+        }
+      },
+      "output": {
+        "ChangeFrameWrapMode": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newWrapMode": "bounds"
+        }
+      }
+    },
+    {
+      "name": "ChangeFrameColumns",
+      "input": {
+        "ChangeFrameColumns": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newColumns": 2
+        }
+      },
+      "output": {
+        "ChangeFrameColumns": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "newColumns": 2
+        }
+      }
+    },
+    {
+      "name": "UpdateGrid",
+      "input": {
+        "UpdateGrid": {
+          "baselineGrid": 12,
+          "baselineOffset": 2,
+          "snapToBaseline": true
+        }
+      },
+      "output": {
+        "UpdateGrid": {
+          "baselineGrid": 12,
+          "baselineOffset": 2,
+          "snapToBaseline": true
+        }
+      }
+    },
+    {
+      "name": "SetFrameFlags",
+      "input": {
+        "SetFrameFlags": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "locked": true,
+          "visible": null
+        }
+      },
+      "output": {
+        "SetFrameFlags": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "locked": true,
+          "visible": null
+        }
+      }
+    },
+    {
+      "name": "UpdateParagraphStyle",
+      "input": {
+        "UpdateParagraphStyle": {
+          "id": "paragraph-1",
+          "name": "Body",
+          "fontFamily": "sans-serif",
+          "fontSize": 12,
+          "fontWeight": 400,
+          "leading": 14,
+          "tracking": 0,
+          "alignment": "left"
+        }
+      },
+      "output": {
+        "UpdateParagraphStyle": {
+          "id": "paragraph-1",
+          "name": "Body",
+          "fontFamily": "sans-serif",
+          "fontSize": 12,
+          "fontWeight": 400,
+          "leading": 14,
+          "tracking": 0,
+          "alignment": "left"
+        }
+      }
+    },
+    {
+      "name": "UpdateTextFrame",
+      "input": {
+        "UpdateTextFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "storyId": "story-1",
+          "threadNext": null,
+          "insetX": 1,
+          "insetY": 2,
+          "insetWidth": 3,
+          "insetHeight": 4
+        }
+      },
+      "output": {
+        "UpdateTextFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "storyId": "story-1",
+          "threadNext": null,
+          "insetX": 1,
+          "insetY": 2,
+          "insetWidth": 3,
+          "insetHeight": 4
+        }
+      }
+    },
+    {
+      "name": "UpdateLayer",
+      "input": {
+        "UpdateLayer": {
+          "pageId": "page-1",
+          "layerId": "layer-1",
+          "name": "Inhalt",
+          "visible": true,
+          "locked": false
+        }
+      },
+      "output": {
+        "UpdateLayer": {
+          "pageId": "page-1",
+          "layerId": "layer-1",
+          "name": "Inhalt",
+          "visible": true,
+          "locked": false
+        }
+      }
+    },
+    {
+      "name": "CreateCharacterStyle",
+      "input": {
+        "CreateCharacterStyle": {
+          "id": "character-2",
+          "name": "Stark",
+          "index": null
+        }
+      },
+      "output": {
+        "CreateCharacterStyle": {
+          "id": "character-2",
+          "name": "Stark",
+          "index": null
+        }
+      }
+    },
+    {
+      "name": "DeleteCharacterStyle",
+      "input": {
+        "DeleteCharacterStyle": {
+          "id": "character-1"
+        }
+      },
+      "output": {
+        "DeleteCharacterStyle": {
+          "id": "character-1"
+        }
+      }
+    },
+    {
+      "name": "UpdateCharacterStyle",
+      "input": {
+        "UpdateCharacterStyle": {
+          "id": "character-1",
+          "name": null,
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "italic": null,
+          "color": null,
+          "tracking": null
+        }
+      },
+      "output": {
+        "UpdateCharacterStyle": {
+          "id": "character-1",
+          "name": null,
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "italic": null,
+          "color": null,
+          "tracking": null
+        }
+      }
+    },
+    {
+      "name": "UpdateParentPage",
+      "input": {
+        "UpdateParentPage": {
+          "id": "parent-1",
+          "name": "Vorlage",
+          "width": 210,
+          "height": 297
+        }
+      },
+      "output": {
+        "UpdateParentPage": {
+          "id": "parent-1",
+          "name": "Vorlage",
+          "width": 210,
+          "height": 297
+        }
+      }
+    },
+    {
+      "name": "UpdateSpread",
+      "input": {
+        "UpdateSpread": {
+          "id": "spread-1",
+          "name": "Doppelseite"
+        }
+      },
+      "output": {
+        "UpdateSpread": {
+          "id": "spread-1",
+          "name": "Doppelseite"
+        }
+      }
+    },
+    {
+      "name": "SetPageParent",
+      "input": {
+        "SetPageParent": {
+          "id": "page-1",
+          "parentPageId": null
+        }
+      },
+      "output": {
+        "SetPageParent": {
+          "id": "page-1",
+          "parentPageId": null
+        }
+      }
+    },
+    {
+      "name": "SetPageGuides",
+      "input": {
+        "SetPageGuides": {
+          "id": "page-1",
+          "guides": [
+            {
+              "x": 10,
+              "y": 11,
+              "w": 20,
+              "h": 0
+            }
+          ]
+        }
+      },
+      "output": {
+        "SetPageGuides": {
+          "id": "page-1",
+          "guides": [
+            {
+              "x": 10,
+              "y": 11,
+              "w": 20,
+              "h": 0
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "SetStoryRuns",
+      "input": {
+        "SetStoryRuns": {
+          "id": "story-1",
+          "runs": [
+            {
+              "start": 1,
+              "end": 7,
+              "paragraphStyleId": "paragraph-1",
+              "characterStyleId": "character-1"
+            }
+          ]
+        }
+      },
+      "output": {
+        "SetStoryRuns": {
+          "id": "story-1",
+          "runs": [
+            {
+              "start": 1,
+              "end": 7,
+              "paragraphStyleId": "paragraph-1",
+              "characterStyleId": "character-1"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "UpdateLink",
+      "input": {
+        "UpdateLink": {
+          "id": "link-1",
+          "width": 800,
+          "height": 600,
+          "dpi": 300,
+          "colorProfile": null
+        }
+      },
+      "output": {
+        "UpdateLink": {
+          "id": "link-1",
+          "width": 800,
+          "height": 600,
+          "dpi": 300,
+          "colorProfile": null
+        }
+      }
+    },
+    {
+      "name": "SetPageOverrides",
+      "input": {
+        "SetPageOverrides": {
+          "id": "page-1",
+          "overrides": [
+            {
+              "objectId": "parent-frame",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0,
+                "rotation": 0
+              },
+              "visible": false,
+              "locked": null
+            }
+          ]
+        }
+      },
+      "output": {
+        "SetPageOverrides": {
+          "id": "page-1",
+          "overrides": [
+            {
+              "objectId": "parent-frame",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0,
+                "rotation": 0
+              },
+              "visible": false,
+              "locked": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "CreateLayer",
+      "input": {
+        "CreateLayer": {
+          "pageId": "page-1",
+          "id": "layer-3",
+          "name": "Ebene",
+          "index": null,
+          "remove": false
+        }
+      },
+      "output": {
+        "CreateLayer": {
+          "pageId": "page-1",
+          "id": "layer-3",
+          "name": "Ebene",
+          "index": null,
+          "remove": false
+        }
+      }
+    },
+    {
+      "name": "SetFrameLayer",
+      "input": {
+        "SetFrameLayer": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "layerId": "layer-2"
+        }
+      },
+      "output": {
+        "SetFrameLayer": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "layerId": "layer-2"
+        }
+      }
+    },
+    {
+      "name": "ReorderFrame",
+      "input": {
+        "ReorderFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "forward": true
+        }
+      },
+      "output": {
+        "ReorderFrame": {
+          "pageId": "page-1",
+          "frameId": "text-1",
+          "forward": true
+        }
+      }
+    },
+    {
+      "name": "DragFrames",
+      "input": {
+        "DragFrames": {
+          "pageId": "page-1",
+          "targets": [
+            "text-1",
+            "text-2"
+          ],
+          "dx": 3,
+          "dy": -4
+        }
+      },
+      "output": {
+        "DragFrames": {
+          "pageId": "page-1",
+          "targets": [
+            "text-1",
+            "text-2"
+          ],
+          "dx": 3,
+          "dy": -4
+        }
+      }
+    },
+    {
+      "name": "RotateFrames",
+      "input": {
+        "RotateFrames": {
+          "pageId": "page-1",
+          "targets": [
+            "text-1"
+          ],
+          "pivotX": 0,
+          "pivotY": 0,
+          "angle": 1.5
+        }
+      },
+      "output": {
+        "RotateFrames": {
+          "pageId": "page-1",
+          "targets": [
+            "text-1"
+          ],
+          "pivotX": 0,
+          "pivotY": 0,
+          "angle": 1.5
+        }
+      }
+    },
+    {
+      "name": "ScaleFrames",
+      "input": {
+        "ScaleFrames": {
+          "pageId": "page-1",
+          "targets": [
+            "text-1"
+          ],
+          "pivotX": 0,
+          "pivotY": 0,
+          "sx": 2,
+          "sy": 0.5
+        }
+      },
+      "output": {
+        "ScaleFrames": {
+          "pageId": "page-1",
+          "targets": [
+            "text-1"
+          ],
+          "pivotX": 0,
+          "pivotY": 0,
+          "sx": 2,
+          "sy": 0.5
+        }
+      }
+    },
+    {
+      "name": "CreateParagraphStyle",
+      "input": {
+        "CreateParagraphStyle": {
+          "style": {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          },
+          "index": null
+        }
+      },
+      "output": {
+        "CreateParagraphStyle": {
+          "style": {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          },
+          "index": null
+        }
+      }
+    },
+    {
+      "name": "DeleteParagraphStyle",
+      "input": {
+        "DeleteParagraphStyle": {
+          "id": "paragraph-1"
+        }
+      },
+      "output": {
+        "DeleteParagraphStyle": {
+          "id": "paragraph-1"
+        }
+      }
+    },
+    {
+      "name": "CreateParentPage",
+      "input": {
+        "CreateParentPage": {
+          "page": {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          },
+          "index": null
+        }
+      },
+      "output": {
+        "CreateParentPage": {
+          "page": {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          },
+          "index": null
+        }
+      }
+    },
+    {
+      "name": "DeleteParentPage",
+      "input": {
+        "DeleteParentPage": {
+          "id": "parent-1"
+        }
+      },
+      "output": {
+        "DeleteParentPage": {
+          "id": "parent-1"
+        }
+      }
+    },
+    {
+      "name": "CreateSpread",
+      "input": {
+        "CreateSpread": {
+          "spread": {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1"
+            ]
+          },
+          "index": null
+        }
+      },
+      "output": {
+        "CreateSpread": {
+          "spread": {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1"
+            ]
+          },
+          "index": null
+        }
+      }
+    },
+    {
+      "name": "DeleteSpread",
+      "input": {
+        "DeleteSpread": {
+          "id": "spread-2"
+        }
+      },
+      "output": {
+        "DeleteSpread": {
+          "id": "spread-2"
+        }
+      }
+    },
+    {
+      "name": "SetPageSpread",
+      "input": {
+        "SetPageSpread": {
+          "id": "page-1",
+          "spreadId": "spread-2",
+          "index": 0
+        }
+      },
+      "output": {
+        "SetPageSpread": {
+          "id": "page-1",
+          "spreadId": "spread-2",
+          "index": 0
+        }
+      }
+    },
+    {
+      "name": "ReorderLayer",
+      "input": {
+        "ReorderLayer": {
+          "pageId": "page-1",
+          "layerId": "layer-1",
+          "toIndex": 1
+        }
+      },
+      "output": {
+        "ReorderLayer": {
+          "pageId": "page-1",
+          "layerId": "layer-1",
+          "toIndex": 1
+        }
+      }
+    },
+    {
+      "name": "SetParentPageContent",
+      "input": {
+        "SetParentPageContent": {
+          "id": "parent-1",
+          "layers": [
+            {
+              "id": "parent-layer",
+              "name": "Parent",
+              "visible": true,
+              "locked": false,
+              "objectIds": [
+                "parent-frame"
+              ]
+            }
+          ],
+          "frames": [
+            {
+              "kind": "rect",
+              "id": "parent-frame",
+              "layerId": "parent-layer",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 20,
+                "h": 20,
+                "rotation": 0
+              },
+              "visible": null,
+              "locked": null,
+              "fill": null,
+              "stroke": null
+            }
+          ]
+        }
+      },
+      "output": {
+        "SetParentPageContent": {
+          "id": "parent-1",
+          "layers": [
+            {
+              "id": "parent-layer",
+              "name": "Parent",
+              "visible": true,
+              "locked": false,
+              "objectIds": [
+                "parent-frame"
+              ]
+            }
+          ],
+          "frames": [
+            {
+              "kind": "rect",
+              "id": "parent-frame",
+              "layerId": "parent-layer",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 20,
+                "h": 20,
+                "rotation": 0
+              },
+              "visible": null,
+              "locked": null,
+              "fill": null,
+              "stroke": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "name": "ReplaceDocument",
+      "input": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": "parent-1",
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "text-1",
+                      "text-2"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "text",
+                    "id": "text-1",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": "text-2",
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  },
+                  {
+                    "kind": "text",
+                    "id": "text-2",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  }
+                ],
+                "overrides": [
+                  {
+                    "objectId": "parent-frame",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0,
+                      "rotation": 0
+                    },
+                    "visible": false,
+                    "locked": null
+                  }
+                ]
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "output": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": "parent-1",
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "text-1",
+                      "text-2"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "text",
+                    "id": "text-1",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": "text-2",
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  },
+                  {
+                    "kind": "text",
+                    "id": "text-2",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 50,
+                      "h": 50,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "none"
+                  }
+                ],
+                "overrides": [
+                  {
+                    "objectId": "parent-frame",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0,
+                      "rotation": 0
+                    },
+                    "visible": false,
+                    "locked": null
+                  }
+                ]
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      }
+    }
+  ],
+  "defaults": [
+    {
+      "name": "native option defaults",
+      "input": {
+        "UpdateCharacterStyle": {
+          "id": "character-1"
+        }
+      },
+      "output": {
+        "UpdateCharacterStyle": {
+          "id": "character-1",
+          "name": null,
+          "fontFamily": null,
+          "fontSize": null,
+          "fontWeight": null,
+          "italic": null,
+          "color": null,
+          "tracking": null
+        }
+      }
+    },
+    {
+      "name": "native boolean default",
+      "input": {
+        "CreateLayer": {
+          "pageId": "page-1",
+          "id": "l",
+          "name": "New"
+        }
+      },
+      "output": {
+        "CreateLayer": {
+          "pageId": "page-1",
+          "id": "l",
+          "name": "New",
+          "index": null,
+          "remove": false
+        }
+      }
+    },
+    {
+      "name": "nullable print target default",
+      "input": {
+        "ChangePrintTarget": {}
+      },
+      "output": {
+        "ChangePrintTarget": {
+          "newPrintTarget": null
+        }
+      }
+    }
+  ],
+  "refusals": [
+    {},
+    {
+      "Unknown": {}
+    },
+    {
+      "RenameLayout": {
+        "newName": "x",
+        "extra": true
+      }
+    },
+    {
+      "RenameLayout": {
+        "newName": "x"
+      },
+      "DeletePage": {
+        "id": "p"
+      }
+    },
+    {
+      "RenameLayout": null
+    },
+    {
+      "ChangePageWidth": {
+        "id": "p",
+        "newWidth": "210"
+      }
+    },
+    {
+      "UpdatePageColumns": {
+        "id": "p",
+        "count": 1.5,
+        "gutter": 0
+      }
+    },
+    {
+      "UpdateLink": {
+        "id": "l",
+        "width": 4294967296,
+        "height": 1,
+        "dpi": 72,
+        "colorProfile": null
+      }
+    },
+    {
+      "ChangeFrameFill": {
+        "pageId": "p",
+        "frameId": "f",
+        "newFill": [
+          1,
+          0,
+          0
+        ]
+      }
+    },
+    {
+      "CreatePage": {
+        "page": {
+          "id": "page-1",
+          "name": "Cover",
+          "spreadId": "spread-1",
+          "parentPageId": "parent-1",
+          "width": 200,
+          "height": 300,
+          "margins": {
+            "top": 10,
+            "right": 10,
+            "bottom": 10,
+            "left": 10
+          },
+          "columns": {
+            "count": 1,
+            "gutter": 0
+          },
+          "guides": [],
+          "layerIds": [
+            "layer-1",
+            "layer-2"
+          ],
+          "layers": [
+            {
+              "id": "layer-1",
+              "name": "Content",
+              "visible": true,
+              "locked": false,
+              "objectIds": [
+                "text-1",
+                "text-2"
+              ]
+            },
+            {
+              "id": "layer-2",
+              "name": "Second",
+              "visible": true,
+              "locked": false,
+              "objectIds": []
+            }
+          ],
+          "frames": [
+            {
+              "kind": "text",
+              "id": "text-1",
+              "layerId": "layer-1",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 50,
+                "h": 50,
+                "rotation": 0
+              },
+              "locked": null,
+              "visible": null,
+              "storyId": "story-1",
+              "threadNext": "text-2",
+              "columns": 1,
+              "inset": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "wrapMode": "none"
+            },
+            {
+              "kind": "text",
+              "id": "text-2",
+              "layerId": "layer-1",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 50,
+                "h": 50,
+                "rotation": 0
+              },
+              "locked": null,
+              "visible": null,
+              "storyId": "story-1",
+              "threadNext": null,
+              "columns": 1,
+              "inset": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "wrapMode": "none"
+            }
+          ],
+          "overrides": [
+            {
+              "objectId": "parent-frame",
+              "bounds": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0,
+                "rotation": 0
+              },
+              "visible": false,
+              "locked": null
+            }
+          ]
+        },
+        "index": 9007199254740992
+      }
+    },
+    {
+      "ChangeDataFields": {}
+    },
+    {
+      "ReplaceDocument": {
+        "document": {
+          "schema": "layout.layout",
+          "name": "Fixture Layout",
+          "grid": {
+            "baselineGrid": 12,
+            "baselineOffset": 0,
+            "snapToBaseline": true
+          },
+          "paragraphStyles": [
+            {
+              "id": "paragraph-1",
+              "name": "Body",
+              "fontFamily": "sans-serif",
+              "fontSize": 12,
+              "fontWeight": 400,
+              "leading": 14,
+              "tracking": 0,
+              "alignment": "left"
+            }
+          ],
+          "characterStyles": [
+            {
+              "id": "character-1"
+            }
+          ],
+          "stories": [
+            {
+              "id": "story-1",
+              "content": "Aé🌍",
+              "styleRuns": [
+                {
+                  "start": 1,
+                  "end": 7
+                }
+              ]
+            },
+            {
+              "id": "story-2",
+              "content": "Spare body.",
+              "styleRuns": []
+            }
+          ],
+          "links": [
+            {
+              "id": "link-1",
+              "path": "alpha.png",
+              "hash": "hash-alpha",
+              "width": 800,
+              "height": 600,
+              "dpi": 300
+            },
+            {
+              "id": "link-2",
+              "path": "spare.png",
+              "hash": "hash-spare",
+              "width": 400,
+              "height": 300,
+              "dpi": 72
+            }
+          ],
+          "parentPages": [
+            {
+              "id": "parent-1",
+              "name": "Template",
+              "width": 200,
+              "height": 300,
+              "layerIds": [
+                "parent-layer"
+              ],
+              "layers": [
+                {
+                  "id": "parent-layer",
+                  "name": "Parent",
+                  "visible": true,
+                  "locked": false,
+                  "objectIds": [
+                    "parent-frame"
+                  ]
+                }
+              ],
+              "frames": [
+                {
+                  "kind": "rect",
+                  "id": "parent-frame",
+                  "layerId": "parent-layer",
+                  "bounds": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 20,
+                    "h": 20,
+                    "rotation": 0
+                  }
+                }
+              ]
+            }
+          ],
+          "spreads": [
+            {
+              "id": "spread-1",
+              "name": "First",
+              "pageIds": [
+                "page-1"
+              ]
+            },
+            {
+              "id": "spread-2",
+              "name": "Second",
+              "pageIds": []
+            }
+          ],
+          "pages": [
+            {
+              "id": "page-1",
+              "name": "Cover",
+              "spreadId": "spread-1",
+              "width": 200,
+              "height": 300,
+              "margins": {
+                "top": 10,
+                "right": 10,
+                "bottom": 10,
+                "left": 10
+              },
+              "columns": {
+                "count": 1,
+                "gutter": 0
+              },
+              "guides": [],
+              "layerIds": [
+                "layer-1",
+                "layer-2"
+              ],
+              "layers": [
+                {
+                  "id": "layer-1",
+                  "name": "Content",
+                  "visible": true,
+                  "locked": false,
+                  "objectIds": [
+                    "text-1",
+                    "text-2"
+                  ]
+                },
+                {
+                  "id": "layer-2",
+                  "name": "Second",
+                  "visible": true,
+                  "locked": false,
+                  "objectIds": []
+                }
+              ],
+              "frames": [
+                {
+                  "kind": "text",
+                  "id": "text-1",
+                  "layerId": "layer-1",
+                  "bounds": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 50,
+                    "h": 50,
+                    "rotation": 0
+                  },
+                  "storyId": "story-1",
+                  "columns": 1,
+                  "inset": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 0,
+                    "h": 0
+                  },
+                  "wrapMode": "none"
+                },
+                {
+                  "kind": "text",
+                  "id": "text-2",
+                  "layerId": "layer-1",
+                  "bounds": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 50,
+                    "h": 50,
+                    "rotation": 0
+                  },
+                  "storyId": "story-1",
+                  "columns": 1,
+                  "inset": {
+                    "x": 0,
+                    "y": 0,
+                    "w": 0,
+                    "h": 0
+                  },
+                  "wrapMode": "none"
+                }
+              ],
+              "overrides": [
+                {
+                  "objectId": "parent-frame"
+                }
+              ]
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

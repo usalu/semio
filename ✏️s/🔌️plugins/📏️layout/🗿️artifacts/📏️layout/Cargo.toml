@@ -30,6 +30,7 @@ members = [
     "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🖼️frames/🧪️tests/🍰️companion-2/📦️packages/🦀️rust",
     "📦️packages/🦀️rust",
     "🔨️modules/🏠️host/🧰️owned/📦️packages/🦀️rust",
+    "🔨️modules/🧩️drawing-composition/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏭️bridge/**",

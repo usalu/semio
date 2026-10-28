@@ -46,3 +46,5 @@ pub mod set_layer_visible {
     mod tests_hides_shape_a;
 }
 //#endregion 🪢️TaxonomyMounts
+
+#[path="."]pub mod set_artboard{#[path="🧬️schema/🧬️mutations/🖼️set-artboard/🦠️mutation/🦀️.rs"]pub mod mutation;}

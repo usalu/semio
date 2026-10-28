@@ -1,0 +1,24 @@
+{
+  "feature": "layout.retained.deletion-inverse",
+  "kinds": [
+    "DeleteLink",
+    "DeleteStory",
+    "DeleteParagraphStyle",
+    "DeleteCharacterStyle",
+    "DeleteSpread",
+    "DeleteParentPage"
+  ],
+  "source": "original affected row only; character identifier prepared separately",
+  "stages": [
+    "fund original inverse mutation vector",
+    "prepare original deleted row through its typed retained field owner",
+    "prepare duplicate character-style identifier",
+    "move row fields into typed Create or Create+Update inverse commands",
+    "close aliases and partial commands through original factories"
+  ],
+  "forbidden": [
+    "whole Snapshot clone",
+    "cold mutation diff",
+    "unfunded row clone or destructor"
+  ]
+}

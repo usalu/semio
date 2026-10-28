@@ -1,0 +1,15 @@
+# Field And Segmented Select Target Policy
+
+Source-only map; no source edits or DOM execution claim.
+
+Current shared Field label htmlFor defaults to `${id}.control`. Proposed explicit controlId should preserve that default for existing authored controls while owned Field supplies exact ordinary target. Stable Field label/description/error IDs and a narrow context can connect ordinary input, menu trigger, button and radiogroup to actual resident metadata without a store projection.
+
+Input and Button ordinary views place controlDomId on actual labelable input/textarea/button. Menu Select places `${controlDomId}-select` on Select root but controlDomId on actual SelectTrigger; label target is trigger, not wrapper/root. Segmented Select places controlDomId on ToggleGroup div, whose role is radiogroup and is not HTML-labelable.
+
+ToggleGroup/TSX167 renders each real button with item.id if supplied, else `${groupId}-${item.value}`. ToggleGroupItem/TSX199 places that exact id on actual button role=radio. Item props inherit ButtonHTMLAttributes, so Interpreter can supply deterministic option IDs without new framework protocol. No DOM query is needed to locate selected target.
+
+For segmented Field label target: derive effective value from the same controls.value(record) override used for rendered group, otherwise component.value. Choose matching actual option; if none, choose first enabled option (all ordinary Select options currently share group disabled state). Empty option roster has no labelable target: render group naming without fabricated htmlFor. Disabled selected option remains an actual association target but cannot focus, as normal disabled controls. Assign explicit option IDs from scoped controlDomId plus canonical ordinal to avoid raw option-value delimiter collisions. Pass those same IDs to ToggleGroup items; target uses same exact index. The group receives Field aria-labelledby/describedby/required/invalid; each radio retains its own option name rather than replacing it with the field name. Label-click focus and group accessible name are distinct obligations.
+
+Shared leaf DAG occurrences need distinct field-scoped DOM contexts. Repeated source node ID does not imply repeated DOM identity. Parent Field occurrence owns field ID and passes its exact scope to child control; do not require generic retained graph to be a tree. Fixed allowed Form→Field→leaf positions/depth prevent cycles in this subset. Native status Extension is separately nonvisual and cannot act as a Field leaf.
+
+Minimal tests extend actual owned root wire fixture with Form/status/Fields and segmented Select: assert label.htmlFor equals selected radio.id, change choice and association follows new selected option, missing selection targets first actual option, menu label targets trigger, Input label click focuses control, and shared leaf in two Fields yields distinct IDs. Assert group aria-labelledby plus error/description links reference actual stable nodes, required/invalid propagate, option names remain X/Y, and no arbitrary DOM query is used by implementation. Runtime remains gated by actual renderer Vitest policy until executed.

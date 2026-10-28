@@ -1,0 +1,17 @@
+"""🧱️ Pin the actual primitive factor against current selected geometric consumers."""
+from pathlib import Path
+import json,hashlib
+
+ticket=Path(__file__).parent
+artifact=ticket.parents[6]/"✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc"
+any=artifact/"🏅️standards/🔖️4x3/🪆️subsets/✳️any"
+owned=[any/"🚪️io/geometry/csg.ts",any/"🚪️io/🧪️tests/csg-primitive.test.ts"]
+previous=json.loads((ticket/"🗑️generated/geometry-domain-source.json").read_text(encoding="utf8"))
+references=[Path(row["path"])for row in previous["owned"]+previous["references"]if Path(row["path"])not in owned]
+def row(path):return {"path":str(path),"sha256":hashlib.sha256(path.read_bytes()).hexdigest(),"utf16PathUnits":len(str(path).encode("utf-16-le"))//2}
+value={"owned":list(map(row,owned)),"references":list(map(row,references)),"nativeExecuted":False,"scope":"Real Block/Cone/Cylinder primitive source entry shared by existing genuine CsgSolid and future Boolean operands. No Boolean dispatcher/rounded producer implementation."}
+assert len(set(owned+references))==len(owned+references)
+assert all(item["utf16PathUnits"]<=256 for item in value["owned"]+value["references"])
+(ticket/"🗑️generated/csg-primitive-source.json").write_text(json.dumps(value,ensure_ascii=False,indent=2)+"\n",encoding="utf8")
+(ticket/"csg-primitive-implementation.md").write_text("# Real Primitive Source Entry\n\nExisting ifcCsgSolidSteps still requires an actual simple CsgSolid and reads its original TreeRootExpression through the canonical graph/owner-qualified field query. It delegates the same actual primitive object to new ifcCsgPrimitiveSteps. The shared primitive body retains its existing exact Block/Cone/Cylinder declarations, original required Position, raw REAL source domains, finite SI/frame/precision checks, exact output preflight and existing geometric algorithm. No synthetic source wrapper or alternate graph/index is used. No extra wrapper yield is introduced; no historical absolute turn-count measurement is claimed.\n\nNew eight-law direct-entry baseline was0pass8missing-entry failures2assert, honestly proposed API absence. Final8pass28assert159ms compares actual direct versus genuine-wrapper outputs for3 source-neutral primitive families under ordinary and reflected/nonuniform frames, exact60/645/1284 grants and one-less refusal, same-ID replacement source-authority refusal, and exact initial observer Error/undefined identity. Source inputs remain unchanged. Original frame/winding ownership is preserved; this refactor does not mark arbitrary intermediate primitives already world-outward.\n\nActual focused existing/new regression203pass54320Bun assertions4files0fail2.01s, strict10realconsumers0/empty under unchanged repository options. All root readers terminal. New csg-primitive.test.ts stays unregistered pending independent source closure. Current61-path snapshot (exact count emitted) uses fresh current revisions of existing geometric references; historical geometry-domain60 audit remains unchanged.\n\nFull154 was already terminal green before this source edit, with4871pass12skip0fail and0test-source changes. The new factor is a subsequent focused change and is not silently represented as part of that immutable full snapshot. Actual Boolean IFC dispatch, rounded profile support and native execution remain incomplete.\n",encoding="utf8")
+print("[DEBUG]",json.dumps({"owned":len(owned),"references":len(references),"maxPath":max(row["utf16PathUnits"]for row in value["owned"]+value["references"])}))

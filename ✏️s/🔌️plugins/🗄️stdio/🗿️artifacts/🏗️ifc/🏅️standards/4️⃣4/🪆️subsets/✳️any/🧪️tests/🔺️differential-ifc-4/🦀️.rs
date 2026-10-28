@@ -96,6 +96,47 @@ mod subject {
         outcome(write_part21(&to_part21_document(&applied(decoded(&mutated)?, &mutation_inverse(&operation, &base))?)).into_bytes())
     }
 
+    pub fn official_round_trip(ctx: &Context) -> Result<Outcome, String> {
+        use semio_s_artifact_stdio_ifc_4::standards::v4::subsets::any::io::{decode_ifc4_document, encode_ifc4_document};
+        let spec = ctx.doc_json()?;
+        let copy = ctx.copy_input(&spec.str("input"), Some("official.ifc"))?;
+        let input = std::fs::read(copy).map_err(|error| error.to_string())?;
+        let document = decode_ifc4_document(&input)?;
+        if Json::Number(document.instances.len() as f64) != *spec.get("entityCount").ok_or("missing expected entity count")? {
+            return Err("official IFC4 materialized entity count differs from neutral contract".into());
+        }
+        let snapshot = from_part21_document(STDIO_IFC_DOCUMENT_SCHEMA, &document);
+        let output = encode_ifc4_document(&to_part21_document(&snapshot))?;
+        let projection = project_ifc_4_any(&output)?;
+        if projection != project_ifc_4_any(&input)? {
+            return Err("official IFC4 snapshot rewrite changed the independently read graph".into());
+        }
+        Ok(Outcome::with_raw(output, projection))
+    }
+
+    pub fn geometry(ctx: &Context) -> Result<Outcome, String> {
+        use semio_s_artifact_stdio_ifc_4_model::standards::v4::subsets::any::schema::geometry::{project, GeometryStatus};
+        let spec = ctx.doc_json()?;
+        let text = format!("ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('IFC4'));ENDSEC;DATA;{}ENDSEC;END-ISO-10303-21;", spec.str("data"));
+        let scene = project(&decoded(text.as_bytes())?);
+        if scene.status != GeometryStatus::Complete || !scene.issues.is_empty() { return Err(format!("geometry projection failed: {:?}", scene.issues)); }
+        let products = Json::Array(scene.meshes.iter().map(|mesh| Json::Number(mesh.product as f64)).collect());
+        let bounds = scene.bounds().map(|bounds| Json::Array(bounds.into_iter().map(|point| Json::Array(point.into_iter().map(Json::Number).collect())).collect())).unwrap_or(Json::Null);
+        let mut projection = vec![("products".into(), products), ("vertices".into(), Json::Number(scene.meshes.iter().map(|mesh| mesh.vertices.len()).sum::<usize>() as f64)), ("triangles".into(), Json::Number(scene.meshes.iter().map(|mesh| mesh.triangles.len()).sum::<usize>() as f64)), ("bounds".into(), bounds)];
+        let mut volume = 0.; let mut area = 0.;
+        for mesh in &scene.meshes { for triangle in &mesh.triangles {
+            let a = mesh.vertices[triangle[0] as usize]; let b = mesh.vertices[triangle[1] as usize]; let c = mesh.vertices[triangle[2] as usize];
+            let cross = |a: [f64; 3], b: [f64; 3]| [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+            let n = cross(b, c); volume += (a[0] * n[0] + a[1] * n[1] + a[2] * n[2]) / 6.;
+            let n = cross([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+            area += (n[0] * n[0] + n[1] * n[1] + n[2] * n[2]).sqrt() / 2.;
+        } }
+        let expected = spec.get("expected").ok_or("missing-neutral-expectation")?;
+        if expected.get("volume").is_some() { projection.push(("volume".into(), Json::Number(volume.abs()))); }
+        if expected.get("area").is_some() { projection.push(("area".into(), Json::Number(area))); }
+        Ok(Outcome::with_raw(scene.meshes_json().into_bytes(), Json::Object(projection)))
+    }
+
     pub fn round_trip(ctx: &Context) -> Result<Outcome, String> {
         let input = mutable_input(ctx)?;
         outcome(encoded(&input, &decoded(&input)?)?)
@@ -113,7 +154,13 @@ pub fn adapter() -> Adapter {
     #[cfg(feature = "sut")]
     {
         built = built.subject("differential", subject::mutate).subject("differential-inverse", subject::inverse);
-        built = built.subject("differential-identity-round-trip", subject::round_trip);
+        built = built.subject("differential-geometry-pn-index", subject::geometry);
+        built = built.subject("differential-geometry-faceted-brep", subject::geometry);
+        built = built.subject("differential-geometry-placed-extrusion", subject::geometry);
+        built = built.subject("differential-geometry-triangulated", subject::geometry);
+        built = built.subject("differential-geometry-mapped-triangle", subject::geometry);
+        built = built.subject("differential-geometry-concave-polygon", subject::geometry);
+        built = built.subject("differential-identity-round-trip", subject::round_trip).subject("differential-official-round-trip", subject::official_round_trip);
     }
     built
 }

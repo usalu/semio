@@ -1,3 +1,4 @@
+import type {SetArtboard} from "../../../🏷️metadata/🧬️schema/🧬️mutations/🖼️set-artboard/🦠️mutation/🟦️.ts";
 import type {SetShapeCoordinate} from "../../../🔀️transform/🧬️schema/🧬️mutations/🔷️set-shape-coordinate/🦠️mutation/🟦️.ts";
 import type {ImportImageAsset} from "../../../🧱️structure/🧬️schema/🧬️mutations/📥️import-image-asset/🦠️mutation/🟦️.ts";
 import type {RemoveImageAsset} from "../../../🧱️structure/🧬️schema/🧬️mutations/🗑️remove-image-asset/🦠️mutation/🟦️.ts";
@@ -117,6 +118,7 @@ export interface DeleteLayer {
 
 /** 🧩️ One arm per `DrawingMutation` variant, same declaration order as the Rust enum. */
 export type DrawingMutation =
+  | ({mutation:"setArtboard"}&SetArtboard)
   | ({ mutation: "setLayerVisible" } & SetLayerVisible)
   | ({ mutation: "setLayerLocked" } & SetLayerLocked)
   | ({ mutation: "setLayerOpacity" } & SetLayerOpacity)

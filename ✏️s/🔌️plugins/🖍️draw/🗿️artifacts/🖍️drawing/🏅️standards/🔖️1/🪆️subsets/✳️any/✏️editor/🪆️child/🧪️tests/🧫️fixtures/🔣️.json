@@ -1,0 +1,13 @@
+{
+  "editorId": "s.draw.drawing@1/*#editor",
+  "dialect": {
+    "artifactKind": "s.draw.drawing",
+    "standard": "1",
+    "subset": "*"
+  },
+  "commands": [
+    "editPath",
+    "editFill",
+    "patchLayer"
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "schema": "stdio.part21.native-receiving",
+  "binary": [
+    {
+      "value": "0",
+      "admitted": true
+    },
+    {
+      "value": "0FF",
+      "admitted": true
+    },
+    {
+      "value": "17F",
+      "admitted": true
+    },
+    {
+      "value": "23",
+      "admitted": true
+    },
+    {
+      "value": "31",
+      "admitted": true
+    },
+    {
+      "value": "",
+      "admitted": false
+    },
+    {
+      "value": "1",
+      "admitted": false
+    },
+    {
+      "value": "3F",
+      "admitted": false
+    },
+    {
+      "value": "0ff",
+      "admitted": false
+    },
+    {
+      "value": "4F",
+      "admitted": false
+    },
+    {
+      "value": "0G",
+      "admitted": false
+    }
+  ]
+}

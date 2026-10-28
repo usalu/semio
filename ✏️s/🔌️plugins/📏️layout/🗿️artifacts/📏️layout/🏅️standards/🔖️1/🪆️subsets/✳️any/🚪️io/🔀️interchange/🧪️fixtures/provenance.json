@@ -1,0 +1,23 @@
+{
+  "schema": "layout.interchange.provenance.v1",
+  "fixtures": [
+    {
+      "path": "w3c-rect.svg",
+      "url": "https://www.w3.org/Graphics/SVG/Test/20110816/svg/shapes-rect-01-t.svg",
+      "retrieved": "2026-10-21",
+      "sha256": "e0d5298a759a920abb0803a507eaf80584a9586a12e0cf54c7efe5d50d14fbba",
+      "upstreamStatus": "accepted",
+      "standard": "SVG 1.1 Second Edition Tiny",
+      "copyright": "W3C 2009; original copyright notice retained",
+      "scope": "Canonical SVG syntax round-trip plus independent XML oracle; does not establish Layout rendering or complete SVG conformance"
+    }
+  ],
+  "handcrafted": [
+    "🔣️.json"
+  ],
+  "missingOfficialCorpora": [
+    "Adobe-produced IDML package and accessible SDK/schema; Adobe historical CS6 IDML links returned 404 in ticket audit",
+    "PDF fidelity corpus",
+    "AP214 geometry conformance corpus"
+  ]
+}

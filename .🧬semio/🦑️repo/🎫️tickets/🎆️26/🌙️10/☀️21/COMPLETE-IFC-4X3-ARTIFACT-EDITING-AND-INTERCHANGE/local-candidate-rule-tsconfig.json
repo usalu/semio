@@ -1,0 +1,8 @@
+{
+  "extends": "./details-contextual-tsconfig.json",
+  "files": [
+    "../../../../../../../\u270f\ufe0fs/\ud83d\udd0c\ufe0fplugins/\ud83d\uddc4\ufe0fstdio/\ud83d\uddff\ufe0fartifacts/\ud83c\udfd7\ufe0fifc/\ud83c\udfc5\ufe0fstandards/\ud83d\udd16\ufe0f4x3/\ud83e\ude86\ufe0fsubsets/\u2733\ufe0fany/\ud83e\uddec\ufe0fschema/\u2696\ufe0fvalidation/machine_local_rules.test.ts"
+  ],
+  "include": [],
+  "exclude": []
+}

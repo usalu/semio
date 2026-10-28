@@ -1,0 +1,14 @@
+/** 📐 Issued placement and point owners read real source relationships and derived axes. */
+import {test,expect} from 'bun:test';
+import Ajv from 'ajv/dist/2020';
+import cases from './cases.json';
+import schema from './cases.schema.json';
+import {compileIfc4x3Express,IfcExpressContext,type ExpressControl} from '../index.ts';
+import {parseIfc4x3Step} from '../../../🚪️io/step.ts';
+import {issuedOwnerValue} from '../🧪️coverage/fixture.ts';
+import {numericOwnerSnapshot} from '../🧪️numeric/fixture.ts';
+import {placementOwnerArguments} from './fixture.ts';
+const issued=compileIfc4x3Express();
+test('closed placement/point cases reference six actual issued owners and the pinned source',async()=>{expect(new Ajv({strict:true}).compile(schema)(cases)).toBe(true);expect(new Set(cases.functions.map(row=>row.owner)).size).toBe(6);expect((await issued).complete).toBe(true);expect(new Bun.CryptoHasher('sha256').update(await Bun.file(new URL('../../📚️catalog/IFC4X3_ADD2.exp',import.meta.url)).arrayBuffer()).digest('hex')).toBe(cases.source.expSha256);});
+for(const row of cases.functions)test('issued placement '+row.owner+' '+row.id,async()=>{const context=new IfcExpressContext(await parseIfc4x3Step(await Bun.file(new URL('./source.ifc',import.meta.url)).text()),(await issued).program);await context.initialize();const args=placementOwnerArguments(context,row.args),before=[...context.entities].map(([id,value])=>[String(id),numericOwnerSnapshot(value)]);expect(context.evaluator.functions.get(row.owner)).toBe((await issued).program.functions.find(fn=>fn.name===row.owner));expect(issuedOwnerValue(await context.evaluator.call(row.owner,args))).toEqual(row.expected);expect([...context.entities].map(([id,value])=>[String(id),numericOwnerSnapshot(value)])).toEqual(before);});
+for(const kind of ['abort','undefined','object'])test('placement derived axes retain original '+kind,async()=>{const abort=new AbortController(),failure=kind==='undefined'?undefined:Object.freeze({original:kind});let active=false,calls=0,redirected=0,caught=false;const control:ExpressControl={signal:abort.signal,batchSize:1,progress:function(this:unknown){if(!active)return;expect(this).toBeUndefined();calls++;control.signal=new AbortController().signal;control.progress=()=>redirected++;if(kind==='abort')abort.abort();else throw failure;}};const context=new IfcExpressContext(await parseIfc4x3Step(await Bun.file(new URL('./source.ifc',import.meta.url)).text()),(await issued).program,control);await context.initialize();active=true;try{await context.evaluator.call('IFCSAMEAXIS2PLACEMENT',[context.entities.get(22n)!,context.entities.get(23n)!,{kind:'real',value:.25}]);}catch(error){caught=true;if(kind==='abort')expect(error).toMatchObject({code:'cancelled'});else expect(error).toBe(failure);}expect(caught).toBe(true);expect(calls).toBe(1);expect(redirected).toBe(0);});

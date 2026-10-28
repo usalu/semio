@@ -1,0 +1,44 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/express-ast.schema.json",
+  "title": "Owned EXPRESS Semantic AST",
+  "$ref": "#/$defs/Program",
+  "$defs": {
+    "Expression": {
+      "type": "object",
+      "required": ["kind", "offset"],
+      "properties": {
+        "kind": { "enum": ["integer", "real", "string", "logical", "unknown", "identifier", "unary", "binary", "attribute", "qualify", "call", "index", "slice", "aggregate", "query", "interval"] },
+        "offset": { "type": "integer", "minimum": 0 },
+        "text": { "type": "string" },
+        "operator": { "type": "string" },
+        "name": { "type": "string" },
+        "operands": { "type": "array", "items": { "$ref": "#/$defs/Expression" } },
+        "entries": { "type": "array", "items": { "type": "object", "required": ["value"], "properties": { "value": { "$ref": "#/$defs/Expression" }, "repeat": { "$ref": "#/$defs/Expression" } }, "additionalProperties": false } }
+      },
+      "additionalProperties": false
+    },
+    "Variable": { "type": "object", "required": ["names", "type"], "properties": { "names": { "type": "array", "items": { "type": "string" }, "minItems": 1 }, "type": { "type": "string" }, "initial": { "$ref": "#/$defs/Expression" } }, "additionalProperties": false },
+    "Statement": {
+      "type": "object",
+      "required": ["kind", "offset"],
+      "properties": {
+        "kind": { "enum": ["assign", "return", "if", "case", "repeat", "block", "escape", "skip", "call", "null"] },
+        "offset": { "type": "integer", "minimum": 0 },
+        "name": { "type": "string" },
+        "expressions": { "type": "array", "items": { "$ref": "#/$defs/Expression" } },
+        "body": { "type": "array", "items": { "$ref": "#/$defs/Statement" } },
+        "otherwise": { "type": "array", "items": { "$ref": "#/$defs/Statement" } },
+        "cases": { "type": "array", "items": { "type": "object", "required": ["labels", "body"], "properties": { "labels": { "type": "array", "items": { "$ref": "#/$defs/Expression" } }, "body": { "type": "array", "items": { "$ref": "#/$defs/Statement" } } }, "additionalProperties": false } },
+        "while": { "$ref": "#/$defs/Expression" },
+        "until": { "$ref": "#/$defs/Expression" }
+      },
+      "additionalProperties": false
+    },
+    "Function": { "type": "object", "required": ["name", "parameters", "resultType", "locals", "body"], "properties": { "name": { "type": "string" }, "parameters": { "type": "array", "items": { "$ref": "#/$defs/Variable" } }, "resultType": { "type": "string" }, "locals": { "type": "array", "items": { "$ref": "#/$defs/Variable" } }, "body": { "type": "array", "items": { "$ref": "#/$defs/Statement" } } }, "additionalProperties": false },
+    "Rule": { "type": "object", "required": ["owner", "label", "expression"], "properties": { "owner": { "type": "string" }, "label": { "type": "string" }, "expression": { "$ref": "#/$defs/Expression" } }, "additionalProperties": false },
+    "GlobalRule": { "type": "object", "required": ["name", "populations", "locals", "body", "rules"], "properties": { "name": { "type": "string" }, "populations": { "type": "array", "items": { "type": "string" } }, "locals": { "type": "array", "items": { "$ref": "#/$defs/Variable" } }, "body": { "type": "array", "items": { "$ref": "#/$defs/Statement" } }, "rules": { "type": "array", "items": { "$ref": "#/$defs/Rule" } } }, "additionalProperties": false },
+    "Program": { "type": "object", "required": ["schema", "functions", "globalRules", "rules", "derived", "unique", "bounds", "inverse"], "properties": { "schema": { "const": "IFC4X3_ADD2" }, "functions": { "type": "array", "items": { "$ref": "#/$defs/Function" } }, "globalRules": { "type": "array", "items": { "$ref": "#/$defs/GlobalRule" } }, "rules": { "type": "array", "items": { "$ref": "#/$defs/Rule" } }, "derived": { "type": "array", "items": { "$ref": "#/$defs/Rule" } }, "unique": { "type": "array", "items": { "$ref": "#/$defs/Rule" } }, "bounds": { "type": "array", "items": { "$ref": "#/$defs/Rule" } }, "inverse": { "type": "array", "items": { "type": "object", "required": ["owner", "name", "type", "attribute"], "properties": { "owner": { "type": "string" }, "name": { "type": "string" }, "type": { "type": "string" }, "attribute": { "type": "string" }, "aggregate": { "type": "boolean" }, "lower": { "$ref": "#/$defs/Expression" }, "upper": { "$ref": "#/$defs/Expression" } }, "additionalProperties": false } } }, "additionalProperties": false }
+  }
+}
+

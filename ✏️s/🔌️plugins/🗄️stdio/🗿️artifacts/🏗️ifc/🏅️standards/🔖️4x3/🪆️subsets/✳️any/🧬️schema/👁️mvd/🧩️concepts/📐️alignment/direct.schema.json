@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/alignment-direct.schema.json",
+  "$defs": {
+    "Target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segment",
+        "kind",
+        "applicable"
+      ],
+      "properties": {
+        "segment": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Id"
+        },
+        "kind": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Kind"
+        },
+        "applicable": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "targets"
+      ],
+      "properties": {
+        "targets": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/Target"
+          }
+        }
+      }
+    },
+    "TargetReport": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "segment",
+        "kind",
+        "applicable",
+        "status",
+        "diagnostics"
+      ],
+      "properties": {
+        "segment": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Id"
+        },
+        "kind": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Kind"
+        },
+        "applicable": {
+          "type": "boolean"
+        },
+        "status": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Status"
+        },
+        "curve": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Id"
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "path",
+              "label"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^mvd\\.direct\\."
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pointer": {
+                "type": "string"
+              },
+              "label": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "en",
+                  "de"
+                ],
+                "properties": {
+                  "en": {
+                    "type": "string"
+                  },
+                  "de": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Report": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "concept",
+        "predicate",
+        "source",
+        "status",
+        "targets",
+        "diagnostics",
+        "schemaConformance",
+        "viewConformance",
+        "geometryConformance",
+        "layoutTerminalConformance",
+        "parentCurveConformance"
+      ],
+      "properties": {
+        "concept": {
+          "const": "Product_Shape/Product_Geometric_Representation/Alignment_Geometry/Alignment_Geometry_-_Horizontal,_Vertical_and_Cant"
+        },
+        "predicate": {
+          "const": "selected-direct-zero-counterpart"
+        },
+        "source": {
+          "const": {
+            "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+            "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Alignment_Geometry/Alignment_Geometry_-_Horizontal,_Vertical_and_Cant/content.html",
+            "sha256": "052ef264607c967a36123caf90a609a87c263e732cc44220c1f7847d115d07a7"
+          }
+        },
+        "status": {
+          "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Status"
+        },
+        "targets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TargetReport"
+          }
+        },
+        "diagnostics": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "code",
+              "path",
+              "label"
+            ],
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^mvd\\.direct\\."
+              },
+              "path": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "pointer": {
+                "type": "string"
+              },
+              "label": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "en",
+                  "de"
+                ],
+                "properties": {
+                  "en": {
+                    "type": "string"
+                  },
+                  "de": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "schemaConformance": {
+          "const": "not-evaluated"
+        },
+        "viewConformance": {
+          "const": "not-evaluated"
+        },
+        "geometryConformance": {
+          "const": "not-evaluated"
+        },
+        "layoutTerminalConformance": {
+          "const": "not-evaluated"
+        },
+        "parentCurveConformance": {
+          "const": "not-evaluated"
+        }
+      }
+    },
+    "Definition": {
+      "const": {
+        "concept": "Product_Shape/Product_Geometric_Representation/Alignment_Geometry/Alignment_Geometry_-_Horizontal,_Vertical_and_Cant",
+        "predicate": "selected-direct-zero-counterpart",
+        "source": {
+          "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+          "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Alignment_Geometry/Alignment_Geometry_-_Horizontal,_Vertical_and_Cant/content.html",
+          "sha256": "052ef264607c967a36123caf90a609a87c263e732cc44220c1f7847d115d07a7"
+        }
+      }
+    }
+  },
+  "oneOf": [
+    {
+      "$ref": "#/$defs/Request"
+    },
+    {
+      "$ref": "#/$defs/Report"
+    },
+    {
+      "$ref": "#/$defs/Definition"
+    }
+  ]
+}

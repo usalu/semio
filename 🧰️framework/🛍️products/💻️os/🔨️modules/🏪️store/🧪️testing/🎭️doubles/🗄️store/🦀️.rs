@@ -182,10 +182,10 @@ where
     fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn ErasedMemberStoreOneItemPublication>>, String> {
         SpaceMember::begin_one_item_owned_publication(&self.0, request, grant)
     }
-    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
+    fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, semio_framework_os_vcs::VcsError> {
         SpaceMember::advance_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
-    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
+    fn prepare_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_os_vcs::VcsError> {
         SpaceMember::prepare_one_item_publication(&mut self.0, publication, body, grant,receiving)
     }
     fn stage_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemPreparationStep, String> {
@@ -200,8 +200,8 @@ where
     fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn ErasedMemberStoreOneItemPublication, visibility: &Arc<semio_framework_os_vcs::ArtifactGroupVisibility>, snapshot: ErasedSnapshotRead, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, (ValueError, ErasedSnapshotRead)> {
         SpaceMember::return_prepared_snapshot_read_erased(&self.0, publication, visibility, snapshot, grant)
     }
-    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        SpaceMember::abort_one_item_publication(&mut self.0, publication, grant)
+    fn abort_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+        SpaceMember::abort_one_item_publication(&mut self.0, publication, original,grant)
     }
     fn snapshot_read_erased_now(&self) -> Result<ErasedSnapshotRead, String> {
         SpaceMember::snapshot_read_erased_now(&self.0)
@@ -512,6 +512,7 @@ impl<M> DemoMemberStoreProducer<M> {pub const fn new()->Self{Self(::std::marker:
 impl MemberStoreProducer<DemoSnapshot,DemoMutation> for crate::DemoMemberStoreProducer<DemoMutation> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
+    fn member_store_owners_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<DemoMutation>()
     }
@@ -813,6 +814,7 @@ pub fn demo_base_store_owners() -> DocumentStoreOwners<DemoSnapshot, DemoMutatio
 impl MemberStoreProducer<DemoSnapshot,SeverityMutation> for crate::DemoMemberStoreProducer<SeverityMutation> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
+    fn member_store_owners_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<SeverityMutation>()
     }
@@ -829,6 +831,7 @@ impl MemberStoreProducer<DemoSnapshot,SeverityMutation> for crate::DemoMemberSto
 impl MemberStoreProducer<DemoSnapshot,ValidatedMutation> for crate::DemoMemberStoreProducer<ValidatedMutation> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
+    fn member_store_owners_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<ValidatedMutation>()
     }
@@ -841,6 +844,7 @@ impl MemberStoreProducer<DemoSnapshot,ValidatedMutation> for crate::DemoMemberSt
 impl MemberStoreProducer<DemoSnapshot,TimestampedMutation> for crate::DemoMemberStoreProducer<TimestampedMutation> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
+    fn member_store_owners_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         fixture_authoring_birth_demand::<TimestampedMutation>()
     }

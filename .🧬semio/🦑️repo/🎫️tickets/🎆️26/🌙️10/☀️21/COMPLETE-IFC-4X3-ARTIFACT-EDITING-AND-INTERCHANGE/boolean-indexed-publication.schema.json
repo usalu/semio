@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "producerExecuted",
+    "metric",
+    "sourceSha256",
+    "originalSource",
+    "cases"
+  ],
+  "properties": {
+    "scope": {
+      "const": "owned-indexed-publication-conservation"
+    },
+    "producerExecuted": {
+      "const": false
+    },
+    "metric": {
+      "const": "logical-numeric-slots"
+    },
+    "sourceSha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "originalSource": {
+      "type": "string"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 31,
+      "maxItems": 31,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "vertexCount",
+          "triangleCount",
+          "originalSlots",
+          "flatSlots",
+          "limit",
+          "copiedPrefix",
+          "expectedPeak",
+          "expectedUsed",
+          "actualPartialLength",
+          "outcome",
+          "originalHandleRetained"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "vertexCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "triangleCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "originalSlots": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "flatSlots": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "copiedPrefix": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedPeak": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "expectedUsed": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "actualPartialLength": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "outcome": {
+            "enum": [
+              "published",
+              "limit-refusal",
+              "return",
+              "cancel",
+              "throw-undefined",
+              "throw-error"
+            ]
+          },
+          "originalHandleRetained": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

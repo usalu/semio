@@ -1,0 +1,63 @@
+{
+  "nativeExecution": false,
+  "maximumSegments": 128,
+  "bytesPerTurn": 64,
+  "scanGrantLaw": {"rangeWords": 2, "scalarWords": 3, "booleanBytes": 1, "phaseBytes": 1, "maximumPublishedRangesPerTurn": 1},
+  "document": {
+    "a/b": {"~name": {"Grüße🧬": ["zero", "one"]}},
+    "": {"~1": "escaped once"},
+    "array": [0, 1, 2],
+    "id": "18446744073709551615"
+  },
+  "paths": [
+    {"path": "", "mode": "existing", "accepted": true},
+    {"path": "/a~1b/~0name/Grüße🧬/1", "mode": "existing", "accepted": true},
+    {"path": "//~01", "mode": "existing", "accepted": true},
+    {"path": "/id", "mode": "existing", "accepted": true},
+    {"path": "/array/0", "mode": "existing", "accepted": true},
+    {"path": "/array/2", "mode": "existing", "accepted": true},
+    {"path": "/array/3", "mode": "existing", "accepted": false},
+    {"path": "/array/3", "mode": "insert", "accepted": true},
+    {"path": "/array/-", "mode": "insert", "accepted": true},
+    {"path": "/array/4", "mode": "insert", "accepted": false},
+    {"path": "/array/-", "mode": "existing", "accepted": false},
+    {"path": "/array/01", "mode": "existing", "accepted": false},
+    {"path": "/array/+1", "mode": "existing", "accepted": false},
+    {"path": "/array/18446744073709551616", "mode": "existing", "accepted": false},
+    {"path": "/array/1", "mode": "member", "accepted": false},
+    {"path": "/id", "mode": "member", "accepted": true},
+    {"path": "/new~1key", "mode": "insert", "accepted": true},
+    {"path": "", "mode": "insert", "accepted": false},
+    {"path": "/missing", "mode": "existing", "accepted": false},
+    {"path": "/a~1b/~0name/Grüße🧬/1/child", "mode": "existing", "accepted": false},
+    {"path": "/a~2b", "mode": "existing", "accepted": false},
+    {"path": "/a~", "mode": "existing", "accepted": false},
+    {"path": "array/0", "mode": "existing", "accepted": false}
+  ],
+  "moves": [
+    {"from": "/a~1b", "path": "/a~1b/~0name", "accepted": false},
+    {"from": "/array/0", "path": "/array/-", "accepted": true},
+    {"from": "/array/0", "path": "/missing/child", "accepted": true},
+    {"from": "/array/0", "path": "/array/0", "accepted": true},
+    {"from": "", "path": "/array/0", "accepted": false},
+    {"from": "/missing", "path": "/array/0", "accepted": false}
+  ],
+  "nativeMoves": [
+    {"from": "/entities/0/args/0", "path": "/entities/0/args/0/value", "accepted": false},
+    {"from": "/entities/0/args/0", "path": "/entities/0/args/-", "accepted": true},
+    {"from": "/entities/0/args/0", "path": "/missing/child", "accepted": true},
+    {"from": "/entities/0/args/0", "path": "/entities/0/args/0", "accepted": true},
+    {"from": "", "path": "/entities/0/args/0", "accepted": false},
+    {"from": "/missing", "path": "/entities/0/args/0", "accepted": false}
+  ],
+  "ifc": [
+    {"event": {"operation": "setValue", "path": "/entities/0/args/0/value", "value": "new"}, "accepted": true},
+    {"event": {"operation": "insertValue", "path": "/entities/0/complex/-", "value": {}}, "accepted": true},
+    {"event": {"operation": "insertValue", "path": "/entities/0/complex/0", "value": {}}, "accepted": true},
+    {"event": {"operation": "insertValue", "path": "/entities/0/complex/1", "value": {}}, "accepted": false},
+    {"event": {"operation": "setValue", "path": "/entities/0/args/1/reference", "value": "18446744073709551615"}, "accepted": true},
+    {"event": {"operation": "setValue", "path": "/entities/0/args/2/appendReference", "value": "18446744073709551615"}, "accepted": true},
+    {"event": {"operation": "removeValue", "path": "/entities/0/args/1/reference"}, "accepted": false},
+    {"event": {"operation": "renameKey", "path": "/entities/0/args/0/value", "key": "payload"}, "accepted": true}
+  ]
+}

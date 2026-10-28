@@ -6,6 +6,7 @@ export type IfcValue =
   | { kind: "integer"; value: bigint }
   | { kind: "real"; value: Binary64 }
   | { kind: "string"; value: string }
+  | { kind: "binary"; value: string }
   | { kind: "enum"; value: string }
   | { kind: "reference"; value: bigint }
   | { kind: "aggregate"; value: IfcValue[] }
@@ -22,7 +23,7 @@ export interface IfcEntity {
   id: bigint;
   name: string;
   args: IfcValue[];
-  complex: IfcComplexType[];
+  complex?: IfcComplexType[];
 }
 
 /** 📇️ The three standard `HEADER;` records, typed via `IfcValue`. */

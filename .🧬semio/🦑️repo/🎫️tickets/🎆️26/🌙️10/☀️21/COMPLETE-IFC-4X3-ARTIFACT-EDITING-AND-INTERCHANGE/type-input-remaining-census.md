@@ -1,0 +1,11 @@
+# Remaining Required Type Input Domains
+
+Read-only census after the frozen numeric/binary control checkpoint uses the actual immutable IFC4X3_ADD2 catalog. `type-input-remaining-census.ts` resolves defined aliases without replacing SELECT or aggregate semantics. Generated declaration-level evidence is `🗑️generated/type-input-remaining-census.json`.
+
+Among required, non-derived direct attributes, 126 resolve to aggregate domains and 42 to SELECT domains. No alias chain reaches the census depth limit. Twenty-five aggregate attributes have a primitive or enumeration leaf after alias resolution. These are catalog occurrences, not counts of unmatched remap requests or proof of complete guided support.
+
+The narrowest next aggregate slice is a released finite LIST of primitive values. `IfcCartesianPoint.Coordinates` has direct/full arity one and LIST [1:3] OF IfcLengthMeasure. `IfcDirection.DirectionRatios` has direct/full arity one and LIST [2:3] OF IfcReal, with a nonzero direction WHERE constraint. `IfcTextureVertex.Coordinates` is LIST [2:2] with the same direct/full equality. Their small bounds fit existing physical field limits without widening caps, defaulting members or introducing hidden paging. They can exercise empty/partial caller drafts, exact binary64 words, explicit append/remove/reorder, cardinality, alias rules and central inverse preservation.
+
+A future implementation should add an explicit aggregate carrier to the one closed request schema, with caller-authored ordered child carriers and original-funded row reconstruction. A blank aggregate draft must remain distinguishable from an unset required slot and from an admitted empty aggregate. Every child stays editable, and readiness must continue through the actual strict candidate domain and issued-rule owner. Do not treat a scalar text box as an aggregate parser or silently create the lower-bound number of elements. Wider/unbounded lists, SET identity/uniqueness, ARRAY indexing, nested aggregates and SELECT constructor membership remain explicit separate work.
+
+This census changes no production source or registration and makes no new capability claim. Current native controls remain frozen for independent review; no aggregate feature is implemented by this report.

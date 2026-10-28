@@ -1,0 +1,145 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Child Vector Read Qualification Laws",
+  "type": "object",
+  "required": [
+    "schema",
+    "base",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.original-child-vector-read.tests/v1"
+    },
+    "base": {
+      "type": "object",
+      "required": [
+        "reference",
+        "capability"
+      ],
+      "properties": {
+        "reference": {
+          "$ref": "#/$defs/reference"
+        },
+        "capability": {
+          "$ref": "#/$defs/capability"
+        }
+      },
+      "additionalProperties": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "accept"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "page": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "field": {
+            "enum": [
+              "owner",
+              "slot",
+              "childId",
+              "artifactId",
+              "artifactKind",
+              "standard",
+              "subset"
+            ]
+          },
+          "value": {
+            "type": "string"
+          },
+          "substitute": {
+            "enum": [
+              "parent",
+              "projection",
+              "lender",
+              "member",
+              "parentRevision",
+              "childRevision",
+              "capability"
+            ]
+          },
+          "unicode": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "reference": {
+      "type": "object",
+      "required": [
+        "owner",
+        "slot",
+        "childId",
+        "artifactId",
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "owner": {
+          "type": "string"
+        },
+        "slot": {
+          "type": "string"
+        },
+        "childId": {
+          "type": "string"
+        },
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactKind": {
+          "type": "string"
+        },
+        "standard": {
+          "type": "string"
+        },
+        "subset": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    },
+    "capability": {
+      "type": "object",
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "standard": {
+          "type": "string",
+          "minLength": 1
+        },
+        "subset": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

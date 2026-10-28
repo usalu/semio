@@ -1,0 +1,33 @@
+{
+  "entries": [
+    [
+      "__proto__",
+      1
+    ],
+    [
+      "constructor",
+      2
+    ],
+    [
+      "",
+      3
+    ],
+    [
+      "entryAt",
+      4
+    ],
+    [
+      "語🌍",
+      5
+    ]
+  ],
+  "replace": {
+    "key": "constructor",
+    "value": 8
+  },
+  "insert": {
+    "key": "new",
+    "value": 9
+  },
+  "remove": "__proto__"
+}

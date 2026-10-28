@@ -1,0 +1,30 @@
+# Guided Released Template Staging Plan
+
+Implementation is active after the aggregate and native TYPEOF source checkpoints. The neutral schema/TS reducer/query and adjacent authored Rust contract are implemented at framework/manifest/arg-schema/📝️staging, with a narrow framework/manifest/staging public subpath. IFC apply/staging.ts produces declaration-dependent fields and existing-planner identity requirements. Generic RenderWork hooks and PendingReserved work/source ownership are source-implemented, and actual native details query attachment uses them. The guided producer remains unmounted: standalone original-controlled staged request wire receiving/context lease mounting, paged native controls, browser request/event/Execute and actual renderer tests remain open. Binding/status/census contracts now address the original resident UI intent and finite request policies. See staged-template-form-implementation.md for current verified evidence and explicit limits. Native execution and semantic publication admission remain false.
+
+## Chosen Source Boundary
+
+The form will be a domain-neutral staged-form producer owned by the existing artifact/plugin request route, not an IFC React component or document Draft. The shell already owns per-window ephemeral action arguments and dispatches exactly one ActionDescriptor on Execute. That remains the authoritative staging/submit route. The existing closed ApplyTemplate application/receiver/planner/publication gate remains unchanged.
+
+The schema-first module lives beside manifest argument schemas in `🧮️arg-schema/📝️staging`, with adjacent JSON Schema, TypeScript and authored Rust implementations/tests. The closed request carries action id, immutable staged values, request generation, source revision and cancellation/progress authority. The closed response carries request generation/revision, localized field/group descriptions, exact canonical argument paths, typed controls, readonly discriminants, validation diagnostics, and explicit stage-reset events. A response from an obsolete generation/revision cannot overwrite current staging.
+
+Producer integration will use a source-owned plugin/artifact query hook receiving the real captured snapshot and staged command values. A producer may emit borrowed immutable declaration metadata but must incrementally own graph queries/reference results under its original request. Expensive reference/identity scans must not run synchronously inside shell render. The exact host hook will be selected from the existing ArtifactEditor/request completion interfaces before editing it; the details worker must be notified before any shared bridge edit.
+
+Both React action-pane rendering and native action-pane rendering will consume the same field description and stage events, using existing ArgSchema/control primitives and exact native scalar transport. The shell reducer remains ephemeral/window-local. Nested path writes compose the current top-level staged argument through a domain-neutral reducer; no form event applies an IFC graph mutation. Template selection changes explicitly remove incompatible entry, identity and performance staging.
+
+## IFC Producer
+
+The IFC extension lives under `🧬️schema/🏷️templates/✍️apply` next to factory/receiver/application schema. It resolves exactly one of the 760 immutable released templates and emits only that declaration's selected entry controls. Each property/quantity kind retains its own closed structure: single, reference, enumerated, list, bounded, table, length, area, volume, weight, count and time. Table axes retain independent declared domains and units; enum controls preserve released literals or actual referenced enumeration definitions. Required kind/name discriminants are readonly command data, never a permissive flattened union.
+
+Target/reference/unit/owner-history choices are source-revision queries with complete addressing rather than truncated candidates. Fields preserve decimal i64/u64 and binary64 words without lossy UI number coercion. Owner history and performance are typed nested groups. English/German labels are explicit; official names/literals remain data labels. Every control must expose focus, keyboard operation and label/error association in both renderers.
+
+Identity keys come from the actual declaration/selected-entry/source planner. Explicit authored id/guid values remain required unless an original-source allocation request returns retained results bound to the exact application request and revision. No UI max-id guess, random identity, guessed GUID or locally fabricated allocation result is permitted. Identity assistance cannot grant semantic admission.
+
+## Planned Files And Evidence
+
+Framework edits, after root notification: new staged-form schema/runtime next to manifest ArgSchema; minimal artifact/plugin request/response hook; existing action pane and staging reducer; existing native window-action rows/dispatch. IFC edits: producer adjacent to application factory, actual factory declaration/hook registration, neutral form vectors and TS/native tests. The native receiver/application contract is preserved. No BIM/FEM/external-source source or build enforcement edit belongs to this work.
+
+Tests will precede implementation and inspect all 760 declarations, every carrier/form, bounded/table/enum/reference variants, explicit exact identities, locale and accessibility contracts, selection reset, generation/revision races, cancelled reference queries, and actual Execute descriptor construction. Independent PSD/IfcOpenShell metadata cases validate released form/domain/literal choices. Renderer tests must exercise actual staging and Execute, not only compare generated descriptions. Native tests remain source-only until authentic enforcing compilation runs.
+
+The current template semantic publication route continues to refuse `template.semantic-admission-unavailable`. Form readiness, schema validity or a completed staged request never permits Emit. Actual native renderer interaction, source ownership/receipt proof and semantic admission remain separately evidenced requirements.
+

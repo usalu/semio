@@ -1,0 +1,13 @@
+{
+  "schema": "part21.writer.fragments.v1",
+  "input": "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION(('Layout drafting stream'),'2;1');\nFILE_NAME('layout.step','',(''),(''),'semio','','');\nFILE_SCHEMA(('AUTOMOTIVE_DESIGN'));\nENDSEC;\nDATA;\n#1=CARTESIAN_POINT('Grüße',(1.,2.,0.));\n#2=(LENGTH_UNIT() NAMED_UNIT(*) SI_UNIT(.MILLI.,.METRE.));\n#3=POLYLINE('Outline',(#1,#1,#1));\nENDSEC;\nEND-ISO-10303-21;\n",
+  "expected": {
+    "instances": 3,
+    "types": [
+      "CARTESIAN_POINT",
+      "LENGTH_UNIT",
+      "POLYLINE"
+    ],
+    "unicode": "Grüße"
+  }
+}

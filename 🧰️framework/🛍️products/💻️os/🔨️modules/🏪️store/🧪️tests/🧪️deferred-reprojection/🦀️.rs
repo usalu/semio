@@ -337,6 +337,7 @@ impl semio_framework_os_spr::ColdMutation<DemoSnapshot> for CountedOp {
 impl MemberStoreProducer<DemoSnapshot, CountedOp> for semio_framework_os_store_testing_doubles::DemoMemberStoreProducer<CountedOp> {
     type SnapshotOpen = UnsupportedMemberSnapshotOpen<DemoSnapshot>;
 
+    fn member_store_owners_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     fn member_store_owners_birth_demand(&self) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         super::fixture_authoring_birth_demand::<CountedOp>()
     }

@@ -1,0 +1,593 @@
+{
+  "contract": {
+    "coordinates": "page-top-left-y-down",
+    "fillRule": "nonzero",
+    "alpha": "source-over",
+    "samplesPerPixel": 16,
+    "maximumSegmentWorkPerTurn": 64
+  },
+  "cases": [
+    {
+      "id": "alpha-and-stroke",
+      "width": 32,
+      "height": 24,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"24\"><rect width=\"32\" height=\"24\" fill=\"white\"/><path d=\"M2 2L18 2L18 18L2 18Z\" fill=\"#ff0000\" fill-opacity=\"0.5\" stroke=\"#0000ff\" stroke-width=\"2\"/></svg>",
+      "probes": [
+        {
+          "x": 8,
+          "y": 8,
+          "rgba": [
+            255,
+            127,
+            127,
+            255
+          ],
+          "tolerance": 1
+        },
+        {
+          "x": 24,
+          "y": 12,
+          "rgba": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "tolerance": 0
+        },
+        {
+          "x": 2,
+          "y": 8,
+          "rgba": [
+            0,
+            0,
+            255,
+            255
+          ],
+          "tolerance": 1
+        }
+      ],
+      "paths": [
+        {
+          "points": [
+            [
+              2,
+              2
+            ],
+            [
+              18,
+              2
+            ],
+            [
+              18,
+              18
+            ],
+            [
+              2,
+              18
+            ]
+          ],
+          "closed": true,
+          "fill": [
+            1,
+            0,
+            0,
+            0.5
+          ],
+          "stroke": [
+            0,
+            0,
+            1,
+            1
+          ],
+          "strokeWidth": 2
+        }
+      ]
+    },
+    {
+      "id": "rotated-path",
+      "width": 32,
+      "height": 24,
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"32\" height=\"24\"><rect width=\"32\" height=\"24\" fill=\"white\"/><path d=\"M16 2L26 12L16 22L6 12Z\" fill=\"#00aa00\"/></svg>",
+      "probes": [
+        {
+          "x": 16,
+          "y": 12,
+          "rgba": [
+            0,
+            170,
+            0,
+            255
+          ],
+          "tolerance": 0
+        },
+        {
+          "x": 7,
+          "y": 3,
+          "rgba": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "tolerance": 0
+        }
+      ],
+      "paths": [
+        {
+          "points": [
+            [
+              16,
+              2
+            ],
+            [
+              26,
+              12
+            ],
+            [
+              16,
+              22
+            ],
+            [
+              6,
+              12
+            ]
+          ],
+          "closed": true,
+          "fill": [
+            0,
+            0.6666666667,
+            0,
+            1
+          ],
+          "stroke": null,
+          "strokeWidth": 0
+        }
+      ]
+    }
+  ],
+  "glyphs": [
+    {
+      "character": "A",
+      "size": 20,
+      "origin": [
+        4,
+        22
+      ]
+    },
+    {
+      "character": "é",
+      "size": 20,
+      "origin": [
+        4,
+        22
+      ]
+    },
+    {
+      "character": "A",
+      "size": 20,
+      "origin": [
+        4,
+        22
+      ],
+      "rotation": 1.5707963267948966,
+      "center": [
+        20,
+        20
+      ]
+    }
+  ],
+  "images": [
+    {
+      "id": "rotated-transparent-proxy",
+      "width": 24,
+      "height": 20,
+      "image": {
+        "width": 2,
+        "height": 1,
+        "rgba": [
+          255,
+          0,
+          0,
+          128,
+          0,
+          255,
+          0,
+          255
+        ]
+      },
+      "frame": {
+        "x": 8,
+        "y": 8,
+        "width": 8,
+        "height": 4,
+        "rotation": 1.5707963267948966
+      },
+      "probes": [
+        {
+          "x": 11,
+          "y": 7,
+          "rgba": [
+            255,
+            127,
+            127,
+            255
+          ],
+          "tolerance": 1
+        },
+        {
+          "x": 11,
+          "y": 12,
+          "rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "tolerance": 1
+        },
+        {
+          "x": 8,
+          "y": 10,
+          "rgba": [
+            255,
+            255,
+            255,
+            255
+          ],
+          "tolerance": 0
+        }
+      ]
+    }
+  ],
+  "artifact": {
+    "document": {
+      "schema": "layout.layout",
+      "name": "Fidelity Witness",
+      "grid": {
+        "baselineGrid": 12,
+        "baselineOffset": 0,
+        "snapToBaseline": true
+      },
+      "paragraphStyles": [
+        {
+          "id": "paragraph-1",
+          "name": "Body",
+          "fontFamily": "Layout Sans",
+          "fontSize": 20,
+          "fontWeight": 400,
+          "leading": 24,
+          "tracking": 0,
+          "alignment": "left"
+        }
+      ],
+      "characterStyles": [],
+      "stories": [
+        {
+          "id": "story-1",
+          "content": "Aé",
+          "styleRuns": []
+        }
+      ],
+      "links": [
+        {
+          "id": "link-1",
+          "path": "proxy.png",
+          "hash": "known-proxy",
+          "width": 2,
+          "height": 1,
+          "dpi": 72,
+          "colorProfile": null,
+          "state": "ready",
+          "proxyDataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAEUlEQVR4AWP4z8DQwPCf4T8ADn0DfllmAvMAAAAASUVORK5CYII="
+        }
+      ],
+      "parentPages": [],
+      "spreads": [
+        {
+          "id": "spread-1",
+          "name": "Page",
+          "pageIds": [
+            "page-1"
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "id": "page-1",
+          "name": "Cover",
+          "spreadId": "spread-1",
+          "parentPageId": null,
+          "width": 64,
+          "height": 48,
+          "margins": {
+            "top": 10,
+            "right": 10,
+            "bottom": 10,
+            "left": 10
+          },
+          "columns": {
+            "count": 1,
+            "gutter": 0
+          },
+          "guides": [],
+          "layerIds": [
+            "base"
+          ],
+          "layers": [
+            {
+              "id": "base",
+              "name": "Base",
+              "visible": true,
+              "locked": false,
+              "objectIds": [
+                "rect-1",
+                "text-1",
+                "image-1"
+              ]
+            }
+          ],
+          "frames": [
+            {
+              "kind": "rect",
+              "id": "rect-1",
+              "layerId": "base",
+              "bounds": {
+                "x": 2,
+                "y": 32,
+                "rotation": 0,
+                "w": 16,
+                "h": 12
+              },
+              "locked": null,
+              "visible": null,
+              "fill": [
+                1,
+                0,
+                0,
+                0.5
+              ],
+              "stroke": null
+            },
+            {
+              "kind": "text",
+              "id": "text-1",
+              "layerId": "base",
+              "bounds": {
+                "x": 2,
+                "y": 2,
+                "rotation": 0,
+                "w": 32,
+                "h": 24
+              },
+              "locked": null,
+              "visible": null,
+              "storyId": "story-1",
+              "threadNext": null,
+              "columns": 1,
+              "inset": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "wrapMode": "none"
+            },
+            {
+              "kind": "image",
+              "id": "image-1",
+              "layerId": "base",
+              "bounds": {
+                "x": 40,
+                "y": 8,
+                "rotation": 1.5707963267948966,
+                "w": 8,
+                "h": 4
+              },
+              "locked": null,
+              "visible": null,
+              "linkId": "link-1"
+            }
+          ],
+          "overrides": []
+        }
+      ],
+      "printTarget": null
+    },
+    "probes": [
+      {
+        "x": 8,
+        "y": 38,
+        "rgba": [
+          255,
+          128,
+          128,
+          255
+        ],
+        "tolerance": 1
+      },
+      {
+        "x": 43,
+        "y": 7,
+        "rgba": [
+          255,
+          127,
+          127,
+          255
+        ],
+        "tolerance": 1
+      },
+      {
+        "x": 43,
+        "y": 12,
+        "rgba": [
+          0,
+          255,
+          0,
+          255
+        ],
+        "tolerance": 1
+      }
+    ]
+  },
+  "rotatedArtifact": {
+    "document": {
+      "schema": "layout.layout",
+      "name": "Fidelity Witness",
+      "grid": {
+        "baselineGrid": 12,
+        "baselineOffset": 0,
+        "snapToBaseline": true
+      },
+      "paragraphStyles": [
+        {
+          "id": "paragraph-1",
+          "name": "Body",
+          "fontFamily": "Layout Sans",
+          "fontSize": 20,
+          "fontWeight": 400,
+          "leading": 24,
+          "tracking": 0,
+          "alignment": "left"
+        }
+      ],
+      "characterStyles": [],
+      "stories": [
+        {
+          "id": "story-1",
+          "content": "Aé",
+          "styleRuns": []
+        }
+      ],
+      "links": [
+        {
+          "id": "link-1",
+          "path": "proxy.png",
+          "hash": "known-proxy",
+          "width": 2,
+          "height": 1,
+          "dpi": 72,
+          "colorProfile": null,
+          "state": "ready",
+          "proxyDataUrl": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAABCAYAAAD0In+KAAAAEUlEQVR4AWP4z8DQwPCf4T8ADn0DfllmAvMAAAAASUVORK5CYII="
+        }
+      ],
+      "parentPages": [],
+      "spreads": [
+        {
+          "id": "spread-1",
+          "name": "Page",
+          "pageIds": [
+            "page-1"
+          ]
+        }
+      ],
+      "pages": [
+        {
+          "id": "page-1",
+          "name": "Cover",
+          "spreadId": "spread-1",
+          "parentPageId": null,
+          "width": 64,
+          "height": 48,
+          "margins": {
+            "top": 10,
+            "right": 10,
+            "bottom": 10,
+            "left": 10
+          },
+          "columns": {
+            "count": 1,
+            "gutter": 0
+          },
+          "guides": [],
+          "layerIds": [
+            "base"
+          ],
+          "layers": [
+            {
+              "id": "base",
+              "name": "Base",
+              "visible": true,
+              "locked": false,
+              "objectIds": [
+                "text-1"
+              ]
+            }
+          ],
+          "frames": [
+            {
+              "kind": "text",
+              "id": "text-1",
+              "layerId": "base",
+              "bounds": {
+                "x": 12,
+                "y": 8,
+                "rotation": 1.5707963267948966,
+                "w": 32,
+                "h": 24
+              },
+              "locked": null,
+              "visible": null,
+              "storyId": "story-1",
+              "threadNext": null,
+              "columns": 1,
+              "inset": {
+                "x": 0,
+                "y": 0,
+                "w": 0,
+                "h": 0
+              },
+              "wrapMode": "none"
+            }
+          ],
+          "overrides": []
+        }
+      ],
+      "printTarget": null
+    },
+    "expectedRotation": 1.5707963267948966,
+    "expectedCenter": [
+      28,
+      20
+    ]
+  },
+  "transformProbes": [
+    {
+      "point": [
+        4,
+        22
+      ],
+      "center": [
+        20,
+        20
+      ],
+      "rotation": 1.5707963267948966,
+      "expected": [
+        18,
+        4
+      ]
+    },
+    {
+      "point": [
+        24,
+        22
+      ],
+      "center": [
+        20,
+        20
+      ],
+      "rotation": 1.5707963267948966,
+      "expected": [
+        18,
+        24
+      ]
+    }
+  ],
+  "closeRoutes": [
+    "svg",
+    "png",
+    "pdf",
+    "package"
+  ]
+}

@@ -8,7 +8,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -59,7 +59,7 @@ pub fn diff_update_paragraph_style(payload: &UpdateParagraphStyle, base: &Layout
     if !payload.font_size.is_finite() || payload.font_size <= 0.0 || !payload.leading.is_finite() || payload.leading <= 0.0 || !payload.tracking.is_finite() || payload.font_weight == 0 || !alignment_ok(&payload.alignment) || payload.name.trim().is_empty() || payload.font_family.trim().is_empty() {
         return protocol::MutationOutcome::fatal("mutation.invariant", "A paragraph style needs a name, a font family, a positive size and leading, a finite tracking, a non-zero weight, and alignment left, center, right, or justify.", std::iter::empty::<String>());
     }
-    if style.name == payload.name && style.font_family == payload.font_family && style.font_size == payload.font_size && style.font_weight == payload.font_weight && style.leading == payload.leading && style.tracking == payload.tracking && style.alignment == payload.alignment {
+    if style.name == payload.name && style.font_family == payload.font_family && semio_framework_value::equal_f64(style.font_size, payload.font_size) && style.font_weight == payload.font_weight && semio_framework_value::equal_f64(style.leading, payload.leading) && semio_framework_value::equal_f64(style.tracking, payload.tracking) && style.alignment == payload.alignment {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Paragraph style is already set to that value.");
     }
     protocol::MutationOutcome::new(LayoutDiff {
@@ -99,3 +99,16 @@ pub fn inverse_update_paragraph_style<Op: From<crate::update_paragraph_style::Up
     })())
 }
 
+
+impl PartialEq for UpdateParagraphStyle {
+    fn eq(&self, other: &Self) -> bool {
+        self.id == other.id
+            && self.name == other.name
+            && self.font_family == other.font_family
+            && semio_framework_value::equal_f64(self.font_size, other.font_size)
+            && self.font_weight == other.font_weight
+            && semio_framework_value::equal_f64(self.leading, other.leading)
+            && semio_framework_value::equal_f64(self.tracking, other.tracking)
+            && self.alignment == other.alignment
+    }
+}

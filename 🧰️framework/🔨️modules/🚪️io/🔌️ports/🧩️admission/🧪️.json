@@ -1,0 +1,18 @@
+{
+  "title": "Original Child Admission Envelope Laws",
+  "originalGrant": {
+    "maximumItems": 8,
+    "maximumCopyBytes": 8192,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 4096,
+    "maximumDepth": 16
+  },
+  "cases": [
+    "Unfunded birth refuses before opaque allocation",
+    "Unfunded advancement never calls child",
+    "Child receives actual original remainder rather than demand",
+    "Child cannot overreport any receipt currency",
+    "Cancellation closes child before exact opaque box release",
+    "Closed cursor rejects new source work"
+  ]
+}

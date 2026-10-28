@@ -1,0 +1,31 @@
+# IFC4 Semantic Inspector Implementation
+
+Schema-first descriptors in schema/🔎️semantics/🔣️.json declare explicit IFC4 type families and inherited root/object/product/element/spatial/project attributes with EN/DE labels, value kind, optionality, mutability and label character limits. Unsupported entity families retain generic full-snapshot details and reference navigation. References are read-only links in this slice.
+
+The inspector uses its own details window/provider with canonical /ifc-ID/attribute paths. Admission is overridden only for fully validated semantic scalar edits; the retained SnapshotEditEvent factory then translates to existing SetEntityArg operations, with optional clearing mapped to Unset. All mutation publication, inversion and document ownership stay in the existing event-sourced framework.
+
+Primary semantics checked against [IFC4 IfcElement inheritance](https://standards.buildingsmart.org/IFC/RELEASE/IFC4/FINAL/HTML/schema/ifcproductextension/lexical/ifcelement.htm). Root and Product direct pages returned HTTP403; the readable Element inheritance graph supplies inherited root/object/product declarations.
+
+## Concrete Surface Integration
+
+Both IFC4 editor and viewer now declare the topology-backed `ifc-entities` domain with `entity` granularity. Every source entity has its exact `ifc-DECIMAL_U64` topology id; real product meshes already emit the same interaction ids. The world surface publishes current admitted ids and granularity using the framework pick method. Topology ownership permits document-change pruning of deleted selected entities. The inspector follows the first selected entity, provides reference/back-reference navigation in the same interaction domain and retains complete generic snapshot Details as a separate editor tab. Reference values remain read only; broken references have explicit localized labels and no clickable target. Viewer controls remain read only.
+
+Semantic common-field applicability now reads normative IFC4 inheritance from the complete pinned ADD2 TC1 catalog through its narrow subtype query. The schema declares families (Root, Object/Context, Product, Element, SpatialElement, Context) instead of a closed class whitelist. Labels, value kinds, optionality and supported edits remain schema-owned; there is no UI-only type switch. The descriptors expose common root/product fields, not all 776 entities’ complete attribute input domains.
+
+Both stale TypeScript main-window box instance interfaces were replaced by reexports of the actual first-party GeometryPayloads contract. Native issue transport now serializes entity ids as decimal strings, preserving IDs above 2^53.
+
+## Original Request Control And Retained Publication
+
+The shared SnapshotEditingEditor trait has a contextual emission hook whose default delegates existing scalar editing. The existing SnapshotEditToolJobFactory now supplies a zero-payload SnapshotEditWork adapter with the previous tool id, extent, depth-one work demand, terminal frame size, one-shot consumed guard and no checkpoint/progress claim. Its step passes the actual original StepContext to the hook; no parallel publisher or new semantic action was introduced. IFC overrides that hook to check original cancellation/deadline/fuel during every lookup and GlobalId uniqueness scan, before publication-limit validation, and again before accepting an emission. Admission checks only canonical path, constant descriptor identity and bounded scalar envelope and performs no document scan or mutation allocation.
+
+A control stop returns an explicit cancelled/limited refusal and publishes no partial edit. This is one-shot controlled planning, not a retained resumable semantic cursor. Existing whole-snapshot retained materialization, inverse preparation and publication infrastructure remains its own known gate; this change does not claim to make every generic snapshot edit incremental. The native inspector checks controls during its complete forward/back graph traversal and again before building a window.
+
+## Executed Tests And Limits
+
+Final semantic source execution: 13/13 permanent TypeScript groups passed with zero strict diagnostics. Coverage includes all neutral root/wall/site/project fields; stable-id edits after entity reordering; the real central mutation applier and exact inverse; empty string versus Unset; Unicode code-point length and UTF-8 byte limits; every cancellation position in graph and edit planning; u64 identities; missing references; typed/complex references; million-character source values without copying them into editable controls; all declared common-field positions/optionality across all 776 normative IFC4 entity declarations; and GlobalId collisions against an unlisted Actor and explicit complex Root constituent, while a nonroot color name sharing a GUID-like string stays legal.
+
+Existing AJV independently executed nullable/string/GlobalId pattern/code-point-length scalar acceptance and projected field contracts. This is independent scalar-domain evidence, not complete IFC EXPRESS validation. An IfcOpenShell test-only oracle is authored at semantics/🧪️tests/🐍️.py for native attribute names/indices, projection and successful edit re-serialization/re-read; it was not executed on this host. Native model, editor integration and shared contextual-work regressions were authored. The existing Windows native-build case-sensitivity gate still prevents claiming native compilation, native test execution or mounted UI authoring success. Independent Rust grammar syntax checks found no errors or missing nodes in the changed native source and tests.
+
+Shared framework regression input is editing/🧪️tests/🧫️fixtures/🎟️contextual-snapshot-edit.json; its tests verify the actual original context pointer/cancellation witness/fuel, failure without a completed mutation vector and the repeated-step consumed guard. IFC-specific native integration tests verify stable semantic paths, existing SetEntityArg emission, optional clearing, retained admission, domain topology and original-caller hook refusal.
+
+Additional strict TypeScript check including both rewritten editor/viewer main-window typed twins passed with zero diagnostics. Earlier failed source-run transformed modules were removed along with successful run outputs; test harness inputs and Markdown evidence remain.

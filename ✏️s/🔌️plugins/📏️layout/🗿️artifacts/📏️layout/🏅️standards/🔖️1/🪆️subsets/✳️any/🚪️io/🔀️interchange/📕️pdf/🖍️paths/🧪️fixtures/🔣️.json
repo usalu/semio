@@ -1,0 +1,323 @@
+{
+  "schema": "layout.pdf.paths.v1",
+  "cases": [
+    {
+      "id": "cubic-affine",
+      "matrix": [
+        2,
+        0,
+        0,
+        2,
+        10,
+        20
+      ],
+      "height": 200,
+      "ops": [
+        [
+          "m",
+          1,
+          2
+        ],
+        [
+          "c",
+          3,
+          4,
+          5,
+          6,
+          7,
+          8
+        ],
+        [
+          "h"
+        ]
+      ],
+      "expected": [
+        [
+          "m",
+          12,
+          176
+        ],
+        [
+          "c",
+          16,
+          172,
+          20,
+          168,
+          24,
+          164
+        ],
+        [
+          "h"
+        ]
+      ]
+    },
+    {
+      "id": "abbreviated-cubic",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "height": 100,
+      "ops": [
+        [
+          "m",
+          2,
+          3
+        ],
+        [
+          "v",
+          4,
+          5,
+          6,
+          7
+        ],
+        [
+          "y",
+          8,
+          9,
+          10,
+          11
+        ]
+      ],
+      "expected": [
+        [
+          "m",
+          2,
+          97
+        ],
+        [
+          "c",
+          2,
+          97,
+          4,
+          95,
+          6,
+          93
+        ],
+        [
+          "c",
+          8,
+          91,
+          10,
+          89,
+          10,
+          89
+        ]
+      ]
+    },
+    {
+      "id": "rectangle-negative",
+      "matrix": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "height": 100,
+      "ops": [
+        [
+          "re",
+          10,
+          20,
+          -5,
+          8
+        ]
+      ],
+      "expected": [
+        [
+          "m",
+          10,
+          80
+        ],
+        [
+          "l",
+          5,
+          80
+        ],
+        [
+          "l",
+          5,
+          72
+        ],
+        [
+          "l",
+          10,
+          72
+        ],
+        [
+          "h"
+        ]
+      ]
+    },
+    {
+      "id": "ctm-changes-midpath",
+      "height": 100,
+      "ops": [
+        [
+          "m",
+          1,
+          2
+        ],
+        [
+          "cm",
+          1,
+          0,
+          0,
+          1,
+          10,
+          20
+        ],
+        [
+          "l",
+          3,
+          4
+        ]
+      ],
+      "expected": [
+        [
+          "m",
+          1,
+          98
+        ],
+        [
+          "l",
+          13,
+          76
+        ]
+      ]
+    },
+    {
+      "id": "reflected-shear-fill",
+      "matrix": [
+        -1,
+        0,
+        0.5,
+        1,
+        40,
+        0
+      ],
+      "height": 100,
+      "ops": [
+        [
+          "m",
+          1,
+          2
+        ],
+        [
+          "l",
+          3,
+          4
+        ],
+        [
+          "l",
+          5,
+          6
+        ],
+        [
+          "h"
+        ]
+      ],
+      "expected": [
+        [
+          "m",
+          40,
+          98
+        ],
+        [
+          "l",
+          39,
+          96
+        ],
+        [
+          "l",
+          38,
+          94
+        ],
+        [
+          "h"
+        ]
+      ]
+    }
+  ],
+  "ownership": [
+    {
+      "id": "unmarked",
+      "tag": null,
+      "promotions": [
+        true
+      ],
+      "suppress": false
+    },
+    {
+      "id": "tagged-promoted",
+      "tag": "SemioLayoutText",
+      "promotions": [
+        true
+      ],
+      "suppress": true
+    },
+    {
+      "id": "tagged-unsupported",
+      "tag": "SemioLayoutText",
+      "promotions": [
+        false
+      ],
+      "suppress": false
+    },
+    {
+      "id": "paint-before-text",
+      "tag": "SemioLayoutText",
+      "promotions": [],
+      "suppress": false
+    },
+    {
+      "id": "mixed-fallback",
+      "tag": "SemioLayoutText",
+      "promotions": [
+        true,
+        false
+      ],
+      "suppress": false
+    }
+  ],
+  "refusals": [
+    {
+      "id": "line-before-move",
+      "ops": [
+        [
+          "l",
+          1,
+          2
+        ]
+      ],
+      "error": "layout.pdf.path-current-point"
+    },
+    {
+      "id": "cubic-before-move",
+      "ops": [
+        [
+          "v",
+          1,
+          2,
+          3,
+          4
+        ]
+      ],
+      "error": "layout.pdf.path-current-point"
+    }
+  ],
+  "oracle": {
+    "geometry": "Three.js Matrix3 and CubicBezierCurve; PDF.js actual physical PDF render",
+    "alpha": 0.5
+  },
+  "lifecycle": {
+    "maximumSegments": 16384,
+    "cancelEveryOperators": 64
+  }
+}

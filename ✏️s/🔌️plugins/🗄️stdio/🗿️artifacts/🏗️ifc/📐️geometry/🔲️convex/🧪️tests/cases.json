@@ -1,0 +1,143 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "circle-cardinals",
+      "boundary": {
+        "kind": "circle",
+        "radius": 1,
+        "chords": 4
+      },
+      "expectedSize": 4,
+      "expectedArea": 2.0
+    },
+    {
+      "id": "circle-default",
+      "boundary": {
+        "kind": "circle",
+        "radius": 1,
+        "chords": 72
+      },
+      "expectedSize": 72,
+      "expectedArea": 3.137606738915694
+    },
+    {
+      "id": "rounded-default",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 0.2,
+        "chords": 72,
+        "width": 1.8,
+        "height": 0.6
+      },
+      "expectedSize": 76,
+      "expectedArea": 1.045504269556628
+    },
+    {
+      "id": "capsule-horizontal",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 0.5,
+        "chords": 72,
+        "width": 2,
+        "height": 1
+      },
+      "expectedSize": 74,
+      "expectedArea": 1.7844016847289235
+    },
+    {
+      "id": "capsule-vertical",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 0.5,
+        "chords": 72,
+        "width": 1,
+        "height": 2
+      },
+      "expectedSize": 74,
+      "expectedArea": 1.7844016847289235
+    },
+    {
+      "id": "rounded-circle-limit",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 1,
+        "chords": 72,
+        "width": 2,
+        "height": 2
+      },
+      "expectedSize": 72,
+      "expectedArea": 3.137606738915694
+    },
+    {
+      "id": "rounded-coarse",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 0.2,
+        "chords": 4,
+        "width": 1.8,
+        "height": 0.6
+      },
+      "expectedSize": 8,
+      "expectedArea": 1.0
+    },
+    {
+      "id": "rounded-absolute-reference",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 0.2,
+        "chords": 316,
+        "width": 1.8,
+        "height": 0.6
+      },
+      "expectedSize": 320,
+      "expectedArea": 1.0456554260432436
+    },
+    {
+      "id": "radius-zero",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 0,
+        "chords": 72,
+        "width": 2,
+        "height": 2
+      },
+      "expectedSize": null,
+      "expectedArea": null
+    },
+    {
+      "id": "radius-over-half",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 2,
+        "chords": 72,
+        "width": 2,
+        "height": 2
+      },
+      "expectedSize": null,
+      "expectedArea": null
+    },
+    {
+      "id": "nonquadrant-chords",
+      "boundary": {
+        "kind": "circle",
+        "radius": 1,
+        "chords": 5
+      },
+      "expectedSize": null,
+      "expectedArea": null
+    },
+    {
+      "id": "negative-width",
+      "boundary": {
+        "kind": "rounded-rectangle",
+        "radius": 1,
+        "chords": 72,
+        "width": -2,
+        "height": 2
+      },
+      "expectedSize": null,
+      "expectedArea": null
+    }
+  ]
+}

@@ -1,0 +1,923 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "operation": "ordinal-preserving-compatible-direct-attribute-remap",
+  "sources": {
+    "axis3": {
+      "name": "IFCAXIS2PLACEMENT3D",
+      "args": [
+        {
+          "kind": "reference",
+          "value": "4"
+        },
+        {
+          "kind": "reference",
+          "value": "5"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCGEOMETRICREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCPLACEMENT",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "3"
+            }
+          ]
+        }
+      ]
+    },
+    "axis2": {
+      "name": "IFCAXIS2PLACEMENT2D",
+      "args": [
+        {
+          "kind": "reference",
+          "value": "5"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCGEOMETRICREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCPLACEMENT",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "3"
+            }
+          ]
+        }
+      ]
+    },
+    "single": {
+      "name": "IFCPROPERTYSINGLEVALUE",
+      "args": [
+        {
+          "kind": "typedValue",
+          "value": {
+            "name": "IFCREAL",
+            "items": [
+              {
+                "kind": "real",
+                "value": {
+                  "bits": "9223372036854775808"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "reference",
+          "value": "9007199254740993"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCPROPERTYABSTRACTION",
+          "args": []
+        },
+        {
+          "name": "IFCPROPERTY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "名称🌍"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        },
+        {
+          "name": "IFCSIMPLEPROPERTY",
+          "args": []
+        }
+      ]
+    },
+    "bounded": {
+      "name": "IFCPROPERTYBOUNDEDVALUE",
+      "args": [
+        {
+          "kind": "typedValue",
+          "value": {
+            "name": "IFCREAL",
+            "items": [
+              {
+                "kind": "real",
+                "value": {
+                  "bits": "4611686018427387904"
+                }
+              }
+            ]
+          }
+        },
+        {
+          "kind": "typedValue",
+          "value": {
+            "name": "IFCINTEGER",
+            "items": [
+              {
+                "kind": "integer",
+                "value": "9223372036854775807"
+              }
+            ]
+          }
+        },
+        {
+          "kind": "reference",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCPROPERTYABSTRACTION",
+          "args": []
+        },
+        {
+          "name": "IFCPROPERTY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "名称🌍"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        },
+        {
+          "name": "IFCSIMPLEPROPERTY",
+          "args": []
+        }
+      ]
+    },
+    "invalid-unit": {
+      "name": "IFCPROPERTYSINGLEVALUE",
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "string",
+          "value": "invalid unit"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCPROPERTYABSTRACTION",
+          "args": []
+        },
+        {
+          "name": "IFCPROPERTY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "名称🌍"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        },
+        {
+          "name": "IFCSIMPLEPROPERTY",
+          "args": []
+        }
+      ]
+    },
+    "sphere": {
+      "name": "IFCSPHERE",
+      "args": [
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCGEOMETRICREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCCSGPRIMITIVE3D",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "2"
+            }
+          ]
+        }
+      ]
+    },
+    "missing": {
+      "name": "IFCPROPERTYSINGLEVALUE",
+      "args": [
+        {
+          "kind": "unset"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCPROPERTYABSTRACTION",
+          "args": []
+        },
+        {
+          "name": "IFCPROPERTY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "名称🌍"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        },
+        {
+          "name": "IFCSIMPLEPROPERTY",
+          "args": []
+        }
+      ]
+    },
+    "single-unset": {
+      "name": "IFCPROPERTYSINGLEVALUE",
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCPROPERTYABSTRACTION",
+          "args": []
+        },
+        {
+          "name": "IFCPROPERTY",
+          "args": [
+            {
+              "kind": "string",
+              "value": "名称🌍"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        },
+        {
+          "name": "IFCSIMPLEPROPERTY",
+          "args": []
+        }
+      ]
+    },
+    "material": {
+      "name": "IFCMATERIALPROFILE",
+      "args": [
+        {
+          "kind": "string",
+          "value": "名称🌍"
+        },
+        {
+          "kind": "string",
+          "value": "exact description"
+        },
+        {
+          "kind": "reference",
+          "value": "6"
+        },
+        {
+          "kind": "reference",
+          "value": "7"
+        },
+        {
+          "kind": "integer",
+          "value": "9223372036854775807"
+        },
+        {
+          "kind": "string",
+          "value": "category/🌍"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCMATERIALDEFINITION",
+          "args": []
+        }
+      ]
+    },
+    "constituent": {
+      "name": "IFCMATERIALCONSTITUENT",
+      "args": [
+        {
+          "kind": "string",
+          "value": "名称🌍"
+        },
+        {
+          "kind": "string",
+          "value": "exact description"
+        },
+        {
+          "kind": "reference",
+          "value": "6"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "string",
+          "value": "category/🌍"
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCMATERIALDEFINITION",
+          "args": []
+        }
+      ]
+    },
+    "offsets": {
+      "name": "IFCMATERIALLAYERWITHOFFSETS",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AXIS2"
+        },
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "real",
+              "value": {
+                "bits": "9223372036854775808"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4611686018427387904"
+              }
+            }
+          ]
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCMATERIALDEFINITION",
+          "args": []
+        },
+        {
+          "name": "IFCMATERIALLAYER",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "6"
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4611686018427387904"
+              }
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "layer"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        }
+      ]
+    },
+    "box": {
+      "name": "IFCBOUNDINGBOX",
+      "args": [
+        {
+          "kind": "reference",
+          "value": "3"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        }
+      ],
+      "complex": [
+        {
+          "name": "IFCREPRESENTATIONITEM",
+          "args": []
+        },
+        {
+          "name": "IFCGEOMETRICREPRESENTATIONITEM",
+          "args": []
+        }
+      ]
+    }
+  },
+  "tail": [
+    {
+      "id": "2",
+      "name": "IFCAXIS2PLACEMENT3D",
+      "args": [
+        {
+          "kind": "reference",
+          "value": "3"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "complex": []
+    },
+    {
+      "id": "3",
+      "name": "IFCCARTESIANPOINT",
+      "args": [
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            }
+          ]
+        }
+      ],
+      "complex": []
+    },
+    {
+      "id": "4",
+      "name": "IFCDIRECTION",
+      "args": [
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            }
+          ]
+        }
+      ],
+      "complex": []
+    },
+    {
+      "id": "5",
+      "name": "IFCDIRECTION",
+      "args": [
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4607182418800017408"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "0"
+              }
+            }
+          ]
+        }
+      ],
+      "complex": []
+    },
+    {
+      "id": "9007199254740993",
+      "name": "IFCMONETARYUNIT",
+      "args": [
+        {
+          "kind": "string",
+          "value": "EUR"
+        }
+      ],
+      "complex": []
+    },
+    {
+      "id": "6",
+      "name": "IFCMATERIAL",
+      "args": [
+        {
+          "kind": "string",
+          "value": "steel"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "complex": []
+    },
+    {
+      "id": "7",
+      "name": "IFCRECTANGLEPROFILEDEF",
+      "args": [
+        {
+          "kind": "enum",
+          "value": "AREA"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        }
+      ],
+      "complex": []
+    }
+  ],
+  "cases": [
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "axis-shrink",
+      "source": "axis3",
+      "target": "IFCAXIS2PLACEMENT2D",
+      "map": [
+        1
+      ],
+      "args": [
+        {
+          "kind": "reference",
+          "value": "5"
+        }
+      ],
+      "mutations": 3
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "axis-grow",
+      "source": "axis2",
+      "target": "IfcAxis2Placement3D",
+      "map": [
+        null,
+        0
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "5"
+        }
+      ],
+      "mutations": 3
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "property-grow",
+      "source": "single",
+      "target": "IFCPROPERTYBOUNDEDVALUE",
+      "map": [
+        null,
+        null,
+        1,
+        null
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "mutations": 5
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "property-shrink",
+      "source": "bounded",
+      "target": "IFCPROPERTYSINGLEVALUE",
+      "map": [
+        null,
+        2
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "9007199254740993"
+        }
+      ],
+      "mutations": 5
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "sparse-existing-unset",
+      "source": "single-unset",
+      "target": "IFCPROPERTYBOUNDEDVALUE",
+      "map": [
+        null,
+        null,
+        1,
+        null
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "mutations": 3
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "material-in-place-and-move",
+      "source": "material",
+      "target": "IFCMATERIALCONSTITUENT",
+      "map": [
+        0,
+        1,
+        2,
+        null,
+        5
+      ],
+      "args": [
+        {
+          "kind": "string",
+          "value": "名称🌍"
+        },
+        {
+          "kind": "string",
+          "value": "exact description"
+        },
+        {
+          "kind": "reference",
+          "value": "6"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "string",
+          "value": "category/🌍"
+        }
+      ],
+      "mutations": 4
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "aggregate-offset-move",
+      "source": "offsets",
+      "target": "IFCMATERIALPROFILEWITHOFFSETS",
+      "map": [
+        1
+      ],
+      "args": [
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "real",
+              "value": {
+                "bits": "9223372036854775808"
+              }
+            },
+            {
+              "kind": "real",
+              "value": {
+                "bits": "4611686018427387904"
+              }
+            }
+          ]
+        }
+      ],
+      "mutations": 3
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "numeric-dimension-move",
+      "source": "box",
+      "target": "IFCRECTANGLEPROFILEDEF",
+      "map": [
+        1,
+        2
+      ],
+      "args": [
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        },
+        {
+          "kind": "real",
+          "value": {
+            "bits": "4611686018427387904"
+          }
+        }
+      ],
+      "mutations": 5
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": true,
+      "id": "maximum-id",
+      "entityId": "18446744073709551615",
+      "source": "single",
+      "target": "IFCPROPERTYBOUNDEDVALUE",
+      "map": [
+        null,
+        null,
+        1,
+        null
+      ],
+      "args": [
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "unset"
+        },
+        {
+          "kind": "reference",
+          "value": "9007199254740993"
+        },
+        {
+          "kind": "unset"
+        }
+      ],
+      "mutations": 5
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": false,
+      "id": "required-profile-refusal",
+      "source": "constituent",
+      "target": "IFCMATERIALPROFILE",
+      "phase": "required"
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": false,
+      "id": "required-radius-refusal",
+      "source": "sphere",
+      "target": "IFCELLIPSE",
+      "phase": "required"
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": false,
+      "id": "required-enumeration-refusal",
+      "source": "single",
+      "target": "IFCPROPERTYENUMERATION",
+      "phase": "required"
+    },
+    {
+      "path": "/entities/0",
+      "retained": true,
+      "admitted": false,
+      "id": "invalid-compatible-domain-refusal",
+      "source": "invalid-unit",
+      "target": "IFCPROPERTYBOUNDEDVALUE",
+      "phase": "domain"
+    },
+    {
+      "path": "/entities/0",
+      "retained": false,
+      "admitted": false,
+      "id": "missing-original-slot",
+      "source": "missing",
+      "target": "IFCPROPERTYBOUNDEDVALUE"
+    }
+  ]
+}

@@ -539,6 +539,32 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🕹️ `interaction` reads the framework-owned interaction mechanism (hover + selection) so a
     /// window can paint its own hovered/selected state instead of ever storing it again itself —
     /// see `26/08/14/FIRST-CLASS-HOVER-AND-SELECTION-MECHANISM`.
+    /// 🧳️ Retains query state under the original render identity until funded retirement.
+    type RenderWork: semio_framework_value::retirement::RetireOwned + Send + 'static = ();
+    fn uses_render_work(_body_key: &str) -> bool { false }
+    /// 📨️ Retains only the original donor accepted for this exact window render work.
+    fn receive_render_work_request(_work:&mut Self::RenderWork,_request:&mut Option<semio_framework::action_staging::StagedFormRequest>,_view:&ViewModel,_cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.render-request-unsupported").into())}
+    /// 🎟️ Creates only the work admitted and receipted by this original turn.
+    fn begin_render_work(_body_key: &str, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Self::RenderWork>, semio_framework_job::OriginalTurnFailure> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact did not declare retained render work").into())
+    }
+    /// 📏️ Quotes the next original query action before the scheduler lends its independent physical currencies.
+    fn render_work_demand(_work:&Self::RenderWork,_maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(Default::default())}
+    /// 🪢️ Advances the same query owner; a completed tree remains private until retirement.
+    async fn render_with_work_context(
+        _work: &mut Self::RenderWork,
+        _owner: &ArtifactInstanceOperationOwnerHandle,
+        _body_key: &str,
+        _source: &std::sync::Arc<Self::Snapshot>,
+        _doc: &ArtifactView<'_, Self::Snapshot>,
+        _cfg: &ConfigView<'_, Self::Config>,
+        _view_state: &ViewModel,
+        _transient: &TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+        _cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> {
+        Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "artifact did not implement retained render work").into())
+    }
     async fn render_with_request_context(
         owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,

@@ -1,0 +1,109 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "cases"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 12,
+      "maxItems": 12,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "boundary",
+          "expectedSize",
+          "expectedArea"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "boundary": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "radius",
+                  "chords"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "circle"
+                  },
+                  "radius": {
+                    "type": "number"
+                  },
+                  "chords": {
+                    "type": "integer"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "radius",
+                  "chords",
+                  "width",
+                  "height"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "rounded-rectangle"
+                  },
+                  "radius": {
+                    "type": "number"
+                  },
+                  "chords": {
+                    "type": "integer"
+                  },
+                  "width": {
+                    "type": "number"
+                  },
+                  "height": {
+                    "type": "number"
+                  }
+                }
+              }
+            ]
+          },
+          "expectedSize": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "integer",
+                "minimum": 4
+              }
+            ]
+          },
+          "expectedArea": {
+            "anyOf": [
+              {
+                "type": "null"
+              },
+              {
+                "type": "number",
+                "minimum": 0
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,394 @@
+{
+  "scope": "ifc-owned-boolean-workflow",
+  "mapped": [
+    {
+      "id": "reflected-difference",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            0.5
+          ]
+        }
+      ],
+      "expected": "supported",
+      "volume": 96
+    },
+    {
+      "id": "reflected-union",
+      "operation": "UNION",
+      "root": "csg",
+      "cut": [
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            0.5
+          ]
+        }
+      ],
+      "expected": "supported",
+      "volume": 420
+    },
+    {
+      "id": "reflected-intersection",
+      "operation": "INTERSECTION",
+      "root": "direct",
+      "cut": [
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            0.5
+          ]
+        }
+      ],
+      "expected": "supported",
+      "volume": 96
+    },
+    {
+      "id": "millimetre-reflection",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": "MILLI",
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            0.5
+          ]
+        }
+      ],
+      "expected": "supported",
+      "volume": 9.6e-08
+    },
+    {
+      "id": "nested-double-reflection",
+      "operation": "DIFFERENCE",
+      "root": "csg",
+      "cut": [
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            10,
+            20,
+            30
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 2,
+          "secondary": [
+            3,
+            0.5
+          ]
+        },
+        {
+          "origin": [
+            1,
+            -2,
+            3
+          ],
+          "originRotation": 1.5707963267948966,
+          "target": [
+            -1,
+            4,
+            -2
+          ],
+          "axes": [
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              1,
+              0,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 0.5,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "expected": "supported",
+      "volume": 12
+    },
+    {
+      "id": "positive-uniform",
+      "operation": "DIFFERENCE",
+      "root": "direct",
+      "cut": [
+        [
+          2,
+          -1,
+          -1
+        ],
+        [
+          5,
+          5,
+          5
+        ]
+      ],
+      "unitPrefix": null,
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            null,
+            null,
+            null
+          ],
+          "scale": 2,
+          "secondary": [
+            null,
+            null
+          ]
+        }
+      ],
+      "expected": "supported",
+      "volume": 256
+    }
+  ],
+  "official": {
+    "file": "bath-csg-solid.ifc",
+    "sha256": "4592f3029faa12625494ada734fcfe46e4fc91a33d001198e9e3144721870b95",
+    "product": 225,
+    "root": 208,
+    "profile": 202,
+    "radiusIndex": 5,
+    "radiusMillimetres": 200,
+    "editedRadiusMillimetres": 100,
+    "chords": 72,
+    "volume": 0.5481470113103606,
+    "bounds": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        2,
+        0.8,
+        0.8
+      ]
+    ]
+  }
+}

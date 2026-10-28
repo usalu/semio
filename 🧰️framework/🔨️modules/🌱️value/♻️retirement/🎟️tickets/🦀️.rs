@@ -19,3 +19,6 @@ pub fn close_factory_ticket<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<
     let step=crate::retained_clone::admit_retained_clone_close(grant,step,ticket.terminal_is_empty(),"factory ticket payload")?;
     Ok(RetainedCloneStep::Progress(step.progress()))
 }
+
+/// 🧷️ Native erased children retain the actual original cleanup loan through terminal frame release.
+pub fn close_factory_ticket_original<T:ErasedSnapshotRetirement+?Sized>(slot:&mut Option<Box<T>>,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let Some(ticket)=slot.as_mut()else{return Ok(RetainedCloneStep::Complete(Default::default()))};if ticket.terminal_is_empty(){return close_factory_ticket(slot,grant)}let step=ticket.close_original_step(original,grant)?;let step=crate::retained_clone::admit_retained_clone_close(grant,step,ticket.terminal_is_empty(),"original factory ticket payload")?;Ok(RetainedCloneStep::Progress(step.progress()))}

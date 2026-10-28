@@ -1,0 +1,22 @@
+# Finite Boolean Adapter Parent Plan
+
+The first source-neutral public matrix is30 actual authored IFC4X3_ADD2 graphs, using all three operators and direct BooleanResult versus real CsgSolid wrappers. It retains shared neutral box geometry/analytical expectations explicitly. The actual current public extractor run is2pass29fail/113 Bun assertions/31tests,366ms; schema and one existing explicit unsupported path pass. The failures demonstrate missing current evaluation and missing explicit empty classification. No central dispatcher or held production changed. generated/boolean-finite-red.txt is retained. New unregistered files are io/tests boolean-finite-cases.json, boolean-finite.schema.json, boolean-finite-fixtures.ts and boolean-finite.test.ts.
+
+Known empty regularized results will be classified explicitly with no invented triangles. Initially the triangle endpoint can report an explicit empty result and no mesh; GLB's current no-geometry refusal remains a documented separate unsupported export lane until a truthful known-empty scene contract is implemented. Edge/point-contact nonmanifold unions are a bounded kernel refusal, not assertions of invalid IFC EXPRESS. The official bath original still requires its actual rounded rectangle evaluator; it is not relabeled as this initial Block-only pass.
+
+## Source, Frames and Publication
+
+Read exact IfcBooleanResult-owned Operator/FirstOperand/SecondOperand through the current graph/declared domain helper. Use active-path explicit frames with original depth and repeated DAG evaluation; do not fabricate CsgSolid wrappers for direct primitive operands or widen SELECT to MappedItem. Factor the real primitive entry from current CSG evaluator only after the broad-reader hold ends. Primitive Position remains part of the leaf's actual frame.
+
+One explicit mesh winding provenance must distinguish existing represented-frame indices from already outward world-space Boolean results. Existing leaf meshes receive the original frame sign once before kernel admission; central publication validates the original frame but must not reverse an already outward result again. A truthful owned provenance tag belongs at this internal boundary. Do not pass a fake identity frame. Reflection/nonuniform mapping, operand placement, nested expressions, actual SI, original control, canonical diff/inverse and exact STEP/GLB tests follow the first producer.
+
+## Original Work and Live Workspace
+
+Implement the reviewed ownership plan in ifc-boolean-budget-ownership-independent-plan.md before using the standalone Boolean factory repeatedly. Current IFC geometry control has no maxWork. A closed once-captured Boolean policy must distinguish whole-expression work, BSP depth/polygon limits, expression depth and maximum live intermediate mesh values from cumulative published output. One private evaluation session lends the same monotonic work counter to all children and kernel steps. Reentrant observer use must refuse without exposing session/grant receivers. Per-node fresh unchanged grants are not allowed.
+
+A mesh workspace lease reserves before each owned backing growth/producer allocation, remains counted while a sibling/parent retains it, and releases on retirement. Block60 and actual circular645/1284 leaf preflight counts are existing concrete frontiers. Dynamic kernel copies/normalization/triangulation must reserve as they grow, including overlapping retained inputs and output, not only compare the final count. Polygon/metadata allocation also remains bounded by the original work/polygon ceilings. Separate published maxValues debits each completed represented mesh once and preserves existing partial-product behavior. These are JS logical resource contracts, not native physical funding/receipts.
+
+## Primary Evidence Boundary
+
+The canonical live [BooleanOperand](https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/lexical/IfcBooleanOperand.htm) and [BooleanResult](https://ifc43-docs.standards.buildingsmart.org/IFC/RELEASE/IFC4x3/HTML/lexical/IfcBooleanResult.htm) URLs now redirect to a development build; the pinned issued ADD2 EXPRESS/catalog and pinned primary HTML listed in the independent plan govern this work. The select includes TessellatedFaceSet, and Boolean result requires actual Closed TRUE for tessellated operands and matching dimensions. Current source supported families do not certify arbitrary declared operands. No runtime SDK dependency or full MVD/native claim follows from this first matrix.
+

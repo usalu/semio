@@ -1,0 +1,11 @@
+# Progressive EXPRESS Population Traversal
+
+The86-file actual registration is green1820/80073 with12existing gated skips and0fail. The original evaluator grants and immutable schema/program sources are independently closed. Full feature completion remains open.
+
+The next bounded slice is the actual full-population EXPRESS consumer. Its global-rule scope currently materializes and filters the full entity map synchronously for each population; scalar inverse cardinality repeats a model-dependent synchronous filter/map/Set after the already-progressive attribute lookup. Inverse SET construction also uses a growing linear includes search. These operations should consume the same original evaluator control rather than create another budget or progress channel.
+
+First capture independent current-source bounds and actual cohort/inverse observations with the genuine777-rule compiler program. Add closed language-neutral projection cases and schema before implementation. Test actual initialized contexts and full global-rule validation, original work/cancellation/observer-failure behavior, inheritance, identity/order, unknown/empty cohorts and scalar inverse zero/one/two cardinalities. Use AJV plus a third-party comparison library and independent IfcOpenShell observations. A projection input that violates EXPRESS cardinality is explicitly distinguished from physically malformed STEP and from full model validity.
+
+Implementation should keep one context-owned population index constructed under existing original evaluator ticks, copy projected cohort members progressively, and share one progressive inverse matching operation between attribute projection and cardinality. Preserve source entity identity, SET deduplication and existing rule outcomes. Avoid a second source clone, unissued program, synchronous model-sized array spreads, new runtime dependency or widened grant. Static released-schema searches have separate fixed bounds and must not be confused with model-dependent work.
+
+Independent after/source closure and focused strict/semantic tests precede registration and the next full snapshot. Native compiler/runtime/renderer/Store/publication gates remain false. No full IFC4x3/all-MVD completion is implied by this slice.

@@ -71,6 +71,8 @@ impl ArtifactViewer for Ifc4AnyViewer {
     const DIALECT: Dialect = IFC4_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = IFC4_ANY_DOCUMENT_SCHEMA;
 
+    fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(crate::standards::v4::subsets::any::io::inspector::topology(doc.snapshot))}
+
     fn initial_snapshot() -> IfcSnapshot {
         IfcSnapshot::default()
     }
@@ -87,6 +89,25 @@ impl ArtifactViewer for Ifc4AnyViewer {
         Ok(ViewEmit::default())
     }
 
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        if body_key == crate::standards::v4::subsets::any::io::inspector::BODY_KEY {
+            return crate::standards::v4::subsets::any::io::inspector::render(doc,_interaction,view_state,"s.stdio.ifc@4/*#viewer",false,cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+        }
+        if body_key == main::BODY_KEY {
+            return crate::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, _interaction).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+        }
+        Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
+    }
+
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
@@ -99,7 +120,9 @@ impl ArtifactViewer for Ifc4AnyViewer {
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_ifc4_any_viewer() -> semio_framework_plugin::AppDefinition {
-    Viewer::builder(IFC4_ANY_DIALECT).document(["stdio", "ifc4"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::IFC4_ANY_VIEW_MODE_ID).window_kind_def(main::definition()).default_layout(view::layout()).build_definition()
+    let mut definition=Viewer::builder(IFC4_ANY_DIALECT).document(["stdio", "ifc4"]).icon_id("box").mode_def(view::definition()).default_mode_id(view::IFC4_ANY_VIEW_MODE_ID).window_kind_def(main::definition()).window_kind_def(crate::standards::v4::subsets::any::io::inspector::window_definition(false)).default_layout(view::layout()).build_definition();
+    crate::standards::v4::subsets::any::io::inspector::install_interaction(&mut definition);
+    definition
 }
 //#endregion 🔖️Manifest
 

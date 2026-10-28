@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IDML Retained Mutation Decision And Inverse",
+  "type": "object",
+  "required": [
+    "genuineInputs",
+    "typedSparseDecision",
+    "originalInverseIssuer"
+  ],
+  "properties": {
+    "genuineInputs": {
+      "const": true
+    },
+    "typedSparseDecision": {
+      "const": true
+    },
+    "originalInverseIssuer": {
+      "const": true
+    }
+  },
+  "description": "Admit original and genuine replacement source without whole-document copies. Compare bounded numeric fields, prepare only changed typed diff fields, preserve warning/fatal diagnostics and emit explicit inverse mutations after central preflight. Every partial source, selected field, result vector and exact inverse issuer remains closeable."
+}

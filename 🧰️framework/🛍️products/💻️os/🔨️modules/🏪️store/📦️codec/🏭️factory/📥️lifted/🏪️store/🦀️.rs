@@ -25,7 +25,9 @@ use semio_framework_os_store_owned_schema_decode::artifact_retirement_self_grant
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot;
 use semio_framework_os_store_codec_registry::canonical_check_in_line;
-use semio_framework_os_store_engine_owners::funded_bounded_artifact_store_owners;
+#[path="🏠️owners/🦀️.rs"]
+mod codec_owners;
+pub use codec_owners::{ArtifactCodecOwnerSource,BoundedArtifactCodecOwners,codec_document_owners};
 use semio_framework_os_store_text_io::text_format::{ArtifactTextFiles, ParsedDocumentText, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines};
 use semio_framework_os_store_text_io::text_format::project_envelope_history;
 use semio_framework_os_store_ledger::edit_from_operation_envelope;
@@ -67,6 +69,16 @@ pub fn bare_artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCo
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
     Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<P>,
+{
+    bare_artifact_codec_with_owners::<P,Mutation,BoundedArtifactCodecOwners>(schema)
+}
+
+/// 🧬️ Selects one original publication/replay owner source for every native reduction store.
+pub fn bare_artifact_codec_with_owners<P, Mutation, Source>(schema: impl Into<String>) -> ArtifactCodec
+where
+    P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+    Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
+    Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
 {
     /// 🕰️`'static`, not `'a`. These items are coerced to `for<'a> fn(..) -> ..` pointers, so a
     /// `P: 'a` bound would have to hold for EVERY lifetime — which is `'static` by another name,
@@ -125,10 +137,11 @@ where
     /// shallow shell, so an early return here aborts the process instead of reporting the
     /// fault. Capture every fallible step as a value, run the close cursor, forget the
     /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
-    fn apply_ops_binary_impl<'a, 'b, P, Mutation>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
+    fn apply_ops_binary_impl<'a, 'b, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
     where
         P: ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync + Clone + FromValue,
         Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<P>,
+        Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
             let mutations: Vec<Mutation> = if ops_vec.is_empty() {
@@ -162,8 +175,9 @@ where
                     None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), semio_framework_os_vcs::HistoryPageStack::new()),
                 };
                 envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
-                let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await?;
-                let installed = funded_bounded_artifact_store_owners::<P, Mutation>().and_then(|owners| store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); error })).map_err(|error| VcsError::ValidationFailed(error.into_message()));
+                let owners = match codec_document_owners::<P,Mutation,Source>() { Ok(owners)=>owners, Err(error)=>{envelope.retire_unadopted();return Err(VcsError::ValidationFailed(error.into_message()))} };
+                let mut store = match ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
+                let installed = store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) });
                 (store, installed)
             };
             let applied = match installed {
@@ -182,13 +196,14 @@ where
         })
     }
 
-    fn replay_envelopes_impl<'a, P, Mutation>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
+    fn replay_envelopes_impl<'a, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
     where
         P: ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync + Clone + FromValue,
         Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + semio_framework_os_spr::ColdMutation<P>,
+        Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
-            let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, funded_bounded_artifact_store_owners::<P, Mutation>).await?;
+            let files = replay_envelopes_onto_pair::<P, Mutation>(pack, spr, envelopes, codec_document_owners::<P,Mutation,Source>).await?;
             Ok((files.pack, files.spr, files.ops))
         })
     }
@@ -215,8 +230,8 @@ where
         compile_dsl: compile_dsl_impl::<P, Mutation>,
         print_mirror: print_mirror_impl::<P, Mutation>,
         edit_text_from_envelope: edit_text_from_envelope_impl::<P, Mutation>,
-        apply_ops_binary: apply_ops_binary_impl::<P, Mutation>,
-        replay_envelopes: replay_envelopes_impl::<P, Mutation>,
+        apply_ops_binary: apply_ops_binary_impl::<P, Mutation,Source>,
+        replay_envelopes: replay_envelopes_impl::<P, Mutation,Source>,
     }
 }
 
@@ -304,9 +319,10 @@ where
         None => (envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect(), semio_framework_os_vcs::HistoryPageStack::new()),
     };
     envelope.cursor = Some(ArtifactCursor::new(applied, redo, envelope.cursor.as_ref().and_then(|cursor| cursor.checkpoint_id.clone())));
-    let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await?;
+    let owners = match owners() {Ok(owners)=>owners,Err(error)=>{envelope.retire_unadopted();return Err(VcsError::ValidationFailed(error.into_message()))}};
+    let mut store = match ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await {Ok(store)=>store,Err(error)=>{close_unscheduled_catalog(owners);return Err(error)}};
     let baseline = store.supersessions().clone();
-    let mut folded = owners().and_then(|owners| store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); error })).map_err(|error| VcsError::ValidationFailed(error.into_message()));
+    let mut folded = store.install_document_store_owners_exact(owners).map_err(|(error, owners)| { close_unscheduled_catalog(owners); VcsError::ValidationFailed(error.into_message()) });
     for envelope in envelopes {
         if folded.is_err() { break; }
         match store.ingest_remote(envelope).await {

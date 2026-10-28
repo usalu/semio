@@ -1,0 +1,9 @@
+# Released View Header Original Control Gap
+
+A read-only follow-on probe uses the current public released-view header endpoints with a genuine typed FILE_DESCRIPTION containing ViewDefinition [ReferenceView]. All four sync/async declaration and selection wrappers refuse the unchanged original maxDepth0 with depthLimit. The same four calls finish when their first observer only changes the caller's maxDepth to256. No abort, graph mutation, global monkeypatch, compiler override or wrapper replacement is involved.
+
+Exact authored input: mvd-header-control-probe.ts. Exact observations: generated/mvd-header-control-probe.json. Declaration baselines stop after22 callbacks; redirected calls finish after25. Selection baselines stop after24; redirected calls finish after28. This is an actual original-limit bypass in wrapper closures, separate from the six independently closed runner/diff/SetEntityArg observer/signal routes.
+
+header.ts creates readSteps/selectSteps with raw caller options before runIfcEdit captures a private scope. Nested copy/admit factories later capture that still mutable raw object, so callbacks can raise the original semantic depth limit between stages. The canonical private control helper is already available; four public wrappers should capture once at entry and pass that same private record to generator and runner. A new adjacent header-control neutral/test slice can prove original depth/entity/value/callback/getter and sync/async laws without editing the eight historical canonical-control files or the twenty frozen exchange files.
+
+No production fix is included in this observation. This must not weaken the historical bounded scope or imply the four header routes were covered by its33-entry test matrix. Root receives this precise next scope for coordination after the exchange checkpoint. Native and publication gates remain unchanged.

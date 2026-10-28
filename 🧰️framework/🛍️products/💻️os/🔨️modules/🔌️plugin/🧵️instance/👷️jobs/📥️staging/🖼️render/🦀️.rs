@@ -22,10 +22,15 @@ use semio_framework_plugin_interaction::UiAssemblyResult;
 use semio_framework_ui_contract::*;
 use crate::jobs_instance_root::{OriginalRenderInteractionStamp, original_render_posted_since};
 
+#[path = "work.rs"]
+pub mod work;
+
 impl<A: ArtifactApp> PendingReserved<A> {
-    pub fn render_failure_terminal_is_empty(&self)->bool{self.pending_render_tree.is_none()&&self.pending_render_tree_close.is_none()&&self.pending_render_tree_identity.is_none()&&self.pending_render_failure.is_none()&&self.pending_render_close_failure.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_retirement.is_none()&&self.pending_render_identity.is_none()}
+    pub fn render_failure_terminal_is_empty(&self)->bool{self.pending_render_work.is_none()&&self.pending_render_source.is_none()&&self.pending_render_tree.is_none()&&self.pending_render_tree_close.is_none()&&self.pending_render_tree_identity.is_none()&&self.pending_render_failure.is_none()&&self.pending_render_close_failure.is_none()&&self.pending_render_compound.is_none()&&self.pending_render_retirement.is_none()&&self.pending_render_identity.is_none()}
 
     pub fn render_failure_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(work)=self.pending_render_work.as_ref(){return work.demand(body)}
+        if let Some(source)=self.pending_render_source.as_ref(){return source.demand(body)}
         if self.pending_render_tree.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
         if let Some(tree)=self.pending_render_tree_close.as_ref(){return tree.next_demand(body)}
         if self.pending_render_close_failure.is_some()||self.pending_render_compound.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()})}
@@ -52,6 +57,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
 
     pub(crate) fn close_pending_render_tree_on_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
         if let Some(identity)=self.pending_render_tree_identity.as_mut(){identity.validate(cx)?;}
+        if self.close_pending_render_work_on_original(cx)?!=Some(true){return Ok(None)}
         if let Some(tree)=self.pending_render_tree.as_mut(){
             if let Some(resources)=tree.native_resources.as_mut(){
                 if resources.close_step_on_original(cx)?!=Some(true){return Ok(None)}
@@ -59,7 +65,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
                 return Ok(Some(false));
             }
             let grant=cx.retained_grant();
-            if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+            if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
             let tree=self.pending_render_tree.take().expect("original tree source remains stationary until funded close donation");
             *self.pending_render_tree_close=Some(semio_framework_ui_contract::OriginalBuiltTreeRetirement::new(tree.root));
             self.pending_render_tree_ready=false;
@@ -74,13 +80,31 @@ impl<A: ArtifactApp> PendingReserved<A> {
                 return Ok(Some(false));
             }
             let grant=cx.retained_grant();
-            if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
+            if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(None)}
             drop(self.pending_render_tree_close.take());
             cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;
             cx.consume_fuel(1);
             return Ok(Some(false));
         }
         self.pending_render_tree_ready=false;
+        Ok(Some(true))
+    }
+
+    pub fn close_pending_render_work_on_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+        if self.pending_render_work.is_none()&&self.pending_render_source.is_none(){return Ok(Some(true))}
+        let identity=self.pending_render_tree_identity.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render work lost its initiating identity"))?;
+        if let Some(work)=self.pending_render_work.as_mut(){
+            return match work.close(identity,cx)?{
+                Some(true)=>{drop(self.pending_render_work.take());Ok(Some(false))},
+                step=>Ok(step),
+            };
+        }
+        if let Some(source)=self.pending_render_source.as_mut(){
+            return match source.close(identity,cx)?{
+                Some(true)=>{drop(self.pending_render_source.take());Ok(Some(true))},
+                step=>Ok(step),
+            };
+        }
         Ok(Some(true))
     }
 
@@ -110,7 +134,7 @@ impl<A: ArtifactApp> PendingReserved<A> {
             if let Some(original)=semio_framework_job::admit_original_domain_failure(&mut self.pending_render_failure,cx)?{*self.pending_render_failure=Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(original));}
             return Ok(false);
         }
-        let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
+        let grant=cx.retained_grant();if cx.retirement_should_yield()||grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
         let Some(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(initial))=self.pending_render_failure.take()else{unreachable!()};
         let closure=self.pending_render_close_failure.take().expect("original render closure cause remains stationary");
         *self.pending_render_compound=Some(semio_framework_job::OriginalClosureFailure{initial,closure});

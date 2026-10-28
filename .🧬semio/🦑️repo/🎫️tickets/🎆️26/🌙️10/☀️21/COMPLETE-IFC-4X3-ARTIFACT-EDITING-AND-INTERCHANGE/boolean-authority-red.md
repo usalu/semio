@@ -1,0 +1,4 @@
+# Boolean Control Authority Red Checkpoint
+
+The new closed60 language-neutral cases plus schema/getter laws ran against the unchanged original public booleanSolid and subtractHalfSpace implementations on Bun1.4.2:21 pass44 fail across65 tests. All20 initial callback faults/cancellations and the schema pass; all40 interior/completion callbacks redirected by mutable options fail, plus four callback getters reread instead of captured once. The actual existing public operation executes in every case. This is a genuine implementation red, not an absent-API or runner failure. Full failing output is temporarily retained in generated/boolean-authority-red.txt. Original mesh inputs remain under preservation assertions; exact Error and thrown undefined identities are obligations, not wrapped diagnostic substitutes.
+

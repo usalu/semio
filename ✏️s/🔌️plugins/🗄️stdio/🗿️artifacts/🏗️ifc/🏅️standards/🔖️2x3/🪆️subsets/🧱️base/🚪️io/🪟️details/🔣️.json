@@ -1,0 +1,12 @@
+{
+  "title": "IFC2x3 Catalog Details",
+  "schema": "IFC2X3 TC1",
+  "model": "Own Ifc2x3Snapshot and exact Part21Value, no IFC4 conversion",
+  "controls": "Shared declaration-only metadata contract with own instance/entity/argument paths",
+  "edits": "Existing UpsertInstance/RemoveInstance/SetHeader and central diff/inverse authority",
+  "limits": {
+    "depth": 128,
+    "suggestions": 256
+  },
+  "paths": "/document/instances/row/entities/constituent/arguments/index"
+}

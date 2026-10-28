@@ -292,6 +292,8 @@ pub(super) fn layout_build_export_tool_job(request: &mut Option<ArtifactOwnedToo
         LayoutCommand::ExportPng(payload) => (LayoutExportKind::Png, payload.page_id.clone().or_else(|| Some(blueprint::config::from_snapshot(original.window_config.as_ref()).active_page_id))),
         LayoutCommand::ExportSvg(payload) => (LayoutExportKind::Svg, payload.page_id.clone().or_else(|| Some(blueprint::config::from_snapshot(original.window_config.as_ref()).active_page_id))),
         LayoutCommand::ExportPdf(payload) => (LayoutExportKind::Pdf, payload.page_id.clone()),
+        LayoutCommand::ExportStep(payload) => (LayoutExportKind::Step, payload.page_id.clone().or_else(|| Some(blueprint::config::from_snapshot(original.window_config.as_ref()).active_page_id))),
+        LayoutCommand::ExportIdml(_) => (LayoutExportKind::Idml, None),
         LayoutCommand::ExportPackage(_) => (LayoutExportKind::Package, None),
         _ => return Ok(false),
     };

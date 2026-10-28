@@ -2,6 +2,43 @@
 
 use super::*;
 
+#[test]
+fn auxiliary_context_leases_use_actual_windows_and_never_survive_source_replacement(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let leases:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/context-lease.json")).unwrap();
+    let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();let window=leases["window"].as_str().unwrap();let locale=serde_json::from_value(leases["locale"].clone()).unwrap();
+    for row in leases["cases"].as_array().unwrap(){
+        let mut contexts=SurfaceContexts::default();assert!(contexts.window_lease(window,locale).is_none());
+        contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap();
+        let lease=contexts.window_lease(window,locale).unwrap();assert!(contexts.window_lease("missing",locale).is_none());
+        match row["operation"].as_str().unwrap(){
+            "unchanged"=>{},
+            "sibling"=>contexts.insert("7:right".into(),"graph".into(),view.for_window_instance("right").unwrap()).unwrap(),
+            "refresh"=>contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap(),
+            "update"=>contexts.update_view(&view),
+            "locale"=>{let mut next=view.clone();next.locale=semio_framework_ui_locale::Locale::En;contexts.update_view(&next);},
+            "close"=>contexts.remove("7:left"),
+            "close-remount"=>{contexts.remove("7:left");contexts.insert("7:left".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap();},
+            "ambiguous"=>contexts.insert("alias".into(),"graph".into(),view.for_window_instance(window).unwrap()).unwrap(),
+            "exhausted"=>{contexts.version=u64::MAX;contexts.update_view(&view);assert_eq!(contexts.version,u64::MAX);},
+            _=>unreachable!(),
+        }
+        let current=contexts.borrow_window_lease(lease);assert_eq!(current.is_some(),row["valid"].as_bool().unwrap());
+        if let Some(current)=current{assert_eq!(current.view_state.window_id.as_deref(),Some(window));assert_eq!(current.view_state.locale,locale);}
+    }
+}
+
+#[test]
+fn retained_surface_render_borrows_the_exact_mounted_view_without_materialization(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
+    let view:ViewModel=serde_json::from_value(fixture["view"].clone()).unwrap();
+    let surface=&fixture["surfaces"][0];let id=surface["id"].as_str().unwrap();let window=surface["windowId"].as_str().unwrap();let body=surface["bodyKey"].as_str().unwrap();
+    let mut contexts=SurfaceContexts::default();contexts.insert(id.into(),body.into(),view.for_window_instance(window).unwrap()).unwrap();
+    let binding=contexts.slots.iter().flatten().find(|binding|binding.surface==id).unwrap();
+    for _ in 0..3{let actual=contexts.borrow(id).unwrap();assert!(std::ptr::eq(actual.view_state,&binding.view_state));assert!(std::ptr::eq(actual.body_key.as_ptr(),binding.body_key.as_ptr()));assert_eq!(actual.view_state.window_id.as_deref(),Some(window));}
+    assert!(contexts.borrow("unmounted").is_none());
+}
+
 #[semio_framework_async_macros::async_test]
 async fn surface_context_retains_host_preferences_and_window_identity() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();

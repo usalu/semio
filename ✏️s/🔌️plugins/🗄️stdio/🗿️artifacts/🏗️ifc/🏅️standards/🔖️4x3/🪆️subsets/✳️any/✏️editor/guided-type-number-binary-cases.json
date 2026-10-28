@@ -1,0 +1,243 @@
+{
+  "sourceContract": "type-number-binary-input.json",
+  "cases": [
+    {
+      "id": "real-missing",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": "1",
+      "input": null,
+      "ready": false,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "binary64",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "real-negative-zero",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": "1",
+      "input": {
+        "kind": "real",
+        "value": {
+          "bits": "9223372036854775808"
+        }
+      },
+      "ready": true,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "binary64",
+          "value": "9223372036854775808"
+        }
+      ]
+    },
+    {
+      "id": "real-nonfinite",
+      "source": "real",
+      "target": "IFCPOINTONCURVE",
+      "index": "1",
+      "input": {
+        "kind": "real",
+        "value": {
+          "bits": "9218868437227405312"
+        }
+      },
+      "ready": false,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "binary64",
+          "value": "9218868437227405312"
+        }
+      ]
+    },
+    {
+      "id": "number-missing",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": "0",
+      "input": null,
+      "ready": false,
+      "fields": [
+        {
+          "kind": "choice",
+          "format": null,
+          "value": null
+        }
+      ]
+    },
+    {
+      "id": "number-large-integer",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": "0",
+      "input": {
+        "kind": "integer",
+        "value": "9007199254740993"
+      },
+      "ready": true,
+      "fields": [
+        {
+          "kind": "choice",
+          "format": null,
+          "value": "integer"
+        },
+        {
+          "kind": "text",
+          "format": "decimal-i64",
+          "value": "9007199254740993"
+        }
+      ]
+    },
+    {
+      "id": "number-negative-zero",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": "0",
+      "input": {
+        "kind": "real",
+        "value": {
+          "bits": "9223372036854775808"
+        }
+      },
+      "ready": true,
+      "fields": [
+        {
+          "kind": "choice",
+          "format": null,
+          "value": "real"
+        },
+        {
+          "kind": "text",
+          "format": "binary64",
+          "value": "9223372036854775808"
+        }
+      ]
+    },
+    {
+      "id": "binary-empty",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": "1",
+      "input": {
+        "kind": "binary",
+        "value": "0"
+      },
+      "ready": true,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "text",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": "binary-not-byte-aligned",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": "1",
+      "input": {
+        "kind": "binary",
+        "value": "31"
+      },
+      "ready": false,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "text",
+          "value": "31"
+        }
+      ]
+    },
+    {
+      "id": "binary-invalid-padding",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": "1",
+      "input": {
+        "kind": "binary",
+        "value": "3A"
+      },
+      "ready": false,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "text",
+          "value": "3A"
+        }
+      ]
+    },
+    {
+      "id": "binary-blank",
+      "source": "binary",
+      "target": "IFCBLOBTEXTURE",
+      "index": "1",
+      "input": {
+        "kind": "binary",
+        "value": ""
+      },
+      "ready": false,
+      "fields": [
+        {
+          "kind": "text",
+          "format": "text",
+          "value": ""
+        }
+      ]
+    },
+    {
+      "id": "number-integer-invalid-utf8",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": "0",
+      "input": {
+        "kind": "integer",
+        "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€ääääääääääääääääääääääääääääääääääääääää"
+      },
+      "ready": false,
+      "fields": [
+        {
+          "kind": "choice",
+          "format": null,
+          "value": "integer"
+        },
+        {
+          "kind": "text",
+          "format": "decimal-i64",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€ääääääääääääääääääääääääääääääääääääääää"
+        }
+      ]
+    },
+    {
+      "id": "number-real-invalid-utf8",
+      "source": "number",
+      "target": "IFCQUANTITYNUMBER",
+      "index": "0",
+      "input": {
+        "kind": "real",
+        "value": {
+          "bits": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€ääääääääääääääääääääääääääääääääääääääää"
+        }
+      },
+      "ready": false,
+      "fields": [
+        {
+          "kind": "choice",
+          "format": null,
+          "value": "real"
+        },
+        {
+          "kind": "text",
+          "format": "binary64",
+          "value": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa€ääääääääääääääääääääääääääääääääääääääää"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,3 @@
+/** 🥚 Validate only authored neutral input, independent of geometry producers. */
+import Ajv from 'ajv/dist/2020';import {readFile,writeFile}from'node:fs/promises';import{resolve}from'node:path';
+const p=import.meta.dir,rows=JSON.parse(await readFile(resolve(p,'ellipse-profile-cases.json'),'utf8')),schema=JSON.parse(await readFile(resolve(p,'ellipse-profile.schema.json'),'utf8')),check=new Ajv({strict:true}).compile(schema),result={valid:check(rows),errors:check.errors,rows:rows.cases.length};await writeFile(resolve(p,'🗑️generated/ellipse-profile-contract-validation.json'),JSON.stringify(result,null,2)+'\n');if(!result.valid)throw Error(JSON.stringify(result));console.log('[DEBUG]',result);

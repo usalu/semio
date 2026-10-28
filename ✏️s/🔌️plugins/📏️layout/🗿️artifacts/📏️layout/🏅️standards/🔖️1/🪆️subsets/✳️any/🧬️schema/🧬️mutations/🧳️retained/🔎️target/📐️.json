@@ -1,0 +1,15 @@
+{
+  "feature": "layout.retained.target-lookup",
+  "source": {
+    "identity": "stable numeric registration",
+    "count": "borrowed row count",
+    "key": "borrowed UTF8 key by ordinal"
+  },
+  "target": {
+    "identity": "stable numeric registration",
+    "value": "borrowed UTF8 string"
+  },
+  "operation": "scan equal-length row keys in at most256-byte chunks, no owned strings or candidate rows",
+  "result": "first original row ordinal or missing; source identity/count/target pointer extent stay fixed",
+  "funding": "all five original grant axes checked before state change; fixed512copy bytes quotes two256-byte reads; no allocations or releases"
+}

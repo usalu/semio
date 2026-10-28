@@ -1,0 +1,106 @@
+{
+  "labels": [
+    [
+      "producer",
+      "STEP Physical File produced by:"
+    ],
+    [
+      "module",
+      "Module:"
+    ],
+    [
+      "creationDate",
+      "Creation date:"
+    ],
+    [
+      "host",
+      "Host:"
+    ],
+    [
+      "database",
+      "Database:"
+    ],
+    [
+      "databaseVersion",
+      "Database version:"
+    ],
+    [
+      "databaseCreationDate",
+      "Database creation date:"
+    ],
+    [
+      "schema",
+      "Schema:"
+    ],
+    [
+      "model",
+      "Model:"
+    ],
+    [
+      "modelCreationDate",
+      "Model creation date:"
+    ],
+    [
+      "headerModel",
+      "Header model:"
+    ],
+    [
+      "headerModelCreationDate",
+      "Header model creation date:"
+    ],
+    [
+      "user",
+      "EDMuser:"
+    ],
+    [
+      "group",
+      "EDMgroup:"
+    ],
+    [
+      "license",
+      "License ID and type:"
+    ],
+    [
+      "options",
+      "EDMstepFileFactory options:"
+    ]
+  ],
+  "values": {
+    "producer": "STEP Physical File produced by: 😀 C:\\project\\file",
+    "module": "Module: 😀 C:\\project\\file",
+    "creationDate": "Creation date: 😀 C:\\project\\file",
+    "host": "Host: 😀 C:\\project\\file",
+    "database": "Database: 😀 C:\\project\\file",
+    "databaseVersion": "5507",
+    "databaseCreationDate": "Database creation date: 😀 C:\\project\\file",
+    "schema": "IFC2X3",
+    "model": "Model: 😀 C:\\project\\file",
+    "modelCreationDate": "Model creation date: 😀 C:\\project\\file",
+    "headerModel": "Header model: 😀 C:\\project\\file",
+    "headerModelCreationDate": "Header model creation date: 😀 C:\\project\\file",
+    "user": "EDMuser: 😀 C:\\project\\file",
+    "group": "EDMgroup: 😀 C:\\project\\file",
+    "license": "",
+    "options": "EDMstepFileFactory options: 😀 C:\\project\\file"
+  },
+  "invalidValues": [
+    "line\nbreak",
+    "return\rbreak",
+    "comment */ terminator",
+    " leading",
+    "\tleading",
+    "trailing\n",
+    "leading",
+    "﻿leading"
+  ],
+  "expected": {
+    "typedPreamblePreserved": true,
+    "graphPreserved": true
+  },
+  "behaviors": {
+    "duplicate": "refused",
+    "incomplete": "refused",
+    "quotedBanner": "ignored",
+    "arbitraryBanner": "ignored"
+  }
+}

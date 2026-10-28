@@ -323,27 +323,7 @@ impl FontCodec {
                 };
             }
         }
-        if let Some(map) = &font.to_unicode {
-            for mapping in &map.mappings {
-                match mapping {
-                    PdfToUnicodeMapping::Char { code, text } => {
-                        codec.code_to_text.insert(*code, text.clone());
-                    }
-                    PdfToUnicodeMapping::Range { low, high, text } => {
-                        for code in *low..=(*high).min(low + 65535) {
-                            if let Some(text) = cmap::to_unicode_lookup(map, code) {
-                                codec.code_to_text.insert(code, text);
-                            }
-                            let _ = text;
-                        }
-                    }
-                }
-            }
-            let byte_width = map.byte_width;
-            for (code, text) in &codec.code_to_text {
-                codec.text_to_code.entry(text.clone()).or_insert((*code, byte_width));
-            }
-        }
+        if let Some(map)=&font.to_unicode{for mapping in &map.mappings{if let PdfToUnicodeMapping::Char{code,text}=mapping{codec.code_to_text.insert(*code,text.clone());}}}
         if codec.composite && codec.text_to_code.is_empty() {
             if let (Some(program), Some(cid_codec)) = (&codec.program, &codec.cid_codec) {
                 if codec.cid_to_gid_identity {
@@ -416,7 +396,7 @@ impl FontCodec {
             let cid=self.cid_codec.as_ref().map_or(code,|codec|codec.cid(code));
             let width=if self.composite {self.cid_widths.get(&cid).copied().unwrap_or(self.default_width)} else {self.simple_widths.get(&code).copied().unwrap_or(self.default_width)};
             let glyph_id=if self.composite {if self.cid_to_gid_identity {u16::try_from(cid).ok()}else{self.cid_to_gid.get(&cid).copied()}}else{self.code_to_gid.get(&code).copied()};
-            DecodedGlyph {code,code_width,width,glyph_id,cid,is_space_char:code==32&&code_width==1,text:self.code_to_text.get(&code).cloned()}
+            DecodedGlyph {code,code_width,width,glyph_id,cid,is_space_char:code==32&&code_width==1,text:self.to_unicode.as_ref().and_then(|map|cmap::to_unicode_lookup(map,code)).or_else(||self.code_to_text.get(&code).cloned())}
         }).collect()
     }
 
@@ -444,13 +424,14 @@ impl FontCodec {
         let mut cursor = text;
         while !cursor.is_empty() {
             let mut matched = false;
-            for length in (1..=cursor.chars().count().min(4)).rev() {
+            for length in (1..=cursor.chars().take(4).count()).rev() {
                 let candidate: String = cursor.chars().take(length).collect();
-                if let Some((code, width)) = self.text_to_code.get(&candidate) {
+                let mapped=self.to_unicode.as_ref().and_then(|map|cmap::to_unicode_reverse(map,&candidate).map(|code|(code,self.cid_codec.as_ref().map_or(1,|codec|codec.width_of(code))))).or_else(||self.text_to_code.get(&candidate).copied());
+                if let Some((code,width))=mapped {
                     if self.composite {
-                        cmap::CidCodec::push_code(&mut out, *code, *width);
+                        cmap::CidCodec::push_code(&mut out, code, width);
                     } else {
-                        out.push(*code as u8);
+                        out.push(code as u8);
                     }
                     cursor = &cursor[candidate.len()..];
                     matched = true;
@@ -563,3 +544,7 @@ pub fn truetype_simple_gid(font: &TrueTypeFont, code: u32, name: Option<&str>, s
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+#[cfg(test)]
+#[path="🧪️tests/🔬️unit/🦀️.rs"]
+mod tests;

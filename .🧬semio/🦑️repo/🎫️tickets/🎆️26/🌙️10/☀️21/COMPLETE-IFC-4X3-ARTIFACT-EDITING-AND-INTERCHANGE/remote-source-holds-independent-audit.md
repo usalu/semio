@@ -1,0 +1,13 @@
+# Remote Source Holds Independent Audit
+
+Read-only current ingestion helper and actual hub/archive call sites2026-10-21. No new confirmed P1/P2 in reviewed newly wired scope. No complete runtime/browser/native proof.
+
+Hub beginDocumentSourceWork checks exact openDocumentSessions entry before acquiring full plugin/app/instance/runtime/client owner identity. receive validates bounded mutation/retract wire first; accepted queued messages acquire one entry-scoped hold before copying/pushing. At prepared-port drain,each original queued message enters ordinary receive and admits its individual hold synchronously before queued aggregate hold is released. Same entry WeakMap avoids one hold per queued copy. Capacity refusal latches owner unresolved,so a null work cannot silently authorize later readiness.
+
+Immediate receive captures exact port,checks entry+port before actual ingestion,awaits persistence.ingested(port.receive),admits undefined only on fulfilled result and always finishes. Sync/async failure never admits,and therefore remains unresolved until actual owner retirement. No failed promise is interpreted as a successful terminal mutation. prepared callback's drain retains existing source queues; proof depends on every accepted message still routing receive,not bypassing it.
+
+Archive document event acquires exact full owner hold before decode/readBack.archive; fulfilled readback admits none then finally finishes. held() checks exact open entry across async readback. Cancelled but fulfilled readback is an actual completed replacement attempt,not a native operation watchdog. Failure remains unknown-held. Existing merge/readback semantics are dependencies; no full archive claim from this wrapper alone.
+
+Remaining exact gaps visible: generic loadDocumentArchive at hub module224 still has direct load/entry.replacements.replace path without newly reviewed hold around the whole replacement; loadDocumentPair delegates it. Extension/media/service command callers and terminal requestedEffects may mutate through separate routes. Complete source proof requires those shared actor/document mutation boundaries,not only current observer or historydirty notices. Root explicitly owns next hooks. Background refresh forwards only if actual owner/plugin currently eligible; an unfocused cache can remain safely unresolved until focus observation.
+
+Root reports helper3tests and all5source suites42pass150assert/strictpass; not independently rerun. Required integration tests include queue-beforebind,multi-message drain,entry/port replacement during receive,ingest rejection,archive cancellation/failure,overlapping local+remote holds and close during readback. No duplicate heavy suite run.

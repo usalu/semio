@@ -1,6 +1,5 @@
 //! 🔗 `change-link-path` — sets an {@link ImageLink}'s file `path`.
 
-
 use semio_s_artifact_layout_layout_diff::LayoutLinksDelta;
 use semio_s_artifact_layout_layout_diff::LayoutLinksModification;
 use semio_s_artifact_layout_layout_diff::{ImageLinkPatch, LayoutDiff};

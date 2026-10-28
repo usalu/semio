@@ -1,0 +1,2 @@
+/** 🔮️ Independent frame placement retains only numeric records at the test boundary. */
+export function createFrameGeometryOracle(three){return{outline(box,pageHeight){return[[0,0],[box.width,0],[box.width,box.height],[0,box.height],[0,0]].map(([x,y])=>{const point=new three.Vector3(x-box.width/2,y-box.height/2,0).applyAxisAngle(new three.Vector3(0,0,1),box.rotation).add(new three.Vector3(box.x+box.width/2,box.y+box.height/2,0));return[point.x*25.4/72,(pageHeight-point.y)*25.4/72,0];});}};}

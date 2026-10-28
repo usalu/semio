@@ -1,0 +1,21 @@
+{
+  "title": "Stored ZIP Stream Contract",
+  "type": "object",
+  "required": [
+    "maximumChunkBytes",
+    "maximumEntries",
+    "maximumNameBytes"
+  ],
+  "properties": {
+    "maximumChunkBytes": {
+      "const": 4096
+    },
+    "maximumEntries": {
+      "const": 1024
+    },
+    "maximumNameBytes": {
+      "const": 256
+    }
+  },
+  "additionalProperties": false
+}

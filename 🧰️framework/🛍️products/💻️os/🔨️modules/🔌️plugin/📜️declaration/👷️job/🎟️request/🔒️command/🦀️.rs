@@ -23,6 +23,8 @@ impl<C> ArtifactOriginalToolCommand<C>{
   Ok(self.encoded_bytes)
  }
  pub fn into_box(self)->Box<C>{self.command}
+ /// 🪢️ The initiating caller may lend its same typed payload to paid receiving work without unboxing its seal.
+ pub fn original_mut(&mut self,cx:&StepContext<'_>)->Result<Option<&mut C>,ValueError>{if !self.source_binding.matches(cx){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original command mutable loan changed its source authority"))}if cx.should_yield()||cx.is_cancelled()||cx.retained_grant().maximum_items==0{return Ok(None)}Ok(Some(self.command.as_mut()))}
 }
 impl<C> std::ops::Deref for ArtifactOriginalToolCommand<C>{
  type Target=C;

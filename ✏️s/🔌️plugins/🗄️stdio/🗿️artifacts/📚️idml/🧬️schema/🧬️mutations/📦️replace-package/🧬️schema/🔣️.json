@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.idml.mutation.replace-package",
+  "title": "Replace IDML Package",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "document"
+  ],
+  "properties": {
+    "document": {
+      "$ref": "s.stdio.idml.package"
+    }
+  }
+}

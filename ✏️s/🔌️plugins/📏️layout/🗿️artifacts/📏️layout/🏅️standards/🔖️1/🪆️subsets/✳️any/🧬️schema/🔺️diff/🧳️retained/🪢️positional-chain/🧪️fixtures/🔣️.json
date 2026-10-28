@@ -1,0 +1,185 @@
+{
+  "schema": "s.layout.layout.retained.positional-chain.v1",
+  "cases": [
+    {
+      "id": "extend-then-replace",
+      "held": 2,
+      "steps": [
+        {
+          "len": 3,
+          "rows": [
+            {
+              "index": 2
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "index": 1
+            }
+          ]
+        }
+      ],
+      "origins": [
+        [
+          null,
+          0
+        ],
+        [
+          1,
+          0
+        ],
+        [
+          0,
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "add",
+          "path": "/2",
+          "value": {
+            "authored": "0:0"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/1",
+          "value": {
+            "authored": "1:0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "truncate-prior-insertion",
+      "held": 1,
+      "steps": [
+        {
+          "len": 2,
+          "rows": [
+            {
+              "index": 1
+            }
+          ]
+        },
+        {
+          "len": 1,
+          "rows": []
+        }
+      ],
+      "origins": [
+        [
+          null,
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "add",
+          "path": "/1",
+          "value": {
+            "authored": "0:0"
+          }
+        },
+        {
+          "op": "remove",
+          "path": "/1"
+        }
+      ]
+    },
+    {
+      "id": "live-position-preserved",
+      "held": 3,
+      "steps": [
+        {
+          "rows": [
+            {
+              "index": 0
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "index": 2
+            }
+          ]
+        }
+      ],
+      "origins": [
+        [
+          0,
+          0
+        ],
+        [
+          null,
+          1
+        ],
+        [
+          1,
+          0
+        ]
+      ],
+      "rfc6902": [
+        {
+          "op": "replace",
+          "path": "/0",
+          "value": {
+            "authored": "0:0"
+          }
+        },
+        {
+          "op": "replace",
+          "path": "/2",
+          "value": {
+            "authored": "1:0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "intermediate-missing-row",
+      "held": 1,
+      "steps": [
+        {
+          "len": 3,
+          "rows": [
+            {
+              "index": 2
+            }
+          ]
+        },
+        {
+          "rows": [
+            {
+              "index": 1
+            }
+          ]
+        }
+      ],
+      "error": "mutation.apply.missing-target"
+    },
+    {
+      "id": "duplicate-prefix-row",
+      "held": 1,
+      "steps": [
+        {
+          "rows": [
+            {
+              "index": 0
+            },
+            {
+              "index": 0
+            }
+          ]
+        },
+        {
+          "rows": []
+        }
+      ],
+      "error": "mutation.apply.duplicate-target"
+    }
+  ]
+}

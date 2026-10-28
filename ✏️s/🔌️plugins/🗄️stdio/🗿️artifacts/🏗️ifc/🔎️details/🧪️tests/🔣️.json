@@ -1,0 +1,124 @@
+{
+  "schema": "IFC4",
+  "cases": [
+    {
+      "name": "wall inherited identity",
+      "entity": "IFCWALL",
+      "index": 0,
+      "attribute": "GlobalId",
+      "type": "IFCGLOBALLYUNIQUEID",
+      "optional": false,
+      "derived": false
+    },
+    {
+      "name": "wall enum",
+      "entity": "IFCWALL",
+      "index": 8,
+      "attribute": "PredefinedType",
+      "type": "IFCWALLTYPEENUM",
+      "optional": true,
+      "derived": false,
+      "enum": [
+        "MOVABLE",
+        "PARAPET",
+        "PARTITIONING",
+        "PLUMBINGWALL",
+        "SHEAR",
+        "SOLIDWALL",
+        "STANDARD",
+        "POLYGONAL",
+        "ELEMENTEDWALL",
+        "USERDEFINED",
+        "NOTDEFINED"
+      ]
+    },
+    {
+      "name": "point coordinates",
+      "entity": "IFCCARTESIANPOINT",
+      "index": 0,
+      "attribute": "Coordinates",
+      "aggregate": "LIST",
+      "lower": 1,
+      "upper": 3,
+      "optional": false,
+      "derived": false
+    },
+    {
+      "name": "derived context dimension",
+      "entity": "IFCGEOMETRICREPRESENTATIONSUBCONTEXT",
+      "index": 2,
+      "attribute": "CoordinateSpaceDimension",
+      "derived": true
+    },
+    {
+      "name": "product representation reference",
+      "entity": "IFCWALL",
+      "index": 6,
+      "attribute": "Representation",
+      "type": "IFCPRODUCTREPRESENTATION",
+      "optional": true,
+      "derived": false
+    }
+  ],
+  "references": {
+    "accepted": "18446744073709551615",
+    "rejected": [
+      "",
+      "0",
+      "-1",
+      "1.5",
+      "1e3",
+      "18446744073709551616"
+    ]
+  },
+  "variants": [
+    "unset",
+    "enum",
+    "select",
+    "aggregate",
+    "complex",
+    "entity"
+  ],
+  "select": {
+    "entity": "IFCPROPERTYSINGLEVALUE",
+    "index": 2,
+    "attribute": "NominalValue",
+    "requiredLeaves": [
+      "IFCLABEL",
+      "IFCFORCEMEASURE"
+    ],
+    "optional": true
+  },
+  "complexReference": {
+    "primary": "IFCROOT",
+    "constituent": "IFCPRODUCT",
+    "index": 0,
+    "target": "IFCLOCALPLACEMENT",
+    "targetId": "9"
+  },
+  "typeSwitch": {
+    "from": "IFCWALL",
+    "to": "IFCDOOR",
+    "preserve": [
+      "GlobalId",
+      "Name"
+    ],
+    "minimumMutations": 2
+  },
+  "uniqueReferenceReplacement": {
+    "entity": "IFCUNITASSIGNMENT",
+    "argument": 0,
+    "ids": [
+      "2",
+      "3"
+    ],
+    "unchanged": "2",
+    "duplicate": "3",
+    "replacement": "4",
+    "types": [
+      "IFCSIUNIT",
+      "IFCSIUNIT",
+      "IFCSIUNIT"
+    ]
+  }
+}

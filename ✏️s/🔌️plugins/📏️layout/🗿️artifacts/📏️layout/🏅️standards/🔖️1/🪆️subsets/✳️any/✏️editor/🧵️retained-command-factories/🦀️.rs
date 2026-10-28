@@ -1,6 +1,7 @@
 //! 🧵️ Retained command factories of the layout play app: the retained tool ids and contract, the window work record, the retained command job factory with its owned tool job factory implementation and the retained and export proof catalogues. See [`super`].
 
 use super::*;
+#[path="🖼️page-drawing/🦀️.rs"]mod page_drawing;
 
 //#region 🧵️RetainedCommands
 /// 🧵️ Every shell-reachable verb is a bounded first-step tool (ticket 26/09/16/LAYOUT-PLUGIN-END-TO-END):
@@ -18,20 +19,31 @@ pub(super) const LAYOUT_RETAINED_RAW_BYTES: usize = 8_192;
 pub(super) const LAYOUT_RETAINED_WORK_ITEMS: usize = 1;
 
 fn layout_retained_contract() -> ToolExecutionContract {
-    ToolExecutionContract::bounded_first_step(LAYOUT_RETAINED_RAW_BYTES, 64, 1, 16_384, 7_500)
+    ToolExecutionContract::resumable(LAYOUT_RETAINED_RAW_BYTES, 131_072, 1, 33_554_432, 2_000, 64, 1)
 }
 
 pub(super) struct LayoutWindowWork {
     pub(super) tool_id: &'static str,
     pub(super) completed: bool,
+    page_drawing:page_drawing::PageDrawingWork,
 }
 
 impl LayoutWindowWork {
-    pub(super) fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false } }
+    pub(super) fn new(tool_id: &'static str) -> Self { Self { tool_id, completed: false,page_drawing:page_drawing::PageDrawingWork::new() } }
 }
 
 impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<LayoutPlayApp>> for LayoutWindowWork {
-    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, _maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+    fn receive_original_command(&mut self,command:&mut LayoutCommand,cx:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.page_drawing.receive(command,cx)}
+    fn begin_close(&mut self){self.page_drawing.begin_close()}
+    fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{self.page_drawing.close_step(cx)}
+    fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.page_drawing.close_demand(0)?.copy_bytes)}
+    fn next_close_capacity_byte_demand(&self,body:usize)->Result<usize,semio_framework_value::ValueError>{Ok(self.page_drawing.close_demand(body)?.capacity_bytes)}
+    fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.page_drawing.close_demand(0)?.release_bytes)}
+    fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.page_drawing.close_demand(0)?.depth)}
+    fn terminal_is_empty(&self)->bool{self.page_drawing.owners.terminal_is_empty()}
+
+    fn work_demands(&self, _input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        if self.page_drawing.active(){return self.page_drawing.demand(maximum_copy_bytes)}
         Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>(), depth: 1, ..Default::default() })
     }
     fn terminal_frame_release_bytes(&self) -> Option<usize> {
@@ -53,8 +65,12 @@ impl semio_framework_plugin::retained_command::ArtifactCommandWork<EditorApp<Lay
     fn step(
         &mut self,
         input: &semio_framework_plugin::retained_command::ArtifactCommandInputs<'_, EditorApp<LayoutPlayApp>>,
-    _cx: &mut StepContext<'_>,
+    cx: &mut StepContext<'_>,
     ) -> Result<semio_framework_plugin::retained_command::ArtifactCommandWorkStep<EditorApp<LayoutPlayApp>>, semio_framework_job::OriginalTurnFailure> {
+        if self.page_drawing.active(){
+            if let Some(emit)=self.page_drawing.step(input,cx)?{self.completed=true;return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Complete(emit))}
+            return Ok(semio_framework_plugin::retained_command::ArtifactCommandWorkStep::Pending{stage:"layout.page.drawing.artboard",preview:b""});
+        }
         let original: Result<_, Fault> = (|| {
         use semio_framework_plugin::retained_command::ArtifactCommandWorkStep;
         if self.completed || input.command.command_id() != self.tool_id {
@@ -231,7 +247,7 @@ impl LayoutRetainedProofs {
         artifact_schema: "layout.layout",
         factory: "LayoutRetainedCommandJobFactory",
         factory_type: LayoutRetainedCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(8_192, 64, 1, 16_384, 7_500),
+        contract: ToolExecutionContract::resumable(8_192, 131_072, 1, 33_554_432, 2_000, 64, 1),
         tools: ["setActivePage", "focusPreflightIssue", "engagementInput", "canvasPointerDown", "canvasPointerMove", "canvasPointerUp", "canvasDragOver", "canvasDragLeave", "setCamera", "addFrame", "addPage", "patchPage", "patchFrame", "deleteSelection", "engagementSubmit", "canvasDrop", "translateSelection", "rotateSelection", "scaleSelection", "patchDocument"]
     }
 }
@@ -251,6 +267,8 @@ impl LayoutExportProofs {
             "exportSvg" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
             "exportPdf" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
             "exportPackage" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
+            "exportStep" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
+            "exportIdml" => ToolExecutionContract::resumable(4_096, 131_072, 1, 33_554_432, 2_000, 64, 1),
         }
     }
 }

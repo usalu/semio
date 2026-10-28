@@ -1,0 +1,14 @@
+{
+  "schema": "stdio.ifc.retained-value-edit/1",
+  "cases": [
+    {"name":"nested text payload","before":{"kind":"aggregate","value":[{"kind":"string","value":"before"}]},"event":{"kind":"set","path":"/value/0/value","value":"after"},"after":{"kind":"aggregate","value":[{"kind":"string","value":"after"}]}},
+    {"name":"typed name","before":{"kind":"typedValue","value":{"name":"IFCLABEL","items":[{"kind":"string","value":"x"}]}},"event":{"kind":"set","path":"/value/name","value":"IFCTEXT"},"after":{"kind":"typedValue","value":{"name":"IFCTEXT","items":[{"kind":"string","value":"x"}]}}},
+    {"name":"insert","before":{"kind":"aggregate","value":[{"kind":"integer","value":1},{"kind":"integer","value":3}]},"event":{"kind":"insert","path":"/value/1","value":{"kind":"integer","value":2}},"after":{"kind":"aggregate","value":[{"kind":"integer","value":1},{"kind":"integer","value":2},{"kind":"integer","value":3}]}},
+    {"name":"remove","before":{"kind":"aggregate","value":[{"kind":"integer","value":1},{"kind":"integer","value":2},{"kind":"integer","value":3}]},"event":{"kind":"remove","path":"/value/1"},"after":{"kind":"aggregate","value":[{"kind":"integer","value":1},{"kind":"integer","value":3}]}},
+    {"name":"move forward","before":{"kind":"aggregate","value":[{"kind":"integer","value":1},{"kind":"integer","value":2},{"kind":"integer","value":3}]},"event":{"kind":"move","from":"/value/0","path":"/value/2"},"after":{"kind":"aggregate","value":[{"kind":"integer","value":2},{"kind":"integer","value":3},{"kind":"integer","value":1}]}},
+    {"name":"move backward typed","before":{"kind":"typedValue","value":{"name":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"integer","value":1},{"kind":"integer","value":2},{"kind":"integer","value":3}]}},"event":{"kind":"move","from":"/value/items/2","path":"/value/items/0"},"after":{"kind":"typedValue","value":{"name":"IFCCOMPOUNDPLANEANGLEMEASURE","items":[{"kind":"integer","value":3},{"kind":"integer","value":1},{"kind":"integer","value":2}]}}},
+    {"name":"replace aggregate payload","before":{"kind":"aggregate","value":[]},"event":{"kind":"set","path":"/value","value":[{"kind":"string","value":"received"}]},"after":{"kind":"aggregate","value":[{"kind":"string","value":"received"}]}}
+  ],
+  "largeCollection":{"items":2000,"textBytes":512,"moveFrom":0,"moveTo":1999,"cancelAt":[1,4,1000,2000,"last"]},
+  "largeInput":{"textBytes":1000000,"path":"/value/0/value","sameAllocation":true}
+}

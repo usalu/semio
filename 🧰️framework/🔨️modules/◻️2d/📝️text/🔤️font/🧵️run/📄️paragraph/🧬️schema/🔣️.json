@@ -1,0 +1,84 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:font-paragraph:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "width",
+    "origin",
+    "size",
+    "lineHeight",
+    "tracking",
+    "alignment",
+    "spans"
+  ],
+  "properties": {
+    "width": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "origin": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "size": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "lineHeight": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "tracking": {
+      "type": "number"
+    },
+    "alignment": {
+      "enum": [
+        "left",
+        "center",
+        "right",
+        "justify"
+      ]
+    },
+    "spans": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "start",
+          "end",
+          "size",
+          "tracking",
+          "face"
+        ],
+        "properties": {
+          "start": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "end": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "size": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "tracking": {
+            "type": "number"
+          },
+          "face": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 31
+          }
+        }
+      }
+    }
+  }
+}

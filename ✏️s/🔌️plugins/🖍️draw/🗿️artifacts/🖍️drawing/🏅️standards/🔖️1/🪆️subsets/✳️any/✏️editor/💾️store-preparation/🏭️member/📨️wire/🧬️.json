@@ -1,0 +1,29 @@
+{
+  "feature": "drawing-original-member-wire",
+  "schema": "drawing.drawing",
+  "header": "op",
+  "phases": [
+    "OriginalBytes",
+    "OriginalProjection",
+    "OriginalJson",
+    "TakeOriginalMutation",
+    "CloseOriginalJson",
+    "CloseOriginalBytes",
+    "TypedPreparation"
+  ],
+  "invariants": [
+    "same original NativeDecodeControl ledger and retirement recipient on every receive and close",
+    "canonical original operation bytes must match declared schema",
+    "original typed mutation and installed issuer transfer once without cloning",
+    "no Ready before parser/native aliases and original bytes close",
+    "cancel retains all original sources and paid refusal receipts",
+    "typed publication and replay share the actual admitted preparation source"
+  ],
+  "grants": [
+    "items",
+    "copyBytes",
+    "capacityBytes",
+    "releaseBytes",
+    "depth"
+  ]
+}

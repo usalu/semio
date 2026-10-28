@@ -1,0 +1,29 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"semio.ifc4x3.templates.v1",
+  "type":"object","additionalProperties":false,
+  "required":["schema","source","templates"],
+  "properties":{
+    "schema":{"const":"IFC4X3_ADD2"},
+    "source":{"type":"object","additionalProperties":false,"required":["url","commit","sha256","language"],"properties":{"url":{"type":"string"},"commit":{"type":"string","pattern":"^[a-f0-9]{40}$"},"sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},"language":{"const":"en"}}},
+    "templates":{"type":"array","minItems":760,"maxItems":760,"items":{"$ref":"#/$defs/template"}}
+  },
+  "$defs":{
+    "enumeration":{"type":"object","additionalProperties":false,"required":["name","literals"],"properties":{"name":{"type":"string","minLength":1},"literals":{"type":"array","minItems":1,"items":{"type":"string"}}}},
+    "entry":{"oneOf":[
+      {"type":"object","additionalProperties":false,"required":["name","definition","kind","dataType"],"properties":{"name":{"type":"string","minLength":1},"definition":{"type":"string"},"kind":{"enum":["P_SINGLEVALUE","P_REFERENCEVALUE","P_LISTVALUE","P_BOUNDEDVALUE","Q_WEIGHT","Q_LENGTH","Q_AREA","Q_VOLUME","Q_COUNT","Q_TIME"]},"dataType":{"type":"string","minLength":1}}},
+      {"type":"object","additionalProperties":false,"required":["name","definition","kind","dataType","enumeration"],"properties":{"name":{"type":"string","minLength":1},"definition":{"type":"string"},"kind":{"const":"P_ENUMERATEDVALUE"},"dataType":{"const":"IfcLabel"},"enumeration":{"$ref":"#/$defs/enumeration"}}},
+      {"type":"object","additionalProperties":false,"required":["name","definition","kind","dataType","secondaryType","expression"],"properties":{"name":{"type":"string","minLength":1},"definition":{"type":"string"},"kind":{"const":"P_TABLEVALUE"},"dataType":{"type":"string","minLength":1},"secondaryType":{"type":"string","minLength":1},"expression":{"type":"string"}}}
+    ]},
+    "template":{"type":"object","additionalProperties":false,"required":["name","definition","kind","applicable","classes","entries","sourceFile","sourceSha256"],"properties":{
+      "name":{"type":"string","pattern":"^(Pset|Qto)_[A-Za-z0-9_]+$"},
+      "definition":{"type":"string"},
+      "kind":{"enum":["PSET_OCCURRENCEDRIVEN","PSET_PERFORMANCEDRIVEN","PSET_TYPEDRIVENOVERRIDE","PSET_MATERIALDRIVEN","PSET_PROFILEDRIVEN","QTO_TYPEDRIVENOVERRIDE","QTO_OCCURRENCEDRIVEN"]},
+      "applicable":{"type":"string"},
+      "classes":{"type":"array","minItems":1,"items":{"type":"string","minLength":1}},
+      "entries":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/entry"}},
+      "sourceFile":{"type":"string","pattern":"\\.xml$"},
+      "sourceSha256":{"type":"string","pattern":"^[a-f0-9]{64}$"}
+    }}
+  }
+}

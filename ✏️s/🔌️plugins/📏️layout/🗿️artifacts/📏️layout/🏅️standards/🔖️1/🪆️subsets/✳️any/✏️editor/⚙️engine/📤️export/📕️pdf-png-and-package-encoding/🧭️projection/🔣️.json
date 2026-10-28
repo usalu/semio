@@ -1,0 +1,37 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LayoutPdfProjection",
+  "description": "Local y-down path geometry remains unrounded. Its exact affine composes with the page y-up projection in a PDF cm operator. Semantic text maps local y-up font coordinates through the same affine. Image coordinates are normalized into that same local source space.",
+  "type": "object",
+  "required": [
+    "affine",
+    "height",
+    "origin",
+    "italic"
+  ],
+  "properties": {
+    "affine": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 6,
+      "maxItems": 6
+    },
+    "height": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "origin": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "italic": {
+      "type": "boolean"
+    }
+  }
+}

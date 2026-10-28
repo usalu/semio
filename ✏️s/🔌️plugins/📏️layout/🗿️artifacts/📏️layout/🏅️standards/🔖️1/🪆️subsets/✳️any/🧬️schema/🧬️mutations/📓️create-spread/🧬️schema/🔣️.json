@@ -1,0 +1,22 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/layout/layout/mutation/create-spread/schema.json",
+  "title": "CreateSpread",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "spread"
+  ],
+  "properties": {
+    "spread": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/layout/layout/artifact.json#/$defs/Spread"
+    },
+    "index": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    }
+  }
+}

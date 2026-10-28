@@ -1,0 +1,9 @@
+{
+  "source": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%202.3.0.1%20(IFC%202x3%20TC1)/Simple-Scene/Building-Architecture.ifc",
+  "commit": "80d976a9b193a26a8e928c3e79bff67af1de68a8",
+  "sha256": "c4db65ba847f6b369a95d6c54fa11f4750cbe6d59f021934e8923d8d578e5885",
+  "bytes": 92542,
+  "license": "CC-BY-4.0",
+  "attribution": "buildingSMART International Ltd.",
+  "upstreamBlob": "07f1b8014e74b950037f53a0547ded51b435953f"
+}

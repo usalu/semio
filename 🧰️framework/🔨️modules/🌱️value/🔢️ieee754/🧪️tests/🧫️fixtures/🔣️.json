@@ -1,0 +1,117 @@
+{
+  "schema": "value.ieee754.identity.v1",
+  "cases": [
+    {
+      "name": "binary32 same positive zero",
+      "width": 32,
+      "left": "00000000",
+      "right": "00000000",
+      "equal": true
+    },
+    {
+      "name": "binary32 signed zeros differ",
+      "width": 32,
+      "left": "00000000",
+      "right": "80000000",
+      "equal": false
+    },
+    {
+      "name": "binary32 same negative zero",
+      "width": 32,
+      "left": "80000000",
+      "right": "80000000",
+      "equal": true
+    },
+    {
+      "name": "binary32 same NaN payload",
+      "width": 32,
+      "left": "7fc00042",
+      "right": "7fc00042",
+      "equal": true
+    },
+    {
+      "name": "binary32 different NaN payload",
+      "width": 32,
+      "left": "7fc00042",
+      "right": "7fc00043",
+      "equal": false
+    },
+    {
+      "name": "binary32 same infinity",
+      "width": 32,
+      "left": "7f800000",
+      "right": "7f800000",
+      "equal": true
+    },
+    {
+      "name": "binary32 positive and negative infinity",
+      "width": 32,
+      "left": "7f800000",
+      "right": "ff800000",
+      "equal": false
+    },
+    {
+      "name": "binary32 same smallest subnormal",
+      "width": 32,
+      "left": "00000001",
+      "right": "00000001",
+      "equal": true
+    },
+    {
+      "name": "binary64 same positive zero",
+      "width": 64,
+      "left": "0000000000000000",
+      "right": "0000000000000000",
+      "equal": true
+    },
+    {
+      "name": "binary64 signed zeros differ",
+      "width": 64,
+      "left": "0000000000000000",
+      "right": "8000000000000000",
+      "equal": false
+    },
+    {
+      "name": "binary64 same negative zero",
+      "width": 64,
+      "left": "8000000000000000",
+      "right": "8000000000000000",
+      "equal": true
+    },
+    {
+      "name": "binary64 same NaN payload",
+      "width": 64,
+      "left": "7ff8000000000042",
+      "right": "7ff8000000000042",
+      "equal": true
+    },
+    {
+      "name": "binary64 different NaN payload",
+      "width": 64,
+      "left": "7ff8000000000042",
+      "right": "7ff8000000000043",
+      "equal": false
+    },
+    {
+      "name": "binary64 same infinity",
+      "width": 64,
+      "left": "7ff0000000000000",
+      "right": "7ff0000000000000",
+      "equal": true
+    },
+    {
+      "name": "binary64 positive and negative infinity",
+      "width": 64,
+      "left": "7ff0000000000000",
+      "right": "fff0000000000000",
+      "equal": false
+    },
+    {
+      "name": "binary64 same smallest subnormal",
+      "width": 64,
+      "left": "0000000000000001",
+      "right": "0000000000000001",
+      "equal": true
+    }
+  ]
+}

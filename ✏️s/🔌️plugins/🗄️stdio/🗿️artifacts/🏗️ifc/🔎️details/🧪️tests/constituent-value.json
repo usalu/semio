@@ -1,0 +1,296 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "snapshot": {
+    "schema": "stdio.ifc",
+    "entities": [
+      {
+        "id": 1,
+        "name": "IFCREPRESENTATIONITEM",
+        "args": [],
+        "complex": [
+          {
+            "name": "IFCCARTESIANPOINT",
+            "args": [
+              {
+                "kind": "aggregate",
+                "value": [
+                  {
+                    "kind": "real",
+                    "value": 0
+                  },
+                  {
+                    "kind": "real",
+                    "value": 1
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      {
+        "id": 2,
+        "name": "IFCMATERIALDEFINITION",
+        "args": [],
+        "complex": [
+          {
+            "name": "IFCMATERIAL",
+            "args": [
+              {
+                "kind": "string",
+                "value": "Steel"
+              },
+              {
+                "kind": "unset"
+              },
+              {
+                "kind": "string",
+                "value": "Metal"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "complete-coordinates",
+      "path": "/entities/0/complex/0/args/0",
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 4
+          },
+          {
+            "kind": "real",
+            "value": 5
+          }
+        ]
+      },
+      "admitted": true,
+      "expected": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 4
+          },
+          {
+            "kind": "real",
+            "value": 5
+          }
+        ]
+      }
+    },
+    {
+      "id": "coordinate-payload",
+      "path": "/entities/0/complex/0/args/0/value/1/value",
+      "value": 9,
+      "admitted": true,
+      "expected": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 0
+          },
+          {
+            "kind": "real",
+            "value": 9
+          }
+        ]
+      }
+    },
+    {
+      "id": "coordinate-item",
+      "path": "/entities/0/complex/0/args/0/value/1",
+      "value": {
+        "kind": "real",
+        "value": 8
+      },
+      "admitted": true,
+      "expected": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 0
+          },
+          {
+            "kind": "real",
+            "value": 8
+          }
+        ]
+      }
+    },
+    {
+      "id": "coordinates-bounds",
+      "path": "/entities/0/complex/0/args/0",
+      "value": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 0
+          },
+          {
+            "kind": "real",
+            "value": 1
+          },
+          {
+            "kind": "real",
+            "value": 2
+          },
+          {
+            "kind": "real",
+            "value": 3
+          }
+        ]
+      },
+      "admitted": false
+    },
+    {
+      "id": "coordinates-domain",
+      "path": "/entities/0/complex/0/args/0",
+      "value": {
+        "kind": "string",
+        "value": "4,5"
+      },
+      "admitted": false
+    },
+    {
+      "id": "complete-name",
+      "path": "/entities/1/complex/0/args/0",
+      "value": {
+        "kind": "string",
+        "value": "Aluminium"
+      },
+      "admitted": true,
+      "expected": {
+        "kind": "string",
+        "value": "Aluminium"
+      }
+    },
+    {
+      "id": "name-payload",
+      "path": "/entities/1/complex/0/args/0/value",
+      "value": "Aluminium",
+      "admitted": true,
+      "expected": {
+        "kind": "string",
+        "value": "Aluminium"
+      }
+    },
+    {
+      "id": "required-name",
+      "path": "/entities/1/complex/0/args/0",
+      "value": {
+        "kind": "unset"
+      },
+      "admitted": false
+    },
+    {
+      "id": "name-domain",
+      "path": "/entities/1/complex/0/args/0",
+      "value": {
+        "kind": "integer",
+        "value": 7
+      },
+      "admitted": false
+    },
+    {
+      "id": "optional-category",
+      "path": "/entities/1/complex/0/args/2",
+      "value": {
+        "kind": "unset"
+      },
+      "admitted": true,
+      "expected": {
+        "kind": "unset"
+      }
+    },
+    {
+      "id": "coordinate-insert",
+      "event": "insert",
+      "path": "/entities/0/complex/0/args/0/value/1",
+      "value": {
+        "kind": "real",
+        "value": 4
+      },
+      "admitted": true,
+      "expected": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 0
+          },
+          {
+            "kind": "real",
+            "value": 4
+          },
+          {
+            "kind": "real",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "coordinate-remove",
+      "event": "remove",
+      "path": "/entities/0/complex/0/args/0/value/0",
+      "admitted": true,
+      "expected": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 1
+          }
+        ]
+      }
+    },
+    {
+      "id": "coordinate-move",
+      "event": "move",
+      "path": "/entities/0/complex/0/args/0/value/1",
+      "from": "/entities/0/complex/0/args/0/value/0",
+      "admitted": true,
+      "expected": {
+        "kind": "aggregate",
+        "value": [
+          {
+            "kind": "real",
+            "value": 1
+          },
+          {
+            "kind": "real",
+            "value": 0
+          }
+        ]
+      }
+    },
+    {
+      "id": "insert-outside-collection",
+      "event": "insert",
+      "path": "/entities/0/complex/0/args/0/value/4",
+      "value": {
+        "kind": "real",
+        "value": 4
+      },
+      "admitted": false
+    },
+    {
+      "id": "move-leaves-argument",
+      "event": "move",
+      "path": "/entities/0/complex/0/args/0/value/1",
+      "from": "/entities/1/complex/0/args/0",
+      "admitted": false
+    }
+  ]
+}

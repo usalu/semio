@@ -1,0 +1,255 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "default",
+      "radius": 1,
+      "depth": 2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "supported",
+      "segments": 72,
+      "volume": 6.283185307179586
+    },
+    {
+      "id": "millimetres",
+      "radius": 50,
+      "depth": 200,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "millimetres": true,
+      "expected": "supported",
+      "segments": 72,
+      "volume": 0.0015707963267948969
+    },
+    {
+      "id": "absolute",
+      "radius": 0.05,
+      "depth": 0.2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "sampling": {
+        "absoluteChordErrorMetres": 0.000001,
+        "relativeChordError": 0
+      },
+      "expected": "supported",
+      "segments": 500,
+      "volume": 0.0015707963267948969
+    },
+    {
+      "id": "coarse",
+      "radius": 1,
+      "depth": 2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "sampling": {
+        "relativeChordError": 1,
+        "maxSegments": 7
+      },
+      "expected": "supported",
+      "segments": 4,
+      "volume": 6.283185307179586
+    },
+    {
+      "id": "negative-z",
+      "radius": 0.05,
+      "depth": 0.2,
+      "direction": [
+        0,
+        0,
+        -7
+      ],
+      "expected": "supported",
+      "segments": 72,
+      "volume": 0.0015707963267948969
+    },
+    {
+      "id": "oblique",
+      "radius": 1,
+      "depth": 5,
+      "direction": [
+        3,
+        0,
+        4
+      ],
+      "expected": "supported",
+      "segments": 72,
+      "volume": 12.566370614359172
+    },
+    {
+      "id": "placed",
+      "radius": 0.05,
+      "depth": 0.2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profileOrigin": [
+        1,
+        2
+      ],
+      "profileX": [
+        0,
+        1
+      ],
+      "solidOrigin": [
+        3,
+        4,
+        5
+      ],
+      "solidZ": [
+        0,
+        1,
+        0
+      ],
+      "solidX": [
+        1,
+        0,
+        0
+      ],
+      "expected": "supported",
+      "segments": 72,
+      "volume": 0.0015707963267948969
+    },
+    {
+      "id": "unattainable",
+      "radius": 1,
+      "depth": 1,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "sampling": {
+        "absoluteChordErrorMetres": 1e-30,
+        "relativeChordError": 0
+      },
+      "expected": "refuse"
+    },
+    {
+      "id": "collapsed-origin",
+      "radius": 0.05,
+      "depth": 1,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "solidOrigin": [
+        1e+300,
+        1e+300,
+        1e+300
+      ],
+      "solidZ": [
+        0,
+        0,
+        1
+      ],
+      "solidX": [
+        1,
+        0,
+        0
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "subnormal-radius",
+      "radius": 5e-324,
+      "depth": 1,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "subnormal-depth",
+      "radius": 1,
+      "depth": 5e-324,
+      "direction": [
+        3,
+        0,
+        4
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "overflow-radius",
+      "radius": 1e+308,
+      "depth": 2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profileOrigin": [
+        1e+308,
+        0
+      ],
+      "profileX": [
+        1,
+        0
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "parallel",
+      "radius": 1,
+      "depth": 2,
+      "direction": [
+        1,
+        0,
+        0
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "zero-radius",
+      "radius": 0,
+      "depth": 2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "negative-depth",
+      "radius": 1,
+      "depth": -1,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "curve-profile",
+      "radius": 1,
+      "depth": 2,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profileType": "CURVE",
+      "expected": "refuse"
+    }
+  ]
+}

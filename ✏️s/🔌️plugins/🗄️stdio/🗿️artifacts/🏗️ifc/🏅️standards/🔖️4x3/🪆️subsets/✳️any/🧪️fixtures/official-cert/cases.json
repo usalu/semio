@@ -1,0 +1,200 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "repository": "buildingSMART/Certification-datasets",
+  "commit": "80d976a9b193a26a8e928c3e79bff67af1de68a8",
+  "notice": "Copyright buildingSMART International Ltd.; unchanged Simple-Scene source files; informative compliance evidence without full-view or geometry certification.",
+  "license": {
+    "spdx": "CC-BY-4.0",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/LICENSE",
+    "file": "LICENSE.txt",
+    "sha256": "3e20c50b6edfdb4be207f64495586115d0574c8394538109d74f79e1d8976d18",
+    "attribution": "buildingSMART International Ltd."
+  },
+  "oracle": {
+    "implementation": "IfcOpenShell",
+    "version": "0.9.0.post1",
+    "expressRules": true
+  },
+  "cases": [
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Building-Architecture.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Building-Architecture.ifc",
+      "blob": "5b3509f37ca99ae1e889c9b10b0d79b809557f80",
+      "sha256": "96e7103812b15b65eb1fd7802d36b9962833485dce5ead4f440bbf529530881d",
+      "bytes": 141965,
+      "file": "Building-Architecture.ifc",
+      "entities": 369,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Building-Architecture.ifc','2026-06-23T11:54:06',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Building-Hvac.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Building-Hvac.ifc",
+      "blob": "41a5c92a0e1cdc965d68fa8a8d09baaa9643855b",
+      "sha256": "22891586f153793d098811caec8a510cd404f6c2f1979fb329eeeebc3f475642",
+      "bytes": 111304,
+      "file": "Building-Hvac.ifc",
+      "entities": 152,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Building-Hvac.ifc','2026-06-23T11:54:07',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Building-Landscaping.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Building-Landscaping.ifc",
+      "blob": "f7e0ad9b278172f3556d8e2e1de09a3f4c50fa0f",
+      "sha256": "93253acebf6c2d9bfeb1300c3c8d2fdf663ea24746e5cddb8392aaf50f9a0ca8",
+      "bytes": 1073991,
+      "file": "Building-Landscaping.ifc",
+      "entities": 141,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Building-Landscaping.ifc','2026-06-23T11:54:06',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Building-Structural.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Building-Structural.ifc",
+      "blob": "362372ffaf13f592a1c45d9ed8420423a177cea9",
+      "sha256": "db64895488aad4eab082c8292f5632145b0fc864c0642d4fe667404882bacf27",
+      "bytes": 185139,
+      "file": "Building-Structural.ifc",
+      "entities": 339,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Building-Structural.ifc','2026-06-23T11:54:07',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Infra-Bridge.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Infra-Bridge.ifc",
+      "blob": "6faf5659b75374d3980a09f5d45ce53d7f944b6b",
+      "sha256": "97e84cb93e07bfbedbc1bdc57aef161f4998e09accd77175dd0561af2ab4ffab",
+      "bytes": 1739554,
+      "file": "Infra-Bridge.ifc",
+      "entities": 902,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Infra-Bridge.ifc','2026-06-23T11:54:08',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Infra-Electrical.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Infra-Electrical.ifc",
+      "blob": "8b26961a66dbd0aa38dc03da586064e890fc0553",
+      "sha256": "39eebb4612c303e5db5adbab54cdf31ab5f04e02b1887ee49953257fa903a544",
+      "bytes": 120043,
+      "file": "Infra-Electrical.ifc",
+      "entities": 214,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Infra-Electrical.ifc','2026-06-23T11:54:08',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Infra-Landscaping.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Infra-Landscaping.ifc",
+      "blob": "0b46a01d4fa653aba2e3176ef34188e09f19264a",
+      "sha256": "378f25564c4fc969225370e322e8ec0d16ce52239e68dd5572e4681879e33fca",
+      "bytes": 2348837,
+      "file": "Infra-Landscaping.ifc",
+      "entities": 1186,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Infra-Landscaping.ifc','2026-06-23T11:54:07',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Infra-Plumbing.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Infra-Plumbing.ifc",
+      "blob": "ec04d90dc9abad2a1b96ca444b200a22e4de027a",
+      "sha256": "a6ac7a0f4c80c91f04a1a66b73899be064f9c3992b2e886c92f0e3145c0ca50f",
+      "bytes": 350835,
+      "file": "Infra-Plumbing.ifc",
+      "entities": 443,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Infra-Plumbing.ifc','2026-06-23T11:54:08',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Infra-Rail.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Infra-Rail.ifc",
+      "blob": "d946fa80f31138cd6da4e66a07dffb8f4400040d",
+      "sha256": "c9073051e17796b8b59f96cf268207f4011c08eedeaa791774480c33e9defbb3",
+      "bytes": 161670,
+      "file": "Infra-Rail.ifc",
+      "entities": 726,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Infra-Rail.ifc','2026-06-23T11:54:09',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    },
+    {
+      "path": "IFC 4.3.2.0 (IFC 4.3 ADD2)/Simple-Scene/Infra-Road.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/IFC%204.3.2.0%20%28IFC%204.3%20ADD2%29/Simple-Scene/Infra-Road.ifc",
+      "blob": "7625d7a0aa6e0a6043b6fbadd5fe00efa5f8d335",
+      "sha256": "a3cb29433d7176bd31ff7535a596b5d7cd4eb7f2fb0eb6eee451612063c1f167",
+      "bytes": 263708,
+      "file": "Infra-Road.ifc",
+      "entities": 894,
+      "headers": {
+        "FILE_SCHEMA": "FILE_SCHEMA(('IFC4X3_ADD2'));",
+        "FILE_NAME": "FILE_NAME('Infra-Road.ifc','2026-06-23T11:54:08',(''),(''),'Sketchup-IFC-manager 5.6.0 / SketchUp 2026 (26.2.242)','BIM_Tools - Sketchup_IFC_manager - 5.6.0','None');",
+        "FILE_DESCRIPTION": "FILE_DESCRIPTION(('ViewDefinition [ReferenceView]'),'2;1');"
+      },
+      "declaredMvd": [
+        "ViewDefinition [ReferenceView]"
+      ],
+      "diagnostics": []
+    }
+  ]
+}

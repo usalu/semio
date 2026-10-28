@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Layout PDF Semantic Text Marker",
+  "type": "object",
+  "required": [
+    "tag",
+    "maximumDepth"
+  ],
+  "properties": {
+    "tag": {
+      "const": "SemioLayoutText"
+    },
+    "maximumDepth": {
+      "const": 256
+    },
+    "properties": {
+      "type": "object",
+      "properties": {
+        "SemioFontFamily": {
+          "type": "string",
+          "description": "PDF text string, emitted as FEFF UTF16BE hex"
+        },
+        "SemioFontWeight": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4294967295
+        },
+        "SemioItalic": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "description": "A standard BMC/BDC application tag explicitly authors invisible glyph-cluster text for editable Layout reconstruction. Nested scope uses bounded numeric state; arbitrary invisible/OCR text is not promoted by this contract. One semantic Tj cluster and all its contiguous visible outlines share the BDC scope. Successful supported editable promotion suppresses those owned outlines. Failed promotion leaves outline fallback. Tz in the authored tag compensates the placeholder CID font width; uniform orthogonal Tm carries authored font shape."
+}

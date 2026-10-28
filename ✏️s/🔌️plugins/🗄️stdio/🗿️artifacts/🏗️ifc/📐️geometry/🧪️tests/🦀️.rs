@@ -1,0 +1,15 @@
+use super::*;
+struct Value;
+impl GeometryValue for Value{
+ fn as_reference(&self)->Option<u64>{None}fn as_str(&self)->Option<&str>{None}fn as_enum(&self)->Option<&str>{None}fn as_real(&self)->Option<f64>{None}fn as_integer(&self)->Option<i64>{None}fn as_aggregate(&self)->Option<&[Self]>{None}fn as_typed(&self)->Option<(&str,&[Self])>{None}fn is_absent(&self)->bool{false}fn is_unset(&self)->bool{false}fn is_derived(&self)->bool{false}
+}
+fn projector(progress:&mut dyn FnMut(GeometryProgress)->GeometryControl)->Projector<'_, '_,Value>{Projector{entities:HashMap::new(),standard:GeometryStandard::Ifc4,limits:GeometryLimits::default(),progress,scene:GeometryScene::default(),vertices:0,triangles:0,vertex_indices:HashMap::new(),openings:HashMap::new()}}
+#[test]
+fn three_point_arcs_retain_exact_middle_endpoints_orientation_and_scale(){for extent in [1.,1e-120,1e120]{let mut progress=|_|GeometryControl::Continue;let mut p=projector(&mut progress);let start=[extent,0.,0.];let middle=[0.,extent,0.];let end=[-extent,0.,0.];let points=p.arc_points(start,middle,end).unwrap();assert_eq!(points.len(),36);assert_eq!(points[17],middle);assert_eq!(points[35],end);assert!(points.iter().all(|point|point[1]>=0.));let clockwise=p.arc_points(end,middle,start).unwrap();assert_eq!(clockwise.len(),36);assert_eq!(clockwise[17],middle);assert_eq!(clockwise[35],start);let major=p.arc_points(start,end,middle).unwrap();assert_eq!(major.len(),54);assert_eq!(major[35],end);assert_eq!(major[53],middle);}}
+#[test]
+fn exact_collinearity_is_polyline_but_numerically_ill_conditioned_arcs_are_refused(){let mut progress=|_|GeometryControl::Continue;let mut p=projector(&mut progress);assert_eq!(p.arc_points([0.;3],[1.,0.,0.],[2.,0.,0.]).unwrap(),vec![[1.,0.,0.],[2.,0.,0.]]);assert_eq!(p.arc_points([0.;3],[1.,0.,0.],[2.,1e-15,0.]).unwrap_err(),"ill-conditioned-profile-arc");}
+#[test]
+fn arc_sampling_obeys_original_caller_control(){let mut calls=0;let mut progress=|_|{calls+=1;if calls==10{GeometryControl::Cancel}else{GeometryControl::Continue}};let mut p=projector(&mut progress);assert_eq!(p.arc_points([1.,0.,0.],[0.,1.,0.],[-1.,0.,0.]).unwrap_err(),"cancelled");assert_eq!(p.scene.status,GeometryStatus::Cancelled);drop(p);assert_eq!(calls,10);let mut progress=|_|GeometryControl::Continue;let mut p=projector(&mut progress);p.limits.work=1;assert_eq!(p.arc_points([1.,0.,0.],[0.,1.,0.],[-1.,0.,0.]).unwrap_err(),"work-limit");assert_eq!(p.scene.status,GeometryStatus::Limited);}
+
+#[test]
+fn geometry_defaults_match_canonical_schema(){let value=semio_framework_pack_json::parse(include_str!("../📜️limits.json"),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let defaults=GeometryLimits::default();assert_eq!(defaults.work as u64,value["default"]["work"].as_u64().unwrap());assert_eq!(defaults.vertices as u64,value["default"]["vertices"].as_u64().unwrap());assert_eq!(defaults.triangles as u64,value["default"]["triangles"].as_u64().unwrap());assert_eq!(defaults.depth as u64,value["default"]["depth"].as_u64().unwrap());}

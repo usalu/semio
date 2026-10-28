@@ -1,0 +1,112 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "type": "object",
+      "required": [
+        "source",
+        "output",
+        "parent",
+        "drawing",
+        "closeOrder",
+        "maximumDrawingSources"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source": {
+          "const": "actual retained command"
+        },
+        "output": {
+          "const": "same supplied queue"
+        },
+        "parent": {
+          "const": "actual original snapshot read"
+        },
+        "drawing": {
+          "const": "qualified actual member source"
+        },
+        "closeOrder": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 4,
+          "maxItems": 4
+        },
+        "maximumDrawingSources": {
+          "const": 65
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 16,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "name",
+          "kind",
+          "drawings",
+          "accept"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "kind": {
+            "enum": [
+              "svg",
+              "png",
+              "pdf",
+              "step",
+              "idml",
+              "package"
+            ]
+          },
+          "drawings": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 65
+          },
+          "accept": {
+            "type": "boolean"
+          },
+          "replaceOutput": {
+            "type": "boolean"
+          },
+          "missingMember": {
+            "type": "boolean"
+          },
+          "replaceParent": {
+            "type": "boolean"
+          },
+          "replaceRevision": {
+            "type": "boolean"
+          },
+          "cancel": {
+            "enum": [
+              "metadata",
+              "read",
+              "core"
+            ]
+          },
+          "deny": {
+            "enum": [
+              "output",
+              "read",
+              "download"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

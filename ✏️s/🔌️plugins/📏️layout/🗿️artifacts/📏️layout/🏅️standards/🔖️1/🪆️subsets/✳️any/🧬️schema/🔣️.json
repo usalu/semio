@@ -77,7 +77,10 @@
       "items": {
         "$ref": "#/$defs/Page"
       },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "x-semio-child-kind": "s.draw.drawing",
+      "x-semio-child-standard": "1",
+      "x-semio-child-subset": "*"
     },
     "printTarget": {
       "anyOf": [
@@ -95,11 +98,11 @@
       "x-semio-state": "artifact"
     },
     "backgroundDrawing": {
-      "$ref": "#/$defs/LayoutDrawingChild",
+      "$ref": "#/$defs/LayoutDrawingMember",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio",
-      "x-semio-child-standard": "v1",
-      "x-semio-child-subset": "drawing"
+      "x-semio-child-kind": "s.draw.drawing",
+      "x-semio-child-standard": "1",
+      "x-semio-child-subset": "*"
     },
     "referencedModel": {
       "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json",
@@ -279,12 +282,12 @@
         "start": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 18446744073709551615
+          "maximum": 18446744073709552000
         },
         "end": {
           "type": "integer",
           "minimum": 0,
-          "maximum": 18446744073709551615
+          "maximum": 18446744073709552000
         },
         "paragraphStyleId": {
           "anyOf": [
@@ -904,6 +907,13 @@
           "items": {
             "$ref": "#/$defs/PageOverride"
           }
+        },
+        "backgroundDrawing": {
+          "$ref": "#/$defs/LayoutDrawingMember",
+          "x-semio-state": "artifact",
+          "x-semio-child-kind": "s.draw.drawing",
+          "x-semio-child-standard": "1",
+          "x-semio-child-subset": "*"
         }
       }
     },
@@ -930,19 +940,15 @@
         }
       }
     },
-    "LayoutDrawingChild": {
+    "LayoutDrawingMember": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "handle",
-        "content"
+        "handle"
       ],
       "properties": {
         "handle": {
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json"
-        },
-        "content": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json"
         }
       }
     }

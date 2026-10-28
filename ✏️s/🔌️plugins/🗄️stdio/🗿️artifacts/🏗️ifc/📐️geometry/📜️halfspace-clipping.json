@@ -1,0 +1,26 @@
+{
+  "standards": [
+    "IFC4",
+    "IFC2X3"
+  ],
+  "operation": "difference",
+  "representation": "IFCBOOLEANCLIPPINGRESULT",
+  "firstOperands": [
+    "IFCEXTRUDEDAREASOLID",
+    "IFCBOOLEANCLIPPINGRESULT"
+  ],
+  "secondOperand": "IFCHALFSPACESOLID",
+  "baseSurface": "IFCPLANE",
+  "agreement": {
+    "T": "Normal points away from halfspace material: remove negative signed side.",
+    "F": "Normal points into halfspace material: remove positive signed side."
+  },
+  "ownedPlane": "origin + outward-to-retained normal; subtractHalfSpace removes the positive signed side.",
+  "restriction": "For admitted bounded A in exact domain D, A minus H = A minus (D intersect H); no arbitrary finite extent.",
+  "control": "All admission, clipping, cap construction and Boolean reconstruction share original work/cancellation and output admission.",
+  "exclusions": [
+    "IFCBOXEDHALFSPACE",
+    "IFCPOLYGONALBOUNDEDHALFSPACE",
+    "Non-plane surfaces"
+  ]
+}

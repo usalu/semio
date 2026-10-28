@@ -1,0 +1,3 @@
+import{createRequire}from'node:module';const require=createRequire(import.meta.url),_=require('lodash'),patch=require('fast-json-patch');
+/** 🧪️ Private third-party membership and physical JSON Patch references use only owned plain data. */
+export function parentCreationReference(base,page,index){const row=_.cloneDeep(page);row.layerIds=_.map(row.layers,'id');for(const layer of row.layers)layer.objectIds=_.map(_.filter(row.frames,{layerId:layer.id}),'id');const ops=[{op:'add',path:'/parentPages/'+(index??base.parentPages.length),value:row}];return{row,after:patch.applyPatch(_.cloneDeep(base),ops,true,false).newDocument};}

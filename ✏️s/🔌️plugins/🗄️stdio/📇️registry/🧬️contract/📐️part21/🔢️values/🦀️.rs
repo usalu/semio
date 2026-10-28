@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Value
 /// 🔢️ Exact logical STEP real: decimal coefficient/scale plus an optional base-10 exponent.
-#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, PartialEq, Eq, value_derive::ToValue, semio_framework_value::NativeReceive, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase", deny_unknown_fields )]
 pub struct Part21Decimal {
@@ -80,6 +80,7 @@ impl fmt::Display for Part21Decimal {
 pub enum Part21Value {
     Ref(u64),
     Str(String),
+    Binary(String),
     Enum(String),
     Int(i64),
     Real(Part21Decimal),
@@ -91,6 +92,16 @@ pub enum Part21Value {
     },
     Unset,
     Derived,
+}
+
+/// 🧮️ Recognizes canonical STEP binary content: unused high bits followed by uppercase hexadecimal digits.
+pub fn is_part21_binary(value: &str) -> bool {
+    let bytes = value.as_bytes();
+    let Some(&(unused @ b'0'..=b'3')) = bytes.first() else { return false; };
+    if bytes.len() == 1 { return unused == b'0'; }
+    if !bytes[1..].iter().all(|value| value.is_ascii_digit() || (b'A'..=b'F').contains(value)) { return false; }
+    let first = if bytes[1].is_ascii_digit() { bytes[1] - b'0' } else { bytes[1] - b'A' + 10 };
+    first < (1u8 << (4 - (unused - b'0')))
 }
 
 impl Part21Value {

@@ -1,0 +1,197 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "texts",
+    "extras",
+    "phases",
+    "boundaries",
+    "batchSize",
+    "longCodeUnits",
+    "limitedBytes",
+    "explicitJsonByteCeiling",
+    "cancellation",
+    "limit"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "texts": {
+      "const": [
+        {
+          "id": "controls",
+          "value": "quote\" backslash\\\b\f\n\r\t\u0000\u001f slash/"
+        },
+        {
+          "id": "unicode",
+          "value": "Grüezi 日本語 😀    ﻿"
+        },
+        {
+          "id": "lone-surrogates",
+          "value": "left\ud800middle\udc00right"
+        },
+        {
+          "id": "literal-escapes",
+          "value": "\\ud800 \\n \\u0000"
+        }
+      ]
+    },
+    "extras": {
+      "const": [
+        {
+          "id": "duplicate-keys",
+          "value": {
+            "kind": "object",
+            "members": [
+              [
+                "first",
+                {
+                  "kind": "string",
+                  "value": "old"
+                }
+              ],
+              [
+                "9",
+                {
+                  "kind": "string",
+                  "value": "nine"
+                }
+              ],
+              [
+                "first",
+                {
+                  "kind": "string",
+                  "value": "last"
+                }
+              ],
+              [
+                "__proto__",
+                {
+                  "kind": "object",
+                  "members": [
+                    [
+                      "safe",
+                      {
+                        "kind": "boolean",
+                        "value": true
+                      }
+                    ]
+                  ]
+                }
+              ],
+              [
+                "0",
+                {
+                  "kind": "string",
+                  "value": "zero"
+                }
+              ],
+              [
+                "constructor",
+                {
+                  "kind": "string",
+                  "value": "data"
+                }
+              ],
+              [
+                "attributes",
+                {
+                  "kind": "array",
+                  "values": []
+                }
+              ],
+              [
+                "bits",
+                {
+                  "kind": "string",
+                  "value": "ordinary"
+                }
+              ],
+              [
+                "toJSON",
+                {
+                  "kind": "string",
+                  "value": "data"
+                }
+              ]
+            ]
+          },
+          "expected": "{\"0\":\"zero\",\"9\":\"nine\",\"first\":\"last\",\"__proto__\":{\"safe\":true},\"constructor\":\"data\",\"attributes\":[],\"bits\":\"ordinary\",\"toJSON\":\"data\"}"
+        },
+        {
+          "id": "exact-numbers",
+          "value": {
+            "kind": "array",
+            "values": [
+              {
+                "kind": "number",
+                "value": {
+                  "bits": "0x8000000000000000"
+                }
+              },
+              {
+                "kind": "number",
+                "value": {
+                  "bits": "0x3e7ad7f29abcaf48"
+                }
+              },
+              {
+                "kind": "number",
+                "value": {
+                  "bits": "0x444b1ae4d6e2ef50"
+                }
+              },
+              {
+                "kind": "number",
+                "value": {
+                  "bits": "0x7fefffffffffffff"
+                }
+              },
+              {
+                "kind": "number",
+                "value": {
+                  "bits": "0x0000000000000001"
+                }
+              }
+            ]
+          },
+          "expected": "[0,1e-7,1e+21,1.7976931348623157e+308,5e-324]"
+        }
+      ]
+    },
+    "phases": {
+      "const": [
+        "glb-json-values",
+        "glb-json-encode",
+        "glb-json-bytes"
+      ]
+    },
+    "boundaries": {
+      "const": [
+        "interior",
+        "complete"
+      ]
+    },
+    "batchSize": {
+      "const": 64
+    },
+    "longCodeUnits": {
+      "const": 8192
+    },
+    "limitedBytes": {
+      "const": 2048
+    },
+    "explicitJsonByteCeiling": {
+      "const": 64
+    },
+    "cancellation": {
+      "const": "io.cancelled"
+    },
+    "limit": {
+      "const": "glb.limit"
+    }
+  }
+}

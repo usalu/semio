@@ -1,0 +1,9 @@
+from pathlib import Path
+home=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details')
+p=home/'type_input.ts';s=p.read_text(encoding='utf8').replace("!['reference','string','integer'].includes(String(payload.kind))","typeof payload.kind!=='string'||!['reference','string','integer'].includes(payload.kind)").replace('Required references are caller-authored','Required typed values are caller-authored').replace('All required reference fields retain','All required typed fields retain').replace('Exact caller-authored references join','Exact caller-authored values join');data=s.encode();old=p.stat().st_size
+with p.open('r+b')as f:f.write(data);f.write(b' '*max(0,old-len(data)))
+p=home/'type_scalar_input.test.ts';s=p.read_text(encoding='utf8');s+='''
+test('declared scalar kind and exact command mode cannot be replaced by arbitrary payloads',async()=>{const snapshot=source('unit');for(const payload of [{kind:'string',value:'2'},{kind:'integer',value:2},{kind:'integer',value:'2',extra:'x'},{kind:'typedValue',value:{name:'IFCINTEGER',items:[]}}]){const current=request('IFCDERIVEDUNITELEMENT');current.args={path:'/entities/0',value:{$ifcType:'IFCDERIVEDUNITELEMENT',$ifcInputs:[{index:'0',value:{kind:'reference',value:'7'}},{index:'1',value:payload}]}};await expect(typeInputForm(snapshot,'source-revision',current,control())).rejects.toThrow();}});
+''';p.open('r+b').write(s.encode())
+root=home.parent;p=root/'📦️packages/🟦️typescript/📜️script.ts';s=p.read_text(encoding='utf8');a='  "🔎️details/type_multiple_input.test.ts",';assert s.count(a)==1;s=s.replace(a,a+'\n  "🔎️details/type_scalar_input.test.ts",');p.open('r+b').write(s.encode())
+p=Path(__file__).with_name('details-contextual-tsconfig.json');import json;s=json.loads(p.read_text(encoding='utf8'));s['files'].append('../../../../../../../'+str(home/'type_scalar_input.test.ts').replace('\\','/'));p.open('r+b').write((json.dumps(s,ensure_ascii=False,indent=2)+'\n').encode())

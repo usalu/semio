@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "families": [
+    "Anta",
+    "Kelly Slab",
+    "Share Tech Mono",
+    "Noto Emoji"
+  ],
+  "script": "latn",
+  "features": [
+    "ccmp",
+    "rlig",
+    "liga",
+    "clig",
+    "calt",
+    "kern",
+    "mark",
+    "mkmk"
+  ],
+  "denied": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "original": {
+    "items": 1,
+    "copyBytes": 0,
+    "capacityBytes": 0,
+    "releaseBytes": 0,
+    "depth": 0
+  },
+  "textCases": [
+    {
+      "id": "latin",
+      "text": "Plan"
+    },
+    {
+      "id": "canonical-mark",
+      "text": "Á"
+    },
+    {
+      "id": "flags",
+      "text": "🇩🇪🇺🇸"
+    },
+    {
+      "id": "joined-emoji",
+      "text": "👩‍💻"
+    }
+  ],
+  "workspaceRetirement": {
+    "slots": 8,
+    "elementBytes": 64,
+    "initialized": 4
+  }
+}

@@ -115,8 +115,7 @@
         "removed": {
           "type": "array",
           "items": {
-            "type": "integer",
-            "minimum": 0
+            "$ref": "#/definitions/IfcEntityRemoved"
           }
         },
         "modified": {
@@ -130,6 +129,24 @@
           "items": {
             "$ref": "#/definitions/IfcEntityAdded"
           }
+        }
+      }
+    },
+    "IfcEntityRemoved": {
+      "type": "object",
+      "required": [
+        "id",
+        "index"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0
         }
       }
     }

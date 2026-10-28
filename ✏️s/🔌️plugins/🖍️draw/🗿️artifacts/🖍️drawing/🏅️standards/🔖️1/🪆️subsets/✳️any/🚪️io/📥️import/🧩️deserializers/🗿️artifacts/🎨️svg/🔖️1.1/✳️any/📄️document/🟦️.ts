@@ -1,3 +1,4 @@
+import {DrawingAssetsOwner} from '../../../../../../../../🧬️schema/🟦️.ts';
 import {drawingFontFamilyFromCatalog} from "../../../../../../../../🧬️schema/📝️text/🔤️family/🟦️.ts";
 /** 📄️ Incrementally construct an editable SVG hierarchy with explicit unsupported-feature failures. */
 import type {DrawingSnapshot} from "../../../../../../../../🧬️schema/📸️snapshot/🟦️.ts";
@@ -144,7 +145,7 @@ export class SvgImportJob {
     const xml=new DOMParser().parseFromString(source,"image/svg+xml"),root=xml.documentElement;
     if(!root||root.localName!=="svg"||xml.getElementsByTagName("parsererror").length)throw new Error("Invalid SVG document");
     const frame=viewport(root),title=Array.from(root.childNodes).find(n=>n.nodeType===1&&(n as Element).localName==="title")?.textContent?.trim()||"SVG";
-    const snapshot:DrawingSnapshot={schema:"drawing.document",id,title,layers:[],assets:{},artboard:{width:binary64(frame.width),height:binary64(frame.height)}};this.document=snapshot;
+    const snapshot:DrawingSnapshot={schema:"drawing.document",id,title,layers:[],assets:DrawingAssetsOwner.fromEntriesCold([]),artboard:{width:binary64(frame.width),height:binary64(frame.height)}};this.document=snapshot;
     const box=root.getAttribute("viewBox");this.userViewport=box?box.trim().split(/[ ,\t\r\n]+/).map(scalar).slice(2) as [number,number]:[frame.width,frame.height];
     for(const node of Array.from(root.getElementsByTagName("*")))if(["linearGradient","radialGradient"].includes(node.localName)&&node.hasAttribute("id")){const id=node.getAttribute("id")!;if(this.gradients.has(id))throw new Error("Duplicate SVG gradient id");this.gradients.set(id,node);}
     this.pending=[{element:root,id:"svg",style:{},parent:snapshot.layers as Layer[]}];

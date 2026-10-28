@@ -1,0 +1,50 @@
+{
+  "nativeExecution":false,
+  "snapshot":{
+    "schema":"stdio.ifc",
+    "entities":[
+      {"id":1,"name":"IFCUNITASSIGNMENT","args":[{"kind":"aggregate","value":[{"kind":"reference","value":2},{"kind":"reference","value":3}]}]},
+      {"id":2,"name":"IFCSIUNIT","args":[{"kind":"derived"},{"kind":"enum","value":"LENGTHUNIT"},{"kind":"unset"},{"kind":"enum","value":"METRE"}]},
+      {"id":3,"name":"IFCSIUNIT","args":[{"kind":"derived"},{"kind":"enum","value":"AREAUNIT"},{"kind":"unset"},{"kind":"enum","value":"SQUARE_METRE"}]},
+      {"id":4,"name":"IFCSIUNIT","args":[{"kind":"derived"},{"kind":"enum","value":"TIMEUNIT"},{"kind":"unset"},{"kind":"enum","value":"SECOND"}]},
+      {"id":5,"name":"IFCLOCALPLACEMENT","args":[{"kind":"unset"},{"kind":"reference","value":6}]},
+      {"id":6,"name":"IFCAXIS2PLACEMENT3D","args":[{"kind":"reference","value":7},{"kind":"unset"},{"kind":"unset"}]},
+      {"id":7,"name":"IFCCARTESIANPOINT","args":[{"kind":"aggregate","value":[{"kind":"real","value":0},{"kind":"real","value":0},{"kind":"real","value":0}]}]},
+      {"id":18446744073709551615,"name":"IFCLOCALPLACEMENT","args":[{"kind":"unset"},{"kind":"reference","value":6}]},
+      {"id":13,"name":"IFCNAMEDUNIT","args":[{"kind":"reference","value":14},{"kind":"enum","value":"LENGTHUNIT"}],"complex":[{"name":"IFCCONVERSIONBASEDUNIT","args":[{"kind":"string","value":"Foot"},{"kind":"reference","value":15}]}]},
+      {"id":14,"name":"IFCDIMENSIONALEXPONENTS","args":[{"kind":"integer","value":1},{"kind":"integer","value":0},{"kind":"integer","value":0},{"kind":"integer","value":0},{"kind":"integer","value":0},{"kind":"integer","value":0},{"kind":"integer","value":0}]},
+      {"id":15,"name":"IFCMEASUREWITHUNIT","args":[{"kind":"typedValue","value":{"name":"IFCLENGTHMEASURE","items":[{"kind":"real","value":0.3048}]}},{"kind":"reference","value":2}]},
+      {"id":16,"name":"IFCMEASUREWITHUNIT","args":[{"kind":"typedValue","value":{"name":"IFCLENGTHMEASURE","items":[{"kind":"real","value":0.5}]}},{"kind":"reference","value":2}]},
+      {"id":17,"name":"IFCPROPERTYSINGLEVALUE","args":[{"kind":"string","value":"Malformed Reference Constructor"},{"kind":"unset"},{"kind":"typedValue","value":{"name":"IFCLOCALPLACEMENT","items":[{"kind":"reference","value":5}]}},{"kind":"unset"}]},
+      {"id":18,"name":"IFCPROPERTYSET","args":[{"kind":"string","value":"0123456789012345678901"},{"kind":"unset"},{"kind":"string","value":"Pset"},{"kind":"unset"},{"kind":"aggregate","value":[{"kind":"reference","value":17}]}]},
+      {"id":19,"name":"IFCRELDEFINESBYPROPERTIES","args":[{"kind":"string","value":"0123456789012345678902"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"},{"kind":"aggregate","value":[{"kind":"reference","value":20}]},{"kind":"typedValue","value":{"name":"IFCPROPERTYSETDEFINITIONSET","items":[{"kind":"aggregate","value":[{"kind":"reference","value":18}]}]}}]},
+      {"id":20,"name":"IFCWALL","args":[{"kind":"string","value":"0123456789012345678903"},{"kind":"unset"},{"kind":"string","value":"Wall"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"}]}
+    ]
+  },
+  "cases":[
+    {"name":"Set Unique Reference","path":"/entities/0/args/0/value/0/reference","value":"4","admitted":true},
+    {"name":"Keep Same Unique Reference","path":"/entities/0/args/0/value/0/reference","value":"2","admitted":true},
+    {"name":"Reject Duplicate Reference","path":"/entities/0/args/0/value/0/reference","value":"3","admitted":false},
+    {"name":"Set Bare Reference Payload","path":"/entities/0/args/0/value/0/value","value":"4","admitted":true},
+    {"name":"Reject Bare Numeric Payload","path":"/entities/0/args/0/value/0/value","value":4,"admitted":false},
+    {"name":"Set Native Reference Wrapper","path":"/entities/0/args/0/value/0","value":{"kind":"reference","value":4},"admitted":true},
+    {"name":"Reject Wrong Wrapper","path":"/entities/0/args/0/value/0","value":{"kind":"integer","value":4},"admitted":false},
+    {"name":"Reject Wrapper Unknown Field","path":"/entities/0/args/0/value/0","value":{"kind":"reference","value":4,"extra":true},"admitted":false},
+    {"name":"Append Unique Reference","path":"/entities/0/args/0/appendReference","value":"4","admitted":true},
+    {"name":"Reject Duplicate Append","path":"/entities/0/args/0/appendReference","value":"2","admitted":false},
+    {"name":"Reject Missing Append","path":"/entities/0/args/0/appendReference","value":"999","admitted":false},
+    {"name":"Reject Wrong Target Type","path":"/entities/0/args/0/appendReference","value":"5","admitted":false},
+    {"name":"Keep Optional Unset","path":"/entities/4/args/0/reference","value":"","admitted":true},
+    {"name":"Set Exact Maximum Identity","path":"/entities/4/args/0/reference","value":"18446744073709551615","admitted":true},
+    {"name":"Reject Required Unset","path":"/entities/4/args/1/reference","value":"","admitted":false},
+    {"name":"Keep Required Reference","path":"/entities/4/args/1/reference","value":"6","admitted":true},
+    {"name":"Reject Noncanonical Identity","path":"/entities/4/args/0/reference","value":"05","admitted":false},
+    {"name":"Reject Zero Identity","path":"/entities/4/args/0/reference","value":"0","admitted":false},
+    {"name":"Reject Overflow Identity","path":"/entities/4/args/0/reference","value":"18446744073709551616","admitted":false},
+    {"name":"Set Constituent Reference","path":"/entities/8/complex/0/args/1/reference","value":"16","admitted":true},
+    {"name":"Reject Constituent Target Type","path":"/entities/8/complex/0/args/1/reference","value":"2","admitted":false},
+    {"name":"Reject Entity Constructor Inside Value Select","path":"/entities/12/args/2/value/items/0/reference","value":"18446744073709551615","admitted":false},
+    {"name":"Keep Reference Inside Legal Aggregate Alias","path":"/entities/14/args/5/value/items/0/value/0/reference","value":"18","admitted":true},
+    {"name":"Reject Derived Reference","path":"/entities/1/args/0/reference","value":"14","admitted":false}
+  ]
+}

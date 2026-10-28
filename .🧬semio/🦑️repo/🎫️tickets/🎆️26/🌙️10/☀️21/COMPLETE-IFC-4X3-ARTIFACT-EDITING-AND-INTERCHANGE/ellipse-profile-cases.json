@@ -1,0 +1,988 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "scope": "ellipse-extrusion-proposal",
+  "producerExecuted": false,
+  "segmentCap": "total-boundary-edges",
+  "cases": [
+    {
+      "id": "ordinary",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "axes-swapped",
+      "semiAxes": [
+        1,
+        2
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "equal-circle",
+      "semiAxes": [
+        1,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 3.141592653589793,
+      "idealVolume": 2.199114857512855
+    },
+    {
+      "id": "profile-position",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0.4,
+          -0.2
+        ],
+        "rotation": 1.0471975511965976
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "profile-position-unset",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "profile-position-unset",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "solid-tilt",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          3,
+          2,
+          1
+        ],
+        "tilt": 1.5707963267948966
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "oblique-negative-reflection",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        1,
+        2,
+        -3
+      ],
+      "profile": {
+        "translation": [
+          0.4,
+          -0.2
+        ],
+        "rotation": 1.0471975511965976
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        -2,
+        3,
+        4
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 84.63429618148078
+    },
+    {
+      "id": "millimetres",
+      "semiAxes": [
+        2000,
+        1000
+      ],
+      "depth": 700,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": "MILLI",
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6283185.307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "absolute-policy",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 1e-05,
+        "relativeChordError": 0,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "true-plane-not-max-world-scale",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 1.5707963267948966
+      },
+      "mappingScale": [
+        2,
+        1000,
+        3
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 26389.37829015426
+    },
+    {
+      "id": "segment-cap4",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "resource-refusal",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "semi-axis1-zero",
+      "semiAxes": [
+        0,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null
+    },
+    {
+      "id": "semi-axis2-negative",
+      "semiAxes": [
+        2,
+        -1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null
+    },
+    {
+      "id": "semi-axis1-unset",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "semi-axis1-unset",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null
+    },
+    {
+      "id": "integer-semi-axis1",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "INTEGER",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid-carrier",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null
+    },
+    {
+      "id": "foreign-profile-position",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "profile-position-3d",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null
+    },
+    {
+      "id": "tangent-extrusion",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        1,
+        0,
+        0
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "invalid",
+      "geometry": "refuse",
+      "idealArea": null,
+      "idealVolume": null
+    },
+    {
+      "id": "coordinate-collapse",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          1e+20,
+          1e+20,
+          1e+20
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "precision-refusal",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    },
+    {
+      "id": "subnormal-semi-axis",
+      "semiAxes": [
+        5e-324,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "precision-refusal",
+      "idealArea": 1.5e-323,
+      "idealVolume": 1e-323
+    },
+    {
+      "id": "integer-canonical-real-repair",
+      "semiAxes": [
+        2,
+        1
+      ],
+      "depth": 0.7,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profile": {
+        "translation": [
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "solid": {
+        "translation": [
+          0,
+          0,
+          0
+        ],
+        "tilt": 0
+      },
+      "mappingScale": [
+        1,
+        1,
+        1
+      ],
+      "unitPrefix": null,
+      "carriers": {
+        "semiAxis1": "REAL",
+        "semiAxis2": "REAL",
+        "depth": "REAL"
+      },
+      "sampling": {
+        "absoluteChordErrorMetres": 0,
+        "relativeChordError": 0.001,
+        "maxSegments": 4096
+      },
+      "damage": "none",
+      "formal": "valid",
+      "geometry": "supported",
+      "idealArea": 6.283185307179586,
+      "idealVolume": 4.39822971502571
+    }
+  ]
+}

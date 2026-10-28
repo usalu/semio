@@ -1,0 +1,7 @@
+# Official AP214 Schema Evidence
+
+Retrieved 2026-10-21 from the MBx Interoperability Forum EXPRESS schema catalogue, https://www.mbx-if.org/home/mbx/resources/express-schemas/. Its AP214 Ed.3 2010 EXP link is https://www.mbx-if.org/home/wp-content/uploads/2024/07/AP214E3_2010.zip. The 101465-byte ZIP has SHA256 8b6360658c444c6b90e0ad63137d7c392103edc4cbc39dc440ee497378630b74. Its only member AP214E3_2010.exp is 860508 bytes, SHA256 71ab140fe7f774321beee6a31e6fee2afc3973fd60350ae2018c74c211fb4295. Temporary fetched material is under this ticket's generated folder.
+
+This is an official schema reference, not an official Part21 test case and not a native validation result. The published schema confirms AUTOMOTIVE_DESIGN; geometrically_bounded_wireframe_shape_representation requires at least one geometric_curve_set or mapped_item and restricts polylines within its curves to more than two points (WR6). text_literal_with_extent inherits literal, axis2 placement, alignment, path and font and adds planar_extent. The native STEP execution agent received the exact original schema for its implementation checks.
+
+The current official CAx resources page https://www.mbx-if.org/home/cax/resources/ describes NIST FTC/CTC geometry-only AP203 and AP242 files; it does not reclassify the checked-in NIST AP203 fixture as AP214. Official test-round publications are linked from https://www.mbx-if.org/home/cax/testrounds/. No Adobe or AP214 conformance fixture or complete STEP compliance claim is inferred from this acquisition.

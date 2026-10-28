@@ -12,6 +12,8 @@ use semio_framework_job::{OriginalCallerSourceLoan, OriginalTurnFailure, StepCon
 use semio_framework_value::{RetainedCloneProgress, ValueError, ValueRefusalKind};
 use semio_framework_value::retirement::controlled::ControlledRetirement;
 use std::mem::ManuallyDrop;
+#[path="auxiliary.rs"]
+pub mod auxiliary;
 
 #[doc(hidden)]
 pub struct ReceivingSource{pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub recipient:usize,pub epoch:Cell<Option<u64>>,pub clock:fn()->Option<u64>,observed:Cell<Option<u64>>,deadline:u64,loan:ManuallyDrop<Option<OriginalCallerSourceLoan>>,returning_loan:bool}
@@ -32,6 +34,8 @@ type ResponseFields=(Option<String>,Option<semio_framework_value::DslValue>,Opti
 #[doc(hidden)]
 #[path="📦️completed/🦀️.rs"]
 pub mod completed;
+#[path="staged.rs"]
+pub mod staged;
 #[doc(hidden)]
 pub struct RetainedResponse{pub instance:Option<u32>,pub key:Option<instance_lifetime::NativeCloseKey>,pub witness:ReceivingSource,pub request:Option<semio_framework::kernel::RequestId>,pub input:ManuallyDrop<Option<completed::CompletedInput>>,pub fields:ManuallyDrop<Option<ResponseFields>>,pub request_result:ManuallyDrop<Option<Result<Vec<u8>,semio_framework::Fault>>>,pub request_closing:ManuallyDrop<Option<ControlledRetirement<Result<Vec<u8>,semio_framework::Fault>>>>,pub closing:ManuallyDrop<Option<ControlledRetirement<ResponseFields>>>,pub output:ManuallyDrop<Option<semio_framework_plugin_runtime_ops::ops_ingress::PluginExchangeOutput>>,pub failure:ManuallyDrop<Option<OriginalTurnFailure>>,pub finished:bool}
 impl RetainedResponse{

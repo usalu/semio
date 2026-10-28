@@ -1,12 +1,13 @@
 //! 🪪️ Artifact identity, capabilities, localization and definitions.
-use semio_framework_plugin_ownership::sdk_fault::ArtifactDefinitionError;
-use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
-use std::collections::BTreeMap;
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 /// 🚪️ `io`'s `ArtifactRef`/`ArtifactKindId` vocabulary is not glob-re-exported at the
 /// `semio-framework-os-kernel` crate root (deliberate — see that crate's own glue.rs comment on
 /// the `io` mount), so it is named through the `store::io::` path everywhere in this file,
 /// exactly like the sibling `🎞️gif` migration leaf (`semio_framework_artifact_reference::ArtifactDialect`) already does.
-use semio_framework_artifact_reference::ArtifactKindId;
+use semio_framework_artifact_reference::{ArtifactDialect, ArtifactKindId, Dialect};
+use semio_framework_plugin_ownership::sdk_fault::ArtifactDefinitionError;
+use semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError;
+use std::collections::BTreeMap;
 
 /// 🪪️ Admits one canonical artifact root owned by this exact plugin identity.
 #[doc(hidden)]
@@ -196,6 +197,11 @@ impl ArtifactIdentityNamespace {
         Self("dialect".into())
     }
 
+    /// 🛤️ Exact directed composition authority for an artifact-owned source and foreign target.
+    pub fn composition_route() -> Self {
+        Self("composition-route".into())
+    }
+
     /// 🧾️ Exact dialect validation authority, distinct from dialect composition authority.
     pub fn validated_dialect() -> Self {
         Self("validated-dialect".into())
@@ -246,6 +252,12 @@ pub struct ArtifactIdentityClaim {
 }
 
 impl ArtifactIdentityClaim {
+    /// 🛤️ Claims one exact directed route with unambiguous UTF-8 byte length framing.
+    pub fn composition_route(from: &ArtifactDialect, into: &ArtifactDialect) -> Result<Self, ArtifactDefinitionError> {
+        let from = from.to_coordinate();
+        let into = into.to_coordinate();
+        Self::new(ArtifactIdentityNamespace::composition_route(), format!("{}:{from}{}:{into}", from.len(), into.len()))
+    }
     /// 🗜️ Binds an exact extension to one codec schema using unambiguous UTF-8 length framing.
     pub fn codec_extension(schema: &str, extension: &str) -> Result<Self, ArtifactDefinitionError> {
         if schema.trim().is_empty() || extension.trim().is_empty() {
@@ -269,6 +281,9 @@ impl ArtifactIdentityClaim {
         if value.trim().is_empty() {
             return Err(ArtifactDefinitionError::new("artifact-definition.claim", "identity claim values must be non-empty"));
         }
+        if namespace == ArtifactIdentityNamespace::composition_route() {
+            parse_composition_route(&value)?;
+        }
         Ok(Self { namespace, value })
     }
 
@@ -281,6 +296,49 @@ impl ArtifactIdentityClaim {
     pub fn value(&self) -> &str {
         &self.value
     }
+}
+
+fn parse_composition_route(value: &str) -> Result<Vec<ArtifactDialect>, ArtifactDefinitionError> {
+    let invalid = || ArtifactDefinitionError::new("artifact-definition.composition-route", "composition route requires two canonical length-framed dialect coordinates");
+    let mut rest = value;
+    let mut endpoints = Vec::with_capacity(2);
+    for _ in 0..2 {
+        let (length, tail) = rest.split_once(':').ok_or_else(invalid)?;
+        let count = length.parse::<usize>().map_err(|_| invalid())?;
+        if count == 0 || length != count.to_string() {
+            return Err(invalid());
+        }
+        let coordinate = tail.get(..count).ok_or_else(invalid)?;
+        let dialect = ArtifactDialect::parse_coordinate(coordinate).map_err(|_| invalid())?;
+        ArtifactKindId::parse(&dialect.artifact_kind).map_err(|_| invalid())?;
+        if dialect.to_coordinate() != coordinate || coordinate.chars().any(char::is_whitespace) {
+            return Err(invalid());
+        }
+        rest = &tail[count..];
+        endpoints.push(dialect);
+    }
+    if !rest.is_empty() {
+        return Err(invalid());
+    }
+    Ok(endpoints)
+}
+
+/// 🎹 Derives native output ownership or exact owned-source route claims for a foreign exporter.
+pub fn composer_identity_claims(owner: &str, writes: Dialect, reads: &[Dialect]) -> Result<Vec<ArtifactIdentityClaim>, ArtifactDefinitionError> {
+    ArtifactKindId::parse(owner).map_err(|_| ArtifactDefinitionError::new("artifact-definition.composer-owner", "composer owner requires a canonical artifact kind"))?;
+    if writes.artifact_kind == owner {
+        return Ok(vec![ArtifactIdentityClaim::new(ArtifactIdentityNamespace::dialect(), ArtifactDialect::from(writes).to_coordinate())?]);
+    }
+    if reads.iter().any(|source| source.artifact_kind != owner) {
+        return Err(ArtifactDefinitionError::new("artifact-definition.composer-owner", "foreign output routes must read artifact-owned source dialects"));
+    }
+    let mut claims = reads.iter().filter(|source| source.artifact_kind == owner).map(|source| ArtifactIdentityClaim::composition_route(&ArtifactDialect::from(*source), &ArtifactDialect::from(writes))).collect::<Result<Vec<_>, _>>()?;
+    claims.sort();
+    claims.dedup();
+    if claims.is_empty() {
+        return Err(ArtifactDefinitionError::new("artifact-definition.composer-owner", "foreign composer requires an artifact-owned source dialect"));
+    }
+    Ok(claims)
 }
 
 /// 🌐️ Explicit locale identity. There is intentionally no default locale.
@@ -572,6 +630,9 @@ impl ArtifactDefinition {
                 return Err(ArtifactDefinitionError::new("artifact-definition.descriptor", format!("capability {} has no immutable descriptor", capability.identity)));
             }
             for claim in capability.claims() {
+                if claim.namespace() == &ArtifactIdentityNamespace::composition_route() && parse_composition_route(claim.value())?[0].artifact_kind != self.identity.as_str() {
+                    return Err(ArtifactDefinitionError::new("artifact-definition.composition-route-owner", "composition route source must belong to its declaring artifact"));
+                }
                 if let Some(previous) = claims.insert(claim.clone(), capability.identity.clone()) {
                     return Err(ArtifactDefinitionError::new("artifact-definition.duplicate-claim", format!("{}:{} is claimed by both {} and {}", claim.namespace.as_str(), claim.value, previous, capability.identity)));
                 }
@@ -600,8 +661,7 @@ impl ArtifactMime {
         let Some(subtype) = segments.next() else {
             return Err(ArtifactDefinitionError::new("artifact-definition.mime", "MIME must contain a type and subtype"));
         };
-        if segments.next().is_some() || kind.is_empty() || subtype.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'!' | b'#' | b'$' | b'&' | b'^' | b'_' | b'.' | b'+' | b'-' | b'/'))
-        {
+        if segments.next().is_some() || kind.is_empty() || subtype.is_empty() || !value.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || matches!(byte, b'!' | b'#' | b'$' | b'&' | b'^' | b'_' | b'.' | b'+' | b'-' | b'/')) {
             return Err(ArtifactDefinitionError::new("artifact-definition.mime", format!("MIME {value:?} is not lower-case ASCII type/subtype")));
         }
         Ok(Self(value))
@@ -711,3 +771,7 @@ pub fn require_declared_capability_or_record(definition: &ArtifactDefinition, de
         *definition_error = Some(error);
     }
 }
+
+#[cfg(test)]
+#[path = "🧪️tests/composition-route.rs"]
+mod composition_route_tests;

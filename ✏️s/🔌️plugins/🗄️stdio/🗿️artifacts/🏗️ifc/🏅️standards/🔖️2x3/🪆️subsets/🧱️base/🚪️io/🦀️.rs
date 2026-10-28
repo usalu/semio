@@ -12,8 +12,11 @@
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3EdmPreamble;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::Ifc2x3Snapshot;
 use semio_s_artifact_stdio_ifc_2x3_base_model::standards::v2x3::subsets::base::schema::snapshot::STDIO_IFC2X3_DOCUMENT_SCHEMA;
-use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21_with, Part21Preamble, Part21WriteOptions};
+use semio_s_artifact_stdio_contract::part21::{parse_part21_with_comments, write_part21_with, Part21Preamble, Part21WriteOptions};
 use std::fmt::Write as _;
+#[path="⚖️boundary/🦀️.rs"]
+mod exchange_boundary;
+pub use exchange_boundary::{validate_ifc2x3_exchange,validate_ifc2x3_exchange_with};
 
 //#region 🔖️Codec
 /// 📐️ The IFC2X3 FILE_SCHEMA name a conforming Part-21 file must declare.
@@ -24,50 +27,31 @@ pub const IFC2X3_SCHEMA_NAME: &str = "IFC2X3";
 /// `IFC2X3` (so this decoder never silently accepts an IFC4 or plain STEP AP214 file).
 pub fn decode_ifc2x3(bytes: &[u8]) -> Result<Ifc2x3Snapshot, String> {
     let text = std::str::from_utf8(bytes).map_err(|e| format!("ifc2x3: not valid utf-8: {e}"))?;
-    let document = parse_part21(text).map_err(|e| format!("ifc2x3 parse: {e}"))?;
-    let declares_ifc2x3 = document.header.file_schema.iter().any(|v| v.as_list().is_some_and(|items| items.iter().any(|item| item.as_str() == Some(IFC2X3_SCHEMA_NAME))));
-    if !declares_ifc2x3 {
-        return Err(format!("ifc2x3: FILE_SCHEMA does not declare {IFC2X3_SCHEMA_NAME}"));
-    }
-    Ok(Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: parse_edm_preamble(text) })
+    let mut edm_preamble=Ok(None);
+    let document=parse_part21_with_comments(text,&mut |start,end|{if edm_preamble.is_err(){return;}match parse_edm_preamble(&text[start..end]){Ok(Some(value))=>{if matches!(edm_preamble,Ok(Some(_))){edm_preamble=Err("ifc2x3: duplicate EDM preamble".into());}else{edm_preamble=Ok(Some(value));}},Ok(None)=>{},Err(error)=>edm_preamble=Err(error)}}).map_err(|e|format!("ifc2x3 parse: {e}"))?;
+    let snapshot=Ifc2x3Snapshot { schema: STDIO_IFC2X3_DOCUMENT_SCHEMA.into(), document, edm_preamble: edm_preamble? };
+    validate_ifc2x3_exchange(&snapshot)?;
+    Ok(snapshot)
 }
 
 /// 📤️ Regenerates valid IFC2X3 SPF bytes from a snapshot. Losslessness is `write_part21`'s job
 /// (shared with `step`/`4`); this function's only own contribution is the byte encoding.
 pub fn encode_ifc2x3(snapshot: &Ifc2x3Snapshot) -> Result<Vec<u8>, String> {
-    snapshot::validate_ifc2x3_snapshot(snapshot)?;
+    validate_ifc2x3_exchange(snapshot)?;
     let options = Part21WriteOptions { line_ending: "\r\n", blank_after_header: snapshot.edm_preamble.is_some(), blank_before_data: true, blank_before_terminator: true, space_after_instance_equals: true };
     Ok(write_part21_with(&snapshot.document, options, snapshot.edm_preamble.as_ref()).into_bytes())
 }
 //#endregion 🔖️Codec
 
 //#region 🏭️EdmPreamble
-fn parse_edm_preamble(text: &str) -> Option<Ifc2x3EdmPreamble> {
-    let lines = text.lines().map(|line| line.trim_end_matches('\r')).collect::<Vec<_>>();
-    let start = lines.iter().position(|line| *line == "/******************************************************************************************")?;
-    let end = lines[start + 1..].iter().position(|line| *line == "******************************************************************************************/")? + start + 1;
-    let value = |label: &str| {
-        let prefix = format!("* {label}");
-        lines[start + 1..end].iter().find_map(|line| line.strip_prefix(&prefix).map(str::trim_start)).map(str::to_string)
-    };
-    Some(Ifc2x3EdmPreamble {
-        producer: value("STEP Physical File produced by:")?,
-        module: value("Module:")?,
-        creation_date: value("Creation date:")?,
-        host: value("Host:")?,
-        database: value("Database:")?,
-        database_version: value("Database version:")?,
-        database_creation_date: value("Database creation date:")?,
-        schema: value("Schema:")?,
-        model: value("Model:")?,
-        model_creation_date: value("Model creation date:")?,
-        header_model: value("Header model:")?,
-        header_model_creation_date: value("Header model creation date:")?,
-        user: value("EDMuser:")?,
-        group: value("EDMgroup:")?,
-        license: value("License ID and type:")?,
-        options: value("EDMstepFileFactory options:")?,
-    })
+fn parse_edm_preamble(text:&str)->Result<Option<Ifc2x3EdmPreamble>,String>{
+    const OPEN:&str="/******************************************************************************************";const CLOSE:&str="******************************************************************************************/";
+    let mut lines=text.lines();if lines.next()!=Some(OPEN){return Ok(None);}
+    let labels=["* STEP Physical File produced by:","* Module:","* Creation date:","* Host:","* Database:","* Database version:","* Database creation date:","* Schema:","* Model:","* Model creation date:","* Header model:","* Header model creation date:","* EDMuser:","* EDMgroup:","* License ID and type:","* EDMstepFileFactory options:"];
+    let mut values:[Option<String>;16]=std::array::from_fn(|_|None);let mut closed=false;
+    for line in lines{if line==CLOSE{closed=true;continue;}for(index,label)in labels.iter().enumerate(){if let Some(value)=line.strip_prefix(*label){if values[index].is_some(){return Err("ifc2x3: duplicate EDM metadata field".into());}values[index]=Some(value.trim_start_matches(|c:char|c.is_whitespace()||c=='\u{feff}').into());break;}}}
+    if values[0].is_none(){return Ok(None);}if !closed||values.iter().any(Option::is_none){return Err("ifc2x3: incomplete EDM metadata".into());}
+    Ok(Some(Ifc2x3EdmPreamble{producer:values[0].take().unwrap(),module:values[1].take().unwrap(),creation_date:values[2].take().unwrap(),host:values[3].take().unwrap(),database:values[4].take().unwrap(),database_version:values[5].take().unwrap(),database_creation_date:values[6].take().unwrap(),schema:values[7].take().unwrap(),model:values[8].take().unwrap(),model_creation_date:values[9].take().unwrap(),header_model:values[10].take().unwrap(),header_model_creation_date:values[11].take().unwrap(),user:values[12].take().unwrap(),group:values[13].take().unwrap(),license:values[14].take().unwrap(),options:values[15].take().unwrap()}))
 }
 
 impl Part21Preamble for Ifc2x3EdmPreamble {
@@ -141,6 +125,9 @@ pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
 //#region 🧪️Tests
+#[cfg(test)]
+#[path="⚖️boundary/🧪️tests/🦀️.rs"]
+mod exchange_boundary_tests;
 //#endregion 🧪️Tests
 
 //#region 🚪️DerivedIoRegistry

@@ -1,0 +1,242 @@
+{
+  "schema": "xml.no-dtd.validation.v1",
+  "limits": {
+    "sourceBytes": 8388608,
+    "depth": 256,
+    "attributesPerElement": 1024
+  },
+  "cases": [
+    {
+      "id": "minimal",
+      "xml": "<Document DOMVersion=\"8.0\"/>",
+      "valid": true,
+      "root": "Document"
+    },
+    {
+      "id": "unicode-names",
+      "xml": "<日本語 属性=\"Grüße\">😀 &amp; &#x10437;</日本語>",
+      "valid": true,
+      "root": "日本語"
+    },
+    {
+      "id": "comment-pi-cdata",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!--before--><?build test?><Document DOMVersion=\"8&#46;0\"><![CDATA[<raw>&text]]></Document><!--after-->",
+      "valid": true,
+      "root": "Document"
+    },
+    {
+      "id": "nested",
+      "xml": "<root a=\"1\" b=\"2\"><a><b/></a>text</root>",
+      "valid": true,
+      "root": "root"
+    },
+    {
+      "id": "attribute-entities",
+      "xml": "<Document DOMVersion=\"8&#46;0\" note=\"&quot;&apos;&lt;&gt;&amp;\"/>",
+      "valid": true,
+      "root": "Document"
+    },
+    {
+      "id": "empty",
+      "xml": "",
+      "valid": false,
+      "error": "xml.validation.root"
+    },
+    {
+      "id": "mismatch",
+      "xml": "<root><a></b></root>",
+      "valid": false,
+      "error": "xml.validation.close-name"
+    },
+    {
+      "id": "unclosed",
+      "xml": "<root>",
+      "valid": false,
+      "error": "xml.validation.unclosed"
+    },
+    {
+      "id": "duplicate-attribute",
+      "xml": "<root a=\"1\" a=\"2\"/>",
+      "valid": false,
+      "error": "xml.validation.duplicate-attribute"
+    },
+    {
+      "id": "missing-attribute-space",
+      "xml": "<root a=\"1\"b=\"2\"/>",
+      "valid": false,
+      "error": "xml.validation.attribute-space"
+    },
+    {
+      "id": "unknown-entity",
+      "xml": "<root>&unknown;</root>",
+      "valid": false,
+      "error": "xml.validation.entity"
+    },
+    {
+      "id": "invalid-scalar",
+      "xml": "<root>&#0;</root>",
+      "valid": false,
+      "error": "xml.validation.character"
+    },
+    {
+      "id": "literal-less-in-attribute",
+      "xml": "<root a=\"<\"/>",
+      "valid": false,
+      "error": "xml.validation.attribute-value"
+    },
+    {
+      "id": "two-roots",
+      "xml": "<a/><b/>",
+      "valid": false,
+      "error": "xml.validation.root"
+    },
+    {
+      "id": "trailing-text",
+      "xml": "<a/>oops",
+      "valid": false,
+      "error": "xml.validation.root"
+    },
+    {
+      "id": "comment-double-hyphen",
+      "xml": "<a><!--bad--x--></a>",
+      "valid": false,
+      "error": "xml.validation.comment"
+    },
+    {
+      "id": "cdata-delimiter-in-text",
+      "xml": "<a>]]></a>",
+      "valid": false,
+      "error": "xml.validation.character-data"
+    },
+    {
+      "id": "reserved-pi",
+      "xml": "<a><?XML foo?></a>",
+      "valid": false,
+      "error": "xml.validation.processing-instruction"
+    },
+    {
+      "id": "doctype-forbidden",
+      "xml": "<!DOCTYPE root><root/>",
+      "valid": false,
+      "error": "xml.validation.doctype",
+      "policy": true
+    },
+    {
+      "id": "invalid-utf8",
+      "bytes": [
+        60,
+        97,
+        62,
+        255,
+        60,
+        47,
+        97,
+        62
+      ],
+      "valid": false,
+      "error": "xml.validation.utf8"
+    },
+    {
+      "id": "xml-declaration-standalone",
+      "xml": "<?xml version=\"1.0\" standalone=\"yes\"?><a/>",
+      "valid": true,
+      "root": "a"
+    },
+    {
+      "id": "declaration-encoding",
+      "xml": "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"no\"?><a/>",
+      "valid": true,
+      "root": "a"
+    },
+    {
+      "id": "empty-pi",
+      "xml": "<?x?><a/>",
+      "valid": true,
+      "root": "a"
+    },
+    {
+      "id": "bom",
+      "xml": "﻿<a/>",
+      "valid": true,
+      "root": "a"
+    },
+    {
+      "id": "unterminated-entity",
+      "xml": "<a>&amp</a>",
+      "valid": false,
+      "error": "xml.validation.entity"
+    },
+    {
+      "id": "bad-declaration-order",
+      "xml": "<?xml encoding=\"UTF-8\" version=\"1.0\"?><a/>",
+      "valid": false,
+      "error": "xml.validation.declaration"
+    },
+    {
+      "id": "bad-declaration-value",
+      "xml": "<?xml version=\"2.0\"?><a/>",
+      "valid": false,
+      "error": "xml.validation.declaration"
+    },
+    {
+      "id": "empty-character-reference",
+      "xml": "<a>&#x;</a>",
+      "valid": false,
+      "error": "xml.validation.entity"
+    },
+    {
+      "id": "surrogate-character-reference",
+      "xml": "<a>&#55296;</a>",
+      "valid": false,
+      "error": "xml.validation.character"
+    },
+    {
+      "id": "spaced-close",
+      "xml": "<a></a   >",
+      "valid": true,
+      "root": "a"
+    },
+    {
+      "id": "name-start-digit",
+      "xml": "<1a/>",
+      "valid": false,
+      "error": "xml.validation.name"
+    },
+    {
+      "id": "attribute-needs-value",
+      "xml": "<a b/>",
+      "valid": false,
+      "error": "xml.validation.attribute-equals"
+    }
+  ],
+  "lifecycle": {
+    "workGrants": [
+      1,
+      7,
+      64,
+      4096
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      20,
+      50
+    ],
+    "longTextRepeat": 10000,
+    "deepAccepted": 256,
+    "deepRefused": 257,
+    "attributeAccepted": 1024,
+    "attributeRefused": 1025,
+    "longNameBytes": 10000,
+    "differential": {
+      "seed": 91173,
+      "mutations": 1000,
+      "alphabet": "<>/!?&;=\"'a -[]0"
+    }
+  },
+  "oracle": {
+    "library": "saxes",
+    "method": "Strict XML1.0 reader with explicit no-DTD admission policy, behind test-only interface"
+  },
+  "source": "https://www.w3.org/TR/xml/"
+}

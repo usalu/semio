@@ -1,0 +1,17 @@
+{
+  "$schema":"./fem-isolated.schema.json",
+  "schema":"IFC4X3_ADD2",
+  "phase":"fem-topology",
+  "cases":[
+    {"id":"empty-analysis","nodes":[],"members":[],"supports":[],"loads":[],"code":"fem.empty"},
+    {"id":"zero-member-node","nodes":["isolated"],"members":[],"supports":[],"loads":[],"code":"fem.empty"},
+    {"id":"isolated-node","nodes":["start","end","isolated"],"members":[{"start":"start","end":"end"}],"supports":[],"loads":[],"code":"fem.isolated-node"},
+    {"id":"isolated-support","nodes":["start","end","isolated"],"members":[{"start":"start","end":"end"}],"supports":["isolated"],"loads":[],"code":"fem.isolated-node"},
+    {"id":"isolated-load","nodes":["start","end","isolated"],"members":[{"start":"start","end":"end"}],"supports":[],"loads":["isolated"],"code":"fem.isolated-node"},
+    {"id":"self-member","nodes":["start"],"members":[{"start":"start","end":"start"}],"supports":[],"loads":[],"code":"fem.length"},
+    {"id":"missing-node","nodes":["start"],"members":[{"start":"start","end":"absent"}],"supports":[],"loads":[],"code":"fem.reference"},
+    {"id":"connected-frame","nodes":["start","end"],"members":[{"start":"start","end":"end"}],"supports":["start"],"loads":["end"],"code":null},
+    {"id":"shared-node","nodes":["start","middle","end"],"members":[{"start":"start","end":"middle"},{"start":"middle","end":"end"}],"supports":["start"],"loads":["end"],"code":null},
+    {"id":"disconnected-members","nodes":["a","b","c","d"],"members":[{"start":"a","end":"b"},{"start":"c","end":"d"}],"supports":["a","c"],"loads":["b","d"],"code":null}
+  ]
+}

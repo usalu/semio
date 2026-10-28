@@ -1,0 +1,4597 @@
+{
+  "cuts": [
+    0,
+    1,
+    3,
+    7,
+    50,
+    200
+  ],
+  "cases": [
+    {
+      "name": "same valid authored document no-op",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": false
+    },
+    {
+      "name": "changed original document title",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Replacement",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "changed original ordered page roots",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              },
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": true
+    },
+    {
+      "name": "invalid authored grid before equality",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 0,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": false,
+      "error": "mutation.invariant"
+    },
+    {
+      "name": "identical invalid authored document still refuses",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 0,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 0,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": false,
+      "error": "mutation.invariant"
+    },
+    {
+      "name": "authored owning spread missing",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": false,
+      "error": "mutation.invariant"
+    },
+    {
+      "name": "authored frame owning layer missing",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "Aé🌍",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "absent",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": false,
+      "error": "mutation.invariant"
+    },
+    {
+      "name": "authored text run stale UTF8 range",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Fixture Layout",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [
+              {
+                "id": "paragraph-1",
+                "name": "Body",
+                "fontFamily": "sans-serif",
+                "fontSize": 12,
+                "fontWeight": 400,
+                "leading": 14,
+                "tracking": 0,
+                "alignment": "left"
+              }
+            ],
+            "characterStyles": [
+              {
+                "id": "character-1",
+                "name": null,
+                "fontFamily": null,
+                "fontSize": null,
+                "fontWeight": null,
+                "italic": null,
+                "color": null,
+                "tracking": null
+              }
+            ],
+            "stories": [
+              {
+                "id": "story-1",
+                "content": "A",
+                "styleRuns": [
+                  {
+                    "start": 1,
+                    "end": 7,
+                    "paragraphStyleId": "paragraph-1",
+                    "characterStyleId": "character-1"
+                  }
+                ]
+              },
+              {
+                "id": "story-2",
+                "content": "Spare body.",
+                "styleRuns": []
+              }
+            ],
+            "links": [
+              {
+                "id": "link-1",
+                "path": "alpha.png",
+                "hash": "hash-alpha",
+                "width": 800,
+                "height": 600,
+                "dpi": 300,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              },
+              {
+                "id": "link-2",
+                "path": "spare.png",
+                "hash": "hash-spare",
+                "width": 400,
+                "height": 300,
+                "dpi": 72,
+                "colorProfile": null,
+                "state": null,
+                "proxyDataUrl": null
+              }
+            ],
+            "parentPages": [
+              {
+                "id": "parent-1",
+                "name": "Template",
+                "width": 200,
+                "height": 300,
+                "layerIds": [
+                  "parent-layer"
+                ],
+                "layers": [
+                  {
+                    "id": "parent-layer",
+                    "name": "Parent",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "parent-frame"
+                    ]
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "parent-frame",
+                    "layerId": "parent-layer",
+                    "bounds": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 20,
+                      "h": 20,
+                      "rotation": 0
+                    },
+                    "visible": null,
+                    "locked": null,
+                    "fill": null,
+                    "stroke": null
+                  }
+                ]
+              }
+            ],
+            "spreads": [
+              {
+                "id": "spread-1",
+                "name": "First",
+                "pageIds": [
+                  "page-1",
+                  "page-2"
+                ]
+              },
+              {
+                "id": "spread-2",
+                "name": "Second",
+                "pageIds": []
+              }
+            ],
+            "pages": [
+              {
+                "id": "page-1",
+                "name": "Cover",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": [
+                      "frame-rect",
+                      "frame-text"
+                    ]
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [
+                  {
+                    "kind": "rect",
+                    "id": "frame-rect",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 30,
+                      "w": 60,
+                      "h": 40,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "fill": [
+                      1,
+                      1,
+                      1,
+                      1
+                    ],
+                    "stroke": null
+                  },
+                  {
+                    "kind": "text",
+                    "id": "frame-text",
+                    "layerId": "layer-1",
+                    "bounds": {
+                      "x": 20,
+                      "y": 90,
+                      "w": 160,
+                      "h": 120,
+                      "rotation": 0
+                    },
+                    "locked": null,
+                    "visible": null,
+                    "storyId": "story-1",
+                    "threadNext": null,
+                    "columns": 1,
+                    "inset": {
+                      "x": 0,
+                      "y": 0,
+                      "w": 0,
+                      "h": 0
+                    },
+                    "wrapMode": "box"
+                  }
+                ],
+                "overrides": []
+              },
+              {
+                "id": "page-2",
+                "name": "Second",
+                "spreadId": "spread-1",
+                "parentPageId": null,
+                "width": 200,
+                "height": 300,
+                "margins": {
+                  "top": 10,
+                  "right": 10,
+                  "bottom": 10,
+                  "left": 10
+                },
+                "columns": {
+                  "count": 1,
+                  "gutter": 0
+                },
+                "guides": [],
+                "layerIds": [
+                  "layer-1",
+                  "layer-2"
+                ],
+                "layers": [
+                  {
+                    "id": "layer-1",
+                    "name": "Content",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  },
+                  {
+                    "id": "layer-2",
+                    "name": "Second",
+                    "visible": true,
+                    "locked": false,
+                    "objectIds": []
+                  }
+                ],
+                "frames": [],
+                "overrides": []
+              }
+            ],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": false,
+      "error": "mutation.invariant"
+    },
+    {
+      "name": "valid authored empty root collections",
+      "before": {
+        "schema": "layout.layout",
+        "name": "Fixture Layout",
+        "grid": {
+          "baselineGrid": 12,
+          "baselineOffset": 0,
+          "snapToBaseline": true
+        },
+        "paragraphStyles": [
+          {
+            "id": "paragraph-1",
+            "name": "Body",
+            "fontFamily": "sans-serif",
+            "fontSize": 12,
+            "fontWeight": 400,
+            "leading": 14,
+            "tracking": 0,
+            "alignment": "left"
+          }
+        ],
+        "characterStyles": [
+          {
+            "id": "character-1",
+            "name": null,
+            "fontFamily": null,
+            "fontSize": null,
+            "fontWeight": null,
+            "italic": null,
+            "color": null,
+            "tracking": null
+          }
+        ],
+        "stories": [
+          {
+            "id": "story-1",
+            "content": "Aé🌍",
+            "styleRuns": [
+              {
+                "start": 1,
+                "end": 7,
+                "paragraphStyleId": "paragraph-1",
+                "characterStyleId": "character-1"
+              }
+            ]
+          },
+          {
+            "id": "story-2",
+            "content": "Spare body.",
+            "styleRuns": []
+          }
+        ],
+        "links": [
+          {
+            "id": "link-1",
+            "path": "alpha.png",
+            "hash": "hash-alpha",
+            "width": 800,
+            "height": 600,
+            "dpi": 300,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          },
+          {
+            "id": "link-2",
+            "path": "spare.png",
+            "hash": "hash-spare",
+            "width": 400,
+            "height": 300,
+            "dpi": 72,
+            "colorProfile": null,
+            "state": null,
+            "proxyDataUrl": null
+          }
+        ],
+        "parentPages": [
+          {
+            "id": "parent-1",
+            "name": "Template",
+            "width": 200,
+            "height": 300,
+            "layerIds": [
+              "parent-layer"
+            ],
+            "layers": [
+              {
+                "id": "parent-layer",
+                "name": "Parent",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "parent-frame"
+                ]
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "parent-frame",
+                "layerId": "parent-layer",
+                "bounds": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 20,
+                  "h": 20,
+                  "rotation": 0
+                },
+                "visible": null,
+                "locked": null,
+                "fill": null,
+                "stroke": null
+              }
+            ]
+          }
+        ],
+        "spreads": [
+          {
+            "id": "spread-1",
+            "name": "First",
+            "pageIds": [
+              "page-1",
+              "page-2"
+            ]
+          },
+          {
+            "id": "spread-2",
+            "name": "Second",
+            "pageIds": []
+          }
+        ],
+        "pages": [
+          {
+            "id": "page-1",
+            "name": "Cover",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": [
+                  "frame-rect",
+                  "frame-text"
+                ]
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [
+              {
+                "kind": "rect",
+                "id": "frame-rect",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 30,
+                  "w": 60,
+                  "h": 40,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "fill": [
+                  1,
+                  1,
+                  1,
+                  1
+                ],
+                "stroke": null
+              },
+              {
+                "kind": "text",
+                "id": "frame-text",
+                "layerId": "layer-1",
+                "bounds": {
+                  "x": 20,
+                  "y": 90,
+                  "w": 160,
+                  "h": 120,
+                  "rotation": 0
+                },
+                "locked": null,
+                "visible": null,
+                "storyId": "story-1",
+                "threadNext": null,
+                "columns": 1,
+                "inset": {
+                  "x": 0,
+                  "y": 0,
+                  "w": 0,
+                  "h": 0
+                },
+                "wrapMode": "box"
+              }
+            ],
+            "overrides": []
+          },
+          {
+            "id": "page-2",
+            "name": "Second",
+            "spreadId": "spread-1",
+            "parentPageId": null,
+            "width": 200,
+            "height": 300,
+            "margins": {
+              "top": 10,
+              "right": 10,
+              "bottom": 10,
+              "left": 10
+            },
+            "columns": {
+              "count": 1,
+              "gutter": 0
+            },
+            "guides": [],
+            "layerIds": [
+              "layer-1",
+              "layer-2"
+            ],
+            "layers": [
+              {
+                "id": "layer-1",
+                "name": "Content",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              },
+              {
+                "id": "layer-2",
+                "name": "Second",
+                "visible": true,
+                "locked": false,
+                "objectIds": []
+              }
+            ],
+            "frames": [],
+            "overrides": []
+          }
+        ],
+        "printTarget": null
+      },
+      "mutation": {
+        "ReplaceDocument": {
+          "document": {
+            "schema": "layout.layout",
+            "name": "Empty",
+            "grid": {
+              "baselineGrid": 12,
+              "baselineOffset": 0,
+              "snapToBaseline": true
+            },
+            "paragraphStyles": [],
+            "characterStyles": [],
+            "stories": [],
+            "links": [],
+            "parentPages": [],
+            "spreads": [],
+            "pages": [],
+            "printTarget": null
+          }
+        }
+      },
+      "accepted": true
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+# Genuine Drawing Original Receiving
+
+The actual MemberStoreProducer opening contract cannot use the current cold final `decode_snapshot` call. Draw opening needs its native record receiver to consume the admitted original RecordValue/FieldValue body.
+
+The first-party NativeValueSource contract now lends heterogeneous child references as trait objects. NativeReceive/NativeReceiver permit unsized original sources; generated struct/tuple/sequence receivers retain their typed child slots against those original projected loans. Canonical record keys are explicitly names or ordinals. Named flattening lends the enclosing record; ordinal flattening lends the actual nested field record. Tagged statements expose their original tag and payload references, and generated enum receivers retain a separate original payload slot rather than constructing a named JSON carrier.
+
+Original source facets are implemented on genuine RecordValue and FieldValue owners, scalar String/Number/bool/u8, actual Vec elements and original `(String, T)` statement pairs. They perform constant indexed lending and no tree conversion or cloned payload allocation. The source facet rejects nested unsupported wrapper shapes rather than recursively flattening arbitrary inputs.
+
+Independent Ajv/Lodash projection checks actually pass 3 heterogeneous cases, preserving object identity where applicable. Native actual RecordValue/statement typed construction, denial, physical HeapWitness receipt and exact close laws are authored; all edited native sources parse with tree-sitter. These native laws and the derive expansion tests remain unrun because the current repo native execution frontend remains unavailable. Grammar checking is not compile evidence.
+
+Required remaining opening work: original-funded paged UTF8/list/map receivers; original member snapshot wire source; binding the genuine Draw receiving/retirement owners into a real member catalog/producer; transaction-issued identity input; typed qualified command emission and member bundle restore. No cold decoder wrapper or bare-reference source issuer was registered.
+
+## Paged recipient and original wire milestone
+
+Native PagedList sequences now reserve actual structural backing with the incoming original grant before receiving a row; failed placement restores the same child output. PagedUtf8 receives into retained chunks with exact append metadata and structural reservation grants. PagedMap first validates original UTF8 keys through a paged scalar hash/probe/byte comparison index, then receives the original ranked entry pairs without sorting or rebuilding a proxy tree. Every partial index, typed child, output and original binding follows controlled retirement. Explicit empty paged defaults and paged bytes recipients are mounted.
+
+The 28 genuine Draw dependency types now declare NativeReceive; DrawingLayerNode explicitly cuts recursive trait-selection conditions and DrawingAttributes declares its allocation-free missing-field default. A complete original Drawing fixture is compared with serde in a native authored construction/cancellation/physical-receipt law.
+
+The actual Pack record materializer and its Body/Document drivers now accept RetainedWireByteSource plus an original range directly. The same existing API accepts original slices/vectors through the existing neutral wire source trait, with no copied contiguous member snapshot. MemberOpenRequest now lends a source-qualified original_snapshot_source / original_snapshot_close_source over its sealed framed pages and original operation/generation; the actual framed snapshot metadata address distinguishes this source from history. Added an actual paged source/refusal/physical-receipt native law.
+
+Executed independent laws: heterogeneous source projection3; paged text4 (3admitted/1limitrefusal); map5 (4unique/1duplicate); original wire ranges3. These validate neutral semantics and are not executions of the native receivers. All newly edited native source files are grammar checked; Rust macro expansion, type checking, native runtime and HeapWitness laws remain unrun. The real MemberStoreProducer, transaction identity issuer, qualified command publication and composed restore remain required. Pack cursor constructor/header accounting and all caller signature changes require independent native source audit before any producer can claim original-authority completion.
+
+## Independent audit repairs
+
+`NATIVE-CUSTODY-AUDIT.md` correctly found that the original snapshot source depended on the movable MemberOpenRequest address and that Pack receiver birth did not debit header copy. Both are repaired. OriginalWireSourceIdentity now has mandatory range_start; snapshot/history use the stable sealed page slot and actual frame start. All concrete scanned constructors were updated, whole-owner sources use0, and struct-update substitutions retain the original coordinate. The snapshot metadata address is no longer used. A first-party portable identity twin actually passes4 independent Lodash cases (outer descriptor movement, frame substitution, foreign backing, foreign generation); matching native laws and range-substitution denial are mounted but unrun.
+
+RetainedRecordReceiving::birth_demand now quotes twice its concrete fixed owner header width. Both Body and Document admission require incoming item/copy/depth authority before constructing the allocation-free parser and return that copy receipt. Added native positive/three-positive-axis-denial/physical-zero-birth law. Native runtime remains unrun.

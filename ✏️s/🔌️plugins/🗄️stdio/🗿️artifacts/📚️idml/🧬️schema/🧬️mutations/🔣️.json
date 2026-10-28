@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "s.stdio.idml.mutations",
+  "title": "IdmlMutation",
+  "oneOf": [
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "document"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replacePackage"
+        },
+        "document": {
+          "$ref": "s.stdio.idml.package"
+        }
+      }
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mutation",
+        "path",
+        "bytes"
+      ],
+      "properties": {
+        "mutation": {
+          "const": "replacePart"
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "bytes": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        }
+      }
+    }
+  ]
+}

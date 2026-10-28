@@ -1,0 +1,12 @@
+{
+  "cases": [
+    { "id": "current-read", "state": "current", "sent": true },
+    { "id": "old-active-read", "state": "replaced", "sent": false },
+    { "id": "changed-publication", "state": "publication", "sent": false },
+    { "id": "unsubscribed-read", "state": "unsubscribed", "sent": false },
+    { "id": "closed-owner", "state": "closed", "sent": false },
+    { "id": "unsupported-action", "state": "unsupported", "sent": false },
+    { "id": "disabled-record", "state": "disabled", "sent": false },
+    { "id": "foreign-read", "state": "foreign", "sent": false }
+  ]
+}

@@ -674,13 +674,69 @@ def identity_round_trip(ctx: Context) -> Outcome:
     return Outcome(projection, produced)
 
 
+def official_round_trip(ctx: Context) -> Outcome:
+    """🏛️ IfcOpenShell independently materializes and regenerates unchanged official IFC4 samples."""
+    spec = spec_of(ctx)
+    path = ctx.copy_input(spec["input"], "official.ifc")
+    with open(path, "r", encoding="utf-8") as handle:
+        original = handle.read()
+    model = open_model(path)
+    if model.schema != "IFC4" or len(list(model)) != spec["entityCount"]:
+        raise AssertionError("official IFC4 materialized graph differs from the neutral contract")
+    produced = model.to_string().encode("utf-8")
+    projection = project(produced.decode("utf-8"))
+    found = first_divergence("$", project(original), projection)
+    if found:
+        raise AssertionError("IfcOpenShell changed the official exchange graph: " + found)
+    return Outcome(projection, produced)
+
+
 # endregion 🔖️Handlers
+
+
+def geometry(ctx: Context) -> Outcome:
+    """📐️ Independently tessellate the neutral source graph with IfcOpenShell/OpenCascade."""
+    import ifcopenshell.geom
+    spec = spec_of(ctx)
+    text = "ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('IFC4'));ENDSEC;DATA;" + spec["data"] + "ENDSEC;END-ISO-10303-21;"
+    model = ifcopenshell.file.from_string(text)
+    settings = ifcopenshell.geom.settings()
+    settings.set(settings.USE_WORLD_COORDS, True)
+    settings.set(settings.CONVERT_BACK_UNITS, True)
+    settings.set(settings.WELD_VERTICES, True)
+    products, vertices, triangles = [], [], []
+    for product in model.by_type("IfcProduct"):
+        if not product.Representation:
+            continue
+        shape = ifcopenshell.geom.create_shape(settings, product)
+        mesh = shape.geometry
+        offset = len(vertices)
+        vertices.extend(tuple(mesh.verts[index:index + 3]) for index in range(0, len(mesh.verts), 3))
+        triangles.extend(tuple(offset + value for value in mesh.faces[index:index + 3]) for index in range(0, len(mesh.faces), 3))
+        products.append(product.id())
+    bounds = [[min(point[axis] for point in vertices) for axis in range(3)], [max(point[axis] for point in vertices) for axis in range(3)]] if vertices else None
+    projection = {"products": products, "vertices": len(vertices), "triangles": len(triangles), "bounds": bounds}
+    volume, area = 0.0, 0.0
+    for triangle in triangles:
+        a, b, c = (vertices[index] for index in triangle)
+        volume += (a[0] * (b[1] * c[2] - b[2] * c[1]) + a[1] * (b[2] * c[0] - b[0] * c[2]) + a[2] * (b[0] * c[1] - b[1] * c[0])) / 6.0
+        u, v = tuple(b[i] - a[i] for i in range(3)), tuple(c[i] - a[i] for i in range(3))
+        n = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+        area += sum(value * value for value in n) ** 0.5 / 2.0
+    if "volume" in spec["expected"]:
+        projection["volume"] = abs(volume)
+    if "area" in spec["expected"]:
+        projection["area"] = area
+    found = first_divergence("geometry", spec["expected"], projection)
+    if found:
+        raise AssertionError(found)
+    return Outcome(projection, json.dumps(projection).encode("utf-8"))
 
 
 # region 🔖️Registration
 def adapter() -> Adapter:
     """🧭️ Registration entry point the host calls — by full expanded scenario id, one per row."""
-    return Adapter("python").oracle("differential", mutate).oracle("differential-inverse", inverse).oracle("differential-identity-round-trip", identity_round_trip)
+    return Adapter("python").oracle("differential", mutate).oracle("differential-inverse", inverse).oracle("differential-identity-round-trip", identity_round_trip).oracle("differential-official-round-trip", official_round_trip).oracle("differential-geometry-pn-index", geometry).oracle("differential-geometry-faceted-brep", geometry).oracle("differential-geometry-placed-extrusion", geometry).oracle("differential-geometry-triangulated", geometry).oracle("differential-geometry-mapped-triangle", geometry).oracle("differential-geometry-concave-polygon", geometry)
 
 
 # endregion 🔖️Registration

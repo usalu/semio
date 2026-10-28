@@ -1,0 +1,67 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "contract",
+    "cases",
+    "refusals"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.bim-phase-names.v1"
+    },
+    "contract": {
+      "const": {
+        "set": "semio_BimProject",
+        "count": "PhaseCount",
+        "names": "PhaseNames",
+        "countType": "IFCINTEGER",
+        "itemType": "IFCTEXT",
+        "empty": "count-only",
+        "ifcPhase": "singular",
+        "refusal": "bim.phase-definition"
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 7,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "phases"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "phases": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "refusals": {
+      "const": [
+        "missing-count",
+        "negative-count",
+        "wrong-count-type",
+        "mismatched-count",
+        "missing-list",
+        "wrong-list-type",
+        "untyped-list-item",
+        "physical-unit",
+        "duplicate-count",
+        "duplicate-set",
+        "unknown-property"
+      ]
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "title": "Page Layer Cache Preparation",
+  "type": "object",
+  "required": [
+    "identity",
+    "layers",
+    "frames"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "identity": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "layers": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/frame"
+      }
+    }
+  },
+  "$defs": {
+    "frame": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "layer"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "layer": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$comment": "The same original-funded cache owners install into a live Page under ApplyCapability or an unpublished prepared ParentPage under its owning mutation preparation."
+}

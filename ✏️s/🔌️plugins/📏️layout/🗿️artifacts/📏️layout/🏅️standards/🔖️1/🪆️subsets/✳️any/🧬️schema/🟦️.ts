@@ -1,9 +1,11 @@
+export {drawingMemberAt,drawingReadDemand,drawingReadAt,type DrawingReadAdvance} from './🪆️drawing/🟦️.ts';
+import {parseLayoutDrawingMember,type LayoutDrawingMember} from './🪆️drawing/🟦️.ts';
+export {parseLayoutDrawingMember,type LayoutDrawingMember,type LayoutDrawingBirthSource,type LayoutDrawingBirth,type LayoutImportBundle} from './🪆️drawing/🟦️.ts';
 /** 🧬️ Canonical Layout document schema. */
 import { parseSchemaRecord } from "@semio-tech/framework/schema/record";
 import { parseArtifactChild, type ArtifactChild, parseArtifactLink, type ArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
 export type { ArtifactChild, ArtifactLink };
-import {type Binary64,type Binary32,parseBinary64,parseBinary32} from "@semio-tech/framework/value/ieee754";
-import {embeddedChildSlotV1} from "@semio-tech/framework/io/ports";
+import {type Binary64,type Binary32,parseBinary64,parseBinary32,binary64Value} from "@semio-tech/framework/value/ieee754";
 import{parseQuestionDictionary,type QuestionDictionary}from"@semio-tech/framework/value/dictionary";
 export{parseQuestionDictionary,type QuestionDictionary};
 
@@ -24,12 +26,9 @@ export interface FrameImage { kind: "image"; id: string; layerId: string; bounds
 export type Frame = FrameRect | FrameText | FrameImage;
 export interface PageOverride { objectId: string; bounds: LayoutBounds | null; visible: boolean | null; locked: boolean | null }
 export interface ParentPage { id: string; name: string; width: Binary64; height: Binary64; layerIds: string[]; layers: Layer[]; frames: Frame[] }
-export interface Page { id: string; name: string; spreadId: string; parentPageId: string | null; width: Binary64; height: Binary64; margins: PageMargins; columns: PageColumns; guides: LayoutRect[]; layerIds: string[]; layers: Layer[]; frames: Frame[]; overrides: PageOverride[] }
+export interface Page { id: string; name: string; spreadId: string; parentPageId: string | null; width: Binary64; height: Binary64; margins: PageMargins; columns: PageColumns; guides: LayoutRect[]; layerIds: string[]; layers: Layer[]; frames: Frame[]; overrides: PageOverride[]; backgroundDrawing?: LayoutDrawingMember }
 export interface Spread { id: string; name: string; pageIds: string[] }
-/** 🖊️ Inline content of the background drawing child; the composition root binds its owner's codec to the slot. */
-export type LayoutDrawingContent = object;
-export const LAYOUT_BACKGROUND_DRAWING = embeddedChildSlotV1<LayoutDrawingContent>("layout.background-drawing");
-export interface LayoutDrawingChild { handle: ArtifactChild; content: LayoutDrawingContent }
+export type DrawingSourceAddress = {kind:"document"} | {kind:"page";page:number};
 export interface LayoutArtifact {
   /** 📐️ @state artifact */ schema: string;
   /** 🏷️ @state artifact */ name: string;
@@ -43,7 +42,7 @@ export interface LayoutArtifact {
   /** 📄️ @state artifact */ pages: Page[];
   /** 🖨️ @state artifact */ printTarget: string | null;
   /** 🌾️ @state artifact */ dataFields?: QuestionDictionary;
-  /** 🪣️ @state artifact @child kind=s.stdio.semio */ backgroundDrawing?: LayoutDrawingChild;
+  /** 🪣️ @state artifact @child kind=s.draw.drawing */ backgroundDrawing?: LayoutDrawingMember;
   /** 📎️ @state artifact @link_slot roles=model */ referencedModel?: ArtifactLink;
 }
 export interface LayoutDropPreviewState { kind: string; x: number; y: number }
@@ -166,16 +165,14 @@ export function parseParentPage(value: unknown, at = "$" ): ParentPage {
   return { id: string(row.id, `${at}.id`), name: string(row.name, `${at}.name`), width: word(row.width, `${at}.width`), height: word(row.height, `${at}.height`), layerIds: strings(row.layerIds, `${at}.layerIds`), layers: array(row.layers, `${at}.layers`).map((item, index) => parseLayer(item, `${at}.layers[${index}]`)), frames: array(row.frames, `${at}.frames`).map((item, index) => parseFrame(item, `${at}.frames[${index}]`)) };
 }
 export function parsePage(value: unknown, at = "$" ): Page {
-  const keys = ["id", "name", "spreadId", "parentPageId", "width", "height", "margins", "columns", "guides", "layerIds", "layers", "frames", "overrides"], row = record(value, keys, keys, at);
-  return { id: string(row.id, `${at}.id`), name: string(row.name, `${at}.name`), spreadId: string(row.spreadId, `${at}.spreadId`), parentPageId: nullable(row.parentPageId, string, `${at}.parentPageId`), width: word(row.width, `${at}.width`), height: word(row.height, `${at}.height`), margins: parsePageMargins(row.margins, `${at}.margins`), columns: parsePageColumns(row.columns, `${at}.columns`), guides: array(row.guides, `${at}.guides`).map((item, index) => parseLayoutRect(item, `${at}.guides[${index}]`)), layerIds: strings(row.layerIds, `${at}.layerIds`), layers: array(row.layers, `${at}.layers`).map((item, index) => parseLayer(item, `${at}.layers[${index}]`)), frames: array(row.frames, `${at}.frames`).map((item, index) => parseFrame(item, `${at}.frames[${index}]`)), overrides: array(row.overrides, `${at}.overrides`).map((item, index) => parsePageOverride(item, `${at}.overrides[${index}]`)) };
+  const keys = ["id", "name", "spreadId", "parentPageId", "width", "height", "margins", "columns", "guides", "layerIds", "layers", "frames", "overrides"], row = record(value, [...keys,"backgroundDrawing"], keys, at);
+  const result: Page = { id: string(row.id, `${at}.id`), name: string(row.name, `${at}.name`), spreadId: string(row.spreadId, `${at}.spreadId`), parentPageId: nullable(row.parentPageId, string, `${at}.parentPageId`), width: word(row.width, `${at}.width`), height: word(row.height, `${at}.height`), margins: parsePageMargins(row.margins, `${at}.margins`), columns: parsePageColumns(row.columns, `${at}.columns`), guides: array(row.guides, `${at}.guides`).map((item, index) => parseLayoutRect(item, `${at}.guides[${index}]`)), layerIds: strings(row.layerIds, `${at}.layerIds`), layers: array(row.layers, `${at}.layers`).map((item, index) => parseLayer(item, `${at}.layers[${index}]`)), frames: array(row.frames, `${at}.frames`).map((item, index) => parseFrame(item, `${at}.frames[${index}]`)), overrides: array(row.overrides, `${at}.overrides`).map((item, index) => parsePageOverride(item, `${at}.overrides[${index}]`)) };
+  if (Object.hasOwn(row, "backgroundDrawing")) result.backgroundDrawing = parseLayoutDrawingMember(row.backgroundDrawing, `${at}.backgroundDrawing`);
+  return result;
 }
 export function parseSpread(value: unknown, at = "$" ): Spread {
   const keys = ["id", "name", "pageIds"], row = record(value, keys, keys, at);
   return { id: string(row.id, `${at}.id`), name: string(row.name, `${at}.name`), pageIds: strings(row.pageIds, `${at}.pageIds`) };
-}
-export function parseLayoutDrawingChild(value: unknown, at = "$" ): LayoutDrawingChild {
-  const keys = ["handle", "content"], row = record(value, keys, keys, at), handle = parseArtifactChild(row.handle);
-  return { handle, content: LAYOUT_BACKGROUND_DRAWING.codec().parse(row.content, `${at}.content`) };
 }
 export function parseLayoutArtifact(value: unknown, at = "$" ): LayoutArtifact {
   const keys = ["schema", "name", "grid", "paragraphStyles", "characterStyles", "stories", "links", "parentPages", "spreads", "pages", "printTarget", "dataFields", "backgroundDrawing", "referencedModel"];
@@ -192,7 +189,7 @@ export function parseLayoutArtifact(value: unknown, at = "$" ): LayoutArtifact {
     printTarget: nullable(row.printTarget, string, `${at}.printTarget`),
   };
   if (Object.hasOwn(row, "dataFields")) result.dataFields = parseQuestionDictionary(row.dataFields, `${at}.dataFields`);
-  if (Object.hasOwn(row, "backgroundDrawing")) result.backgroundDrawing = parseLayoutDrawingChild(row.backgroundDrawing, `${at}.backgroundDrawing`);
+  if (Object.hasOwn(row, "backgroundDrawing")) result.backgroundDrawing = parseLayoutDrawingMember(row.backgroundDrawing, `${at}.backgroundDrawing`);
   if (Object.hasOwn(row, "referencedModel")) result.referencedModel = parseArtifactLink(row.referencedModel);
   return result;
 }

@@ -1,0 +1,365 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "identity",
+      "dimensions": [
+        2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none"
+    },
+    {
+      "id": "offset",
+      "dimensions": [
+        2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          -1,
+          -0.5,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "bounds": [
+        [
+          -1,
+          -0.5,
+          0
+        ],
+        [
+          1,
+          0.5,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none"
+    },
+    {
+      "id": "rotated",
+      "dimensions": [
+        2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "refDirection": [
+          0,
+          1,
+          0
+        ]
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "supported",
+      "bounds": [
+        [
+          -1,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none"
+    },
+    {
+      "id": "millimetres",
+      "dimensions": [
+        2000,
+        1000,
+        3000
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": "MILLI",
+      "mapping": [],
+      "expected": "supported",
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "volume": 6,
+      "damage": "none"
+    },
+    {
+      "id": "mapped-reflected",
+      "dimensions": [
+        2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [
+        {
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "originRotation": 0,
+          "target": [
+            0,
+            0,
+            0
+          ],
+          "axes": [
+            [
+              -1,
+              0,
+              0
+            ],
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              1
+            ]
+          ],
+          "scale": 1,
+          "secondary": [
+            2,
+            3
+          ]
+        }
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          -2,
+          0,
+          0
+        ],
+        [
+          0,
+          2,
+          9
+        ]
+      ],
+      "volume": 36,
+      "damage": "none"
+    },
+    {
+      "id": "zero-dimension-0",
+      "dimensions": [
+        0,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "bounds": null,
+      "volume": null,
+      "damage": "none"
+    },
+    {
+      "id": "zero-dimension-1",
+      "dimensions": [
+        2,
+        0,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "bounds": null,
+      "volume": null,
+      "damage": "none"
+    },
+    {
+      "id": "zero-dimension-2",
+      "dimensions": [
+        2,
+        1,
+        0
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "bounds": null,
+      "volume": null,
+      "damage": "none"
+    },
+    {
+      "id": "negative-dimension",
+      "dimensions": [
+        -2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "bounds": null,
+      "volume": null,
+      "damage": "none"
+    },
+    {
+      "id": "parallel-placement",
+      "dimensions": [
+        2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": [
+          0,
+          0,
+          1
+        ],
+        "refDirection": [
+          0,
+          0,
+          2
+        ]
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "bounds": null,
+      "volume": null,
+      "damage": "none"
+    },
+    {
+      "id": "wrong-root",
+      "dimensions": [
+        2,
+        1,
+        3
+      ],
+      "position": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "axis": null,
+        "refDirection": null
+      },
+      "unitPrefix": null,
+      "mapping": [],
+      "expected": "unsupported",
+      "bounds": null,
+      "volume": null,
+      "damage": "wrong-root"
+    }
+  ]
+}

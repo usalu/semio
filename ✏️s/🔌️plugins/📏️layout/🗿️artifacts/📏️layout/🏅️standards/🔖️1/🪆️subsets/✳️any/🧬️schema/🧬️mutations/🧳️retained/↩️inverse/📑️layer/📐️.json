@@ -1,0 +1,16 @@
+{
+  "feature": "layout.retained.layer-inverse",
+  "sources": [
+    "authored page/id/name for creation inverse",
+    "original page/id/name for removed layer",
+    "second original page/id/name only for nondefault visible/locked flags"
+  ],
+  "stages": [
+    "fund exact one/two inverse command vector",
+    "prepare each original String with retained authority",
+    "move Strings individually into typed CreateLayer",
+    "prepare/move optional UpdateLayer fields",
+    "swap into stored reverse-replay order"
+  ],
+  "cleanup": "each original String alias and partial mutation vector remains under original controlled owner"
+}

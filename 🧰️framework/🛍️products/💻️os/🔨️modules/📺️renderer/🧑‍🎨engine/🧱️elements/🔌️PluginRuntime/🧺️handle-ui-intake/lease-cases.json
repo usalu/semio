@@ -1,0 +1,62 @@
+{
+  "limits": {
+    "leases": 64,
+    "reads": 64
+  },
+  "cases": [
+    {
+      "name": "before-ack",
+      "state": "before-ack",
+      "acquire": false,
+      "current": false
+    },
+    {
+      "name": "acknowledged",
+      "state": "acknowledged",
+      "acquire": true,
+      "current": true
+    },
+    {
+      "name": "pending-next-ack",
+      "state": "pending-next-ack",
+      "acquire": false,
+      "current": false
+    },
+    {
+      "name": "next-ack-old-target",
+      "state": "next-ack-old-target",
+      "acquire": false,
+      "current": true
+    },
+    {
+      "name": "copied-target",
+      "state": "copied-target",
+      "acquire": false,
+      "current": true
+    },
+    {
+      "name": "foreign-instance",
+      "state": "foreign-instance",
+      "acquire": false,
+      "current": true
+    },
+    {
+      "name": "foreign-handle",
+      "state": "foreign-handle",
+      "acquire": false,
+      "current": true
+    },
+    {
+      "name": "closing",
+      "state": "closing",
+      "acquire": false,
+      "current": false
+    },
+    {
+      "name": "remounted",
+      "state": "remounted",
+      "acquire": false,
+      "current": false
+    }
+  ]
+}

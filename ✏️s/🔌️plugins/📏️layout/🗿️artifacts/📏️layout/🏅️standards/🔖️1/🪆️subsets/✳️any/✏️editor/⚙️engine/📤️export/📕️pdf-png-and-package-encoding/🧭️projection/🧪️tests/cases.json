@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "name": "identity",
+      "affine": [
+        1,
+        0,
+        0,
+        1,
+        0,
+        0
+      ],
+      "height": 300,
+      "origin": [
+        12,
+        24
+      ],
+      "italic": false
+    },
+    {
+      "name": "shear-and-nonuniform-scale",
+      "affine": [
+        2,
+        0.5,
+        0.75,
+        3,
+        40,
+        60
+      ],
+      "height": 300,
+      "origin": [
+        12,
+        24
+      ],
+      "italic": true
+    },
+    {
+      "name": "reflection",
+      "affine": [
+        -1,
+        0.25,
+        0,
+        2,
+        250,
+        20
+      ],
+      "height": 400,
+      "origin": [
+        0,
+        -4
+      ],
+      "italic": false
+    },
+    {
+      "name": "tiny-local-large-affine",
+      "affine": [
+        1000000000000,
+        0,
+        0,
+        1000000000000,
+        -100,
+        -200
+      ],
+      "height": 200,
+      "origin": [
+        1e-10,
+        2e-10
+      ],
+      "italic": false
+    }
+  ]
+}

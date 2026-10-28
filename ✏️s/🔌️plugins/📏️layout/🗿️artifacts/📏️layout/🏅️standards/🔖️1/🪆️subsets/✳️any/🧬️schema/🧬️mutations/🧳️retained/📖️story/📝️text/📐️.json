@@ -1,0 +1,24 @@
+{
+  "feature": "layout.retained.original-text-fragments",
+  "source": "genuine original String projections plus numeric UTF8 boundary spans",
+  "output": "one final contiguous owned String, exact reserve request and actual capacity receipt",
+  "frontiers": [
+    "original mutation/baseline bindings",
+    "one bounded original span descriptor",
+    "one exact reserve",
+    "one actual source-piece binding",
+    "at most256 original UTF8 bytes copied",
+    "original piece alias close",
+    "funded final String transfer",
+    "funded partial original/string retirement"
+  ],
+  "uses": [
+    "explicit EditStory prefix/insert/suffix output",
+    "explicit EditStory deleted original inverse slice"
+  ],
+  "prohibitions": [
+    "no copied original source strings",
+    "no cold concat/format/string flatten",
+    "no fabricated original source owner"
+  ]
+}

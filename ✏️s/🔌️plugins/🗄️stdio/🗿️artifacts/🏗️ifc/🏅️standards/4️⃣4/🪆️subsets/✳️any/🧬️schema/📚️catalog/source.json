@@ -1,0 +1,9 @@
+{
+  "schema": "IFC4",
+  "version": "4.0.2.1",
+  "source": {
+    "url": "https://standards.buildingsmart.org/IFC/RELEASE/IFC4/ADD2_TC1/EXPRESS/IFC4.exp",
+    "mirror": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/EXPRESS/IFC4.exp",
+    "sha256": "a3e46d39a85c2b683e7167572165d74b4ff6f8ef7e7c1e7f314a4980a63c9edb"
+  }
+}

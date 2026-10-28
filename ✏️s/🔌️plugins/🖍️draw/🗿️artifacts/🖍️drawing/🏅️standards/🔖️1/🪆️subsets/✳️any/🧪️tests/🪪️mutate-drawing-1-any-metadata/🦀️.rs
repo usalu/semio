@@ -20,7 +20,7 @@ use semio_repo_test_host::law;
 //#region 🔖️Kinds
 /// 🏷️ This subset's own slice of `KINDS` in `../../../🏷️metadata/🧬️schema/🧬️mutations/🦀️.rs` — duplicated,
 /// not imported, because the oracle-only build must not link the subject crate.
-const KINDS: &[&str] = &["rename-layer", "set-layer-locked", "set-layer-visible"];
+const KINDS: &[&str] = &["set-artboard", "rename-layer", "set-layer-locked", "set-layer-visible"];
 
 /// 👁️ Kinds whose committed specification vector declares NO movement — a refusal or an
 /// accepted no-op — so the observability law must not be claimed for them.
@@ -34,6 +34,11 @@ const UNOBSERVABLE: &[&str] = &[];
 /// on, never recomputed here.
 fn fixture_text(kind: &str) -> (&'static str, &'static str, &'static str) {
     match kind {
+        "set-artboard" => (
+            include_str!("../../../🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/🖼️set-artboard/↔️resize/📸️snapshot/⬅️before/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/🖼️set-artboard/↔️resize/🦠️mutation/🔣️.json"),
+            include_str!("../../../🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/🖼️set-artboard/↔️resize/📸️snapshot/➡️after/🔣️.json"),
+        ),
         "rename-layer" => (
             include_str!("../../../🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/📸️snapshot/⬅️before/🔣️.json"),
             include_str!("../../../🏷️metadata/🧪️tests/🧫️fixtures/🧬️mutations/✏️rename-layer/✏️renames/🦠️mutation/🔣️.json"),

@@ -1,0 +1,72 @@
+{
+  "cases": [
+    {
+      "name": "Document Genuine Birth",
+      "source": {
+        "kind": "document"
+      },
+      "member": {
+        "handle": {
+          "childId": "document-child",
+          "target": {
+            "artifactId": "drawing-document",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      },
+      "initial": {
+        "schema": "drawing.document",
+        "id": "drawing-document",
+        "layers": [],
+        "assets": {},
+        "artboard": {
+          "width": 80,
+          "height": 40
+        }
+      }
+    },
+    {
+      "name": "Independent Page Birth",
+      "source": {
+        "kind": "page",
+        "pageId": "page-a"
+      },
+      "member": {
+        "handle": {
+          "childId": "page-child-a",
+          "target": {
+            "artifactId": "drawing-page-a",
+            "dialect": {
+              "artifactKind": "s.draw.drawing",
+              "standard": "1",
+              "subset": "*"
+            }
+          }
+        }
+      },
+      "initial": {
+        "schema": "drawing.document",
+        "id": "drawing-page-a",
+        "layers": [],
+        "assets": {},
+        "artboard": {
+          "width": 120,
+          "height": 60
+        }
+      }
+    }
+  ],
+  "refusals": [
+    "duplicate-source",
+    "duplicate-child-edge",
+    "duplicate-artifact",
+    "missing-member-source",
+    "foreign-dialect",
+    "inline-current-content",
+    "genesis-id-mismatch"
+  ]
+}

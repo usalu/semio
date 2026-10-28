@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PDF Editable Drawing Paths",
+  "type": "object",
+  "required": [
+    "maximumSegments",
+    "supportedOperators"
+  ],
+  "properties": {
+    "maximumSegments": {
+      "const": 16384
+    },
+    "supportedOperators": {
+      "const": [
+        "m",
+        "l",
+        "c",
+        "v",
+        "y",
+        "h",
+        "re",
+        "S",
+        "s",
+        "f",
+        "F",
+        "f*",
+        "B",
+        "B*",
+        "b",
+        "b*",
+        "n"
+      ]
+    }
+  },
+  "description": "Current paths store device-space Move/Line/Cubic/Close segments at construction time. Paint is consumed once. Supported marked semantic text owns subsequent outline paint until EMC only after successful editable promotion. Unsupported affine text retains painted paths. Nonzero fills and undashed uniform strokes map to owned Drawing styles. Even-odd paint refuses until the Drawing owner supports fill-rule."
+}

@@ -43,8 +43,8 @@ pub fn diff_set_page_guides(payload: &SetPageGuides, base: &LayoutSnapshot) -> p
     let Some(page) = base.pages.iter().find(|page| page.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Page \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if payload.guides.len() > 64 || payload.guides.iter().any(|guide| !guide_ok(guide)) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "A page has at most 64 guides, and each guide origin and size must be finite with a non-negative size.", std::iter::empty::<String>());
+    if payload.guides.iter().any(|guide| !guide_ok(guide)) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Guide origins and sizes must be finite with non-negative sizes.", std::iter::empty::<String>());
     }
     if page.guides == payload.guides {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Page guides are already set to that value.");

@@ -1,0 +1,11 @@
+import {test as register} from "node:test";
+import assert from "node:assert/strict";
+import {readFileSync} from "node:fs";
+import {decodeIfc4} from "../../../../🚪️io/🟦️.ts";
+import {Ifc4GeometryGraph} from "../🟦️.ts";
+import {project} from "../../🟦️.ts";
+export const records:{name:string;passed:boolean;error?:string}[]=[];
+export const checks:Promise<void>[]=[];
+const test=(name:string,run:()=>void):void=>{checks.push(register(name,()=>{try{run();records.push({name,passed:true});}catch(error){records.push({name,passed:false,error:String(error)});throw error;}}));};
+const cases=JSON.parse(readFileSync(new URL("../../../../../../../🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📐️geometry/🔣️.json",import.meta.url),"utf8")).cases as {file:string;issue?:string}[];
+for(const row of cases.filter(r=>r.issue))test("IFC4 borrowed reader neutral: "+row.file,()=>{const source=readFileSync(new URL("../../../../../../../🔖️2x3/🪆️subsets/🧱️base/🧪️tests/🧫️fixtures/📐️geometry/"+row.file,import.meta.url),"utf8").replace("'IFC2X3'","'IFC4'"),snapshot=decodeIfc4(source),graph=new Ifc4GeometryGraph(snapshot),id=row.file==="complex-product.ifc"?17n:10n,index=snapshot.entities.findIndex(e=>e.id===id);assert.equal(graph.entity(index)?.constituentCount,2);assert.equal(graph.constituent(index,0)?.name,row.file==="complex-product.ifc"?"IFCWALL":"IFCEXTRUDEDAREASOLID");assert.equal(graph.constituent(index,1)?.name,row.file==="complex-product.ifc"?"IFCBUILDINGELEMENT":"IFCREPRESENTATIONITEM");assert.equal(graph.constituent(index,2),undefined);const scene=project(snapshot);assert.equal(scene.status,"complete");assert.equal(scene.meshes.length,0);assert.ok(scene.issues.some(i=>i.reason===row.issue));});

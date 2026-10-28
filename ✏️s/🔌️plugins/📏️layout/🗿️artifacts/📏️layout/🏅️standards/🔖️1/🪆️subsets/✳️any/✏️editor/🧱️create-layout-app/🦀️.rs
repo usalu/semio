@@ -19,8 +19,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
                 schema: "layout.layout".into(),
                 export_formats: vec![],
                 import_formats: vec![],
-                export_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
-                import_stdio_kinds: vec!["stdio.svg".into(), "stdio.png".into()],
+                export_stdio_kinds: ["stdio.svg", "stdio.png", "stdio.pdf", "stdio.step", "stdio.idml", "stdio.dxf", "stdio.dwg"].into_iter().map(str::to_string).collect(),
+                import_stdio_kinds: ["stdio.svg", "stdio.pdf", "stdio.step", "stdio.idml", "stdio.dxf", "stdio.dwg"].into_iter().map(str::to_string).collect(),
             })
             .document(["semio", "layout"])
             .icon_id("layout")
@@ -49,6 +49,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .shell_action("exportPng", LocalizedLabel::native("Export Png", "Png exportieren"))
             .shell_action("exportSvg", LocalizedLabel::native("Export Svg", "Svg exportieren"))
             .shell_action("exportPdf", LocalizedLabel::native("Export Pdf", "Pdf exportieren"))
+            .shell_action("exportStep", LocalizedLabel::native("Export STEP", "STEP exportieren"))
+            .shell_action("exportIdml", LocalizedLabel::native("Export IDML", "IDML exportieren"))
             .shell_action("exportPackage", LocalizedLabel::native("Export Package", "Paket exportieren"))
             .action_with(layout_internal_action("patchPage", LocalizedLabel::native("Patch Page", "Seite aktualisieren"), ActionKind::Mutation))
             .action_with(layout_internal_action("patchFrame", LocalizedLabel::native("Patch Frame", "Rahmen aktualisieren"), ActionKind::Mutation))
@@ -58,6 +60,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_destructive("exportPng")
             .action_destructive("exportSvg")
             .action_destructive("exportPdf")
+            .action_destructive("exportStep")
+            .action_destructive("exportIdml")
             .action_destructive("exportPackage")
             .action_with(layout_internal_action("canvasDrop", LocalizedLabel::native("Canvas Drop", "Ablegen auf Leinwand"), ActionKind::Mutation))
             .action_with(layout_internal_action("setActivePage", LocalizedLabel::native("Set Active Page", "Aktive Seite festlegen"), ActionKind::View))
@@ -85,6 +89,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_use_when("exportPdf", vec!["export the document as pdf".into(), "print this layout to pdf".into()])
             .action_describe("exportPng", LocalizedLabel::native("Renders the layout to downloadable PNG raster images.", "Rendert das Layout in herunterladbare PNG-Rasterbilder."))
             .action_describe("exportSvg", LocalizedLabel::native("Renders the layout to a downloadable SVG vector document.", "Rendert das Layout in ein herunterladbares SVG-Vektordokument."))
+            .action_describe("exportStep", LocalizedLabel::native("Exports the active page geometry and text annotations as STEP.", "Exportiert Geometrie und Textanmerkungen der aktiven Seite als STEP."))
+            .action_describe("exportIdml", LocalizedLabel::native("Exports editable pages, text and supported assets as an IDML package.", "Exportiert bearbeitbare Seiten, Text und unterstützte Assets als IDML-Paket."))
             .action_describe("exportPackage", LocalizedLabel::native("Bundles the layout and every asset it references into one downloadable package.", "Bündelt das Layout und alle referenzierten Assets in ein herunterladbares Paket."))
             .action_describe("setActivePage", LocalizedLabel::native("Brings one page of the layout into view.", "Holt eine Seite des Layouts in die Ansicht."))
             .action_describe("focusPreflightIssue", LocalizedLabel::native("Scrolls to and highlights one reported preflight issue.", "Springt zu einem gemeldeten Preflight-Problem und hebt es hervor."))
@@ -107,6 +113,8 @@ pub fn create_layout_app() -> semio_framework_plugin::AppDefinition {
             .action_interactive_job("exportPng", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportSvg", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportPdf", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportStep", InteractiveJobClassification::Migrated)
+            .action_interactive_job("exportIdml", InteractiveJobClassification::Migrated)
             .action_interactive_job("exportPackage", InteractiveJobClassification::Migrated)
             .action_interactive_job("addFrame", InteractiveJobClassification::Migrated)
             .action_interactive_job("addPage", InteractiveJobClassification::Migrated)

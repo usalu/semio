@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "PDF Text String Decode",
+  "type": "array",
+  "items": {
+    "type": "integer",
+    "minimum": 0,
+    "maximum": 255
+  },
+  "description": "PDF text string bytes: UTF16BE BOM, UTF8 BOM or PDFDocEncoding, matching the canonical native codec."
+}

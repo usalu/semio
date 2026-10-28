@@ -308,3 +308,6 @@ pub mod identity_test;
 #[path = "📋️clipboard/🧵️job/🦀️.rs"]
 pub mod clipboard_job;
 //#endregion 🪢️TaxonomyMounts
+
+#[path="🪆️child/🦀️.rs"]
+pub mod child_editor;

@@ -1,0 +1,26 @@
+{
+  "feature": "DrawingMemberStoreProducer",
+  "families": 17,
+  "unmountedFamilies": 10,
+  "sourceIdentity": "one-publication-replay-wire-semantic-source",
+  "cases": [
+    {
+      "name": "deny-source-before-birth",
+      "axes": [
+        "items",
+        "copyBytes",
+        "capacityBytes",
+        "depth"
+      ],
+      "expected": "zero-allocation-original-refusal"
+    },
+    {
+      "name": "admit-three-semantic-ports",
+      "expected": "publication-replay-share-source-and-wire-mounted"
+    },
+    {
+      "name": "catalog-close",
+      "expected": "all-original-factory-aliases-retired"
+    }
+  ]
+}

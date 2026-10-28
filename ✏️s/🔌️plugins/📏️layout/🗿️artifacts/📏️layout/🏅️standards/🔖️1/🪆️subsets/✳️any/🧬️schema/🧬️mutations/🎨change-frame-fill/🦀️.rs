@@ -1,7 +1,6 @@
 //! 🎨 `change-frame-fill` — sets a `Frame::Rect`'s `fill` color (`None` clears it). A no-op on
 //! non-rect frames, matching the pre-migration `PatchFrame`'s `fill` handling.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_model::Frame;
@@ -11,7 +10,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🎨ChangeFrameFill
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -55,8 +54,14 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
     let Some(frame) = page.frames.iter().find(|frame| frame.id() == payload.frame_id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Frame \"{}\" does not exist on page \"{}\".", payload.frame_id, payload.page_id), [payload.frame_id.clone()]);
     };
+    if !matches!(frame, Frame::Rect { .. }) {
+        return protocol::MutationOutcome::error("mutation.target-mismatch", "The target is not a rectangle frame.", [payload.frame_id.clone()]);
+    }
+    if payload.new_fill.as_ref().is_some_and(|color| color.iter().any(|value| !value.is_finite())) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", "Frame colors must be finite.", [payload.frame_id.clone()]);
+    }
     if let Frame::Rect { fill, .. } = frame {
-        if *fill == payload.new_fill {
+        if semio_s_artifact_layout_layout_model::equality::equal_color(fill, &payload.new_fill) {
             return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("Frame \"{}\" already has that fill.", payload.frame_id));
         }
     }
@@ -75,6 +80,7 @@ pub fn diff_change_frame_fill(payload: &ChangeFrameFill, base: &LayoutSnapshot) 
 
 //#region 🎨ChangeFrameFill
 pub fn inverse_change_frame_fill<Op: From<crate::change_frame_fill::ChangeFrameFill>>(payload: &ChangeFrameFill, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
+    if diff_change_frame_fill(payload, base).diff() == &LayoutDiff::default() { return Ok(Vec::new()); }
     Ok((|| {
     let Some(page) = base.pages.iter().find(|page| page.id == payload.page_id) else {
         return Vec::new();
@@ -91,3 +97,11 @@ pub fn inverse_change_frame_fill<Op: From<crate::change_frame_fill::ChangeFrameF
 }
 //#endregion 🎨ChangeFrameFill
 
+
+impl PartialEq for ChangeFrameFill {
+    fn eq(&self, other: &Self) -> bool {
+        self.page_id == other.page_id
+            && self.frame_id == other.frame_id
+            && semio_s_artifact_layout_layout_model::equality::equal_color(&self.new_fill, &other.new_fill)
+    }
+}

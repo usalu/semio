@@ -1,0 +1,22 @@
+[package]
+workspace = "../../../.."
+name = "semio-s-artifact-layout-drawing-composition"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-io-ports = { workspace = true }
+semio-s-artifact-draw-drawing-model = { path = "../../../../../../../🖍️draw/🗿️artifacts/🖍️drawing/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+serde_json = { workspace = true }

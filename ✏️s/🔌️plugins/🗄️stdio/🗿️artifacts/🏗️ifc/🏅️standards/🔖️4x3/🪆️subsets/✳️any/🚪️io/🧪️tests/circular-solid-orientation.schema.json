@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "version",
+    "nativeExecution",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "ifc-circular-solid-orientation"
+    },
+    "version": {
+      "const": 1
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "radius",
+          "depth",
+          "direction",
+          "profileOrigin",
+          "profileRotation",
+          "representedScale",
+          "segments",
+          "polygonVolume"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "radius": {
+            "const": 1
+          },
+          "depth": {
+            "const": 5
+          },
+          "direction": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "profileOrigin": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          },
+          "profileRotation": {
+            "type": "number"
+          },
+          "representedScale": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          },
+          "segments": {
+            "const": 72
+          },
+          "polygonVolume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    }
+  }
+}

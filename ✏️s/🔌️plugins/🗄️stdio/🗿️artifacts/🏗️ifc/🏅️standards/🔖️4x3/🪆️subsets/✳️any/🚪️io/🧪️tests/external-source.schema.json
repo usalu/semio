@@ -1,0 +1,14 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://semio.tech/ifc4x3/external-source-cases",
+ "type":"object","additionalProperties":false,
+ "required":["$schema","schema","sourceRefusal","cancelled","capturePhase","indexPhase","semanticPhases","policyCases","accessors","limits"],
+ "properties":{
+  "$schema":{"const":"./external-source.schema.json"},"schema":{"const":"IFC4X3_ADD2"},
+  "sourceRefusal":{"const":"exchange.source"},"cancelled":{"const":"io.cancelled"},
+  "capturePhase":{"const":"capture-external"},"indexPhase":{"const":"index-external"},
+  "semanticPhases":{"const":["fem-export","fem-topology","fem-loads"]},
+  "policyCases":{"type":"array","minItems":6,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["id","kind","code"],"properties":{"id":{"type":"string","minLength":1},"kind":{"enum":["properties","depth","function","symbol","proto","aliases"]},"code":{"enum":[null,"valueLimit","depthLimit","invalidValue"]}}}},
+  "accessors":{"const":["root","node","member","material","support","loads","word","constructor","array-constructor"]},
+  "limits":{"const":[{"maxEntities":1},{"maxValues":1},{"maxDepth":1}]}
+ }
+}

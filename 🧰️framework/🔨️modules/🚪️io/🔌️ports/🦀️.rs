@@ -13,6 +13,10 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::OnceLock;
 
+#[path="🧵️lower/🦀️.rs"]
+pub mod lower;
+pub use lower::{VectorSceneCursor,VectorSceneGrant,VectorSceneReceipt,VectorSceneStep,VectorSceneEvent,VectorStyleRef,VectorImageBytes};
+
 //#region 🔖️Codec
 /// 🧱️ The validate, lower, lift, SQLite component and external format facets of one child content type, supplied by the composition that knows the child's owner.
 pub trait EmbeddedChildCodecV1: Send + Sync {
@@ -20,6 +24,10 @@ pub trait EmbeddedChildCodecV1: Send + Sync {
     fn validate(&self, content: &DslValue, control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError>;
     /// 🔽️ Reads `content` as the neutral vector scene the parent renders, exports and edits.
     fn lower(&self, content: &DslValue) -> Result<VectorScene, ValueError>;
+    /// 🧵️ Borrows one funded scene descriptor without materializing the child document.
+    fn lower_step<'a>(&self, content: &'a DslValue, cursor: &mut VectorSceneCursor, grant: VectorSceneGrant) -> Result<VectorSceneStep<'a>, ValueError>;
+    /// 📐️ Edits only admitted canvas dimensions without materializing a scene.
+    fn set_canvas_size(&self,content:&mut DslValue,width:f64,height:f64)->Result<(),ValueError>;
     /// 🔼️ Writes a neutral vector scene back as child content.
     fn lift(&self, scene: &VectorScene) -> Result<DslValue, ValueError>;
     /// 🗄️ The DDL the child contributes to the parent's SQLite schema.
@@ -27,9 +35,9 @@ pub trait EmbeddedChildCodecV1: Send + Sync {
     /// 🏷️ Whether `table` belongs to the child's DDL.
     fn sqlite_owns_table(&self, table: &str) -> bool;
     /// 📤️ Projects `content` into the child's tables of the parent's database.
-    fn sqlite_project(&self, content: &DslValue, writer: &mut RowWriter<'_, '_>) -> Result<(), ValueError>;
-    /// ♻️ Reconstructs the content from the child's tables of the parent's database; `declared_schema` is the parent's composed DDL.
-    fn sqlite_reconstruct(&self, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>, declared_schema: &str) -> Result<DslValue, ValueError>;
+    fn sqlite_project(&self, content: &DslValue, writer: &mut RowWriter<'_, '_>) -> Result<i64, ValueError>;
+    /// 📥️ Reconstructs the content from the child's tables of the parent's database; `declared_schema` is the parent's composed DDL.
+    fn sqlite_reconstruct_components(&self, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>, declared_schema: &str) -> Result<Vec<(i64,DslValue)>, ValueError>;
     /// 📥️ The external formats `import` reads, by stable lowercase name.
     fn import_formats(&self) -> &'static [&'static str];
     /// 📝️ The external formats `export` writes, by stable lowercase name.
@@ -312,12 +320,14 @@ pub mod testkit {
     }
 
     impl EmbeddedChildCodecV1 for VectorSceneCodec {
+        fn set_canvas_size(&self,content:&mut DslValue,width:f64,height:f64)->Result<(),ValueError>{if !width.is_finite()||!height.is_finite()||width<0.0||height<0.0{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"test canvas dimensions"))}let DslValue::Object(root)=content else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"test scene"))};let Some((_,DslValue::Object(canvas)))=root.iter_mut().find(|(key,_)|key=="canvas")else{return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"test canvas"))};for(key,value)in canvas{if key=="width"{*value=DslValue::Number(semio_framework_value::Number::Float(width));}else if key=="height"{*value=DslValue::Number(semio_framework_value::Number::Float(height));}}Ok(())}
         fn validate(&self, content: &DslValue, _control: &mut NativeDecodeControl<'_>) -> Result<(), ValueError> {
             VectorScene::from_value(content.clone()).map(|_| ())
         }
         fn lower(&self, content: &DslValue) -> Result<VectorScene, ValueError> {
             VectorScene::from_value(content.clone())
         }
+        fn lower_step<'a>(&self, content: &'a DslValue, cursor: &mut VectorSceneCursor, grant: VectorSceneGrant) -> Result<VectorSceneStep<'a>, ValueError> { cursor.advance(content,grant,None) }
         fn lift(&self, scene: &VectorScene) -> Result<DslValue, ValueError> {
             Ok(scene.to_value())
         }
@@ -327,10 +337,10 @@ pub mod testkit {
         fn sqlite_owns_table(&self, table: &str) -> bool {
             table.starts_with("semio_drawing_")
         }
-        fn sqlite_project(&self, _content: &DslValue, writer: &mut RowWriter<'_, '_>) -> Result<(), ValueError> {
-            writer.insert_key("semio_drawing_document", 1, &[Cell::Integer(1)]).map(|_| ())
+        fn sqlite_project(&self, _content: &DslValue, writer: &mut RowWriter<'_, '_>) -> Result<i64, ValueError> {
+            writer.insert("semio_drawing_document", &[Cell::Integer(1)])
         }
-        fn sqlite_reconstruct(&self, _database: &SqliteDatabase, _control: &mut SqliteSnapshotControl<'_>, _declared_schema: &str) -> Result<DslValue, ValueError> {
+        fn sqlite_reconstruct_components(&self, _database: &SqliteDatabase, _control: &mut SqliteSnapshotControl<'_>, _declared_schema: &str) -> Result<Vec<(i64,DslValue)>, ValueError> {
             Err(ValueError::new(ValueRefusalKind::UnsupportedOwner, "the testkit codec does not reconstruct SQLite content"))
         }
         fn import_formats(&self) -> &'static [&'static str] {
@@ -354,3 +364,14 @@ pub mod testkit {
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🧩️admission/🦀️.rs"]
+pub mod admission;
+pub use admission::{ChildAdmissionSource,ChildAdmissionAdvance,EmbeddedChildAdmission,EmbeddedChildAdmissionCursorV1,EmbeddedChildAdmitterV1,erase_child_admission_source,project_child_admission_source};
+
+pub use admission::{ChildAdmissionAddress,ChildAdmissionStamp,ChildAdmissionQualificationV1,ChildAdmissionRead,ChildAdmissionProviderV1};
+
+pub use admission::vector;
+pub use vector::{EmbeddedChildVectorSourceV1,VectorGraphAdvance,VectorGraphSourceV1};
+
+pub use vector::{OriginalChildVectorPreparation,OriginalChildVectorAdvance};

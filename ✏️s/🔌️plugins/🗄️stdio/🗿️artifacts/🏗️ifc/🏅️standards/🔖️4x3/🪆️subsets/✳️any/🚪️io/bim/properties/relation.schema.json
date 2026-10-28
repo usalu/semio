@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"array","minItems":4,"maxItems":4,"items":{"type":"object","additionalProperties":false,"required":["id","result"],"properties":{"id":{"enum":["wrong-related-object","type-related-object","late-unknown-related-object","empty-authored-holder"]},"result":{"const":"refused"}}}}

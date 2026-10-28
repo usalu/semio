@@ -23,6 +23,10 @@ pub mod manifest {
 }
 
 pub use semio_framework_action_bus as action_bus;
+/// 📝️ Neutral staged requests expose one shared original receiving contract.
+pub mod action_staging {
+    pub use semio_framework_manifest_arg_schema::{StagedFormCensusCursor,StagedFormLimits,StagedFormRequest,StagedFormRequestCursor,StagedFormToken,StagedFormPage,StagedFormChoicePage,StagedFormPageBinding,StagedFormStatus,StagedFormTextFormat,StagedFormBinding,StagedFormBindingEdit,StagedFormBindingOption,StagedFormChoiceEditKind,StagedFormLayout,StagedFormEdit,StagedFormLabel,StagedFormDiagnostic,StagedFormBodyLimits,STAGED_FORM_BODY_LIMITS,STAGED_FORM_EVENT_ACTION,STAGED_FORM_PAGE_ACTION,STAGED_FORM_STATUS_EXTENSION};
+}
 pub use semio_framework_interaction as interaction;
 
 //#region 🧩️ReservedFeatures

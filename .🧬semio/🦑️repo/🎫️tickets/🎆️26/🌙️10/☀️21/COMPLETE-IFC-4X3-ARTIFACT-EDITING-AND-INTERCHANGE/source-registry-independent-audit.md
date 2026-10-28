@@ -1,0 +1,11 @@
+# Per-Owner Source Registry Independent Audit
+
+Read-only current registry/cache/host source checkpoint2026-10-21. No confirmed P1/P2 within exact admitted lifetime contract. No full browser/native execution claim.
+
+Registry keys caches by exact owner and plugin WeakMaps,retains active caches in bounded1024 Map,refuses retired plugin handles permanently and closes all on shell retirement. Focus changes do not retire previous still-active owner's cache. Actual observations carry their acquired source cache rather than reading whichever cache is currently focused after await. Plugin loaded-list effect retires removed exact handles; actual owner remains authoritative for individual document retirement.
+
+Reviewed current LocalSourceRevision.clear explicitly includes retire&&owner!==null in notification change detection. Initial suspicion of empty/held-only cache cleanup loss was based on prior context and is not a current defect. Authored ticket source-registry-retirement-probe.ts executed actual capacity1 registry:fresh acquire→owner retire yields size0 and nextowner admittedtrue. Generated result retained. No production changes.
+
+Registry source subscription deletes active entry/disposes itself when binding retires. Owner/plugin weak lookup retains retired cache facade but acquire checks isBound and refuses its resurrection; a new exact owner creates a new cache. Removed plugin handle is WeakSet tombstoned,so reload must use new actual handle as intended. Capacity refuses new cache rather than evicting live holds. Work collision hardening now requires registry===this before terminal close,preventing terminal-before-conflict from releasing a colliding live key.
+
+Host gate remains incomplete until remote/background entry mutation paths acquire their own actual document owner cache. A focused owner ref cannot stand in for a background document. Full lifecycle tests should include focus switch while twooperations held,ownerclose while unfocused,pluginreload with unchangednumericinstance,and shell cleanup/remount behavior. Registry retireAll is terminal; any React effect lifecycle that intentionally reuses state after cleanup must create a fresh registry or establish that such reuse cannot occur. This is an integration obligation,not demonstrated current runtime defect.

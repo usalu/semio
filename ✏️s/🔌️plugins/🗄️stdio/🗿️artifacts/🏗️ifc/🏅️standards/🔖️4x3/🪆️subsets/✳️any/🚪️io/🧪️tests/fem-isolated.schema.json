@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://semio.tech/ifc4x3/fem-isolated-cases",
+  "type":"object","additionalProperties":false,"required":["$schema","schema","phase","cases"],
+  "properties":{
+    "$schema":{"const":"./fem-isolated.schema.json"},"schema":{"const":"IFC4X3_ADD2"},"phase":{"const":"fem-topology"},
+    "cases":{"type":"array","minItems":10,"items":{"type":"object","additionalProperties":false,"required":["id","nodes","members","supports","loads","code"],"properties":{
+      "id":{"type":"string","minLength":1},"nodes":{"$ref":"#/$defs/ids"},"supports":{"$ref":"#/$defs/ids"},"loads":{"$ref":"#/$defs/ids"},
+      "members":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["start","end"],"properties":{"start":{"type":"string","minLength":1},"end":{"type":"string","minLength":1}}}},
+      "code":{"enum":[null,"fem.empty","fem.isolated-node","fem.length","fem.reference"]}
+    }}}
+  },
+  "$defs":{"ids":{"type":"array","uniqueItems":true,"items":{"type":"string","minLength":1}}}
+}

@@ -1,0 +1,5 @@
+# Dense glTF Accessor Admission
+
+Follow the completed GLB framing checkpoint by checking the actual dense triangle accessor boundary. Native source already rejects component misalignment, declared-buffer overflow and role-inconsistent buffer-view targets; TypeScript currently omits those checks and silently normalizes nonbyte values through Uint8Array.from. Its accessor also copies the entire buffer for every accessor and scans all rows without an interior cancellation checkpoint.
+
+Use the unchanged original Khronos Box GLB, shared closed neutral layout edits and an interior large-accessor cancellation case before implementation. Align supported dense layouts with the native source checks, decode bounded scalar rows through a reusable small DataView and retain original controls. Compare valid world geometry through the existing three.js oracle, and separately check invalid natural layouts with the official Khronos validator. A malformed native byte vector is not representable in Rust's u8 snapshot, so that case is TypeScript source admission rather than a physical GLB fixture. Keep the cold JSON/whole-buffer receiving boundary explicitly open.

@@ -1,0 +1,11 @@
+# Native Constituent Optional Shape Independent Audit
+
+Read-only stable constituent_roster reshaping phases9/11/12/13/4 and private witness/close review. No new confirmed P1/P2. Worker reports TS12/32 and selected details169/440 plus strict; native compilation/runtime/physical receipts remain unexecuted under authentic ingress refusal.
+
+Admission requires actual old direct count equal source args length and known target count. Only auxiliary old0→targetoptional-only or completeold→target0 enters reshaping; primary differing arity remains fallback. Phase11 checks each target direct attribute optional, nonderived and nonGlobalId before defaults. Inherited/source normalization guard still applies. This is not arbitrary value conversion or required-value synthesis.
+
+Positive zero-old reshaping explicitly mints strict private witness even though oldarity0. Validate uses old sourcearity and candidate targetarity separately, exact sealed prepared primitive and original authority. Existing DomainWork strict path disables draft bypass and requiredUnset creation relaxation, so optional Unset is accepted by domain rather than globally treating required defaults as valid. Source reference membership uses prepared selected complex as previously audited.
+
+Phase12 preflights exact targetarity×sizeof(IfcValue), retains Vec owner before fallible reserve and posts actual capacity. Phase13 appends one inline Unset per turn. Phase4 swaps candidate args Vec with cloned selected old tuple; displaced old tuple remains in retyped_args and is never implicitly dropped. Rebuilt candidate then moves under pending SetEntityComplex. Close prioritizes active retirement and retyped_args before rebuilt, then releases state; terminal predicate includes new tuple owner. Added base quote includes two Vec<IfcValue> envelopes. Original source/event/path remain intact except already-audited name donation.
+
+No claim of executed denial stationarity, allocation-failure receipts or cancellation-close law. Authored native everyprefix tests must run under authentic compiler before enabling any native route. Complete complex inheritance validity and general nonzero-to-nonzero arity changes remain outside this subset.

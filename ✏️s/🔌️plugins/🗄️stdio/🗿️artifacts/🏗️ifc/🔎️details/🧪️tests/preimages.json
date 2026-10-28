@@ -1,0 +1,20 @@
+{
+  "schema":"stdio.ifc.progressive-preimage-batches/2",
+  "boundary":"Retained metadata resolves immediate preimages from the captured snapshot and preceding immutable mutations; central progressive Store remains authoritative.",
+  "cases":[
+    {"name":"distinct argument slots","admitted":true,"mutations":[{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"a"}},{"mutation":"setEntityArg","id":1,"index":1,"value":{"kind":"string","value":"b"}}]},
+    {"name":"duplicate argument slot","admitted":true,"mutations":[{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"large preimage"}},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"small"}}]},
+    {"name":"remove descending","admitted":true,"mutations":[{"mutation":"removeEntityArg","id":1,"index":2},{"mutation":"removeEntityArg","id":1,"index":1},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"integer","value":3}}]},
+    {"name":"remove ascending","admitted":true,"mutations":[{"mutation":"removeEntityArg","id":1,"index":0},{"mutation":"removeEntityArg","id":1,"index":1}]},
+    {"name":"insert then edit","admitted":true,"mutations":[{"mutation":"insertEntity","index":0,"entity":{"id":3,"name":"IFCAXIS2PLACEMENT3D","args":[],"complex":[]}},{"mutation":"setEntityArg","id":3,"index":0,"value":{"kind":"unset"}}]},
+    {"name":"distinct final inserts and original edit","admitted":true,"mutations":[{"mutation":"insertEntity","index":1,"entity":{"id":3,"name":"IFCAXIS2PLACEMENT3D","args":[],"complex":[]}},{"mutation":"insertEntity","index":2,"entity":{"id":4,"name":"IFCAXIS2PLACEMENT3D","args":[],"complex":[]}},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"reference","value":3}}]},
+    {"name":"duplicate name","admitted":true,"mutations":[{"mutation":"setEntityName","id":1,"name":"IFCWALL"},{"mutation":"setEntityName","id":1,"name":"IFCDOOR"}]},
+    {"name":"name and other payload","admitted":true,"mutations":[{"mutation":"setEntityName","id":1,"name":"IFCWALL"},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"id"}}]},
+    {"name":"duplicate header tuple","admitted":true,"mutations":[{"mutation":"setFileName","values":[]},{"mutation":"setFileName","values":[]}]},
+    {"name":"duplicate complex tuple","admitted":true,"mutations":[{"mutation":"setEntityComplex","id":1,"complex":[]},{"mutation":"setEntityComplex","id":1,"complex":[]}]},
+    {"name":"shift before source read","admitted":true,"mutations":[{"mutation":"insertEntityArg","id":1,"index":0,"value":{"kind":"unset"}},{"mutation":"setEntityArg","id":1,"index":1,"value":{"kind":"unset"}}]},
+    {"name":"remove after earlier entity insertion","admitted":true,"mutations":[{"mutation":"insertEntity","index":0,"entity":{"id":3,"name":"IFCAXIS2PLACEMENT3D","args":[],"complex":[]}},{"mutation":"removeEntity","id":1}]},
+    {"name":"edit then remove entity","admitted":true,"mutations":[{"mutation":"setEntityName","id":1,"name":"IFCWALL"},{"mutation":"removeEntity","id":1}]}
+  ],
+  "progressiveOracle":{"entity":"IFCPROPERTYSINGLEVALUE","initial":"original","first":"large preimage","second":"small","attribute":"Name"}
+}

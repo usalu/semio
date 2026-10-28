@@ -30,7 +30,8 @@
             "$ref": "#/$defs/IfcValue"
           }
         }
-      }
+      },
+      "additionalProperties": false
     }
   },
   "properties": {
@@ -72,7 +73,8 @@
             "$ref": "#/$defs/IfcValue"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "IfcEntity": {
       "type": "object",
@@ -101,32 +103,189 @@
             "$ref": "#/$defs/IfcComplexType"
           }
         }
-      }
+      },
+      "additionalProperties": false
     },
     "IfcValue": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "unset"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "derived"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "integer"
+            },
+            "value": {
+              "type": "integer"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "real"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "string"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "binary"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^(?:0[0-9A-F]*|1[0-7][0-9A-F]*|2[0-3][0-9A-F]*|3[01][0-9A-F]*)$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "enum"
+            },
+            "value": {
+              "type": "string"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "reference"
+            },
+            "value": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "aggregate"
+            },
+            "value": {
+              "type": "array",
+              "items": {
+                "$ref": "#/$defs/IfcValue"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "typedValue"
+            },
+            "value": {
+              "$ref": "#/$defs/IfcTypedValue"
+            }
+          }
+        }
+      ]
+    },
+    "IfcTypedValue": {
       "type": "object",
+      "additionalProperties": false,
       "required": [
-        "kind"
+        "name",
+        "items"
       ],
       "properties": {
-        "kind": {
-          "type": "string",
-          "enum": [
-            "unset",
-            "derived",
-            "integer",
-            "real",
-            "string",
-            "enum",
-            "reference",
-            "aggregate",
-            "typedValue"
-          ]
+        "name": {
+          "type": "string"
         },
-        "value": {
-          "description": "present for every kind except unset/derived; integer/real are numbers, string/enum are strings, reference is a non-negative integer id, aggregate is IfcValue[], typedValue is a [string, IfcValue[]] tuple"
+        "items": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/IfcValue"
+          }
         }
       }
     }
-  }
+  },
+  "additionalProperties": false
 }

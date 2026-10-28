@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Original Funded Layout Package ZIP Contract",
+  "type": "object",
+  "required": [
+    "schema",
+    "chunkExtents",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "layout.package.zip.original.v1"
+    },
+    "chunkExtents": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1,
+        "maximum": 4096
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "members"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "members": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "object",
+              "required": [
+                "length",
+                "multiplier",
+                "offset",
+                "crc32"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "length": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "multiplier": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "offset": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 255
+                },
+                "crc32": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 4294967295
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

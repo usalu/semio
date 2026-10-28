@@ -17,10 +17,10 @@ import { uiAccessibilityValueV1, uiProgressFractionV1 } from "@semio-tech/ui-con
 import { shellLabel } from "../../🛠️ShellHelpers/🏷️labels/🟦️.tsx";
 import { ShellFaultBoundary } from "../../🐚️Shell/🧯️fault-boundary/🟦️.tsx";
 import { resolveExtensionHost } from "../🗺️element-host-registry/🟦️.ts";
-import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
 import { accessibilityAriaProps } from "../📐️layout-accessibility/🟦️.tsx";
-import { dispatchTrigger, resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
-import { nodeDomId } from "../🪪️stable-dom-ids/🟦️.ts";
+import { resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
+import { controlDomId } from "../🪪️stable-dom-ids/🟦️.ts";
+import { dispatchControlTrigger as dispatchTrigger, type UiControlContext } from "../🎛️control-port/🟦️.ts";
 
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
@@ -41,19 +41,19 @@ export function TextView({ record }: { readonly record: UiNodeRecord }) {
   );
 }
 
-export function ButtonView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
+export function ButtonView({ record, context }: { readonly record: UiNodeRecord; readonly context: UiControlContext }) {
   const component = record.component as Extract<Component, { type: "button" }>;
-  const id = nodeDomId(context.store, record, context.domScope);
+  const id = controlDomId(context, record);
   const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, id);
   const [, render] = useState(0);
   const mounted = useRef(true);
-  const pending = useRef({ store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false });
-  if (pending.current.store !== context.store || pending.current.owner !== context.localDocumentOwner || pending.current.key !== record.key) pending.current = { store: context.store, owner: context.localDocumentOwner, key: record.key, busy: false };
+  const pending = useRef({ source: context.controls.identity, owner: context.localDocumentOwner, key: record.key, busy: false });
+  if (pending.current.source !== context.controls.identity || pending.current.owner !== context.localDocumentOwner || pending.current.key !== record.key) pending.current = { source: context.controls.identity, owner: context.localDocumentOwner, key: record.key, busy: false };
   const state = pending.current;
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   const activate = () => {
-    const current = context.store.getNodeSnapshot(record.id);
-    if (state.busy || !current || current.key !== record.key || current.component.type !== "button" || current.disabled) return;
+    const current = context.controls.read(record.id);
+    if (state.busy || !current || current !== record || current.component.type !== "button" || context.controls.disabled(current)) return;
     state.busy = true;
     render((value) => value + 1);
     const finish = () => { if (pending.current !== state || !mounted.current) return; state.busy = false; render((value) => value + 1); };
@@ -68,9 +68,12 @@ export function ButtonView({ record, context }: { readonly record: UiNodeRecord;
         data-tone={record.style.tone ?? undefined}
         text={component.label}
         icon={resolveControlIconNode(component.icon)}
-        disabled={record.disabled || state.busy}
+        disabled={context.controls.disabled(record) || state.busy}
         aria-label={record.accessibility.label ?? undefined}
-        aria-describedby={aria["aria-describedby"] as string | undefined}
+        aria-labelledby={context.field?.label}
+        aria-describedby={[aria["aria-describedby"], context.field?.describedBy].filter(Boolean).join(" ") || undefined}
+        aria-invalid={context.field?.invalid || undefined}
+        aria-errormessage={context.field?.invalid ? context.field.error : undefined}
         className={activityBorderClass(record)}
         aria-busy={state.busy || record.activity === "loading" || record.activity === "waiting" || undefined}
         onClick={activate}

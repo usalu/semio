@@ -56,4 +56,3 @@ pub fn inverse_delete_character_style<Op: From<crate::create_character_style::Cr
     })())
 }
 
-

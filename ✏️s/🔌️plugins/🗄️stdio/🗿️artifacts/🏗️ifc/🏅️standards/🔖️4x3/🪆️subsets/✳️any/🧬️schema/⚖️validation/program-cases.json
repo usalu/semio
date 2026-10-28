@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "actualProgramRequired": true,
+  "source": "#1=IFCDIRECTION((0.,0.,0.));",
+  "expectedFailure": "IFCDIRECTION.MAGNITUDEGREATERZERO",
+  "compilerSourceWork": 172607,
+  "cases": [
+    {
+      "id": "admit-clear-rules",
+      "phase": "admit",
+      "mutation": "clear-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "admit-replace-rules",
+      "phase": "admit",
+      "mutation": "replace-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "admit-expression-offset",
+      "phase": "admit",
+      "mutation": "expression-offset",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "admit-clear-statements",
+      "phase": "admit",
+      "mutation": "clear-statements",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "admit-delete-variable",
+      "phase": "admit",
+      "mutation": "delete-variable",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "admit-edit-inverse",
+      "phase": "admit",
+      "mutation": "edit-inverse",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "normalize-clear-rules",
+      "phase": "normalize",
+      "mutation": "clear-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "normalize-replace-rules",
+      "phase": "normalize",
+      "mutation": "replace-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "normalize-expression-offset",
+      "phase": "normalize",
+      "mutation": "expression-offset",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "normalize-clear-statements",
+      "phase": "normalize",
+      "mutation": "clear-statements",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "normalize-delete-variable",
+      "phase": "normalize",
+      "mutation": "delete-variable",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "normalize-edit-inverse",
+      "phase": "normalize",
+      "mutation": "edit-inverse",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "structure-clear-rules",
+      "phase": "structure",
+      "mutation": "clear-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "structure-replace-rules",
+      "phase": "structure",
+      "mutation": "replace-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "structure-expression-offset",
+      "phase": "structure",
+      "mutation": "expression-offset",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "structure-clear-statements",
+      "phase": "structure",
+      "mutation": "clear-statements",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "structure-delete-variable",
+      "phase": "structure",
+      "mutation": "delete-variable",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "structure-edit-inverse",
+      "phase": "structure",
+      "mutation": "edit-inverse",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "evaluate-clear-rules",
+      "phase": "evaluate",
+      "mutation": "clear-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "evaluate-replace-rules",
+      "phase": "evaluate",
+      "mutation": "replace-rules",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "evaluate-expression-offset",
+      "phase": "evaluate",
+      "mutation": "expression-offset",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "evaluate-clear-statements",
+      "phase": "evaluate",
+      "mutation": "clear-statements",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "evaluate-delete-variable",
+      "phase": "evaluate",
+      "mutation": "delete-variable",
+      "expected": "retained-invalid-report"
+    },
+    {
+      "id": "evaluate-edit-inverse",
+      "phase": "evaluate",
+      "mutation": "edit-inverse",
+      "expected": "retained-invalid-report"
+    }
+  ]
+}

@@ -1,0 +1,9 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details')
+def write(f,s):
+ b=s.encode();old=f.stat().st_size
+ with f.open('r+b')as o:o.write(b);o.write(b' '*max(0,old-len(b)))
+f=p/'type-guidance.rs';s=f.read_text(encoding='utf8');s=s.replace("    domains:[Option<&'static str>;16],\n",'').replace('    selected:[Option<usize>;16],','    selected:[usize;16],').replace('    kind_cursor: InputKindCursor,',"    kind_cursor: InputKindCursor,\n    domains:[Option<&'static str>;16],").replace('            kind_cursor: Default::default(),','            kind_cursor: Default::default(),\n            domains:Default::default(),').replace('self.state.domains','self.domains').replace('next.domains','self.domains').replace('self.state.selected[self.state.field].filter','self.state.selected[self.state.field].checked_sub(1).filter').replace('next.selected[next.part-1]=Some(next.member)','next.selected[next.part-1]=next.member+1');write(f,s)
+f=p/'type_enum_input_tests.rs';s=f.read_text(encoding='utf8');a='''        if mode<2{let value=request.args.get_mut("value").unwrap().get_mut("$ifcInputs").unwrap();let DslValue::Array(rows)=value else{panic!("rows")};*rows[0].get_mut("value").unwrap().get_mut("value").unwrap()=DslValue::String(if mode==0{"userdefined"}else{"UNKNOWN"}.into());}''';b='''        if mode<2{let value=enum_field_mut(enum_field_mut(&mut request.args,"value"),"$ifcInputs");let DslValue::Array(rows)=value else{panic!("rows")};*enum_field_mut(enum_field_mut(&mut rows[0],"value"),"value")=DslValue::String(if mode==0{"userdefined"}else{"UNKNOWN"}.into());}''';assert a in s;s=s.replace(a,b);s+='''
+fn enum_field_mut<'a>(value:&'a mut DslValue,key:&str)->&'a mut DslValue{let DslValue::Object(fields)=value else{panic!("object")};&mut fields.iter_mut().find(|(name,_)|name==key).unwrap().1}
+''';write(f,s)

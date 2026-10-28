@@ -1,0 +1,101 @@
+{
+  "schema": "semio.ifc4x3.bim-occurrence-properties.v1",
+  "scope": "dimensionless-own-occurrence-properties-on-supported-spatial-holders",
+  "integerDomain": {
+    "minimum": "-2147483648",
+    "maximum": "2147483647",
+    "source": "Canonical BIM PropertyValue JSON schema and Rust i32; not an IFC INTEGER restriction"
+  },
+  "holders": [
+    "site",
+    "building",
+    "storey"
+  ],
+  "values": [
+    {
+      "id": "text-empty",
+      "kind": "Text",
+      "value": ""
+    },
+    {
+      "id": "text-unicode",
+      "kind": "Text",
+      "value": "B\u00fcro \u00b7 \u6771\u4eac\nline"
+    },
+    {
+      "id": "real-negative-zero",
+      "kind": "Real",
+      "bits": "8000000000000000"
+    },
+    {
+      "id": "real-positive",
+      "kind": "Real",
+      "bits": "4004000000000000"
+    },
+    {
+      "id": "integer-negative",
+      "kind": "Integer",
+      "value": "-17"
+    },
+    {
+      "id": "integer-max",
+      "kind": "Integer",
+      "value": "2147483647"
+    },
+    {
+      "id": "integer-min",
+      "kind": "Integer",
+      "value": "-2147483648"
+    },
+    {
+      "id": "boolean-false",
+      "kind": "Boolean",
+      "value": false
+    },
+    {
+      "id": "boolean-true",
+      "kind": "Boolean",
+      "value": true
+    }
+  ],
+  "exportRefusals": [
+    "length",
+    "area",
+    "volume",
+    "angle",
+    "unsafe-integer",
+    "out-of-domain-integer",
+    "nonfinite-real",
+    "wrong-boolean",
+    "missing-holder",
+    "ambiguous-holder",
+    "reserved-storey",
+    "reserved-project",
+    "empty-set",
+    "empty-property",
+    "empty-set-name"
+  ],
+  "importRefusals": [
+    "physical-unit",
+    "logical-unknown",
+    "unset-nominal",
+    "unsafe-integer",
+    "out-of-domain-integer",
+    "measure",
+    "extra-items",
+    "untyped",
+    "duplicate-property",
+    "duplicate-set",
+    "missing-set-name",
+    "empty-property-name",
+    "non-single",
+    "reserved-wrong-holder",
+    "ambiguous-property-owner",
+    "late-unknown-property",
+    "ambiguous-set-owner"
+  ],
+  "importAliases": [
+    "IFCLABEL",
+    "IFCIDENTIFIER"
+  ]
+}

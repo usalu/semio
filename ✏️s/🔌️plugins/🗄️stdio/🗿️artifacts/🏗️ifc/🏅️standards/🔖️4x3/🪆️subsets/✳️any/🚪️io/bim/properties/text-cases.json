@@ -1,0 +1,9 @@
+[
+  {"direction":"export","fault":"unpaired-text","result":"unsupported"},
+  {"direction":"export","fault":"long-set-name","result":"unsupported"},
+  {"direction":"export","fault":"long-property-name","result":"unsupported"},
+  {"direction":"import","fault":"unpaired-text","result":"unsupported"},
+  {"direction":"import","fault":"long-set-name","result":"unsupported"},
+  {"direction":"import","fault":"long-property-name","result":"unsupported"},
+  {"direction":"import","fault":"long-label","result":"unsupported"}
+]

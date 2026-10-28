@@ -1,4 +1,7 @@
 import type { PluginOperationDiagnostic } from "../📬️typed-result/🟦️.ts";
+import type {OwnedUiSurfaceLease} from '../🧺️handle-ui-intake/lease.ts';
+import type {PluginUiRefreshSectionResponse} from '@semio-tech/framework';
+export type {OwnedUiSurfaceLease,OwnedUiSurfaceReadSource} from '../🧺️handle-ui-intake/lease.ts';
 /** 🧷️ The public type contract of the plugin handle: `PluginWasmHandle`, the extension-completion and document-binding shapes, the operation-completion publication and the transaction proposal/outcome types.
  *
  * 🧱️ Child module of {@link ../🟦️.tsx | PluginRuntime}, which re-exports every public name below so import specifiers stay unchanged.
@@ -121,6 +124,8 @@ export type PluginWasmHandle = {
    * `dispatch` as on {@link handleAction}. */
   readonly handleCommand?: (instanceId: number, commandJson: string, viewState: ViewModel, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;
   readonly refreshUi: (instanceId: number, request: PluginUiRefreshRequest) => Promise<PluginUiRefreshResponse>;
+  /** 🎟️ Only an exact internally certified ordinary response can lend its acknowledged original source. */
+  readonly acquireOwnedUiSurface:(instanceId:number,target:PluginUiRefreshSectionResponse)=>OwnedUiSurfaceLease|undefined;
   readonly contextMenu: (instanceId: number, request: PluginContextMenuRequest, viewState: ViewModel) => Promise<readonly ContextMenuItemSpec[]>;
   /** 🧾️ Complete projection used to seed or resynchronize host-owned history state. */
   readonly readHistory: (instanceId: number) => Promise<HistoryPatch>;

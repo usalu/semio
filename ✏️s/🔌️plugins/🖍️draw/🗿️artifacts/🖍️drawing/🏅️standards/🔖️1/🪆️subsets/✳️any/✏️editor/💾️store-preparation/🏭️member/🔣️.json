@@ -1,0 +1,9 @@
+{
+  "feature": "DrawingMemberStoreProducer",
+  "snapshotOpen": "OriginalRecordMemberSnapshotOpen<DrawingSnapshot>",
+  "owners": "actual bounded original typed retirement factories + same shared paged semantic issuer for publication and replay",
+  "sourceDemand": "capacity/depth and copy from shared_semantic_source_demands",
+  "semanticFamilies": 17,
+  "unmountedFamilies": 10,
+  "wire": "DrawingMemberWirePreparationFactory over OriginalJsonReceiving<DrawingMutation>, same shared typed semantic issuer, original decoder cleanup loan"
+}

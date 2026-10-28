@@ -1,0 +1,25 @@
+{
+  "id": "Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_Brep_Geometry",
+  "source": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_Brep_Geometry/content.html",
+    "sha256": "1e1658d668430d01c2f796a3d6ca217ebd89a9f7c18b9a17d9937ff170cfed17"
+  },
+  "predicates": [
+    {
+      "attribute": "RepresentationIdentifier",
+      "kind": "equals-string",
+      "value": "Body"
+    },
+    {
+      "attribute": "RepresentationType",
+      "kind": "equals-string",
+      "value": "Brep"
+    },
+    {
+      "attribute": "Items",
+      "kind": "every-subtype",
+      "value": "IFCFACETEDBREP"
+    }
+  ]
+}

@@ -4,43 +4,20 @@ use super::*;
 
 //#region 🧩️Job
 impl LayoutExportJob {
-    fn base64_one(&mut self) -> Result<(), String> {
-        const TABLE: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        let remaining = self.output.len.saturating_sub(self.base64_cursor);
-        if remaining == 0 {
-            if !self.base64_tail.is_empty() {
-                let a = self.base64_tail[0];
-                let b = self.base64_tail.get(1).copied().unwrap_or(0);
-                self.encoded.append(&[TABLE[(a >> 2) as usize], TABLE[((a & 3) << 4 | b >> 4) as usize], if self.base64_tail.len() > 1 { TABLE[((b & 15) << 2) as usize] } else { b'=' }, b'='])?;
-                self.base64_tail.clear();
-            }
-            self.stage = ExportStage::PackageCommit;
-            return Ok(());
-        }
-        let take = remaining.min(BASE64_INPUT_BYTES_PER_UNIT);
-        let mut input = Vec::with_capacity(self.base64_tail.len() + take);
-        input.extend_from_slice(&self.base64_tail);
-        let source = self.output.take_prefix(take);
-        if source.len() != take {
-            return Err("layout-export-base64-cursor".into());
-        }
-        input.extend_from_slice(&source);
-        self.base64_cursor += take;
-        let complete = input.len() / 3 * 3;
-        let mut encoded = Vec::with_capacity(complete / 3 * 4);
-        for triple in input[..complete].as_chunks::<3>().0 {
-            encoded.extend_from_slice(&[TABLE[(triple[0] >> 2) as usize], TABLE[((triple[0] & 3) << 4 | triple[1] >> 4) as usize], TABLE[((triple[1] & 15) << 2 | triple[2] >> 6) as usize], TABLE[(triple[2] & 63) as usize]]);
-        }
-        self.encoded.append(&encoded)?;
-        self.base64_tail.clear();
-        self.base64_tail.extend_from_slice(&input[complete..]);
-        Ok(())
+    fn base64_one(&mut self,work:&mut OutputWork)->Result<(),String>{
+        const TABLE:&[u8;64]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+        let remaining=self.output.len.saturating_sub(self.base64_cursor);if remaining==0{self.stage=ExportStage::PackageCommit;return Ok(());}
+        let take=remaining.min(BASE64_INPUT_BYTES_PER_UNIT);let mut input=[0u8;BASE64_INPUT_BYTES_PER_UNIT];self.output.copy_range(self.base64_cursor,&mut input[..take],work)?;
+        let mut encoded=[0u8;BASE64_INPUT_BYTES_PER_UNIT.div_ceil(3)*4];let length=take.div_ceil(3)*4;work.copy(length,1)?;
+        for(at,triple)in input[..take].chunks(3).enumerate(){let a=triple[0];let b=triple.get(1).copied().unwrap_or(0);let c=triple.get(2).copied().unwrap_or(0);let out=&mut encoded[at*4..at*4+4];out[0]=TABLE[(a>>2)as usize];out[1]=TABLE[((a&3)<<4|b>>4)as usize];out[2]=if triple.len()>1{TABLE[((b&15)<<2|c>>6)as usize]}else{b'='};out[3]=if triple.len()>2{TABLE[(c&63)as usize]}else{b'='};}
+        self.encoded.append(&encoded[..length],work)?;self.base64_cursor+=take;Ok(())
     }
 
     pub(super) fn stage_name(&self) -> &'static str {
         match self.stage {
             ExportStage::Validate => "layout.export.validate",
             ExportStage::Plan => "layout.export.plan",
+            ExportStage::BeginEncode=>"layout.export.begin-encode",
             ExportStage::Encode => "layout.export.encode",
             ExportStage::Base64 => "layout.export.base64",
             ExportStage::PackageCommit => "layout.export.package-commit",
@@ -48,46 +25,25 @@ impl LayoutExportJob {
         }
     }
 
-    fn advance_one(&mut self) -> Result<(), String> {
-        match self.stage {
-            ExportStage::Validate => self.validate_one(),
-            ExportStage::Plan => self.plan_one(),
-            ExportStage::Encode => self.encode_one(),
-            ExportStage::Base64 => self.base64_one(),
-            ExportStage::PackageCommit => self.package_commit_one(),
-            ExportStage::Complete => Ok(()),
-        }
-    }
+    pub(super) fn advance_one(&mut self,context:&mut StepContext<'_>,drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>)->Result<(),semio_framework_job::OriginalTurnFailure>{match self.stage{ExportStage::Plan=>self.plan_one_in(context,drawing_read),ExportStage::BeginEncode=>self.begin_encode_one(context).map(|_|()),ExportStage::Encode=>self.encode_one(context).map(|_|()),ExportStage::Base64=>self.emit_output_one(context,true,|job,work|job.base64_one(work)).map(|_|()),ExportStage::Validate=>self.validate_one().map_err(|error|Fault::from(error).into()),ExportStage::PackageCommit=>self.package_commit_one(context).map(|_|()),ExportStage::Complete=>Ok(())}}
 
-    fn verify_restore_target(&mut self) -> Result<bool, String> {
-        let Some(target) = &self.restore_target else { return Ok(false) };
-        if self.completed_units < target.completed_units {
-            return Ok(false);
-        }
-        if self.completed_units != target.completed_units || self.active_output().len as u64 != target.output_bytes || self.active_output().digest != target.output_digest {
-            return Err("layout-export-checkpoint-replay-mismatch".into());
-        }
-        self.restore_target = None;
-        Ok(true)
-    }
+    pub(super) fn milestone(&self)->checkpoint::ExportMilestone{checkpoint::ExportMilestone{stage:self.stage as u8,raw_bytes:self.output.len,encoded_bytes:self.encoded.len,published_chunks:self.commit_cursor}}
+    pub(super) fn commit_work_turn(&mut self,committed:bool,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let mut work_units=self.work_units.checked_add(1).ok_or_else(||Fault::from("layout-export-work-overflow"))?;let committed_units=self.committed_units.checked_add(u64::from(committed)).ok_or_else(||Fault::from("layout-export-work-overflow"))?;let matched=if let Some(target)=self.restore_target.as_ref(){checkpoint::replay_position(committed_units,target.committed_units,self.active_output().len as u64==target.output_bytes&&self.active_output().digest==target.output_digest,self.stage==ExportStage::Complete).map_err(Fault::from)?}else{false};if matched{work_units=work_units.max(self.restore_target.as_ref().unwrap().work_units);self.restore_target=None;}self.work_units=work_units;if committed{self.committed_units=committed_units;}context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1+usize::from(committed)+usize::from(matched),copied_bytes:size_of::<u64>()*(1+usize::from(committed))+if matched{size_of::<Option<LayoutExportCheckpoint>>()}else{0},..Default::default()})?;Ok(matched)}
 
-    fn package_commit_one(&mut self) -> Result<(), String> {
-        let chunk = if self.request.as_ref().unwrap().kind.binary() { self.encoded.take_chunk() } else { self.output.take_chunk() };
-        if let Some(bytes) = chunk {
-            if let Some(credit) = &self.media_output_credit {
-                credit.credit(bytes.len()).map_err(|error| error.message)?;
-            }
-            self.output_chunks.as_ref().unwrap().push(bytes).map_err(|error| error.message)?;
-            self.commit_cursor += 1;
-        } else {
-            self.output_chunks.as_ref().unwrap().seal().map_err(|error| error.message)?;
-            self.stage = ExportStage::Complete;
+    fn package_commit_one(&mut self,context:&mut StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let output=if self.request.as_ref().unwrap().kind.binary(){&mut self.encoded}else{&mut self.output};
+        let queue=self.output_chunks.as_ref().unwrap();
+        if output.publishing.is_some(){
+            let demand=ArtifactOutputChunks::original_push_demands();let grant=context.retained_grant();let own=std::mem::size_of::<usize>();if grant.maximum_items<2||grant.maximum_copy_bytes<demand.copy_bytes.saturating_add(own)||grant.maximum_depth<demand.depth{return Ok(false);}
+            let accepted=context.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items-1,maximum_copy_bytes:grant.maximum_copy_bytes-own,..grant},|same|queue.push_original(&mut output.publishing,self.media_output_credit.as_ref(),same))?;
+            if accepted{self.commit_cursor+=1;context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:own,..Default::default()})?;}return Ok(accepted);
         }
-        Ok(())
+        let result=output.transfer_one(context.retained_grant());let progress=match &result{Ok((_,_,progress))=>*progress,Err(error)=>error.retained_progress()};context.consume_retained(progress)?;let(chunk,done,_)=result?;*output.publishing=chunk;
+        if done{let demand=ArtifactOutputChunks::original_seal_demands();let grant=context.retained_grant();let own=size_of::<ExportStage>();if grant.maximum_items<2||grant.maximum_copy_bytes<demand.copy_bytes.saturating_add(own)||grant.maximum_depth<demand.depth{return Ok(false);}let accepted=context.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items-1,maximum_copy_bytes:grant.maximum_copy_bytes-own,..grant},|same|queue.seal_original(same))?;if !accepted{return Ok(false);}self.stage=ExportStage::Complete;context.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:own,..Default::default()})?;return Ok(true);}Ok(false)
     }
 
     fn commit_publication(&mut self) -> Result<LayoutExportPublication, String> {
-        let checkpoint = LayoutExportCheckpoint { completed_units: self.completed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
+        let checkpoint = LayoutExportCheckpoint { work_units: self.work_units, committed_units:self.committed_units, output_bytes: self.active_output().len as u64, output_digest: self.active_output().digest };
         let state = encode_checkpoint(&self.operation, self.request.as_ref().unwrap(), &checkpoint)?;
         LayoutExportPublication::new(LayoutExportPublicationKind::Commit, &state)
     }
@@ -110,6 +66,15 @@ impl LayoutExportJob {
         let one=semio_framework_value::RetirementDemand{depth:1,..Default::default()};
         if self.close_stage==LayoutExportCloseStage::Publication&&!self.slot.terminal_is_empty(){return self.slot.retirement_demands()}
         if self.close_terminal_is_empty(){return Ok(Default::default())}
+        if self.close_stage==LayoutExportCloseStage::Output||self.close_stage==LayoutExportCloseStage::Encoded{let output=if self.close_stage==LayoutExportCloseStage::Output{&self.output}else{&self.encoded};return if output.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportCloseStage>(),..one})}else{output.close_demand()};}
+        if self.close_stage==LayoutExportCloseStage::Interchange{return Ok(semio_framework_value::RetirementDemand{release_bytes:self.interchange_session.as_ref().map_or(0,InterchangeExportSession::next_release_bytes),..one})}
+        if self.close_stage==LayoutExportCloseStage::FramePlanning { if let Some(owner)=self.frame_plan_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.frame_plan.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.frame_plan)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::Drawing { if let Some(owner)=self.drawing_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.drawing.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.drawing)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::Paragraphs { if let Some(owner)=self.text_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.text.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.text)} return Ok(one) }
+        if self.close_stage==LayoutExportCloseStage::PdfOffsets{return if self.pdf_offsets.terminal_is_empty(){Ok(one)}else{self.pdf_offsets.next_close_demand()};}
+        if self.close_stage==LayoutExportCloseStage::PdfItems{return if self.pdf_items.terminal_is_empty(){Ok(one)}else{self.pdf_items.next_close_demand()};}
+        if self.close_stage==LayoutExportCloseStage::PdfPages{return if self.pdf_pages.terminal_is_empty(){Ok(one)}else{self.pdf_pages.next_close_demand()};}
+        if self.close_stage==LayoutExportCloseStage::Fidelity { if let Some(owner)=self.fidelity_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)} if self.fidelity.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fidelity)} return Ok(one) }
         if matches!(self.close_stage,LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit){
             if let Some(owner)=self.output_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,0)}
             if self.close_stage==LayoutExportCloseStage::OutputChunks&&self.output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.output_chunks)}
@@ -117,12 +82,21 @@ impl LayoutExportJob {
         }
         if self.close_stage==LayoutExportCloseStage::Snapshot{return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<LayoutExportRequest>(),..one})}
         if self.close_stage==LayoutExportCloseStage::SnapshotOwner{return Ok(self.snapshot_close.as_ref().map_or(one,|lease|if lease.terminal_is_empty(){one}else{lease.retirement_demands()}))}
-        Ok(semio_framework_value::RetirementDemand{release_bytes:LAYOUT_EXPORT_CLOSE_TURN_BYTES,..one})
+        Ok(semio_framework_value::RetirementDemand{release_bytes:self.next_manual_close_release_bytes(),..one})
     }
     fn close_paired_turn(&mut self,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneStep,semio_framework_value::ValueError>{
         use semio_framework_value::{RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind};let item=RetainedCloneProgress{copied_items:1,..Default::default()};
         if self.output_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.output_retirement,grant)}
         match self.close_stage{
+            LayoutExportCloseStage::PdfOffsets=>{if !self.pdf_offsets.terminal_is_empty(){return self.pdf_offsets.close_one(grant);}self.close_stage=LayoutExportCloseStage::PdfItems;}
+            LayoutExportCloseStage::PdfItems=>{if !self.pdf_items.terminal_is_empty(){return self.pdf_items.close_one(grant);}self.close_stage=LayoutExportCloseStage::PdfPages;}
+            LayoutExportCloseStage::PdfPages=>{if !self.pdf_pages.terminal_is_empty(){return self.pdf_pages.close_one(grant);}self.close_stage=LayoutExportCloseStage::Interchange;}
+
+            LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded=>{let output=if self.close_stage==LayoutExportCloseStage::Output{&mut self.output}else{&mut self.encoded};if !output.terminal_is_empty(){return output.close_one(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}self.close_stage=if self.close_stage==LayoutExportCloseStage::Output{LayoutExportCloseStage::Encoded}else{LayoutExportCloseStage::PngRow};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportCloseStage>(),..item}));}
+            LayoutExportCloseStage::FramePlanning=>{if self.frame_plan_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.frame_plan_retirement,grant)}if self.frame_plan.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.frame_plan,&mut self.frame_plan_retirement,grant)}self.close_stage=LayoutExportCloseStage::ZipEntries;}
+            LayoutExportCloseStage::Drawing=>{if self.drawing_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.drawing_retirement,grant)}if self.drawing.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.drawing,&mut self.drawing_retirement,grant)}self.drawing_source=None;self.close_stage=LayoutExportCloseStage::Paragraphs;}
+            LayoutExportCloseStage::Paragraphs=>{if self.text_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.text_retirement,grant)}if self.text.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.text,&mut self.text_retirement,grant)}self.close_stage=LayoutExportCloseStage::FramePlanning;}
+            LayoutExportCloseStage::Fidelity=>{if self.fidelity_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.fidelity_retirement,grant)}if self.fidelity.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.fidelity,&mut self.fidelity_retirement,grant)}self.close_stage=LayoutExportCloseStage::Drawing;}
             LayoutExportCloseStage::OutputChunks=>{if self.output_chunks.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output_chunks,&mut self.output_retirement,grant)}self.close_stage=LayoutExportCloseStage::MediaCredit;}
             LayoutExportCloseStage::MediaCredit=>{if self.media_output_credit.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_output_credit,&mut self.output_retirement,grant)}self.close_stage=LayoutExportCloseStage::Snapshot;}
             LayoutExportCloseStage::Snapshot=>{if let Some(request)=self.request.as_ref(){if !self.snapshot_close.as_ref().map_or_else(||Arc::strong_count(&request.snapshot)>1,|lease|lease.can_release(&request.snapshot)){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout snapshot lost its paired original supplier"))}if request.page_id.is_some()||request.preflight_json.is_some()||!request.parent_document_id.is_empty()||!request.canonical_base_revision_hex.is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"layout request metadata remains live before snapshot return"))}self.request.take();self.close_stage=LayoutExportCloseStage::SnapshotOwner;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_bytes:size_of::<LayoutExportRequest>(),..item}))}self.close_stage=LayoutExportCloseStage::SnapshotOwner;}
@@ -133,8 +107,8 @@ impl LayoutExportJob {
 
 }
 
-impl InteractiveJob for LayoutExportJob {
-    fn step<'a>(&'a mut self, context: &mut StepContext<'_>) -> LayoutExportTurn<'a> {
+impl LayoutExportJob{
+    pub fn step_with_drawing_read<'a>(&'a mut self, context: &mut StepContext<'_>, drawing_read:Option<&semio_framework_io_ports::ChildAdmissionRead<'_>>) -> LayoutExportTurn<'a> {
         if !self.slot.settle(context)? {
             return Ok(None);
         }
@@ -150,26 +124,11 @@ impl InteractiveJob for LayoutExportJob {
         }
         context.set_stage(self.stage_name());
         loop {
-            if let Err(error) = self.advance_one() {
-                self.slot.publication = Some(Self::fault_publication(&error));
-                return self.drive_publication(context);
-            }
-            self.completed_units = self.completed_units.saturating_add(1);
-            context.consume_fuel(1);
-            if context.is_cancelled() {
-                return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);
-            }
-            match self.verify_restore_target() {
-                Ok(true) => {
-                    self.slot.publication = self.preview_publication().ok();
-                    return self.drive_publication(context);
-                }
-                Ok(false) => {}
-                Err(error) => {
-                    self.slot.publication = Some(Self::fault_publication(&error));
-                    return self.drive_publication(context);
-                }
-            }
+            if context.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);}if context.should_yield(){return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);}
+            let grant=context.retained_grant();let restoring=self.restore_target.is_some();let own_items=2+usize::from(restoring);let own_copy=size_of::<u64>()*2+if restoring{size_of::<Option<LayoutExportCheckpoint>>()}else{0};if grant.maximum_items<own_items||grant.maximum_copy_bytes<own_copy||grant.maximum_depth==0{return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);}
+            let required=self.required_drawing_source();let before=self.milestone();context.with_retained_loan(semio_framework_value::RetainedCloneGrant{maximum_items:grant.maximum_items-own_items,maximum_copy_bytes:grant.maximum_copy_bytes-own_copy,..grant},|same|self.advance_one(same,drawing_read))?;
+            let committed=checkpoint::committed_milestone(before,self.milestone());let matched=self.commit_work_turn(committed,context)?;context.consume_fuel(1);if self.required_drawing_source()!=required{return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);}
+            if context.is_cancelled(){return JobOutcomeBorrow::admit_cancelled(context).map_err(Into::into);}if matched{self.slot.publication=self.preview_publication().ok();return self.drive_publication(context);}if self.restore_target.is_some(){if context.should_yield(){return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);}continue;}
             if matches!(self.stage, ExportStage::Complete) {
                 self.slot.publication = Some(match self.commit_publication() {
                     Ok(publication) => publication,
@@ -177,14 +136,14 @@ impl InteractiveJob for LayoutExportJob {
                 });
                 return JobOutcomeBorrow::admit_yield(context).map_err(Into::into);
             }
-            if self.completed_units.is_multiple_of(64) {
+            if self.work_units.is_multiple_of(64) {
                 self.slot.publication = Some(match self.checkpoint_publication() {
                     Ok(publication) => publication,
                     Err(error) => Self::fault_publication(&error),
                 });
                 return self.drive_publication(context);
             }
-            if self.completed_units.is_multiple_of(16) {
+            if self.work_units.is_multiple_of(16) {
                 self.slot.publication = self.preview_publication().ok();
                 return self.drive_publication(context);
             }
@@ -193,6 +152,11 @@ impl InteractiveJob for LayoutExportJob {
             }
         }
     }
+
+}
+
+impl InteractiveJob for LayoutExportJob {
+    fn step<'a>(&'a mut self,context:&mut StepContext<'_>)->LayoutExportTurn<'a>{self.step_with_drawing_read(context,None)}
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a JobOutcomeDescriptor) -> Result<JobOutcomeView<'a>, semio_framework_value::ValueError> {
         match descriptor.kind() {
@@ -212,7 +176,7 @@ impl InteractiveJob for LayoutExportJob {
 
     fn close_step(&mut self,cx:&mut StepContext<'_>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
         self.begin_close();let demand=self.close_demand()?;
-        if matches!(self.close_stage,LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit|LayoutExportCloseStage::Snapshot|LayoutExportCloseStage::SnapshotOwner){return semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_paired_turn(grant))}
+        if matches!(self.close_stage,LayoutExportCloseStage::Output|LayoutExportCloseStage::Encoded|LayoutExportCloseStage::PdfOffsets|LayoutExportCloseStage::PdfItems|LayoutExportCloseStage::PdfPages|LayoutExportCloseStage::Fidelity|LayoutExportCloseStage::Drawing|LayoutExportCloseStage::Paragraphs|LayoutExportCloseStage::FramePlanning|LayoutExportCloseStage::OutputChunks|LayoutExportCloseStage::MediaCredit|LayoutExportCloseStage::Snapshot|LayoutExportCloseStage::SnapshotOwner){return semio_framework_job::close_original_retained_step(cx,demand,|grant|self.close_paired_turn(grant))}
         let grant=cx.retained_grant();if cx.should_yield()||grant.maximum_items==0||grant.maximum_depth<demand.depth||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(InteractiveJobCloseStep::Pending{progress:Default::default()})}
         let step=layout_close_step(self.close_turn(grant))?;cx.consume_retained(step.progress())?;if step.progress().copied_items>0{cx.consume_fuel(1)}Ok(step)
     }
@@ -273,6 +237,8 @@ fn checkpoint_kind(kind: LayoutExportKind) -> u8 {
         LayoutExportKind::Svg => 1,
         LayoutExportKind::Pdf => 2,
         LayoutExportKind::Package => 3,
+        LayoutExportKind::Step => 4,
+        LayoutExportKind::Idml => 5,
     }
 }
 
@@ -300,13 +266,14 @@ impl CheckpointWriter {
 }
 
 pub(super) fn encode_checkpoint(operation: &Operation, request: &LayoutExportRequest, checkpoint: &LayoutExportCheckpoint) -> Result<[u8; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], String> {
+    if checkpoint.committed_units>checkpoint.work_units||checkpoint.output_bytes>MAX_LAYOUT_EXPORT_OUTPUT_BYTES as u64{return Err("layout-export-checkpoint-progress".into());}
     let mut state = CheckpointWriter { bytes: [0; MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES], cursor: 0 };
     state.write(LAYOUT_EXPORT_CHECKPOINT_MAGIC)?;
     state.write(&[checkpoint_kind(request.kind), u8::from(request.page_id.is_some())])?;
     state.authority(request.page_id.as_deref().unwrap_or_default())?;
     state.authority(&request.parent_document_id)?;
     state.write(request.canonical_base_revision_hex.as_bytes())?;
-    for value in [operation.operation.0, operation.base_revision.0, operation.generation.0, checkpoint.completed_units, checkpoint.output_bytes, checkpoint.output_digest] {
+    for value in [operation.operation.0, operation.base_revision.0, operation.generation.0, checkpoint.work_units, checkpoint.committed_units, checkpoint.output_bytes, checkpoint.output_digest] {
         state.write(&value.to_le_bytes())?;
     }
     if state.cursor != MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES {
@@ -332,7 +299,8 @@ pub(super) fn decode_checkpoint(operation: &Operation, request: &LayoutExportReq
     let operation_id = reader.u64()?;
     let base_revision = reader.u64()?;
     let generation = reader.u64()?;
-    let checkpoint = LayoutExportCheckpoint { completed_units: reader.u64()?, output_bytes: reader.u64()?, output_digest: reader.u64()? };
+    let checkpoint = LayoutExportCheckpoint { work_units: reader.u64()?, committed_units:reader.u64()?, output_bytes: reader.u64()?, output_digest: reader.u64()? };
+    if checkpoint.committed_units>checkpoint.work_units||checkpoint.output_bytes>MAX_LAYOUT_EXPORT_OUTPUT_BYTES as u64{return Err("layout-export-checkpoint-progress".into());}
     let expected_page = request.page_id.as_deref().map(str::as_bytes);
     let decoded_page = match page_present {
         0 if page_id.is_empty() => None,

@@ -1,0 +1,14 @@
+# Explicit Nodal Component Red Checkpoint
+
+Root authorized new unregistered neutral/test files while expanded119reader38907 remains the production/registered-test freeze. No production, registered fixture/test or package file was changed. New domain folder is io/fem/nodal with cases.json, schema.json, nodal.feature and nodal.test.ts. Registration is deliberately absent.
+
+The closed neutral cases describe18selected DOF/value vectors (sixDOFs × +0/-0/3), three foreign explicit-presence vectors including mixed zero/nonzero/unset and six explicit zeros, five domain refusals (missing force/torque unit, duplicated force unit, invalid component, all absent components), and two original source-reference/DOF refusals. Actual endpoint tests check selected binary64 bits, five inactive unset slots, STEP writer/parser roundtrip, exact node targeting, actual source-vector order, canonical edit/external fast-json-patch and inverse, and original cancellation/undefined/IfcStepError failures in both directions.
+
+Authentic unchanged-production red:7pass/29fail/68assertions across36 tests in921ms. The seven existing passes cover neutral schema, invalid component rejection, both source reference/DOF refusals and all three existing exporter original-control failure laws. Red selected vectors expose explicit zero defaults in five inactive slots; foreign vectors expose discarded populated zeros; invalid zero-unit vectors expose skipped dimension checks; all-absent action currently silently drops; central zero projection disappears; new importer component progress/cancel phase is absent. No artificial missing-module/import failure is counted as feature evidence.
+
+The first narrow strict invocation also found test-only Bun expectation generic string-vs-FemDof typing; those test declarations were corrected without loosening actual output assertions or adding a permissive domain cast. Current complete transitive new-test strict graph reaches only the existing TS2307 framework-interaction resolution failure through replication/local-interaction. No compiler/dependency/alias workaround was used; source files are not copied. Logs generated/fem-nodal-red.txt, fem-nodal-red-final.txt, fem-nodal-red-strict.txt and fem-nodal-red-strict-final.txt preserve the separate evidence.
+
+The preexisting actual three-vector source observations and fresh external zero force/action remain in generated/fem-zero-record/before.json and external-before.json. Those are before evidence, not a passing after implementation. The broader census and selected clean schema-native optional-slot contract remain declared-interchange-census.md and fem-zero-record-plan.md.
+
+The unregistered four-file red freeze and observed unchanged fem.ts reference are recorded in generated/fem-nodal-red-source.json. Production edits await root's expanded reader terminal release. Native loaded FEM remains explicitly unsupported; no compiler/runtime/parity/publication flags change.
+

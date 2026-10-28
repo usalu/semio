@@ -1,0 +1,581 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/requirements-report.schema.json",
+  "$defs": {
+    "Diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "code",
+        "path",
+        "label"
+      ],
+      "properties": {
+        "code": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "pointer": {
+          "type": "string"
+        },
+        "label": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "en",
+            "de"
+          ],
+          "properties": {
+            "en": {
+              "type": "string",
+              "minLength": 1
+            },
+            "de": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    }
+  },
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "view",
+    "schemaConformance",
+    "viewConformance",
+    "complete",
+    "valid",
+    "hasFailure",
+    "status",
+    "coverage",
+    "obligations",
+    "diagnostics"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "scope": {
+      "enum": [
+        "selected-contracts",
+        "released-view"
+      ]
+    },
+    "view": {
+      "enum": [
+        "ReferenceView",
+        "Alignment-basedReferenceView",
+        null
+      ]
+    },
+    "schemaConformance": {
+      "const": "not-evaluated"
+    },
+    "viewConformance": {
+      "const": "not-evaluated"
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "hasFailure": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "fail",
+        "incomplete",
+        "not-applicable"
+      ]
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requested",
+        "evaluated",
+        "passed",
+        "failed",
+        "notApplicable",
+        "incomplete",
+        "denominator",
+        "authority"
+      ],
+      "properties": {
+        "requested": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64000
+        },
+        "evaluated": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64000
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64000
+        },
+        "failed": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64000
+        },
+        "notApplicable": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64000
+        },
+        "incomplete": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 64000
+        },
+        "denominator": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "maximum": 64000
+        },
+        "authority": {
+          "enum": [
+            "explicit-selection",
+            "unresolved-release"
+          ]
+        }
+      }
+    },
+    "obligations": {
+      "type": "array",
+      "maxItems": 64000,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "selection",
+          "implementation",
+          "status",
+          "hasFailure",
+          "diagnostics"
+        ],
+        "properties": {
+          "selection": {
+            "$ref": "https://semio.tech/ifc4x3/requirements-request.schema.json#/$defs/Obligation"
+          },
+          "implementation": {
+            "enum": [
+              "implemented",
+              "unimplemented"
+            ]
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "incomplete",
+              "not-applicable"
+            ]
+          },
+          "hasFailure": {
+            "type": "boolean"
+          },
+          "child": {
+            "anyOf": [
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-tessellation-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-swept-solid-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-advanced-swept-solid-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-surface-model-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-clipping-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-brep-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/body-advanced-brep-concept.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Report"
+              },
+              {
+                "$ref": "https://semio.tech/ifc4x3/alignment-direct.schema.json#/$defs/Report"
+              }
+            ]
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/Diagnostic"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-tessellation-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-tessellation"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-swept-solid-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-swept-solid"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-advanced-swept-solid-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-advanced-swept-solid"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-surface-model-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-surface-model"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-clipping-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-clipping"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-brep-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-brep"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/body-advanced-brep-concept.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "body-advanced-brep"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/alignment-terminal.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "alignment-terminal"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "then": {
+              "properties": {
+                "child": {
+                  "$ref": "https://semio.tech/ifc4x3/alignment-direct.schema.json#/$defs/Report"
+                }
+              }
+            },
+            "if": {
+              "properties": {
+                "selection": {
+                  "properties": {
+                    "contract": {
+                      "const": "alignment-direct"
+                    }
+                  },
+                  "required": [
+                    "contract"
+                  ],
+                  "type": "object"
+                }
+              },
+              "required": [
+                "selection"
+              ],
+              "type": "object"
+            }
+          }
+        ]
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Diagnostic"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "const": "released-view"
+          }
+        },
+        "required": [
+          "scope"
+        ]
+      },
+      "then": {
+        "properties": {
+          "complete": {
+            "const": false
+          },
+          "valid": {
+            "const": false
+          },
+          "status": {
+            "const": "incomplete"
+          },
+          "coverage": {
+            "properties": {
+              "authority": {
+                "const": "unresolved-release"
+              },
+              "denominator": {
+                "const": null
+              }
+            },
+            "type": "object"
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "view": {
+            "const": null
+          },
+          "coverage": {
+            "properties": {
+              "authority": {
+                "const": "explicit-selection"
+              },
+              "denominator": {
+                "type": "integer",
+                "minimum": 1
+              }
+            },
+            "type": "object"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "valid": {
+            "const": true
+          }
+        },
+        "required": [
+          "valid"
+        ]
+      },
+      "then": {
+        "properties": {
+          "complete": {
+            "const": true
+          },
+          "hasFailure": {
+            "const": false
+          },
+          "status": {
+            "const": "pass"
+          }
+        }
+      }
+    }
+  ]
+}

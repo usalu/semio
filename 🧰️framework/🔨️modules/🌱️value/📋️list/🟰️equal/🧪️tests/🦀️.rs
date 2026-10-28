@@ -37,3 +37,21 @@ fn retained_slice_equality_wide_typed_pages_and_cancellation_are_bounded(){
  while !cursor.ready(){let d=cursor.demand(&left,&right,RetainedSliceEquality::fixed_copy_bytes()+size_of::<InlinePoint>()*2).unwrap();let(step,heap)=crate::observe_retirement_allocations(||cursor.advance(&left,&right,grant(d)).unwrap());assert_eq!(heap,(0,0));assert!(step.progress().copied_bytes<=d.copy_bytes);turns+=1;}assert_eq!(turns,2);assert_eq!(cursor.equal(),Some(false));
  let empty=[Empty;33];let mut cursor=RetainedSliceEquality::new();let mut turns=0;while !cursor.ready(){let before=cursor.offset;let d=cursor.demand(&empty,&empty,0).unwrap();let(_,heap)=crate::observe_retirement_allocations(||cursor.advance(&empty,&empty,grant(d)).unwrap());assert_eq!(heap,(0,0));assert_eq!(cursor.offset-before,1);turns+=1;}assert_eq!(turns,33);assert_eq!(cursor.equal(),Some(true));
 }
+
+/// 🔢️ Bounded inline scalar pages compare exact IEEE words without cloning or allocation.
+#[test]
+fn retained_floating_equality_matches_portable_ieee_words() {
+ let corpus:serde_json::Value=serde_json::from_str(include_str!("../../../🔢️ieee754/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
+ for case in corpus["cases"].as_array().unwrap(){
+  let expected=case["equal"].as_bool().unwrap();
+  if case["width"]==64 {
+   let left=f64::from_bits(u64::from_str_radix(case["left"].as_str().unwrap(),16).unwrap());let right=f64::from_bits(u64::from_str_radix(case["right"].as_str().unwrap(),16).unwrap());
+   assert_eq!(<f64 as RetainedEqualityElement>::inline_eq(&left,&right),expected);
+   let mut cursor=RetainedSliceEquality::new();let d=cursor.demand(&[left],&[right],1024).unwrap();let(_,heap)=crate::observe_retirement_allocations(||cursor.advance(&[left],&[right],grant(d)).unwrap());assert_eq!(heap,(0,0));assert_eq!(cursor.equal(),Some(expected));
+  } else {
+   let left=f32::from_bits(u32::from_str_radix(case["left"].as_str().unwrap(),16).unwrap());let right=f32::from_bits(u32::from_str_radix(case["right"].as_str().unwrap(),16).unwrap());
+   assert_eq!(<f32 as RetainedEqualityElement>::inline_eq(&left,&right),expected);
+   let mut cursor=RetainedSliceEquality::new();let d=cursor.demand(&[left],&[right],1024).unwrap();let(_,heap)=crate::observe_retirement_allocations(||cursor.advance(&[left],&[right],grant(d)).unwrap());assert_eq!(heap,(0,0));assert_eq!(cursor.equal(),Some(expected));
+  }
+ }
+}

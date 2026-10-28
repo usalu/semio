@@ -1,0 +1,1 @@
+{"schema":"layout.drawing.composition.demand.v1","axes":[{"grant":"maximumCopyBytes","demand":"copyBytes"},{"grant":"maximumCapacityBytes","demand":"capacityBytes"},{"grant":"maximumReleaseBytes","demand":"releaseBytes"},{"grant":"maximumDepth","demand":"depth"}],"expectedRefusal":{"kind":"progress","sourceItems":0,"copiedBytes":0,"retainedCapacityBytes":0,"releasedBytes":0}}

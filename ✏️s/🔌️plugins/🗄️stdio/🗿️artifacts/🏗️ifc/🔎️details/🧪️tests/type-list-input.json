@@ -1,0 +1,28 @@
+{
+  "schema":"IFC4X3_ADD2",
+  "encoding":"ifc-template-command",
+  "nativeExecution":false,
+  "domains":[
+    {"entity":"IFCCARTESIANPOINT","attribute":"Coordinates","index":"0","lower":1,"upper":3,"item":"IFCLENGTHMEASURE","ancestors":["IFCPOINT","IFCGEOMETRICREPRESENTATIONITEM","IFCREPRESENTATIONITEM"]},
+    {"entity":"IFCDIRECTION","attribute":"DirectionRatios","index":"0","lower":2,"upper":3,"item":"IFCREAL","ancestors":["IFCGEOMETRICREPRESENTATIONITEM","IFCREPRESENTATIONITEM"]},
+    {"entity":"IFCTEXTUREVERTEX","attribute":"Coordinates","index":"0","lower":2,"upper":2,"item":"IFCPARAMETERVALUE","ancestors":["IFCPRESENTATIONITEM"]}
+  ],
+  "cases":[
+    {"id":"point-one-dimension-rule","entity":"IFCCARTESIANPOINT","words":["4607182418800017408"],"admitted":false},
+    {"id":"point-two","entity":"IFCCARTESIANPOINT","words":["4607182418800017408","0"],"admitted":true},
+    {"id":"point-three-exact","entity":"IFCCARTESIANPOINT","words":["9223372036854775808","1","9218868437227405311"],"admitted":true},
+    {"id":"point-empty","entity":"IFCCARTESIANPOINT","words":[],"admitted":false},
+    {"id":"point-overfull","entity":"IFCCARTESIANPOINT","words":["0","0","0","0"],"admitted":false},
+    {"id":"point-blank-draft","entity":"IFCCARTESIANPOINT","words":[""],"admitted":false},
+    {"id":"point-nonfinite","entity":"IFCCARTESIANPOINT","words":["9218868437227405312"],"admitted":false},
+    {"id":"direction-two","entity":"IFCDIRECTION","words":["4607182418800017408","9223372036854775808"],"admitted":true},
+    {"id":"direction-zero-rule","entity":"IFCDIRECTION","words":["0","9223372036854775808"],"admitted":false},
+    {"id":"direction-underfull","entity":"IFCDIRECTION","words":["4607182418800017408"],"admitted":false},
+    {"id":"texture-two","entity":"IFCTEXTUREVERTEX","words":["0","4602678819172646912"],"admitted":true},
+    {"id":"texture-overfull","entity":"IFCTEXTUREVERTEX","words":["0","0","0"],"admitted":false}
+  ],
+  "cardinality":{"unselectedMissing":true,"includeEmptyDraft":true,"retainPrefixExactly":true,"newMember":{"kind":"real","value":{"bits":""}}},
+  "refusals":[{"kind":"aggregate","value":null},{"kind":"aggregate","value":[{"kind":"integer","value":"1"}]},{"kind":"aggregate","value":[{"kind":"real","value":{"bits":"0","extra":""}}]},{"kind":"aggregate","value":"[]"},{"kind":"aggregate","value":[],"extra":false}],
+  "controls":{"maximumPhysical":16,"maximumChoices":32,"noRequiredDefaults":true},
+  "originalControl":{"cancelEveryProgressPrefix":true,"preserveObserverFailureIdentity":true,"preserveSourceAndRequest":true}
+}

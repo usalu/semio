@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Drawing Child Editor Registrations",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "editorId",
+    "dialect",
+    "commands"
+  ],
+  "properties": {
+    "editorId": {
+      "const": "s.draw.drawing@1/*#editor"
+    },
+    "dialect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactKind",
+        "standard",
+        "subset"
+      ],
+      "properties": {
+        "artifactKind": {
+          "const": "s.draw.drawing"
+        },
+        "standard": {
+          "const": "1"
+        },
+        "subset": {
+          "const": "*"
+        }
+      }
+    },
+    "commands": {
+      "type": "array",
+      "uniqueItems": true,
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "enum": [
+          "editPath",
+          "editFill",
+          "patchLayer"
+        ]
+      }
+    }
+  },
+  "$comment": "Actual typed registrations bind these identities to mandatory genuine DRAWING_ADMITTER and DRAWING_VECTOR_SOURCE objects together."
+}

@@ -1,0 +1,13 @@
+{
+  "feature": "layout.retained.original-document-equality",
+  "source": "two actual original immutable LayoutSnapshot references, original canonical tree field lending",
+  "cursor": "original descendant loans with scalar frame stack; paid geometric backing growth, one frame copy/drain per turn; one node/header or at most256 paired original text/key bytes per turn",
+  "floatingPoint": "IEEE bit identity for both binary32 and binary64; no JSON rendering or numeric coercion",
+  "bindings": "original typed aliases outlive stable descendant loans and all scalar frame backings; no arbitrary fixed-depth cap",
+  "prohibitions": [
+    "no Snapshot clone",
+    "no ToValue/native-json conversion",
+    "no tree materialization",
+    "no external runtime library"
+  ]
+}

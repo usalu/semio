@@ -44,7 +44,7 @@ pub fn diff_update_spread(payload: &UpdateSpread, base: &LayoutSnapshot) -> prot
     if spread.name == payload.name {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Spread is already named that.");
     }
-    protocol::MutationOutcome::new(LayoutDiff { spreads: Some(LayoutSpreadsDelta { modified: vec![LayoutSpreadsModification { id: payload.id.clone(), patch: SpreadPatch { name: Some(payload.name.clone()) } }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(LayoutDiff { spreads: Some(LayoutSpreadsDelta { modified: vec![LayoutSpreadsModification { id: payload.id.clone(), patch: SpreadPatch { name: Some(payload.name.clone()), ..Default::default() } }], ..Default::default() }), ..Default::default() })
 }
 
 pub fn inverse_update_spread<Op: From<crate::update_spread::UpdateSpread>>(payload: &UpdateSpread, base: &LayoutSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {

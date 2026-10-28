@@ -1,0 +1,186 @@
+{
+  "scope": "explicit-three-representation-clauses",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "faceted",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "faceted-voids",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrepWithVoids"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "mixed-faceted",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrep",
+        "IfcFacetedBrepWithVoids"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "advanced",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcAdvancedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "advanced-voids",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcAdvancedBrepWithVoids"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "abstract-manifold",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcManifoldSolidBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "closed-shell",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcClosedShell"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "face-model",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFaceBasedSurfaceModel"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "shell-model",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcShellBasedSurfaceModel"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "tessellated",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-advanced",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrep",
+        "IfcAdvancedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "empty-items",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [],
+      "expected": "pass"
+    },
+    {
+      "id": "wrong-identifier",
+      "applicable": true,
+      "identifier": "Axis",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "advanced-type",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "excluded",
+      "applicable": false,
+      "identifier": "Axis",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrep"
+      ],
+      "expected": "not-applicable"
+    },
+    {
+      "id": "unresolved",
+      "applicable": null,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "incomplete"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+# Released View Header Control Correction
+
+The four public released-view declaration/selection wrappers now capture the existing private canonical edit scope before constructing readSteps/selectSteps, and pass that same record to the runner. The production change is one import plus four entry assignments in header.ts. Historical canonical-control eight files and frozen exchange twenty files are unchanged. No new error/control class, authority, API, dependency or native admission was introduced.
+
+The authenticated local before probe remains mvd-header-control-probe.ts and generated/mvd-header-control-probe.json: unchanged depth0 fails all four routes; first-callback caller depth replacement256 falsely finished all four. Schema/neutral/feature and actual tests preceded production:24 pass/10 fail across34 tests/102 assertions. The failures include four original-depth bypasses, four repeated-property capture cases, and two selection value-zero bypasses.
+
+The current focused header-control+existing header+canonical-control run passes279 tests/1,044 assertions/0 failures in520ms. All34 new tests pass, retaining original callback/signal/receiver/failure and six getters once, original zero-depth/value refusal, zero entity header-only semantics and unchanged declaration/selection behavior. A real selected header command applies through central mutation and agrees with test-only independent fast-json-patch. Strict checking of the new test's complete transitive graph exits0.
+
+The earlier control audit remains bounded to its own six actual routes; it did not cover these four wrappers. This is an additional source slice, not retrospective broadening of prior evidence. New owned roster generated/mvd-header-control-source.json lists five files; canonical control.ts is an observed unchanged reference. Root alone registers any/🧪️tests/mvd-header-control.test.ts after independent closure. The frozen exchange/native source scopes and genuine native compiler/type/runtime/receipt/publication gates remain unchanged.
+
+Independent mvd-header-control-independent-audit.md closes all5 hashes and observes all4 actual unchanged before interfaces now refusing depthLimit with or without caller replacement. Its own34tests/108assertions pass. Before false-success evidence remains unchanged; no new source defect or native claim.

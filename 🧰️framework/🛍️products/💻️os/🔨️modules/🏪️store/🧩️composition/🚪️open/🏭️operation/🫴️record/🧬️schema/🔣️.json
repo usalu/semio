@@ -1,0 +1,46 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "OriginalRecordMemberSnapshotOpen",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phases",
+    "closeOrder",
+    "source",
+    "headerBirth"
+  ],
+  "properties": {
+    "phases": {
+      "const": [
+        "frame",
+        "parse",
+        "takeRecord",
+        "issueOriginal",
+        "receivingShell",
+        "captureOriginal",
+        "birthReceiver",
+        "receive",
+        "takeSnapshot",
+        "closeReceiving",
+        "closeParser",
+        "ready"
+      ]
+    },
+    "closeOrder": {
+      "const": [
+        "receiving",
+        "issuedOriginal",
+        "parsedRecord",
+        "parser",
+        "snapshot",
+        "request"
+      ]
+    },
+    "source": {
+      "const": "sealedOriginalPagesAndRange"
+    },
+    "headerBirth": {
+      "const": "twiceConcreteOwnerHeader"
+    }
+  }
+}

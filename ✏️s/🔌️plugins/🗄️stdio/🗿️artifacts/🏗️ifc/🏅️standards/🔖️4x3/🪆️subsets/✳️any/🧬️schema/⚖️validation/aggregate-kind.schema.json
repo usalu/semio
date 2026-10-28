@@ -1,0 +1,10 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://semio.tech/ifc4x3/aggregate-kind-cases",
+ "type":"object","additionalProperties":false,"required":["$schema","schema","nativeExecution","functions","cases","pending","admission"],
+ "properties":{
+  "$schema":{"const":"./aggregate-kind.schema.json"},"schema":{"const":"IFC4X3_ADD2"},"nativeExecution":{"const":false},"admission":{"const":false},
+  "functions":{"type":"array","minItems":4,"maxItems":4,"items":{"type":"object","additionalProperties":false,"required":["name","source"],"properties":{"name":{"type":"string","minLength":1},"source":{"type":"string","minLength":1}}}},
+  "cases":{"type":"array","minItems":10,"maxItems":10,"items":{"type":"object","additionalProperties":false,"required":["id","expression","aggregate","values"],"properties":{"id":{"type":"string","minLength":1},"expression":{"type":"string","minLength":1},"aggregate":{"enum":["SET","BAG"]},"values":{"type":"array","items":{"type":"string"}}}}},
+  "pending":{"const":["typeof-containing-select-closure","uncertain-aggregate-output-membership"]}
+ }
+}

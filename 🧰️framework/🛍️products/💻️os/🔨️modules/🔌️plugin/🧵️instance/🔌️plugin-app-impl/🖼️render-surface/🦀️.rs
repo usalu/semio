@@ -3,6 +3,26 @@
 use super::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
+    /// 📨️ A real context lends the original donor before the same retained render owner begins querying.
+    pub(super) fn receive_render_request(&mut self,body_key:&str,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{
+        let invalid=||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"staging.render-request-context");
+        let value=request.as_ref().ok_or_else(invalid)?;
+        if !A::uses_render_work(body_key)||!value.context_matches(view.window_id.as_deref(),view.locale){return Err(invalid().into());}
+        if self.pending.receive_render_failure(cx)?||cx.should_yield(){return Ok(None);}
+        if self.pending.pending_render_tree.is_some()||self.pending.pending_render_tree_close.is_some()||self.pending.pending_render_source.is_some(){return Err(invalid().into());}
+        if self.pending.pending_render_work.is_none()&&self.pending.pending_render_tree_ready{self.pending.pending_render_tree_identity=None;self.pending.pending_render_tree_ready=false;}
+        if let Some(identity)=self.pending.pending_render_tree_identity.as_mut(){identity.validate(cx)?;}else{self.pending.pending_render_tree_identity=Some(OriginalRenderTreeIdentity::capture(cx)?);}
+        if self.pending.pending_render_work.is_none(){
+            if !<A::RenderWork as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()||!<A::Snapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"staged render requires controlled original source retirement").into());}
+            let Some(work)=A::begin_render_work(body_key,cx)?else{return Ok(None)};
+            *self.pending.pending_render_work=Some(semio_framework_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(work));
+            return Ok(None);
+        }
+        let identity=self.pending.pending_render_tree_identity.as_mut().ok_or_else(invalid)?;
+        let work=self.pending.pending_render_work.as_mut().ok_or_else(invalid)?.original(identity,cx)?.ok_or_else(invalid)?;
+        let result=A::receive_render_work_request(work,request,view,cx);
+        match result{Ok(Some(()))if request.is_some()=>Err(invalid().into()),Ok(None)if request.is_none()=>Err(invalid().into()),other=>other}
+    }
     /// 🕰️ Framework-owned, snapshot-independent — served before any app body-key match.
     ///
     /// 🕹️ Task 5: materialized once, before either branch, then used to stamp EVERY
@@ -13,9 +33,18 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     /// are only ever READ here, so a snapshot avoids an aliasing conflict against `&mut self`.
     pub(super) async fn render(&mut self, body_key: &str, snapshot_override_json: Option<&str>, view_state: &ViewModel,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<()>,semio_framework_job::OriginalTurnFailure> {
         if self.pending.receive_render_failure(cx)?||cx.should_yield(){return Ok(None)}
-        if self.pending.pending_render_tree.is_none()&&self.pending.pending_render_tree_close.is_none()&&self.pending.pending_render_tree_ready{self.pending.pending_render_tree_identity=None;self.pending.pending_render_tree_ready=false;}
+        if self.pending.pending_render_source.is_none()&&self.pending.pending_render_work.is_none()&&self.pending.pending_render_tree.is_none()&&self.pending.pending_render_tree_close.is_none()&&self.pending.pending_render_tree_ready{self.pending.pending_render_tree_identity=None;self.pending.pending_render_tree_ready=false;}
         if let Some(identity)=self.pending.pending_render_tree_identity.as_mut(){identity.validate(cx)?;}else{self.pending.pending_render_tree_identity=Some(OriginalRenderTreeIdentity::capture(cx)?);}
-        if self.pending.pending_render_tree.is_some(){return Ok(self.pending.pending_render_tree_ready.then_some(()));}
+        if self.pending.pending_render_tree.is_some(){
+            if !self.pending.pending_render_tree_ready{
+                match self.pending.close_pending_render_work_on_original(cx){
+                    Ok(Some(true))=>self.pending.pending_render_tree_ready=true,
+                    Ok(_)=>return Ok(None),
+                    Err(failure)=>return self.pending.retain_render_failure(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure),cx),
+                }
+            }
+            return Ok(self.pending.pending_render_tree_ready.then_some(()));
+        }
         let original_render_result:semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<()>=async {
         if let Some(section)=semio_framework::UiRefreshSection::from_body_key(body_key){
             let tree=semio_framework_plugin_reactor_app::original_render_section(self,section,view_state)?;
@@ -55,6 +84,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         let window_config = self.stores.window_config_store.capture(Some(view_state)).await?;
         let window_transient = self.stores.window_transient_store.capture(Some(view_state))?;
         if let Some(json) = snapshot_override_json {
+            if A::uses_render_work(body_key){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render queries require an original canonical document source").into())}
             let snapshot: A::Snapshot = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|plugin_sdk_fault(error.to_string()))?;
             let history = std::sync::Arc::clone(&self.history.cache.as_ref().ok_or_else(|| plugin_sdk_fault("render cache unavailable after refresh"))?.3);
             let doc = ArtifactView::new(&snapshot, history.as_ref()).with_instance(self.tools.instance_operation_owner.clone());
@@ -71,13 +101,35 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
         let operation_progress = self.tools.operation_progress_snapshot();
         let render_operation = self.tools.live_render_operation(&self.mounted_policy, &self.stores);
         let parent_document_id = self.stores.store.envelope().id.clone();
+        if A::uses_render_work(body_key)&&self.pending.pending_render_work.is_none(){
+            if !<A::RenderWork as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()||!<A::Snapshot as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"retained render requires controlled work and source retirement").into())}
+            if cx.should_yield(){return Ok(None)}
+            let Some(work)=A::begin_render_work(body_key,cx)?else{return Ok(None)};
+            *self.pending.pending_render_work=Some(semio_framework_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(work));
+        }
         let Some(node) = ({
             let VcsArtifactApp { app: _, history: command_history, child_composition, tool_runs, time_travel, tool_machines, .. } = self;
             let Some((_, snapshot, config, history)) = command_history.cache.as_ref() else {
                 return Err(plugin_sdk_fault("render cache unavailable after refresh").into());
             };
+            let source=time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot));
+            if A::uses_render_work(body_key){
+                let identity=self.pending.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render source has no original identity"))?;
+                if let Some(retained)=self.pending.pending_render_source.as_mut(){
+                    let retained=retained.original(identity,cx)?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render source alias is unavailable"))?;
+                    if !std::sync::Arc::ptr_eq(retained,source){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render query cannot replace its original snapshot source").into())}
+                }else{
+                    let grant=cx.retained_grant();
+                    let bytes=std::mem::size_of::<std::sync::Arc<A::Snapshot>>();
+                    if cx.should_yield()||grant.maximum_items==0||grant.maximum_copy_bytes<bytes||grant.maximum_depth==0{return Ok(None)}
+                    *self.pending.pending_render_source=Some(semio_framework_plugin_instance_jobs::jobs_render::work::OriginalRenderWork::retain(std::sync::Arc::clone(source)));
+                    cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()})?;
+                    cx.consume_fuel(1);
+                    return Ok(None);
+                }
+            }
             let doc = ArtifactView::with_render_context(
-                time_travel.render_snapshot_or(tool_runs, tool_machines.overlay_or(snapshot)).as_ref(),
+                source.as_ref(),
                 history.as_ref(),
                 ChildContentView::clone(time_travel.render_children_or(tool_runs, &child_composition.child_content_root)),
                 render_operation,
@@ -91,13 +143,23 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             let cfg = ConfigView { snapshot: tool_machines.config_overlay_or(config).as_ref(), window: window_config.as_ref().map(|authority| self.stores.window_config_store.preview_or(&authority.snapshot)) };
             let transient = self.stores.transient_store.current_root();
             let transient = TransientView { snapshot: transient.as_ref(), window: window_transient.as_ref().map(|authority| &authority.snapshot) };
-            A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await?
+            if A::uses_render_work(body_key){
+                let identity=self.pending.pending_render_tree_identity.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render query has no original identity"))?;
+                let work=self.pending.pending_render_work.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render query has no owner"))?.original(identity,cx)?.ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained render query lost its original owner"))?;
+                let demand=A::render_work_demand(work,cx.retained_grant().maximum_copy_bytes)?;
+                use semio_framework_plugin_instance_jobs::jobs_render::work::demand::{render_readiness,RenderReadiness};
+                match render_readiness(demand,cx.retained_grant(),cx.original_total_retained_grant(),cx.is_cancelled()){RenderReadiness::Enter=>{},RenderReadiness::Pending|RenderReadiness::Cancelled=>return Ok(None),RenderReadiness::Refused=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original render action exceeds its caller's independent physical authority").into())}
+                let retained=self.pending.pending_render_source.as_mut().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render source loan is missing"))?.snapshot_loan(identity,doc.snapshot,cx)?;
+                A::render_with_work_context(work,&self.tools.instance_operation_owner,body_key,retained,&doc,&cfg,view_state,&transient,&interaction,cx).await?
+            }else{
+                A::render_with_request_context(&self.tools.instance_operation_owner, body_key, &doc, &cfg, view_state, &transient, &interaction,cx).await?
+            }
         }) else{return Ok(None)};
         self.pending.retain_pending_render_tree(node);
         InstanceExtensions::after_app_render(&mut self.extension_ctx(), body_key, view_state)?;
         self.render_ctx().stamp_pending_render_interaction_ui(&interaction_state, body_key).await?;
-        self.pending.pending_render_tree_ready=true;
-        Ok(Some(()))
+        self.pending.pending_render_tree_ready=self.pending.close_pending_render_work_on_original(cx)?==Some(true);
+        Ok(self.pending.pending_render_tree_ready.then_some(()))
         }.await;
         match original_render_result{Ok(tree)=>Ok(tree),Err(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure))=>self.pending.retain_render_failure(semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure::Original(failure), cx),Err(source)=>self.pending.retain_render_failure(source, cx)}
     }

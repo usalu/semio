@@ -39,3 +39,29 @@ pub mod update_spread;
 //#endregion 🪢️TaxonomyMounts
 
 pub use semio_s_artifact_layout_layout_mutations_content_2::{change_link_path, change_page_width, create_character_style, create_story, delete_character_style, delete_story, edit_story, rename_page, set_page_guides, set_page_parent, update_character_style, update_link, update_page_margins, update_parent_page};
+
+#[path = "../📝️create-paragraph-style/🦀️.rs"]
+pub mod create_paragraph_style;
+#[path = "../🗑️delete-paragraph-style/🦀️.rs"]
+pub mod delete_paragraph_style;
+#[path = "../📖️create-parent-page/🦀️.rs"]
+pub mod create_parent_page;
+#[path = "../🗑️delete-parent-page/🦀️.rs"]
+pub mod delete_parent_page;
+#[path = "../📓️create-spread/🦀️.rs"]
+pub mod create_spread;
+#[path = "../🗑️delete-spread/🦀️.rs"]
+pub mod delete_spread;
+#[path = "../📓️set-page-spread/🦀️.rs"]
+pub mod set_page_spread;
+#[path = "../🪜️reorder-layer/🦀️.rs"]
+pub mod reorder_layer;
+
+#[path = "../📖️set-parent-page-content/🦀️.rs"]
+pub mod set_parent_page_content;
+
+#[path = "../📄️replace-document/🦀️.rs"]
+pub mod replace_document;
+
+#[path="../🖊️set-page-background-drawing/🦀️.rs"]
+pub mod set_page_background_drawing;

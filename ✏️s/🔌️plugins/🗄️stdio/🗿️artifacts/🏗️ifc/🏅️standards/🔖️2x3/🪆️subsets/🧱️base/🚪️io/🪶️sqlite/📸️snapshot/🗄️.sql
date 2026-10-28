@@ -43,7 +43,7 @@ CREATE TABLE ifc2x3_entity_argument (
 );
 CREATE TABLE ifc2x3_value (
   id INTEGER PRIMARY KEY,
-  kind TEXT NOT NULL CHECK (kind IN ('unset','derived','int','real','str','enum','ref','list','typed')),
+  kind TEXT NOT NULL CHECK (kind IN ('unset','derived','int','real','str','binary','enum','ref','list','typed')),
   integer_value INTEGER,
   decimal_negative INTEGER CHECK (decimal_negative IN (0,1)),
   decimal_coefficient TEXT,
@@ -59,7 +59,7 @@ CREATE TABLE ifc2x3_value (
   CHECK ((kind = 'real') = (decimal_coefficient IS NOT NULL)),
   CHECK ((kind = 'real') = (decimal_scale IS NOT NULL)),
   CHECK (kind = 'real' OR decimal_exponent IS NULL),
-  CHECK ((kind = 'str') = (string_value IS NOT NULL)),
+  CHECK ((kind IN ('str','binary')) = (string_value IS NOT NULL)),
   CHECK ((kind = 'enum') = (enum_value IS NOT NULL)),
   CHECK ((kind = 'ref') = (reference_instance_id IS NOT NULL)),
   CHECK (kind = 'ref' OR reference_instance_row_id IS NULL),

@@ -45,6 +45,9 @@ impl<'a> Rows<'a> {
         self.tables.iter().position(|table| table.name == name).ok_or_else(|| invalid("unknown Layout table"))
     }
 
+    /// 🔎️ Borrows admitted owner metadata without consuming its original ownership row twice.
+    pub fn get(&self,name:&str,identity:i64)->Result<&'a SqliteRow,ValueError>{let table=&self.tables[self.table(name)?];let position=table.rows.binary_search_by_key(&identity,|row|row.rowid).map_err(|_|invalid("dangling Layout relation"))?;Ok(table.rows[position])}
+
     pub fn contains(&self, name: &str, identity: i64) -> Result<bool, ValueError> {
         let table = &self.tables[self.table(name)?];
         Ok(table.rows.binary_search_by_key(&identity, |row| row.rowid).is_ok_and(|position| !table.used[position]))
@@ -101,6 +104,9 @@ impl<'a> Rows<'a> {
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, end - start, end - start)?;
         Ok(output)
     }
+
+    /// 📇️ Consume one unordered owner table directly in admitted row order without relational rescans.
+    pub fn take_all(&mut self,name:&str,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{let index=self.table(name)?;let table=&mut self.tables[index];let mut output=transfer::reserve(table.rows.len(),control)?;for(index,row)in table.rows.iter().enumerate(){if std::mem::replace(&mut table.used[index],true){return Err(invalid("multiply owned Layout relation"))}output.push(*row);if index%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,index,table.rows.len())?;}}Ok(output)}
 
     pub fn finish(self, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
         for table in self.tables {

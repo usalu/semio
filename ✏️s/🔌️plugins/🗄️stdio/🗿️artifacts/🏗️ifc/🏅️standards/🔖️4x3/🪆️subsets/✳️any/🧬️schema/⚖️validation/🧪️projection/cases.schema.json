@@ -1,0 +1,262 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "numericEquality",
+    "source",
+    "functions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "numericEquality": {
+      "const": "finite-real-value-with-zero-sign-equivalence"
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "schema",
+        "expSha256"
+      ],
+      "properties": {
+        "file": {
+          "const": "../\ud83e\uddea\ufe0fvector/source.ifc"
+        },
+        "schema": {
+          "const": "IFC4X3_ADD2"
+        },
+        "expSha256": {
+          "const": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+        }
+      }
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 39,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "id",
+          "args",
+          "expected",
+          "tolerance"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "IFCBASEAXIS",
+              "IFCFIRSTPROJAXIS",
+              "IFCSECONDPROJAXIS"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 4,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "unknown"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "entity"
+                    },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "integer"
+                    },
+                    "value": {
+                      "type": "string",
+                      "pattern": "^-?(0|[1-9][0-9]*)$"
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "unknown"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "ratios"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "direction"
+                  },
+                  "ratios": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 3,
+                    "items": {
+                      "type": "number"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "items"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "axes"
+                  },
+                  "items": {
+                    "type": "array",
+                    "minItems": 2,
+                    "maxItems": 3,
+                    "items": {
+                      "oneOf": [
+                        {
+                          "type": "array",
+                          "minItems": 2,
+                          "maxItems": 3,
+                          "items": {
+                            "type": "number"
+                          }
+                        },
+                        {
+                          "type": "null"
+                        }
+                      ]
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "tolerance": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1e-14
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "owner": {
+                  "const": "IFCBASEAXIS"
+                }
+              },
+              "required": [
+                "owner"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "array",
+                  "minItems": 4,
+                  "maxItems": 4
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "owner": {
+                  "const": "IFCFIRSTPROJAXIS"
+                }
+              },
+              "required": [
+                "owner"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "owner": {
+                  "const": "IFCSECONDPROJAXIS"
+                }
+              },
+              "required": [
+                "owner"
+              ]
+            },
+            "then": {
+              "properties": {
+                "args": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3
+                }
+              }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

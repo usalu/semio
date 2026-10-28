@@ -1,0 +1,24 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object", "additionalProperties": false, "required": ["page", "attacks"],
+  "properties": {
+    "page": {
+      "type": "object", "additionalProperties": false, "required": ["fieldOffset", "diagnosticOffset", "choice"],
+      "properties": {
+        "fieldOffset": { "const": "9007199254740993" },
+        "diagnosticOffset": { "const": "18446744073709551615" },
+        "choice": {
+          "type": "object", "additionalProperties": false, "required": ["path", "offset"],
+          "properties": { "path": { "type": "array", "minItems": 1, "items": { "type": "string" } }, "offset": { "const": "32" } }
+        }
+      }
+    },
+    "attacks": {
+      "type": "array", "minItems": 1,
+      "items": {
+        "type": "object", "additionalProperties": false, "required": ["id", "field", "value"],
+        "properties": { "id": { "type": "string" }, "field": { "enum": ["surface", "revision", "node", "nodeKey", "trigger", "action", "input", "seq"] }, "value": {} }
+      }
+    }
+  }
+}

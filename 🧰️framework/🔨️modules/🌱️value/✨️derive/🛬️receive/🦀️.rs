@@ -22,13 +22,14 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
   }else{quote!{}};
   if attrs.tag.is_some()||data.variants.iter().any(|v|!matches!(v.fields,Fields::Unit)){let tokens=enums::expand(input,&attrs)?;return Ok(quote!(#default #tokens));}
   let variants=data.variants.iter().map(|v|{let attr=parse_variant_attrs(&v.attrs)?;let wire=variant_wire_name(&v.ident.to_string(),&attr.rename,&attrs.rename_all);let id=&v.ident;Ok(quote!(#wire=>Ok(Self::#id)))}).collect::<syn::Result<Vec<_>>>()?;
+  let ordinal_variants=data.variants.iter().enumerate().map(|(index,variant)|{let id=&variant.ident;let ordinal=index as u32;quote!(#ordinal=>Ok(Self::#id))}).collect::<Vec<_>>();
   return Ok(quote!{
    #default
-   impl<I:#native::native_decoding::owned::tree::NativeValueSource> #native::native_decoding::owned::tree::NativeScalarValue<I> for #name{
-    fn read(input:&I)->Result<Self,#value::ValueError>{match input.text()?.as_str(){#(#variants,)*_=>Err(#native::native_decoding::owned::tree::invalid())}}
-    fn read_copy_bytes(input:&I)->Result<usize,#value::ValueError>{Ok(input.text()?.len()+::std::mem::size_of::<Self>())}
+   impl<I:#native::native_decoding::owned::tree::NativeValueSource+?Sized> #native::native_decoding::owned::tree::NativeScalarValue<I> for #name{
+    fn read(input:&I)->Result<Self,#value::ValueError>{if let Ok(ordinal)=input.enum_ordinal(){return match ordinal{#(#ordinal_variants,)*_=>Err(#native::native_decoding::owned::tree::invalid())}}match input.text()?.as_str(){#(#variants,)*_=>Err(#native::native_decoding::owned::tree::invalid())}}
+    fn read_copy_bytes(input:&I)->Result<usize,#value::ValueError>{Ok(if input.enum_ordinal().is_ok(){::std::mem::size_of::<u32>()}else{input.text()?.len()}+::std::mem::size_of::<Self>())}
    }
-   impl<I:#native::native_decoding::owned::tree::NativeValueSource> #native::native_decoding::NativeReceive<I> for #name{
+   impl<I:#native::native_decoding::owned::tree::NativeValueSource+?Sized> #native::native_decoding::NativeReceive<I> for #name{
     type Receiver=#native::native_decoding::owned::tree::NativeScalarReceiver<I,Self>;
     fn receive_birth_demand()->#value::RetirementDemand{Self::Receiver::birth()}
     fn begin_receive(grant:#value::RetainedCloneGrant)->Result<(Self::Receiver,#value::RetainedCloneProgress),#value::ValueError>{Self::Receiver::begin(grant)}
@@ -49,32 +50,33 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
  }}).collect::<Vec<_>>();
  let missing_demands=types.iter().zip(required.iter()).map(|(ty,required)|if *required{quote!(Err(#native::native_decoding::owned::tree::invalid()))}else{quote!(#native::native_decoding::owned::tree::nested(<#ty as #native::native_decoding::owned::NativeDefault>::native_default_demand(),2*::std::mem::size_of::<#ty>()+::std::mem::size_of::<bool>()+::std::mem::size_of::<usize>()))}).collect::<Vec<_>>();
  let indices=(0..count).collect::<Vec<_>>();let slots=members.iter().map(|member|match member{Member::Named(id)=>format_ident!("slot_{}",id),Member::Unnamed(index)=>format_ident!("slot_{}",index.index)}).collect::<Vec<_>>();let tree=quote!(#native::native_decoding::owned::tree);
- let bounds=types.iter().zip(required.iter()).map(|(ty,required)|if *required{quote!(#ty:#native::native_decoding::NativeReceive<I>)}else{quote!(#ty:#native::native_decoding::NativeReceive<I>+#native::native_decoding::owned::NativeDefault)}).collect::<Vec<_>>();
+ let bounds=types.iter().zip(required.iter()).map(|(ty,required)|if *required{quote!(#ty:#native::native_decoding::NativeReceive<dyn #native::native_decoding::owned::tree::NativeValueSource>)}else{quote!(#ty:#native::native_decoding::NativeReceive<dyn #native::native_decoding::owned::tree::NativeValueSource>+#native::native_decoding::owned::NativeDefault)}).collect::<Vec<_>>();
+ let implementation_where=if attrs.receive_recursive{quote!{}}else{quote!{where #(#bounds,)*}};
  let schema_memberships=types.iter().zip(wires.iter()).zip(flattened.iter()).map(|((ty,wire),flatten)|if *flatten{quote!(<#ty as #native::native_decoding::owned::NativeRecordFields>::native_field_memberships(key))}else{quote!(usize::from(key==#wire))}).collect::<Vec<_>>();
  let schema_bytes=types.iter().zip(wires.iter()).zip(flattened.iter()).map(|((ty,wire),flatten)|if *flatten{quote!(<#ty as #native::native_decoding::owned::NativeRecordFields>::native_field_key_bytes())}else{let bytes=wire.len();quote!(#bytes)}).collect::<Vec<_>>();
  let selectors=types.iter().zip(wires.iter()).zip(flattened.iter()).enumerate().map(|(index,((ty,wire),flatten))|if *flatten{quote!(if <#ty as #native::native_decoding::owned::NativeRecordFields>::native_field_memberships(key)>0{field=Some(#index);})}else{quote!(if key==#wire{field=Some(#index);})}).collect::<Vec<_>>();
- let child_method=if tuple{format_ident!("sequence_child")}else{format_ident!("record_child")};let sources=flattened.iter().enumerate().map(|(index,flatten)|if *flatten{quote!(input.project(usize::MAX-#index,|source|source))}else{quote!({input.get().#child_method(index)?;input.project(index,move|source|source.#child_method(index).unwrap())})}).collect::<Vec<_>>();
- let slot_births=flattened.iter().map(|flatten|if *flatten{quote!(#tree::NativeReceiveSlot::original_record_subset())}else{quote!(#tree::NativeReceiveSlot::default())}).collect::<Vec<_>>();
- let scan_demand=if tuple{quote!(Ok(#tree::fixed(3*::std::mem::size_of::<usize>()+::std::mem::size_of::<u8>())))}else{quote!({let count=input.get().record_len()?;let bytes=if self.scan<count{input.get().record_key(self.scan)?.len()}else{0};Ok(#tree::fixed(bytes+<#name as #native::native_decoding::owned::NativeRecordFields>::native_field_key_bytes()+3*::std::mem::size_of::<usize>()+::std::mem::size_of::<Option<usize>>()+::std::mem::size_of::<u8>()))})};
- let scan_step=if tuple{quote!(let count=input.get().sequence_len()?;if count!=#count{return Err(#tree::invalid());}if self.scan==count{self.phase=2;}else{self.positions[self.scan]=Some(self.scan);self.scan+=1;})}else{quote!(let count=input.get().record_len()?;if self.scan==count{self.phase=2;}else{let key=input.get().record_key(self.scan)?;let memberships=<#name as #native::native_decoding::owned::NativeRecordFields>::native_field_memberships(key);if memberships>1||memberships==0&&!self.subset{return Err(#tree::invalid());}if memberships==1{let mut field=None;#(#selectors)*let field=field.ok_or_else(#tree::invalid)?;let flattened:[bool;#count]=[#(#flattened),*];if !flattened[field]&&self.positions[field].is_some(){return Err(#tree::invalid());}self.positions[field]=Some(self.scan);}self.scan+=1;})};
+ let child_method=if tuple{format_ident!("sequence_child")}else{format_ident!("record_child")};let sources=flattened.iter().enumerate().map(|(index,flatten)|if *flatten{quote!({match input.get().record_key(index)?{#native::native_decoding::owned::NativeRecordKey::Name(_)=>input.project(usize::MAX-#index,|source|source.as_source()),#native::native_decoding::owned::NativeRecordKey::Ordinal(_)=>{input.get().record_child(index)?;input.project(index,move|source|source.record_child(index).unwrap())}}})}else{quote!({input.get().#child_method(index)?;input.project(index,move|source|source.#child_method(index).unwrap())})}).collect::<Vec<_>>();
+ let slot_births=flattened.iter().map(|flatten|if *flatten{quote!(if matches!(input.get().record_key(index)?,#native::native_decoding::owned::NativeRecordKey::Name(_)){#tree::NativeReceiveSlot::original_record_subset()}else{#tree::NativeReceiveSlot::default()})}else{quote!(#tree::NativeReceiveSlot::default())}).collect::<Vec<_>>();
+ let scan_demand=if tuple{quote!(Ok(#tree::fixed(3*::std::mem::size_of::<usize>()+::std::mem::size_of::<u8>())))}else{quote!({let count=input.get().record_len()?;let bytes=if self.scan<count{match input.get().record_key(self.scan)?{#native::native_decoding::owned::NativeRecordKey::Name(key)=>key.len(),#native::native_decoding::owned::NativeRecordKey::Ordinal(_)=>::std::mem::size_of::<u16>()}}else{0};Ok(#tree::fixed(bytes+<#name as #native::native_decoding::owned::NativeRecordFields>::native_field_key_bytes()+3*::std::mem::size_of::<usize>()+::std::mem::size_of::<Option<usize>>()+::std::mem::size_of::<u8>()))})};
+ let scan_step=if tuple{quote!(let count=input.get().sequence_len()?;if count!=#count{return Err(#tree::invalid());}if self.scan==count{self.phase=2;}else{self.positions[self.scan]=Some(self.scan);self.scan+=1;})}else{quote!(let count=input.get().record_len()?;if self.scan==count{self.phase=2;}else{let original_key=input.get().record_key(self.scan)?;let(field,memberships)=match original_key{#native::native_decoding::owned::NativeRecordKey::Name(key)=>{let memberships=<#name as #native::native_decoding::owned::NativeRecordFields>::native_field_memberships(key);let mut field=None;#(#selectors)*(field,memberships)},#native::native_decoding::owned::NativeRecordKey::Ordinal(id)=>{let index=usize::from(id);(if index<#count{Some(index)}else{None},usize::from(index<#count))}};if memberships>1||memberships==0&&!self.subset{return Err(#tree::invalid());}if memberships==1{let field=field.ok_or_else(#tree::invalid)?;let flattened:[bool;#count]=[#(#flattened),*];if self.positions[field].is_some()&&(!flattened[field]||matches!(original_key,#native::native_decoding::owned::NativeRecordKey::Ordinal(_))){return Err(#tree::invalid());}self.positions[field]=Some(self.scan);}self.scan+=1;})};
  Ok(quote!{
-  #vis struct #receiver<I:#tree::NativeValueSource> where #(#bounds,)*{
+  #vis struct #receiver<I:#tree::NativeValueSource+?Sized> where #(#bounds,)*{
    binding:Option<#value::retained_clone::RetainedCloneBinding>,positions:[Option<usize>;#count],
-   #(#slots: ::std::mem::ManuallyDrop<Option<Box<#tree::NativeReceiveSlot<I,#types>>>>,)*
-   partial: ::std::mem::ManuallyDrop<Option<Box<::std::mem::MaybeUninit<#name>>>>,initialized:[bool;#count],retirement:#value::retained_clone::RetainedCloneClose,scan:usize,field:usize,phase:u8,stage:u8,closing:bool,subset:bool,input: ::std::marker::PhantomData<fn()->I>
+   #(#slots: ::std::mem::ManuallyDrop<Option<Box<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>>>,)*
+   partial: ::std::mem::ManuallyDrop<Option<Box<::std::mem::MaybeUninit<#name>>>>,initialized:[bool;#count],retirement:#value::retained_clone::RetainedCloneClose,scan:usize,field:usize,phase:u8,stage:u8,closing:bool,subset:bool,input: ::std::marker::PhantomData<fn(&I)>
   }
-  #[cfg(test)]impl<I:#tree::NativeValueSource> #receiver<I> where #(#bounds,)*{
+  #[cfg(test)]impl<I:#tree::NativeValueSource+?Sized> #receiver<I> where #(#bounds,)*{
    fn native_field_owner_count(&self)->usize{0usize#(+usize::from(self.#slots.is_some()))*}
   }  impl #native::native_decoding::owned::NativeRecordFields for #name{
    fn native_field_memberships(key:&str)->usize{0usize#(+#schema_memberships)*}
    fn native_field_key_bytes()->usize{0usize#(+#schema_bytes)*}
-  }  impl<I:#tree::NativeValueSource> #native::native_decoding::NativeReceive<I> for #name where #(#bounds,)*{
+  }  impl<I:#tree::NativeValueSource+?Sized> #native::native_decoding::NativeReceive<I> for #name #implementation_where{
    type Receiver=#receiver<I>;
    fn receive_birth_demand()->#value::RetirementDemand{#tree::fixed(2*::std::mem::size_of::<Self::Receiver>())}
    fn begin_receive(grant:#value::RetainedCloneGrant)->Result<(Self::Receiver,#value::RetainedCloneProgress),#value::ValueError>{let demand=<Self as #native::native_decoding::NativeReceive<I>>::receive_birth_demand();if !#value::retained_clone::retained_clone_grant_admits(grant,demand){return Err(#tree::invalid());}Ok((#receiver{binding:None,positions:[None;#count],#(#slots: ::std::mem::ManuallyDrop::new(None),)*partial: ::std::mem::ManuallyDrop::new(None),initialized:[false;#count],retirement:Default::default(),scan:0,field:0,phase:0,stage:0,closing:false,subset:false,input: ::std::marker::PhantomData},#tree::receipt(demand)))}
    fn begin_record_subset(grant:#value::RetainedCloneGrant)->Result<(Self::Receiver,#value::RetainedCloneProgress),#value::ValueError>{let(mut receiver,p)=Self::begin_receive(grant)?;receiver.subset=true;Ok((receiver,p))}
   }
-  impl<I:#tree::NativeValueSource> #native::native_decoding::NativeReceiver<I,#name> for #receiver<I> where #(#bounds,)*{
+  impl<I:#tree::NativeValueSource+?Sized> #native::native_decoding::NativeReceiver<I,#name> for #receiver<I> where #(#bounds,)*{
    fn demands(&self,input:#value::retained_clone::RetainedCloneRef<'_,I>,body:usize)->Result<#value::RetirementDemand,#value::ValueError>{
     if self.closing||self.phase>=5{return Err(#tree::invalid());}input.check_binding(&self.binding)?;
     match self.phase{
@@ -83,11 +85,11 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
      2=>if self.stage==0{Ok(#tree::fixed(::std::mem::size_of::<[Option<usize>;#count]>()+::std::mem::size_of::<u8>()))}else{Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<Option<Box<::std::mem::MaybeUninit<#name>>>>()+2*::std::mem::size_of::<u8>(),capacity_bytes: ::std::mem::size_of::<#name>(),depth:1,..Default::default()})},
      3=>{let overhead=::std::mem::size_of::<usize>()+::std::mem::size_of::<u8>();if self.field==#count{return Ok(#tree::fixed(overhead));}if self.positions[self.field].is_none(){return match self.field{#(#indices=>#missing_demands,)*_=>Err(#tree::invalid())};}let index=self.positions[self.field].ok_or_else(#tree::invalid)?;let child=match self.field{#(#indices=>#sources,)*_=>return Err(#tree::invalid())};match self.field{
       #(#indices=>match self.stage{
-       0=>Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<#tree::NativeReceiveSlot<I,#types>>()+2*::std::mem::size_of::<Option<Box<#tree::NativeReceiveSlot<I,#types>>>>()+overhead,capacity_bytes: ::std::mem::size_of::<#tree::NativeReceiveSlot<I,#types>>(),depth:1,..Default::default()}),
+       0=>Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>()+2*::std::mem::size_of::<Option<Box<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>>>()+overhead,capacity_bytes: ::std::mem::size_of::<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>(),depth:1,..Default::default()}),
        1=>#tree::nested(self.#slots.as_ref().ok_or_else(#tree::invalid)?.demands(child,body)?,overhead),
        2=>Ok(#tree::fixed(2*::std::mem::size_of::<#types>()+overhead+::std::mem::size_of::<bool>())),
        3=>#tree::nested(self.#slots.as_ref().ok_or_else(#tree::invalid)?.close_demands(body.saturating_sub(overhead))?,overhead),
-       4=>Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<Option<Box<#tree::NativeReceiveSlot<I,#types>>>>()+overhead,release_bytes: ::std::mem::size_of::<#tree::NativeReceiveSlot<I,#types>>(),depth:1,..Default::default()}),
+       4=>Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<Option<Box<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>>>()+overhead,release_bytes: ::std::mem::size_of::<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>(),depth:1,..Default::default()}),
        _=>Err(#tree::invalid()),
       },)*_=>Err(#tree::invalid())}},
      4=>Ok(#tree::fixed(::std::mem::size_of::<[bool;#count]>()+::std::mem::size_of::<u8>())),_=>Err(#tree::invalid())
@@ -117,7 +119,7 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
    fn begin_close(&mut self){self.closing=true;#(if let Some(slot)=self.#slots.as_mut(){slot.begin_close();})*}
    fn close_demands(&self,body:usize)->Result<#value::RetirementDemand,#value::ValueError>{
     if !self.closing{return Err(#tree::invalid());}
-    #(if let Some(slot)=self.#slots.as_ref(){return if slot.terminal_is_empty(){Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<Option<Box<#tree::NativeReceiveSlot<I,#types>>>>(),release_bytes: ::std::mem::size_of::<#tree::NativeReceiveSlot<I,#types>>(),depth:1,..Default::default()})}else{slot.close_demands(body)};})*
+    #(if let Some(slot)=self.#slots.as_ref(){return if slot.terminal_is_empty(){Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<Option<Box<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>>>(),release_bytes: ::std::mem::size_of::<#tree::NativeReceiveSlot<dyn #tree::NativeValueSource,#types>>(),depth:1,..Default::default()})}else{slot.close_demands(body)};})*
     if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<#name>(false,&None,body);}
     #(if self.initialized[#indices]{return #tree::nested(self.retirement.next_owner_demands::<#types>(true,&None,body.saturating_sub(2*::std::mem::size_of::<#types>()+::std::mem::size_of::<bool>()))?,2*::std::mem::size_of::<#types>()+::std::mem::size_of::<bool>());})*
     if self.partial.is_some(){return Ok(#value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<Option<Box<::std::mem::MaybeUninit<#name>>>>(),release_bytes: ::std::mem::size_of::<#name>(),depth:1,..Default::default()});}
@@ -133,6 +135,8 @@ pub fn expand(input:&DeriveInput)->syn::Result<proc_macro2::TokenStream>{
    }
    fn terminal_is_empty(&self)->bool{self.binding.is_none()&&self.partial.is_none()&&self.retirement.is_empty()#(&&self.#slots.is_none()&&!self.initialized[#indices])*}
   }
-  impl<I:#tree::NativeValueSource> Drop for #receiver<I> where #(#bounds,)*{fn drop(&mut self){assert!(::std::thread::panicking()||<Self as #native::native_decoding::NativeReceiver<I,#name>>::terminal_is_empty(self),"native record receiving requires funded closure");}}
+  impl<I:#tree::NativeValueSource+?Sized> Drop for #receiver<I> where #(#bounds,)*{fn drop(&mut self){assert!(::std::thread::panicking()||<Self as #native::native_decoding::NativeReceiver<I,#name>>::terminal_is_empty(self),"native record receiving requires funded closure");}}
  })
 }
+
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod recursive_tests;

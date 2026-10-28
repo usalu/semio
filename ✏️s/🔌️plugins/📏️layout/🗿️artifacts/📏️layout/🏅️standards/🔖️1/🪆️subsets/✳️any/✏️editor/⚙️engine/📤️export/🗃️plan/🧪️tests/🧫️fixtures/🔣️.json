@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "original": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 65536,
+    "maximumCapacityBytes": 65536,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "itemBytes": 176,
+  "pageBytes": 32,
+  "offsetBytes": 4,
+  "cancelCuts": [
+    0,
+    1,
+    8,
+    17,
+    33
+  ],
+  "offsetStride": 31,
+  "child": {
+    "copiedItems": 1,
+    "copiedBytes": 7,
+    "retainedCapacityBytes": 11,
+    "releasedBytes": 5
+  }
+}

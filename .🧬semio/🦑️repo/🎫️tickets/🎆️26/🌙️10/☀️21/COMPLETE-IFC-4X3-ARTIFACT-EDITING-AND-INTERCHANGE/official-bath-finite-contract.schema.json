@@ -1,0 +1,267 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "producerExecuted",
+    "sourceSha256",
+    "productId",
+    "operator",
+    "unitScaleMetres",
+    "block",
+    "cutter",
+    "mapping",
+    "productPlacement",
+    "policy",
+    "references"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "scope": {
+      "const": "official-bath-independent-finite-policy"
+    },
+    "producerExecuted": {
+      "const": false
+    },
+    "sourceSha256": {
+      "const": "4592f3029faa12625494ada734fcfe46e4fc91a33d001198e9e3144721870b95"
+    },
+    "productId": {
+      "const": "225"
+    },
+    "operator": {
+      "const": "DIFFERENCE"
+    },
+    "unitScaleMetres": {
+      "type": "number"
+    },
+    "block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "dimensions",
+        "position"
+      ],
+      "properties": {
+        "id": {
+          "const": "200"
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "position": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "cutter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "profileId",
+        "dimensions",
+        "radius",
+        "depth",
+        "direction",
+        "profilePosition",
+        "solidPosition"
+      ],
+      "properties": {
+        "id": {
+          "const": "206"
+        },
+        "profileId": {
+          "const": "202"
+        },
+        "dimensions": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "radius": {
+          "type": "number"
+        },
+        "depth": {
+          "type": "number"
+        },
+        "direction": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "number"
+          }
+        },
+        "profilePosition": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "solidPosition": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "mapping": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "origin",
+        "target",
+        "composed"
+      ],
+      "properties": {
+        "id": {
+          "const": "222"
+        },
+        "origin": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "target": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "composed": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "number"
+            }
+          }
+        }
+      }
+    },
+    "productPlacement": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "array",
+        "minItems": 4,
+        "maxItems": 4,
+        "items": {
+          "type": "number"
+        }
+      }
+    },
+    "policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "curvedChords",
+        "totalBoundary",
+        "relativeChordError",
+        "absoluteChordErrorMetres",
+        "maxSegments"
+      ],
+      "properties": {
+        "curvedChords": {
+          "type": "number"
+        },
+        "totalBoundary": {
+          "type": "number"
+        },
+        "relativeChordError": {
+          "type": "number"
+        },
+        "absoluteChordErrorMetres": {
+          "type": "number"
+        },
+        "maxSegments": {
+          "type": "number"
+        }
+      }
+    },
+    "references": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "idealVolume",
+        "sdkVolume",
+        "sdkVertices",
+        "sdkTriangles"
+      ],
+      "properties": {
+        "idealVolume": {
+          "type": "number"
+        },
+        "sdkVolume": {
+          "type": "number"
+        },
+        "sdkVertices": {
+          "type": "number"
+        },
+        "sdkTriangles": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

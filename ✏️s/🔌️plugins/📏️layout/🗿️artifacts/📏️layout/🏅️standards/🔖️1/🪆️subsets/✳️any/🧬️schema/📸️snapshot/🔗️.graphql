@@ -13,7 +13,7 @@ type LayoutSnapshot {
   pages: [Page!]! @state(class: ARTIFACT)
   printTarget: String @state(class: ARTIFACT)
   dataFields: QuestionDictionary @state(class: ARTIFACT)
-  backgroundDrawing: LayoutDrawingChild @state(class: ARTIFACT) @child(kind: "s.stdio.semio")
+  backgroundDrawing: LayoutDrawingMember @state(class: ARTIFACT) @child(kind: "s.draw.drawing")
   referencedModel: ArtifactLink @state(class: ARTIFACT) @link(roles: ["model"])
 }
 
@@ -36,4 +36,4 @@ type PageOverride { objectId: String! bounds: LayoutBounds visible: Boolean lock
 type ParentPage { id: String! name: String! width: Float! height: Float! layerIds: [String!]! layers: [Layer!]! frames: [Frame!]! }
 type Page { id: String! name: String! spreadId: String! parentPageId: String width: Float! height: Float! margins: PageMargins! columns: PageColumns! guides: [LayoutRect!]! layerIds: [String!]! layers: [Layer!]! frames: [Frame!]! overrides: [PageOverride!]! }
 type Spread { id: String! name: String! pageIds: [String!]! }
-type LayoutDrawingChild { handle: ArtifactChild! content: SemioDrawingSnapshot! }
+type LayoutDrawingMember { handle: ArtifactChild! }

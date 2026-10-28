@@ -1,0 +1,15 @@
+{
+  "source":"native-cases.json","diagnostic":"template.identities","ready":false,"numericDecodeBeforeComplete":false,
+  "cases":[
+    {"name":"empty-roster","sourceCase":"00","mode":"empty"},
+    {"name":"blank-ids-and-guids","sourceCase":"00","mode":"blank"},
+    {"name":"partial-decimal","sourceCase":"00","mode":"partial"},
+    {"name":"u64-overflow","sourceCase":"00","mode":"overflow"},
+    {"name":"resource-does-not-acquire-guid","sourceCase":"03","mode":"blank"},
+    {"name":"new-enumeration-remains-explicit","sourceCase":"07","mode":"blank"},
+    {"name":"duplicate-id","sourceCase":"00","mode":"duplicate"},
+    {"name":"required-guid-absent","sourceCase":"00","mode":"missingGuid"},
+    {"name":"required-id-absent","sourceCase":"00","mode":"missingId"},
+    {"name":"paged-history-identities","sourceCase":"10","mode":"empty"}
+  ]
+}

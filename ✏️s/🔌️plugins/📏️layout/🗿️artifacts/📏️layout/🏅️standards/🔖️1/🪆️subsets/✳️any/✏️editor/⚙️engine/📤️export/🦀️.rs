@@ -13,7 +13,7 @@ use semio_s_artifact_layout_layout_engine_json::JsonValidationCursor;
 use semio_s_artifact_layout_layout_engine_json::MAX_LAYOUT_EXPORT_DECODED_ITEMS;
 use semio_s_artifact_layout_layout_engine_json::MAX_LAYOUT_EXPORT_STRING_BYTES;
 use semio_s_artifact_layout_layout_engine_json::StringSource;
-use semio_s_artifact_layout_layout_engine_json::TypedJsonCursor;
+use semio_s_artifact_layout_layout_engine_json::{TypedJsonCursor,ChildJsonCursor};
 use semio_s_artifact_layout_layout_engine_json::TypedJsonNode;
 use semio_s_artifact_layout_layout_engine_json::finite_json_number;
 use semio_s_artifact_layout_layout_engine_json::frame_bounds;
@@ -31,16 +31,26 @@ use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCom
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
+use semio_s_artifact_layout_layout_io::interchange::{InterchangeExportSession, InterchangeExportAdvance};
 use semio_s_artifact_layout_layout_engine_json::dictionary::DictionaryJsonCursor;
+
+#[path="📍️checkpoint/🦀️.rs"]mod checkpoint;
+#[path="📤️output/🦀️.rs"]mod output;
+use output::{OutputWork,OUTPUT_BODY_BYTES,OUTPUT_COPY_BYTES};
 
 #[path = "📜️export-contract-and-state/🦀️.rs"]
 mod export_contract_and_state;
-pub use export_contract_and_state::{LAYOUT_EXPORT_PAYLOAD_SCHEMA, LAYOUT_EXPORT_TOOL_IDS, LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA, LAYOUT_MEDIA_EXPORT_SCHEMA, LAYOUT_MEDIA_EXPORT_TOOL_ID, LayoutExportCheckpoint, LayoutExportKind, LayoutExportPublication, LayoutExportPublicationKind, LayoutExportRequest, LayoutExportTurn, LayoutPublicationSlot, MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DIMENSION, MAX_LAYOUT_EXPORT_FILES, MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE, MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE, MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE, MAX_LAYOUT_EXPORT_LINKS, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, MAX_LAYOUT_EXPORT_PAGES, MAX_LAYOUT_EXPORT_PARENT_PAGES, MAX_LAYOUT_EXPORT_PIXELS, MAX_LAYOUT_EXPORT_RAW_BYTES, MAX_LAYOUT_EXPORT_SPREADS, MAX_LAYOUT_EXPORT_SPREAD_PAGE_IDS, MAX_LAYOUT_EXPORT_STORIES, MAX_LAYOUT_EXPORT_STYLES, MAX_LAYOUT_EXPORT_TOTAL_FRAMES};
+pub use export_contract_and_state::{LAYOUT_EXPORT_PAYLOAD_SCHEMA, LAYOUT_EXPORT_TOOL_IDS, LAYOUT_MEDIA_EXPORT_PAYLOAD_SCHEMA, LAYOUT_MEDIA_EXPORT_SCHEMA, LAYOUT_MEDIA_EXPORT_TOOL_ID, LayoutExportCheckpoint, LayoutExportKind, LayoutExportPublication, LayoutExportPublicationKind, LayoutExportRequest, LayoutExportTurn, LayoutPublicationSlot, MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES, MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES, MAX_LAYOUT_EXPORT_DIMENSION, MAX_LAYOUT_EXPORT_FILES, MAX_LAYOUT_EXPORT_GUIDES_PER_PAGE, MAX_LAYOUT_EXPORT_LAYERS_PER_PAGE, MAX_LAYOUT_EXPORT_LINKS, MAX_LAYOUT_EXPORT_OUTPUT_BYTES, MAX_LAYOUT_EXPORT_PAGES, MAX_LAYOUT_EXPORT_PARENT_PAGES, MAX_LAYOUT_EXPORT_PIXELS, MAX_LAYOUT_EXPORT_RAW_BYTES, MAX_LAYOUT_EXPORT_SPREADS, MAX_LAYOUT_EXPORT_SPREAD_PAGE_IDS, MAX_LAYOUT_EXPORT_STORIES, MAX_LAYOUT_EXPORT_STYLES};
 #[cfg(any(test, feature = "testkit"))]
 pub use export_contract_and_state::LayoutExportCommit;
-use export_contract_and_state::{BASE64_INPUT_BYTES_PER_UNIT, ChunkRope, ExportRect, ExportStage, LAYOUT_EXPORT_CHECKPOINT_MAGIC, LAYOUT_EXPORT_CLOSE_TURN_BYTES, LayoutCloseTurn, LayoutExportCloseStage, MAX_LAYOUT_EXPORT_AUTHORITY_BYTES, OUTPUT_CHUNK_BYTES, PNG_PIXELS_PER_UNIT, PackageSection, PdfItem, PdfPagePlan, PdfRaster, PdfSection, PngRowSection, ZipEntry, ZipState, layout_close_step};
+use export_contract_and_state::{BASE64_INPUT_BYTES_PER_UNIT, ChunkRope, ExportStage, FramePlanTurn, NestedValidationCursor, LAYOUT_EXPORT_CHECKPOINT_MAGIC, LayoutCloseTurn, LayoutExportCloseStage, MAX_LAYOUT_EXPORT_AUTHORITY_BYTES, OUTPUT_CHUNK_BYTES, PackageSection, PdfItem, PdfPagePlan, PdfRaster, PdfSection, PngRowSection, ZipEntry, ZipState, PackageMember, layout_close_step};
 #[cfg(any(test, feature = "testkit"))]
 use export_contract_and_state::MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS;
+
+#[path="🗃️plan/🦀️.rs"]
+mod plan_storage;
+use plan_storage::{PlanItems,PlanPages};
+pub use plan_storage::PlanOffsets;
 
 #[path = "🏗️job-admission-and-close/🦀️.rs"]
 mod job_admission_and_close;
@@ -65,8 +75,9 @@ use advance_commit_and_codec::decode_checkpoint;
 #[cfg(any(test, feature = "testkit"))]
 #[path = "🧪️testing/🦀️.rs"]
 mod test_oracle;
+#[cfg(test)]use test_oracle::{append_plan_fixture,close_plan_fixture,close_original_fixture};
 #[cfg(any(test, feature = "testkit"))]
-pub use test_oracle::{LAYOUT_EXPORT_FIXTURE_STOCK, LAYOUT_EXPORT_FIXTURE_TURN, LAYOUT_EXPORT_FIXTURE_TURN_BUDGET, LayoutExportObserved, drive_job_batch, export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch, headless_batch_export, layout_export_fixture_caller, run_layout_export_headless_batch};
+pub use test_oracle::{encode_export_checkpoint_fixture,decode_export_checkpoint_fixture,append_offset_fixture,append_output_fixture,close_output_fixture,output_append_refused_fixture,LAYOUT_EXPORT_FIXTURE_STOCK, LAYOUT_EXPORT_FIXTURE_TURN, LAYOUT_EXPORT_FIXTURE_TURN_BUDGET, LayoutExportObserved, drive_job_batch, export_document_pdf_headless_batch, export_document_png_headless_batch, export_document_svg_headless_batch, export_package_zip_headless_batch, headless_batch_export, layout_export_fixture_caller, run_layout_export_headless_batch};
 
 /// 🧪️ The white-box surface of the companion laws: every module the job record, its stages and its codecs live in.
 #[cfg(any(test, feature = "testkit"))]
@@ -74,3 +85,39 @@ pub mod testkit {
     pub use super::{advance_commit_and_codec::*, export_contract_and_state::*, job_admission_and_close::*, pdf_png_and_package_encoding::*, validate_plan_and_svg::*};
 }
 //#endregion 🧪️Testkit
+
+#[cfg(test)]
+#[path = "🧪️tests/📄️large-sheet/🦀️.rs"]
+mod large_sheet_tests;
+
+#[path = "🎨️faithful-primitives/🦀️.rs"]
+mod faithful_primitives;
+use faithful_primitives::{FidelityState, PaintShape};
+
+#[cfg(test)]
+#[path = "🧪️tests/🎨️fidelity/🦀️.rs"]
+mod fidelity_tests;
+
+#[cfg(test)]
+#[path = "🧪️tests/📦️formats/🦀️.rs"]
+mod format_job_tests;
+
+#[path="📄️paragraph-planning/🦀️.rs"]
+mod paragraph_planning;
+use paragraph_planning::ExportTextState;
+
+#[cfg(test)]
+#[path="🧪️tests/📄️paragraph/🦀️.rs"]
+mod paragraph_export_tests;
+
+use semio_s_artifact_layout_layout_engine::scene::drawing_planning::composition::{DrawingCompositionState,DrawingCompositionTurn};
+use semio_s_artifact_layout_layout_engine::scene::drawing_planning::{DrawingSourceAddress,DrawingPlacement};
+
+#[path="🖼️frame-planning/🦀️.rs"]mod frame_planning;
+
+#[cfg(test)]#[path="🧪️tests/🗺️planning/🦀️.rs"]mod retained_plan_tests;
+
+#[cfg(test)]#[path="🧪️tests/♻️buffers/🦀️.rs"]mod physical_close_tests;
+
+#[path="📖️drawing-read/🦀️.rs"]mod drawing_read;
+pub use drawing_read::LayoutExportWorkTurn;

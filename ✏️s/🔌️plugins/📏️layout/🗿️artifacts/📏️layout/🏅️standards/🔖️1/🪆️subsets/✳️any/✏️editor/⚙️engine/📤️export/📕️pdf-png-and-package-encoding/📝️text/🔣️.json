@@ -1,0 +1,21 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "LayoutPdfSemanticText",
+  "description": "Standard marked content scopes editable Layout text beside faithful glyph outline paint. Other invisible PDF text keeps its authored visibility policy.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["family", "weight", "italic"],
+  "properties": {
+    "family": {"type": "string"},
+    "weight": {"type": "integer", "minimum": 0, "maximum": 4294967295},
+    "italic": {"type": "boolean"}
+  },
+  "x-pdf": {
+    "tag": "SemioLayoutText",
+    "family": "SemioFontFamily",
+    "weight": "SemioFontWeight",
+    "italic": "SemioItalic",
+    "familyEncoding": "UTF-16BE with FEFF BOM",
+    "maximumScalarUnitsPerTurn": 1
+  }
+}

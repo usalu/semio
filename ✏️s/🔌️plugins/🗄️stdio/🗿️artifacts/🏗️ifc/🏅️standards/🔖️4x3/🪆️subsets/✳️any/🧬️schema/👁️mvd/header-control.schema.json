@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "routes",
+    "properties",
+    "originalDepth",
+    "replacementDepth",
+    "depthRefusal",
+    "faults",
+    "initialView",
+    "selectedView"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.mvd-header-control.v1"
+    },
+    "routes": {
+      "const": [
+        "declarations-sync",
+        "declarations-async",
+        "selection-sync",
+        "selection-async"
+      ]
+    },
+    "properties": {
+      "const": [
+        "signal",
+        "onProgress",
+        "maxEntities",
+        "maxValues",
+        "maxDepth",
+        "yieldEvery"
+      ]
+    },
+    "originalDepth": {
+      "const": 0
+    },
+    "replacementDepth": {
+      "const": 256
+    },
+    "depthRefusal": {
+      "const": "depthLimit"
+    },
+    "faults": {
+      "const": [
+        "abort",
+        "undefined",
+        "editError"
+      ]
+    },
+    "initialView": {
+      "const": "Alignment-basedReferenceView"
+    },
+    "selectedView": {
+      "const": "ReferenceView"
+    }
+  }
+}

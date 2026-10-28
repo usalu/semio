@@ -1,0 +1,9 @@
+# Native LIST Choice Layout Correction
+
+Reviewing the actual SELECT binding path exposed a pre-existing native LIST inconsistency. A present LIST field was assigned `StagedFormLayout::Preserve` because the field constructor excluded only enum choices. Its binding contains a Choice edit. The actual domain-neutral `StagedFormBinding::plan` accepts Preserve only for exactly one Text edit, so this generated LIST binding cannot form an admitted plan. This is a source-level finding; the enforcing compiler prevents a native executed reproduction.
+
+The constructor now assigns Replace to LIST and SELECT choice fields, alongside the existing enum behavior. Scalar child text fields retain Preserve when their structure is already present. The change permits cardinality/member selection to replace the field layout and retains the same token, source-owned option payload, original binding receiver and model mutation authority.
+
+The adjacent native law reconstructs the original Preserve-plus-Choice binding and explicitly expects the actual `plan` method to refuse it. The otherwise identical Replace binding must be admitted. The existing original LIST guidance law now also calls `plan` on every actual produced cardinality binding. New SELECT laws call the same plan method on actual discriminator and text bindings, apply their borrowed Set edits to fixture arguments and check exact final constructor shape. These before/after and produced-binding laws are authored and syntax-parsed, not executed red/green evidence. No native capability, type-check, runtime or physical accounting claim follows.
+
+The correction is included in the current fifty-eight-path SELECT source roster. The earlier LIST49 roster and independent report remain historical evidence for their exact former hashes; they are not rewritten to imply this later correction was reviewed then.

@@ -1,0 +1,11 @@
+/** 🔬 Emit actual IFC properties for every defined original STEP alphabet position. */
+import {mkdir,readFile,writeFile} from "node:fs/promises";
+import {resolve} from "node:path";
+import {pathToFileURL} from "node:url";
+
+const root=resolve(import.meta.dir,"../../../../../../.."),base=resolve(root,"✏️s/🔌️plugins/🗄️stdio"),output=resolve(import.meta.dir,"🗑️generated/step-alphabets");
+const cases=JSON.parse(await readFile(resolve(base,"📇️registry/🧬️contract/📐️part21/🔤️lexer-and-parse/alphabets/cases.json"),"utf8")).cases as {name:string;source:string;expected:string|null}[];
+const {parseIfc4x3Step,writeIfc4x3Step}=await import(pathToFileURL(resolve(base,"🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/step.ts")).href);
+if(process.argv.includes("--reimport")){const expected=new Map(cases.filter(row=>row.expected!==null).map(row=>[row.name,row.expected])),graph=await parseIfc4x3Step(await readFile(resolve(output,"independent.ifc"),"utf8"));if(graph.entities.length!==expected.size)throw new Error("Independent alphabet population differs");for(const entity of graph.entities){const name=entity.args[0],value=entity.args[2];if(name?.kind!=="string"||value?.kind!=="typedValue"||value.value.name!=="IFCTEXT"||value.value.items[0]?.kind!=="string"||expected.get(name.value)!==value.value.items[0].value)throw new Error("Independent alphabet value differs");}console.log("[DEBUG] "+JSON.stringify({nativeWriterReimport:graph.entities.length,differences:0}));process.exit(0);}
+const rows=cases.filter(row=>row.expected!==null),source=`ISO-10303-21;HEADER;FILE_DESCRIPTION(('Alphabet Contract'),'2;1');FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('IFC4X3_ADD2'));ENDSEC;DATA;${rows.map((row,index)=>`#${index+1}=IFCPROPERTYSINGLEVALUE('${row.name}',$,IFCTEXT('${row.source}'),$);`).join("")}ENDSEC;END-ISO-10303-21;`;
+await mkdir(output,{recursive:true});const owned=await writeIfc4x3Step(await parseIfc4x3Step(source));await writeFile(resolve(output,"source.ifc"),source);await writeFile(resolve(output,"owned.ifc"),owned);await writeFile(resolve(output,"expected.json"),JSON.stringify(rows.map(row=>({name:row.name,value:row.expected})),null,2));console.log("[DEBUG] "+JSON.stringify({defined:rows.length,undefined:cases.length-rows.length}));

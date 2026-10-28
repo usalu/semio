@@ -1,0 +1,46 @@
+{
+  "feature": "original-retirement-close-loan",
+  "cases": [
+    {
+      "name": "same-original",
+      "initialBytes": 32,
+      "capacityBytes": 3,
+      "charges": [
+        1,
+        2
+      ],
+      "expectedBytes": 35
+    },
+    {
+      "name": "over-hop-retained",
+      "initialBytes": 32,
+      "capacityBytes": 2,
+      "charges": [
+        1,
+        2
+      ],
+      "expectedBytes": 33,
+      "refusedAt": 1
+    },
+    {
+      "name": "zero-charge-observes-original",
+      "initialBytes": 7,
+      "capacityBytes": 0,
+      "charges": [
+        0
+      ],
+      "expectedBytes": 7
+    },
+    {
+      "name": "second-loan-same-ledger",
+      "initialBytes": 1,
+      "capacityBytes": 9,
+      "charges": [
+        3,
+        2,
+        4
+      ],
+      "expectedBytes": 10
+    }
+  ]
+}

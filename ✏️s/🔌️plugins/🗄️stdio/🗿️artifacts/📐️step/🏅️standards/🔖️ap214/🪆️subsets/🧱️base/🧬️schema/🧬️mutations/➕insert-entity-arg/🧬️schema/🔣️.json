@@ -121,6 +121,19 @@
         },
         {
           "type": "object",
+          "required": [
+            "binary"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "binary": {
+              "type": "string",
+              "pattern": "^(?:0[0-9A-F]*|1[0-7][0-9A-F]*|2[0-3][0-9A-F]*|3[01][0-9A-F]*)$"
+            }
+          }
+        },
+        {
+          "type": "object",
           "additionalProperties": false,
           "required": [
             "enum"

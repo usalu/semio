@@ -1,0 +1,300 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "base",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          -1,
+          -2,
+          0
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "volume": 24
+    },
+    {
+      "id": "profile-offset-rotation",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profileOrigin": [
+        5,
+        -2
+      ],
+      "profileX": [
+        0,
+        1
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          3,
+          -3,
+          0
+        ],
+        [
+          7,
+          -1,
+          3
+        ]
+      ],
+      "volume": 24
+    },
+    {
+      "id": "solid-placement",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "solidOrigin": [
+        10,
+        20,
+        30
+      ],
+      "solidZ": [
+        0,
+        1,
+        0
+      ],
+      "solidX": [
+        1,
+        0,
+        0
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          9,
+          20,
+          28
+        ],
+        [
+          11,
+          23,
+          32
+        ]
+      ],
+      "volume": 24
+    },
+    {
+      "id": "oblique-nonunit",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        3,
+        0,
+        4
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          -1,
+          -2,
+          0
+        ],
+        [
+          2.8,
+          2,
+          2.4
+        ]
+      ],
+      "volume": 19.2
+    },
+    {
+      "id": "negative-z",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        -7
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          -1,
+          -2,
+          -3
+        ],
+        [
+          1,
+          2,
+          0
+        ]
+      ],
+      "volume": 24
+    },
+    {
+      "id": "millimetres",
+      "x": 2000,
+      "y": 4000,
+      "depth": 3000,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "millimetres": true,
+      "expected": "supported",
+      "bounds": [
+        [
+          -1,
+          -2,
+          0
+        ],
+        [
+          1,
+          2,
+          3
+        ]
+      ],
+      "volume": 24
+    },
+    {
+      "id": "combined",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        3,
+        0,
+        4
+      ],
+      "profileOrigin": [
+        5,
+        -2
+      ],
+      "profileX": [
+        0,
+        1
+      ],
+      "solidOrigin": [
+        10,
+        20,
+        30
+      ],
+      "solidZ": [
+        0,
+        1,
+        0
+      ],
+      "solidX": [
+        1,
+        0,
+        0
+      ],
+      "expected": "supported",
+      "bounds": [
+        [
+          13,
+          20,
+          31
+        ],
+        [
+          18.8,
+          22.4,
+          33
+        ]
+      ],
+      "volume": 19.2
+    },
+    {
+      "id": "zero-x",
+      "x": 0,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "negative-y",
+      "x": 2,
+      "y": -4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "zero-depth",
+      "x": 2,
+      "y": 4,
+      "depth": 0,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "negative-depth",
+      "x": 2,
+      "y": 4,
+      "depth": -3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "expected": "refuse"
+    },
+    {
+      "id": "non-area",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        0,
+        0,
+        1
+      ],
+      "profileType": "CURVE",
+      "expected": "refuse"
+    },
+    {
+      "id": "plane-parallel",
+      "x": 2,
+      "y": 4,
+      "depth": 3,
+      "direction": [
+        1,
+        0,
+        0
+      ],
+      "expected": "refuse"
+    }
+  ]
+}

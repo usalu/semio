@@ -1,0 +1,9 @@
+# Complex Instance Editing and Physical Conformance
+
+The [ISO 10303-21 text published by STEP Tools](https://steptools.com/stds/step/IS_final_p21e3.html), clauses 12.2.5.1–12.2.5.3, selects internal mapping for one leaf entity type and external mapping for multiple leaves. External partial records are ordered by their uppercase entity names; each contains its direct explicit attributes. The [buildingSMART header implementation guide](https://standards.buildingsmart.org/documents/Implementation/ImplementationGuide_IFCHeaderData_Version_1.0.2.pdf) also describes IFC's use of conformance class 1. These are physical encoding rules, distinct from evaluating a population's entity/attribute constraints.
+
+Consequently, a proposed ordinary-IFC → external-single-chain UI toggle would produce an encoding that does not follow that selection rule. No such toggle was implemented. This corrects the earlier host-fix report's suggestion that ordinary → complete external-chain conversion was necessarily a missing authoring feature.
+
+The generic graph still retains partial constituents and exposes controls for imported/repaired records. Current semantic execution can flatten a complete single chain to evaluate its EXPRESS attributes and rules. That useful evaluation must not be presented as proof that the original physical encoding conforms. The STEP parser's lossless syntax support and semantic validator's normalized population scope are separate from a complete Part 21 conformance check. Independent semantic audit has been asked to verify that distinction.
+
+After semantic facade and package suite registration, the coordinator executed the semantic, native-program consistency, structural-schema and MVD-scope suites together: **57 passed, zero failed, 928 assertions**. This verifies those executed contracts; native Rust host execution and full MVD conformance remain unverified.

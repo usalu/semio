@@ -162,6 +162,7 @@ function createKernelHandle(scope: PluginHandleScope, instances: ReturnType<type
       const opening = openingInstances.get(instanceId);
       const retirement = documentBindings.get(instanceId)?.port.retire();
       const retiring = Promise.resolve().then(async () => {
+        ui.beginOwnedUiSurfaceClose(instanceId);
         await Promise.all([opening?.then(() => {}, () => {}), retirement]);
         if (actorIdByInstance.get(instanceId) === actorId) {
           const lease = lifecycleByInstance.get(instanceId);
@@ -480,6 +481,6 @@ export async function loadPluginModule(pluginId: string, moduleUrl: string, sign
   const invoke = createInboundInvoke(scope, instances, requestActors);
   const bindDocumentPort = createDocumentPortBinder(scope, instances, ui, jobs);
 
-  return { ...richHandle, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort, subscribeSpawnedJobProgress: jobs.subscribeSpawnedJobProgress };
+  return { ...richHandle, refreshUi, captureExtensionCompletion, invoke, bindDocumentPort, subscribeSpawnedJobProgress: jobs.subscribeSpawnedJobProgress,acquireOwnedUiSurface:ui.acquireOwnedUiSurface };
 }
 //#endregion 🔖️plugin-runtime

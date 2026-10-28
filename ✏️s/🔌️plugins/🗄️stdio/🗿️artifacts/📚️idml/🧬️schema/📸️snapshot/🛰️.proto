@@ -1,0 +1,4 @@
+syntax = "proto3";
+package semio.stdio.idml.snapshot;
+message IdmlPart { string path = 1; bytes bytes = 2; }
+message IdmlSnapshot { string dom_version = 1; repeated IdmlPart parts = 2; }

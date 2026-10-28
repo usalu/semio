@@ -2,6 +2,7 @@
 use crate::{RetainedValueToken as Token,RetainedValueContainer as Container,RetainedValueRole as Role,RetainedValueDriver,retained_pack_close_progress};
 use semio_framework_replication_codec::PackLimits;
 use semio_framework_pack_error::PackRefusal;
+use semio_framework_replication_wire_core::RetainedWireByteSource;
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::mem::size_of;
 fn invalid(detail:&'static str)->PackRefusal{PackRefusal::RetainedMalformed{kind:ValueRefusalKind::InvalidValue,what:"retained Pack Document",offset:0,detail}}
@@ -26,10 +27,10 @@ pub struct RetainedDocumentDriver{
 fn catalog_fault(error:CatalogFault)->PackRefusal{error.into_pack_refusal("retained intrinsic Document catalog")}
 fn paged(error:semio_framework_value_persistent::list::PagedListError)->PackRefusal{PackRefusal::from_paged_refusal(error,"retained intrinsic chunk references",0)}
 fn partial_close(step:Close)->RetainedCloneStep{match retained_pack_close_progress(step){RetainedCloneStep::Complete(progress)|RetainedCloneStep::Progress(progress)=>RetainedCloneStep::Progress(progress)}}
-fn segment_one(cursor:&mut Segment,input:&[u8],offset:&mut usize,complete:&mut bool,maximum:usize)->Result<Option<Event>,PackRefusal>{
+fn segment_one<S:RetainedWireByteSource+?Sized>(cursor:&mut Segment,input:&S,range:(usize,usize),offset:&mut usize,complete:&mut bool,maximum:usize)->Result<Option<Event>,PackRefusal>{
  if let Some(bytes)=cursor.next_allocation_bytes(){if bytes>maximum{return Err(capacity())}cursor.reserve_allocation(bytes).map_err(|error|error.fault.into_pack_refusal("retained intrinsic inflater",0))?;return Ok(None)}
  match cursor.preflight(){
-  Ok(())=>{let event=if *offset<input.len(){let event=Source::Byte{offset:*offset as u64,value:input[*offset]};*offset+=1;event}else if !*complete{*complete=true;Source::Complete{bytes:*offset as u64,pages:0}}else{return cursor.grant()};cursor.admit(event).map_err(|_|invalid("segment source handback"))?;Ok(None)},
+  Ok(())=>{let event=if *offset<(range.1-range.0){let event=Source::Byte{offset:*offset as u64,value:input.byte_at(range.0+*offset).ok_or_else(||invalid("original Pack segment byte is absent"))?};*offset+=1;event}else if !*complete{*complete=true;Source::Complete{bytes:*offset as u64,pages:0}}else{return cursor.grant()};cursor.admit(event).map_err(|_|invalid("segment source handback"))?;Ok(None)},
   Err(Admission::Fault(error))=>Err(error.clone()),Err(Admission::Closed)=>Err(invalid("closed document segment")),Err(Admission::Complete)=>Ok(None),Err(Admission::Pending|Admission::InflaterBackpressure)=>cursor.grant(),
  }
 }
@@ -43,13 +44,13 @@ impl RetainedDocumentDriver{
   let value=match if intrinsic{Value::try_new_intrinsic(limits,maximum)}else{Value::try_new(limits,maximum)}{Ok(cursor)=>cursor,Err(error)=>{while catalog.close_step(1,0).map_err(paged)?!=Close::Complete{}while segment.close_step(1,0)!=Close::Complete{}while chunk_segment.close_step(1,0)!=Close::Complete{}return Err(error)}};
   Ok(Self{anchor:Anchor::new(),segment,chunk_segment,catalog,value,ids:Default::default(),phase:Phase::Anchor,offset:0,chunk_offset:0,input_work:0,source_complete:false,chunk_complete:false,superblock:None,verified:None,event:None,document_byte:None,body_ingress:0,sealed:false,intrinsic,schema_index:0,schema_hash:semio_framework_hash::Hasher::new(),chunks:Chunks::None,pending_id:None,chunk_hash:semio_framework_hash::Hasher::new(),closed:false})
  }
- fn replay_one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>{
+ fn replay_one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
   if let Some(bytes)=self.value.next_allocation_bytes()?{if bytes>maximum{return Err(capacity())}self.value.reserve_allocation(bytes).map_err(|error|error.fault)?;return Ok(None)}
   if let Some(id)=self.pending_id{
    if !self.ids.has_reserved_slot(){let bytes=self.ids.next_allocation_bytes().map_err(paged)?;if bytes>maximum{return Err(capacity())}self.ids.reserve_one(bytes).map_err(|error|PackRefusal::from_paged_allocation(error,"retained intrinsic chunk references",0))?;return Ok(None)}
    let entry=self.catalog.chunk(id).map_err(catalog_fault)?;let Chunks::Gather{remaining,total,..}=&mut self.chunks else{return Err(invalid("chunk reference outside declaration"))};*total=total.checked_add(entry.raw_len).ok_or_else(capacity)?;*remaining=remaining.checked_sub(1).ok_or_else(||invalid("too many chunk references"))?;self.ids.push_reserved(id).map_err(|_|invalid("chunk reference exceeds admitted owner"))?;self.pending_id=None;return Ok(None)
   }
-  if matches!(self.chunks,Chunks::Read{..}){return self.chunk_one(input,maximum)}
+  if matches!(self.chunks,Chunks::Read{..}){return self.chunk_one(input,range,maximum)}
   if !self.value.ingress_ready(){if let Some(token)=self.value.grant()?{
    match token{
     Token::Tag{value:0x09,..}=>return Ok(None),
@@ -60,20 +61,20 @@ impl RetainedDocumentDriver{
    }
   }return Ok(None)}
   if let Some((index,byte))=self.document_byte{if self.value.ingress_ready(){self.value.admit_byte(index,byte).map_err(|_|invalid("document value handback"))?;self.document_byte=None;self.body_ingress+=1}return Ok(None)}
-  if self.source_complete&&self.offset==input.len()&&matches!(self.segment.preflight(),Err(Admission::Complete)){
+  if self.source_complete&&self.offset==(range.1-range.0)&&matches!(self.segment.preflight(),Err(Admission::Complete)){
    if !self.sealed{self.value.seal(self.body_ingress)?;self.sealed=true;return Ok(None)}return Err(invalid("document terminal value progress unavailable"))
   }
-  let before=self.offset;if let Some(event)=segment_one(&mut self.segment,input,&mut self.offset,&mut self.source_complete,maximum)?{if let Event::RawByte{segment,value,..}=event{if segment.kind==semio_framework_replication_codec::KIND_DOCUMENT{self.document_byte=Some((self.body_ingress,value))}}}
+  let before=self.offset;if let Some(event)=segment_one(&mut self.segment,input,range,&mut self.offset,&mut self.source_complete,maximum)?{if let Event::RawByte{segment,value,..}=event{if segment.kind==semio_framework_replication_codec::KIND_DOCUMENT{self.document_byte=Some((self.body_ingress,value))}}}
   self.input_work=self.input_work.checked_add(self.offset-before).ok_or_else(capacity)?;Ok(None)
  }
- fn chunk_one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>{
+ fn chunk_one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
   let Chunks::Read{index,end,seen,found,verified}=self.chunks else{unreachable!()};
   if index==end{self.chunks=Chunks::None;return Ok(None)}
   let id=*self.ids.get(index).ok_or_else(||invalid("missing retained chunk reference"))?;let entry=self.catalog.chunk(id).map_err(catalog_fault)?;
   if matches!(self.chunk_segment.preflight(),Err(Admission::Complete)){
    if !found||!verified||seen!=entry.raw_len{return Err(invalid("referenced chunk is incomplete"))}self.chunk_segment.replay()?;self.chunk_offset=0;self.chunk_complete=false;self.chunk_hash=semio_framework_hash::Hasher::new();self.chunks=Chunks::Read{index:index+1,end,seen:0,found:false,verified:false};return Ok(None)
   }
-  let before=self.chunk_offset;let event=segment_one(&mut self.chunk_segment,input,&mut self.chunk_offset,&mut self.chunk_complete,maximum)?;self.input_work=self.input_work.checked_add(self.chunk_offset-before).ok_or_else(capacity)?;
+  let before=self.chunk_offset;let event=segment_one(&mut self.chunk_segment,input,range,&mut self.chunk_offset,&mut self.chunk_complete,maximum)?;self.input_work=self.input_work.checked_add(self.chunk_offset-before).ok_or_else(capacity)?;
   match event{
    Some(Event::Begin(segment))if segment.kind==semio_framework_replication_codec::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if found||segment.stored_len!=entry.stored_len||segment.raw_len!=entry.raw_len{return Err(invalid("referenced chunk framing disagrees with catalog"))}self.chunks=Chunks::Read{index,end,seen,found:true,verified:false}},
    Some(Event::RawByte{segment,value,..})if segment.kind==semio_framework_replication_codec::KIND_CHUNK&&segment.payload_offset==entry.offset=>{if !found||seen>=entry.raw_len{return Err(invalid("referenced chunk exceeds declared raw length"))}self.chunk_hash.update(&[value]);self.chunks=Chunks::Read{index,end,seen:seen+1,found,verified};return Ok(Some(Token::Byte(value)))},
@@ -84,17 +85,17 @@ impl RetainedDocumentDriver{
 }
 impl RetainedValueDriver for RetainedDocumentDriver{
  fn new(limits:PackLimits,length:usize,maximum:usize)->Result<Self,PackRefusal>{Self::declared(limits,length,maximum,true)}
- fn one(&mut self,input:&[u8],maximum:usize)->Result<Option<Token>,PackRefusal>{
+ fn one<S:RetainedWireByteSource+?Sized>(&mut self,input:&S,range:(usize,usize),maximum:usize)->Result<Option<Token>,PackRefusal>{
   match self.phase{
-   Phase::Anchor=>{let event=if self.offset<input.len(){let event=Source::Byte{offset:self.offset as u64,value:input[self.offset]};self.offset+=1;self.input_work+=1;Some(event)}else if !self.source_complete{self.source_complete=true;Some(Source::Complete{bytes:self.offset as u64,pages:0})}else{None};if self.anchor.grant(event)?{self.superblock=self.anchor.take();self.phase=Phase::Verify;self.offset=0;self.source_complete=false}Ok(None)},
+   Phase::Anchor=>{let event=if self.offset<(range.1-range.0){let event=Source::Byte{offset:self.offset as u64,value:input.byte_at(range.0+self.offset).ok_or_else(||invalid("original Pack anchor byte is absent"))?};self.offset+=1;self.input_work+=1;Some(event)}else if !self.source_complete{self.source_complete=true;Some(Source::Complete{bytes:self.offset as u64,pages:0})}else{None};if self.anchor.grant(event)?{self.superblock=self.anchor.take();self.phase=Phase::Verify;self.offset=0;self.source_complete=false}Ok(None)},
    Phase::Verify=>{
     if self.catalog.has_pending_input(){if let Some(bytes)=self.catalog.next_allocation_bytes().map_err(catalog_fault)?{if bytes>maximum{return Err(capacity())}self.catalog.reserve_allocation(bytes).map_err(|error|catalog_fault(error.fault))?;}else{self.catalog.grant().map_err(catalog_fault)?;}return Ok(None)}
     if let Some(event)=self.event.take(){self.catalog.admit(event).map_err(|_|invalid("catalog segment handback"))?;return Ok(None)}
     if self.catalog.progress().complete{self.verified=self.catalog.take(self.superblock.take().ok_or_else(||invalid("missing verified document anchor"))?).map_err(catalog_fault)?;if self.verified.is_none(){return Err(invalid("catalog has no verified manifest"))}self.phase=Phase::Schema;return Ok(None)}
-    let before=self.offset;self.event=segment_one(&mut self.segment,input,&mut self.offset,&mut self.source_complete,maximum)?;self.input_work+=self.offset-before;Ok(None)
+    let before=self.offset;self.event=segment_one(&mut self.segment,input,range,&mut self.offset,&mut self.source_complete,maximum)?;self.input_work+=self.offset-before;Ok(None)
    },
    Phase::Schema=>{if !self.intrinsic{self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;return Ok(None)}if self.schema_index<INTRINSIC_SCHEMA_GRAPH.len(){self.schema_hash.update(&INTRINSIC_SCHEMA_GRAPH[self.schema_index..self.schema_index+1]);self.schema_index+=1;return Ok(None)}let manifest=self.verified.as_ref().unwrap().manifest;if manifest.field_count!=1||self.schema_hash.finalize().as_bytes()!=&manifest.schema_hash{return Err(invalid("intrinsic document schema mismatch"))}self.segment.replay()?;self.offset=0;self.source_complete=false;self.phase=Phase::Replay;Ok(None)},
-   Phase::Replay=>{let token=self.replay_one(input,maximum)?;if matches!(token,Some(Token::Complete{..})){self.phase=Phase::Complete}Ok(token)},
+   Phase::Replay=>{let token=self.replay_one(input,range,maximum)?;if matches!(token,Some(Token::Complete{..})){self.phase=Phase::Complete}Ok(token)},
    Phase::Complete=>Ok(None),
   }
  }

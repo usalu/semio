@@ -1,0 +1,49 @@
+{
+  "schema": "semio.ifc.edit-control-cases.v1",
+  "properties": [
+    "signal",
+    "onProgress",
+    "maxEntities",
+    "maxValues",
+    "maxDepth",
+    "yieldEvery"
+  ],
+  "modes": [
+    "sync",
+    "async"
+  ],
+  "failures": [
+    "undefined",
+    "object",
+    "editError",
+    "error"
+  ],
+  "limits": [
+    {
+      "name": "maxEntities",
+      "value": 0,
+      "code": "entityLimit"
+    },
+    {
+      "name": "maxValues",
+      "value": 0,
+      "code": "valueLimit"
+    },
+    {
+      "name": "maxDepth",
+      "value": 0,
+      "code": "depthLimit"
+    }
+  ],
+  "cleanup": {
+    "yielded": 3,
+    "finished": true,
+    "observed": 1
+  },
+  "cancellation": {
+    "code": "cancelled",
+    "originalCalls": 1,
+    "replacementCalls": 0,
+    "published": false
+  }
+}

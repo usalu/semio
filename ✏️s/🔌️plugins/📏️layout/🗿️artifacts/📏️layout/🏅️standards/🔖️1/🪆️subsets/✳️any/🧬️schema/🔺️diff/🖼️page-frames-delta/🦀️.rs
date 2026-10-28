@@ -1,14 +1,17 @@
 //! 🖼️ Page frames delta of the layout diff: the keyed frame rows of a page and their delta algebra. See [`super`].
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 
 //#region 🔖️DeltaHelpers
 protocol::row_patch! {
+    #[derive(semio_framework_value::RetainedClone)]
     /// 🗂️ Owned-field patch of one layer: its name and the two flags.
     pub LayerPatch of Layer { set { name: String, visible: bool, locked: bool } }
 }
 
 protocol::list_delta! {
+    #[derive(semio_framework_value::RetainedClone)]
     /// 🧩 Positional keyed rows of the `layers` list.
     pub PageLayersDelta {
         removal: PageLayerRemoval,
@@ -23,7 +26,7 @@ protocol::list_delta! {
 }
 
 /// ➖️ One `frames` row removed, with the base index the inverse reinserts it at.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PageFrameRemoval {
     pub id: String,
@@ -31,7 +34,7 @@ pub struct PageFrameRemoval {
 }
 
 /// ➕️ One `frames` row inserted at its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PageFrameInsertion {
     pub index: usize,
@@ -40,7 +43,7 @@ pub struct PageFrameInsertion {
 }
 
 /// ↕️ One `frames` row moved from its base index to its index in the resulting list.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PageFrameRelocation {
     pub id: String,
@@ -49,7 +52,7 @@ pub struct PageFrameRelocation {
 }
 
 /// 🩹 One modified `frames` row.
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase")]
 pub struct PageFramesModification {
     pub id: String,
@@ -57,7 +60,7 @@ pub struct PageFramesModification {
 }
 
 /// 🧩 Positional keyed rows of the `frames` list.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 pub struct PageFramesDelta {
     pub removed: Vec<PageFrameRemoval>,

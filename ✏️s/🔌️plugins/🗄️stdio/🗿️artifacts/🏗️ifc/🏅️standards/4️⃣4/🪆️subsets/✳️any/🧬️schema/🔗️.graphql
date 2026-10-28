@@ -1,5 +1,6 @@
-# 🧬️ IfcArtifact
+# 🧬️ IFC4 artifact owns its complete persisted header and entity graph.
 type IfcArtifact {
   schema: String! @state(class: ARTIFACT)
-  PLACEHOLDER_TEXT_COLON String! @state(class: ARTIFACT)
+  header: IfcHeader! @state(class: ARTIFACT)
+  entities: [IfcEntity!]! @state(class: ARTIFACT)
 }

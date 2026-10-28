@@ -1,0 +1,78 @@
+{
+  "contract": "DrawingOriginalLookup",
+  "original": [
+    "RetainedCloneRef<DrawingSnapshot>",
+    "RetainedCloneRef<DrawingNativeText>"
+  ],
+  "traversal": "bounded-depth-first-original-owned-tree",
+  "comparison": "one-byte-pair-from-original-paged-utf8-per-paid-turn",
+  "denial": "no-source-change-no-backing-no-progress",
+  "result": "funded-DrawingLayerAddress",
+  "closure": [
+    "comparison-metadata",
+    "target-binding",
+    "snapshot-binding"
+  ],
+  "cases": [
+    {
+      "id": "root",
+      "tree": [
+        {
+          "id": "root",
+          "children": []
+        }
+      ],
+      "target": "root",
+      "address": [
+        0
+      ]
+    },
+    {
+      "id": "nested-unicode",
+      "tree": [
+        {
+          "id": "root",
+          "children": [
+            {
+              "id": "雪\u0000🍃",
+              "children": []
+            }
+          ]
+        }
+      ],
+      "target": "雪\u0000🍃",
+      "address": [
+        0,
+        0
+      ]
+    },
+    {
+      "id": "missing",
+      "tree": [
+        {
+          "id": "a",
+          "children": []
+        }
+      ],
+      "target": "b",
+      "address": null
+    },
+    {
+      "id": "literal",
+      "tree": [
+        {
+          "id": "__proto__",
+          "children": []
+        },
+        {
+          "id": "constructor",
+          "children": []
+        }
+      ],
+      "target": "constructor",
+      "address": [
+        1
+      ]
+    }
+  ]
+}

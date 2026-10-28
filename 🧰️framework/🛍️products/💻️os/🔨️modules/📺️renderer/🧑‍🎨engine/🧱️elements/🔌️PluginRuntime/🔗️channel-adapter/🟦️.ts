@@ -166,6 +166,7 @@ export async function adaptPluginHandle(pluginId: string, lease: { readonly hand
     handleAction: async (instanceId, actionJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(actionJson), "action", viewState, dispatch),
     handleCommand: async (instanceId, commandJson, viewState, dispatch) => performInvocation(requireChannel(instanceId), instanceId, JSON.parse(commandJson), "command", viewState, dispatch),
     refreshUi: async () => ({}),
+    acquireOwnedUiSurface:()=>undefined,
     contextMenu: async (instanceId, request, viewState) => performContextMenu(requireChannel(instanceId), request, viewState),
     readHistory: async (instanceId) => readHistoryWithBoundedRetryV1(requireChannel(instanceId), instanceId),
     applyMutations: async (instanceId, mutationsPack) => {

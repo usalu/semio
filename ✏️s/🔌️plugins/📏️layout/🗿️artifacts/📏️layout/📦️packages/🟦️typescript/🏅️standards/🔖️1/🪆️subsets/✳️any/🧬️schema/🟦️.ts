@@ -1,4 +1,4 @@
-/** 🧬️ Public entry `@semio-tech/layout-layout-ts/standards/1/subsets/any/schema`: the explicit surface that importers outside the module use. */
-export { default as subsetsAnySchema } from "../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
-export { LAYOUT_BACKGROUND_DRAWING, parseCharacterStyle, parseGridSettings, parseImageLink, parseLayoutArtifact, parseLayoutDrawingChild, parseTextStyleRun } from "../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
-export type { LayoutArtifact, LayoutDrawingContent } from "../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
+/** 🧬️ Explicit public Layout schema surface preserves genuine member references and original prepared source reads. */
+export {default as subsetsAnySchema} from "../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔣️.json";
+export {parseCharacterStyle,parseGridSettings,parseImageLink,parseLayoutArtifact,parseTextStyleRun,parseLayoutDrawingMember,drawingMemberAt,drawingReadDemand,drawingReadAt} from "../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";
+export type {LayoutArtifact,DrawingSourceAddress,LayoutDrawingMember,LayoutDrawingBirthSource,LayoutDrawingBirth,LayoutImportBundle,DrawingReadAdvance} from "../../../../../../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🟦️.ts";

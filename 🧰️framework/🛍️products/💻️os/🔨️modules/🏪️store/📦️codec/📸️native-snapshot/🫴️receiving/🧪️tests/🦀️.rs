@@ -37,3 +37,13 @@ fn retire(cx:&mut StepContext<'_>,demand:RetirementDemand,run:impl FnOnce(&mut d
  let result=cx.with_native_retirement(|native|run(native,grant));let progress=match &result{Ok(step)=>step.progress(),Err(error)=>error.retained_progress()};let reconciled=cx.consume_retained(progress);cx.consume_fuel(progress.copied_items as u64);
  match(result,reconciled){(Ok(_),Ok(()))=>Ok(progress),(Err(error),Ok(()))=>Err(error.into()),(Ok(_),Err(error))=>Err(error.into()),(Err(error),Err(receipt))=>{let mut failure=OriginalTurnFailure::from(error);failure.receipt_refusal=Some(receipt);Err(failure)}}
 }
+
+#[test]
+fn original_snapshot_record_prefixes_retire_through_the_same_original_snapshot_recipient(){
+ let expected=OriginalRecord{text:"original retained record 雪".repeat(40),items:vec!["one".into(),"two".into()]};let body=semio_framework_os_pack::record::encode_document(&OriginalRecord::__dsl_spec(),&expected.__dsl_to_record(),&Default::default()).unwrap();let envelope=semio_framework_os_semio::SemioEnvelope::from_envelope_id("test.original",semio_framework_os_semio::Component::Pack,1).unwrap();let source=semio_framework_os_semio::wrap_binary(&envelope,&body);
+ for prefix in[0,1,8,64,512,4096,usize::MAX]{let mut original=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut owner=None;
+  original.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,metadata::<OriginalSnapshotRecordReceiving<OriginalRecord>>(),|native,grant|{let(candidate,p)=OriginalSnapshotRecordReceiving::admit(&source,"test.original",PackLimits::default(),native,grant)?.unwrap();owner=Some(candidate);Ok(RetainedCloneStep::Progress(p))})).unwrap();let mut owner=owner.unwrap();let mut turns=0;
+  while turns<prefix&&!owner.is_ready(){let demand=owner.demands(&source,4096).unwrap();original.turn_with_decoder(stock(),&mut decoder,|cx|receive(cx,demand,|native,grant|owner.step(&source,native,4096,grant).map(RetainedCloneStep::Progress))).unwrap();turns+=1;assert!(turns<100000);}
+  original.cancel().cancel_now();let mut retained=ControlledRetirement::new(owner).ok().unwrap();while !retained.terminal_is_empty(){let demand=retained.next_demand(4096).unwrap();let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||original.turn_with_decoder(stock(),&mut decoder,|cx|cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|retained.step(grant)))));let progress=result.unwrap();assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));}drop(retained);finish(original,decoder);
+ }
+}

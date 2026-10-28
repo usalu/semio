@@ -1,0 +1,213 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/express/traversal",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "physicalValidity",
+    "initialization",
+    "sources",
+    "cohorts",
+    "inverses",
+    "globals",
+    "controls"
+  ],
+  "properties": {
+    "initialization":{"type":"object","additionalProperties":false,"required":["absent","repeated"],"properties":{"absent":{"const":"context-state"},"repeated":{"const":"context-state"}}},
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "scope": {
+      "const": "population-projection-and-cardinality"
+    },
+    "physicalValidity": {
+      "const": "not-claimed"
+    },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zero",
+        "one",
+        "two",
+        "ordered"
+      ],
+      "properties": {
+        "zero": {
+          "type": "string",
+          "minLength": 1
+        },
+        "one": {
+          "type": "string",
+          "minLength": 1
+        },
+        "two": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ordered": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "cohorts": {
+      "type": "array",
+      "minItems": 9,
+      "maxItems": 9,
+      "items": {
+        "$ref": "#/$defs/cohort"
+      }
+    },
+    "inverses": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/inverse"
+      }
+    },
+    "globals": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "$ref": "#/$defs/global"
+      }
+    },
+    "controls": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "population",
+        "batchSize",
+        "workAllowance"
+      ],
+      "properties": {
+        "population": {
+          "const": 2048
+        },
+        "batchSize": {
+          "const": 32
+        },
+        "workAllowance": {
+          "const": 4
+        }
+      }
+    }
+  },
+  "$defs": {
+    "ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "pattern": "^[1-9][0-9]*$"
+      }
+    },
+    "cohort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "type",
+        "ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "zero",
+            "one",
+            "two",
+            "ordered"
+          ]
+        },
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "ids": {
+          "$ref": "#/$defs/ids"
+        }
+      }
+    },
+    "inverse": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "source",
+        "owner",
+        "name",
+        "target",
+        "ids",
+        "cardinality"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source": {
+          "enum": [
+            "zero",
+            "one",
+            "two"
+          ]
+        },
+        "owner": {
+          "const": "IFCMATERIALLAYER"
+        },
+        "name": {
+          "const": "TOMATERIALLAYERSET"
+        },
+        "target": {
+          "const": "1"
+        },
+        "ids": {
+          "$ref": "#/$defs/ids"
+        },
+        "cardinality": {
+          "enum": [
+            "true",
+            "false"
+          ]
+        }
+      }
+    },
+    "global": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "body",
+        "result"
+      ],
+      "properties": {
+        "id": {
+          "enum": [
+            "zero",
+            "one",
+            "two"
+          ]
+        },
+        "body": {
+          "type": "string"
+        },
+        "result": {
+          "enum": [
+            "true",
+            "false"
+          ]
+        }
+      }
+    }
+  }
+}

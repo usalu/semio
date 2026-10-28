@@ -40,7 +40,8 @@
             "list",
             "typed",
             "unset",
-            "derived"
+            "derived",
+            "binary"
           ],
           "x-semio-ui": {
             "label": {
@@ -83,6 +84,10 @@
               "derived": {
                 "en": "Derived (*)",
                 "de": "Abgeleitet (*)"
+              },
+              "binary": {
+                "en": "Binary",
+                "de": "Binär"
               }
             }
           }

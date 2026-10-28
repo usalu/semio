@@ -136,3 +136,6 @@ pub struct RetirementDemand {
 pub fn retained_clone_grant_admits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool {
     grant.maximum_items>0 && grant.maximum_copy_bytes>=demand.copy_bytes && grant.maximum_capacity_bytes>=demand.capacity_bytes && grant.maximum_release_bytes>=demand.release_bytes && grant.maximum_depth>=demand.depth
 }
+
+#[path="♻️original-close/🦀️.rs"]mod original_close;
+pub use original_close::OriginalRetirementCloseLoan;

@@ -57,6 +57,12 @@ impl<'owner,'control> NativeSnapshotDecodeOwner<'owner,'control>{
  /// 🌳️ Keeps actual parent custody and accepted receipts through original native scopes.
  pub fn scoped_native<O>(&mut self,maximum:usize,observer:&mut dyn FnMut(semio_framework_value_native_owned::native_decoding::NativeDecodeProgress)->bool,operation:impl FnOnce(&mut NativeSnapshotDecodeOwner<'_,'_>)->Result<O,ValueError>)->Result<O,ValueError>{let grant=self.remaining_grant();let pending=self.pending.as_deref_mut();let mut performed=RetainedCloneProgress::default();let result=self.native.scoped_maximum(maximum,|native|native.scoped_observer(observer,|native|{let mut original=NativeSnapshotDecodeOwner{native,grant,progress:Default::default(),wallet:None,pending};let result=operation(&mut original);performed=original.progress();result}));self.record_progress(performed).map_err(|error|error.with_retained_progress(performed))?;result.map_err(|error|error.with_retained_progress(performed))}
 
+ /// 🪆️ Borrows one child workload while preserving the original cumulative wallet and return owner.
+ pub fn scoped_stage<O>(&mut self,operation:impl FnOnce(&mut NativeSnapshotDecodeOwner<'_,'control>)->Result<O,ValueError>)->Result<O,ValueError>{
+  let grant=self.grant;let wallet=&mut self.progress;let pending=self.pending.as_deref_mut();
+  self.native.scoped_stage(|native|{let mut original=NativeSnapshotDecodeOwner::borrowed(native,grant,wallet);original.pending=pending;operation(&mut original)})
+ }
+
  /// 🖱️ Retains a typed decoder cursor and its accepted output in the original recipient.
  pub fn drive_cursor<T:semio_framework_value::retirement::RetireOwned,O:semio_framework_value::retirement::RetireOwned>(&mut self,cursor:&mut Option<T>,advance:impl FnMut(&mut T,&mut NativeDecodeControl<'_>,RetainedCloneGrant)->(Result<Option<O>,ValueError>,RetainedCloneProgress))->Result<O,ValueError>{
   let remaining=self.remaining_grant();let mut performed=RetainedCloneProgress::default();

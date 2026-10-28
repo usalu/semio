@@ -1,0 +1,116 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "units": [
+    {
+      "id": "metre",
+      "scale": 1,
+      "dimensions": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "millimetre",
+      "scale": 0.001,
+      "dimensions": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "foot",
+      "scale": 0.3048,
+      "dimensions": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "inch-via-foot",
+      "scale": 0.0254,
+      "dimensions": [
+        1,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "density-kg-per-mm3",
+      "scale": 1000000000,
+      "dimensions": [
+        -3,
+        1,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "pressure-kg-per-m-s2",
+      "scale": 1,
+      "dimensions": [
+        -1,
+        1,
+        -2,
+        0,
+        0,
+        0,
+        0
+      ]
+    }
+  ],
+  "refusals": [
+    "assignment-kind",
+    "assignment-member",
+    "duplicate-length",
+    "derived-child-role",
+    "derived-single-exp1",
+    "derived-noninteger",
+    "conversion-wrapper",
+    "conversion-cycle",
+    "conversion-dimensions",
+    "conversion-factor-kind",
+    "offset-conversion",
+    "placement-cycle"
+  ],
+  "operations": [
+    "length",
+    "derived",
+    "conversion",
+    "placement"
+  ],
+  "frontiers": [
+    "initial",
+    "interior",
+    "completion"
+  ],
+  "faults": [
+    "abort",
+    "error",
+    "step-error",
+    "edit-error",
+    "undefined",
+    "number"
+  ]
+}

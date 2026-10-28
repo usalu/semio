@@ -1,0 +1,21 @@
+{
+  "schema":"IFC4X3_ADD2",
+  "cases":[
+    {"name":"Insert Without Replacing Commentary","before":["Comment [engineering]","Option [Filter: All]"],"view":"ReferenceView","after":["ViewDefinition [ReferenceView]","Comment [engineering]","Option [Filter: All]"]},
+    {"name":"Replace At Original Position","before":["Comment [Änderung]","ViewDefinition[Alignment-basedReferenceView]","Option [all]"],"view":"ReferenceView","after":["Comment [Änderung]","ViewDefinition [ReferenceView]","Option [all]"]},
+    {"name":"Collapse Explicit Multiple Declarations","before":["ViewDefinition [CustomView, ReferenceView]","Comment [keep]","ViewDefinition [OtherView]"],"view":"Alignment-basedReferenceView","after":["ViewDefinition [Alignment-basedReferenceView]","Comment [keep]"]},
+    {"name":"Clear Without Empty Description List","before":["ViewDefinition [ReferenceView]"],"view":null,"after":[""]},
+    {"name":"Clear Preserves Other Header Data","before":["Comment [unchanged]","ViewDefinition [ReferenceView]"],"view":null,"after":["Comment [unchanged]"]},
+    {"name":"Canonical Selection Is An Exact No Op","before":["ViewDefinition [ReferenceView]"],"view":"ReferenceView","after":["ViewDefinition [ReferenceView]"]}
+  ],
+  "declarations":[
+    {"text":"ViewDefinition [ReferenceView]","views":["ReferenceView"],"known":["ReferenceView"],"malformed":false},
+    {"text":" ViewDefinition\t[CustomView, Alignment-basedReferenceView] ","views":["CustomView","Alignment-basedReferenceView"],"known":["Alignment-basedReferenceView"],"malformed":false},
+    {"text":"ViewDefinition [Alignment-basedView]","views":["Alignment-basedView"],"known":[],"malformed":false},
+    {"text":"ViewDefinition [ReferenceView","views":[],"known":[],"malformed":true},
+    {"text":"ViewDefinition [ReferenceView,,Other]","views":[],"known":[],"malformed":true},
+    {"text":"ViewDefinition []","views":[],"known":[],"malformed":true},
+    {"text":"ViewDefinition [ReferenceView] trailing","views":[],"known":[],"malformed":true}
+  ],
+  "unrelated":["Comment [ReferenceView]","ViewDefinitionExtra [ReferenceView]","Text ViewDefinition [ReferenceView]"]
+}

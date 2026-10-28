@@ -1,0 +1,22 @@
+{
+  "feature": "layout.retained.page-overrides",
+  "source": "original LayoutMutation and immutable original Page + ParentPage",
+  "selection": "selected through actual original-grant RetainedLayoutMutation common protocol",
+  "decision": [
+    "bounded original Page lookup",
+    "at most64 authored override rows",
+    "empty overrides permitted without parent",
+    "bounded original parent lookup and inherited frame admission",
+    "one bounded duplicate/equality fragment per turn",
+    "constant optional bounds, visibility, lock comparison with IEEE identity"
+  ],
+  "output": "source-bound numeric keyed payload planner uses original equality + patience subsequence; prepared inserted rows transfer; old removed/moved IDs genuinely prepare",
+  "inverse": "original Page id only plus original affected Vec<PageOverride>, one genuine SetPageOverrides event",
+  "prohibitions": [
+    "no cold override helper",
+    "no copied identifier list",
+    "no snapshot clone",
+    "no fake original source"
+  ],
+  "preparedPayload": "portable and Native prepare actual original authored Page id and Vec<PageOverride> before sparse movement; original inherited/source fields are never fabricated"
+}

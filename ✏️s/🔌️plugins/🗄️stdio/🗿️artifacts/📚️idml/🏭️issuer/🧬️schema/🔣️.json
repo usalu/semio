@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IDML Shared Retained Semantic Issuer",
+  "type": "object",
+  "required": [
+    "publication",
+    "replay",
+    "sharedSource",
+    "originalRetirement",
+    "codecOwnerSource"
+  ],
+  "properties": {
+    "publication": {
+      "const": true
+    },
+    "replay": {
+      "const": true
+    },
+    "sharedSource": {
+      "const": true
+    },
+    "originalRetirement": {
+      "const": true
+    },
+    "codecOwnerSource": {
+      "const": "IdmlCodecOwners"
+    }
+  },
+  "description": "A concrete IDML PagedOneItemPreparationFactory uses genuine RetainedMutation and RetainedDiff. Original shared semantic factory birth and bounded catalog construction are quoted before allocation. Publication and replay use the same original source and distinct exact retirement authorities. The native direct codec factory and declared bare codec select this source explicitly. Native reduction and replay store creation install its original owners with complete source and factory-constructor grants; no alternative factory is substituted on refusal."
+}

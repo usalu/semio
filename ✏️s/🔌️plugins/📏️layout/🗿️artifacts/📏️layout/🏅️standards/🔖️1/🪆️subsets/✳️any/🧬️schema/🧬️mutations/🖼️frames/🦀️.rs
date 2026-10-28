@@ -18,8 +18,6 @@ pub mod create_frame;
 pub mod create_layer;
 #[path = "../➖delete-frame/🦀️.rs"]
 pub mod delete_frame;
-#[path = "../🏷️set-drawing-text/🦀️.rs"]
-pub mod set_drawing_text;
 #[path = "../🧲set-frame-layer/🦀️.rs"]
 pub mod set_frame_layer;
 #[path = "../📐update-grid/🦀️.rs"]

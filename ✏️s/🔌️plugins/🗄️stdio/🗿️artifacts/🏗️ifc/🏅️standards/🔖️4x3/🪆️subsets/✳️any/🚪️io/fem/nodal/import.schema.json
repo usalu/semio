@@ -1,0 +1,95 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "components",
+    "declaredBy",
+    "queryStates",
+    "scalarPolicy",
+    "identities",
+    "order",
+    "laws",
+    "nativeExecuted",
+    "componentIdentity"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.fem.native-nodal-import.v1"
+    },
+    "components": {
+      "const": [
+        "ForceX",
+        "ForceY",
+        "ForceZ",
+        "MomentX",
+        "MomentY",
+        "MomentZ"
+      ]
+    },
+    "declaredBy": {
+      "const": "IFCSTRUCTURALLOADSINGLEFORCE"
+    },
+    "queryStates": {
+      "const": [
+        {
+          "state": "unique-present",
+          "result": "exact-component"
+        },
+        {
+          "state": "unique-unset",
+          "result": "absent"
+        },
+        {
+          "state": "unique-missing-value",
+          "result": "invalid"
+        },
+        {
+          "state": "missing",
+          "result": "invalid"
+        },
+        {
+          "state": "ambiguous",
+          "result": "invalid"
+        },
+        {
+          "state": "unknown",
+          "result": "unsupported"
+        }
+      ]
+    },
+    "scalarPolicy": {
+      "const": "finite-exact-binary64"
+    },
+    "identities": {
+      "const": "actual-action-id-component-in-case"
+    },
+    "order": {
+      "const": "analysis-list-then-assignment-source-order"
+    },
+    "laws": {
+      "const": [
+        "same-source-owner-query",
+        "late-unknown-preserved",
+        "all-six-optionals-queried",
+        "explicit-zero-is-present",
+        "used-unit-role-required",
+        "all-unset-projection-refusal",
+        "missing-serialized-is-not-unset",
+        "original-prefix-cancel-paid-close",
+        "fixed-key-stack-quoted-before-initialization"
+      ]
+    },
+    "nativeExecuted": {
+      "const": false
+    },
+    "componentIdentity": {
+      "const": {
+        "deniedCopyBytes": 115,
+        "maximumStackCopyBytes": 116,
+        "outcome": "ownership-limit-before-initialization"
+      }
+    }
+  }
+}

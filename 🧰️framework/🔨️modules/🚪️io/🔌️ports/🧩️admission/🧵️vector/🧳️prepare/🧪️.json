@@ -1,0 +1,78 @@
+{
+  "schema": "semio.child-vector-preparation.tests/v1",
+  "cases": [
+    {
+      "name": "Complete Genuine Graph",
+      "drawingCase": 0,
+      "valid": true
+    },
+    {
+      "name": "Invalid Schema Closes Before Refusal",
+      "drawingCase": 1,
+      "valid": false
+    },
+    {
+      "name": "Duplicate Identity Closes Before Refusal",
+      "drawingCase": 3,
+      "valid": false
+    },
+    {
+      "name": "Original Source Cannot Be Substituted",
+      "drawingCase": 0,
+      "substitute": "source"
+    },
+    {
+      "name": "Original Projection Cannot Be Substituted",
+      "drawingCase": 0,
+      "substitute": "projection"
+    },
+    {
+      "name": "Original Value Cannot Be Substituted",
+      "drawingCase": 0,
+      "substitute": "value"
+    },
+    {
+      "name": "Paired Admitter Cannot Be Substituted",
+      "drawingCase": 0,
+      "substitute": "admitter"
+    },
+    {
+      "name": "Paired Vector Cannot Be Substituted",
+      "drawingCase": 0,
+      "substitute": "vector"
+    },
+    {
+      "name": "Cancellation Closes Every Paid Frontier",
+      "drawingCase": 0,
+      "cuts": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        10,
+        20,
+        50,
+        100,
+        200
+      ]
+    },
+    {
+      "name": "Paid Consumer Error Preserves Original Custody",
+      "drawingCase": 0
+    },
+    {
+      "name": "Incomplete Read Cannot Publish Graph",
+      "drawingCase": 0
+    },
+    {
+      "name": "Complete Read Requires Original Graph",
+      "drawingCase": 0
+    },
+    {
+      "name": "Denied Bound Source Does Not Observe Payload",
+      "drawingCase": 0
+    }
+  ]
+}

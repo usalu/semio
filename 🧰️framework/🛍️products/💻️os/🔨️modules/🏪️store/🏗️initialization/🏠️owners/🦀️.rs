@@ -613,7 +613,7 @@ where
     C:MemberStoreProducer<P,Mutation>,
 {
     let birth = producer.member_store_owners_birth_demand()?;
-    complete_unscheduled_catalog(producer.member_store_owners(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth.max(1), ..Default::default() }))
+    complete_unscheduled_catalog(producer.member_store_owners(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: birth.capacity_bytes, maximum_depth: birth.depth.max(1), maximum_copy_bytes:producer.member_store_owners_copy_byte_demand()?, ..Default::default() }))
 }
 
 /// 🎟️ Completes every pending factory ticket of an admitted catalog from its own quoted constructor demands.

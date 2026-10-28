@@ -14,9 +14,9 @@ pub fn definition() -> ModeDefinition {
     ModeDefinition { id: IFC2X3_ANY_EDIT_MODE_ID.into(), label: LocalizedLabel::native("Edit", "Bearbeiten"), icon_id: "pencil".into(), tools: Vec::new(), layout_id: None, commands: Vec::new() }
 }
 
-/// 🪟️ Single full-pane Main window.
+/// 🪟️ Geometry, selected-instance attributes and full snapshot Details.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn layout() -> WindowLayout {
-    semio_s_artifact_stdio_contract::editing::snapshot_details_split_layout(main::WINDOW_KIND_ID, "Main")
+    crate::standards::v2x3::subsets::base::io::inspector::layout(main::WINDOW_KIND_ID,true)
 }
 //#endregion 🔖️Definition

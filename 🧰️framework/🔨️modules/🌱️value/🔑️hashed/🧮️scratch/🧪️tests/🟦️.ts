@@ -21,3 +21,5 @@ test("fixed scratch hash ownership matches independent Map through collisions, t
   }
  }
 });
+
+test("incremental scratch probes preserve exact fixed slots through explicit retirement",()=>{const fixture=JSON.parse(readFileSync(new URL("./🧫️fixtures/📇️incremental.json",import.meta.url),"utf8")),map=new ScratchHashMap<number,number>(fixture.maximum,()=>0,Object.is,false);expect(map.slotCount).toBe(fixture.slots);let patched:Record<string,number>={};for(const[key,value]of fixture.entries){let probe=0;while(map.probe(probe)!=null)probe++;expect(map.insertVacant(probe,key,value)).toBe(true);patched=applyPatch(patched,[{op:"add",path:"/"+key,value}],true,false).newDocument;}for(let at=0;at<map.slotCount;at++){const slot=map.probe(at);if(slot!=null)expect(slot.value).toBe(patched[slot.key]);}expect(map.insertVacant(0,23,230)).toBe(false);const retired:number[]=[];while(map.slotCount>0){const slot=map.popLastSlot();if(slot!=null)retired.push(slot.key);}expect(retired).toEqual(fixture.retirementOrder);expect(map.size).toBe(0);});

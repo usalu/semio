@@ -672,3 +672,8 @@ impl<V: FromValue, const N: usize> FromValue for PagedMap<V, N> {
     }
 }
 
+
+#[cfg(test)]#[path="📇️record/🧪️tests.rs"]mod indexed_record_tests;
+
+#[path="🛬️receive/🦀️.rs"]mod native_receive;
+pub use native_receive::PagedTextReceiver;

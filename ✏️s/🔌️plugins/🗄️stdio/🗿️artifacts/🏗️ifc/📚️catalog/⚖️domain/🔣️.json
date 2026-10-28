@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Catalog Declaration Domain Admission",
+  "type": "object",
+  "required": [
+    "catalog",
+    "expression",
+    "value",
+    "control"
+  ],
+  "properties": {
+    "catalog": {
+      "type": "string"
+    },
+    "expression": {
+      "type": "object"
+    },
+    "value": {
+      "type": "object"
+    },
+    "control": {
+      "type": "object",
+      "required": [
+        "cancellation",
+        "fuel",
+        "depth"
+      ],
+      "properties": {
+        "cancellation": {
+          "const": "original"
+        },
+        "fuel": {
+          "const": "every traversal"
+        },
+        "depth": {
+          "const": 128
+        }
+      }
+    }
+  }
+}

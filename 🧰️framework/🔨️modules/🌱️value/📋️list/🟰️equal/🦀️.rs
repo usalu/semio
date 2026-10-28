@@ -5,7 +5,10 @@ use std::mem::size_of;
 /// 🔬️ Equality reads only the fixed inline representation and performs no allocation or borrowed-payload traversal.
 pub trait RetainedEqualityElement:Copy{fn inline_eq(left:&Self,right:&Self)->bool;}
 macro_rules! scalar{($($ty:ty),*)=>{$(impl RetainedEqualityElement for $ty{fn inline_eq(left:&Self,right:&Self)->bool{left==right}})*}}
-scalar!(bool,u8,u16,u32,u64,u128,usize,i8,i16,i32,i64,i128,isize,f32,f64,char,());
+scalar!(bool,u8,u16,u32,u64,u128,usize,i8,i16,i32,i64,i128,isize,char,());
+
+impl RetainedEqualityElement for f32{fn inline_eq(left:&Self,right:&Self)->bool{left.to_bits()==right.to_bits()}}
+impl RetainedEqualityElement for f64{fn inline_eq(left:&Self,right:&Self)->bool{left.to_bits()==right.to_bits()}}
 
 /// 📖️ The caller retains immutable original slices and their revision; the cursor owns only scalar metadata.
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]

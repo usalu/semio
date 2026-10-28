@@ -281,6 +281,23 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     ) -> UiAssemblyResult<ComponentTree> {
         E::render_with_instance_operation_owner(owner, body_key, doc, cfg, view_state)
     }
+    type RenderWork = E::RenderWork;
+    fn uses_render_work(body_key: &str) -> bool { E::uses_render_work(body_key) }
+    fn receive_render_work_request(work:&mut Self::RenderWork,request:&mut Option<semio_framework::action_staging::StagedFormRequest>,view:&ViewModel,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<()>,semio_framework_job::OriginalTurnFailure>{E::receive_render_work_request(work,request,view,cx)}
+    fn begin_render_work(body_key: &str, cx: &mut semio_framework_job::StepContext<'_>) -> Result<Option<Self::RenderWork>, semio_framework_job::OriginalTurnFailure> { E::begin_render_work(body_key, cx) }
+    fn render_work_demand(work:&Self::RenderWork,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{E::render_work_demand(work,maximum_body_bytes)}
+    async fn render_with_work_context(
+        work: &mut Self::RenderWork,
+        owner: &ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        source: &std::sync::Arc<Self::Snapshot>,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &ViewModel,
+        transient: &TransientView<'_, Self::Transient>,
+        interaction: &InteractionView<'_>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin_ownership::sdk_fault::OriginalRenderResult<ComponentTree> { E::render_with_work_context(work, owner, body_key, source, doc, cfg, view_state, transient, interaction, cx) }
     async fn render_with_request_context(
         owner: &ArtifactInstanceOperationOwnerHandle,
         body_key: &str,

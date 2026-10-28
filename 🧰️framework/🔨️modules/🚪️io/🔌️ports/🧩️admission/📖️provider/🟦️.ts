@@ -1,0 +1,13 @@
+import {childAdmissionAdmits,type ChildAdmissionGrant,type ChildAdmissionDemand,type ChildAdmissionProgress,type ChildAdmissionSource,type EmbeddedChildAdmitterV1,type EmbeddedChildVectorSourceV1} from '../🟦️.ts';
+export interface ChildAdmissionStamp{readonly parentIdentity:unknown;readonly expectedReferenceIdentity:unknown;readonly childIdentity:unknown;readonly capabilityIdentity:unknown;readonly requestIdentity:unknown;readonly parentRevision:ArrayLike<number>;readonly childRevision:ArrayLike<number>}
+export interface ChildAdmissionQualificationV1{childAdmissionStamp():ChildAdmissionStamp}
+/** 🧭️ Fixed logical routing custody; native uses exact physical fixed stamp copy widths. */
+export class ChildAdmissionAddress{private constructor(private readonly slot:number,private readonly stamp:ChildAdmissionStamp){}
+ static demand():ChildAdmissionDemand{return{copyBytes:352,capacityBytes:0,releaseBytes:0,depth:1}}
+ static admit(ordinal:number,qualification:ChildAdmissionQualificationV1,g:ChildAdmissionGrant):{address:ChildAdmissionAddress;progress:ChildAdmissionProgress}{const d=this.demand();if(!childAdmissionAdmits(g,d))throw Error('Original child admission routing address is unfunded');if(!Number.isSafeInteger(ordinal)||ordinal<0)throw Error('Invalid original child ordinal');const s=qualification.childAdmissionStamp();if(s.parentRevision.length!==32||s.childRevision.length!==32)throw Error('Invalid original child revision');const stamp={...s,parentRevision:Array.from(s.parentRevision),childRevision:Array.from(s.childRevision)};return{address:new ChildAdmissionAddress(ordinal,stamp),progress:{copiedItems:1,copiedBytes:d.copyBytes,retainedCapacityBytes:0,releasedBytes:0}}}
+ ordinal(){return this.slot}
+ expectedReferenceIdentity(){return this.stamp.expectedReferenceIdentity}
+ matches(qualification:ChildAdmissionQualificationV1){const s=qualification.childAdmissionStamp(),a=this.stamp;if(a.parentIdentity!==s.parentIdentity||a.expectedReferenceIdentity!==s.expectedReferenceIdentity||a.childIdentity!==s.childIdentity||a.capabilityIdentity!==s.capabilityIdentity||a.requestIdentity!==s.requestIdentity||s.parentRevision.length!==32||s.childRevision.length!==32)return false;for(let at=0;at<32;at++)if(a.parentRevision[at]!==s.parentRevision[at]||a.childRevision[at]!==s.childRevision[at])return false;return true}
+}
+export interface ChildAdmissionRead{readonly source:ChildAdmissionSource;readonly admitter:EmbeddedChildAdmitterV1;readonly vector:EmbeddedChildVectorSourceV1}
+export interface ChildAdmissionProviderV1{read(address:ChildAdmissionAddress):ChildAdmissionRead}

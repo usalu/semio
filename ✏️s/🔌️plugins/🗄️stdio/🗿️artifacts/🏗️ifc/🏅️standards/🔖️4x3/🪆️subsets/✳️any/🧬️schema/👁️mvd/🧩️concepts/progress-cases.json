@@ -1,0 +1,148 @@
+{
+  "cases": [
+    {
+      "concept": "alignment",
+      "stage": "request",
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "request",
+      "fault": "edit-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "request",
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "request",
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "request",
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "request",
+      "fault": "number",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "source",
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "source",
+      "fault": "edit-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "source",
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "source",
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "source",
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "alignment",
+      "stage": "source",
+      "fault": "number",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "request",
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "request",
+      "fault": "edit-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "request",
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "request",
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "request",
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "request",
+      "fault": "number",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "source",
+      "fault": "edit-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "source",
+      "fault": "edit-cancelled",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "source",
+      "fault": "step-error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "source",
+      "fault": "error",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "source",
+      "fault": "undefined",
+      "expected": "reject-original"
+    },
+    {
+      "concept": "tessellation",
+      "stage": "source",
+      "fault": "number",
+      "expected": "reject-original"
+    }
+  ]
+}

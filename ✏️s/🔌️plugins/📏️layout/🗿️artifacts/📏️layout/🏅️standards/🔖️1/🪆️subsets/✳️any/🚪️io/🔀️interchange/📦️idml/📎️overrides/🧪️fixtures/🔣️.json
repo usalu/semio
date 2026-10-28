@@ -1,0 +1,159 @@
+{
+  "schema": "layout.idml.overrides.v1",
+  "source": {
+    "specification": "https://raw.githubusercontent.com/jorisros/IDMLlib/master/docs/idml-specification.pdf",
+    "pages": [
+      157,
+      158
+    ],
+    "attribute": "Page.OverrideList",
+    "representation": "suppressed master Self references and actual editable spread item copies; standard Label properties retain sparse native override presence"
+  },
+  "cases": [
+    {
+      "id": "rectangle-bounds-and-lock",
+      "kind": "rect",
+      "override": {
+        "objectId": "master-rect",
+        "bounds": {
+          "x": 90,
+          "y": 40,
+          "width": 55,
+          "height": 22,
+          "rotation": 0.2
+        },
+        "locked": false
+      },
+      "expected": {
+        "overrideList": [
+          "master-rect"
+        ],
+        "copyCount": 1,
+        "sourceRetained": true,
+        "unaffectedPageInherited": true
+      }
+    },
+    {
+      "id": "text-visibility",
+      "kind": "text",
+      "override": {
+        "objectId": "master-text",
+        "visible": false
+      },
+      "expected": {
+        "overrideList": [
+          "master-text"
+        ],
+        "copyCount": 1,
+        "sourceRetained": true
+      }
+    },
+    {
+      "id": "image-resize",
+      "kind": "image",
+      "override": {
+        "objectId": "master-image",
+        "bounds": {
+          "x": 15,
+          "y": 25,
+          "width": 40,
+          "height": 20,
+          "rotation": 0.1
+        }
+      },
+      "expected": {
+        "overrideList": [
+          "master-image"
+        ],
+        "copyCount": 1,
+        "embeddedBytesRetained": true
+      }
+    },
+    {
+      "id": "empty-sparse-override",
+      "kind": "rect",
+      "override": {
+        "objectId": "master-rect"
+      },
+      "expected": {
+        "copyCount": 1,
+        "fields": []
+      }
+    },
+    {
+      "id": "external-deletion",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\" OverrideList=\"master-rect\"/>",
+      "expected": {
+        "overrides": [
+          {
+            "objectId": "master-rect",
+            "visible": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "missing-master-item",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\" OverrideList=\"absent\"/>",
+      "error": "layout.idml.override-source"
+    },
+    {
+      "id": "duplicate-master-item",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\" OverrideList=\"master-rect master-rect\"/>",
+      "error": "layout.idml.duplicate-override"
+    },
+    {
+      "id": "changed-copy-paint",
+      "kind": "rect",
+      "override": {
+        "objectId": "master-rect",
+        "visible": false
+      },
+      "rewrite": {
+        "fill": "Color/Black"
+      },
+      "error": "layout.idml.override-copy-content"
+    },
+    {
+      "id": "translated-master",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\" MasterPageTransform=\"1 0 0 1 12 -4\"/>",
+      "expected": {
+        "overrides": [
+          {
+            "objectId": "master-rect",
+            "bounds": {
+              "x": 17,
+              "y": 4,
+              "width": 50,
+              "height": 30,
+              "rotation": 0
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "hidden-master",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\"/>",
+      "spreadShowMasterItems": false,
+      "expected": {
+        "overrides": [
+          {
+            "objectId": "master-rect",
+            "visible": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "unsupported-master-affine",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\" MasterPageTransform=\"0 1 -1 0 0 0\"/>",
+      "error": "layout.idml.master-page-transform"
+    },
+    {
+      "id": "nonfinite-master-translation",
+      "inputXml": "<Page Self=\"body\" AppliedMaster=\"master\" MasterPageTransform=\"1 0 0 1 NaN 0\"/>",
+      "error": "layout.idml.master-page-transform"
+    }
+  ]
+}

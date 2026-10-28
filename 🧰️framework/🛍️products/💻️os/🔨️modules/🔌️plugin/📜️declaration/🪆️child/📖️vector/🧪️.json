@@ -1,0 +1,112 @@
+{
+  "schema": "semio.original-child-vector-read.tests/v1",
+  "base": {
+    "reference": {
+      "owner": "",
+      "slot": "backgroundDrawing",
+      "childId": "drawing-document",
+      "artifactId": "drawing-artifact",
+      "artifactKind": "s.draw.drawing",
+      "standard": "1",
+      "subset": "*"
+    },
+    "capability": {
+      "artifactKind": "s.draw.drawing",
+      "standard": "1",
+      "subset": "*"
+    }
+  },
+  "cases": [
+    {
+      "name": "Genuine Document Reference",
+      "accept": true
+    },
+    {
+      "name": "Genuine Page Reference",
+      "page": 0,
+      "accept": true
+    },
+    {
+      "name": "Different Child Identity",
+      "field": "childId",
+      "value": "other",
+      "accept": false
+    },
+    {
+      "name": "Different Artifact Identity",
+      "field": "artifactId",
+      "value": "other",
+      "accept": false
+    },
+    {
+      "name": "Different Artifact Kind",
+      "field": "artifactKind",
+      "value": "s.stdio.semio",
+      "accept": false
+    },
+    {
+      "name": "Different Standard",
+      "field": "standard",
+      "value": "2",
+      "accept": false
+    },
+    {
+      "name": "Different Subset",
+      "field": "subset",
+      "value": "other",
+      "accept": false
+    },
+    {
+      "name": "Different Owner",
+      "field": "owner",
+      "value": "other",
+      "accept": false
+    },
+    {
+      "name": "Different Slot",
+      "field": "slot",
+      "value": "other",
+      "accept": false
+    },
+    {
+      "name": "Another Parent Source",
+      "substitute": "parent",
+      "accept": false
+    },
+    {
+      "name": "Another Source Projection",
+      "substitute": "projection",
+      "accept": false
+    },
+    {
+      "name": "Another Registered Lender",
+      "substitute": "lender",
+      "accept": false
+    },
+    {
+      "name": "Another Live Member",
+      "substitute": "member",
+      "accept": false
+    },
+    {
+      "name": "Another Parent Revision",
+      "substitute": "parentRevision",
+      "accept": false
+    },
+    {
+      "name": "Another Child Revision",
+      "substitute": "childRevision",
+      "accept": false
+    },
+    {
+      "name": "Another Read Capability",
+      "substitute": "capability",
+      "accept": false
+    },
+    {
+      "name": "Unicode Reference",
+      "unicode": true,
+      "accept": true
+    }
+  ]
+}

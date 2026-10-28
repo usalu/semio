@@ -1,0 +1,106 @@
+{
+  "schemaVersion": 1,
+  "fonts": [
+    {
+      "role": "LayoutSans",
+      "size": 26772,
+      "hash": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f",
+      "path": "🧰️framework/🔨️modules/🖼️canvas/🖼️assets/🔤️MapLabelSans.ttf"
+    },
+    {
+      "role": "Sans",
+      "size": 26772,
+      "hash": "6e9112853217f39bc753c94ab0f16fd7dc57fa56003cfb981b0bb7b0c514487f",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🚀️anta/🏛️latin/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "Serif",
+      "size": 27608,
+      "hash": "33c29e564b169dbbc1a90be9f050fcde7fb204232bc4f3c52bf4b844e31dbba6",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/🧱️kelly-slab/🏛️latin/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "Mono",
+      "size": 19540,
+      "hash": "31ff08942c8f4ff98276c050f039a2685d91d923867ea6c776c6a291a086fc13",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/⌨️share-tech-mono/🏛️latin/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiRegions",
+      "size": 23652,
+      "hash": "afbacbae52dbd6a6250f9ffd1e690227564c744508d703d36df14c322816b657",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌍️regions/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiFlags",
+      "size": 8536,
+      "hash": "ebbfea501df1f01063a103c99ac6c76a6a239ee45856a57c6730d8c4456803e4",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🚩️flags/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiSymbols",
+      "size": 83404,
+      "hash": "207ecd3bb593edda35f515399f8d2aad0021d72525ba0a5ac212001f318cc4e5",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔣️symbols/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiObjects",
+      "size": 146732,
+      "hash": "fa6c50b00fb39b2f984a53fbf03f2ae5c2624045d1738614e80c1e68c59267a7",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧰️objects/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiActivities",
+      "size": 79792,
+      "hash": "4eaa8acc313c6fc34aa9a0b6a2ff24ebb8a910568d2c1b3f4fed2aeead58ba15",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🎯️activities/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiTravel",
+      "size": 86008,
+      "hash": "654c549ae1488f355924e53b9bfd150d672df6b0c053b21b8dd17a2f8a2c6718",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧳️travel/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiFood",
+      "size": 80404,
+      "hash": "0bb1b805256ac06bfe079eed3624fd3ffe2117e854c8ab5cafa87baa3778b3ec",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🍽️food/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiNature",
+      "size": 178048,
+      "hash": "b107e95dcd571bd40408cf5906f91780171abd9edf4328af54888e95a28549d1",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🌿️nature/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiPeople",
+      "size": 150208,
+      "hash": "ff5d9966357cff7cf59bae37208e2c7fb473bd538add5e11676be691eba87f42",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🧑️people/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiFaces",
+      "size": 136852,
+      "hash": "b972f7d349cd89ac6c6fee0b0eaed39c1656aa51d74e932cac89abd21f00fff9",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/😀️faces/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiJoinedForms",
+      "size": 30548,
+      "hash": "dfe0fc53375e8bb7f6fbaa639087f905d7aebf07108816d92524e9b3d81b2a50",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🔗️joined-forms/📖️regular/🔤️outline.ttf"
+    },
+    {
+      "role": "EmojiSupplement",
+      "size": 5444,
+      "hash": "5b6d1483840ee81afd7220816e6cca4713692f85626273d1a827f8b878f32a35",
+      "path": "🧰️framework/🔨️modules/🖼️assets/🔤️fonts/😀️noto-emoji/🪉️supplement/📖️regular/🔤️outline.ttf"
+    }
+  ],
+  "coverage": {
+    "text": "Grüße 🌍",
+    "preferred": 3,
+    "missingScalar": 1114109
+  }
+}

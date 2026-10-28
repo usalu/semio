@@ -1,0 +1,344 @@
+{
+ "$schema": "https://json-schema.org/draft/2020-12/schema",
+ "$id": "https://semio.tech/ifc4x3/alignment-terminal.schema.json",
+ "$defs": {
+  "Id": {
+   "type": "string",
+   "maxLength": 20,
+   "pattern": "^([1-9][0-9]{0,18}|1[0-7][0-9]{18}|18[0-3][0-9]{17}|184[0-3][0-9]{16}|1844[0-5][0-9]{15}|18446[0-6][0-9]{14}|184467[0-3][0-9]{13}|1844674[0-3][0-9]{12}|184467440[0-6][0-9]{10}|1844674407[0-2][0-9]{9}|18446744073[0-6][0-9]{8}|1844674407370[0-8][0-9]{6}|18446744073709[0-4][0-9]{5}|184467440737095[0-4][0-9]{4}|18446744073709550[0-9]{3}|18446744073709551[0-5][0-9]{2}|1844674407370955160[0-9]|1844674407370955161[0-5])$"
+  },
+  "Kind": {
+   "enum": [
+    "horizontal",
+    "vertical",
+    "cant"
+   ]
+  },
+  "Status": {
+   "enum": [
+    "pass",
+    "fail",
+    "not-applicable",
+    "incomplete"
+   ]
+  },
+  "Source": {
+   "const": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Object_Composition/Nesting/Alignment_Layouts/Alignment_Layout_-_Horizontal,_Vertical_and_Cant/content.html",
+    "sha256": "46f10e76e2646fbfd5f3c8e6967c59fb3b522169086dfd9a1af6e0ccfefe7158"
+   }
+  },
+  "Definition": {
+   "const": {
+    "concept": "Object_Composition/Nesting/Alignment_Layouts/Alignment_Layout_-_Horizontal,_Vertical_and_Cant",
+    "predicate": "business-terminal-zero",
+    "source": {
+     "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+     "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Object_Composition/Nesting/Alignment_Layouts/Alignment_Layout_-_Horizontal,_Vertical_and_Cant/content.html",
+     "sha256": "46f10e76e2646fbfd5f3c8e6967c59fb3b522169086dfd9a1af6e0ccfefe7158"
+    },
+    "layouts": [
+     {
+      "kind": "horizontal",
+      "layout": "IFCALIGNMENTHORIZONTAL",
+      "parameter": "IFCALIGNMENTHORIZONTALSEGMENT",
+      "length": "SegmentLength"
+     },
+     {
+      "kind": "vertical",
+      "layout": "IFCALIGNMENTVERTICAL",
+      "parameter": "IFCALIGNMENTVERTICALSEGMENT",
+      "length": "HorizontalLength"
+     },
+     {
+      "kind": "cant",
+      "layout": "IFCALIGNMENTCANT",
+      "parameter": "IFCALIGNMENTCANTSEGMENT",
+      "length": "HorizontalLength"
+     }
+    ]
+   }
+  },
+  "Target": {
+   "type": "object",
+   "required": [
+    "layout",
+    "kind",
+    "applicable"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "layout": {
+     "$ref": "#/$defs/Id"
+    },
+    "kind": {
+     "$ref": "#/$defs/Kind"
+    },
+    "applicable": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    }
+   }
+  },
+  "Diagnostic": {
+   "type": "object",
+   "required": [
+    "code",
+    "path",
+    "label"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "code": {
+     "enum": [
+      "mvd.source",
+      "mvd.applicability",
+      "mvd.target.missing",
+      "mvd.target.ambiguous",
+      "mvd.target.type",
+      "mvd.target.unknown",
+      "mvd.attribute.missing",
+      "mvd.attribute.ambiguous",
+      "mvd.attribute.unknown",
+      "mvd.attribute.shape",
+      "mvd.nesting.missing",
+      "mvd.nesting.ambiguous",
+      "mvd.nesting.unresolved",
+      "mvd.member.reference",
+      "mvd.member.missing",
+      "mvd.member.ambiguous",
+      "mvd.member.type",
+      "mvd.parameter.type",
+      "mvd.length.shape",
+      "mvd.terminal.nonzero"
+     ]
+    },
+    "path": {
+     "type": "array",
+     "items": {
+      "type": "string"
+     }
+    },
+    "pointer": {
+     "type": "string",
+     "pattern": "^/entities/"
+    },
+    "label": {
+     "type": "object",
+     "required": [
+      "en",
+      "de"
+     ],
+     "additionalProperties": false,
+     "properties": {
+      "en": {
+       "type": "string",
+       "minLength": 1
+      },
+      "de": {
+       "type": "string",
+       "minLength": 1
+      }
+     }
+    }
+   }
+  },
+  "TargetReport": {
+   "type": "object",
+   "required": [
+    "layout",
+    "kind",
+    "applicable",
+    "status",
+    "diagnostics"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "layout": {
+     "$ref": "#/$defs/Id"
+    },
+    "kind": {
+     "$ref": "#/$defs/Kind"
+    },
+    "applicable": {
+     "type": [
+      "boolean",
+      "null"
+     ]
+    },
+    "status": {
+     "$ref": "#/$defs/Status"
+    },
+    "diagnostics": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/Diagnostic"
+     }
+    }
+   }
+  },
+  "Request": {
+   "type": "object",
+   "required": [
+    "targets"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "targets": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "$ref": "#/$defs/Target"
+     }
+    }
+   }
+  },
+  "Report": {
+   "type": "object",
+   "required": [
+    "concept",
+    "predicate",
+    "source",
+    "schemaConformance",
+    "viewConformance",
+    "geometryConformance",
+    "status",
+    "targets",
+    "diagnostics"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "concept": {
+     "const": "Object_Composition/Nesting/Alignment_Layouts/Alignment_Layout_-_Horizontal,_Vertical_and_Cant"
+    },
+    "predicate": {
+     "const": "business-terminal-zero"
+    },
+    "source": {
+     "$ref": "#/$defs/Source"
+    },
+    "schemaConformance": {
+     "const": "not-evaluated"
+    },
+    "viewConformance": {
+     "const": "not-evaluated"
+    },
+    "geometryConformance": {
+     "const": "not-evaluated"
+    },
+    "status": {
+     "$ref": "#/$defs/Status"
+    },
+    "targets": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/TargetReport"
+     }
+    },
+    "diagnostics": {
+     "type": "array",
+     "items": {
+      "$ref": "#/$defs/Diagnostic"
+     }
+    }
+   }
+  },
+  "Cases": {
+   "type": "object",
+   "required": [
+    "cases"
+   ],
+   "additionalProperties": false,
+   "properties": {
+    "cases": {
+     "type": "array",
+     "minItems": 1,
+     "items": {
+      "type": "object",
+      "allOf": [{"if":{"properties":{"variant":{"type":"string"}},"required":["variant"]},"then":{"properties":{"lengths":{"type":"array","minItems":2}}}}],
+      "required": [
+       "id",
+       "kind",
+       "lengths",
+       "applicable",
+       "expected"
+      ],
+      "additionalProperties": false,
+      "properties": {
+       "id": {
+        "type": "string",
+        "minLength": 1
+       },
+       "kind": {
+        "$ref": "#/$defs/Kind"
+       },
+       "lengths": {
+        "type": "array",
+        "items": {
+         "type": "number"
+        }
+       },
+       "applicable": {
+        "type": [
+         "boolean",
+         "null"
+        ]
+       },
+       "expected": {
+        "$ref": "#/$defs/Status"
+       },
+       "variant": {
+        "enum": [
+         "signedzero",
+         "wrong-design",
+         "complex",
+         "duplicate-target",
+         "missing-target",
+         "wrong-target",
+         "unknown-target",
+         "mixed-layout",
+         "competing-lists",
+         "unrelated-relationship",
+         "other-owner",
+         "duplicate-attribute",
+         "nonreference-member",
+         "dangling-terminal",
+         "ambiguous-terminal",
+         "wrong-member",
+         "dangling-design",
+         "typed-measure",
+         "wrong-measure-tag",
+         "typed-multiple-items",
+         "integer-zero",
+         "integer-large",
+         "tiny",
+         "negative",
+         "string-zero",
+         "unknown-complex",
+         "earlier-unresolved"
+        ]
+       }
+      }
+     }
+    }
+   }
+  }
+ },
+ "oneOf": [
+  {
+   "$ref": "#/$defs/Request"
+  },
+  {
+   "$ref": "#/$defs/Report"
+  },
+  {
+   "$ref": "#/$defs/Definition"
+  },
+  {
+   "$ref": "#/$defs/Cases"
+  }
+ ]
+}

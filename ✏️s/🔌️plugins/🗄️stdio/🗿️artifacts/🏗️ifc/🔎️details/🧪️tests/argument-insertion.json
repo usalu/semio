@@ -1,0 +1,20 @@
+{
+  "schema":"IFC4X3_ADD2",
+  "nativeExecution":false,
+  "cases":[
+    {"id":"numeric-category","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/2","value":{"kind":"string","value":"metal"},"admitted":true},
+    {"id":"dash-category","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/-","value":{"kind":"string","value":"metal"},"admitted":true},
+    {"id":"optional-unset","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/-","value":{"kind":"unset"},"admitted":true},
+    {"id":"missing-description","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"}],"path":"/entities/0/args/1","value":{"kind":"string","value":"polished"},"admitted":true},
+    {"id":"exact-id-unicode","entityId":"18446744073709551615","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/-","value":{"kind":"string","value":"Stahl 🧩 / ~ ä"},"admitted":true},
+    {"id":"missing-coordinate-list","name":"IFCCARTESIANPOINT","args":[],"path":"/entities/0/args/-","value":{"kind":"aggregate","value":[{"kind":"real","value":1},{"kind":"real","value":2}]},"admitted":true},
+    {"id":"required-unset","name":"IFCCARTESIANPOINT","args":[],"path":"/entities/0/args/0","value":{"kind":"unset"},"admitted":false},
+    {"id":"wrong-category-type","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/2","value":{"kind":"integer","value":5},"admitted":false},
+    {"id":"middle-insertion","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/0","value":{"kind":"string","value":"shift"},"admitted":false},
+    {"id":"beyond-end","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/args/3","value":{"kind":"string","value":"gap"},"admitted":false},
+    {"id":"beyond-declaration","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"},{"kind":"unset"}],"path":"/entities/0/args/-","value":{"kind":"string","value":"extra"},"admitted":false},
+    {"id":"missing-reference","name":"IFCPROPERTYENUMERATEDVALUE","args":[{"kind":"string","value":"colour"},{"kind":"unset"},{"kind":"aggregate","value":[]}],"targets":[{"id":"2","name":"IFCPROPERTYENUMERATION"}],"path":"/entities/0/args/-","value":{"kind":"reference","value":"2"},"admitted":true},
+    {"id":"wrong-reference-target","name":"IFCPROPERTYENUMERATEDVALUE","args":[{"kind":"string","value":"colour"},{"kind":"unset"},{"kind":"aggregate","value":[]}],"targets":[{"id":"2","name":"IFCMATERIAL"}],"path":"/entities/0/args/3","value":{"kind":"reference","value":"2"},"admitted":false},
+    {"id":"absent-reference-target","name":"IFCPROPERTYENUMERATEDVALUE","args":[{"kind":"string","value":"colour"},{"kind":"unset"},{"kind":"aggregate","value":[]}],"path":"/entities/0/args/-","value":{"kind":"reference","value":"2"},"admitted":false}
+  ]
+}

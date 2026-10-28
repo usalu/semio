@@ -1,6 +1,5 @@
 //! 🔄️ `rotate-frame` — sets a frame's `bounds.rotation` in radians.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PageFramesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_diff::{FramePatch, LayoutDiff};
@@ -9,7 +8,7 @@ use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔄️RotateFrame
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -84,3 +83,11 @@ pub fn inverse_rotate_frame<Op: From<crate::rotate_frame::RotateFrame>>(payload:
 }
 //#endregion 🔄️RotateFrame
 
+
+impl PartialEq for RotateFrame {
+    fn eq(&self, other: &Self) -> bool {
+        self.page_id == other.page_id
+            && self.frame_id == other.frame_id
+            && semio_framework_value::equal_f64(self.new_rotation, other.new_rotation)
+    }
+}

@@ -1,0 +1,89 @@
+{
+  "schema": "semio.layout.export-metadata.tests/v1",
+  "base": {
+    "name": "Layout Document",
+    "documentId": "original-layout",
+    "pageId": "page-1",
+    "revision": "1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f"
+  },
+  "cases": [
+    {
+      "name": "PNG Page",
+      "kind": "png"
+    },
+    {
+      "name": "SVG Page",
+      "kind": "svg"
+    },
+    {
+      "name": "PDF Page",
+      "kind": "pdf"
+    },
+    {
+      "name": "STEP Page",
+      "kind": "step"
+    },
+    {
+      "name": "IDML Document",
+      "kind": "idml",
+      "pageId": null
+    },
+    {
+      "name": "Complete Package",
+      "kind": "package"
+    },
+    {
+      "name": "Document PDF",
+      "kind": "pdf",
+      "pageId": null
+    },
+    {
+      "name": "Empty Name",
+      "kind": "svg",
+      "pageId": null,
+      "title": ""
+    },
+    {
+      "name": "Unicode Page",
+      "kind": "pdf",
+      "pageId": "Grüße 🌍 空"
+    },
+    {
+      "name": "ASCII Filename Alphabet",
+      "kind": "svg",
+      "pageId": "Aa19-_. x"
+    },
+    {
+      "name": "Filename Scalar Limit",
+      "kind": "svg",
+      "pageId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaadiscard"
+    },
+    {
+      "name": "Original Parent Identity",
+      "kind": "pdf",
+      "documentId": "original-🌍"
+    },
+    {
+      "name": "Oversize Page Authority",
+      "kind": "svg",
+      "pageId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accept": false
+    },
+    {
+      "name": "Oversize Document Authority",
+      "kind": "pdf",
+      "documentId": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "accept": false
+    },
+    {
+      "name": "Cancellation Preserves Sources",
+      "kind": "svg",
+      "cancel": true
+    },
+    {
+      "name": "Denied Resumed Source Access",
+      "kind": "pdf",
+      "denied": true
+    }
+  ]
+}

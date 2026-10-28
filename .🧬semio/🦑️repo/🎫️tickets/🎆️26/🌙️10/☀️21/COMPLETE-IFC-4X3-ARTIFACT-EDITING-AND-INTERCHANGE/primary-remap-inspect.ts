@@ -1,0 +1,2 @@
+import {ifc4x3Catalog as catalog} from '../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🟦️.ts';
+for(const name of ['IFCMATERIALPROFILE','IFCMATERIALCONSTITUENT','IFCMATERIAL']){const entity=catalog.entities[name]!;console.log(JSON.stringify({name,attributes:entity.attributes.map(attribute=>({name:attribute.name,type:attribute.typeExpr,optional:attribute.optional,derived:attribute.derived}))}));}

@@ -1,8 +1,8 @@
 //! 📏️ layout → dxf — the pages laid side by side as a drawing (`layout_snapshot_to_scene`: page
-//! boundaries, frames with their fills and strokes, and any imported background trace) written as
+//! content, text, embedded image proxies and any imported background trace) written as
 //! DXF R12 entities by the codec bound to the background drawing slot.
 //!
-//! 🔖 `IoFidelity::Lossy`: a picture of the spreads — story text, styles and links are not drawn.
+//! 🔖 `IoFidelity::Lossy`: a picture of the pages — semantic styles, font shaping and link identity are not retained.
 use crate::layout_snapshot_to_format;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 

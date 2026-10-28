@@ -1,0 +1,212 @@
+{
+  "schema": "semio.artifact-output.original-producer.v1",
+  "cases": [
+    {
+      "id": "item-undergrant",
+      "length": 3,
+      "grant": "items-zero",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "copy-undergrant",
+      "length": 3,
+      "grant": "copy-short",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "depth-undergrant",
+      "length": 3,
+      "grant": "depth-zero",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "fuel-undergrant",
+      "length": 3,
+      "grant": "fuel-zero",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "cancelled",
+      "length": 3,
+      "grant": "full",
+      "cancelled": true,
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "queue-busy",
+      "length": 3,
+      "grant": "full",
+      "busy": "queue",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "credit-busy",
+      "length": 3,
+      "grant": "full",
+      "busy": "credit",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "empty",
+      "length": 0,
+      "grant": "full",
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "oversized",
+      "length": 4097,
+      "grant": "full",
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "missing",
+      "length": null,
+      "grant": "full",
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "sealed",
+      "length": 3,
+      "grant": "full",
+      "sealed": true,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "queue-bound",
+      "length": 3,
+      "grant": "full",
+      "maximum": 2,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "slot-full",
+      "length": 3,
+      "grant": "full",
+      "slotsFull": true,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "allocation-unadmitted",
+      "length": 3,
+      "grant": "full",
+      "allocationAdmitted": false,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "credit-bound",
+      "length": 3,
+      "grant": "full",
+      "creditMaximum": 2,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "credit-already-exceeded",
+      "length": 3,
+      "grant": "full",
+      "creditExceeded": true,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "credited-success",
+      "length": 3,
+      "grant": "full",
+      "creditInitial": 2,
+      "outcome": "published",
+      "charged": true
+    },
+    {
+      "id": "uncredited-success",
+      "length": 4096,
+      "grant": "full",
+      "credit": false,
+      "outcome": "published",
+      "charged": true
+    },
+    {
+      "id": "retained-capacity-success",
+      "length": 3,
+      "capacity": 8192,
+      "grant": "full",
+      "outcome": "published",
+      "charged": true
+    },
+    {
+      "id": "retained-capacity-refusal",
+      "length": 3,
+      "capacity": 8192,
+      "grant": "full",
+      "creditMaximum": 2,
+      "outcome": "refusal",
+      "charged": true
+    }
+  ],
+  "sealCases": [
+    {
+      "id": "item-undergrant",
+      "grant": "items-zero",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "copy-undergrant",
+      "grant": "copy-short",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "depth-undergrant",
+      "grant": "depth-zero",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "fuel-undergrant",
+      "grant": "fuel-zero",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "cancelled",
+      "grant": "full",
+      "cancelled": true,
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "queue-busy",
+      "grant": "full",
+      "busy": "queue",
+      "outcome": "yield",
+      "charged": false
+    },
+    {
+      "id": "duplicate",
+      "grant": "full",
+      "sealed": true,
+      "outcome": "refusal",
+      "charged": true
+    },
+    {
+      "id": "success",
+      "grant": "full",
+      "outcome": "sealed",
+      "charged": true
+    }
+  ]
+}

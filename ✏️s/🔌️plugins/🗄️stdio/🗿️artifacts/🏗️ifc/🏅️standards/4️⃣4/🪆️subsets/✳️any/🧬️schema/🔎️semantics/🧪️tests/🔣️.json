@@ -1,0 +1,154 @@
+{
+  "schema": "IFC4",
+  "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));#2=IFCAXIS2PLACEMENT3D(#1,$,$);#3=IFCLOCALPLACEMENT($,#2);#4=IFCPRODUCTDEFINITIONSHAPE($,$,());#10=IFCWALL('0123456789012345678901',$,'Wall',$,'Masonry',#3,#4,'W-10',.STANDARD.);#11=IFCSITE('0123456789012345678902',$,'Site',$,$,$,$,'Site Long',.ELEMENT.,$,$,$,$,$);#12=IFCPROJECT('0123456789012345678903',$,'Project',$,$,'Project Long','Design',(),$);#20=IFCRELVOIDSELEMENT('0123456789012345678904',$,$,$,#10,#11);#14=IFCACTOR('0123456789012345678905',$,'Actor',$,$,$);#15=IFCCOLOURRGB('0123456789012345678906',0.,0.,0.);",
+  "cases": [
+    {
+      "id": "10",
+      "fields": {
+        "globalId": "0123456789012345678901",
+        "ownerHistory": null,
+        "name": "Wall",
+        "description": null,
+        "objectType": "Masonry",
+        "objectPlacement": "#3",
+        "representation": "#4",
+        "tag": "W-10"
+      },
+      "forward": [
+        "3",
+        "4"
+      ],
+      "back": [
+        "20"
+      ]
+    },
+    {
+      "id": "11",
+      "fields": {
+        "globalId": "0123456789012345678902",
+        "ownerHistory": null,
+        "name": "Site",
+        "description": null,
+        "objectType": null,
+        "objectPlacement": null,
+        "representation": null,
+        "longName": "Site Long"
+      },
+      "forward": [],
+      "back": [
+        "20"
+      ]
+    },
+    {
+      "id": "12",
+      "fields": {
+        "globalId": "0123456789012345678903",
+        "ownerHistory": null,
+        "name": "Project",
+        "description": null,
+        "objectType": null,
+        "longName": "Project Long",
+        "phase": "Design"
+      },
+      "forward": [],
+      "back": []
+    },
+    {
+      "id": "1",
+      "fields": {},
+      "forward": [],
+      "back": [
+        "2"
+      ]
+    }
+  ],
+  "edits": [
+    {
+      "id": "10",
+      "field": "name",
+      "value": "Renamed Wall",
+      "index": 2,
+      "expected": {
+        "kind": "string",
+        "value": "Renamed Wall"
+      }
+    },
+    {
+      "id": "10",
+      "field": "description",
+      "value": "",
+      "index": 3,
+      "expected": {
+        "kind": "string",
+        "value": ""
+      }
+    },
+    {
+      "id": "10",
+      "field": "name",
+      "value": null,
+      "index": 2,
+      "expected": {
+        "kind": "unset"
+      }
+    },
+    {
+      "id": "10",
+      "field": "globalId",
+      "value": null,
+      "error": "semantic-required-value"
+    },
+    {
+      "id": "10",
+      "field": "globalId",
+      "value": "bad",
+      "error": "semantic-invalid-global-id"
+    },
+    {
+      "id": "10",
+      "field": "globalId",
+      "value": "0123456789012345678902",
+      "error": "semantic-duplicate-global-id"
+    },
+    {
+      "id": "10",
+      "field": "objectPlacement",
+      "value": "#3",
+      "error": "semantic-read-only-attribute"
+    },
+    {
+      "id": "10",
+      "field": "name",
+      "value": 9,
+      "error": "semantic-value-kind"
+    },
+    {
+      "id": "11",
+      "field": "tag",
+      "value": "wrong",
+      "error": "semantic-unknown-attribute"
+    },
+    {
+      "id": "999",
+      "field": "name",
+      "value": "missing",
+      "error": "semantic-entity-missing"
+    },
+    {
+      "id": "10",
+      "field": "globalId",
+      "value": "0123456789012345678905",
+      "error": "semantic-duplicate-global-id"
+    },
+    {
+      "id": "10",
+      "field": "globalId",
+      "value": "0123456789012345678906",
+      "index": 0,
+      "expected": {
+        "kind": "string",
+        "value": "0123456789012345678906"
+      }
+    }
+  ]
+}

@@ -1,0 +1,736 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "encoding": "ifc-template-command",
+  "choiceCap": 32,
+  "window": 31,
+  "sources": {
+    "boolean": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCCOMPOSITECURVESEGMENT",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "7"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCREPRESENTATIONITEM",
+              "args": []
+            },
+            {
+              "name": "IFCGEOMETRICREPRESENTATIONITEM",
+              "args": []
+            },
+            {
+              "name": "IFCSEGMENT",
+              "args": [
+                {
+                  "kind": "enum",
+                  "value": "CONTINUOUS"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "7",
+          "name": "IFCPOLYLINE",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "9"
+                },
+                {
+                  "kind": "reference",
+                  "value": "10"
+                }
+              ]
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "11",
+          "name": "IFCCOMPOSITECURVE",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "1"
+                }
+              ]
+            },
+            {
+              "kind": "enum",
+              "value": "F"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "9",
+          "name": "IFCCARTESIANPOINT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                },
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "10",
+          "name": "IFCCARTESIANPOINT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "4607182418800017408"
+                  }
+                },
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "logical": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCBSPLINECURVE",
+          "args": [
+            {
+              "kind": "integer",
+              "value": "1"
+            },
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "9"
+                },
+                {
+                  "kind": "reference",
+                  "value": "10"
+                }
+              ]
+            },
+            {
+              "kind": "enum",
+              "value": "POLYLINE_FORM"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCREPRESENTATIONITEM",
+              "args": []
+            },
+            {
+              "name": "IFCGEOMETRICREPRESENTATIONITEM",
+              "args": []
+            },
+            {
+              "name": "IFCCURVE",
+              "args": []
+            },
+            {
+              "name": "IFCBOUNDEDCURVE",
+              "args": []
+            },
+            {
+              "name": "IFCBSPLINECURVEWITHKNOTS",
+              "args": [
+                {
+                  "kind": "aggregate",
+                  "value": [
+                    {
+                      "kind": "integer",
+                      "value": "2"
+                    },
+                    {
+                      "kind": "integer",
+                      "value": "2"
+                    }
+                  ]
+                },
+                {
+                  "kind": "aggregate",
+                  "value": [
+                    {
+                      "kind": "real",
+                      "value": {
+                        "bits": "0"
+                      }
+                    },
+                    {
+                      "kind": "real",
+                      "value": {
+                        "bits": "4607182418800017408"
+                      }
+                    }
+                  ]
+                },
+                {
+                  "kind": "enum",
+                  "value": "UNSPECIFIED"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "9",
+          "name": "IFCCARTESIANPOINT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                },
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "10",
+          "name": "IFCCARTESIANPOINT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "4607182418800017408"
+                  }
+                },
+                {
+                  "kind": "real",
+                  "value": {
+                    "bits": "0"
+                  }
+                }
+              ]
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "derived": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCDERIVEDUNIT",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "7"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "string",
+              "value": "Caller unit type"
+            },
+            {
+              "kind": "string",
+              "value": "Caller unit"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "7",
+          "name": "IFCDERIVEDUNITELEMENT",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "8"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            }
+          ],
+          "complex": []
+        },
+        {
+          "id": "8",
+          "name": "IFCSIUNIT",
+          "args": [
+            {
+              "kind": "derived"
+            },
+            {
+              "kind": "enum",
+              "value": "LENGTHUNIT"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "enum",
+              "value": "METRE"
+            }
+          ],
+          "complex": []
+        }
+      ]
+    },
+    "sensor": {
+      "entities": [
+        {
+          "id": "1",
+          "name": "IFCSENSORTYPE",
+          "args": [
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCROOT",
+              "args": [
+                {
+                  "kind": "string",
+                  "value": "0AAAAAAAAAAAAAAAAAAAAA"
+                },
+                {
+                  "kind": "unset"
+                },
+                {
+                  "kind": "string",
+                  "value": "Caller sensor"
+                },
+                {
+                  "kind": "unset"
+                }
+              ]
+            },
+            {
+              "name": "IFCOBJECTDEFINITION",
+              "args": []
+            },
+            {
+              "name": "IFCTYPEOBJECT",
+              "args": [
+                {
+                  "kind": "unset"
+                },
+                {
+                  "kind": "unset"
+                }
+              ]
+            },
+            {
+              "name": "IFCTYPEPRODUCT",
+              "args": [
+                {
+                  "kind": "unset"
+                },
+                {
+                  "kind": "unset"
+                }
+              ]
+            },
+            {
+              "name": "IFCELEMENTTYPE",
+              "args": [
+                {
+                  "kind": "string",
+                  "value": "Caller sensor type"
+                }
+              ]
+            },
+            {
+              "name": "IFCDISTRIBUTIONELEMENTTYPE",
+              "args": []
+            },
+            {
+              "name": "IFCDISTRIBUTIONCONTROLELEMENTTYPE",
+              "args": []
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "boolean",
+      "source": "boolean",
+      "target": "IFCCOMPOSITECURVESEGMENT",
+      "required": [
+        {
+          "index": 0,
+          "domain": "BOOLEAN",
+          "members": [
+            "T",
+            "F"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "field": 0,
+          "member": "T",
+          "offset": "0"
+        }
+      ],
+      "args": [
+        {
+          "kind": "enum",
+          "value": "T"
+        },
+        {
+          "kind": "reference",
+          "value": "7"
+        }
+      ],
+      "mutations": 1
+    },
+    {
+      "id": "logical",
+      "source": "logical",
+      "target": "IFCBSPLINECURVE",
+      "required": [
+        {
+          "index": 3,
+          "domain": "LOGICAL",
+          "members": [
+            "T",
+            "F",
+            "U"
+          ]
+        },
+        {
+          "index": 4,
+          "domain": "LOGICAL",
+          "members": [
+            "T",
+            "F",
+            "U"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "field": 1,
+          "member": "F",
+          "offset": "0"
+        },
+        {
+          "field": 0,
+          "member": "U",
+          "offset": "0"
+        }
+      ],
+      "args": [
+        {
+          "kind": "integer",
+          "value": "1"
+        },
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "reference",
+              "value": "9"
+            },
+            {
+              "kind": "reference",
+              "value": "10"
+            }
+          ]
+        },
+        {
+          "kind": "enum",
+          "value": "POLYLINE_FORM"
+        },
+        {
+          "kind": "enum",
+          "value": "U"
+        },
+        {
+          "kind": "enum",
+          "value": "F"
+        }
+      ],
+      "mutations": 2
+    },
+    {
+      "id": "full53",
+      "source": "derived",
+      "target": "IFCDERIVEDUNIT",
+      "required": [
+        {
+          "index": 1,
+          "domain": "IFCDERIVEDUNITENUM",
+          "members": [
+            "ACCELERATIONUNIT",
+            "ANGULARVELOCITYUNIT",
+            "AREADENSITYUNIT",
+            "COMPOUNDPLANEANGLEUNIT",
+            "CURVATUREUNIT",
+            "DYNAMICVISCOSITYUNIT",
+            "HEATFLUXDENSITYUNIT",
+            "HEATINGVALUEUNIT",
+            "INTEGERCOUNTRATEUNIT",
+            "IONCONCENTRATIONUNIT",
+            "ISOTHERMALMOISTURECAPACITYUNIT",
+            "KINEMATICVISCOSITYUNIT",
+            "LINEARFORCEUNIT",
+            "LINEARMOMENTUNIT",
+            "LINEARSTIFFNESSUNIT",
+            "LINEARVELOCITYUNIT",
+            "LUMINOUSINTENSITYDISTRIBUTIONUNIT",
+            "MASSDENSITYUNIT",
+            "MASSFLOWRATEUNIT",
+            "MASSPERLENGTHUNIT",
+            "MODULUSOFELASTICITYUNIT",
+            "MODULUSOFLINEARSUBGRADEREACTIONUNIT",
+            "MODULUSOFROTATIONALSUBGRADEREACTIONUNIT",
+            "MODULUSOFSUBGRADEREACTIONUNIT",
+            "MOISTUREDIFFUSIVITYUNIT",
+            "MOLECULARWEIGHTUNIT",
+            "MOMENTOFINERTIAUNIT",
+            "PHUNIT",
+            "PLANARFORCEUNIT",
+            "ROTATIONALFREQUENCYUNIT",
+            "ROTATIONALMASSUNIT",
+            "ROTATIONALSTIFFNESSUNIT",
+            "SECTIONAREAINTEGRALUNIT",
+            "SECTIONMODULUSUNIT",
+            "SHEARMODULUSUNIT",
+            "SOUNDPOWERLEVELUNIT",
+            "SOUNDPOWERUNIT",
+            "SOUNDPRESSURELEVELUNIT",
+            "SOUNDPRESSUREUNIT",
+            "SPECIFICHEATCAPACITYUNIT",
+            "TEMPERATUREGRADIENTUNIT",
+            "TEMPERATURERATEOFCHANGEUNIT",
+            "THERMALADMITTANCEUNIT",
+            "THERMALCONDUCTANCEUNIT",
+            "THERMALEXPANSIONCOEFFICIENTUNIT",
+            "THERMALRESISTANCEUNIT",
+            "THERMALTRANSMITTANCEUNIT",
+            "TORQUEUNIT",
+            "VAPORPERMEABILITYUNIT",
+            "VOLUMETRICFLOWRATEUNIT",
+            "WARPINGCONSTANTUNIT",
+            "WARPINGMOMENTUNIT",
+            "USERDEFINED"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "field": 0,
+          "member": "USERDEFINED",
+          "offset": "31"
+        }
+      ],
+      "args": [
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "reference",
+              "value": "7"
+            }
+          ]
+        },
+        {
+          "kind": "enum",
+          "value": "USERDEFINED"
+        },
+        {
+          "kind": "string",
+          "value": "Caller unit type"
+        },
+        {
+          "kind": "string",
+          "value": "Caller unit"
+        }
+      ],
+      "mutations": 1
+    },
+    {
+      "id": "full34",
+      "source": "sensor",
+      "target": "IFCSENSORTYPE",
+      "required": [
+        {
+          "index": 0,
+          "domain": "IFCSENSORTYPEENUM",
+          "members": [
+            "CO2SENSOR",
+            "CONDUCTANCESENSOR",
+            "CONTACTSENSOR",
+            "COSENSOR",
+            "EARTHQUAKESENSOR",
+            "FIRESENSOR",
+            "FLOWSENSOR",
+            "FOREIGNOBJECTDETECTIONSENSOR",
+            "FROSTSENSOR",
+            "GASSENSOR",
+            "HEATSENSOR",
+            "HUMIDITYSENSOR",
+            "IDENTIFIERSENSOR",
+            "IONCONCENTRATIONSENSOR",
+            "LEVELSENSOR",
+            "LIGHTSENSOR",
+            "MOISTURESENSOR",
+            "MOVEMENTSENSOR",
+            "OBSTACLESENSOR",
+            "PHSENSOR",
+            "PRESSURESENSOR",
+            "RADIATIONSENSOR",
+            "RADIOACTIVITYSENSOR",
+            "RAINSENSOR",
+            "SMOKESENSOR",
+            "SNOWDEPTHSENSOR",
+            "SOUNDSENSOR",
+            "TEMPERATURESENSOR",
+            "TRAINSENSOR",
+            "TURNOUTCLOSURESENSOR",
+            "WHEELSENSOR",
+            "WINDSENSOR",
+            "USERDEFINED",
+            "NOTDEFINED"
+          ]
+        }
+      ],
+      "steps": [
+        {
+          "field": 0,
+          "member": "NOTDEFINED",
+          "offset": "31"
+        }
+      ],
+      "args": [
+        {
+          "kind": "enum",
+          "value": "NOTDEFINED"
+        }
+      ],
+      "mutations": 1
+    }
+  ],
+  "invalidWords": [
+    "",
+    "t",
+    "TRUE",
+    "UNKNOWN",
+    "bogus"
+  ],
+  "invalidPages": [
+    {
+      "fieldOffset": "1",
+      "diagnosticOffset": "0"
+    },
+    {
+      "fieldOffset": "0",
+      "diagnosticOffset": "0",
+      "choice": {
+        "path": [
+          "missing"
+        ],
+        "offset": "31"
+      }
+    },
+    {
+      "fieldOffset": "0",
+      "diagnosticOffset": "0",
+      "choice": {
+        "path": [
+          "value",
+          "$ifcInputs",
+          "0",
+          "value"
+        ],
+        "offset": "01"
+      }
+    },
+    {
+      "fieldOffset": "0",
+      "diagnosticOffset": "0",
+      "choice": {
+        "path": [
+          "value",
+          "$ifcInputs",
+          "0",
+          "value"
+        ],
+        "offset": "62"
+      }
+    }
+  ],
+  "draftSibling": {
+    "source": "logical",
+    "index": 4,
+    "missing": 3,
+    "text": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭🧭ß"
+  }
+}

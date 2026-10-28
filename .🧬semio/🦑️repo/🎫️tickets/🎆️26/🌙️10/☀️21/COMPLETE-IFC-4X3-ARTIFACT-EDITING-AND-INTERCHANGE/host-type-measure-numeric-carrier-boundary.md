@@ -1,0 +1,11 @@
+# Measure Semantic Arms And Physical Tokens
+
+The new type-input vectors describe the command/graph semantic carrier. INTEGER and the integer arm of NUMBER remain distinct exact caller payloads; no string-to-number coercion, numeric retag, central domain change or STEP serializer change is authorized by this feature.
+
+The primary [ISO10303-21 edition3 text,12.1.1.1,12.1.1.5 and12.1.1.7](https://www.steptools.com/stds/step/IS_final_p21e3.html) maps INTEGER to integer exchange tokens and both REAL and NUMBER to real exchange tokens. An SDK's acceptance of an integer token beneath IfcNumericMeasure therefore does not certify the token's Part21 mapping. Exact SDK preservation of a semantic integer arm is a separate observation. This boundary is also consistent with the parent's newly confirmed raw REAL-token mismatch.
+
+The independent Measure oracle intentionally records actual external behavior without silently converting the original typed command. Its INTEGER CountMeasure cases use integer tokens. Its REAL words use explicit real lexical forms including minus zero. NUMBER integer-arm cases expose external acceptance with integer tokens but are explicitly not a Part21-compliance certificate. A compliant real-token encoding or SDK constructor coercion cannot be substituted for exact preservation of the original integer arm, especially beyond binary64's exact integer range. Those exchange-policy decisions remain outside the Details feature.
+
+The initial physical probe also found an independent fixed-array validation gap: IfcOpenShell0.9 accepts a one-element IfcComplexNumber though the released type is ARRAY1:2 OF REAL. The declared bounds imply exactly two elements. The raw result will be retained and compared separately to the external schema metadata plus an owned Ajv cardinality oracle. No neutral expected cardinality is weakened.
+
+The initial oracle adapter wrote raw non-ASCII characters into Part21 literals and the external parser dropped them. The adapter now emits explicit X2 escapes; this changes only the independent test interface, not caller text, the corpus, or the repo's writer. Before outputs remain preserved. Complete coordinate WHERE and declared carrier/domain decisions continue to be reported separately.

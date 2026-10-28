@@ -227,6 +227,8 @@ impl ArtifactEditor for Ifc4AnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ifc4_any_editor_command_from_action(action, args) }
 
+    fn interaction_topology(doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>)->Result<protocol::InteractionTopology,semio_framework_value::ValueError>{Ok(crate::standards::v4::subsets::any::io::inspector::topology(doc.snapshot))}
+
     fn initial_snapshot() -> IfcSnapshot {
         IfcSnapshot::default()
     }
@@ -249,10 +251,29 @@ impl ArtifactEditor for Ifc4AnyEditor {
         }
     }
 
+    fn render_with_request_context(
+        _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,
+        body_key: &str,
+        doc: &ArtifactView<'_, Self::Snapshot>,
+        cfg: &ConfigView<'_, Self::Config>,
+        view_state: &semio_framework_plugin::ViewModel,
+        _transient: &semio_framework_plugin::TransientView<'_, Self::Transient>,
+        _interaction: &InteractionView<'_>,
+        cx: &mut semio_framework_job::StepContext<'_>,
+    ) -> semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree> {
+        if body_key == crate::standards::v4::subsets::any::io::inspector::BODY_KEY {
+            return crate::standards::v4::subsets::any::io::inspector::render(doc,_interaction,view_state,"s.stdio.ifc@4/*#editor",true,cx).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+        }
+        if body_key == main::BODY_KEY {
+            return crate::standards::v4::subsets::any::io::geometry::render_selected_in_context(doc.snapshot, cx, _interaction).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into);
+        }
+        Self::render(body_key, doc, cfg, view_state).map(Some).map_err(Into::into)
+    }
+
     fn render(body_key: &str, doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, view_state: &semio_framework_plugin::ViewModel) -> semio_framework_plugin::UiAssemblyResult<semio_framework_plugin::ComponentTree> {
         match body_key {
             main::BODY_KEY => main::render(doc.snapshot).map(semio_framework_plugin::built_to_component_tree),
-            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details(doc, view_state.locale, "s.stdio.ifc@4/*#editor", &semio_framework_plugin::TreeWindows::for_body(view_state, editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
+            editing::SNAPSHOT_DETAILS_BODY_KEY => editing::render_snapshot_details_provider_revisioned(&crate::standards::v4::subsets::any::io::details::Ifc4DetailsProvider::new(doc.snapshot),semio_s_artifact_stdio_contract::window_kit_artifact_publication_revision(doc)?,view_state.locale,"s.stdio.ifc@4/*#editor",&semio_framework_plugin::TreeWindows::for_body(view_state,editing::SNAPSHOT_DETAILS_BODY_KEY)).map(semio_framework_plugin::built_to_component_tree),
             _ => semio_framework_plugin::built_text_to_component_tree(Label::data(format!("Unknown body: {body_key}"))),
         }
     }
@@ -261,24 +282,50 @@ impl ArtifactEditor for Ifc4AnyEditor {
 
 
 impl editing::SnapshotEditingEditor for Ifc4AnyEditor {
+    fn snapshot_edit_work_capacity()->semio_framework_plugin::retained_command::ArtifactRetainedWorkCapacity{crate::standards::v4::subsets::any::io::details::details_work_capacity()}
+    fn snapshot_edit_work(tool:&'static str)->Box<dyn semio_framework_plugin::retained_command::ArtifactCommandWork<semio_framework_plugin::EditorApp<Self>>>{crate::standards::v4::subsets::any::io::details::details_edit_work::<Self>(tool)}
     fn snapshot_edit_event(command: &Self::Command) -> Option<&editing::SnapshotEditEvent> {
         match command { Ifc4AnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
     }
+    fn snapshot_edit_event_mut(command: &mut Self::Command) -> Option<&mut editing::SnapshotEditEvent> {
+        match command { Ifc4AnyEditCommand::EditSnapshot { event } => Some(event), _ => None }
+    }
+    fn snapshot_edit_command_from_original(event:&mut Option<editing::SnapshotEditEvent>)->Option<Self::Command>{event.take().map(|event|Ifc4AnyEditCommand::EditSnapshot{event})}
+    fn snapshot_edit_is_admitted(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> bool {
+        crate::standards::v4::subsets::any::io::inspector::semantic_edit_admission(event,snapshot).unwrap_or_else(||crate::standards::v4::subsets::any::io::details::details_edit_is_admitted(event,snapshot))
+    }
+    fn snapshot_edit_retained_extent(_:&editing::SnapshotEditEvent,_:&Self::Snapshot)->Option<usize>{Some(Self::snapshot_edit_work_capacity().work_items())}
+    fn snapshot_edit_retained_path_is_admitted(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->bool{crate::standards::v4::subsets::any::io::inspector::semantic_edit_admission(event,snapshot).unwrap_or_else(||crate::standards::v4::subsets::any::io::details::details_edit_retained_path_is_admitted(event,snapshot))}
+    fn snapshot_edit_semantic_path_is_admitted(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot)->Option<bool>{crate::standards::v4::subsets::any::io::inspector::semantic_edit_admission(event,snapshot)}
+    fn snapshot_edit_emit_in_context(event:&editing::SnapshotEditEvent,snapshot:&Self::Snapshot,cx:&mut semio_framework_job::StepContext<'_>)->Result<Emit<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>,Fault>{
+        let _=cx.set_stage("ifc-semantic-edit");
+        let semantic=crate::standards::v4::subsets::any::io::inspector::semantic_edit_controlled(event,snapshot,&mut ||{if cx.is_cancelled(){return Err("semantic-cancelled".into());}if cx.should_yield(){return Err("semantic-limited".into());}cx.consume_fuel(1);Ok(())})?;
+        if let Some(mutations)=semantic{if cx.is_cancelled(){return Err(Fault::from("semantic-cancelled"));}if cx.should_yield(){return Err(Fault::from("semantic-limited"));}return Ok(Emit{artifact_mutations:mutations,..Default::default()});}
+        if matches!(event,editing::SnapshotEditEvent::ReplaceSource{..}) {return Self::snapshot_edit_emit(event,snapshot);}
+        let mutations=crate::standards::v4::subsets::any::io::details::details_edit_special_controlled(event,snapshot,&mut ||{if cx.is_cancelled(){return Err("details-cancelled".into());}if cx.should_yield(){return Err("details-limited".into());}cx.consume_fuel(1);Ok(())})?.unwrap_or_default();
+        if cx.is_cancelled(){return Err(Fault::from("details-cancelled"));}if cx.should_yield(){return Err(Fault::from("details-limited"));}Ok(Emit{artifact_mutations:mutations,..Default::default()})
+    }
     fn snapshot_edit_rules() -> &'static editing::EditRules {
         &edit_rules::EDIT_RULES
+    }
+    fn snapshot_edit_special(event: &editing::SnapshotEditEvent, snapshot: &Self::Snapshot) -> Result<Option<Vec<Self::Mutation>>, Fault> {
+        if let Some(mutations)=crate::standards::v4::subsets::any::io::inspector::semantic_edit(event,snapshot)? {return Ok(Some(mutations));}
+        crate::standards::v4::subsets::any::io::details::details_edit_special(event,snapshot)
     }
 }
 
 //#region 🔖️Manifest
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_ifc4_any_editor() -> semio_framework_plugin::AppDefinition {
-    let builder = Editor::builder(IFC4_ANY_DIALECT).document(["stdio", "ifc4"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC4_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
+    let builder = Editor::builder(IFC4_ANY_DIALECT).document(["stdio", "ifc4"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::IFC4_ANY_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).window_kind_def(crate::standards::v4::subsets::any::io::inspector::window_definition(true)).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
         .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::ifc4_demo::ID, crate::examples::ifc4_demo::label())], crate::examples::ifc4_demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)
         ;
-    editing::snapshot_edit_actions_with(builder).build_definition()
+    let mut definition=editing::snapshot_edit_actions_with(builder).build_definition();
+    crate::standards::v4::subsets::any::io::inspector::install_interaction(&mut definition);
+    definition
 }
 //#endregion 🔖️Manifest
 

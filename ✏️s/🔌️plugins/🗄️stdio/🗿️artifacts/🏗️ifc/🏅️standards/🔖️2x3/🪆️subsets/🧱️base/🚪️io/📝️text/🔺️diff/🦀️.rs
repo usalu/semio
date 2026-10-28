@@ -180,6 +180,7 @@ pub(crate) fn enc_part21_value_into(v: &Part21Value, out: &mut String) {
         Part21Value::Real(r) => {
             write!(out, "R[{r}]").expect("writing to String");
         }
+        Part21Value::Binary(s) => {out.push_str("B[");hex_encode_into(s.as_bytes(), out);out.push(']');}
         Part21Value::Str(s) => {
             out.push_str("S[");
             hex_encode_into(s.as_bytes(), out);
@@ -235,6 +236,7 @@ pub(crate) fn dec_part21_value(s: &str) -> Result<Part21Value, String> {
         "I" => Ok(Part21Value::Int(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "R" => Ok(Part21Value::Real(Part21Decimal::parse(inner)?)),
         "S" => Ok(Part21Value::Str(dec_str(inner)?)),
+        "B" => {let content=dec_str(inner)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(&content){return Err("invalid canonical STEP binary content".into());}Ok(Part21Value::Binary(content))},
         "E" => Ok(Part21Value::Enum(dec_str(inner)?)),
         "F" => Ok(Part21Value::Ref(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "A" => {

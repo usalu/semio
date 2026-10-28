@@ -1,0 +1,9 @@
+# Populated GlobalId Normalization Guard Independent Audit
+
+Read-only change review: IfcNormalizationAttribute/profile hook, constituent_roster phase7 guard_direct transitions, original populate_global_ids and normalization_identity_tests. No new confirmed P1/P2. Native authored tests/physical receipts remain unexecuted under authentic compiler ingress refusal.
+
+Inherited attribute scan still rejects any derived metadata that could affect survivor normalization. It no longer rejects GlobalId solely because a declaration inherits it: direct partial args do not contain inherited slots. A separate direct-attribute pass resolves actual original value at the exact direct ordinal. Actual nonempty IfcValue::String GlobalId may pass unchanged; missing, empty, unset, enum/typed/wrong-kind falls back before clone/donation. This matches the prior empty-string population frontier while conservatively refusing other malformed source shapes. It does not validate compressed GlobalId syntax, uniqueness or schema validity, and does not introduce RNG.
+
+guard_slot resets between inherited/direct/value scans; guard_direct resets when moving to the next part, so one part cannot cause next part to skip inherited derived checks. Virtual candidate and source partials share declared-role handling without indexing inherited slots in direct args. Top Derived value fallback remains. Original source/receiver/caller/profile hook pins and demand/close flow are unchanged apart from added inline state.
+
+Authored tests cover populated original identity preservation and central inverse, empty/missing/wrong-kind fallback, denied axes, unchanged command/state and preparation-prefix cancellation/close. Their physical allocation assertions are useful future gates but parsing is not runtime evidence. Do not infer complete rooted complex-chain validity or arbitrary identity-default support from this source subset.

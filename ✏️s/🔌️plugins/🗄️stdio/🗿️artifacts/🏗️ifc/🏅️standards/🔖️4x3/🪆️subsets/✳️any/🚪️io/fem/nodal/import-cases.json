@@ -1,0 +1,58 @@
+{
+  "schema": "semio.ifc.fem.native-nodal-import.v1",
+  "components": [
+    "ForceX",
+    "ForceY",
+    "ForceZ",
+    "MomentX",
+    "MomentY",
+    "MomentZ"
+  ],
+  "declaredBy": "IFCSTRUCTURALLOADSINGLEFORCE",
+  "queryStates": [
+    {
+      "state": "unique-present",
+      "result": "exact-component"
+    },
+    {
+      "state": "unique-unset",
+      "result": "absent"
+    },
+    {
+      "state": "unique-missing-value",
+      "result": "invalid"
+    },
+    {
+      "state": "missing",
+      "result": "invalid"
+    },
+    {
+      "state": "ambiguous",
+      "result": "invalid"
+    },
+    {
+      "state": "unknown",
+      "result": "unsupported"
+    }
+  ],
+  "scalarPolicy": "finite-exact-binary64",
+  "identities": "actual-action-id-component-in-case",
+  "order": "analysis-list-then-assignment-source-order",
+  "laws": [
+    "same-source-owner-query",
+    "late-unknown-preserved",
+    "all-six-optionals-queried",
+    "explicit-zero-is-present",
+    "used-unit-role-required",
+    "all-unset-projection-refusal",
+    "missing-serialized-is-not-unset",
+    "original-prefix-cancel-paid-close",
+    "fixed-key-stack-quoted-before-initialization"
+  ],
+  "nativeExecuted": false,
+  "componentIdentity": {
+    "deniedCopyBytes": 115,
+    "maximumStackCopyBytes": 116,
+    "outcome": "ownership-limit-before-initialization"
+  }
+}

@@ -16,10 +16,7 @@ import {
 } from "../../⚛️react-port/🟦️.ts";
 import { rowActionAdmissionKeyV1 } from "../🎬️row-action-admission/🟦️.ts";
 import {
-  Field,
-  Section,
   Tree,
-  borderElementClass,
   borderNormalTopClass,
   catalogueTreeDragController,
   cn,
@@ -41,16 +38,14 @@ import {
   type UiDocumentState
 } from "../../📃️UiDocumentStore/🟦️.tsx";
 import { type Component, type UiNodeId, type UiNodeRecord } from "@semio-tech/framework";
-import { wireLabel } from "../🌉️scene-host-contract/🟦️.ts";
 import { leftoverItemSelectedV1, leftoverSelectionOverlayV1, subscribeLeftoverSelectionV1 } from "../🗺️element-host-registry/🟦️.ts";
 import { type UiPresenceOverlayValue, usePresenceOverlayEntry, useUiPresenceOverlay } from "../👥️presence-overlay/🟦️.ts";
 import { treeSectionsCatalogueDragMime } from "../🌲️tree-panel-boundary/🟦️.ts";
 import { type UiInterpreterContext } from "../🧷️interpreter-context/🟦️.ts";
-import { accessibilityAriaProps, layoutSpecStyle, styleSpecDataAttributes } from "../📐️layout-accessibility/🟦️.tsx";
+import { layoutSpecStyle } from "../📐️layout-accessibility/🟦️.tsx";
 import { dispatchTrigger, resolveControlIconNode } from "../⚡️action-dispatch/🟦️.tsx";
 import {
   activityBorderClass,
-  ButtonView,
   ExtensionView,
   ImageView,
   interpretUiNodeBusyShell,
@@ -59,15 +54,9 @@ import {
   TextView,
   UnknownComponentView
 } from "../🔤️display-views/🟦️.tsx";
-import {
-  IconSelectView,
-  InputView,
-  NumberStepperView,
-  RingView,
-  SelectView,
-  SliderView,
-  ToggleView
-} from "../✍️input-views/🟦️.tsx";
+import { OrdinaryControlView } from "../🎛️control-port/🟦️.tsx";
+import { documentControlContext } from "../🎛️control-port/🟦️.ts";
+import { UiContainerFrame } from "../🎛️control-port/container.tsx";
 import {
   collectTreeItemControls,
   collectTreeItems,
@@ -100,50 +89,12 @@ import {
 //#region 🔖️UiInterpreter
 //#region ComponentRenderers
 function ContainerView({ store, record, context }: { readonly store: UiDocumentStore; readonly record: UiNodeRecord; readonly context: UiInterpreterContext }) {
-  const component = record.component as Extract<Component, { type: "container" }>;
-  const { props: aria, describedBy } = accessibilityAriaProps(record.accessibility, `node-${record.id}`);
   const presence = usePresenceOverlayEntry(record.key);
-  const style = layoutSpecStyle(record.layout);
-  const dataAttrs = styleSpecDataAttributes(record.style);
   const childIds = record.children ?? [];
-  const childReactKeys = uiChildReactKeys(store.getState(), childIds);
-  const children = childIds.map((childId, index) => <UiNodeView key={childReactKeys[index]} store={store} id={childId} context={context} />);
-  const role = component.role === "form" ? "form" : component.role === "toolbar" ? "toolbar" : undefined;
-  const activateBinding = (record.bindings ?? []).find((binding) => binding.trigger === "activate");
-
-  if (component.role === "section" || component.role === "group") {
-    return (
-      <Section id={nodeDomId(store, record, context.domScope)} title={component.label ? wireLabel(component.label) : undefined} className={cn(presence.selected && "ring-primary ring-1")}>
-        {describedBy}
-        {children}
-      </Section>
-    );
-  }
-  if (component.role === "field") {
-    return (
-      <Field id={nodeDomId(store, record, context.domScope)} label={component.label ? wireLabel(component.label) : ""} description={component.description ?? undefined} required={component.required ?? undefined} error={component.error ?? undefined}>
-        {describedBy}
-        {children}
-      </Field>
-    );
-  }
-  return (
-    <div
-      style={style}
-      {...dataAttrs}
-      {...aria}
-      role={activateBinding ? "button" : role}
-      id={nodeDomId(store, record, context.domScope)}
-      data-ui-node-id={record.id} data-ui-node-key={record.key}
-      data-activity={record.activity}
-      className={cn(activityBorderClass(record), activateBinding && cn(borderElementClass, "border cursor-pointer rounded-md"), presence.selected && "ring-primary ring-1", presence.hovered && "outline-primary/50 outline-1")}
-      aria-busy={record.activity === "loading" || record.activity === "waiting" || undefined}
-      onClick={activateBinding ? (event) => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined}
-    >
-      {describedBy}
-      {children}
-    </div>
-  );
+  const keys = uiChildReactKeys(store.getState(), childIds);
+  const children = childIds.map((id, index) => <UiNodeView key={keys[index]} store={store} id={id} context={context} />);
+  const activate = (record.bindings ?? []).some(binding => binding.trigger === "activate");
+  return <UiContainerFrame record={record} id={nodeDomId(store, record, context.domScope)} selected={presence.selected} hovered={presence.hovered} onActivate={activate ? event => { event.stopPropagation(); dispatchTrigger(context, record, "activate"); } : undefined}>{children}</UiContainerFrame>;
 }
 
 //#region Tree
@@ -514,25 +465,18 @@ function renderComponent(store: UiDocumentStore, record: UiNodeRecord, context: 
     case "text":
       return <TextView record={record} />;
     case "button":
-      return <ButtonView record={record} context={context} />;
+    case "input":
+    case "select":
+    case "toggle":
+    case "slider":
+    case "numberStepper":
+    case "ring":
+    case "iconSelect":
+      return <OrdinaryControlView record={record} context={documentControlContext(context)} />;
     case "separator":
       return <hr className={cn("border-0", borderNormalTopClass)} data-ui-node-id={record.id} data-ui-node-key={record.key} />;
-    case "input":
-      return <InputView record={record} context={context} />;
-    case "select":
-      return <SelectView record={record} context={context} />;
-    case "toggle":
-      return <ToggleView record={record} context={context} />;
     case "keyValueList":
       return <KeyValueListView record={record} />;
-    case "slider":
-      return <SliderView record={record} context={context} />;
-    case "numberStepper":
-      return <NumberStepperView record={record} context={context} />;
-    case "ring":
-      return <RingView record={record} context={context} />;
-    case "iconSelect":
-      return <IconSelectView record={record} context={context} />;
     case "progress":
       return <ProgressView record={record} />;
     case "tree":

@@ -50,16 +50,18 @@ fn holder_args(id: &str, system: &str) -> UiAssemblyResult<UiValue> {
 pub fn effective_rows(snapshot: &ModelSnapshot, inference: &ModelInference, id: &str, labels: &BimLabels) -> Vec<UiAssemblyResult<BuiltNode>> {
     let Some(properties) = inference.effective_properties.get(id) else { return Vec::new() };
     let mut rows: Vec<UiAssemblyResult<BuiltNode>> = Vec::new();
+    let mut ordinal = 0;
     for (set, values) in &properties.values {
         for (name, value) in values {
             let unit = unit_of(snapshot, value.template.as_deref(), set, name);
             let shown = format!("{} {unit} ({})", property_text(&value.value), source_label(value.source, labels)).replace("  ", " ");
-            rows.push(ui_label(&format!("{set} · {name}")).and_then(|label| tree_item_desc(format!("{ROOT}.effective.{set}.{name}"), label, Some(shown))));
+            rows.push(ui_label(&format!("{} · {}", super::property_caption(set), super::property_caption(name))).and_then(|label| tree_item_desc(format!("{ROOT}.effective.{ordinal}"), label, Some(shown))));
+            ordinal += 1;
         }
     }
-    for finding in &properties.findings {
+    for (ordinal, finding) in properties.findings.iter().enumerate() {
         let issue = issue_label(finding.issue, labels).to_string();
-        rows.push(ui_label(&format!("{} · {}", finding.set, finding.property)).and_then(|label| tree_item_desc(format!("{ROOT}.effective.issue.{}.{}", finding.set, finding.property), label, Some(issue))));
+        rows.push(ui_label(&format!("{} · {}", super::property_caption(&finding.set), super::property_caption(&finding.property))).and_then(|label| tree_item_desc(format!("{ROOT}.effective.issue.{ordinal}"), label, Some(issue))));
     }
     rows.truncate(ROWS);
     rows

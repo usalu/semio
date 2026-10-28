@@ -1093,26 +1093,6 @@
     },
     {
       "type": "object",
-      "title": "SetDrawingText",
-      "properties": {
-        "kind": {
-          "const": "set-drawing-text"
-        },
-        "index": {
-          "type": "integer"
-        },
-        "text": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "kind",
-        "index",
-        "text"
-      ]
-    },
-    {
-      "type": "object",
       "title": "ReorderFrame",
       "properties": {
         "kind": {

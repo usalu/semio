@@ -86,7 +86,7 @@ pub struct JsonValidationCursor {
     nodes: usize,
     require_array: bool,
     root: JsonRootState,
-    pub stack: Vec<JsonContainer>,
+    stack: Vec<JsonContainer>,
     token: JsonToken,
 }
 
@@ -444,4 +444,9 @@ impl JsonValidationCursor {
             Err("layout-export-json-incomplete".into())
         }
     }
+}
+
+impl JsonValidationCursor{
+ pub fn retirement_bytes(&self)->usize{self.stack.capacity().saturating_mul(std::mem::size_of::<JsonContainer>())}
+ pub fn close_one(&mut self,maximum_bytes:usize)->Option<usize>{let bytes=self.retirement_bytes();if bytes==0{return None;}if bytes>maximum_bytes{return Some(0);}drop(std::mem::take(&mut self.stack));Some(bytes)}
 }

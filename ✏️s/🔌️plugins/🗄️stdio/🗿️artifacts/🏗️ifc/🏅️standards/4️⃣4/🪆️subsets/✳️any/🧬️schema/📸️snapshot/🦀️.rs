@@ -13,6 +13,7 @@
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_IFC_DOCUMENT_SCHEMA: &str = "stdio.ifc";
+pub use crate::standards::v4::subsets::any::io::sqlite::snapshot::native::owned::IfcOriginalPackReceiving;
 
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
@@ -34,6 +35,7 @@ pub enum IfcValue {
     Integer(i64),
     Real(f64),
     String(String),
+    Binary(String),
     /// 🔀️ `.EDGE.` style enumeration literal (name kept without the surrounding dots).
     Enum(String),
     /// 🔗️ `#N` — a reference to another entity's id.
@@ -97,6 +99,34 @@ impl IfcValue {
         }
     }
 }
+/// 🔍️ Compare retained value identity, including every binary64 bit, with depth-sized traversal storage.
+pub fn ifc_arguments_identical(left: &[IfcValue], right: &[IfcValue]) -> bool {
+    if left.len() != right.len() { return false; }
+    let mut frames = vec![(left.iter(), right.iter())];
+    while let Some((left, right)) = frames.last_mut() {
+        let Some((left, right)) = left.next().zip(right.next()) else { frames.pop(); continue };
+        let pair = match (left, right) {
+            (IfcValue::Real(left), IfcValue::Real(right)) => {
+                if left.to_bits() != right.to_bits() { return false; }
+                continue;
+            }
+            (IfcValue::Aggregate(left), IfcValue::Aggregate(right)) => Some((left.as_slice(), right.as_slice())),
+            (IfcValue::TypedValue(left), IfcValue::TypedValue(right)) if left.name == right.name => Some((left.items.as_slice(), right.items.as_slice())),
+            _ if left == right => None,
+            _ => return false,
+        };
+        if let Some((left, right)) = pair {
+            if left.len() != right.len() { return false; }
+            frames.push((left.iter(), right.iter()));
+        }
+    }
+    true
+}
+
+/// 🧩️ Compare complete retained partial records without treating positive and negative zero as identical.
+pub fn ifc_complex_identical(left: &[IfcComplexType], right: &[IfcComplexType]) -> bool {
+    left.len() == right.len() && left.iter().zip(right).all(|(left, right)| left.name == right.name && ifc_arguments_identical(&left.args, &right.args))
+}
 //#endregion 🔖️Value
 
 //#region 🔖️Entity
@@ -134,7 +164,8 @@ pub struct IfcEntity {
 /// 📇️ The three standard `HEADER;` records (`FILE_DESCRIPTION`/`FILE_NAME`/`FILE_SCHEMA`), typed
 /// via IFC's own [`IfcValue`] — kept as their raw tuple-of-values shape (not schema-interpreted
 /// into named sub-fields), matching the recipe's "typed HEADER section" completeness target.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct IfcHeader {
     pub file_description: Vec<IfcValue>,
@@ -143,14 +174,14 @@ pub struct IfcHeader {
 }
 
 /// 🌱 ISO 10303-21 §8.2's conformant minimum HEADER, in IFC's own value type — the exact mirror of
-/// [`Part21Header::default`] (`iso_10303_21_minimum`). A derived all-empty default is NOT a fixed
+/// [`Part21Header::default`] (`iso_10303_21_minimum`), with IFC4 declared in `FILE_SCHEMA`. A derived all-empty default is NOT a fixed
 /// point of this artifact's own codec: `write_part21` pads every mandatory record to its full
 /// attribute arity and spells an empty `LIST[1:?] OF STRING` `('')`, so an all-empty header would
 /// come back from `parse_dsl`/`decode_pack` as this one anyway.
 /// https://www.iso.org/standard/63141.html
 impl Default for IfcHeader {
     fn default() -> Self {
-        ifc_header_from_part21(&Part21Header::default())
+        Self { file_schema: vec![IfcValue::Aggregate(vec![IfcValue::String("IFC4".into())])], ..ifc_header_from_part21(&Part21Header::default()) }
     }
 }
 //#endregion 🔖️Header
@@ -160,7 +191,8 @@ impl Default for IfcHeader {
 /// model (never `semio_s_artifact_stdio_contract::part21::Part21Document`). Spatial structure/placement
 /// matrices/property sets stay a derived analyzer view (`engine::spatial::analyze_spatial`,
 /// which is handed a `Part21Document` built on demand via [`to_part21_document`]), not stored here.
-#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 #[artifact_schema(id = "s.stdio.ifc")]
 pub struct IfcSnapshot {
@@ -190,6 +222,7 @@ fn ifc_value_from_part21(v: &Part21Value) -> IfcValue {
     match v {
         Part21Value::Ref(id) => IfcValue::Reference(*id),
         Part21Value::Str(s) => IfcValue::String(s.clone()),
+        Part21Value::Binary(s) => IfcValue::Binary(s.clone()),
         Part21Value::Enum(s) => IfcValue::Enum(s.clone()),
         Part21Value::Int(i) => IfcValue::Integer(*i),
         Part21Value::Real(r) => IfcValue::Real(r.to_f64().unwrap_or_default()),
@@ -206,6 +239,7 @@ fn part21_value_from_ifc(v: &IfcValue) -> Part21Value {
     match v {
         IfcValue::Reference(id) => Part21Value::Ref(*id),
         IfcValue::String(s) => Part21Value::Str(s.clone()),
+        IfcValue::Binary(s) => Part21Value::Binary(s.clone()),
         IfcValue::Enum(s) => Part21Value::Enum(s.clone()),
         IfcValue::Integer(i) => Part21Value::Int(*i),
         IfcValue::Real(r) => Part21Value::Real((*r).into()),

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/exchange-source-cases.schema.json",
+  "title": "Central Owned IFC Source Admission Cases",
+  "type": "object", "additionalProperties": false,
+  "required": ["$schema", "schema", "endpoints", "capturePhasePrefix", "captureCancelAfter", "indexPhase", "indexCancelAfter", "sourceRefusal", "cancellation", "limits"],
+  "properties": {
+    "$schema": { "const": "./exchange-source.schema.json" }, "schema": { "const": "IFC4X3_ADD2" },
+    "endpoints": { "type": "array", "minItems": 3, "maxItems": 3, "uniqueItems": true, "items": {
+      "type": "object", "additionalProperties": false, "required": ["id", "phase"],
+      "properties": { "id": { "enum": ["ifc-to-bim", "ifc-to-fem", "ifc-triangles"] }, "phase": { "enum": ["bim-import", "fem-import", "geometry"] } }
+    } },
+    "capturePhasePrefix": { "const": "capture-" }, "captureCancelAfter": { "const": 32 },
+    "indexPhase": { "const": "index-entities" }, "indexCancelAfter": { "const": 8 },
+    "sourceRefusal": { "const": "exchange.graph" }, "cancellation": { "const": "io.cancelled" },
+    "limits": { "const": [ { "maxEntities": 1 }, { "maxValues": 1 }, { "maxDepth": 1 } ] }
+  }
+}

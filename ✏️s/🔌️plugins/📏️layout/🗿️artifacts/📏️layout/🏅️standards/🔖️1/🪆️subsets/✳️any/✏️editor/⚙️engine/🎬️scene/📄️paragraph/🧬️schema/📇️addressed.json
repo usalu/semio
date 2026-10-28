@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:semio:layout-paragraph-addressed-flow:v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "head",
+    "source",
+    "start",
+    "end"
+  ],
+  "properties": {
+    "head": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "source": {
+      "type": [
+        "integer",
+        "null"
+      ],
+      "minimum": 0
+    },
+    "start": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "end": {
+      "type": "integer",
+      "minimum": 0
+    }
+  }
+}

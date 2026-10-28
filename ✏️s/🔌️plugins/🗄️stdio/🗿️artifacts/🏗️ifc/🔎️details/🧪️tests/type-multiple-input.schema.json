@@ -1,0 +1,177 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "nativeExecution",
+    "encoding",
+    "released",
+    "sources",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "nativeExecution": {
+      "const": false
+    },
+    "encoding": {
+      "const": "ifc-template-command"
+    },
+    "released": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximum",
+        "names",
+        "contentCap",
+        "controlCap"
+      ],
+      "properties": {
+        "maximum": {
+          "const": 4
+        },
+        "names": {
+          "const": [
+            "IFCSURFACESTYLELIGHTING"
+          ]
+        },
+        "contentCap": {
+          "const": 16
+        },
+        "controlCap": {
+          "const": 18
+        }
+      }
+    },
+    "sources": {
+      "type": "object",
+      "minProperties": 2,
+      "additionalProperties": {
+        "type": "object",
+        "required": [
+          "entities"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "entities": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 4,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "source",
+          "target",
+          "initial",
+          "steps",
+          "required",
+          "args",
+          "mutations"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "source": {
+            "enum": [
+              "relationship",
+              "lighting"
+            ]
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[A-Z][A-Z0-9_]*$"
+          },
+          "initial": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "index",
+                "value"
+              ],
+              "properties": {
+                "index": {
+                  "type": "string",
+                  "pattern": "^(0|[1-9][0-9]*)$"
+                },
+                "value": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "reference"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "field",
+                "value"
+              ],
+              "properties": {
+                "field": {
+                  "type": "integer",
+                  "minimum": 0,
+                  "maximum": 15
+                },
+                "value": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "required": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 16,
+            "uniqueItems": true,
+            "items": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "args": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "mutations": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      }
+    }
+  }
+}

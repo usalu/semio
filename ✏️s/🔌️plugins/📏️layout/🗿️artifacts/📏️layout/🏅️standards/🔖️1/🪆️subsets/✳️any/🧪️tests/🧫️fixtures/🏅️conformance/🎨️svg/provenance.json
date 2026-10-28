@@ -1,0 +1,33 @@
+{
+  "index": "https://www.w3.org/Graphics/SVG/Test/20110816/harness/htmlObjectApproved/index.html",
+  "preservation": "Unmodified upstream files; embedded notices retained. External linked resources remain external and are not represented as locally validated rendering fixtures.",
+  "fixtures": [
+    {
+      "file": "coords-trans-02-t.svg",
+      "source": "https://www.w3.org/Graphics/SVG/Test/20110816/svg/coords-trans-02-t.svg",
+      "sha256": "3f9ef06ba6f24da2dafb3928b83bc22ffda58719672c80f3ae63b54b760accda",
+      "bytes": 9961,
+      "status": "accepted",
+      "suite": "W3C SVG 1.1 Second Edition, 2011-08-16",
+      "scope": "Official upstream input for layout SVG import and output inspection; rendering conformance is not yet established."
+    },
+    {
+      "file": "painting-fill-01-t.svg",
+      "source": "https://www.w3.org/Graphics/SVG/Test/20110816/svg/painting-fill-01-t.svg",
+      "sha256": "ea79ff2e62a7e52e6a7211860c5f162e8f6f5d20cfe659aa30baf9a6a667b125",
+      "bytes": 3551,
+      "status": "accepted",
+      "suite": "W3C SVG 1.1 Second Edition, 2011-08-16",
+      "scope": "Official unchanged input; two rectangle-center probes now verify actual portable Layout paint attributes against original W3C input using independent Sharp rendering. Native full Layout import/export execution and whole-suite conformance remain unverified."
+    },
+    {
+      "file": "text-text-01-b.svg",
+      "source": "https://www.w3.org/Graphics/SVG/Test/20110816/svg/text-text-01-b.svg",
+      "sha256": "708b3b20e8ad465458f42dca1640cc4accb0ba09a4e961b5ad2c442509acc469",
+      "bytes": 10257,
+      "status": "accepted",
+      "suite": "W3C SVG 1.1 Second Edition, 2011-08-16",
+      "scope": "Official upstream input for layout SVG import and output inspection; rendering conformance is not yet established."
+    }
+  ]
+}

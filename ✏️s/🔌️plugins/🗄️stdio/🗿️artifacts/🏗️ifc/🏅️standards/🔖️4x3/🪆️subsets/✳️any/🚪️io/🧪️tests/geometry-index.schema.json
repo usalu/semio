@@ -1,0 +1,14 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"https://semio.tech/ifc4x3/geometry/source-index",
+  "type":"object","additionalProperties":false,"required":["scope","rows","expected"],
+  "properties":{
+    "scope":{"const":"captured-source-ordinal-query"},
+    "rows":{"const":[
+      {"id":"1","ordinal":0,"entity":"IFCCARTESIANPOINT","owner":"IFCCARTESIANPOINT","attribute":"Coordinates","pointer":"/entities/0/args/0"},
+      {"id":"4","ordinal":3,"entity":"IFCSIUNIT","owner":"IFCNAMEDUNIT","attribute":"UnitType","pointer":"/entities/3/args/1"},
+      {"id":"6","ordinal":5,"entity":"IFCPROJECT","owner":"IFCROOT","attribute":"GlobalId","pointer":"/entities/5/args/0"}
+    ]},
+    "expected":{"const":{"missing":true,"borrowed":true,"replacement":false,"schemaConformance":"not-claimed"}}
+  }
+}

@@ -102,14 +102,12 @@ fn every_iso_10303_21_string_directive_is_read() {
     assert_eq!(label(r"\X2\4E2D6587\X0\"), "中文");
 }
 
-/// 🧪️ A page this codec cannot map is a TYPED ERROR naming the page, never a wrong character:
-/// ISO 8859-2..-9 do not place `code + 128` at the Unicode codepoint the way ISO 8859-1 does,
-/// and guessing would corrupt a real name silently.
+/// 🧪️ Undefined shifted positions are typed refusals instead of replacement characters.
 #[test]
-fn an_unmappable_iso_8859_page_is_refused_rather_than_guessed() {
-    let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('\\PB\\\\S\\A');\nENDSEC;\nEND-ISO-10303-21;\n";
-    let error = parse_part21(text).expect_err("page B must not be decoded");
-    assert!(error.to_string().contains("ISO 8859 page B"), "the error must name the page it refused: {error}");
+fn undefined_iso_8859_positions_are_refused() {
+    let text = "ISO-10303-21;\nHEADER;\nFILE_DESCRIPTION((''),'2;1');\nFILE_NAME('','',(''),(''),'','','');\nFILE_SCHEMA(('X'));\nENDSEC;\nDATA;\n#1=LABEL('\\PF\\\\S\\!');\nENDSEC;\nEND-ISO-10303-21;\n";
+    let error = parse_part21(text).expect_err("page F byte A1 is undefined");
+    assert!(error.to_string().contains("ISO 8859 page F"), "the refusal must identify the undefined page: {error}");
 }
 
 #[test]
@@ -184,3 +182,46 @@ fn path_edits_address_the_projection() {
 
 #[path = "../🚦️sqlite-cohort/🦀️.rs"]
 mod sqlite_cohort;
+
+
+#[test]
+fn binary_literals_preserve_padding_and_refuse_malformed_content() {
+    for content in ["0", "0F", "17", "23", "31", "00ABCDEF"] {
+        let source = format!("ISO-10303-21;HEADER;FILE_DESCRIPTION((''),'2;1');FILE_NAME('','',(''),(''),'','','');FILE_SCHEMA(('IFC4X3_ADD2'));ENDSEC;DATA;#1=IFCBLOB(\"{content}\");ENDSEC;END-ISO-10303-21;");
+        let document = parse_part21(&source).unwrap();
+        assert_eq!(document.instances[0].entities[0].1[0], Part21Value::Binary(content.into()));
+        let printed = write_part21(&document);
+        assert_eq!(parse_part21(&printed).unwrap(), document);
+    }
+    for content in ["", "4", "1", "18", "24", "32", "0G"] {
+        let source = format!("ISO-10303-21;HEADER;ENDSEC;DATA;#1=IFCBLOB(\"{content}\");ENDSEC;END-ISO-10303-21;");
+        assert!(parse_part21(&source).is_err(), "{content}");
+    }
+}
+
+#[test]
+fn supplementary_unicode_round_trips_without_invalid_x2_groups() {
+    let literal = escape_part21_string("Ä😀中");
+    assert_eq!(literal, r"\X4\000000C40001F60000004E2D\X0\");
+    let text = FIXTURE.replace("CARTESIAN_POINT('',", &format!("CARTESIAN_POINT('{}',", literal));
+    assert_eq!(parse_part21(&text).unwrap().instance(1).unwrap().entities[0].1[0].as_str(), Some("Ä😀中"));
+}
+
+#[test]
+fn x2_utf16_surrogate_pairs_decode_as_one_scalar() {
+    let text = FIXTURE.replace("CARTESIAN_POINT('',", r"CARTESIAN_POINT('\X2\D83DDE00\X0\',");
+    assert_eq!(parse_part21(&text).unwrap().instance(1).unwrap().entities[0].1[0].as_str(), Some("😀"));
+}
+
+#[test]
+fn unicode_directives_reject_unpaired_surrogates_and_invalid_scalars() {
+    for literal in [r"\X2\D83D\X0\", r"\X2\DE00\X0\", r"\X2\D83D0041\X0\", r"\X4\00110000\X0\", r"\X4\0000D800\X0\", r"\S\Ä"] {
+        let text = FIXTURE.replace("CARTESIAN_POINT('',", &format!("CARTESIAN_POINT('{}',", literal));
+        assert!(parse_part21(&text).is_err(), "accepted malformed directive {literal}");
+    }
+}
+
+#[test]
+fn separately_encoded_header_instances_and_footer_match_canonical_and_independent_step(){
+    let fixture:serde_json::Value=serde_json::from_str(include_str!("../../✍️writer/🧪️fixtures/🔣️stream.json")).unwrap();let doc=parse_part21(fixture["input"].as_str().unwrap()).unwrap();let mut text=write_part21_header(&doc.header);for instance in &doc.instances{text.push_str(&write_part21_instance(instance));}text.push_str(write_part21_footer());assert_eq!(text,write_part21(&doc));let reference=semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::oracle_round_trip(text.as_bytes()).unwrap();assert_eq!(semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::project_step_ap214_any(text.as_bytes()).unwrap(),semio_s_artifact_stdio_step_test_oracle::standards::v_ap214::subsets::base::project_step_ap214_any(&reference).unwrap());
+}

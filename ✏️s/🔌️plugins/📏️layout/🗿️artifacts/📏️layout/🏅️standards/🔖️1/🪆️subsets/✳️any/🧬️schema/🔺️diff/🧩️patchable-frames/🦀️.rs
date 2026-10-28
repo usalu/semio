@@ -70,6 +70,7 @@ impl Patchable<crate::ParentPagePatch> for ParentPage {
 
 impl Patchable<crate::SpreadPatch> for Spread {
     fn apply_patch(&mut self, patch: &crate::SpreadPatch) {
+        if let Some(page_ids) = &patch.page_ids { self.page_ids = page_ids.clone(); }
         if let Some(name) = &patch.name {
             self.name = name.clone();
         }
@@ -153,7 +154,7 @@ pub fn apply_frame_field_patch(frame: &mut Frame, patch: &FramePatch) {
 }
 
 /// 📝️ Sparse patch for a {@link TextStory}'s body content.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct TextStoryPatch {
@@ -174,7 +175,7 @@ impl Patchable<TextStoryPatch> for TextStory {
 }
 
 /// 🔗️ Sparse patch for an {@link ImageLink}'s file path.
-#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_dsl_record_derive::DslRecord, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct ImageLinkPatch {
@@ -185,8 +186,9 @@ pub struct ImageLinkPatch {
     pub height: Option<u32>,
     #[value(default)]
     pub dpi: Option<u32>,
-    #[value(default)]
-    pub color_profile: Option<String>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
+    pub color_profile: Option<Option<String>>,
 }
 
 impl Patchable<ImageLinkPatch> for ImageLink {
@@ -204,7 +206,7 @@ impl Patchable<ImageLinkPatch> for ImageLink {
             self.dpi = dpi;
         }
         if let Some(color_profile) = &patch.color_profile {
-            self.color_profile = (!color_profile.is_empty()).then(|| color_profile.clone());
+            self.color_profile = color_profile.clone();
         }
     }
 }
@@ -215,7 +217,7 @@ impl Patchable<ImageLinkPatch> for ImageLink {
 /// `spr` (`FramePatchDsl`), so it lives here alongside the other `*Patch` records rather than in `op`
 /// itself. Frame patching is per-page nested rather than a flat collection-wide op, so unlike the
 /// patches above it has no `Patchable` impl.
-#[derive(Clone, Debug, Default, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[value(deny_unknown_fields)]
 pub struct FramePatch {
@@ -225,7 +227,11 @@ pub struct FramePatch {
     pub height: Option<f64>,
     #[value(default)]
     pub rotation: Option<f64>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub fill: Option<Option<[f32; 4]>>,
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub stroke: Option<Option<[f32; 4]>>,
     pub wrap_mode: Option<String>,
     pub columns: Option<u32>,
@@ -236,6 +242,8 @@ pub struct FramePatch {
     #[value(default)]
     pub story_id: Option<String>,
     #[value(default)]
+    #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option", deserialize_controlled_with = "crate::deserialize_double_option_controlled", default_controlled = "crate::default_double_option_controlled", retire_with = "crate::retire_double_option")]
+    #[cfg_attr(any(test, feature = "testkit"), serde(default, skip_serializing_if = "Option::is_none", deserialize_with = "crate::deserialize_double_option_serde"))]
     pub thread_next: Option<Option<String>>,
     #[value(default)]
     pub inset_x: Option<f64>,
@@ -274,7 +282,14 @@ pub fn layout_frame_selection_diff(base: &LayoutSnapshot, page_id: &str, targets
         .filter(|(ids, _)| !ids.is_empty())
         .map(|(ids, reason)| protocol::MutationMessage::warning("mutation.partial", format!("{} of {} target(s) skipped ({reason}): {}", ids.len(), targets.len(), ids.join(", "))).at(ids))
         .collect();
-    let patched: Vec<PageFramesModification> = movable.iter().filter_map(|frame| Some(transform(frame.bounds())).filter(|next| next != frame.bounds()).map(|next| PageFramesModification { id: frame.id().to_string(), patch: fields(&next) })).collect();
+    let mut patched = Vec::new();
+    for frame in movable {
+        let next = transform(frame.bounds());
+        if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_frame_bounds(&next) {
+            return protocol::MutationOutcome::fatal("mutation.invariant", message, targets.to_vec());
+        }
+        if next != *frame.bounds() { patched.push(PageFramesModification { id: frame.id().to_string(), patch: fields(&next) }); }
+    }
     if patched.is_empty() {
         return protocol::MutationOutcome::new(LayoutDiff::default()).absorb_messages(partial.into_iter().chain([protocol::MutationMessage::warning("mutation.no-op", "The transform moves no frame.").at(targets.to_vec())]));
     }
@@ -312,4 +327,27 @@ pub fn layout_frame_selection_pivot(page: &semio_s_artifact_layout_layout_model:
 /// 🎯️ A frame's centre: the point its rotation turns about.
 pub fn layout_frame_centre(bounds: &semio_s_artifact_layout_layout_model::LayoutBounds) -> (f64, f64) {
     (bounds.x + bounds.width * 0.5, bounds.y + bounds.height * 0.5)
+}
+
+impl PartialEq for FramePatch {
+    fn eq(&self, other: &Self) -> bool {
+        self.x.map(f64::to_bits) == other.x.map(f64::to_bits)
+            && self.y.map(f64::to_bits) == other.y.map(f64::to_bits)
+            && self.width.map(f64::to_bits) == other.width.map(f64::to_bits)
+            && self.height.map(f64::to_bits) == other.height.map(f64::to_bits)
+            && self.rotation.map(f64::to_bits) == other.rotation.map(f64::to_bits)
+            && self.fill.as_ref().map(|value| value.as_ref().map(|color| color.map(f32::to_bits))) == other.fill.as_ref().map(|value| value.as_ref().map(|color| color.map(f32::to_bits)))
+            && self.stroke.as_ref().map(|value| value.as_ref().map(|color| color.map(f32::to_bits))) == other.stroke.as_ref().map(|value| value.as_ref().map(|color| color.map(f32::to_bits)))
+            && self.wrap_mode == other.wrap_mode
+            && self.columns == other.columns
+            && self.locked == other.locked
+            && self.visible == other.visible
+            && self.story_id == other.story_id
+            && self.thread_next == other.thread_next
+            && self.inset_x.map(f64::to_bits) == other.inset_x.map(f64::to_bits)
+            && self.inset_y.map(f64::to_bits) == other.inset_y.map(f64::to_bits)
+            && self.inset_width.map(f64::to_bits) == other.inset_width.map(f64::to_bits)
+            && self.inset_height.map(f64::to_bits) == other.inset_height.map(f64::to_bits)
+            && self.layer_id == other.layer_id
+    }
 }

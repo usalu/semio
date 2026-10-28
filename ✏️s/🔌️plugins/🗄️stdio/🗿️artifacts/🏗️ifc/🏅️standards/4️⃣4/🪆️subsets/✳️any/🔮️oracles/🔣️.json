@@ -95,6 +95,17 @@
               "directoryName": "✏️renames"
             }
           ]
+        },
+        {
+          "mutationId": "set-entity-complex",
+          "sourceMutationDirectoryName": "🧩️set-entity-complex",
+          "mutationDirectoryName": "🧩️set-entity-complex",
+          "scenarios": [
+            {
+              "id": "replaces-complex-constituents",
+              "directoryName": "🔁️replaces"
+            }
+          ]
         }
       ],
       "kinds": [
@@ -106,7 +117,8 @@
         "set-entity-name",
         "set-entity-arg",
         "insert-entity-arg",
-        "remove-entity-arg"
+        "remove-entity-arg",
+        "set-entity-complex"
       ]
     }
   ],
@@ -114,7 +126,7 @@
     {
       "id": "semantic-ifc-v1",
       "description": "IFC4 (ISO 10303-21 exchange structures carrying IFC4's own EXPRESS schema) compared by declared FILE_SCHEMA and the full id-keyed entity graph (name plus positional argument values, reals tolerant). Header timestamp, preprocessor/originating-system strings, comment placement and line-wrapping are writer freedom -- the same normative surface IfcDiff/IfcMutation themselves operate over.",
-      "tolerance": 1e-6,
+      "tolerance": 0.000001,
       "ignoreKeys": [
         "timestamp",
         "preprocessorVersion",
@@ -315,6 +327,27 @@
             "operation": "set-file-schema",
             "bridgeVersion": 1,
             "variant": "SetFileSchema"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "ifc-4-any-mutate",
+              "qualifyingKind": "third-party-library"
+            }
+          ]
+        },
+        {
+          "id": "set-entity-complex",
+          "capability": "ifc-4-any-mutate",
+          "payloadSchema": "🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-entity-complex",
+            "bridgeVersion": 1,
+            "variant": "SetEntityComplex"
           },
           "oracleRequirements": [
             {

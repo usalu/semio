@@ -1,0 +1,9 @@
+{
+  "feature": "layout.retained.rust-string-debug-scalar",
+  "input": "one valid Unicode scalar from an original UTF8 String",
+  "output": "Rust String Debug body escape, without its surrounding double quotes",
+  "native": "fixed ten-byte stack buffer; std char.escape_debug with apostrophe preserved for String context",
+  "portable": "system Unicode property predicates behind the same first-party scalar interface",
+  "bounds": "at most one UTF8 scalar and ten output bytes per turn; no collected string or synchronous original-string formatter",
+  "oracle": "native test-only format!(\"{:?}\", one-scalar/String) plus independent test-only regenerate-unicode-properties tables"
+}

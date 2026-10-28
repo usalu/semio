@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Layout Genuine Drawing Planning Protocol",
+  "description": "Only the original qualified member provider can supply the paired registered admission/vector source. Admission and its owner close before any graph descriptor is lent. Each node, segment, paint stop, dash, asset and reference is consumed in funded fixed turns. Boolean, tracing, complex paint and raster encoding remain explicit unresolved work when a renderer cannot implement them.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "phase"
+  ],
+  "properties": {
+    "phase": {
+      "enum": [
+        "read",
+        "birth",
+        "admission",
+        "descriptor",
+        "paint",
+        "segment",
+        "asset",
+        "reference",
+        "measureText",
+        "fit",
+        "primitive",
+        "resolve",
+        "done",
+        "close"
+      ]
+    },
+    "nodeKind": {
+      "enum": [
+        "group",
+        "path",
+        "shape",
+        "text",
+        "image",
+        "boolean",
+        "trace"
+      ]
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "layer",
+        "leaf"
+      ],
+      "properties": {
+        "layer": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "leaf": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "laws": {
+      "enum": [
+        "original-provider-pair",
+        "admission-closed-before-vector",
+        "all-seven-kinds",
+        "exact-binary64-affine",
+        "authored-text-font",
+        "original-rgba-samples",
+        "gradient-and-dash-descriptors",
+        "denial-no-source-observation",
+        "cancellation-every-cut",
+        "explicit-unresolved-algorithms"
+      ]
+    }
+  }
+}

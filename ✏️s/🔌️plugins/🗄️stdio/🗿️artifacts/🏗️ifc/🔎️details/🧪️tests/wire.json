@@ -1,0 +1,15 @@
+{
+  "schema":"semio.ifc.publication-wire-tests.v1",
+  "header":"op",
+  "chunkBytes":64,
+  "textRuns":["plain text","A\nB","quotes \" and slash \\","Grüße 🌍","\u0000\u001f/end"],
+  "cases":[
+    {"name":"native argument","operation":{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"A\nB"}},"inverse":{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"old"}}},
+    {"name":"remove argument","operation":{"mutation":"removeEntityArg","id":1,"index":0},"inverse":{"mutation":"insertEntityArg","id":1,"index":0,"value":{"kind":"string","value":"old"}}},
+    {"name":"insert argument","operation":{"mutation":"insertEntityArg","id":1,"index":0,"value":{"kind":"binary","value":"0A"}},"inverse":{"mutation":"removeEntityArg","id":1,"index":0}}
+  ],
+  "largeInverse":{"textBytes":1100000,"maximumWireBytes":1048576,"refused":true},
+  "headerTuple":{"path":"/header/fileDescription/0/value/0","before":"ViewDefinition [ReferenceView]","after":"ViewDefinition [Alignment-basedReferenceView]","commentBytes":4096},
+  "cancellation":{"atEveryWireTurn":true,"textBytes":4096,"path":"/entities/0/args/1/value","publication":false,"wholeSnapshotCopied":false,"controlledCodecClose":true},
+  "domainInsertion":{"path":"/entities/0","appendPath":"/entities/-","entity":{"id":1,"name":"IFCORGANIZATION","args":[{"kind":"unset"},{"kind":"string","value":"Organization"},{"kind":"unset"},{"kind":"unset"},{"kind":"unset"}],"complex":[]},"invalidName":{"kind":"integer","value":7},"invalidArgumentCount":4,"inverse":{"mutation":"removeEntity","id":1}}
+}

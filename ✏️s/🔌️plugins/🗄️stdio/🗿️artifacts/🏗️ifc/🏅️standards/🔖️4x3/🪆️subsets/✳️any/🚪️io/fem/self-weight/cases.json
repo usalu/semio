@@ -1,0 +1,133 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "unset",
+      "kind": "unset",
+      "expected": false
+    },
+    {
+      "id": "zero",
+      "kind": "real",
+      "values": [
+        0,
+        0,
+        0
+      ],
+      "expected": false
+    },
+    {
+      "id": "signed-zero",
+      "kind": "real",
+      "values": [
+        -0.0,
+        0,
+        -0.0
+      ],
+      "expected": false
+    },
+    {
+      "id": "down",
+      "kind": "real",
+      "values": [
+        0,
+        0,
+        -1
+      ],
+      "expected": true
+    },
+    {
+      "id": "typed-down",
+      "kind": "typed",
+      "values": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "up",
+      "kind": "real",
+      "values": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "horizontal",
+      "kind": "real",
+      "values": [
+        1,
+        0,
+        0
+      ]
+    },
+    {
+      "id": "fraction",
+      "kind": "real",
+      "values": [
+        0,
+        0,
+        -0.5
+      ]
+    },
+    {
+      "id": "short",
+      "kind": "real",
+      "values": [
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "long",
+      "kind": "real",
+      "values": [
+        0,
+        0,
+        -1,
+        0
+      ]
+    },
+    {
+      "id": "integer",
+      "kind": "integer",
+      "values": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "wrong-typed",
+      "kind": "wrong-typed",
+      "values": [
+        0,
+        0,
+        -1
+      ]
+    },
+    {
+      "id": "derived",
+      "kind": "derived"
+    },
+    {
+      "id": "scalar",
+      "kind": "scalar"
+    },
+    {
+      "id": "missing",
+      "kind": "missing"
+    },
+    {
+      "id": "component-unset",
+      "kind": "component-unset",
+      "values": [
+        0,
+        0,
+        -1
+      ]
+    }
+  ]
+}

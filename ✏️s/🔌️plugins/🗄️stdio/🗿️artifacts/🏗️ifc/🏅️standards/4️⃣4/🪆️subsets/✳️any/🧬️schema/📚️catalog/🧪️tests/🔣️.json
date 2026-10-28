@@ -1,0 +1,147 @@
+{
+  "schema": "IFC4",
+  "version": "4.0.2.1",
+  "counts": {
+    "entities": 776,
+    "types": 397,
+    "enumerations": 207,
+    "selects": 60,
+    "definedTypes": 130,
+    "functions": 47,
+    "rules": 2
+  },
+  "subtypes": [
+    [
+      "IfcWall",
+      "IfcRoot",
+      true
+    ],
+    [
+      "IfcWallStandardCase",
+      "IfcWall",
+      true
+    ],
+    [
+      "IfcCartesianPoint",
+      "IfcRoot",
+      false
+    ],
+    [
+      "IfcAlignment",
+      "IfcRoot",
+      false
+    ],
+    [
+      "IfcBuiltElement",
+      "IfcRoot",
+      false
+    ],
+    [
+      "Missing",
+      "Missing",
+      false
+    ]
+  ],
+  "attributes": [
+    {
+      "entity": "IfcWall",
+      "index": 0,
+      "name": "GlobalId",
+      "type": "IFCGLOBALLYUNIQUEID",
+      "optional": false,
+      "derived": false
+    },
+    {
+      "entity": "IfcWall",
+      "index": 7,
+      "name": "Tag",
+      "type": "IFCIDENTIFIER",
+      "optional": true,
+      "derived": false
+    },
+    {
+      "entity": "IfcWall",
+      "index": 8,
+      "name": "PredefinedType",
+      "type": "IFCWALLTYPEENUM",
+      "optional": true,
+      "derived": false
+    },
+    {
+      "entity": "IfcGeometricRepresentationSubContext",
+      "index": 2,
+      "name": "CoordinateSpaceDimension",
+      "type": "IFCDIMENSIONCOUNT",
+      "optional": false,
+      "derived": true
+    },
+    {
+      "entity": "IfcRelVoidsElement",
+      "index": 4,
+      "name": "RelatingBuildingElement",
+      "type": "IFCELEMENT",
+      "optional": false,
+      "derived": false
+    }
+  ],
+  "selects": [
+    {
+      "name": "IfcAxis2Placement",
+      "members": [
+        "IFCAXIS2PLACEMENT2D",
+        "IFCAXIS2PLACEMENT3D"
+      ],
+      "accepts": [
+        "IfcAxis2Placement2D",
+        "IfcAxis2Placement3D"
+      ],
+      "rejects": [
+        "IfcWall",
+        "Missing"
+      ]
+    }
+  ],
+  "enums": [
+    {
+      "name": "IfcWallTypeEnum",
+      "members": [
+        "MOVABLE",
+        "PARAPET",
+        "PARTITIONING",
+        "PLUMBINGWALL",
+        "SHEAR",
+        "SOLIDWALL",
+        "STANDARD",
+        "POLYGONAL",
+        "ELEMENTEDWALL",
+        "USERDEFINED",
+        "NOTDEFINED"
+      ]
+    }
+  ],
+  "resolved": [
+    {
+      "name": "IfcPositiveLengthMeasure",
+      "kind": "named",
+      "type": "REAL"
+    },
+    {
+      "name": "IfcGloballyUniqueId",
+      "kind": "named",
+      "type": "STRING",
+      "width": 22,
+      "fixed": true
+    },
+    {
+      "name": "IfcComplexNumber",
+      "kind": "aggregate",
+      "aggregate": "ARRAY",
+      "lower": 1,
+      "upper": 2
+    }
+  ],
+  "ruleNames": [
+    "IFCREPRESENTATIONCONTEXTSAMEWCS",
+    "IFCSINGLEPROJECTINSTANCE"
+  ]
+}

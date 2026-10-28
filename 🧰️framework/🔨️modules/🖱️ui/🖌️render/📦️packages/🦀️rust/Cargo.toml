@@ -23,6 +23,7 @@ default = []
 backend-testing = ["semio-framework-ui-render-packet/backend-testing"]
 
 [dependencies]
+semio-framework-value = { path = "../../../../🌱️value/📦️packages/🦀️rust" }
 ui_styling = { path = "../../../🎨️styling/📦️packages/🦀️rust", package = "semio-framework-ui-styling" }
 ui_contract = { path = "../../../🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-render-interaction = { path = "../../🕹️interaction/📦️packages/🦀️rust" }

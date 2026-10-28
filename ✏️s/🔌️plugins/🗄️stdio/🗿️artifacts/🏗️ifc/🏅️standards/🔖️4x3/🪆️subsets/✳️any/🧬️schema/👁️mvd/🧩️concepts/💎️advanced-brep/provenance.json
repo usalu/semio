@@ -1,0 +1,54 @@
+{
+  "concept": {
+    "commit": "610ee3f95db9d0380b1eb8de4dc6e17833531518",
+    "url": "https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Product_Shape/Product_Geometric_Representation/Body_Geometry/Body_AdvancedBrep_Geometry/content.html",
+    "sha256": "368bf65e75dcf96e3a6c778fc6ac29be57b8f1bea2f4315e8df0ea68fa4eb5a1"
+  },
+  "express": {
+    "file": "IFC4X3_ADD2.exp",
+    "sha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "function": "IfcShapeRepresentationTypes",
+    "lines": [
+      13625,
+      13628
+    ],
+    "families": [
+      "IFCMANIFOLDSOLIDBREP"
+    ],
+    "baseDeclarationLines": [
+      7730,
+      7736
+    ],
+    "concreteFamilies": [
+      "IFCADVANCEDBREP",
+      "IFCFACETEDBREP"
+    ]
+  },
+  "interpretation": "HTML-explicit-advanced-and-faceted-union; schema-manifold-base-has-these-concrete-branches",
+  "originals": [
+    {
+      "file": "cube-advanced-brep.ifc",
+      "representation": "183",
+      "expected": "pass",
+      "schemaDiagnostics": []
+    },
+    {
+      "file": "brep-model.ifc",
+      "representation": "1020",
+      "expected": "fail",
+      "schemaDiagnostics": []
+    },
+    {
+      "file": "basin-advanced-brep.ifc",
+      "representation": "615",
+      "expected": "fail",
+      "schemaDiagnostics": [
+        {
+          "kind": "schema",
+          "entityId": "52",
+          "attribute": "Identification"
+        }
+      ]
+    }
+  ]
+}

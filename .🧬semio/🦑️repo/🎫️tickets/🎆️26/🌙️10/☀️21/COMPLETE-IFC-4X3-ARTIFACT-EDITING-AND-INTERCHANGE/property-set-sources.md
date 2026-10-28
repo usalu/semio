@@ -1,0 +1,15 @@
+# Released Property and Quantity Set Sources
+
+The same pinned ADD2 release used for EXPRESS and view-scope metadata includes [annex-a-psd.zip](https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/annex-a-psd.zip). The exact archive is **793,651 bytes**, Git blob `27ffcb91ddf8599e64abddfe24257d6d7b78042e`, SHA-256 `0e2f4c117cc9439bba23f44600c0e1a97bf248eeffc05376fcc5e03dd6d9d8e3`.
+
+The archive contains **645 property sets and 115 quantity sets**, all declaring IFC4X3_ADD2. They contain **3,642 property definitions and 346 quantity definitions**, totaling **3,988 entries**. Property forms are single value (2,512), reference value (290), enumerated value (518), list value (27), bounded value (174) and table value (121). The six quantity forms are weight, length, area, volume, count and time. All original XML names, definitions, applicability strings/class lists and source-file hashes are available to the extraction.
+
+Reference targets cover IfcPerson, IfcTimeSeries, IfcExternalReference, IfcDocumentReference, IfcMaterialDefinition and IfcCostValue. Applicability includes exact predefined-type selectors such as `IfcActuator/ELECTRICACTUATOR`; a subtype-only filter would lose that distinction. Enumeration definitions retain 3,814 literal occurrences and their named PEnum identities. The XML includes original specification notes, including deprecated source properties; authoring must allow explicit field selection and avoid creating every optional/source property automatically.
+
+## Independent Comparison
+
+`property-set-research.py` uses Python's system ElementTree parser to inspect the unchanged archive. `property-set-oracle.py` independently loads IfcOpenShell **0.9.0.post1**'s actual IFC4X3_ADD2 property-template files. It reads real IfcPropertySetTemplate/IfcSimplePropertyTemplate objects, named enumerations and applicable entities. All **760 set names/types/applicability strings** and all **3,988 entry names/forms/primary and secondary domains/enumeration literals** compare exactly: **zero mismatches**.
+
+Quantity simple templates omit PrimaryMeasureType in their native IFC representation. Their value domain is therefore independently resolved from IfcOpenShell's actual IfcQuantity* entity declaration and its explicit *Value attribute, then compared with the extraction's quantity mapping. This is schema-derived metadata; the extraction does not pretend the XML explicitly stores a missing PrimaryMeasureType. Scalar enumeration values use IfcLabel in the independent native template distribution.
+
+Research archive, source listings, parsed descriptors, per-file hashes and detailed comparison are under ticket `🗑️generated/property-sets`. Research scripts and this report remain permanent ticket inputs. No production template API or authoring mutation has been added yet; schema-first source-owned catalog/types, neutral fixtures, native/TS implementations and mutation/diff-based authoring remain the next work.

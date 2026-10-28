@@ -1,0 +1,14 @@
+{"schema":"IFC4X3_ADD2","encoding":"ifc-template-command","nativeExecution":false,"target":"IFCMATERIALPROFILE","source":"constituent","cases":[
+{"id":"caller-profile","inputs":[{"index":"3","value":{"kind":"reference","value":"7"}}],"admitted":true,"mutations":4},
+{"id":"maximum-profile-id","profileId":"18446744073709551615","inputs":[{"index":"3","value":{"kind":"reference","value":"18446744073709551615"}}],"admitted":true,"mutations":4},
+{"id":"absent-required","inputs":[],"admitted":false},
+{"id":"wrong-profile-type","inputs":[{"index":"3","value":{"kind":"reference","value":"6"}}],"admitted":false},
+{"id":"missing-profile-id","inputs":[{"index":"3","value":{"kind":"reference","value":"999"}}],"admitted":false},
+{"id":"zero-id","inputs":[{"index":"3","value":{"kind":"reference","value":"0"}}],"admitted":false},
+{"id":"noncanonical-id","inputs":[{"index":"3","value":{"kind":"reference","value":"07"}}],"admitted":false},
+{"id":"overflow-id","inputs":[{"index":"3","value":{"kind":"reference","value":"18446744073709551616"}}],"admitted":false},
+{"id":"compatible-override","inputs":[{"index":"0","value":{"kind":"reference","value":"7"}},{"index":"3","value":{"kind":"reference","value":"7"}}],"admitted":false},
+{"id":"optional-slot-input","inputs":[{"index":"3","value":{"kind":"reference","value":"7"}},{"index":"4","value":{"kind":"reference","value":"7"}}],"admitted":false},
+{"id":"duplicate-index","inputs":[{"index":"3","value":{"kind":"reference","value":"7"}},{"index":"3","value":{"kind":"reference","value":"7"}}],"admitted":false},
+{"id":"out-of-range-index","inputs":[{"index":"6","value":{"kind":"reference","value":"7"}}],"admitted":false}
+]}

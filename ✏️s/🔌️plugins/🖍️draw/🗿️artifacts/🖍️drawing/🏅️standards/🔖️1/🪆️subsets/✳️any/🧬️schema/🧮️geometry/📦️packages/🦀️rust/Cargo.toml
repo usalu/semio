@@ -19,6 +19,7 @@ path = "../../🦀️.rs"
 testkit = ["dep:serde", "semio-s-artifact-draw-drawing-model/testkit"]
 
 [dependencies]
+semio-framework-value-native-owned = { workspace = true }
 semio-framework-2d = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }

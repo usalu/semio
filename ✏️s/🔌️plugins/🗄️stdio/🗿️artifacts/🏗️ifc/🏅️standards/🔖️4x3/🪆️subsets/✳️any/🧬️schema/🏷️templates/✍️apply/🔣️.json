@@ -1,0 +1,31 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema",
+ "$id":"https://semio.tech/s/stdio/ifc/4x3/template-application.schema.json",
+ "type":"object",
+ "required":["template","target","entries","identities"],
+ "additionalProperties":false,
+ "properties":{
+  "template":{"type":"string","minLength":1},
+  "target":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/EntityId"},
+  "entries":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/Entry"}},
+  "identities":{"type":"array","items":{"$ref":"#/$defs/Identity"}},
+  "ownerHistory":{"$ref":"#/$defs/Reference"},
+  "description":{"type":"string"},
+  "methodOfMeasurement":{"type":"string"},
+  "performance":{"type":"object","required":["lifeCyclePhase","predefinedType"],"additionalProperties":false,"properties":{"lifeCyclePhase":{"type":"string"},"predefinedType":{"enum":["USERDEFINED","NOTDEFINED"]},"objectType":{"type":"string"},"identification":{"type":"string"},"name":{"type":"string"},"description":{"type":"string"}}}
+ },
+ "$defs":{
+  "Value":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/IfcValue"},
+  "Values":{"type":"array","minItems":1,"items":{"$ref":"#/$defs/Value"}},
+  "Reference":{"type":"object","required":["kind","value"],"properties":{"kind":{"const":"reference"},"value":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/EntityId"}},"additionalProperties":false},
+  "Identity":{"type":"object","required":["key","id"],"properties":{"key":{"type":"string"},"id":{"$ref":"https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json#/$defs/EntityId"},"guid":{"type":"string","pattern":"^[0-3][0-9A-Za-z_$]{21}$"}},"additionalProperties":false},
+  "Entry":{"oneOf":[
+   {"type":"object","required":["name","kind","value"],"properties":{"name":{"type":"string"},"kind":{"const":"P_SINGLEVALUE"},"description":{"type":"string"},"value":{"$ref":"#/$defs/Value"},"unit":{"$ref":"#/$defs/Reference"}},"additionalProperties":false},
+   {"type":"object","required":["name","kind","value"],"properties":{"name":{"type":"string"},"kind":{"const":"P_REFERENCEVALUE"},"description":{"type":"string"},"value":{"$ref":"#/$defs/Reference"},"usageName":{"type":"string"}},"additionalProperties":false},
+   {"type":"object","required":["name","kind","values"],"properties":{"name":{"type":"string"},"kind":{"enum":["P_ENUMERATEDVALUE","P_LISTVALUE"]},"description":{"type":"string"},"values":{"$ref":"#/$defs/Values"},"unit":{"$ref":"#/$defs/Reference"}},"additionalProperties":false},
+   {"type":"object","required":["name","kind"],"properties":{"name":{"type":"string"},"kind":{"const":"P_BOUNDEDVALUE"},"description":{"type":"string"},"lower":{"$ref":"#/$defs/Value"},"upper":{"$ref":"#/$defs/Value"},"setPoint":{"$ref":"#/$defs/Value"},"unit":{"$ref":"#/$defs/Reference"}},"additionalProperties":false},
+   {"type":"object","required":["name","kind","defining","defined"],"properties":{"name":{"type":"string"},"kind":{"const":"P_TABLEVALUE"},"description":{"type":"string"},"defining":{"$ref":"#/$defs/Values"},"defined":{"$ref":"#/$defs/Values"},"definingUnit":{"$ref":"#/$defs/Reference"},"definedUnit":{"$ref":"#/$defs/Reference"},"expression":{"type":"string"},"interpolation":{"enum":["LINEAR","LOG_LINEAR","LOG_LOG","NOTDEFINED"]}},"additionalProperties":false},
+   {"type":"object","required":["name","kind","value"],"properties":{"name":{"type":"string"},"kind":{"enum":["Q_LENGTH","Q_AREA","Q_VOLUME","Q_WEIGHT","Q_COUNT","Q_TIME"]},"description":{"type":"string"},"value":{"$ref":"#/$defs/Value"},"unit":{"$ref":"#/$defs/Reference"},"formula":{"type":"string"}},"additionalProperties":false}
+  ]}
+ }
+}

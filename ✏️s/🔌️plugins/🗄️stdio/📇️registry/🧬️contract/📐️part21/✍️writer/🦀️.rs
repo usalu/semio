@@ -162,6 +162,11 @@ fn write_value(out: &mut String, v: &Part21Value) {
             out.push_str(&escape_part21_string(s));
             out.push('\'');
         }
+        Part21Value::Binary(content) => {
+            out.push('"');
+            out.push_str(content);
+            out.push('"');
+        }
         Part21Value::Enum(name) => {
             out.push('.');
             out.push_str(name);
@@ -188,7 +193,7 @@ fn write_value(out: &mut String, v: &Part21Value) {
 }
 
 /// 🔡️ Inverse of the lexer's `read_escape`: `'` doubles, backslash is escaped (to stay
-/// unambiguous with `\X..` on reparse), any other non-printable-ASCII goes through `\X2\..\X0\`.
+/// unambiguous with `\X..` on reparse), other non-printable ASCII uses `\X2\` for BMP runs and `\X4\` for full Unicode scalars.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn escape_part21_string(s: &str) -> String {
     let mut out = String::new();
@@ -197,11 +202,12 @@ pub(super) fn escape_part21_string(s: &str) -> String {
         if run.is_empty() {
             return;
         }
-        out.push_str("\\X2\\");
+        let wide = run.iter().any(|c| (*c as u32) > 0xFFFF);
+        out.push_str(if wide { r"\X4\" } else { r"\X2\" });
         for c in run.drain(..) {
-            let _ = write!(out, "{:04X}", c as u32);
+            if wide { let _ = write!(out, "{:08X}", c as u32); } else { let _ = write!(out, "{:04X}", c as u32); }
         }
-        out.push_str("\\X0\\");
+        out.push_str(r"\X0\");
     }
     for c in s.chars() {
         if c == '\'' {
@@ -222,3 +228,10 @@ pub(super) fn escape_part21_string(s: &str) -> String {
     out
 }
 //#endregion 🔖️Write
+
+/// 🧵️ Canonical opening records through DATA, for callers that retain and emit one bounded entity at a time.
+pub fn write_part21_header(header:&Part21Header)->String{let mut out=String::from("ISO-10303-21;\nHEADER;\n");write_header_record(&mut out,"FILE_DESCRIPTION",FILE_DESCRIPTION_ATTRIBUTES,&header.file_description,"\n");write_header_record(&mut out,"FILE_NAME",FILE_NAME_ATTRIBUTES,&header.file_name,"\n");write_header_record(&mut out,"FILE_SCHEMA",FILE_SCHEMA_ATTRIBUTES,&header.file_schema,"\n");out.push_str("ENDSEC;\nDATA;\n");out}
+/// 📄️ Canonical one-instance writer, sharing the existing string/value/complex-entity grammar.
+pub fn write_part21_instance(instance:&Part21Instance)->String{let mut out=String::new();write_instance(&mut out,instance,"\n",false);out}
+/// 🏁️ Canonical closing records after the last DATA instance.
+pub fn write_part21_footer()->&'static str{"ENDSEC;\nEND-ISO-10303-21;\n"}

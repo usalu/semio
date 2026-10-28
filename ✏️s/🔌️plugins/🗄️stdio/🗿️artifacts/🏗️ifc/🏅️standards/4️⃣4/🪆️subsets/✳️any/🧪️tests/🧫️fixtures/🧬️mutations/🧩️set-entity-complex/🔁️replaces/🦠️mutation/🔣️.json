@@ -1,0 +1,55 @@
+{
+  "mutation": "setEntityComplex",
+  "id": 1,
+  "complex": [
+    {
+      "name": "IFCOBJECT",
+      "args": [
+        {
+          "kind": "string",
+          "value": "Exterior Wall"
+        },
+        {
+          "kind": "reference",
+          "value": 2
+        }
+      ]
+    },
+    {
+      "name": "IFCPRODUCT",
+      "args": [
+        {
+          "kind": "typedValue",
+          "value": {
+            "name": "IFCLENGTHMEASURE",
+            "items": [
+              {
+                "kind": "real",
+                "value": 3.25
+              }
+            ]
+          }
+        },
+        {
+          "kind": "aggregate",
+          "value": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "derived"
+            },
+            {
+              "kind": "integer",
+              "value": -7
+            },
+            {
+              "kind": "enum",
+              "value": "T"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

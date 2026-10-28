@@ -134,7 +134,7 @@ impl ArtifactEditor for DrawingPlayApp {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(DrawingArtifactStorePreparationFactory))
+        Some(std::sync::Arc::new(DrawingArtifactStorePreparationFactory::default()))
     }
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {

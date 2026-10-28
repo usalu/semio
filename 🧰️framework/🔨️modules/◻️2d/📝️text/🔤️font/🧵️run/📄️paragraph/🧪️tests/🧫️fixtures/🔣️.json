@@ -1,0 +1,840 @@
+{
+  "schemaVersion": 1,
+  "font": "⌨️share-tech-mono/🏛️latin/📖️regular",
+  "cases": [
+    {
+      "name": "word-wrap-left",
+      "text": "one two three",
+      "width": 45,
+      "size": 12,
+      "lineHeight": 16,
+      "tracking": 0,
+      "alignment": "left",
+      "spans": [],
+      "expectedLines": [
+        "one ",
+        "two ",
+        "three"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 93,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 91,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 2,
+          "glyph": 73,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 3,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            19.44,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 107,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            28
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 5,
+          "glyph": 114,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            28
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 6,
+          "glyph": 93,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            28
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 7,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            19.44,
+            28
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 8,
+          "glyph": 107,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            44
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 9,
+          "glyph": 80,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            44
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 10,
+          "glyph": 104,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            44
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 11,
+          "glyph": 73,
+          "size": 12,
+          "style": null,
+          "origin": [
+            19.44,
+            44
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 12,
+          "glyph": 73,
+          "size": 12,
+          "style": null,
+          "origin": [
+            25.92,
+            44
+          ],
+          "advance": 6.48
+        }
+      ]
+    },
+    {
+      "name": "center-tracking",
+      "text": "AV To",
+      "width": 100,
+      "size": 12,
+      "lineHeight": 16,
+      "tracking": 2,
+      "alignment": "center",
+      "spans": [],
+      "expectedLines": [
+        "AV To"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            28.8,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 54,
+          "size": 12,
+          "style": null,
+          "origin": [
+            37.28,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 2,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            45.76,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 3,
+          "glyph": 48,
+          "size": 12,
+          "style": null,
+          "origin": [
+            54.24,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 93,
+          "size": 12,
+          "style": null,
+          "origin": [
+            62.72,
+            12
+          ],
+          "advance": 6.48
+        }
+      ]
+    },
+    {
+      "name": "right-mixed-size",
+      "text": "AA BB",
+      "width": 100,
+      "size": 12,
+      "lineHeight": 24,
+      "tracking": 0,
+      "alignment": "right",
+      "spans": [
+        {
+          "start": 3,
+          "end": 5,
+          "size": 20,
+          "tracking": 1,
+          "face": 0
+        }
+      ],
+      "expectedLines": [
+        "AA BB"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            56.96,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            63.44,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 2,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            69.92,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 3,
+          "glyph": 11,
+          "size": 20,
+          "style": 0,
+          "origin": [
+            76.4,
+            12
+          ],
+          "advance": 10.8
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 11,
+          "size": 20,
+          "style": 0,
+          "origin": [
+            88.2,
+            12
+          ],
+          "advance": 10.8
+        }
+      ]
+    },
+    {
+      "name": "explicit-lines-and-blank",
+      "text": "AA\n\nBB",
+      "width": 100,
+      "size": 12,
+      "lineHeight": 16,
+      "tracking": 0,
+      "alignment": "left",
+      "spans": [],
+      "expectedLines": [
+        "AA",
+        "",
+        "BB"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            44
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 5,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            44
+          ],
+          "advance": 6.48
+        }
+      ]
+    },
+    {
+      "name": "justified-wrap",
+      "text": "AA BB CC",
+      "width": 40,
+      "size": 12,
+      "lineHeight": 16,
+      "tracking": 0,
+      "alignment": "justify",
+      "spans": [],
+      "expectedLines": [
+        "AA BB ",
+        "CC"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 2,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 3,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            27.04,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            33.52,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 5,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            40,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 6,
+          "glyph": 12,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            28
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 7,
+          "glyph": 12,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            28
+          ],
+          "advance": 6.48
+        }
+      ]
+    },
+    {
+      "name": "unicode-cluster",
+      "text": "À À",
+      "width": 100,
+      "size": 12,
+      "lineHeight": 16,
+      "tracking": 0,
+      "alignment": "left",
+      "spans": [],
+      "expectedLines": [
+        "À À"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 7,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 3,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 7,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            12
+          ],
+          "advance": 6.48
+        }
+      ]
+    },
+    {
+      "name": "unicode-mandatory-separators",
+      "text": "AA\r\nBB\u000bCC\fDDEE FF GG",
+      "width": 200,
+      "size": 12,
+      "lineHeight": 18,
+      "tracking": 0,
+      "alignment": "left",
+      "spans": [],
+      "expectedLines": [
+        "AA",
+        "BB",
+        "CC",
+        "DD",
+        "EE",
+        "FF",
+        "GG"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 5,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 7,
+          "glyph": 12,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            48
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 8,
+          "glyph": 12,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            48
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 10,
+          "glyph": 14,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            66
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 11,
+          "glyph": 14,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            66
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 14,
+          "glyph": 16,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            84
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 15,
+          "glyph": 16,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            84
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 19,
+          "glyph": 21,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            102
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 20,
+          "glyph": 21,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            102
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 24,
+          "glyph": 22,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            120
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 25,
+          "glyph": 22,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            120
+          ],
+          "advance": 6.48
+        }
+      ]
+    },
+    {
+      "name": "opening-punctuation-space-context",
+      "text": "AA ( BB) CC",
+      "width": 32,
+      "size": 12,
+      "lineHeight": 18,
+      "tracking": 0,
+      "alignment": "left",
+      "spans": [],
+      "expectedLines": [
+        "AA ",
+        "( BB) ",
+        "CC"
+      ],
+      "expectedGlyphs": [
+        {
+          "sourceAt": 0,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 1,
+          "glyph": 3,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 2,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            12
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 3,
+          "glyph": 164,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 4,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 5,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            12.96,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 6,
+          "glyph": 11,
+          "size": 12,
+          "style": null,
+          "origin": [
+            19.44,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 7,
+          "glyph": 165,
+          "size": 12,
+          "style": null,
+          "origin": [
+            25.92,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 8,
+          "glyph": 2,
+          "size": 12,
+          "style": null,
+          "origin": [
+            32.400000000000006,
+            30
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 9,
+          "glyph": 12,
+          "size": 12,
+          "style": null,
+          "origin": [
+            0,
+            48
+          ],
+          "advance": 6.48
+        },
+        {
+          "sourceAt": 10,
+          "glyph": 12,
+          "size": 12,
+          "style": null,
+          "origin": [
+            6.48,
+            48
+          ],
+          "advance": 6.48
+        }
+      ]
+    }
+  ]
+}

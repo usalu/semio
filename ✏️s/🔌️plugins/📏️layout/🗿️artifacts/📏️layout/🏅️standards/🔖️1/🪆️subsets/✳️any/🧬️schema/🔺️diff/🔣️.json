@@ -16,10 +16,7 @@
     "spreads",
     "pages",
     "printTarget",
-    "dataFields",
-    "backgroundDrawing",
-    "drawingTexts",
-    "referencedModel"
+    "dataFields"
   ],
   "properties": {
     "schema": {
@@ -157,7 +154,7 @@
     "backgroundDrawing": {
       "anyOf": [
         {
-          "$ref": "#/$defs/LayoutDrawingChild",
+          "$ref": "#/$defs/LayoutDrawingMember",
           "x-semio-child-kind": "s.stdio.semio",
           "x-semio-child-standard": "v1",
           "x-semio-child-subset": "drawing"
@@ -166,14 +163,8 @@
           "type": "null"
         }
       ],
-      "x-semio-state": "artifact"
-    },
-    "drawingTexts": {
-      "type": "array",
-      "items": {
-        "$ref": "#/$defs/LayoutDrawingTextRow"
-      },
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "description": "Omitted leaves the imported drawing unchanged; null removes it; a child value replaces it."
     },
     "referencedModel": {
       "anyOf": [
@@ -187,7 +178,8 @@
           "type": "null"
         }
       ],
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "description": "Omitted leaves the model link unchanged; null removes it; a link value replaces it."
     }
   },
   "$defs": {
@@ -1009,19 +1001,15 @@
         }
       }
     },
-    "LayoutDrawingChild": {
+    "LayoutDrawingMember": {
       "type": "object",
       "additionalProperties": false,
       "required": [
-        "handle",
-        "content"
+        "handle"
       ],
       "properties": {
         "handle": {
           "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/child/schema.json"
-        },
-        "content": {
-          "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/v1/drawing/snapshot.json"
         }
       }
     },
@@ -1237,6 +1225,19 @@
               "type": "null"
             }
           ]
+        },
+        "pageIds": {
+          "anyOf": [
+            {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -1327,7 +1328,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "Absent preserves the current optional profile; null clears it; every string including empty sets that exact value."
         }
       }
     },
@@ -2622,6 +2624,26 @@
         },
         "layers": {
           "$ref": "#/$defs/PageLayersDelta"
+        },
+        "spread_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "background_drawing": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/LayoutDrawingMember"
+            },
+            {
+              "type": "null"
+            }
+          ]
         }
       }
     },
@@ -2633,8 +2655,6 @@
         "y",
         "width",
         "height",
-        "fill",
-        "stroke",
         "wrap_mode",
         "columns"
       ],
@@ -2702,7 +2722,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "Omitted preserves the paint; null clears it."
         },
         "stroke": {
           "anyOf": [
@@ -2717,7 +2738,8 @@
             {
               "type": "null"
             }
-          ]
+          ],
+          "description": "Omitted preserves the paint; null clears it."
         },
         "wrap_mode": {
           "anyOf": [
@@ -2921,23 +2943,6 @@
         }
       }
     },
-    "LayoutDrawingTextRow": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "index",
-        "text"
-      ],
-      "properties": {
-        "index": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "text": {
-          "type": "string"
-        }
-      }
-    },
     "TextStyleRunRow": {
       "type": "object",
       "additionalProperties": false,
@@ -2975,7 +2980,8 @@
             "$ref": "#/$defs/TextStyleRunRow"
           }
         }
-      }
+      },
+      "description": "Sparse positional changes with at most one row per final index; duplicates are refused atomically."
     },
     "PageGuideRow": {
       "type": "object",
@@ -3014,7 +3020,8 @@
             "$ref": "#/$defs/PageGuideRow"
           }
         }
-      }
+      },
+      "description": "Sparse positional changes with at most one row per final index; duplicates are refused atomically."
     }
   }
 }

@@ -1,0 +1,19 @@
+{
+  "feature": "layout.import.cold-source-plan",
+  "alternatives": {
+    "document": {
+      "document": "LayoutSnapshot",
+      "drawingSources": "PendingDrawingSource[]"
+    },
+    "external": {
+      "format": [
+        "svg",
+        "dxf",
+        "dwg"
+      ],
+      "source": "owned bytes",
+      "name": "authored display name"
+    }
+  },
+  "scope": "unpublished cold analysis only; no native grant, issuer, member qualification or persistent success implied"
+}

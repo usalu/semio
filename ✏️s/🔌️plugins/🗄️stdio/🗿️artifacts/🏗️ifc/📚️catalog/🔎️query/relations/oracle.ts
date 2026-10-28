@@ -1,0 +1,19 @@
+/** 🧪️ SQLite independently orders/deduplicates borrowed role memberships from declared slot metadata. */
+import {Database} from 'bun:sqlite';
+import type {IfcCatalog} from '../../🟦️.ts';
+import type {IfcQueryEntity} from '../🟦️.ts';
+interface Plan {families:readonly {key:string;type:string;subtypes:boolean}[];roles:readonly {key:string;family:string;attribute:string;owner:string;cardinality:string}[]}
+export function sqliteRelationOracle(catalog:IfcCatalog,source:readonly IfcQueryEntity<unknown>[],plan:Plan,roleKey:string,target:string):{ordinal:number;issue:string|null;pointer:string}[]{
+ const db=new Database(':memory:');try{
+ db.exec('CREATE TABLE entity(name TEXT PRIMARY KEY,parent TEXT); CREATE TABLE part(ordinal INTEGER,part INTEGER,name TEXT,complex INTEGER,args TEXT); CREATE TABLE slot(name TEXT,complex INTEGER,idx INTEGER,attribute TEXT,owner TEXT);');
+ const addEntity=db.prepare('INSERT INTO entity VALUES(?,?)'),addSlot=db.prepare('INSERT INTO slot VALUES(?,?,?,?,?)'),addPart=db.prepare('INSERT INTO part VALUES(?,?,?,?,?)');
+ db.transaction(()=>{for(const [name,entity]of Object.entries(catalog.entities)){addEntity.run(name,entity.supertype);for(const complex of [0,1])for(const [index,slot]of (complex?entity.attributes:entity.allAttributes).entries())addSlot.run(name,complex,index,slot.name.toUpperCase(),slot.declaredBy.toUpperCase());}for(const [ordinal,row]of source.entries())for(const [part,value]of [row,...row.complex??[]].entries())addPart.run(ordinal,part,value.name.toUpperCase(),row.complex?.length?1:0,JSON.stringify(value.args));})();
+ const role=plan.roles.find(row=>row.key===roleKey)!,family=plan.families.find(row=>row.key===role.family)!;
+ return db.query(`WITH RECURSIVE ancestry(name,base) AS (SELECT name,name FROM entity UNION ALL SELECT ancestry.name,entity.parent FROM ancestry JOIN entity ON entity.name=ancestry.base WHERE entity.parent IS NOT NULL),
+ candidates AS (SELECT DISTINCT part.ordinal FROM part JOIN ancestry ON ancestry.name=part.name WHERE ancestry.base=$type AND ($subtypes=1 OR part.name=$type)),
+ matched AS (SELECT part.ordinal,part.part,slot.idx,json_extract(part.args,'$['||slot.idx||']') AS payload,'/entities/'||part.ordinal||'/'||CASE WHEN part.part=0 THEN '' ELSE 'complex/'||(part.part-1)||'/' END||'args/'||slot.idx AS pointer FROM part JOIN candidates USING(ordinal) JOIN slot ON slot.name=part.name AND slot.complex=part.complex WHERE slot.attribute=$attribute AND slot.owner=$owner),
+ counts AS (SELECT candidates.ordinal,(SELECT count(*) FROM matched WHERE matched.ordinal=candidates.ordinal) AS n,(SELECT count(*) FROM part LEFT JOIN entity ON entity.name=part.name WHERE part.ordinal=candidates.ordinal AND entity.name IS NULL) AS unknown FROM candidates),
+ classified AS (SELECT counts.ordinal,CASE WHEN unknown>0 THEN 'unknown' WHEN n>1 THEN 'ambiguous' WHEN n=0 THEN 'missing' WHEN $many=1 AND coalesce(json_extract(matched.payload,'$.kind'),'')<>'aggregate' THEN 'aggregate' ELSE NULL END AS issue,matched.payload,coalesce(matched.pointer,'') AS pointer FROM counts LEFT JOIN matched ON matched.ordinal=counts.ordinal AND (matched.part,matched.idx)=(SELECT part,idx FROM matched AS first WHERE first.ordinal=counts.ordinal ORDER BY part,idx LIMIT 1))
+ SELECT ordinal,issue,pointer FROM classified WHERE issue IS NOT NULL OR ($many=0 AND json_extract(payload,'$.kind')='reference' AND json_extract(payload,'$.value')=$target) OR ($many=1 AND EXISTS(SELECT 1 FROM json_each(payload,'$.value') AS member WHERE json_extract(member.value,'$.kind')='reference' AND json_extract(member.value,'$.value')=$target)) ORDER BY ordinal`).all({$type:family.type,$subtypes:family.subtypes?1:0,$attribute:role.attribute.toUpperCase(),$owner:role.owner,$many:role.cardinality==='many'?1:0,$target:target}) as {ordinal:number;issue:string|null;pointer:string}[];
+ }finally{db.close();}
+}

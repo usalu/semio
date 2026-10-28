@@ -3,6 +3,7 @@ export interface Part21Decimal { negative: boolean; coefficient: string; scale: 
 export type Part21Value =
   | { kind: 'ref'; value: bigint }
   | { kind: 'str'; value: string }
+  | { kind: 'binary'; value: string }
   | { kind: 'enum'; value: string }
   | { kind: 'int'; value: bigint }
   | { kind: 'real'; value: Part21Decimal }

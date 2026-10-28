@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Typed Sparse Layout Field Exchanges",
+  "description": "Each supplied owned setter exchanges one fixed field header with live post under central capability and exact original grant. Unrelated fields are untouched; displaced owner remains in the admitted patch for typed retirement. Presence and nullable clearing remain distinct. Nested lists, derived caches and child text edits have separate retained owners.",
+  "type": "object",
+  "required": [
+    "authority",
+    "operation",
+    "displaced"
+  ],
+  "properties": {
+    "authority": {
+      "const": "ApplyCapability"
+    },
+    "operation": {
+      "const": "typed-field-header-exchange"
+    },
+    "displaced": {
+      "const": "retained-in-original-owned-patch"
+    }
+  },
+  "additionalProperties": false
+}

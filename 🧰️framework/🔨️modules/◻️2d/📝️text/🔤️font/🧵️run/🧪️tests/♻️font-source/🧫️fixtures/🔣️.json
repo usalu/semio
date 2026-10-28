@@ -1,0 +1,15 @@
+{
+  "text": "AB",
+  "stops": [
+    null,
+    0,
+    7,
+    1000
+  ],
+  "grants": [
+    1,
+    7,
+    4096
+  ],
+  "expectedFaces": 1
+}

@@ -1,0 +1,19 @@
+{
+  "feature": "layout.retained.batch-frame-command",
+  "kinds": [
+    "DragFrames",
+    "RotateFrames",
+    "ScaleFrames"
+  ],
+  "decision": "complete source-bound numeric plan before any diagnostics/output",
+  "diagnosticOrder": [
+    "failure only",
+    "missing authored targets",
+    "locked original Page frames",
+    "no-op when no changed frames"
+  ],
+  "failureBounds": "Frame bounds must be finite and have a positive size.",
+  "publication": "genuine prepared authored payload -> typed sparse row output; central final graph admission follows",
+  "inverse": "original absolute setters executed through actual retained issuer in reverse order",
+  "selection": "unselected until integrated portable and native authored laws complete"
+}

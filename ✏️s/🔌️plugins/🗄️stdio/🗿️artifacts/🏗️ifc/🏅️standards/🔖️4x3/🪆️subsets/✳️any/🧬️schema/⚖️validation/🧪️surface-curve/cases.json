@@ -1,0 +1,860 @@
+{
+  "version": 1,
+  "source": {
+    "file": "source.ifc",
+    "schema": "IFC4X3_ADD2",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "physical": "authored mixed standalone source with deliberate negative owners"
+  },
+  "negativeRules": [
+    {
+      "entityId": "62",
+      "owner": "IFCCOMPOSITECURVEONSURFACE",
+      "rule": "SAMESURFACE"
+    },
+    {
+      "entityId": "64",
+      "owner": "IFCCOMPOSITECURVEONSURFACE",
+      "rule": "SAMESURFACE"
+    },
+    {
+      "entityId": "69",
+      "owner": "IFCCOMPOSITECURVEONSURFACE",
+      "rule": "SAMESURFACE"
+    },
+    {
+      "entityId": "89",
+      "owner": "IFCPOLYNOMIALCURVE",
+      "rule": "CORRECTPOSITIONDIM"
+    }
+  ],
+  "functions": [
+    {
+      "owner": "IFCASSOCIATEDSURFACE",
+      "id": "plane-first",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "30"
+        }
+      ],
+      "expected": {
+        "kind": "surface",
+        "value": "20"
+      }
+    },
+    {
+      "owner": "IFCASSOCIATEDSURFACE",
+      "id": "same-plane-other-pcurve",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "31"
+        }
+      ],
+      "expected": {
+        "kind": "surface",
+        "value": "20"
+      }
+    },
+    {
+      "owner": "IFCASSOCIATEDSURFACE",
+      "id": "equal-geometry-distinct-plane",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "32"
+        }
+      ],
+      "expected": {
+        "kind": "surface",
+        "value": "21"
+      }
+    },
+    {
+      "owner": "IFCASSOCIATEDSURFACE",
+      "id": "different-plane",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "33"
+        }
+      ],
+      "expected": {
+        "kind": "surface",
+        "value": "22"
+      }
+    },
+    {
+      "owner": "IFCASSOCIATEDSURFACE",
+      "id": "absent",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "pcurve-first",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "30"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "pcurve-distinct",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "32"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "21"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "surface-shared-identity",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "40"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "surface-equal-geometry-distinct-identities",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "41"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20",
+          "21"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "surface-two-identities",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "42"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "21",
+          "22"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "surface-single-pcurve",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "43"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "composite-single",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "60"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "composite-same-surface",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "61"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "composite-disjoint",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "62"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": []
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "composite-intersection",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "63"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "21"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "composite-other-disjoint",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "64"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": []
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "nested-composite-single",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "66"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "nested-composite-disjoint",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "69"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": []
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "nested-composite-intersection",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "72"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": [
+          "20"
+        ]
+      }
+    },
+    {
+      "owner": "IFCGETBASISSURFACE",
+      "id": "absent-empty-set",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "surfaces",
+        "value": []
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "line-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "line-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "conic-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "12"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "conic-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "13"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "polyline-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "14"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "polyline-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "15"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "bspline-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "80"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "bspline-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "81"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "trimmed-recursive",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "82"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "offset-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "83"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "offset-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "84"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "offset-distances",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "85"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "polynomial-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "86"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "polynomial-3d-no-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "87"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "polynomial-3d-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "88"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "polynomial-2d-z-negative-source",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "89"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "spiral-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "90"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "spiral-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "93"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "indexed-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "102"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "indexed-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "103"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "gradient-fixed3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "91"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "reference-fixed3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "92"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "pcurve-fixed3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "30"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "surface-curve-fallthrough",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "40"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "composite-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "70"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "composite-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "71"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "composite-on-surface",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "60"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "nested-composite-on-surface",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "66"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCCURVEDIM",
+      "id": "absent",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "curve-parent-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "56"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "curve-parent-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "57"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "curve-parent-pcurve",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "50"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "curve-parent-surface-unknown",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "54"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "composite-parent-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "74"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "composite-parent-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "76"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "composite-parent-nested",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "65"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "composite-parent-shared",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "67"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCSEGMENTDIM",
+      "id": "absent",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    }
+  ]
+}

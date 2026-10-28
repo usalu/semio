@@ -1,0 +1,127 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/layout/export/plan-work",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "original",
+    "itemBytes",
+    "pageBytes",
+    "offsetBytes",
+    "cancelCuts",
+    "offsetStride",
+    "child"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "original": {
+      "$ref": "#/$defs/grant"
+    },
+    "itemBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "pageBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "offsetBytes": {
+      "const": 4
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "minItems": 3
+    },
+    "offsetStride": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "child": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "copiedItems",
+        "copiedBytes",
+        "retainedCapacityBytes",
+        "releasedBytes"
+      ],
+      "properties": {
+        "copiedItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "copiedBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "retainedCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "releasedBytes": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "grant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "states": {
+      "enum": [
+        "reserve",
+        "produce",
+        "append",
+        "retire",
+        "empty"
+      ]
+    },
+    "ownership": {
+      "enum": [
+        "original-source",
+        "reserved-copy",
+        "retained-row",
+        "owned-fault"
+      ]
+    }
+  }
+}

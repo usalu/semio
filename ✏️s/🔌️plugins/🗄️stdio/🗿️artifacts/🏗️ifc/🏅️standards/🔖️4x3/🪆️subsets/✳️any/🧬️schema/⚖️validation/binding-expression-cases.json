@@ -1,0 +1,8 @@
+{
+  "reads":["TrueNorth","SELF.TrueNorth","SELF\\IfcGeometricRepresentationContext.TrueNorth","SELF\\IfcGeometricRepresentationSubContext.TrueNorth","SELF.ParentContext.TrueNorth"],
+  "query":"SIZEOF(QUERY(TrueNorth <* [1,2] | TrueNorth = 2))",
+  "shadows":[
+    {"name":"PARAMETER_SHADOW","source":"(TrueNorth:INTEGER):INTEGER;RETURN(TrueNorth+1);","arguments":["8"],"expected":"9"},
+    {"name":"LOCAL_SHADOW","source":"():INTEGER;LOCAL TrueNorth:INTEGER:=7;END_LOCAL;RETURN(TrueNorth);","arguments":[],"expected":"7"}
+  ]
+}

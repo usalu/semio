@@ -1,0 +1,26 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    {
+      "id": "negative",
+      "angle": -0.7
+    },
+    {
+      "id": "zero",
+      "angle": 0
+    },
+    {
+      "id": "positive",
+      "angle": 0.3
+    },
+    {
+      "id": "quarter",
+      "angle": 1.5707963267948966
+    },
+    {
+      "id": "half",
+      "angle": 3.141592653589793
+    }
+  ]
+}
+

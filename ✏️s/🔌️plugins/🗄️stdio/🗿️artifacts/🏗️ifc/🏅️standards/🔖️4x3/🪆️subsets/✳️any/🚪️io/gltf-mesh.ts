@@ -1,0 +1,15 @@
+/** 🧊️ Encoded positions retain a usable triangle domain after the float32 transport boundary. */
+import {validateTriangleMeshSteps,type SolidPoint} from '../../../../../📐️geometry/🧊️boolean/🟦️.ts';
+import {IfcStepError,type IfcIoSteps} from './control.ts';
+import type {IfcTriangleMesh} from './geometry.ts';
+
+/** 🪆️ Expand exact coordinate/normal identity pairs under the original remaining byte grant. */
+export function* ifcGltfMeshSteps(mesh:IfcTriangleMesh,maxBytes:number):IfcIoSteps<IfcTriangleMesh&{normalOmitted:boolean}>{
+ yield;const indexBytes=mesh.indices.length*4;if(!Number.isSafeInteger(maxBytes)||maxBytes<0||!Number.isSafeInteger(indexBytes)||indexBytes>maxBytes)throw new IfcStepError('gltf.limit','Encoded indices exceed original byte grant');if(!mesh.normals)return{...mesh,normalOmitted:false};if(!mesh.normalIndices||mesh.normalIndices.length!==mesh.indices.length)throw new IfcStepError('gltf.normals','Complete per-corner normal indices required');let omitted=false;for(const id of mesh.normalIndices){yield;const normal=mesh.normals[id];if(!normal||normal.length!==3||!normal.every(Number.isFinite))throw new IfcStepError('gltf.normals','Finite referenced normal triple required');if(normal.every(n=>n===0))omitted=true;}if(omitted)return{...mesh,normals:undefined,normalIndices:undefined,normalOmitted:true};
+ const positions:IfcTriangleMesh['positions']=[],normals:NonNullable<IfcTriangleMesh['normals']>=[],indices:number[]=[],pairs=new Map<string,number>();let bytes=indexBytes;for(let at=0;at<mesh.indices.length;at++){yield;const point=mesh.indices[at]!,normal=mesh.normalIndices[at]!,key=point+':'+normal;let id=pairs.get(key);if(id===undefined){if(bytes+24>maxBytes)throw new IfcStepError('gltf.limit','Encoded point/normal pairs exceed original byte grant');bytes+=24;id=positions.length;pairs.set(key,id);positions.push(mesh.positions[point]!);normals.push(mesh.normals[normal]!);}indices.push(id);}return{...mesh,positions,normals,indices,normalIndices:undefined,normalOmitted:false};
+}
+
+/** 🔺️ Check actual little-endian encoded vertices before any completed glTF artifact is published. */
+export function* ifcGltfPositionSteps(bytes:Uint8Array,indices:readonly number[]):IfcIoSteps<void>{
+ yield;const view=new DataView(bytes.buffer,bytes.byteOffset,bytes.byteLength);for(let at=0;at<indices.length;at+=3){yield;const points:SolidPoint[]=[];for(let corner=0;corner<3;corner++){yield;const offset=indices[at+corner]!*12;points.push([view.getFloat32(offset,true),view.getFloat32(offset+4,true),view.getFloat32(offset+8,true)]);}const origin=points[0]!,extent=Math.max(...points.flatMap(p=>p.map((n,axis)=>Math.abs(n-origin[axis]!))));if(!(extent>0)||!Number.isFinite(extent))throw new IfcStepError('gltf.precision','Encoded float32 triangle is nonfinite or collapsed');try{yield* validateTriangleMeshSteps({vertices:points.map(p=>p.map((n,axis)=>(n-origin[axis]!)/extent) as SolidPoint),triangles:[[0,1,2]]});}catch(error){if(error instanceof Error&&error.message.startsWith('boolean-'))throw new IfcStepError('gltf.precision','Encoded float32 triangle is degenerate');throw error;}}
+}

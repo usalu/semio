@@ -1,0 +1,635 @@
+{
+  "version": 1,
+  "actualProgramRequired": true,
+  "zeroDepth": {
+    "expressionRecords": 0,
+    "inverseMetadata": 7,
+    "helperAcceptsExpression": false
+  },
+  "cases": [
+    {
+      "id": "population-admit-first-error",
+      "endpoint": "population",
+      "phase": "admit",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-admit-first-edit-invalid",
+      "endpoint": "population",
+      "phase": "admit",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-admit-first-edit-cancelled",
+      "endpoint": "population",
+      "phase": "admit",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-admit-first-evaluation-cancelled",
+      "endpoint": "population",
+      "phase": "admit",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-admit-first-undefined",
+      "endpoint": "population",
+      "phase": "admit",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-admit-first-number",
+      "endpoint": "population",
+      "phase": "admit",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-normalize-first-error",
+      "endpoint": "population",
+      "phase": "normalize",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-normalize-first-edit-invalid",
+      "endpoint": "population",
+      "phase": "normalize",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-normalize-first-edit-cancelled",
+      "endpoint": "population",
+      "phase": "normalize",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-normalize-first-evaluation-cancelled",
+      "endpoint": "population",
+      "phase": "normalize",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-normalize-first-undefined",
+      "endpoint": "population",
+      "phase": "normalize",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-normalize-first-number",
+      "endpoint": "population",
+      "phase": "normalize",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-structure-first-error",
+      "endpoint": "population",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-structure-first-edit-invalid",
+      "endpoint": "population",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-structure-first-edit-cancelled",
+      "endpoint": "population",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-structure-first-evaluation-cancelled",
+      "endpoint": "population",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-structure-first-undefined",
+      "endpoint": "population",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-structure-first-number",
+      "endpoint": "population",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-evaluate-first-error",
+      "endpoint": "population",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-evaluate-first-edit-invalid",
+      "endpoint": "population",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-evaluate-first-edit-cancelled",
+      "endpoint": "population",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-evaluate-first-evaluation-cancelled",
+      "endpoint": "population",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-evaluate-first-undefined",
+      "endpoint": "population",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-evaluate-first-number",
+      "endpoint": "population",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-validation-result-completion-error",
+      "endpoint": "population",
+      "phase": "validation-result",
+      "boundary": "completion",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-validation-result-completion-edit-invalid",
+      "endpoint": "population",
+      "phase": "validation-result",
+      "boundary": "completion",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-validation-result-completion-edit-cancelled",
+      "endpoint": "population",
+      "phase": "validation-result",
+      "boundary": "completion",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-validation-result-completion-evaluation-cancelled",
+      "endpoint": "population",
+      "phase": "validation-result",
+      "boundary": "completion",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-validation-result-completion-undefined",
+      "endpoint": "population",
+      "phase": "validation-result",
+      "boundary": "completion",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "population-validation-result-completion-number",
+      "endpoint": "population",
+      "phase": "validation-result",
+      "boundary": "completion",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-first-error",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-first-edit-invalid",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-first-edit-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-first-evaluation-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-first-undefined",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-first-number",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-completion-error",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "completion",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-completion-edit-invalid",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "completion",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-completion-edit-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "completion",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-completion-evaluation-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "completion",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-completion-undefined",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "completion",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-completion-number",
+      "endpoint": "compiler",
+      "phase": "compile",
+      "boundary": "completion",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-index-first-error",
+      "endpoint": "compiler",
+      "phase": "compile-index",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-index-first-edit-invalid",
+      "endpoint": "compiler",
+      "phase": "compile-index",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-index-first-edit-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile-index",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-index-first-evaluation-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile-index",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-index-first-undefined",
+      "endpoint": "compiler",
+      "phase": "compile-index",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-index-first-number",
+      "endpoint": "compiler",
+      "phase": "compile-index",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-first-error",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-first-edit-invalid",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-first-edit-cancelled",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-first-evaluation-cancelled",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-first-undefined",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-first-number",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-completion-error",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "completion",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-completion-edit-invalid",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "completion",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-completion-edit-cancelled",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "completion",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-completion-evaluation-cancelled",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "completion",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-completion-undefined",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "completion",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "domains-structure-completion-number",
+      "endpoint": "domains",
+      "phase": "structure",
+      "boundary": "completion",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "evaluator-evaluate-first-error",
+      "endpoint": "evaluator",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "evaluator-evaluate-first-edit-invalid",
+      "endpoint": "evaluator",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "evaluator-evaluate-first-edit-cancelled",
+      "endpoint": "evaluator",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "evaluator-evaluate-first-evaluation-cancelled",
+      "endpoint": "evaluator",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "evaluator-evaluate-first-undefined",
+      "endpoint": "evaluator",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "evaluator-evaluate-first-number",
+      "endpoint": "evaluator",
+      "phase": "evaluate",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-first-error",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "first",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-first-edit-invalid",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "first",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-first-edit-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "first",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-first-evaluation-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "first",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-first-undefined",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "first",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-first-number",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "first",
+      "fault": "number",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-completion-error",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "completion",
+      "fault": "error",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-completion-edit-invalid",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "completion",
+      "fault": "edit-invalid",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-completion-edit-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "completion",
+      "fault": "edit-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-completion-evaluation-cancelled",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "completion",
+      "fault": "evaluation-cancelled",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-completion-undefined",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "completion",
+      "fault": "undefined",
+      "expected": "original-refusal"
+    },
+    {
+      "id": "compiler-compile-seal-completion-number",
+      "endpoint": "compiler",
+      "phase": "compile-seal",
+      "boundary": "completion",
+      "fault": "number",
+      "expected": "original-refusal"
+    }
+  ]
+}

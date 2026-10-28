@@ -117,6 +117,7 @@ pub fn enc_value(v: &StepValue) -> String {
         StepValue::Integer(i) => format!("I[{i}]"),
         StepValue::Real(r) => format!("R[{r}]"),
         StepValue::String(s) => format!("S[{}]", enc_str(s)),
+        StepValue::Binary(s) => format!("B[{}]", enc_str(s)),
         StepValue::Enum(s) => format!("E[{}]", enc_str(s)),
         StepValue::Reference(id) => format!("F[{id}]"),
         StepValue::Aggregate(items) => format!("A[{}]", items.iter().map(enc_value).collect::<Vec<_>>().join(",")),
@@ -137,6 +138,7 @@ pub fn dec_value(s: &str) -> Result<StepValue, String> {
         "I" => Ok(StepValue::Integer(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "R" => Ok(StepValue::Real(inner.parse().map_err(|e: std::num::ParseFloatError| e.to_string())?)),
         "S" => Ok(StepValue::String(dec_str(inner)?)),
+        "B" => {let content=dec_str(inner)?;if !semio_s_artifact_stdio_contract::part21::is_part21_binary(&content){return Err("invalid canonical STEP binary content".into());}Ok(StepValue::Binary(content))},
         "E" => Ok(StepValue::Enum(dec_str(inner)?)),
         "F" => Ok(StepValue::Reference(inner.parse().map_err(|e: std::num::ParseIntError| e.to_string())?)),
         "A" => {

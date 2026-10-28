@@ -8,6 +8,72 @@ import { resolveTypescriptCompilerV1 } from "@semio-tech/framework/process/execu
 
 /** 🏃️ Runs the `OwnedVerifyScript` command under the caller's roots and invocation. */
 export async function runOwnedVerifyScript(context: Readonly<{ root: string; repoRoot: string; invocation: ScriptInvocation }>, segments: string[]): Promise<void> {
+  if (segments.length === 1 && segments[0] === "layout-drawing-export") {
+    const tests = resolve(context.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️drawing/🖼️composition/🧪️tests/run.ts");
+    const { runLayoutDrawingExportTests } = await import(tests);
+    await runLayoutDrawingExportTests(context.repoRoot);
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(context.repoRoot), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", tests], context.repoRoot, "layout:drawing-export:strict", scriptInvocationBudget(context.invocation, 120_000), {
+      signal: context.invocation.control.signal,
+      env: scriptInvocationEnvironment(context.invocation, process.env),
+      onProgress: () => context.invocation.control.publish({ owner: context.invocation.policy.owner, command: "layout-drawing-export", stage: "running" }),
+    });
+    return;
+  }
+  if (segments.length === 1 && segments[0] === "layout-drawing-segments") {
+    const tests = resolve(context.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️drawing/🖊️segments/🧪️tests/run.ts");
+    const { runLayoutDrawingSegmentTests } = await import(tests);
+    runLayoutDrawingSegmentTests();
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(context.repoRoot), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", tests], context.repoRoot, "layout:drawing-segments:strict", scriptInvocationBudget(context.invocation, 120_000), {
+      signal: context.invocation.control.signal,
+      env: scriptInvocationEnvironment(context.invocation, process.env),
+      onProgress: () => context.invocation.control.publish({ owner: context.invocation.policy.owner, command: "layout-drawing-segments", stage: "running" }),
+    });
+    return;
+  }
+  if (segments.length === 1 && segments[0] === "layout-text-flow") {
+    const tests = resolve(context.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🎬️scene/🧵️flow/🧪️tests/run.ts");
+    const { runLayoutTextFlowTests } = await import(tests);
+    runLayoutTextFlowTests();
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(context.repoRoot), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", tests], context.repoRoot, "layout:text-flow:strict", scriptInvocationBudget(context.invocation, 120_000), {
+      signal: context.invocation.control.signal,
+      env: scriptInvocationEnvironment(context.invocation, process.env),
+      onProgress: () => context.invocation.control.publish({ owner: context.invocation.policy.owner, command: "layout-text-flow", stage: "running" }),
+    });
+    return;
+  }
+  if (segments.length === 1 && segments[0] === "layout-pdf-streams") {
+    const tests = resolve(context.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/📤️export/📕️pdf-png-and-package-encoding/🧪️tests/run.ts");
+    const { runLayoutPdfStreamTests } = await import(tests);
+    await runLayoutPdfStreamTests(context.repoRoot);
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(context.repoRoot), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", tests], context.repoRoot, "layout:pdf-streams:strict", scriptInvocationBudget(context.invocation, 120_000), {
+      signal: context.invocation.control.signal,
+      env: scriptInvocationEnvironment(context.invocation, process.env),
+      onProgress: () => context.invocation.control.publish({ owner: context.invocation.policy.owner, command: "layout-pdf-streams", stage: "running" }),
+    });
+    return;
+  }
+  if (segments.length === 1 && segments[0] === "layout-diff-algebra") {
+    const tests = resolve(context.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🧪️tests/🧮️algebra/🟦️.ts");
+    const { testLayoutDiffAlgebraOracle } = await import(tests);
+    testLayoutDiffAlgebraOracle();
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(context.repoRoot), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", tests], context.repoRoot, "layout:diff-algebra:strict", scriptInvocationBudget(context.invocation, 120_000), {
+      signal: context.invocation.control.signal,
+      env: scriptInvocationEnvironment(context.invocation, process.env),
+      onProgress: () => context.invocation.control.publish({ owner: context.invocation.policy.owner, command: "layout-diff-algebra", stage: "running" }),
+    });
+    return;
+  }
+  if (segments.length === 1 && segments[0] === "layout-canonical") {
+    const tests = resolve(context.repoRoot, "✏️s/🔌️plugins/📏️layout/🗿️artifacts/📏️layout/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🪪️native-json/🧪️tests/run.ts");
+    const { runLayoutCanonicalTests } = await import(tests);
+    runLayoutCanonicalTests(context.repoRoot);
+    await runOwnedCommand(process.execPath, [resolveTypescriptCompilerV1(context.repoRoot), "--noEmit", "--strict", "--skipLibCheck", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", tests], context.repoRoot, "layout:canonical:strict", scriptInvocationBudget(context.invocation, 120_000), {
+      signal: context.invocation.control.signal,
+      env: scriptInvocationEnvironment(context.invocation, process.env),
+      onProgress: () => context.invocation.control.publish({ owner: context.invocation.policy.owner, command: "layout-canonical", stage: "running" }),
+    });
+    return;
+  }
   if (segments.length === 1 && segments[0] === "physical-codecs") {
     await runOwnedCommand(process.execPath, ["test", resolve(context.root, "./../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔣️transport/🟦️.ts")], context.repoRoot, "owned-physical-codecs", 120_000);
     return;

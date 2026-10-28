@@ -1,0 +1,313 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "source",
+    "scope",
+    "positiveUnavailable",
+    "negativeRules",
+    "ruleResults",
+    "functions"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "file",
+        "schema",
+        "expSha256",
+        "physical"
+      ],
+      "properties": {
+        "file": {
+          "const": "source.ifc"
+        },
+        "schema": {
+          "const": "IFC4X3_ADD2"
+        },
+        "expSha256": {
+          "const": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+        },
+        "physical": {
+          "const": "authored standalone records with explicit negative WHERE owners; no geometry or whole-view validity claim"
+        }
+      }
+    },
+    "scope": {
+      "const": "selected discriminating boundaries, not total branch coverage"
+    },
+    "positiveUnavailable": {
+      "const": [
+        {
+          "owner": "IFCSHAPEREPRESENTATIONTYPES",
+          "label": "Surface2D",
+          "reason": "IfcSurface.Dim is the released constant3; no valid positive2D subtype is fabricated"
+        }
+      ]
+    },
+    "negativeRules": {
+      "const": [
+        {
+          "entityId": "60",
+          "owner": "IFCEDGELOOP",
+          "rule": "ISCLOSED"
+        },
+        {
+          "entityId": "62",
+          "owner": "IFCEDGELOOP",
+          "rule": "ISCONTINUOUS"
+        },
+        {
+          "entityId": "63",
+          "owner": "IFCEDGELOOP",
+          "rule": "ISCLOSED"
+        },
+        {
+          "entityId": "65",
+          "owner": "IFCEDGELOOP",
+          "rule": "ISCLOSED"
+        },
+        {
+          "entityId": "65",
+          "owner": "IFCEDGELOOP",
+          "rule": "ISCONTINUOUS"
+        },
+        {
+          "entityId": "72",
+          "owner": "IFCPATH",
+          "rule": "ISCONTINUOUS"
+        },
+        {
+          "entityId": "75",
+          "owner": "IFCPATH",
+          "rule": "ISCONTINUOUS"
+        },
+        {
+          "entityId": "111",
+          "owner": "IFCFILLAREASTYLE",
+          "rule": "CONSISTENTHATCHSTYLEDEF"
+        },
+        {
+          "entityId": "111",
+          "owner": "IFCFILLAREASTYLE",
+          "rule": "MAXONECOLOUR"
+        },
+        {
+          "entityId": "112",
+          "owner": "IFCFILLAREASTYLE",
+          "rule": "CONSISTENTHATCHSTYLEDEF"
+        },
+        {
+          "entityId": "112",
+          "owner": "IFCFILLAREASTYLE",
+          "rule": "MAXONEEXTHATCHSTYLE"
+        },
+        {
+          "entityId": "113",
+          "owner": "IFCFILLAREASTYLE",
+          "rule": "CONSISTENTHATCHSTYLEDEF"
+        },
+        {
+          "entityId": "231",
+          "owner": "IFCUNITASSIGNMENT",
+          "rule": "WR01"
+        },
+        {
+          "entityId": "232",
+          "owner": "IFCUNITASSIGNMENT",
+          "rule": "WR01"
+        },
+        {
+          "entityId": "233",
+          "owner": "IFCUNITASSIGNMENT",
+          "rule": "WR01"
+        }
+      ]
+    },
+    "ruleResults": {
+      "const": [
+        {
+          "entityId": "70",
+          "owner": "IFCPATH",
+          "rule": "ISCONTINUOUS",
+          "result": "unknown"
+        },
+        {
+          "entityId": "71",
+          "owner": "IFCPATH",
+          "rule": "ISCONTINUOUS",
+          "result": "unknown"
+        },
+        {
+          "entityId": "73",
+          "owner": "IFCPATH",
+          "rule": "ISCONTINUOUS",
+          "result": "unknown"
+        },
+        {
+          "entityId": "74",
+          "owner": "IFCPATH",
+          "rule": "ISCONTINUOUS",
+          "result": "unknown"
+        }
+      ]
+    },
+    "functions": {
+      "type": "array",
+      "minItems": 154,
+      "maxItems": 154,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "owner",
+          "id",
+          "args",
+          "parameterDomain",
+          "expected"
+        ],
+        "properties": {
+          "owner": {
+            "enum": [
+              "IFCCORRECTFILLAREASTYLE",
+              "IFCCORRECTUNITASSIGNMENT",
+              "IFCLOOPHEADTOTAIL",
+              "IFCPATHHEADTOTAIL",
+              "IFCSHAPEREPRESENTATIONTYPES",
+              "IFCTAPEREDSWEPTAREAPROFILES",
+              "IFCTOPOLOGYREPRESENTATIONTYPES"
+            ]
+          },
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "oneOf": [
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "unknown"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "id"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "entity"
+                    },
+                    "id": {
+                      "type": "string",
+                      "pattern": "^[1-9][0-9]*$"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "value"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "string"
+                    },
+                    "value": {
+                      "type": "string"
+                    }
+                  }
+                },
+                {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "kind",
+                    "ids"
+                  ],
+                  "properties": {
+                    "kind": {
+                      "const": "set"
+                    },
+                    "ids": {
+                      "type": "array",
+                      "uniqueItems": true,
+                      "items": {
+                        "type": "string",
+                        "pattern": "^[1-9][0-9]*$"
+                      }
+                    }
+                  }
+                }
+              ]
+            }
+          },
+          "parameterDomain": {
+            "enum": [
+              "declared",
+              "indeterminate-value",
+              "outside-declared-cardinality"
+            ]
+          },
+          "expected": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "indeterminate"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "kind",
+                  "value"
+                ],
+                "properties": {
+                  "kind": {
+                    "const": "logical"
+                  },
+                  "value": {
+                    "enum": [
+                      "true",
+                      "false",
+                      "unknown"
+                    ]
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

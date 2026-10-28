@@ -1,0 +1,17 @@
+{
+  "title": "Original Final Graph Source Bindings",
+  "sources": [
+    "Actual live-post LayoutSnapshot token from owning central protocol",
+    "Authored LayoutDiff token"
+  ],
+  "continuation": "Both genuine original leases bind before reader or continuation birth",
+  "close": "Continuation and reader first; then authored original alias and live-post alias; mutable commit only after all aliases close",
+  "laws": [
+    "No bare address or baseline source mint",
+    "No payload clone",
+    "Exact source identity and projection stay fixed",
+    "Every alias birth uses actual remaining grant",
+    "Denied birth/close does zero work",
+    "Cancel every partially bound pair with exact original release receipts"
+  ]
+}

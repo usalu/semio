@@ -28,28 +28,22 @@ pub fn register_composer_entries(entries: &'static [ComposerEntry]) -> Result<()
     register_composer_entry_refs(&entries.iter().collect::<Vec<_>>())
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
 /// 📇️ Every registered composer entry, erased to owned dialects -- the shape the WIT
 /// `list-artifact-dialects` guest export mirrors verbatim (one row per distinct `writes` entry
 /// registered locally, each carrying the full `reads` list).
 pub async fn list_composer_entries() -> Result<Vec<(ArtifactDialect, Vec<ArtifactDialect>)>, IoRegistryUnavailable> {
-use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
-
     let reg = io_registry().read().map_err(|_| IoRegistryUnavailable { registry: "io-composer" })?;
-    let mut seen: BTreeMap<String, &'static ComposerEntry> = BTreeMap::new();
-    for entry in reg.values() {
-        seen.entry(ArtifactDialect::from(entry.writes).to_coordinate()).or_insert(*entry);
-    }
-    Ok(seen.into_values().map(|entry| (ArtifactDialect::from(entry.writes), entry.reads.iter().map(|&d| ArtifactDialect::from(d)).collect())).collect())
+    Ok(composer_dialect_rows(reg.values().copied()))
 }
+
+fn composer_dialect_rows<'entry>(entries: impl IntoIterator<Item = &'entry ComposerEntry>) -> Vec<(ArtifactDialect, Vec<ArtifactDialect>)> {
+    let mut rows: BTreeMap<ArtifactDialect, std::collections::BTreeSet<ArtifactDialect>> = BTreeMap::new();
+    for entry in entries {
+        rows.entry(entry.writes.into()).or_default().extend(entry.reads.iter().copied().map(ArtifactDialect::from));
+    }
+    rows.into_iter().map(|(writes, reads)| (writes, reads.into_iter().collect())).collect()
+}
+
+#[cfg(test)]
+#[path = "🧪️tests/route-discovery.rs"]
+mod route_discovery_tests;

@@ -1,0 +1,34 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "DrawingSegmentCursor",
+  "description": "One owned scalar command expands under original positive source-item grants. Exact Bezier coordinates and device-tolerance cubic arc pieces preserve affine projection without copying source path collections. SVG endpoint arcs follow W3C SVG 1.1 Appendix F.6. Completed and cancelled cursors own no backing.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "tolerance"
+  ],
+  "properties": {
+    "tolerance": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    }
+  },
+  "$defs": {
+    "progress": {
+      "type": "object",
+      "required": [
+        "work",
+        "pending"
+      ],
+      "properties": {
+        "work": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "pending": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

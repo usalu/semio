@@ -105,10 +105,10 @@ macro_rules! space_members {
             fn begin_one_item_owned_publication(&self, request: &mut $crate::os_store::MemberStoreOwnedBatchRequest, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>>, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_owned_publication(m.as_ref(), request, grant)),+ }
             }
-            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, String> {
+            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut  $crate::os_store::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, $crate::os_store::VcsError> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, body, grant, receiving)),+ }
             }
-            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
+            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut  $crate::os_store::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, $crate::os_store::VcsError> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, body, grant, receiving)),+ }
             }
             fn stage_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
@@ -123,8 +123,8 @@ macro_rules! space_members {
             fn return_prepared_snapshot_read_erased(&self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, snapshot: $crate::os_store::snapshot_read::ErasedSnapshotRead, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::RetainedCloneStep, (::semio_framework_value::ValueError, $crate::os_store::snapshot_read::ErasedSnapshotRead)> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::return_prepared_snapshot_read_erased(m.as_ref(), publication, visibility, snapshot, grant)),+ }
             }
-            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, grant)),+ }
+            fn abort_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, original:&mut ::semio_framework_value::OriginalRetirementCloseLoan<'_>, grant: ::semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<::semio_framework_value::retained_clone::RetainedCloneStep, ::semio_framework_value::ValueError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::abort_one_item_publication(m.as_mut(), publication, original,grant)),+ }
             }
             fn snapshot_read_erased_now(&self) -> Result<$crate::os_store::snapshot_read::ErasedSnapshotRead, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::snapshot_read_erased_now(m.as_ref())),+ }
@@ -274,6 +274,14 @@ macro_rules! space_members {
                 }
             }
 
+            fn open_copy_byte_demand(request:&$crate::os_store::MemberOpenRequest)->Result<usize,$crate::os_store::MemberOpenDiagnostic>{
+                let dialect=&request.admitted_expected()?.dialect;
+                match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
+                    $(($kind,$standard,$subset)=>$crate::os_store::InitialMemberStoreOpen::<Self,$snapshot,$mutation,$catalog>::begin_copy_byte_demand(request,&$catalog_value)?.checked_add(2*::std::mem::size_of::<Self::Open>()).ok_or($crate::os_store::MemberOpenDiagnostic::Capacity),)+
+                    _=>Err($crate::os_store::MemberOpenDiagnostic::Identity),
+                }
+            }
+
             fn member_frame_bytes(&self) -> usize {
                 match self { $(Self::$variant(member) => ::std::mem::size_of_val(member.as_ref())),+ }
             }
@@ -282,12 +290,13 @@ macro_rules! space_members {
                 if opened.is_some(){return Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale).into())}
                 if !admission.admit_source(parent,cx)?||cx.should_yield(){return Ok(false)}
                 let retained=admission.request().ok_or_else(||$crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Stale))?;
+                let required_copy=Self::open_copy_byte_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
                 let required=Self::open_birth_demand(retained).map_err($crate::os_store::member_open::member_admission_diagnostic)?;
                 let grant=cx.retained_grant();
-                if grant.maximum_items==0||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
+                if grant.maximum_items==0||grant.maximum_copy_bytes<required_copy||grant.maximum_depth<required.depth||grant.maximum_capacity_bytes<required.capacity_bytes{return Ok(false)}
                 let dialect=&retained.admitted_expected().map_err($crate::os_store::member_open::member_admission_diagnostic)?.dialect;
                 match(dialect.artifact_kind.as_str(),dialect.standard.as_str(),dialect.subset.as_str()){
-                    $(($kind,$standard,$subset)=>{let(open,mut progress)=$crate::os_store::InitialMemberStoreOpen::begin(admission,cx,::semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:grant.maximum_capacity_bytes-::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self,$snapshot,$mutation,$catalog>>(),maximum_depth:grant.maximum_depth-1,..grant},$catalog_value)?;progress.retained_capacity_bytes+=::std::mem::size_of_val(&open);*opened=Some($open_name::$variant(Box::new(open)));$crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)))?;Ok(true)},)+
+                    $(($kind,$standard,$subset)=>{let(open,mut progress)=$crate::os_store::InitialMemberStoreOpen::begin(admission,cx,::semio_framework_value::retained_clone::RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-2*::std::mem::size_of::<Self::Open>(),maximum_capacity_bytes:grant.maximum_capacity_bytes-::std::mem::size_of::<$crate::os_store::InitialMemberStoreOpen<Self,$snapshot,$mutation,$catalog>>(),maximum_depth:grant.maximum_depth-1,..grant},$catalog_value)?;progress.retained_capacity_bytes+=::std::mem::size_of_val(&open);progress.copied_bytes+=2*::std::mem::size_of::<Self::Open>();*opened=Some($open_name::$variant(Box::new(open)));$crate::os_store::member_open::receive_member_close(cx,Ok(::semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress)))?;Ok(true)},)+
                     _=>Err($crate::os_store::member_open::member_admission_diagnostic($crate::os_store::MemberOpenDiagnostic::Identity).into()),
                 }
             }

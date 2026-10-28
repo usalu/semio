@@ -1,0 +1,16 @@
+{
+  "$schema": "./geometry-product.schema.json",
+  "schema": "IFC4X3_ADD2",
+  "cases": [
+    { "entity": "IFCBUILDINGELEMENTPROXY", "isProduct": true },
+    { "entity": "IFCANNOTATION", "isProduct": true },
+    { "entity": "IFCSTRUCTURALCURVEMEMBER", "isProduct": true },
+    { "entity": "IFCBUILDING", "isProduct": true },
+    { "entity": "IFCRELAGGREGATES", "isProduct": false },
+    { "entity": "IFCPROPERTYSET", "isProduct": false },
+    { "entity": "IFCWALLTYPE", "isProduct": false },
+    { "entity": "IFCPROJECTLIBRARY", "isProduct": false },
+    { "entity": "IFCGEOMETRICREPRESENTATIONCONTEXT", "isProduct": false },
+    { "entity": "IFCUNKNOWNENTITY", "isProduct": false }
+  ]
+}

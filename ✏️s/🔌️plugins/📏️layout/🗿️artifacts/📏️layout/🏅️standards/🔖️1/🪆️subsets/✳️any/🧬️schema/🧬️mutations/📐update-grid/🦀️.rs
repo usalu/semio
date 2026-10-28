@@ -8,7 +8,7 @@ use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;
 use protocol::{MutationKind, SemanticDescriptor};
 use semio_framework_value_derive::{FromValue, ToValue};
 
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Debug, dsl::MutationLeaf, ToValue, FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(any(test, feature = "testkit"), derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(any(test, feature = "testkit"), serde(rename_all = "camelCase"))]
@@ -49,8 +49,8 @@ pub fn diff_update_grid(payload: &UpdateGrid, base: &LayoutSnapshot) -> protocol
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Baseline grid is already set to that value.");
     }
     let patch = GridPatch {
-        baseline_grid: (next.baseline_grid != base.grid.baseline_grid).then_some(next.baseline_grid),
-        baseline_offset: (next.baseline_offset != base.grid.baseline_offset).then_some(next.baseline_offset),
+        baseline_grid: (!semio_framework_value::equal_f64(next.baseline_grid, base.grid.baseline_grid)).then_some(next.baseline_grid),
+        baseline_offset: (!semio_framework_value::equal_f64(next.baseline_offset, base.grid.baseline_offset)).then_some(next.baseline_offset),
         snap_to_baseline: (next.snap_to_baseline != base.grid.snap_to_baseline).then_some(next.snap_to_baseline),
     };
     protocol::MutationOutcome::new(LayoutDiff { grid: Some(patch), ..Default::default() })
@@ -67,3 +67,11 @@ pub fn inverse_update_grid<Op: From<crate::update_grid::UpdateGrid>>(_payload: &
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 
+
+impl PartialEq for UpdateGrid {
+    fn eq(&self, other: &Self) -> bool {
+        semio_framework_value::equal_f64(self.baseline_grid, other.baseline_grid)
+            && semio_framework_value::equal_f64(self.baseline_offset, other.baseline_offset)
+            && self.snap_to_baseline == other.snap_to_baseline
+    }
+}

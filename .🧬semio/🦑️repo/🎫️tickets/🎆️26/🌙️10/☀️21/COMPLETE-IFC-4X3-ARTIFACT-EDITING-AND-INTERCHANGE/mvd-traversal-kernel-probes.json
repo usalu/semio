@@ -1,0 +1,88 @@
+{
+  "kind": "mvd-traversal-kernel-probes",
+  "dialect": "normalized-probe-only",
+  "schema": "IFC4X3_ADD2",
+  "releasedViewAuthority": false,
+  "wholeViewEvaluated": false,
+  "rule": {
+    "declaringEntity": "IFCELEMENT",
+    "attribute": "FillsVoids",
+    "entity": "IFCRELFILLSELEMENT",
+    "next": {
+      "declaringEntity": "IFCRELFILLSELEMENT",
+      "attribute": "RelatingOpeningElement",
+      "entity": "IFCOPENINGELEMENT"
+    }
+  },
+  "cases": [
+    {
+      "id": "unique-match",
+      "queryStatus": "unique",
+      "memberStates": [
+        "match"
+      ],
+      "probe": "exists-matching-entity",
+      "expected": "pass"
+    },
+    {
+      "id": "unique-empty",
+      "queryStatus": "unique",
+      "memberStates": [],
+      "probe": "exists-matching-entity",
+      "expected": "fail"
+    },
+    {
+      "id": "absent-declaration",
+      "queryStatus": "absent",
+      "memberStates": [],
+      "probe": "exists-matching-entity",
+      "expected": "incomplete"
+    },
+    {
+      "id": "ambiguous-owner",
+      "queryStatus": "ambiguous",
+      "memberStates": [
+        "match"
+      ],
+      "probe": "exists-matching-entity",
+      "expected": "incomplete"
+    },
+    {
+      "id": "late-unknown-after-match",
+      "queryStatus": "unknown",
+      "memberStates": [
+        "match"
+      ],
+      "probe": "exists-matching-entity",
+      "expected": "incomplete"
+    },
+    {
+      "id": "known-nonmember",
+      "queryStatus": "unique",
+      "memberStates": [
+        "nonmember"
+      ],
+      "probe": "exists-matching-entity",
+      "expected": "fail"
+    },
+    {
+      "id": "unknown-member",
+      "queryStatus": "unique",
+      "memberStates": [
+        "unknown"
+      ],
+      "probe": "exists-matching-entity",
+      "expected": "incomplete"
+    },
+    {
+      "id": "match-then-unknown-member",
+      "queryStatus": "unique",
+      "memberStates": [
+        "match",
+        "unknown"
+      ],
+      "probe": "exists-matching-entity",
+      "expected": "incomplete"
+    }
+  ]
+}

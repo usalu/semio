@@ -1,0 +1,280 @@
+{
+  "schema": "idml.retained.overlay.v1",
+  "base": {
+    "domVersion": "8.0",
+    "parts": [
+      {
+        "path": "mimetype",
+        "text": "application/vnd.adobe.indesign-idml-package"
+      },
+      {
+        "path": "designmap.xml",
+        "text": "<Document DOMVersion=\"8.0\"/>"
+      },
+      {
+        "path": "Stories/A.xml",
+        "text": "<Story>A 😀</Story>"
+      },
+      {
+        "path": "Stories/B.xml",
+        "text": "<Story>B</Story>"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "no-op",
+      "steps": [],
+      "expectedOrder": [
+        "mimetype",
+        "designmap.xml",
+        "Stories/A.xml",
+        "Stories/B.xml"
+      ]
+    },
+    {
+      "id": "preserve-live-post-field",
+      "post": {
+        "path": "Stories/A.xml",
+        "text": "<Story>Unrelated live edit</Story>"
+      },
+      "steps": [
+        {
+          "parts": [
+            {
+              "path": "Stories/B.xml",
+              "text": "<Story>Authored</Story>"
+            }
+          ]
+        }
+      ],
+      "expectedOrder": [
+        "mimetype",
+        "designmap.xml",
+        "Stories/A.xml",
+        "Stories/B.xml"
+      ]
+    },
+    {
+      "id": "ordered-two-step",
+      "steps": [
+        {
+          "partOrder": [
+            "mimetype",
+            "designmap.xml",
+            "Stories/B.xml",
+            "Stories/A.xml"
+          ],
+          "parts": []
+        },
+        {
+          "parts": [
+            {
+              "path": "Stories/A.xml",
+              "text": "<Story>Second</Story>"
+            }
+          ]
+        }
+      ],
+      "expectedOrder": [
+        "mimetype",
+        "designmap.xml",
+        "Stories/B.xml",
+        "Stories/A.xml"
+      ]
+    },
+    {
+      "id": "remove-then-insert-appends",
+      "steps": [
+        {
+          "parts": [
+            {
+              "path": "Stories/A.xml",
+              "remove": true
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "path": "Stories/A.xml",
+              "text": "<Story>New A</Story>"
+            }
+          ]
+        }
+      ],
+      "expectedOrder": [
+        "mimetype",
+        "designmap.xml",
+        "Stories/B.xml",
+        "Stories/A.xml"
+      ]
+    },
+    {
+      "id": "insert-remove-same-batch",
+      "steps": [
+        {
+          "parts": [
+            {
+              "path": "Links/X.bin",
+              "bytes": [
+                1,
+                2,
+                3
+              ]
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "path": "Links/X.bin",
+              "remove": true
+            }
+          ]
+        }
+      ],
+      "expectedOrder": [
+        "mimetype",
+        "designmap.xml",
+        "Stories/A.xml",
+        "Stories/B.xml"
+      ]
+    },
+    {
+      "id": "version-and-designmap",
+      "steps": [
+        {
+          "domVersion": "9.0",
+          "parts": [
+            {
+              "path": "designmap.xml",
+              "text": "<Document DOMVersion=\"9.0\"/>"
+            }
+          ]
+        }
+      ],
+      "expectedOrder": [
+        "mimetype",
+        "designmap.xml",
+        "Stories/A.xml",
+        "Stories/B.xml"
+      ]
+    },
+    {
+      "id": "duplicate-part",
+      "steps": [
+        {
+          "parts": [
+            {
+              "path": "Stories/B.xml",
+              "text": "<Story>1</Story>"
+            },
+            {
+              "path": "Stories/B.xml",
+              "text": "<Story>2</Story>"
+            }
+          ]
+        }
+      ],
+      "error": "stdio.idml.duplicate-part-patch"
+    },
+    {
+      "id": "missing-remove",
+      "steps": [
+        {
+          "parts": [
+            {
+              "path": "Stories/Missing.xml",
+              "remove": true
+            }
+          ]
+        }
+      ],
+      "error": "stdio.idml.missing-part-patch"
+    },
+    {
+      "id": "duplicate-order",
+      "steps": [
+        {
+          "partOrder": [
+            "mimetype",
+            "designmap.xml",
+            "Stories/B.xml",
+            "Stories/B.xml"
+          ],
+          "parts": []
+        }
+      ],
+      "error": "stdio.idml.part-order"
+    },
+    {
+      "id": "missing-order",
+      "steps": [
+        {
+          "partOrder": [
+            "mimetype",
+            "designmap.xml"
+          ],
+          "parts": []
+        }
+      ],
+      "error": "stdio.idml.part-order"
+    },
+    {
+      "id": "invalid-intermediate",
+      "steps": [
+        {
+          "parts": [
+            {
+              "path": "Stories/B.xml",
+              "text": "<Story>"
+            }
+          ]
+        },
+        {
+          "parts": [
+            {
+              "path": "Stories/B.xml",
+              "text": "<Story>Fixed</Story>"
+            }
+          ]
+        }
+      ],
+      "error": "xml.validation.unclosed"
+    },
+    {
+      "id": "version-mismatch",
+      "steps": [
+        {
+          "domVersion": "9.0",
+          "parts": []
+        }
+      ],
+      "error": "stdio.idml.dom-version-mismatch"
+    }
+  ],
+  "lifecycle": {
+    "workGrants": [
+      1,
+      7,
+      64,
+      4096
+    ],
+    "cancellationCuts": [
+      0,
+      1,
+      5,
+      50
+    ],
+    "largeMembers": 2051
+  },
+  "oracle": {
+    "libraries": [
+      "fflate",
+      "saxes",
+      "fast-json-patch"
+    ],
+    "method": "typed canonical cold application and independent ZIP/XML admission of every ordered intermediate, with untouched live post field preserved"
+  }
+}

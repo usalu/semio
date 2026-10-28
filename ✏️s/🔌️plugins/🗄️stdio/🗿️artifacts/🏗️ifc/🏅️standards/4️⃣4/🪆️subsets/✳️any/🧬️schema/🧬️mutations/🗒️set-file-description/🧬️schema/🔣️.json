@@ -110,6 +110,23 @@
         {
           "type": "object",
           "additionalProperties": false,
+          "required": [
+            "kind",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "binary"
+            },
+            "value": {
+              "type": "string",
+              "pattern": "^(?:0[0-9A-F]*|1[0-7][0-9A-F]*|2[0-3][0-9A-F]*|3[01][0-9A-F]*)$"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
           "properties": {
             "kind": {
               "const": "enum"

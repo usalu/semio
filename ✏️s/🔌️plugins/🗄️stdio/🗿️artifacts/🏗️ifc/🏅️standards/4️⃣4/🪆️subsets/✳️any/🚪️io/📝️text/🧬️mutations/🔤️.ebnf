@@ -1,3 +1,25 @@
-(* ebnf stdio.ifc mutations *)
-document = header, body ;
-header = 'schema', space, 'stdio.ifc', newline ;
+(* 🧬️ IFC4 mutation text: strings and binary scalars carry hexadecimal UTF-8. *)
+document = mutation ;
+mutation =
+    'set-file-description', 'values=', values
+  | 'set-file-name', 'values=', values
+  | 'set-file-schema', 'values=', values
+  | 'insert-entity', 'index=', unsigned, 'entity=', entity
+  | 'remove-entity', 'id=', unsigned
+  | 'set-entity-name', 'id=', unsigned, 'name=', hex
+  | 'set-entity-arg', 'id=', unsigned, 'index=', unsigned, 'value=', value
+  | 'insert-entity-arg', 'id=', unsigned, 'index=', unsigned, 'value=', value
+  | 'remove-entity-arg', 'id=', unsigned, 'index=', unsigned
+  | 'set-entity-complex', 'id=', unsigned, 'complex=', complex-list ;
+value = 'U' | 'D' | 'I[', integer, ']' | 'R[', real, ']'
+  | ('S' | 'E' | 'B'), '[', hex, ']' | 'F[', unsigned, ']'
+  | 'A', values | 'T[', hex, ',', values, ']' ;
+values = '[', [value, {',', value}], ']' ;
+complex-item = '[', hex, ',', values, ']' ;
+complex-list = '[', [complex-item, {',', complex-item}], ']' ;
+entity = '[', unsigned, ',', hex, ',', values, ',', complex-list, ']' ;
+unsigned = digit, {digit} ;
+integer = ['-'], unsigned ;
+real = integer, ['.', {digit}], [('e' | 'E'), ['+' | '-'], unsigned] ;
+hex = {digit | 'a' | 'b' | 'c' | 'd' | 'e' | 'f' | 'A' | 'B' | 'C' | 'D' | 'E' | 'F'} ;
+digit = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' ;

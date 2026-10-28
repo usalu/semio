@@ -1,0 +1,257 @@
+{
+  "scope": "explicit-three-representation-clauses",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "face",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcFaceBasedSurfaceModel"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "shell",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcShellBasedSurfaceModel"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "triangulated",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "TIN",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcTriangulatedIrregularNetwork"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "polygonal",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcPolygonalFaceSet"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "indexed-face",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcIndexedPolygonalFace"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "indexed-face-voids",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcIndexedPolygonalFaceWithVoids"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "abstract-tessellated-item-membership",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcTessellatedItem"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "abstract-tessellated-face-set-membership",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcTessellatedFaceSet"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "mixed-three-families",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcFaceBasedSurfaceModel",
+        "IfcShellBasedSurfaceModel",
+        "IfcIndexedPolygonalFace"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "faceted-brep",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "advanced-brep",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcAdvancedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "disk",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcSweptDiskSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "sectioned",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcSectionedSolidHorizontal"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "surface",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcPlane"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "shell-alone",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcClosedShell"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "curve",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcPolyline"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-foreign",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcFaceBasedSurfaceModel",
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "empty-items",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [],
+      "expected": "pass"
+    },
+    {
+      "id": "wrong-identifier",
+      "applicable": true,
+      "identifier": "Axis",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcFaceBasedSurfaceModel"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "wrong-type",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Tessellation",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "excluded",
+      "applicable": false,
+      "identifier": "Axis",
+      "type": "Surface",
+      "items": [
+        "IfcPlane"
+      ],
+      "expected": "not-applicable"
+    },
+    {
+      "id": "unresolved",
+      "applicable": null,
+      "identifier": "Body",
+      "type": "SurfaceModel",
+      "items": [
+        "IfcFaceBasedSurfaceModel"
+      ],
+      "expected": "incomplete"
+    }
+  ]
+}

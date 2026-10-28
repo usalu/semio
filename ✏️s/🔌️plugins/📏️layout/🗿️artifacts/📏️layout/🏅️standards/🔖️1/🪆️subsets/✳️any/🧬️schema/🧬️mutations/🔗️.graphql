@@ -384,10 +384,6 @@ type SetFrameLayer {
   layerId: String!
 }
 
-type SetDrawingText {
-  index: Int!
-  text: String!
-}
 
 type ReorderFrame {
   pageId: String!
@@ -418,6 +414,21 @@ type ScaleFrames {
   sx: Float!
   sy: Float!
 }
+
+type ParagraphStyle { id: String! name: String! fontFamily: String! fontSize: Float! fontWeight: Int! leading: Float! tracking: Float! alignment: String! }
+type ParentPage { id: String! name: String! width: Float! height: Float! layerIds: [String!]! layers: [Layer!]! frames: [Frame!]! }
+type Spread { id: String! name: String! pageIds: [String!]! }
+type CreateParagraphStyle { style: ParagraphStyle! index: Int }
+type DeleteParagraphStyle { id: String! }
+type CreateParentPage { page: ParentPage! index: Int }
+type DeleteParentPage { id: String! }
+type CreateSpread { spread: Spread! index: Int }
+type DeleteSpread { id: String! }
+type SetPageSpread { id: String! spreadId: String! index: Int }
+type ReorderLayer { pageId: String! layerId: String! toIndex: Int! }
+type SetParentPageContent { id: String! layers: [Layer!]! frames: [Frame!]! }
+
+type ReplaceDocument { document: LayoutSnapshot! }
 
 union LayoutMutation =
     RenameLayout
@@ -463,8 +474,18 @@ union LayoutMutation =
   | SetPageOverrides
   | CreateLayer
   | SetFrameLayer
-  | SetDrawingText
   | ReorderFrame
   | DragFrames
   | RotateFrames
   | ScaleFrames
+
+  | CreateParagraphStyle
+  | DeleteParagraphStyle
+  | CreateParentPage
+  | DeleteParentPage
+  | CreateSpread
+  | DeleteSpread
+  | SetPageSpread
+  | ReorderLayer
+  | SetParentPageContent
+  | ReplaceDocument

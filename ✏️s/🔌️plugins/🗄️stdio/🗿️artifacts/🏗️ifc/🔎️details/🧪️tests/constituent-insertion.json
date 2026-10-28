@@ -1,0 +1,11 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"cases":[
+{"id":"numeric-category","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/2","value":{"kind":"string","value":"metal"},"admitted":true},
+{"id":"dash-unicode","entityId":"18446744073709551615","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/-","value":{"kind":"string","value":"Stahl 🧩 / ~ ä"},"admitted":true},
+{"id":"optional-unset","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/-","value":{"kind":"unset"},"admitted":true},
+{"id":"coordinate-list","root":"IFCREPRESENTATIONITEM","name":"IFCCARTESIANPOINT","args":[],"path":"/entities/0/complex/0/args/-","value":{"kind":"aggregate","value":[{"kind":"real","value":1},{"kind":"real","value":2}]},"admitted":true},
+{"id":"wrong-category","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/2","value":{"kind":"integer","value":5},"admitted":false},
+{"id":"incomplete-arity","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"}],"path":"/entities/0/complex/0/args/-","value":{"kind":"unset"},"admitted":false},
+{"id":"middle","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/0","value":{"kind":"string","value":"shift"},"admitted":true},
+{"id":"beyond-end","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/3","value":{"kind":"string","value":"gap"},"admitted":false},
+{"id":"beyond-declaration","root":"IFCMATERIALDEFINITION","name":"IFCMATERIAL","args":[{"kind":"string","value":"steel"},{"kind":"unset"},{"kind":"unset"}],"path":"/entities/0/complex/0/args/-","value":{"kind":"string","value":"extra"},"admitted":false}
+]}

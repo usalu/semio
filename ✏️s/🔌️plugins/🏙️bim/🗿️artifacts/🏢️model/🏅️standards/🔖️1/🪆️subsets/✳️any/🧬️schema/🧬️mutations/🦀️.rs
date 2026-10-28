@@ -17,6 +17,10 @@ pub mod kit;
 #[path = "🧪️tests/🗂️fixture-cases/🦀️.rs"]
 mod fixture_cases;
 
+#[cfg(test)]
+#[path = "🧪️tests/occurrence.rs"]
+mod occurrence_property_tests;
+
 
 
 

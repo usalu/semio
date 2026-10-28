@@ -44,7 +44,7 @@ fn canonical_tagged_mutations_match_the_owned_schema_validator() {
         for mutation in directories(&owner.join("🧬️schema/🧬️mutations")) {
             documents.push(std::fs::read_to_string(mutation.join("🧬️schema/🔣️.json")).unwrap());
         }
-        for mutation in directories(&owner.join("🧫️fixtures/🧬️mutations")) {
+        for mutation in directories(&owner.join("🧪️tests/🧫️fixtures/🧬️mutations")) {
             for scenario in directories(&mutation) {
                 fixtures.push(std::fs::read_to_string(scenario.join("🦠️mutation/🔣️.json")).unwrap());
             }

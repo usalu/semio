@@ -10,6 +10,7 @@ pub trait MemberStoreProducer<P,M>:Copy+Send+Sync+'static
 where P:Clone+ToValue+FromValue,M:Clone+ToValue+FromValue+Mutation<P>,
 {
  type SnapshotOpen:MemberSnapshotOpenOperation<Snapshot=P>;
+ fn member_store_owners_copy_byte_demand(&self)->Result<usize,ValueError>;
  fn member_store_owners_birth_demand(&self)->Result<RetainedCloneBirthDemand,ValueError>;
  fn member_store_owners(&self,grant:RetainedCloneGrant)->Result<(DocumentStoreOwners<P,M>,RetainedCloneProgress),DocumentStoreOwnersAdmissionError<P,M>>;
 }

@@ -63,6 +63,199 @@
           ]
         }
       }
+    },
+    {
+      "id": "layout-structure-json-patch",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "capabilities": [
+        "layout-structure-mutate"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "json-patch",
+        "implementation": "fast-json-patch",
+        "version": "3.1.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../🧬️schema/🧬️mutations/🧪️tests/🏗️structure/🟦️.ts",
+      "rationale": "Independent RFC 6902 operations produce each structural after-document. Native semantic diffs and inverse replay consume the same language-neutral snapshots."
+    },
+    {
+      "id": "layout-layer-order-lodash",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "lodash",
+      "version": "4.18.1",
+      "capabilities": [
+        "layout-layer-order",
+        "layout-large-sheet-plan"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "lodash",
+        "implementation": "lodash.sortBy",
+        "version": "4.18.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../🧬️schema/🧪️tests/👁️layer-order/🟦️.ts",
+      "rationale": "Lodash stable sorting independently fixes expected parent/local paint and hit-test ordering; native page resolution consumes the same portable projection fixtures and checks retained overrides."
+    },
+    {
+      "id": "layout-graph-validation-ajv",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "ajv",
+      "version": "8.20.0",
+      "capabilities": [
+        "layout-graph-validation"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "json-schema",
+        "implementation": "Ajv plus independent topological graph projection",
+        "version": "8.20.0"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../🧬️schema/🧬️mutations/🧪️tests/✅️validation/🟦️.ts",
+      "rationale": "Ajv independently validates scalar, identity, membership and reference projections. A Kahn topological projection witnesses acyclic text threading; fast-json-patch 3.1.1 constructs document inputs and canonical parent memberships from portable fixtures. No native mutation or validator implementation is imported."
+    },
+    {
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../✏️editor/⚙️engine/📤️export/🧪️tests/🎨️fidelity/🟦️.ts",
+      "id": "layout-fidelity-sharp",
+      "package": "sharp",
+      "version": "0.34.5",
+      "license": "Apache-2.0",
+      "capabilities": [
+        "layout-export-fidelity"
+      ],
+      "engine": {
+        "family": "svg",
+        "implementation": "sharp/libvips",
+        "version": "0.34.5"
+      },
+      "rationale": "Independent SVG rasterization and PNG decoding reproduce portable fill, stroke, alpha and rotated image probes."
+    },
+    {
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../✏️editor/⚙️engine/📤️export/🧪️tests/🎨️fidelity/🟦️.ts",
+      "id": "layout-fidelity-pngjs",
+      "package": "pngjs",
+      "version": "7.0.0",
+      "license": "MIT",
+      "capabilities": [
+        "layout-export-fidelity"
+      ],
+      "engine": {
+        "family": "png",
+        "implementation": "pngjs",
+        "version": "7.0.0"
+      },
+      "rationale": "Independent PNG codec encodes known RGBA proxy witnesses and decodes the SVG oracle output."
+    },
+    {
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../✏️editor/⚙️engine/📤️export/🧪️tests/🎨️fidelity/🟦️.ts",
+      "id": "layout-fidelity-opentype",
+      "package": "opentype.js",
+      "version": "1.3.4",
+      "license": "MIT",
+      "capabilities": [
+        "layout-glyph-outline"
+      ],
+      "engine": {
+        "family": "truetype",
+        "implementation": "opentype.js",
+        "version": "1.3.4"
+      },
+      "rationale": "Independent TrueType parser confirms portable text witnesses have actual contours; native ttf-parser compares each transformed production glyph segment."
+    },
+    {
+      "id": "layout-fidelity-affine",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "@napi-rs/canvas",
+      "version": "1.0.11",
+      "capabilities": [
+        "layout-export-fidelity"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../✏️editor/⚙️engine/📤️export/🧪️tests/🎨️fidelity/🟦️.ts",
+      "engine": {
+        "family": "canvas-2d",
+        "implementation": "DOMMatrix",
+        "version": "1.0.11"
+      },
+      "rationale": "Independent affine matrix composition reproduces authored rotation probe coordinates and frame pivot translation."
+    },
+    {
+      "id": "layout-semantic-graph-json-patch",
+      "kind": "third-party-library",
+      "ecosystem": "javascript",
+      "package": "fast-json-patch",
+      "version": "3.1.1",
+      "capabilities": [
+        "layout-semantic-graph"
+      ],
+      "comparisonProfiles": [
+        "ordered-json-v1"
+      ],
+      "license": "MIT",
+      "testOnly": true,
+      "engine": {
+        "family": "json-patch",
+        "implementation": "fast-json-patch with Ajv and independent Unicode token annotations",
+        "version": "3.1.1"
+      },
+      "productionReachable": false,
+      "networkDuringExecution": false,
+      "hostPath": "../🧬️schema/🧬️mutations/🧪️tests/🕸️graph/🟦️.ts",
+      "rationale": "Independent RFC 6902 operations reproduce portable after-documents. Ajv graph projection and Kahn ordering verify both endpoints; token-level Unicode formatting reproduces scalar splices and UTF-8 ranges; test-only @napi-rs/canvas DOMMatrix independently witnesses finite-input transform overflow. Shared native and TypeScript semantic publication/inverse laws consume these vectors without importing oracle libraries in production."
     }
   ],
   "noOracleDecisions": [],
@@ -503,6 +696,7 @@
         }
       ],
       "kinds": [
+        "set-page-background-drawing",
         "rename-layout",
         "change-print-target",
         "change-data-fields",
@@ -550,7 +744,17 @@
         "reorder-frame",
         "drag-frames",
         "rotate-frames",
-        "scale-frames"
+        "scale-frames",
+        "create-paragraph-style",
+        "delete-paragraph-style",
+        "create-parent-page",
+        "delete-parent-page",
+        "create-spread",
+        "delete-spread",
+        "set-page-spread",
+        "reorder-layer",
+        "set-parent-page-content",
+        "replace-document"
       ]
     }
   ],
@@ -1155,6 +1359,248 @@
             {
               "capability": "layout-1-mutate",
               "qualifyingKind": "verified-native-second-implementation"
+            }
+          ]
+        },
+        {
+          "id": "create-paragraph-style",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📝️create-paragraph-style/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-paragraph-style",
+            "bridgeVersion": 1,
+            "variant": "CreateParagraphStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "delete-paragraph-style",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-paragraph-style/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-paragraph-style",
+            "bridgeVersion": 1,
+            "variant": "DeleteParagraphStyle"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "create-parent-page",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📖️create-parent-page/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-parent-page",
+            "bridgeVersion": 1,
+            "variant": "CreateParentPage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "delete-parent-page",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-parent-page/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-parent-page",
+            "bridgeVersion": 1,
+            "variant": "DeleteParentPage"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "create-spread",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📓️create-spread/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "create-spread",
+            "bridgeVersion": 1,
+            "variant": "CreateSpread"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "delete-spread",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🗑️delete-spread/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "delete-spread",
+            "bridgeVersion": 1,
+            "variant": "DeleteSpread"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "set-page-spread",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📓️set-page-spread/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-spread",
+            "bridgeVersion": 1,
+            "variant": "SetPageSpread"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "reorder-layer",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🪜️reorder-layer/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "reorder-layer",
+            "bridgeVersion": 1,
+            "variant": "ReorderLayer"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "set-parent-page-content",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📖️set-parent-page-content/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-parent-page-content",
+            "bridgeVersion": 1,
+            "variant": "SetParentPageContent"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "replace-document",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/📄️replace-document/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "replace-document",
+            "bridgeVersion": 1,
+            "variant": "ReplaceDocument"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
+            }
+          ]
+        },
+        {
+          "id": "set-page-background-drawing",
+          "capability": "layout-structure-mutate",
+          "payloadSchema": "../🧬️schema/🧬️mutations/🖊️set-page-background-drawing/🧬️schema/🔣️.json",
+          "outcomes": [
+            "applied",
+            "no-op",
+            "rejected"
+          ],
+          "productionDispatch": {
+            "operation": "set-page-background-drawing",
+            "bridgeVersion": 1,
+            "variant": "SetPageBackgroundDrawing"
+          },
+          "oracleRequirements": [
+            {
+              "capability": "layout-structure-mutate",
+              "qualifyingKind": "third-party-library",
+              "oracle": "layout-structure-json-patch"
             }
           ]
         }

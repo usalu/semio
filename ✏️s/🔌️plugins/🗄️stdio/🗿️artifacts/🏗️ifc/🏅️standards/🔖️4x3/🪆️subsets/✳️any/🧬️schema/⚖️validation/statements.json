@@ -1,0 +1,7 @@
+[
+ {"name":"CONTROLFLOW","source":"(N:INTEGER):INTEGER; LOCAL R:INTEGER:=0; END_LOCAL; REPEAT I:=1 TO N; IF I=2 THEN SKIP; END_IF; IF I=4 THEN ESCAPE; END_IF; R:=R+I; END_REPEAT; RETURN(R);","arguments":["5"],"expected":"4"},
+ {"name":"CASEFLOW","source":"(N:INTEGER):INTEGER; CASE N OF 1,2:BEGIN RETURN(N*2); END; OTHERWISE:RETURN(-1); END_CASE;","arguments":["2"],"expected":"4"},
+ {"name":"UNTILFLOW","source":"(N:INTEGER):INTEGER; LOCAL R:INTEGER:=0; END_LOCAL; REPEAT I:=N TO 1 BY -2 UNTIL R>6; R:=R+I; END_REPEAT; RETURN(R);","arguments":["5"],"expected":"8"},
+ {"name":"WHILEFLOW","source":"(N:INTEGER):INTEGER; LOCAL R:INTEGER:=0; END_LOCAL; REPEAT WHILE R<N; R:=R+1; END_REPEAT; RETURN(R);","arguments":["3"],"expected":"3"},
+ {"name":"ARRAYFLOW","source":"(N:INTEGER):INTEGER; LOCAL A:ARRAY[0:2] OF INTEGER; END_LOCAL; A:=[0:3]; A[0]:=N; A[2]:=N+1; RETURN(A[0]+A[2]);","arguments":["4"],"expected":"9"}
+]

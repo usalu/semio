@@ -1,0 +1,14 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "nativeExecution": false,
+  "cases": [
+    {"name":"invalid-program-initialization","code":"express.program-schema","complete":false,"valid":false,"diagnostics":1,"retry":"terminal"},
+    {"name":"unsupported-population-rule","code":"express.unsupported-operator","complete":false,"valid":false,"diagnostics":1,"retry":"terminal"},
+    {"name":"partial-scalar-error","code":"express.ast","scalarAvailable":false,"retry":"refused"},
+    {"name":"completed-population","retry":"terminal","receiptDelta":0},
+    {"name":"foreign-original-source","retry":"refused","receiptDelta":0},
+    {"name":"cancelled-population-prefix","retry":"refused","receiptDelta":0},
+    {"name":"underfunded-continuation","axes":["items","copy","capacity","release","depth"],"receiptDelta":0},
+    {"name":"underfunded-retirement","axis":"release","receiptDelta":0,"ownerRetained":true}
+  ]
+}

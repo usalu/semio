@@ -6,10 +6,13 @@ use semio_s_artifact_layout_layout_mutations_content::change_page_height::Change
 use semio_s_artifact_layout_layout_mutations_content::change_page_width::ChangePageWidth;
 use semio_s_artifact_layout_layout_mutations_content::delete_page::DeletePage;
 use semio_s_artifact_layout_layout_mutations_content::rename_page::RenamePage;
+use semio_s_artifact_layout_layout_mutations_content::set_page_spread::SetPageSpread;
+use semio_s_artifact_layout_layout_mutations_content::reorder_layer::ReorderLayer;
 use semio_s_artifact_layout_layout_mutations_content::reorder_pages::ReorderPages;
 use semio_s_artifact_layout_layout_mutations_frames::create_layer::CreateLayer;
 use semio_s_artifact_layout_layout_mutations_content::set_page_guides::SetPageGuides;
 use semio_s_artifact_layout_layout_mutations_content::set_page_parent::SetPageParent;
+use semio_s_artifact_layout_layout_mutations_content::set_page_background_drawing::SetPageBackgroundDrawing;
 use semio_s_artifact_layout_layout_model::LayoutRect;
 use semio_s_artifact_layout_layout_mutations_frames::update_layer::UpdateLayer;
 use semio_s_artifact_layout_layout_mutations_content::update_page_columns::UpdatePageColumns;
@@ -28,6 +31,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 fn page_field_mutation(document: &LayoutSnapshot, page: &Page, field: &str, value: &str) -> Option<LayoutMutation> {
     let id = page.id.clone();
     match field {
+        "copyDocumentDrawing"|"clearPageDrawing"|"pageDrawingWidth"|"pageDrawingHeight" => page_drawing_mutation(document,page,field,value),
         "name" => Some(LayoutMutation::RenamePage(RenamePage { id, new_name: value.into() })),
         "width" => value.parse::<f64>().ok().map(|new_width| LayoutMutation::ChangePageWidth(ChangePageWidth { id, new_width })),
         "height" => value.parse::<f64>().ok().map(|new_height| LayoutMutation::ChangePageHeight(ChangePageHeight { id, new_height })),
@@ -61,6 +65,7 @@ fn page_field_mutation(document: &LayoutSnapshot, page: &Page, field: &str, valu
             let name = if trimmed.is_empty() { "Layer".to_string() } else { trimmed.to_string() };
             Some(LayoutMutation::CreateLayer(CreateLayer { page_id: id, id: layer_id, name, remove: false, index: None }))
         }
+        "spreadId" => Some(LayoutMutation::SetPageSpread(SetPageSpread { id, spread_id: value.into(), index: None })),
         "parentPageId" => {
             let trimmed = value.trim();
             let parent_page_id = (!trimmed.is_empty()).then(|| trimmed.to_string());
@@ -79,6 +84,10 @@ fn page_field_mutation(document: &LayoutSnapshot, page: &Page, field: &str, valu
     }
 }
 
+
+fn page_drawing_mutation(_document:&LayoutSnapshot,page:&Page,field:&str,_value:&str)->Option<LayoutMutation>{
+    (field=="clearPageDrawing").then(||LayoutMutation::SetPageBackgroundDrawing(SetPageBackgroundDrawing{page_id:page.id.clone(),drawing:None}))
+}
 
 fn guide_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutation> {
     let rest = field.strip_prefix("guide.")?;
@@ -106,10 +115,18 @@ fn guide_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutatio
 
 fn layer_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutation> {
     let (layer_id, key) = field.rsplit_once('.')?;
-    if !matches!(key, "name" | "visible" | "locked") {
+    if !matches!(key, "name" | "visible" | "locked" | "delete" | "moveEarlier" | "moveLater") {
         return None;
     }
     let layer = page.layers.iter().find(|layer| layer.id == layer_id)?;
+    if key == "delete" {
+        return Some(LayoutMutation::CreateLayer(CreateLayer { page_id: page.id.clone(), id: layer.id.clone(), name: layer.name.clone(), index: None, remove: true }));
+    }
+    if matches!(key, "moveEarlier" | "moveLater") {
+        let index = page.layers.iter().position(|item| item.id == layer_id)?;
+        let to_index = if key == "moveEarlier" { index.checked_sub(1)? } else { (index + 1).min(page.layers.len().saturating_sub(1)) };
+        return Some(LayoutMutation::ReorderLayer(ReorderLayer { page_id: page.id.clone(), layer_id: layer_id.into(), to_index }));
+    }
     let mut name = layer.name.clone();
     let mut visible = layer.visible;
     let mut locked = layer.locked;
@@ -135,7 +152,7 @@ fn layer_mutation(page: &Page, field: &str, value: &str) -> Option<LayoutMutatio
 //#region 🔖️PatchFrame
 //#endregion 🔖️PatchFrame
 
-#[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
+#[derive(Clone, Default, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "patch-page")]
 pub struct PatchPage {
     pub page_id: Option<String>,
@@ -144,9 +161,14 @@ pub struct PatchPage {
 }
 
 pub fn handle(payload: &PatchPage, doc: &ArtifactView<'_, LayoutSnapshot>, cfg: &ConfigView<'_, NoConfig>) -> Result<Emit<LayoutMutation, NoConfigMutation>, Fault> {
+    if matches!(payload.field.as_str(),"pageDrawingWidth"|"pageDrawingHeight"|"copyDocumentDrawing") { return Err(Fault::from("Drawing child changes require their original retained child command route")); }
     let page_id = payload.page_id.clone().unwrap_or_else(|| current(cfg).active_page_id);
     match doc.snapshot.pages.iter().find(|page| page.id == page_id).and_then(|page| page_field_mutation(doc.snapshot, page, &payload.field, &payload.value)) {
         Some(mutation) => Ok(Emit::mutations(vec![mutation])),
         None => Ok(Emit::default()),
     }
 }
+
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod drawing_control_tests;
+
+#[path="🖼️drawing/🦀️.rs"]pub mod drawing;

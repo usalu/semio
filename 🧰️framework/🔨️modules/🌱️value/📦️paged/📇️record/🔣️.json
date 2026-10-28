@@ -1,0 +1,14 @@
+{
+  "title": "Original Indexed Record Ownership",
+  "nativeCounterpart": "PagedMap original entry_at/len owns ordered key/value entries",
+  "portable": "One original record owns enumerable literal values and private ordered original key addresses",
+  "laws": [
+    "No authored key or value copy for indexed source reads",
+    "No Object.keys/Object.entries enumeration in a retained read",
+    "No global cache or second value authority",
+    "Arbitrary literal keys including __proto__, constructor and metadata-like names",
+    "Original entry order remains stable",
+    "Cold decoder/command construction precedes original read publication",
+    "Immutable entry replacement constructs the next original owner; existing read owner stays unchanged"
+  ]
+}

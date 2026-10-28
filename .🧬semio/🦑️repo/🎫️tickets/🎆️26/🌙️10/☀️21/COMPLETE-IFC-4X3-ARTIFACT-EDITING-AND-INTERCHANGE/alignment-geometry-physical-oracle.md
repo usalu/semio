@@ -1,0 +1,12 @@
+# Official Alignment Geometry Physical Oracle
+
+Executed authored alignment-geometry-oracle.py with existing tool-neutral ticket dependency path and Python3.13; no reinstall/runtime dependency. IfcOpenShell0.9.0.post1 parsed the pinned official model and confirmed both exact source paths (2/2). Generated/alignment-geometry/oracle.json retains all actual IDs, types, values, ordered membership and environment metadata. Cross-platform Windows short-path use is guarded; normal Paths elsewhere.
+
+Source SHA25689a424cc27f58130d40642b369b93a9b5fb04df2804f1f52ec3fac457f34c025, pinned official models commit ef22440ec501551ccc9689309560bbc7e26aa9d7; URLs and source license/provenance distinction remain alignment-geometry-counterpart-source-plan.md/sources.json. Correction: f.schema reports the schema family IFC4X3; it does not identify the original header edition. The updated oracle independently asserts original f.header.file_schema.schema_identifiers equals [IFC4X3_ADD2] and records f.schema_identifier (IFC4X3_ADD2). The unchanged source is already exact ADD2 and eligible for the current endpoint header gate. No header rewriting occurred. The earlier old-schema exclusion was incorrect.
+
+Actual horizontal layout34 is relation44.RelatingObject; ordered final business member1101.DesignParameters1102 has zero SegmentLength. Same segment Representation1631→Representations1632 (Axis/Segment)→Items1201, actual IfcCurveSegment. SegmentLength is actual SELECT wrapper IfcLengthMeasure with wrappedValue0. CompositeCurve54.Segments ends with that exact same entity1201.
+
+Actual vertical layout45 is relation52.RelatingObject; final business2001.DesignParameters2002 has zero HorizontalLength. Representation2631→shape2632 (Axis/Segment)→curve2101, actual IfcLengthMeasure zero. GradientCurve79.Segments ends with2101 and BaseCurve points54. Alignment29.Representation104 contains shape106 Axis/Curve3D with item79 and shape1002 FootPrint/Curve2D with item54.
+
+This confirms explicit direct segment representation plus shared parent curve identity for this informative H+V model. It does not authenticate general list-index matching, cant correspondence, alternate representation rules, full EXPRESS validation or view conformance. Oracle performed parsing/attribute/identity assertions only; native execution remains false. The original exact-ADD2 physical model can be supplied directly to current business endpoint; the separate exact direct-counterpart predicate still needs frozen applicability/ambiguity policies.
+

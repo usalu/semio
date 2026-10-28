@@ -1,0 +1,109 @@
+{
+  "version": 1,
+  "scope": "one-public-query-with-nested-procedures",
+  "source": "../\ud83e\uddea\ufe0fvector/source.ifc",
+  "helper": "FUNCTION Change(D:IfcDirection):IfcDirection; D.DirectionRatios[1]:=9.0; RETURN(D); END_FUNCTION;",
+  "cases": [
+    {
+      "id": "local-alias",
+      "source": "FUNCTION Probe(D:IfcDirection):REAL; LOCAL A,B:IfcDirection; END_LOCAL; A:=D; B:=A; B.DirectionRatios[1]:=9.0; RETURN(A.DirectionRatios[1]); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "9"
+      }
+    },
+    {
+      "id": "duplicate-argument-alias",
+      "source": "FUNCTION Probe(A,B:IfcDirection):REAL; A.DirectionRatios[1]:=9.0; RETURN(B.DirectionRatios[1]); END_FUNCTION;",
+      "args": [
+        "4",
+        "4"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "9"
+      }
+    },
+    {
+      "id": "aggregate-assignment-copy",
+      "source": "FUNCTION Probe(D:IfcDirection):REAL; LOCAL A:LIST[2:3] OF REAL; END_LOCAL; A:=D.DirectionRatios; A[1]:=9.0; RETURN(D.DirectionRatios[1]); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "3"
+      }
+    },
+    {
+      "id": "derived-local-self",
+      "source": "FUNCTION Probe(D:IfcDirection):INTEGER; D.DirectionRatios:=[1.0,2.0,3.0]; RETURN(D.Dim); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "id": "qualified-derived-self",
+      "source": "FUNCTION Probe(D:IfcDirection):INTEGER; D.DirectionRatios:=[1.0,2.0,3.0]; RETURN(D\\IfcDirection.Dim); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "id": "retained-identity",
+      "source": "FUNCTION Probe(A,B:IfcDirection):BOOLEAN; A.DirectionRatios[1]:=9.0; RETURN(A :=: B); END_FUNCTION;",
+      "args": [
+        "4",
+        "4"
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "id": "returned-local-reference",
+      "source": "FUNCTION Probe(D:IfcDirection):IfcDirection; D.DirectionRatios[1]:=9.0; RETURN(D); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "direction",
+        "value": "9,4"
+      }
+    },
+    {
+      "id": "nested-alias",
+      "source": "FUNCTION Probe(D:IfcDirection):REAL; LOCAL A:IfcDirection; END_LOCAL; A:=Change(D); RETURN(D.DirectionRatios[1]+A.DirectionRatios[1]); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "18"
+      }
+    },
+    {
+      "id": "failed-root-isolated",
+      "source": "FUNCTION Probe(D:IfcDirection):REAL; D.DirectionRatios[1]:=9.0; RETURN(UnsupportedCall(D)); END_FUNCTION;",
+      "args": [
+        "4"
+      ],
+      "expected": {
+        "kind": "error",
+        "value": "unsupported-call"
+      }
+    }
+  ]
+}

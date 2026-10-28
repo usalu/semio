@@ -1,0 +1,24 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "$id":"semio.ifc4x3.official-corpus.v1",
+  "type":"object",
+  "additionalProperties":false,
+  "required":["schema","repository","commit","notice","oracle","cases"],
+  "properties":{
+    "schema":{"const":"IFC4X3_ADD2"},
+    "repository":{"const":"buildingSMART/IFC4.x-specification-models"},
+    "commit":{"type":"string","pattern":"^[a-f0-9]{40}$"},
+    "notice":{"type":"string"},
+    "oracle":{"type":"object","additionalProperties":false,"required":["implementation","version","expressRules"],"properties":{"implementation":{"const":"IfcOpenShell"},"version":{"type":"string"},"expressRules":{"const":true}}},
+    "cases":{"type":"array","minItems":46,"maxItems":46,"items":{"type":"object","additionalProperties":false,"required":["file","path","url","blob","sha256","bytes","entities","diagnostics"],"properties":{
+      "file":{"type":"string","pattern":"^[a-zA-Z0-9_.-]+\\.ifc$"},
+      "path":{"type":"string"},
+      "url":{"type":"string"},
+      "blob":{"type":"string","pattern":"^[a-f0-9]{40}$"},
+      "sha256":{"type":"string","pattern":"^[a-f0-9]{64}$"},
+      "bytes":{"type":"integer","minimum":1},
+      "entities":{"type":"integer","minimum":1},
+      "diagnostics":{"type":"array","items":{"type":"object","additionalProperties":false,"required":["kind","entityId","attribute"],"properties":{"kind":{"enum":["schema","express"]},"entityId":{"type":"string","pattern":"^[1-9][0-9]*$"},"attribute":{"type":"string"}}}}
+    }}}
+  }
+}

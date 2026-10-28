@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Framed Wire Identity",
+  "type": "object",
+  "required": [
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "name",
+          "left",
+          "right",
+          "equal"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "left": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "backing",
+              "extent",
+              "rangeStart",
+              "authority"
+            ],
+            "properties": {
+              "backing": {
+                "type": "string"
+              },
+              "extent": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "rangeStart": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "authority": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "right": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "backing",
+              "extent",
+              "rangeStart",
+              "authority"
+            ],
+            "properties": {
+              "backing": {
+                "type": "string"
+              },
+              "extent": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "rangeStart": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "authority": {
+                "type": "array",
+                "items": {
+                  "type": "string",
+                  "pattern": "^[0-9]+$"
+                },
+                "minItems": 2,
+                "maxItems": 2
+              }
+            }
+          },
+          "equal": {
+            "type": "boolean"
+          }
+        }
+      }
+    }
+  }
+}

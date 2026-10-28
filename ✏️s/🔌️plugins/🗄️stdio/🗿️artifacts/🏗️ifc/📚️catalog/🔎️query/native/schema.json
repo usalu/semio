@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "source",
+    "scope",
+    "results",
+    "laws",
+    "authority"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.ifc.native-query-owner.v1"
+    },
+    "source": {
+      "const": "existing-owner-qualified-query-cases"
+    },
+    "scope": {
+      "const": "original-native-synchronous-receiving"
+    },
+    "results": {
+      "const": [
+        "missing",
+        "unique",
+        "ambiguous",
+        "unknown"
+      ]
+    },
+    "laws": {
+      "const": [
+        {
+          "id": "original-slots",
+          "outcome": "borrowed-scoped"
+        },
+        {
+          "id": "missing-serialized-value",
+          "outcome": "unique-none"
+        },
+        {
+          "id": "late-unknown",
+          "outcome": "unknown"
+        },
+        {
+          "id": "no-items",
+          "outcome": "refused"
+        },
+        {
+          "id": "no-copy",
+          "outcome": "refused"
+        },
+        {
+          "id": "no-capacity",
+          "outcome": "refused"
+        },
+        {
+          "id": "no-depth",
+          "outcome": "refused"
+        },
+        {
+          "id": "cancel-entry",
+          "outcome": "cancelled"
+        },
+        {
+          "id": "cancel-every-prefix",
+          "outcome": "retained-paid-close"
+        },
+        {
+      "id": "parent-stage",
+      "outcome": "same-stage-restored"
+    },
+    {
+      "id": "prior-debit",
+          "outcome": "same-wallet"
+        },
+        {
+          "id": "source-error",
+          "outcome": "receipt-retained"
+        },
+        {
+          "id": "owned-output-failure",
+          "outcome": "retained-paid-close"
+        }
+      ]
+    },
+    "authority": {
+      "const": {
+        "control": "NativeSnapshotDecodeOwner",
+        "grant": "original-remaining",
+        "allocation": "original-receive-nested",
+        "binding": "synchronous-borrow",
+        "result": "higher-ranked-scoped",
+        "output": "owned-retire-owned-static",
+        "retirement": "original-recipient"
+      }
+    }
+  }
+}

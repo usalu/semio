@@ -1,0 +1,54 @@
+# IFC4 Indexed Profile Curve Audit
+
+Read-only primary-source research2026-10-21. Main helper source not yet reviewed; awaiting readiness. Prior contextual edit final guard correction was verified in ifc-contextual-edit-audit.md.
+
+## Exact Official IFC4 Semantics
+
+Pinned source repository buildingSMART/Standards-builds commit a8664407b63d42651e48a78a252c76d09dd6274c, IFC/RELEASE/IFC4/ADD2_TC1/HTML.
+
+- [IfcIndexedPolyCurve original release page](https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcgeometryresource/lexical/ifcindexedpolycurve.htm), HTTP200 via pinned raw mirror. Optional Segments missing means connect CoordList consecutively with lines. IfcLineIndex may describe multiple consecutive lines; IfcArcIndex has start/on-arc/end indices. Explicit segments must share identical end/start indices between neighbors. Explicit closure is last endpoint index equal first endpoint index; matching coordinates under different indices is not this declared closure rule. Without segments, coordinate equality of first/last point determines closure. SelfIntersect is optional informational data, not permission to skip geometry topology checks. Crucially official page says collinear ArcIndex degrades to polyline rather than hard failure.
+- [IfcArcIndex original release page](https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcgeometryresource/lexical/ifcarcindex.htm), HTTP200. Exact list cardinality3 positive indices. Three points determine arc plane, center and radius, and traversal runs start to end through on-arc point. Middle point should be roughly equidistant from endpoints for numeric stability; this is informal guidance, not equal-angle enforcement.
+- [IfcLineIndex original release page](https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcgeometryresource/lexical/ifclineindex.htm), HTTP200. List cardinality>=2 positive indices; intermediate indexed points remain sequential corners.
+- [IfcCartesianPointList2D original release page](https://raw.githubusercontent.com/buildingSMART/Standards-builds/a8664407b63d42651e48a78a252c76d09dd6274c/IFC/RELEASE/IFC4/ADD2_TC1/HTML/schema/ifcgeometricmodelresource/lexical/ifccartesianpointlist2d.htm), HTTP200. CoordList is positional argument0, nonempty list of fixed arity2 coordinates. Verified unchanged official IFC4 EXPRESS: ENTITY IfcCartesianPointList2D SUBTYPE OF(IfcCartesianPointList); CoordList:LIST[1:?] OF LIST[2:2] OF IfcLengthMeasure; END_ENTITY. No TagList or other explicit metadata argument exists in target IFC4 ADD2TC1. Do not accidentally import newer schema point-list arity. PointList3D likewise fixed3 rows; reject malformed row arity rather than padding2D/3D interchangeably.
+
+The public standards host lexical endpoints returned403 or access failure; pinned official raw mirror was read successfully. This is the same official release asset repository used for the unchanged catalog/sample inputs, not a community rewrite.
+
+## Own Algorithm Review Requirements
+
+These implementation constraints are inferred from the above semantics and numerical geometry, not copied schema requirements.
+
+Compute center in translated, scaled coordinates. For 2D profiles, use a fixed xy orientation so signed sweep is observable; for general3D support, build an orthonormal basis in the plane from two independent chord vectors and retain orientation consistently. Avoid center equations on large global coordinates and unscaled squared lengths. The plane may be any orientation when the generic curve helper supports3D, but a 2D arbitrary profile must still enforce point-list dimension2 before extrusion.
+
+Choose signed sweep that includes middle point on its interior arc, including major arc>pi and clockwise negative sweep. atan2 endpoint difference normalized to shortest angle is wrong for major arcs; atan2 sign of determinant alone is also insufficient without through-middle containment. Test start(1,0),middle(0,-1),end(0,1): correct clockwise major sweep -3pi/2; shortest+pi/2 is wrong. Reverse input must reverse direction and preserve coverage. Semicircle tests both signs are essential. Start=end cannot define a unique full circle with only three indexed coordinates; require multiple arcs for a closed circle rather than silently selecting an arbitrary full-turn center. Coincident consecutive points must not create a zero-length artificial segment.
+
+Collinear three points follow official polyline fallback, including middle point as a genuine corner in sequence. Distinguish exact/precision-level collinearity from numerically unstable circumcenter; explicit rejection for unsupported ill-conditioned computation should not be mislabeled as standard-required collinear refusal. Retain midpoint/end anchor identity in tessellation: sampling may split at middle point or choose sample counts per subarc, but do not drop exact connection endpoints or insert duplicated consecutive boundary vertices. Chord tolerance should be computed from radius and signed absolute sweep, enforce max sample/work budget before allocation, and document pre-inherited-transform error (consistent with current curve contract).
+
+Explicit typed SegmentIndexSelect wire uses IFCARCINDEX((i,j,k)) or IFCLINEINDEX((...)), which means typedValue items contain one Aggregate payload. Reject unknown wrappers, wrong item count/kind, nonpositive/wide out-of-range index, ArcIndex cardinality!=3 and LineIndex<2. Do not flatten arbitrary typed wrappers opportunistically. Explicit segment list empty is invalid LIST[1:?], while $ is absent/default polyline. Derived * is not absent optional Segments.
+
+Closure validation must precede removing final endpoint. For explicit list: require exact endpoint index continuity and closure; for implicit list: require endpoint coordinate equality. Equal coordinates under different explicit indices should not bypass index continuity. A profile is required closed; generic indexed curve can be open, so separate curve sampling from profile closure validation. SelfIntersect false does not prove simple; run cap ring validator on sampled profile.
+
+## Required Neutral/Differential Cases
+
+Line-only explicit multiindex plus implicit closed list; mixed line+arc; ±quarter/±semicircle; major arcs; reversed traversal; multi-arc circle; asymmetric middle parameter; collinear fallback; duplicate-coordinate different explicit-index break; broken connectivity/open profile; arbitrary tilted3D plane (if declared supported);2D/3D row arity; huge translation/tiny radius; tiny/huge uniform scale; repeated endpoints; control cancellation at every sampling/lookup tick; sample cap; native/TS parity.
+
+Use existing Three public EllipseCurve/ArcCurve for2D signed-circle samples and Path/ShapeUtils for final cap area, plus pinned official IFC4 beam-extruded-solid.ifc which contains an indexed I-section with line and arc indices. Three data is test-only behind first-party oracle interface. Compare geometric coverage/endpoints/tolerance rather than exact adaptive subdivision order. Official beam is a useful untouched conformance target; keep source schema/attributes unchanged.
+
+## Pending Source Review
+
+No helper source review or differential execution claimed here. Main will notify once the TS helper lands; append concrete line findings and executed results afterward.
+
+## Actual TS Helper Review After Readiness
+
+Reviewed common IFC 📐️geometry/🟦️.ts arcPoints lines266–280, indexedProfileCurve282–305, profileCurve307onward, new GeometryValues.typed and reader boundaries. Native port pending; no native compile claim.
+
+Center formula is the standard two-chord circumcenter in translated/max-chord-scaled xy space. Orientation sign(det) matches traversal start/middle/end. Splitting angular traversal start->middle and middle->end with the same sign correctly retains both negative and major arcs (including suggested−3pi/2 example); exact middle/end are emitted and starting point is not duplicated by each sample. Counts bound angular step to2pi/72 per subarc; max full arc72plus at most2 rounding samples. No proved sign/major-span math defect found by static inspection.
+
+Helper explicitly requires IFC4 and IFCPOINTLIST2D, exact arity2 rows, reads only CoordList position0, checks typed wrappers/aggregate item count/segment index cardinality/onebased bounds, explicit consecutive index equality, explicit closed identity, then coordinate closure before popping last point. Derived* does not become missing segment; unknown wrapper refused. Exact determinant0 follows required polyline fallback; uncertain nonzero determinant threshold explicitly refuses ill-conditioned arc instead of inventing a circle. SelfIntersect ignored as informational is consistent with official source.
+
+**P2 control/large-input issue:** indexedProfileCurve line289 uses polygon.push(...points) for absent Segments. CoordList can contain enough valid points to exceed JavaScript engine argument-count limit (commonly around125k); default geometric vertex limit200k and work2m do not prevent this large-argument call. It can throw RangeError before the intended limited/cancelled geometry status. Replace with a ticked append loop; unlike bounded arcPoints (~74points), implicit entire point-list spread is unbounded. This was surfaced to main. Line298 arc spread is bounded by angular step and needs no same argument-count fix.
+
+Per-point/index/sample loops consume original projector tick; caller graph scanning and original render wrapper remain intact. No sample checkpoint/resume implemented or claimed. Sample result may still be refused by ring topology/budget, which is explicit. Temporary point allocation precedes final vertex cap enforcement but is funded by work ticks; ensure per-operation input/memory ownership remains bounded for extremely long point lists.
+
+Remaining tests needed in actual source: ±major and semicircles; asymmetric middle; collinear fallback; explicit emptysegments, wrong wrapper/dimensions/indices and brokenclosingindex; omittedsegments hugepointlist trigger under small budget; originalcancel eachsamplestep; ordinary rotated/translatedlarge/small radii and nearcollinear diagnostic. Main reports four new neutral geometry vectors failed before implementation and36actual groups passed0diagnostics; independentThree/negativecases were still being added at this read. Those reported results were not independently executed by audit agent, and no fabricated success is implied.
+
+Follow-up: main reports omittedsegments unbounded spread replaced with ticked append loop and38TSgroups passing. Earlier spread finding is resolved by author report; native port pending.

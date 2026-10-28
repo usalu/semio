@@ -1,0 +1,177 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "scope",
+    "view",
+    "requirementSetComplete",
+    "status",
+    "complete",
+    "valid",
+    "obligations",
+    "diagnostics"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "scope": {
+      "enum": [
+        "selected-contracts",
+        "whole-view"
+      ]
+    },
+    "view": {
+      "enum": [
+        "ReferenceView",
+        "Alignment-basedReferenceView",
+        null
+      ]
+    },
+    "requirementSetComplete": {
+      "type": "boolean"
+    },
+    "status": {
+      "enum": [
+        "pass",
+        "fail",
+        "incomplete",
+        "not-applicable"
+      ]
+    },
+    "complete": {
+      "type": "boolean"
+    },
+    "valid": {
+      "type": "boolean"
+    },
+    "obligations": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "concept",
+          "predicate",
+          "target",
+          "applicability",
+          "implementation",
+          "status"
+        ],
+        "properties": {
+          "concept": {
+            "type": "string",
+            "minLength": 1
+          },
+          "predicate": {
+            "type": "string",
+            "minLength": 1
+          },
+          "target": {
+            "type": "string",
+            "pattern": "^[1-9][0-9]*$"
+          },
+          "applicability": {
+            "enum": [
+              "applicable",
+              "not-applicable",
+              "unknown"
+            ]
+          },
+          "implementation": {
+            "enum": [
+              "implemented",
+              "unimplemented"
+            ]
+          },
+          "status": {
+            "enum": [
+              "pass",
+              "fail",
+              "incomplete",
+              "not-applicable"
+            ]
+          }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "complete": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "valid": {
+            "const": false
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "scope": {
+            "const": "whole-view"
+          },
+          "requirementSetComplete": {
+            "const": false
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "complete": {
+            "const": false
+          },
+          "valid": {
+            "const": false
+          }
+        },
+        "not": {
+          "properties": {
+            "status": {
+              "enum": [
+                "pass",
+                "not-applicable"
+              ]
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "valid": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "status": {
+            "const": "pass"
+          },
+          "complete": {
+            "const": true
+          }
+        }
+      }
+    }
+  ]
+}

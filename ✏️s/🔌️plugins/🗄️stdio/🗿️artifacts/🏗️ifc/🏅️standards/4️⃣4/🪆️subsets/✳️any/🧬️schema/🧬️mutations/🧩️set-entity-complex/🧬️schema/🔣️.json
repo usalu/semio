@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/mutation/set-entity-complex/schema.json",
+  "title": "SetEntityComplex",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "mutation",
+    "id",
+    "complex"
+  ],
+  "properties": {
+    "mutation": {
+      "const": "setEntityComplex"
+    },
+    "id": {
+      "type": "integer",
+      "minimum": 0,
+      "x-semio-ui": {
+        "widget": "stepper",
+        "label": {
+          "en": "Entity",
+          "de": "Entität"
+        },
+        "step": 1,
+        "precision": 0,
+        "group": "target",
+        "order": 10
+      }
+    },
+    "complex": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcComplexType"
+      },
+      "x-semio-ui": {
+        "label": {
+          "en": "Complex constituents",
+          "de": "Komplexe Bestandteile"
+        },
+        "description": {
+          "en": "Additional type members of the same entity instance.",
+          "de": "Weitere Typbestandteile derselben Entitätsinstanz."
+        },
+        "group": "value",
+        "order": 20
+      }
+    }
+  }
+}

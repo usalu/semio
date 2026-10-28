@@ -1,0 +1,18 @@
+{
+  "feature": "OriginalRetirementCloseLoan",
+  "authority": "borrowed actual original ledger, recipient and charge callback",
+  "mint": "unsafe trusted native-decoder boundary only",
+  "currencies": "unchanged caller grant and cumulative original allocation",
+  "scope": "no decode/checkpoint/receiving escalation",
+  "forbidden": [
+    "default control",
+    "fresh ledger",
+    "stored surrogate counter"
+  ],
+  "laws": [
+    "exact ledger and recipient identity",
+    "exact original callback sees each charge",
+    "charge error identity and paid effects preserved",
+    "no heap birth"
+  ]
+}

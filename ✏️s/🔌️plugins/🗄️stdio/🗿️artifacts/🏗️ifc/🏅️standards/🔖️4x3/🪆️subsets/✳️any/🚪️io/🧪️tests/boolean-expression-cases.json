@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "nested-two-cuts",
+      "root": "final",
+      "rootForm": "csg",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "cut",
+          "kind": "block",
+          "origin": [
+            2,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "first",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "host",
+          "second": "cut"
+        },
+        {
+          "key": "secondCut",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            1,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "final",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "first",
+          "second": "secondCut"
+        }
+      ],
+      "expected": "mesh",
+      "volume": 16,
+      "physical": "valid"
+    },
+    {
+      "id": "repeated-dag-union",
+      "root": "final",
+      "rootForm": "direct",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "cut",
+          "kind": "block",
+          "origin": [
+            2,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "first",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "host",
+          "second": "cut"
+        },
+        {
+          "key": "final",
+          "kind": "boolean",
+          "operator": "UNION",
+          "first": "first",
+          "second": "first"
+        }
+      ],
+      "expected": "mesh",
+      "volume": 32,
+      "physical": "valid"
+    },
+    {
+      "id": "disconnected-then-intersection",
+      "root": "final",
+      "rootForm": "csg",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "far",
+          "kind": "block",
+          "origin": [
+            6,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "joined",
+          "kind": "boolean",
+          "operator": "UNION",
+          "first": "host",
+          "second": "far"
+        },
+        {
+          "key": "window",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            8,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "final",
+          "kind": "boolean",
+          "operator": "INTERSECTION",
+          "first": "joined",
+          "second": "window"
+        }
+      ],
+      "expected": "mesh",
+      "volume": 96,
+      "physical": "valid"
+    },
+    {
+      "id": "empty-child-union",
+      "root": "final",
+      "rootForm": "direct",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "empty",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "host",
+          "second": "host"
+        },
+        {
+          "key": "final",
+          "kind": "boolean",
+          "operator": "UNION",
+          "first": "empty",
+          "second": "host"
+        }
+      ],
+      "expected": "mesh",
+      "volume": 64,
+      "physical": "valid"
+    },
+    {
+      "id": "shared-subtree-full-subtraction",
+      "root": "final",
+      "rootForm": "csg",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "cut",
+          "kind": "block",
+          "origin": [
+            2,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "first",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "host",
+          "second": "cut"
+        },
+        {
+          "key": "final",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "first",
+          "second": "first"
+        }
+      ],
+      "expected": "empty",
+      "volume": 0,
+      "physical": "valid"
+    },
+    {
+      "id": "active-path-cycle",
+      "root": "cycle",
+      "rootForm": "csg",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "cycle",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "cycle",
+          "second": "host"
+        }
+      ],
+      "expected": "unsupported",
+      "volume": null,
+      "physical": "cyclic-not-sdk-evaluated"
+    },
+    {
+      "id": "dangling-operand",
+      "root": "final",
+      "rootForm": "direct",
+      "nodes": [
+        {
+          "key": "host",
+          "kind": "block",
+          "origin": [
+            0,
+            0,
+            0
+          ],
+          "size": [
+            4,
+            4,
+            4
+          ]
+        },
+        {
+          "key": "final",
+          "kind": "boolean",
+          "operator": "DIFFERENCE",
+          "first": "host",
+          "second": "missing"
+        }
+      ],
+      "expected": "unsupported",
+      "volume": null,
+      "physical": "malformed"
+    }
+  ]
+}

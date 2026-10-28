@@ -3,7 +3,7 @@
 use super::*;
 
 //#region 🔖️Contract
-pub const LAYOUT_EXPORT_TOOL_IDS: &[&str] = &["exportPng", "exportSvg", "exportPdf", "exportPackage"];
+pub const LAYOUT_EXPORT_TOOL_IDS: &[&str] = &["exportPng", "exportSvg", "exportPdf", "exportPackage", "exportStep", "exportIdml"];
 
 pub const LAYOUT_EXPORT_PAYLOAD_SCHEMA: &str = "layout.layout.tool-command.v1";
 
@@ -18,10 +18,6 @@ pub const MAX_LAYOUT_EXPORT_RAW_BYTES: usize = 2 << 20;
 pub const MAX_LAYOUT_EXPORT_COMMAND_RAW_BYTES: usize = 4_096;
 
 pub const MAX_LAYOUT_EXPORT_PAGES: usize = 64;
-
-pub const MAX_LAYOUT_EXPORT_FRAMES_PER_PAGE: usize = 8;
-
-pub const MAX_LAYOUT_EXPORT_TOTAL_FRAMES: usize = 1_024;
 
 pub const MAX_LAYOUT_EXPORT_STORIES: usize = 512;
 
@@ -50,7 +46,7 @@ pub const MAX_LAYOUT_EXPORT_FILES: usize = 3;
 /// (`🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json`'s `contract.maximumTotalBytes`).
 pub const MAX_LAYOUT_EXPORT_OUTPUT_BYTES: usize = ArtifactOutputChunks::MAXIMUM_TOTAL_BYTES;
 
-pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 634;
+pub const MAX_LAYOUT_EXPORT_CHECKPOINT_BYTES: usize = 642;
 
 /// 📤️ Derived, never a literal: the exact per-chunk cap [`ArtifactOutputChunks::push`] enforces. A
 /// literal that drifts from it turns a correct producer into a runtime fault on the wire.
@@ -60,11 +56,9 @@ pub const MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS: usize = MAX_LAYOUT_EXPORT_OUTPUT_BYTE
 
 pub(super) const BASE64_INPUT_BYTES_PER_UNIT: usize = 3_072;
 
-pub(super) const PNG_PIXELS_PER_UNIT: u32 = 256;
-
 pub(super) const MAX_LAYOUT_EXPORT_AUTHORITY_BYTES: usize = 256;
 
-pub(super) const LAYOUT_EXPORT_CHECKPOINT_MAGIC: &[u8; 4] = b"LXC2";
+pub(super) const LAYOUT_EXPORT_CHECKPOINT_MAGIC: &[u8; 4] = b"LXC3";
 
 fn empty_close_snapshot() -> LayoutSnapshot {
     LayoutSnapshot {
@@ -92,6 +86,8 @@ pub enum LayoutExportKind {
     Svg,
     Pdf,
     Package,
+    Step,
+    Idml,
 }
 
 impl LayoutExportKind {
@@ -101,6 +97,8 @@ impl LayoutExportKind {
             Self::Svg => "exportSvg",
             Self::Pdf => "exportPdf",
             Self::Package => "exportPackage",
+            Self::Step => "exportStep",
+            Self::Idml => "exportIdml",
         }
     }
 
@@ -110,6 +108,8 @@ impl LayoutExportKind {
             Self::Svg => "image/svg+xml",
             Self::Pdf => "application/pdf",
             Self::Package => "application/zip",
+            Self::Step => "model/step",
+            Self::Idml => "application/vnd.adobe.indesign-idml-package",
         }
     }
 
@@ -119,11 +119,13 @@ impl LayoutExportKind {
             Self::Svg => "svg",
             Self::Pdf => "pdf",
             Self::Package => "layout-package.zip",
+            Self::Step => "step",
+            Self::Idml => "idml",
         }
     }
 
     pub fn binary(self) -> bool {
-        !matches!(self, Self::Svg)
+        !matches!(self, Self::Svg | Self::Step)
     }
 }
 
@@ -139,7 +141,8 @@ pub struct LayoutExportRequest {
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct LayoutExportCheckpoint {
-    pub completed_units: u64,
+    pub work_units: u64,
+    pub committed_units: u64,
     pub output_bytes: u64,
     pub output_digest: u64,
 }
@@ -173,112 +176,19 @@ impl LayoutExportCommit {
 //#endregion 🔖️Contract
 
 //#region 🧱️Storage
-#[derive(Debug)]
-pub struct ChunkRope {
-    pub chunks: std::collections::VecDeque<Vec<u8>>,
-    pub len: usize,
-    pub digest: u64,
-    pub front_byte_cursor: usize,
-}
+pub use super::output::ChunkRope;
 
-impl ChunkRope {
-    pub fn close_take_chunk(&mut self, maximum_bytes: usize) -> Option<Result<usize, ()>> {
-        let bytes = self.chunks.front().map_or(0, Vec::len);
-        if bytes == 0 {
-            return None;
-        }
-        if bytes > maximum_bytes {
-            return Some(Err(()));
-        }
-        drop(self.chunks.pop_front());
-        Some(Ok(bytes))
-    }
-}
-
-impl ChunkRope {
-    pub fn new() -> Self {
-        Self { chunks: std::collections::VecDeque::with_capacity(MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS), len: 0, digest: 0xcbf29ce484222325, front_byte_cursor: 0 }
-    }
-
-    pub fn append(&mut self, mut bytes: &[u8]) -> Result<(), String> {
-        if self.len.checked_add(bytes.len()).is_none_or(|len| len > MAX_LAYOUT_EXPORT_OUTPUT_BYTES) {
-            return Err("layout-export-output-limit".into());
-        }
-        while !bytes.is_empty() {
-            if self.chunks.back().is_none_or(|chunk| chunk.len() == OUTPUT_CHUNK_BYTES) {
-                if self.chunks.len() == MAX_LAYOUT_EXPORT_OUTPUT_CHUNKS {
-                    return Err("layout-export-output-limit".into());
-                }
-                self.chunks.push_back(Vec::with_capacity(OUTPUT_CHUNK_BYTES));
-            }
-            let chunk = self.chunks.back_mut().expect("chunk exists");
-            let take = bytes.len().min(OUTPUT_CHUNK_BYTES - chunk.len());
-            for byte in &bytes[..take] {
-                self.digest = (self.digest ^ u64::from(*byte)).wrapping_mul(0x100000001b3);
-            }
-            chunk.extend_from_slice(&bytes[..take]);
-            self.len += take;
-            bytes = &bytes[take..];
-        }
-        Ok(())
-    }
-
-    pub fn take_chunk(&mut self) -> Option<Vec<u8>> {
-        if self.front_byte_cursor != 0 {
-            return None;
-        }
-        self.chunks.pop_front()
-    }
-
-    pub fn take_prefix(&mut self, maximum: usize) -> Vec<u8> {
-        let mut output = Vec::with_capacity(maximum);
-        while output.len() < maximum {
-            let Some(chunk) = self.chunks.front() else { break };
-            let take = (maximum - output.len()).min(chunk.len() - self.front_byte_cursor);
-            output.extend_from_slice(&chunk[self.front_byte_cursor..self.front_byte_cursor + take]);
-            self.front_byte_cursor += take;
-            if self.front_byte_cursor == chunk.len() {
-                self.chunks.pop_front();
-                self.front_byte_cursor = 0;
-            }
-        }
-        output
-    }
-}
-
-#[derive(Clone, Debug)]
-pub struct ExportRect {
-    pub x: u32,
-    pub y: u32,
-    pub width: u32,
-    pub height: u32,
-    pub rgba: [u8; 4],
-}
-
-#[derive(Clone, Debug)]
-pub struct ZipEntry {
-    pub name: String,
-    pub crc: u32,
-    pub size: u32,
-    pub offset: u32,
-}
-
-#[derive(Clone, Debug, Default)]
-pub struct ZipState {
-    pub entries: Vec<ZipEntry>,
-    pub current_name: Option<String>,
-    pub current_crc: u32,
-    pub current_size: u32,
-    pub current_offset: u32,
-}
+pub use super::pdf_png_and_package_encoding::zip::{ZipEntry,ZipState,PackageMember};
 
 //#endregion 🧱️Storage
 
 //#region 🧩️Job
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[repr(u8)]
 pub(super) enum ExportStage {
     Validate,
     Plan,
+    BeginEncode,
     Encode,
     Base64,
     PackageCommit,
@@ -303,39 +213,56 @@ pub(super) enum PdfSection {
     FontFileBytes,
     FontFileEnd,
     PageObject,
+    PageResources,
+    PageGraphicsStates,
     ContentBegin,
     ContentItem,
     ContentEnd,
     ContentLength,
+    ImageBegin,
+    ImageRgb,
+    ImageRgbEnd,
+    ImageAlphaBegin,
+    ImageAlpha,
+    ImageAlphaEnd,
+    UnicodeBegin,
+    UnicodeRanges,
+    UnicodeEnd,
+    UnicodeLength,
+    EncodingCmap,
     XrefBegin,
     XrefEntries,
     Trailer,
     Complete,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,semio_framework_value::RetireOwned)]
 pub(super) struct PdfRaster {
     pub(super) width: u32,
     pub(super) height: u32,
-    pub(super) rgb: Vec<u8>,
+    pub(super) resource: Option<usize>,
+    pub(super) rgba: Vec<u8>,
 }
 
 /// 📕️ One painted element of a page's content stream, in page (top-left, y-down) coordinates.
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug,semio_framework_value::RetireOwned)]
 pub(super) enum PdfItem {
+    DrawingPath { index: usize },
+    DrawingOutline { label: usize, glyph: usize, paint: semio_s_artifact_layout_layout_engine::scene::drawing_planning::DrawingPaint, affine: [f64; 6] },
+    Outline { source: usize, glyph: usize, color: [f32; 4], italic: bool, rotation: f32, center: [f32; 2] },
     Stroke { points: Vec<(f32, f32)>, closed: bool, color: [f32; 4], width: f32, fill: Option<[f32; 4]> },
-    Rect { x: f32, y: f32, width: f32, height: f32, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]> },
-    Glyph { x: f32, y: f32, size: f32, glyph_id: u16, color: [f32; 4], italic: bool },
-    Image { x: f32, y: f32, width: f32, height: f32, rotation: f32, placeholder: bool, mark: String, raster: Option<PdfRaster> },
+    Rect { x: f64, y: f64, width: f64, height: f64, rotation: f64, fill: Option<[f32; 4]>, stroke: Option<[f32; 4]> },
+    Image { x: f64, y: f64, width: f64, height: f64, rotation: f64, affine: Option<[f64; 6]>, link: Option<usize>, placeholder: bool, mark: String, proxy: Option<String>, raster: Option<PdfRaster> },
 }
 
 /// 📕️ One exported page: its media box and how many `pdf_items` it owns (items are contiguous in
 /// page order, so the page's slice starts where the previous page's ended).
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug,semio_framework_value::RetireOwned)]
 pub(super) struct PdfPagePlan {
     pub(super) width: u32,
     pub(super) height: u32,
     pub(super) items: usize,
+    pub(super) first_item: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -362,17 +289,19 @@ pub enum LayoutExportCloseStage {
     JsonValidation,
     TypedValidation,
     PackageJson,
-    Rects,
     Output,
     Encoded,
-    Base64Tail,
     PngRow,
     PdfOffsets,
     PdfItems,
     PdfPages,
-    PdfEngine,
+    Interchange,
+    Fidelity,
+    Drawing,
+    Paragraphs,
+    FramePlanning,
     ZipEntries,
-    ZipCurrentName,
+    ZipCurrentMember,
     PageAuthority,
     Preflight,
     ParentAuthority,
@@ -400,9 +329,6 @@ pub(super) enum LayoutCloseTurn {
     Blocked { reason: &'static str },
     Complete,
 }
-
-/// 🔔️ The close budget one staged turn is quoted for; stages release at most one output chunk per turn.
-pub(super) const LAYOUT_EXPORT_CLOSE_TURN_BYTES: usize = ArtifactOutputChunks::CHUNK_BYTES;
 
 pub(super) fn layout_close_step(turn:Result<LayoutCloseTurn,Fault>)->Result<InteractiveJobCloseStep,semio_framework_job::OriginalTurnFailure>{
     Ok(match turn?{
@@ -525,3 +451,13 @@ impl LayoutPublicationSlot {
     }
 }
 //#endregion 🧩️Job
+
+#[derive(Default)]
+pub(super) struct NestedValidationCursor {
+    pub(super) started: bool,
+    pub(super) group: u8,
+    pub(super) index: usize,
+    pub(super) layer: usize,
+}
+
+pub(super) enum FramePlanTurn { Pending, Frame(super::frame_planning::FramePlanAddress), Complete }

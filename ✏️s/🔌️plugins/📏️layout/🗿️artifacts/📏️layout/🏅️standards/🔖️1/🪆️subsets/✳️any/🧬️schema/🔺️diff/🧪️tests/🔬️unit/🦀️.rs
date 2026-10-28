@@ -1,3 +1,4 @@
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 use semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document;
 use crate::{PageFramesDelta, PagePatch};

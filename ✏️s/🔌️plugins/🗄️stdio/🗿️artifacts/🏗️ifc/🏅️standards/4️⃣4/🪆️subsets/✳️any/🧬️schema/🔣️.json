@@ -3,13 +3,26 @@
   "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/artifact.json",
   "title": "IfcArtifact",
   "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "header",
+    "entities"
+  ],
   "properties": {
     "schema": {
       "type": "string",
       "x-semio-state": "artifact"
     },
-    "text": {
-      "type": "string",
+    "header": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/snapshot.json#/definitions/IfcHeader",
+      "x-semio-state": "artifact"
+    },
+    "entities": {
+      "type": "array",
+      "items": {
+        "$ref": "https://json.schemas.assets.semio-tech.com/s/stdio/ifc/4/any/snapshot.json#/$defs/IfcEntity"
+      },
       "x-semio-state": "artifact"
     }
   }

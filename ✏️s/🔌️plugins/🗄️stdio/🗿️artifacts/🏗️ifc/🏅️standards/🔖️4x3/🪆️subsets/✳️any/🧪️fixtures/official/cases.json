@@ -1,0 +1,479 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "repository": "buildingSMART/IFC4.x-specification-models",
+  "commit": "ef22440ec501551ccc9689309560bbc7e26aa9d7",
+  "notice": "buildingSMART International Ltd.; unchanged informative examples; see source repository README for release and license terms.",
+  "oracle": {
+    "implementation": "IfcOpenShell",
+    "version": "0.9.0.post1",
+    "expressRules": true
+  },
+  "cases": [
+    {
+      "path": "models/advanced-geometric-shape/basin-advanced-brep/basin-advanced-brep.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/advanced-geometric-shape/basin-advanced-brep/basin-advanced-brep.ifc",
+      "blob": "becc55dc6fba01ac0f18fd255e5da5690818905e",
+      "sha256": "e947de66cadaefe167e77da75eaaeca864cfcc47f7d1ed197b760b466ae081a9",
+      "bytes": 10073,
+      "file": "basin-advanced-brep.ifc",
+      "entities": 152,
+      "diagnostics": [
+        {
+          "kind": "schema",
+          "entityId": "52",
+          "attribute": "Identification"
+        }
+      ]
+    },
+    {
+      "path": "models/advanced-geometric-shape/basin-faceted-brep/basin-faceted-brep.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/advanced-geometric-shape/basin-faceted-brep/basin-faceted-brep.ifc",
+      "blob": "76ca071903af7e07e428e5ab57304e4c75dcc984",
+      "sha256": "d2bdf9d5f485ff77ce9723a24ceb75a5532b51d1788b9a5f3f5145944d32065f",
+      "bytes": 32713,
+      "file": "basin-faceted-brep.ifc",
+      "entities": 692,
+      "diagnostics": []
+    },
+    {
+      "path": "models/advanced-geometric-shape/basin-tessellation/basin-tessellation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/advanced-geometric-shape/basin-tessellation/basin-tessellation.ifc",
+      "blob": "f1e80e0d8452eb9d63f3f3fc8438f0d0a5e3c76d",
+      "sha256": "466944a98ab0208bd4266d096678233007520915b80bcc14532e64345a1968ef",
+      "bytes": 11877,
+      "file": "basin-tessellation.ifc",
+      "entities": 35,
+      "diagnostics": []
+    },
+    {
+      "path": "models/advanced-geometric-shape/bath-csg-solid/bath-csg-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/advanced-geometric-shape/bath-csg-solid/bath-csg-solid.ifc",
+      "blob": "26e26517d9221ff6e4eb9347af9f6c39f71d47b5",
+      "sha256": "4592f3029faa12625494ada734fcfe46e4fc91a33d001198e9e3144721870b95",
+      "bytes": 3313,
+      "file": "bath-csg-solid.ifc",
+      "entities": 48,
+      "diagnostics": []
+    },
+    {
+      "path": "models/advanced-geometric-shape/cube-advanced-brep/cube-advanced-brep.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/advanced-geometric-shape/cube-advanced-brep/cube-advanced-brep.ifc",
+      "blob": "1f0e5b59bc1890d081350bc5d8fe692985f424b9",
+      "sha256": "c3c5b0e6f4d659cef6efe7725ff6023d22126e3c471601804b7462f166624161",
+      "bytes": 10729,
+      "file": "cube-advanced-brep.ifc",
+      "entities": 182,
+      "diagnostics": []
+    },
+    {
+      "path": "models/alignment-geometries-and-linear-positioning/fixed-reference-swept-area-solid/fixed-reference-swept-area-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/alignment-geometries-and-linear-positioning/fixed-reference-swept-area-solid/fixed-reference-swept-area-solid.ifc",
+      "blob": "adbf9b02ab4d06ba3d8e04097af23632928c66a7",
+      "sha256": "d3e6694756815da907bfc278490ce17596a4fac271905b17a9f3e8c0b4dd6d37",
+      "bytes": 10673,
+      "file": "fixed-reference-swept-area-solid.ifc",
+      "entities": 173,
+      "diagnostics": []
+    },
+    {
+      "path": "models/alignment-geometries-and-linear-positioning/linear-placement-of-signal/linear-placement-of-signal.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/alignment-geometries-and-linear-positioning/linear-placement-of-signal/linear-placement-of-signal.ifc",
+      "blob": "c83da0aa7dfa0c3e8dc08ddd019500b70aa77839",
+      "sha256": "3c6b97f7a82f1a1d114233702e876f387a03701be0d8a621685e5773ce664c97",
+      "bytes": 233672,
+      "file": "linear-placement-of-signal.ifc",
+      "entities": 3161,
+      "diagnostics": []
+    },
+    {
+      "path": "models/alignment-geometries-and-linear-positioning/sectioned-solid-horizontal/sectioned-solid-horizontal.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/alignment-geometries-and-linear-positioning/sectioned-solid-horizontal/sectioned-solid-horizontal.ifc",
+      "blob": "34d7a34c07d5d422c044536d01c0fef90c49968f",
+      "sha256": "89a424cc27f58130d40642b369b93a9b5fb04df2804f1f52ec3fac457f34c025",
+      "bytes": 10542,
+      "file": "sectioned-solid-horizontal.ifc",
+      "entities": 169,
+      "diagnostics": []
+    },
+    {
+      "path": "models/alignment-geometries-and-linear-positioning/segmented-reference-curve/segmented-reference-curve.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/alignment-geometries-and-linear-positioning/segmented-reference-curve/segmented-reference-curve.ifc",
+      "blob": "a6ce514ec25420aa1fd3d8de9767ecd8631fec55",
+      "sha256": "d4320f2fcc7e9c385f89c56c3002a54127f8d9fb4c5a5a447bd7238806b1eadf",
+      "bytes": 6402,
+      "file": "segmented-reference-curve.ifc",
+      "entities": 130,
+      "diagnostics": []
+    },
+    {
+      "path": "models/basic-geometric-shape/brep-model/brep-model.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/basic-geometric-shape/brep-model/brep-model.ifc",
+      "blob": "71636afdf1778e540642a5a8d3b016f06eb8c9ea",
+      "sha256": "b247026e85ef163acd5a165177d8293e606e7b8f83348a9897a3a04967fe4fc1",
+      "bytes": 6186,
+      "file": "brep-model.ifc",
+      "entities": 61,
+      "diagnostics": []
+    },
+    {
+      "path": "models/basic-geometric-shape/csg-primitive/csg-primitive.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/basic-geometric-shape/csg-primitive/csg-primitive.ifc",
+      "blob": "a60510cbeacbabd51d701b3e5e6836543b0e52ae",
+      "sha256": "5f366df723fba68cb5d0ecac4efb549912f4107e292c7323a1cd100b3e8032eb",
+      "bytes": 5101,
+      "file": "csg-primitive.ifc",
+      "entities": 37,
+      "diagnostics": []
+    },
+    {
+      "path": "models/basic-geometric-shape/extruded-solid/extruded-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/basic-geometric-shape/extruded-solid/extruded-solid.ifc",
+      "blob": "7793f9826b3b8d61755c77a8cbf5a0f01db0cd1d",
+      "sha256": "c488f0367106a17289468409531b1b687f72c25cea8e1b46924f59972ad7a8e9",
+      "bytes": 5428,
+      "file": "extruded-solid.ifc",
+      "entities": 36,
+      "diagnostics": []
+    },
+    {
+      "path": "models/basic-geometric-shape/surface-model/surface-model.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/basic-geometric-shape/surface-model/surface-model.ifc",
+      "blob": "8ae98aa7160f14f45eea818da6bbc76bff6aab32",
+      "sha256": "2b53f45bca8b2f98b624afbe74da16590076a902a64d54574fce11bfbda3f942",
+      "bytes": 6221,
+      "file": "surface-model.ifc",
+      "entities": 61,
+      "diagnostics": []
+    },
+    {
+      "path": "models/basic-geometric-shape/triangulated-item/triangulated-item.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/basic-geometric-shape/triangulated-item/triangulated-item.ifc",
+      "blob": "260779740db0e03cb2686eccf3b572511a7945e0",
+      "sha256": "935acf08d1f1c93035c9f2454928f8ff7ba89378f60e6560fcc07c82f7eb8fd1",
+      "bytes": 5295,
+      "file": "triangulated-item.ifc",
+      "entities": 35,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/beam-extruded-solid/beam-extruded-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/beam-extruded-solid/beam-extruded-solid.ifc",
+      "blob": "992e131c2c67752cd378f03156ad9a3a26837693",
+      "sha256": "eaf1dc6bec8371537a7be13fab74c9fd548d4b4e98bf8a800471965c7d7b6b3a",
+      "bytes": 2711,
+      "file": "beam-extruded-solid.ifc",
+      "entities": 28,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/beam-parametric-cross-section/beam-parametric-cross-section.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/beam-parametric-cross-section/beam-parametric-cross-section.ifc",
+      "blob": "f13c7d4f726ca4ed6acfad5395bf9345c2e43b3a",
+      "sha256": "94ca2a46961854a97905af421b1a5432c2c9d58229dadb07add1e4f354145046",
+      "bytes": 35218,
+      "file": "beam-parametric-cross-section.ifc",
+      "entities": 369,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/beam-revolved-solid/beam-revolved-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/beam-revolved-solid/beam-revolved-solid.ifc",
+      "blob": "da98ae5e4693655152e2cf173debf4f0b2c56494",
+      "sha256": "1c9a7a8486b404bf3faa674b67a799828dd3ec0d3ca76021764c40b7c5acb50a",
+      "bytes": 6223,
+      "file": "beam-revolved-solid.ifc",
+      "entities": 56,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/beam-varying-cardinal-points/beam-varying-cardinal-points.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/beam-varying-cardinal-points/beam-varying-cardinal-points.ifc",
+      "blob": "343d2e6c3af3064506bb1044cf9f5ecdf7cb80a6",
+      "sha256": "825ba41b32b61993eb54b6945779fdb777feae17620802016699913de3a1dafd",
+      "bytes": 5659,
+      "file": "beam-varying-cardinal-points.ifc",
+      "entities": 95,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/beam-varying-extrusion-paths/beam-varying-extrusion-paths.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/beam-varying-extrusion-paths/beam-varying-extrusion-paths.ifc",
+      "blob": "b7a0a575fcc589a9081e9e2ce94f2626edd6a544",
+      "sha256": "d7287a53acbe9f38b322556b69e85f8e58bf253a73881a578d1133ee597972a7",
+      "bytes": 4359,
+      "file": "beam-varying-extrusion-paths.ifc",
+      "entities": 68,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/beam-varying-profiles/beam-varying-profiles.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/beam-varying-profiles/beam-varying-profiles.ifc",
+      "blob": "1d4f9e17b347a5779126f519c6656524b30fb14e",
+      "sha256": "67f91eb9a17c6adab398115ff3a9ec06e3035a1dc3226b315e147c133b2e0a58",
+      "bytes": 4314,
+      "file": "beam-varying-profiles.ifc",
+      "entities": 64,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/column-extruded-solid/column-extruded-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/column-extruded-solid/column-extruded-solid.ifc",
+      "blob": "603837b4a1973770e09a178505b6bc445b4c162d",
+      "sha256": "e5ada0a5883b0fced6128c25eac53b0b4b1cd23ad2dc3a821d24442558a98ae0",
+      "bytes": 3118,
+      "file": "column-extruded-solid.ifc",
+      "entities": 43,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/reinforcing-assembly/reinforcing-assembly.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/reinforcing-assembly/reinforcing-assembly.ifc",
+      "blob": "86c08cfd22865ad09441ef73fbc01c3181fc118a",
+      "sha256": "4ae0a9b011cd7b56d811afb49ff6aa469466c577ddb52f7ca2693183fa1c645a",
+      "bytes": 23220,
+      "file": "reinforcing-assembly.ifc",
+      "entities": 434,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/reinforcing-stirrup/reinforcing-stirrup.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/reinforcing-stirrup/reinforcing-stirrup.ifc",
+      "blob": "a999255b06b4a5ecfead0494e2d90b58c176342c",
+      "sha256": "b8905c4bf6dcc18dbb8c0893c3f32327d2e8cff3059f1ee674264afa17267763",
+      "bytes": 4161,
+      "file": "reinforcing-stirrup.ifc",
+      "entities": 44,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/slab-extrusion/slab-extruded-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/slab-extrusion/slab-extruded-solid.ifc",
+      "blob": "94bf077398e01c8f663b813ce67c54c8022344b5",
+      "sha256": "0e4b80b98d8f1576d0c997af24b9486eb638de9f8428959fb6067a3bb74a4aca",
+      "bytes": 3189,
+      "file": "slab-extruded-solid.ifc",
+      "entities": 41,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/slab-openings/slab-openings.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/slab-openings/slab-openings.ifc",
+      "blob": "63554f3ce14acc29f0f28c2c7d5c374a9a659b98",
+      "sha256": "958350475139ad5ee7bfdf1181c259c9f188c977302233c10dbe5644b5843a90",
+      "bytes": 4302,
+      "file": "slab-openings.ifc",
+      "entities": 63,
+      "diagnostics": []
+    },
+    {
+      "path": "models/building-elements/wall-extrusion/wall-extruded-solid.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/building-elements/wall-extrusion/wall-extruded-solid.ifc",
+      "blob": "5121510ab9cde304c833939ff73d08e92badf37c",
+      "sha256": "7e1c9a3147300d3d9e787b657766cadb2d578930eccf8956313f2f4ee976ff99",
+      "bytes": 3313,
+      "file": "wall-extruded-solid.ifc",
+      "entities": 46,
+      "diagnostics": []
+    },
+    {
+      "path": "models/construction-scheduling/construction-scheduling-task/construction-scheduling-task.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/construction-scheduling/construction-scheduling-task/construction-scheduling-task.ifc",
+      "blob": "3f51b4d5dc6842b674ac93f1f27c4f31e7838506",
+      "sha256": "abbb30934dd36ea1370d7464300cd5a33c85ebd438ab10ed2fd258823514fb7d",
+      "bytes": 18874,
+      "file": "construction-scheduling-task.ifc",
+      "entities": 246,
+      "diagnostics": []
+    },
+    {
+      "path": "models/mapped-geometric-shape/mapped-shape-with-multiple-items/mapped-shape-with-multiple-items.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/mapped-geometric-shape/mapped-shape-with-multiple-items/mapped-shape-with-multiple-items.ifc",
+      "blob": "114d15937c32b3fe09870ee18fe7a6d02138d2d9",
+      "sha256": "83fc89342d05dc9682f661f4ae6f0053b0832c830ba71da34c70191f04ca6ad7",
+      "bytes": 7906,
+      "file": "mapped-shape-with-multiple-items.ifc",
+      "entities": 55,
+      "diagnostics": []
+    },
+    {
+      "path": "models/mapped-geometric-shape/mapped-shape-with-transformation/mapped-shape-with-transformation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/mapped-geometric-shape/mapped-shape-with-transformation/mapped-shape-with-transformation.ifc",
+      "blob": "6bcb4604b1ee66624466b69724f781c0e8b912e5",
+      "sha256": "92b95e00e087b6a5ff5d3662a20861874f47932aa5d816ac1e558730b98099f9",
+      "bytes": 6748,
+      "file": "mapped-shape-with-transformation.ifc",
+      "entities": 45,
+      "diagnostics": []
+    },
+    {
+      "path": "models/mapped-geometric-shape/mapped-shape-without-transformation/mapped-shape-without-transformation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/mapped-geometric-shape/mapped-shape-without-transformation/mapped-shape-without-transformation.ifc",
+      "blob": "4900df5c4e5b171b40fd7cd19e30cd8edebfa3ac",
+      "sha256": "2f5b3eb441d06d11e9465d6f5be865765c6086de2c0230a8359f99486c259bec",
+      "bytes": 6676,
+      "file": "mapped-shape-without-transformation.ifc",
+      "entities": 44,
+      "diagnostics": []
+    },
+    {
+      "path": "models/placements-and-gis-referencing/geographic-referencing-gk/geographic-referencing-gk.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/placements-and-gis-referencing/geographic-referencing-gk/geographic-referencing-gk.ifc",
+      "blob": "2fc2a670f314265c71b3d99995ed9852aa150afe",
+      "sha256": "de8088eac8bdcebbe43944c8eba59cc35a184ebabb1266c788b7a4f04945a130",
+      "bytes": 3612,
+      "file": "geographic-referencing-gk.ifc",
+      "entities": 40,
+      "diagnostics": []
+    },
+    {
+      "path": "models/placements-and-gis-referencing/geographic-referencing-rigid-operation/geographic-referencing-rigid-operation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/placements-and-gis-referencing/geographic-referencing-rigid-operation/geographic-referencing-rigid-operation.ifc",
+      "blob": "8252f0ce19e1de6a470db3070401e763c4d88a39",
+      "sha256": "d295762265d1c7cca1b7bfd65a798cba6838a718d3c923aa69913a9c8f36add4",
+      "bytes": 3994,
+      "file": "geographic-referencing-rigid-operation.ifc",
+      "entities": 40,
+      "diagnostics": []
+    },
+    {
+      "path": "models/placements-and-gis-referencing/geographic-referencing-utm/geographic-referencing-utm.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/placements-and-gis-referencing/geographic-referencing-utm/geographic-referencing-utm.ifc",
+      "blob": "ad6bdf6801da506469ed8cd60794ce0c9d400caf",
+      "sha256": "81789138aecf9f185bea65a239816e7a303f54408051c377ad6096e480f67762",
+      "bytes": 3585,
+      "file": "geographic-referencing-utm.ifc",
+      "entities": 40,
+      "diagnostics": []
+    },
+    {
+      "path": "models/placements-and-gis-referencing/grid-placement/grid-placement.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/placements-and-gis-referencing/grid-placement/grid-placement.ifc",
+      "blob": "8733bcd42f959a690da7d4912e71b8e86dedb6e9",
+      "sha256": "b74d0d65041f5bd4d990129e31b546eddf6f722a70fd5a66ed83763a2bbecd02",
+      "bytes": 31361,
+      "file": "grid-placement.ifc",
+      "entities": 525,
+      "diagnostics": []
+    },
+    {
+      "path": "models/structural-analysis-model/structural-curve-member/structural-curve-member.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/structural-analysis-model/structural-curve-member/structural-curve-member.ifc",
+      "blob": "b03afb95150c1725d8381dc32da5f3b66a7e00cd",
+      "sha256": "9ccd7cc699cddf11979bbba51ba8c239f32077b64e61aabd6edc7de36636e32a",
+      "bytes": 15275,
+      "file": "structural-curve-member.ifc",
+      "entities": 188,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape-with-style/tessellation-with-blob-texture/tessellation-with-blob-texture.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape-with-style/tessellation-with-blob-texture/tessellation-with-blob-texture.ifc",
+      "blob": "b0f45f2b7298452a4e67efc2ab0200f1b03070fd",
+      "sha256": "a9984558b52629d8507f01a23aba1d62a84cc7257f8159ac4ae4ac06f71b20fd",
+      "bytes": 23562,
+      "file": "tessellation-with-blob-texture.ifc",
+      "entities": 60,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape-with-style/tessellation-with-image-texture/tessellation-with-image-texture.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape-with-style/tessellation-with-image-texture/tessellation-with-image-texture.ifc",
+      "blob": "58f499291dc4ec3e23708c72f1f463df1b99a6d0",
+      "sha256": "eeec637c7c870c289460c5eec18995ec2c2d41af0c26382f32e453a58773c0a6",
+      "bytes": 10337,
+      "file": "tessellation-with-image-texture.ifc",
+      "entities": 60,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape-with-style/tessellation-with-individual-colors/tessellation-with-individual-colors.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape-with-style/tessellation-with-individual-colors/tessellation-with-individual-colors.ifc",
+      "blob": "9460312d992590d03685b47844f3f2ae1a2e24da",
+      "sha256": "49a003e142dce4b047f6c420a804aad68e30c7e4f5af3f7e2db2f9f32560e8a5",
+      "bytes": 2657,
+      "file": "tessellation-with-individual-colors.ifc",
+      "entities": 29,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape-with-style/tessellation-with-pixel-texture/tessellation-with-pixel-texture.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape-with-style/tessellation-with-pixel-texture/tessellation-with-pixel-texture.ifc",
+      "blob": "b7c5651651f0b2f79e08076ff18f172a6df3469d",
+      "sha256": "522788afc44ba467730e2b8b521d4baa334df299598a6595ffd430c16a0f7e5e",
+      "bytes": 796767,
+      "file": "tessellation-with-pixel-texture.ifc",
+      "entities": 60,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape/beam-curved-i-shape-tessellated/beam-curved-i-shape-tessellated.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape/beam-curved-i-shape-tessellated/beam-curved-i-shape-tessellated.ifc",
+      "blob": "88742022f2d92a6a52e88b8be49fbc55b71acefd",
+      "sha256": "aaf49fa0c33cb7d19d53b9d5f6e8a3f2d7c79356238eff3b973a10f2cfff0fd7",
+      "bytes": 356818,
+      "file": "beam-curved-i-shape-tessellated.ifc",
+      "entities": 30,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape/beam-straight-i-shape-tessellated/beam-straight-i-shape-tessellated.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape/beam-straight-i-shape-tessellated/beam-straight-i-shape-tessellated.ifc",
+      "blob": "82c788b7541883aaad191eb6c064216699e882eb",
+      "sha256": "14cfed0af4bf0aa84901552311738c545079b3a827a1e94f45cb13f0da3fcc27",
+      "bytes": 5438,
+      "file": "beam-straight-i-shape-tessellated.ifc",
+      "entities": 21,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape/column-straight-rectangle-tessellation/column-straight-rectangle-tessellation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape/column-straight-rectangle-tessellation/column-straight-rectangle-tessellation.ifc",
+      "blob": "67c6fc9612d85d2c9891766bcda25099fa57fb0b",
+      "sha256": "c65f0a5e7339ff654b39e63349ed4cdff22b15a7ff25c2fef4e896385dd1f310",
+      "bytes": 4417,
+      "file": "column-straight-rectangle-tessellation.ifc",
+      "entities": 26,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape/polygonal-face-tessellation/polygonal-face-tessellation.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape/polygonal-face-tessellation/polygonal-face-tessellation.ifc",
+      "blob": "4d005b5a7e166eac0cfb488102da5d25d307ac3e",
+      "sha256": "b6ef01ef5c35a1da1955ab2c41191c5baf9f78e334f9d70e38d675fc49dad0cb",
+      "bytes": 4176,
+      "file": "polygonal-face-tessellation.ifc",
+      "entities": 52,
+      "diagnostics": []
+    },
+    {
+      "path": "models/tessellated-shape/slab-tessellated-unique-vertices/slab-tessellated-unique-vertices.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/tessellated-shape/slab-tessellated-unique-vertices/slab-tessellated-unique-vertices.ifc",
+      "blob": "44b22b77b29310409a5d6c2c658315c500ac439b",
+      "sha256": "b1611154ea511526e5de5a58ea90e6cfb5abb2d8a6294d8c5f63cd6e297e912b",
+      "bytes": 5060,
+      "file": "slab-tessellated-unique-vertices.ifc",
+      "entities": 29,
+      "diagnostics": []
+    },
+    {
+      "path": "models/trimmed-curve-parameters/curve-parameters-in-degrees/curve-parameters-in-degrees.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/trimmed-curve-parameters/curve-parameters-in-degrees/curve-parameters-in-degrees.ifc",
+      "blob": "65c8d764981b7760d9b2bc9941484539b927c902",
+      "sha256": "97f46c4580c1ca39d50b110a8579dac8b5bde189dad524753d8209d4443494aa",
+      "bytes": 8071,
+      "file": "curve-parameters-in-degrees.ifc",
+      "entities": 131,
+      "diagnostics": []
+    },
+    {
+      "path": "models/trimmed-curve-parameters/curve-parameters-in-radians/curve-parameters-in-radians.ifc",
+      "url": "https://raw.githubusercontent.com/buildingSMART/IFC4.x-specification-models/ef22440ec501551ccc9689309560bbc7e26aa9d7/models/trimmed-curve-parameters/curve-parameters-in-radians/curve-parameters-in-radians.ifc",
+      "blob": "b3df78341b1a0efc0f07a107d33784681cd9cac0",
+      "sha256": "358a598b685f33e384ee2d6c5d0c90b18f62db0d67ab999563355189f7f851b2",
+      "bytes": 7993,
+      "file": "curve-parameters-in-radians.ifc",
+      "entities": 128,
+      "diagnostics": []
+    }
+  ]
+}

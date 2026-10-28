@@ -19,6 +19,7 @@ pub(crate) fn encode_value(value: &Part21Value, control: &mut NativeEncodeContro
             let (kind, count) = match value {
                 Part21Value::Ref(_) => ("ref", 2),
                 Part21Value::Str(_) => ("str", 2),
+                Part21Value::Binary(_) => ("binary", 2),
                 Part21Value::Enum(_) => ("enum", 2),
                 Part21Value::Int(_) => ("int", 2),
                 Part21Value::Real(_) => ("real", 2),
@@ -34,7 +35,7 @@ pub(crate) fn encode_value(value: &Part21Value, control: &mut NativeEncodeContro
             control.step()?;
             match value {
                 Part21Value::Ref(value) => put(output.get_mut(), "value", value.to_value_controlled(control)?, control)?,
-                Part21Value::Str(value) | Part21Value::Enum(value) => put(output.get_mut(), "value", value.to_value_controlled(control)?, control)?,
+                Part21Value::Str(value) | Part21Value::Binary(value) | Part21Value::Enum(value) => put(output.get_mut(), "value", value.to_value_controlled(control)?, control)?,
                 Part21Value::Int(value) => put(output.get_mut(), "value", value.to_value_controlled(control)?, control)?,
                 Part21Value::Real(value) => put(output.get_mut(), "value", value.to_value_controlled(control)?, control)?,
                 Part21Value::List(items) => put(output.get_mut(), "values", values(items, control)?, control)?,

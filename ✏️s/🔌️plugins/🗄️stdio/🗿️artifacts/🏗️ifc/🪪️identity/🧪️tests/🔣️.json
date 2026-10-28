@@ -1,0 +1,21 @@
+{
+  "format": "IFC compressed 128-bit identity",
+  "cases": [
+    {
+      "hex": "0",
+      "expected": "0000000000000000000000"
+    },
+    {
+      "hex": "1",
+      "expected": "0000000000000000000001"
+    },
+    {
+      "hex": "ffffffffffffffffffffffffffffffff",
+      "expected": "3$$$$$$$$$$$$$$$$$$$$$"
+    },
+    {
+      "hex": "00112233445566778899aabbccddeeff",
+      "expected": "004I8pH5LcTuYPghlCtUx$"
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+{"schema":"IFC4X3_ADD2","metric":"source-numeric-backing","cases":[
+{"kind":"block","reflected":false,"vertices":8,"triangles":12,"values":60,"turns":585,"sha256":"d635a92c0a561e72759a94de64d1709c0c7bf5a3a674a6d514407d35a95a5e3d"},
+{"kind":"block","reflected":true,"vertices":8,"triangles":12,"values":60,"turns":585,"sha256":"b177a960338664834393dc2b0eb7887fe9ac1f0f97dda464aa3824d72e937eb6"},
+{"kind":"cone","reflected":false,"vertices":73,"triangles":142,"values":645,"turns":786,"sha256":"767049e13d2df004687038b7736c072e863ff7c1c8dd779b41ec884b2d794848"},
+{"kind":"cone","reflected":true,"vertices":73,"triangles":142,"values":645,"turns":786,"sha256":"5f4f191844da7513653a1382fcee3bb9456761775c6e12c173d110cc458e7b7c"},
+{"kind":"cylinder","reflected":false,"vertices":144,"triangles":284,"values":1284,"turns":1003,"sha256":"329fbf594071184a319e55e0ab52d5b249f5dc2607276aa9f6a225cc6bf02bab"},
+{"kind":"cylinder","reflected":true,"vertices":144,"triangles":284,"values":1284,"turns":1003,"sha256":"7facbab7625721cffa78b00741f0c421cf163cd125993002b3d689a7e8b41e22"},
+{"kind":"rectangle","reflected":false,"vertices":8,"triangles":12,"values":60,"originalTurns":21,"turns":1017,"sha256":"38acede3b71956edc8b5f4a3e74700ada21badd6cb630d6e323226988016dd10"},
+{"kind":"rectangle","reflected":true,"vertices":8,"triangles":12,"values":60,"originalTurns":21,"turns":1017,"sha256":"c1ee5ba02ffc6cac0a6d092528ebcab61dd8da039cb68ad1cec86c05b902f449"},
+{"kind":"circle","reflected":false,"vertices":144,"triangles":284,"values":1284,"originalTurns":650,"turns":1285,"sha256":"2214f6923fb1b58090845c3d2777c4e33897f4ba61addb2fcd3cd053c1e6a41b"},
+{"kind":"circle","reflected":true,"vertices":144,"triangles":284,"values":1284,"originalTurns":650,"turns":1285,"sha256":"76217a1fc12122863e13d4bc1da46d81fb1a6b13d653bd9021eaa6c7a7d0355f"},
+{"kind":"rounded","reflected":false,"vertices":152,"triangles":300,"values":1356,"turns":1626,"sha256":"bc619241181b9d7f2f5f54b38916f5ae87c1ce5cd61465eca9302026b614f624"},
+{"kind":"rounded","reflected":true,"vertices":152,"triangles":300,"values":1356,"turns":1626,"sha256":"afd0d6dcd4a462090ec89afa45067d7a32cabeb005e67d9c5e942d1287eeeea8"}]}

@@ -1,0 +1,137 @@
+{
+  "description": "Sparse nullable controlled decoding: absent preserves, null clears, concrete sets. Ordinary and cumulative controlled ownership must agree; serde independently validates row patches.",
+  "cases": [
+    {
+      "name": "empty-layout",
+      "owner": "layout",
+      "value": {}
+    },
+    {
+      "name": "clear-layout-links",
+      "owner": "layout",
+      "value": {
+        "backgroundDrawing": null,
+        "referencedModel": null
+      }
+    },
+    {
+      "name": "empty-page",
+      "owner": "page",
+      "value": {}
+    },
+    {
+      "name": "clear-parent",
+      "owner": "page",
+      "value": {
+        "parent_page_id": null
+      }
+    },
+    {
+      "name": "set-parent",
+      "owner": "page",
+      "value": {
+        "parent_page_id": "parent-α"
+      }
+    },
+    {
+      "name": "empty-character",
+      "owner": "character",
+      "value": {}
+    },
+    {
+      "name": "clear-character",
+      "owner": "character",
+      "value": {
+        "name": null,
+        "fontFamily": null,
+        "fontSize": null,
+        "fontWeight": null,
+        "italic": null,
+        "color": null,
+        "tracking": null
+      }
+    },
+    {
+      "name": "set-character",
+      "owner": "character",
+      "value": {
+        "name": "Emphasis",
+        "fontFamily": "Sans",
+        "fontSize": 12,
+        "fontWeight": 700,
+        "italic": false,
+        "color": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "tracking": 0
+      }
+    },
+    {
+      "name": "empty-frame",
+      "owner": "frame",
+      "value": {}
+    },
+    {
+      "name": "clear-frame",
+      "owner": "frame",
+      "value": {
+        "fill": null,
+        "stroke": null,
+        "thread_next": null
+      }
+    },
+    {
+      "name": "set-frame",
+      "owner": "frame",
+      "value": {
+        "fill": [
+          1,
+          0,
+          0,
+          1
+        ],
+        "stroke": [
+          0,
+          1,
+          0,
+          1
+        ],
+        "thread_next": "frame-β"
+      }
+    },
+    {
+      "name": "link-profile-absent",
+      "value": {
+        "path": null
+      },
+      "owner": "link"
+    },
+    {
+      "name": "link-profile-clear",
+      "value": {
+        "path": null,
+        "color_profile": null
+      },
+      "owner": "link"
+    },
+    {
+      "name": "link-profile-present-empty",
+      "value": {
+        "path": null,
+        "color_profile": ""
+      },
+      "owner": "link"
+    },
+    {
+      "name": "link-profile-set",
+      "value": {
+        "path": null,
+        "color_profile": "Display P3"
+      },
+      "owner": "link"
+    }
+  ]
+}

@@ -1,0 +1,814 @@
+{
+  "version": 1,
+  "source": {
+    "file": "source.ifc",
+    "schema": "IFC4X3_ADD2",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "physical": "authored standalone geometric population; no complete project/view claim"
+  },
+  "functions": [
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "equal",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "2d-3d-zero",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "different-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "below-boundary",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "3"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "exact-boundary",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "reversed-boundary",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "zero-epsilon",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "real",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "negative-epsilon",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "real",
+          "value": "-0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "default-epsilon",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMECARTESIANPOINT",
+      "id": "unknown-point",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "equal",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "2d-3d-zero",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "12"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "proportional-raw",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "orthogonal",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "13"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "below-boundary",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "15"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "exact-boundary",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "16"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "zero-epsilon",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "real",
+          "value": "0"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "default-epsilon",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "12"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEDIRECTION",
+      "id": "unknown-direction",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "12"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "id": "same2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "id": "same3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "entity",
+          "id": "23"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "id": "2d-3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "id": "rotated2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "entity",
+          "id": "21"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "id": "different-location",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "entity",
+          "id": "24"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCSAMEAXIS2PLACEMENT",
+      "id": "unknown-placement",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "real",
+          "value": "0.25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "unknown"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "no-parent2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "no-parent3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "parent2d-child2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "entity",
+          "id": "30"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "parent3d-child2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        },
+        {
+          "kind": "entity",
+          "id": "31"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "parent3d-child3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "entity",
+          "id": "31"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "parent2d-child3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "22"
+        },
+        {
+          "kind": "entity",
+          "id": "30"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      }
+    },
+    {
+      "owner": "IFCCORRECTLOCALPLACEMENT",
+      "id": "unknown-child",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "31"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "cartesian2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "cartesian3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "2"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "curve2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "58"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "curve3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "52"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "surface3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "54"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "distance3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "55"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCPOINTDIM",
+      "id": "absent",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    },
+    {
+      "owner": "IFCPOINTLISTDIM",
+      "id": "2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "40"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "2"
+      }
+    },
+    {
+      "owner": "IFCPOINTLISTDIM",
+      "id": "3d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "41"
+        }
+      ],
+      "expected": {
+        "kind": "integer",
+        "value": "3"
+      }
+    },
+    {
+      "owner": "IFCPOINTLISTDIM",
+      "id": "absent",
+      "args": [
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      }
+    }
+  ]
+}

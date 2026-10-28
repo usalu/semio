@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "IDML Retained Central Apply",
+  "type": "object",
+  "required": [
+    "readOnlyPreflight",
+    "typedFields",
+    "capabilityCommit",
+    "originalCustody"
+  ],
+  "properties": {
+    "readOnlyPreflight": {
+      "const": true
+    },
+    "typedFields": {
+      "const": true
+    },
+    "capabilityCommit": {
+      "const": true
+    },
+    "originalCustody": {
+      "const": true
+    }
+  },
+  "description": "Resolve/admit every ordered batch against live post using numeric metadata. Copy only authored diff fields through genuine source refs. Move untouched live post fields during central capability commit. Retain displaced selected bytes/removed members/numeric backing for independently granted closure. Undergrants make no progress; all frontiers close."
+}

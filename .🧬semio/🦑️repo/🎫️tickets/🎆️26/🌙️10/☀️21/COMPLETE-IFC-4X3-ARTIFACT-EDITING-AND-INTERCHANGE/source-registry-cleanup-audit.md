@@ -1,0 +1,11 @@
+# Source Registry Cleanup and Late Callback Audit
+
+Read-only2026-10-21 current source. Registry retireAll now retires each old source then resets owner WeakMap; no terminal closed latch. New acquire after effect setup can create fresh source objects,while all old observation tokens remain rejected by their retired source. This corrects prior state-reuse integration obligation at registry level. Retired plugin WeakSet persists intentionally across restart; actually reloaded code needs a new handle.
+
+Current ShellCore cleanup calls retireAll; sourceOwnerRef nulling is acknowledged pending mapped-file write. Current document-transfer-ref still assigns ref during render only; symmetric effect setup/cleanup is likewise pending. These are open source lifecycle lines,not completed behavior.
+
+Late callbacks carrying old source observations cannot publish into a newly acquired cache: token identity/pending/owner binding are distinct. Old work releases use replaced hold sets and cannot clear fresh holds. A stale active sourceOwnerRef after unmount,however,could let a later callback call registry.acquire again because registry is restartable. Clear ref before retiring registry on true cleanup and reject observations unless actual shell/document owner remains active. Owner registry retirement is the additional lifetime authority; do not rely only on source-cache reset.
+
+For React setup→cleanup→setup reusing state,if cleanup retires LocalDocumentOwner objects,the next setup must reacquire an active owner from exact identity. Merely assigning a captured pre-cleanup owner in setup restores an inactive object and leaves begin/read unavailable until another render. This is a concrete integration test requirement,not an executed React failure in this audit. Preserve focused/unfocused owner caches across ordinary focus effects; true owner cleanup must not be conflated with focus change.
+
+Required test: capture old observation/work,cleanup all,then setup new active owner/cache without assuming rerender; old completion cannot refill,new read succeeds. Repeat queued observer callback after true unmount,pluginhandle retirement,ownerretire and focused document change. No runtime/browser/native claims and no source edits.

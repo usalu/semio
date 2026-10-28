@@ -1,0 +1,15 @@
+/** 🧪 Full-population and binding regressions share independent oracle source bodies. */
+import {expect,test} from "bun:test";
+import cases from "./derived-binding-cases.json";
+import models from "./models.json";
+import bindings from "./binding-expression-cases.json";
+import {compileIfc4x3Express} from "./compiler.ts";
+import {validateIfc4x3Domains} from "./admission.ts";
+import {IfcExpressContext,validateIfc4x3Express} from "./population.ts";
+import {ExpressParser,parseExpressExpression} from "./parser.ts";
+import {ExpressEvaluator} from "./evaluator.ts";
+import {parseIfc4x3Step} from "../../🚪️io/step.ts";
+const program=compileIfc4x3Express().then(result=>result.program);
+for(const row of cases)test(`effective inherited North2D ${row.name}`,async()=>{const graph=await parseIfc4x3Step(models.header+row.body+models.footer);expect(await validateIfc4x3Domains(graph)).toEqual([]);const report=await validateIfc4x3Express(graph,{},await program);expect(report.complete).toBe(true);expect(report.results.filter(result=>result.rule==="NORTH2D"&&result.result==="false").map(result=>String(result.entityId)).sort()).toEqual([...row.northFailures].sort());expect(report.valid).toBe(row.northFailures.length===0);});
+test("unqualified SELF and both qualified inherited derived reads agree",async()=>{const row=cases[0]!,graph=await parseIfc4x3Step(models.header+row.body+models.footer),context=new IfcExpressContext(graph,await program);await context.initialize();const scope=context.scope(context.entities.get(BigInt(row.subContextId))!);for(const expression of bindings.reads){const value=await context.evaluator.evaluate(parseExpressExpression(expression),scope);expect(value.kind).toBe("entity");expect(value.identity).toBe(BigInt(row.northId));}expect(scope.has("TRUENORTH")).toBe(false);});
+test("local parameter and QUERY bindings retain precedence over lazy SELF attributes",async()=>{const row=cases[0]!,graph=await parseIfc4x3Step(models.header+row.body+models.footer),context=new IfcExpressContext(graph,await program);await context.initialize();const scope=context.scope(context.entities.get(BigInt(row.subContextId))!);scope.set("TRUENORTH",{kind:"integer",value:42n});expect((await context.evaluator.evaluate(parseExpressExpression("TrueNorth"),scope)).value).toBe(42n);expect((await context.evaluator.evaluate(parseExpressExpression("SELF.TrueNorth"),scope)).identity).toBe(BigInt(row.northId));scope.set("TRUENORTH",{kind:"unknown"});expect((await context.evaluator.evaluate(parseExpressExpression("TrueNorth"),scope)).kind).toBe("unknown");const selected=await context.evaluator.evaluate(parseExpressExpression(bindings.query),scope);expect(selected.value).toBe(1n);const compiled=await program;for(const row of bindings.shadows){const evaluator=new ExpressEvaluator({...compiled,functions:[new ExpressParser(row.source).function(row.name)]});expect((await evaluator.call(row.name,row.arguments.map(value=>({kind:"integer",value:BigInt(value)})))).value).toBe(BigInt(row.expected));}});

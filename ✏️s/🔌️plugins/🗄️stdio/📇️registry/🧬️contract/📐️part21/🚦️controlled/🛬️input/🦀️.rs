@@ -48,10 +48,11 @@ impl DecodeOwner{
  fn value(&mut self,value:&DslValue,depth:usize,control:&mut NativeDecodeControl<'_>)->Result<Part21Value,ValueError>{
   control.scoped_depth(64,|control|control.scoped_stage(|control|{
    let entries=object(value,&["kind","value","values","typeName"],control)?;let kind=required(entries,"kind",control)?.as_str().ok_or_else(||invalid("Part21 kind requires Text"))?;
-   let allowed:&[&str]=match kind{"ref"|"str"|"enum"|"int"|"real"=>&["kind","value"],"list"=>&["kind","values"],"typed"=>&["kind","typeName","values"],"unset"|"derived"=>&["kind"],_=>return Err(invalid("unknown Part21 value kind"))};fields(entries,allowed,control)?;control.begin_stage(1)?;
+   let allowed:&[&str]=match kind{"ref"|"str"|"binary"|"enum"|"int"|"real"=>&["kind","value"],"list"=>&["kind","values"],"typed"=>&["kind","typeName","values"],"unset"|"derived"=>&["kind"],_=>return Err(invalid("unknown Part21 value kind"))};fields(entries,allowed,control)?;control.begin_stage(1)?;
    let result=match kind{
     "ref"=>Part21Value::Ref(u64::from_value_controlled(required(entries,"value",control)?,control)?),
     "str"=>Part21Value::Str(self.text(required(entries,"value",control)?,control)?),
+    "binary"=>{let value=required(entries,"value",control)?;if !value.as_str().is_some_and(is_part21_binary){return Err(invalid("invalid canonical STEP binary content"));}Part21Value::Binary(self.text(value,control)?)},
     "enum"=>Part21Value::Enum(self.text(required(entries,"value",control)?,control)?),
     "int"=>Part21Value::Int(i64::from_value_controlled(required(entries,"value",control)?,control)?),
     "real"=>Part21Value::Real(self.decimal(required(entries,"value",control)?,control)?),

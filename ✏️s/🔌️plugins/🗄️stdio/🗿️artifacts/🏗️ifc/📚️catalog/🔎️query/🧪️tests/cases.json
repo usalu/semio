@@ -1,0 +1,273 @@
+{
+  "cases": [
+    {
+      "id": "simple-position",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "AREA",
+          "Rectangle",
+          "position",
+          "x",
+          "y"
+        ]
+      },
+      "name": "Position",
+      "owner": "IFCPARAMETERIZEDPROFILEDEF",
+      "status": "unique",
+      "values": [
+        "position"
+      ],
+      "pointers": [
+        "/entities/7/args/2"
+      ]
+    },
+    {
+      "id": "simple-x",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "AREA",
+          "Rectangle",
+          "position",
+          "x",
+          "y"
+        ]
+      },
+      "name": "XDim",
+      "owner": "IFCRECTANGLEPROFILEDEF",
+      "status": "unique",
+      "values": [
+        "x"
+      ],
+      "pointers": [
+        "/entities/7/args/3"
+      ]
+    },
+    {
+      "id": "complex-position",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "x",
+          "y"
+        ],
+        "complex": [
+          {
+            "name": "IFCPROFILEDEF",
+            "args": [
+              "AREA",
+              "Rectangle"
+            ]
+          },
+          {
+            "name": "IFCPARAMETERIZEDPROFILEDEF",
+            "args": [
+              "position"
+            ]
+          }
+        ]
+      },
+      "name": "Position",
+      "owner": "IFCPARAMETERIZEDPROFILEDEF",
+      "status": "unique",
+      "values": [
+        "position"
+      ],
+      "pointers": [
+        "/entities/7/complex/1/args/0"
+      ]
+    },
+    {
+      "id": "complex-x",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "x",
+          "y"
+        ],
+        "complex": [
+          {
+            "name": "IFCPROFILEDEF",
+            "args": [
+              "AREA",
+              "Rectangle"
+            ]
+          },
+          {
+            "name": "IFCPARAMETERIZEDPROFILEDEF",
+            "args": [
+              "position"
+            ]
+          }
+        ]
+      },
+      "name": "XDim",
+      "owner": "IFCRECTANGLEPROFILEDEF",
+      "status": "unique",
+      "values": [
+        "x"
+      ],
+      "pointers": [
+        "/entities/7/args/0"
+      ]
+    },
+    {
+      "id": "solid-position",
+      "entity": {
+        "name": "IFCEXTRUDEDAREASOLID",
+        "args": [
+          "direction",
+          "depth"
+        ],
+        "complex": [
+          {
+            "name": "IFCSWEPTAREASOLID",
+            "args": [
+              "profile",
+              "position"
+            ]
+          }
+        ]
+      },
+      "name": "Position",
+      "owner": "IFCSWEPTAREASOLID",
+      "status": "unique",
+      "values": [
+        "position"
+      ],
+      "pointers": [
+        "/entities/7/complex/0/args/1"
+      ]
+    },
+    {
+      "id": "wrong-owner",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "AREA",
+          "Rectangle",
+          "position",
+          "x",
+          "y"
+        ]
+      },
+      "name": "Position",
+      "owner": "IFCSWEPTAREASOLID",
+      "status": "missing",
+      "values": [],
+      "pointers": []
+    },
+    {
+      "id": "duplicate",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "x",
+          "y"
+        ],
+        "complex": [
+          {
+            "name": "IFCRECTANGLEPROFILEDEF",
+            "args": [
+              "x2",
+              "y2"
+            ]
+          }
+        ]
+      },
+      "name": "XDim",
+      "owner": "IFCRECTANGLEPROFILEDEF",
+      "status": "ambiguous",
+      "values": [
+        "x",
+        "x2"
+      ],
+      "pointers": [
+        "/entities/7/args/0",
+        "/entities/7/complex/0/args/0"
+      ]
+    },
+    {
+      "id": "unknown-after-duplicates",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "x",
+          "y"
+        ],
+        "complex": [
+          {
+            "name": "IFCRECTANGLEPROFILEDEF",
+            "args": [
+              "x2",
+              "y2"
+            ]
+          },
+          {
+            "name": "UNKNOWN",
+            "args": []
+          }
+        ]
+      },
+      "name": "XDim",
+      "owner": "IFCRECTANGLEPROFILEDEF",
+      "status": "unknown",
+      "values": [
+        "x",
+        "x2"
+      ],
+      "pointers": [
+        "/entities/7/args/0",
+        "/entities/7/complex/0/args/0"
+      ]
+    },
+    {
+      "id": "unknown",
+      "entity": {
+        "name": "IFCRECTANGLEPROFILEDEF",
+        "args": [
+          "x",
+          "y"
+        ],
+        "complex": [
+          {
+            "name": "UNKNOWN",
+            "args": []
+          }
+        ]
+      },
+      "name": "XDim",
+      "owner": "IFCRECTANGLEPROFILEDEF",
+      "status": "unknown",
+      "values": [
+        "x"
+      ],
+      "pointers": [
+        "/entities/7/args/0"
+      ]
+    },
+    {
+      "id": "case-insensitive",
+      "entity": {
+        "name": "ifcrectangleprofiledef",
+        "args": [
+          "AREA",
+          "Rectangle",
+          "position",
+          "x",
+          "y"
+        ]
+      },
+      "name": "xdim",
+      "owner": "ifcrectangleprofiledef",
+      "status": "unique",
+      "values": [
+        "x"
+      ],
+      "pointers": [
+        "/entities/7/args/3"
+      ]
+    }
+  ]
+}

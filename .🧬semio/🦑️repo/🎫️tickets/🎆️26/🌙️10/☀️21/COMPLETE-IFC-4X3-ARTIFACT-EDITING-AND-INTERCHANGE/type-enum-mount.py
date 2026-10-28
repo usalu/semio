@@ -1,0 +1,13 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details')
+def write(f,s):
+ b=s.encode();old=f.stat().st_size
+ with f.open('r+b')as o:o.write(b);o.write(b' '*max(0,old-len(b)))
+f=p/'constituent_roster.rs';s=f.read_text(encoding='utf8').replace('    rootless_profile: Option<usize>,','    rootless_profile: Option<usize>,\n    input_profile: Option<(usize,usize,usize)>,')
+s=s.replace('            || state.authority.is_none_or', '            || state.input_profile!=Some((C::enumeration_count as usize,C::enumeration_member as usize,C::rootless_attribute_count as usize))\n            || state.authority.is_none_or')
+s=s.replace('if self.state.closing || self.state.binding.is_some_and', 'if self.state.input_profile.is_some_and(|profile|profile!=(C::enumeration_count as usize,C::enumeration_member as usize,C::rootless_attribute_count as usize)) || self.state.closing || self.state.binding.is_some_and',1)
+s=s.replace('                self.state.binding = Some(binding);','                self.state.binding = Some(binding);\n                self.state.input_profile=Some((C::enumeration_count as usize,C::enumeration_member as usize,C::rootless_attribute_count as usize));',1);write(f,s)
+f=p/'type-guidance.rs';s=f.read_text(encoding='utf8').replace('+ size_of::<Vec<Field>>()', '+ size_of::<Vec<Field>>() + size_of::<Vec<Navigation>>()');write(f,s)
+f=p/'type_input_tests.rs';s=f.read_text(encoding='utf8');s+='\n#[path="type_enum_input_tests.rs"]\nmod enumeration;\n';write(f,s)
+f=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🟦️typescript/📜️script.ts');s=f.read_text(encoding='utf8');a='  "🔎️details/type_scalar_input.test.ts",';assert a in s;s=s.replace(a,a+'\n  "🔎️details/type_enum_input.test.ts",');write(f,s)
+f=Path('.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️21/COMPLETE-IFC-4X3-ARTIFACT-EDITING-AND-INTERCHANGE/host-type-enum-input-plan.md');s=f.read_text(encoding='utf8');a='Request choice.path is the exact current prepared field payload path into the sorted caller row carrier.';s=s.replace(a,'Request choice.path is the source-owned candidate target-attribute coordinate [entities, source ordinal, args, target direct index], validated under the unchanged source/profile/revision/request. It is a page coordinate only; the actual Choice binding targets the sorted caller row payload path. This distinction keeps absent required fields uniquely addressable even before their rows exist. Navigation walks one active field/window at a time in target order, providing at most a previous and next control across all paged domains.');f.write_text(s,encoding='utf8')

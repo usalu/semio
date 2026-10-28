@@ -1,0 +1,173 @@
+{
+  "scope": "item-family-only",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "tess-triangulated",
+      "policy": "tessellation",
+      "names": [
+        "IFCTRIANGULATEDFACESET"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "tess-polygonal",
+      "policy": "tessellation",
+      "names": [
+        "IFCPOLYGONALFACESET"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "tess-extruded",
+      "policy": "tessellation",
+      "names": [
+        "IFCEXTRUDEDAREASOLID"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "tess-unknown",
+      "policy": "tessellation",
+      "names": [
+        "IFCUNKNOWNITEM"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "tess-late-unknown",
+      "policy": "tessellation",
+      "names": [
+        "IFCTRIANGULATEDFACESET",
+        "IFCUNKNOWNITEM"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "tess-known-extra",
+      "policy": "tessellation",
+      "names": [
+        "IFCTESSELLATEDFACESET",
+        "IFCTRIANGULATEDFACESET",
+        "IFCMATERIAL"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "swept-extruded",
+      "policy": "swept-solid",
+      "names": [
+        "IFCEXTRUDEDAREASOLID"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "swept-revolved",
+      "policy": "swept-solid",
+      "names": [
+        "IFCREVOLVEDAREASOLID"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "swept-extruded-tapered",
+      "policy": "swept-solid",
+      "names": [
+        "IFCEXTRUDEDAREASOLIDTAPERED"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-revolved-tapered",
+      "policy": "swept-solid",
+      "names": [
+        "IFCREVOLVEDAREASOLIDTAPERED"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-disk",
+      "policy": "swept-solid",
+      "names": [
+        "IFCSWEPTDISKSOLID"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-sectioned",
+      "policy": "swept-solid",
+      "names": [
+        "IFCSECTIONEDSOLIDHORIZONTAL"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-abstract-parent",
+      "policy": "swept-solid",
+      "names": [
+        "IFCSWEPTAREASOLID"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-foreign",
+      "policy": "swept-solid",
+      "names": [
+        "IFCTRIANGULATEDFACESET"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-unknown",
+      "policy": "swept-solid",
+      "names": [
+        "IFCUNKNOWNITEM"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "swept-positive-late-unknown",
+      "policy": "swept-solid",
+      "names": [
+        "IFCEXTRUDEDAREASOLID",
+        "IFCUNKNOWNITEM"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "swept-excluded-late-unknown",
+      "policy": "swept-solid",
+      "names": [
+        "IFCEXTRUDEDAREASOLIDTAPERED",
+        "IFCUNKNOWNITEM"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "swept-mixed-constituents",
+      "policy": "swept-solid",
+      "names": [
+        "IFCEXTRUDEDAREASOLID",
+        "IFCREVOLVEDAREASOLID"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "swept-deny-complex",
+      "policy": "swept-solid",
+      "names": [
+        "IFCEXTRUDEDAREASOLID",
+        "IFCREVOLVEDAREASOLIDTAPERED"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept-name-case",
+      "policy": "swept-solid",
+      "names": [
+        "IfcRevolvedAreaSolid"
+      ],
+      "expected": "pass"
+    }
+  ]
+}

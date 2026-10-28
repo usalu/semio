@@ -1,0 +1,94 @@
+{
+  "standard": "IFC2X3",
+  "lengthUnits": "source",
+  "cases": [
+    {
+      "file": "placed-extrusion.ifc",
+      "product": "17",
+      "representation": "11",
+      "meshes": 1,
+      "vertices": 8,
+      "triangles": 12,
+      "bounds": [
+        [
+          8,
+          19,
+          30
+        ],
+        [
+          12,
+          21,
+          33
+        ]
+      ],
+      "volume": 24,
+      "reference": {
+        "engine": "three",
+        "shape": "ExtrudeGeometry",
+        "version": "0.182.0"
+      }
+    },
+    {
+      "file": "mapped-extrusion.ifc",
+      "product": "24",
+      "representation": "22",
+      "meshes": 1,
+      "vertices": 8,
+      "triangles": 12,
+      "bounds": [
+        [
+          98,
+          -4,
+          0
+        ],
+        [
+          102,
+          4,
+          6
+        ]
+      ],
+      "volume": 192,
+      "reference": {
+        "engine": "three",
+        "shape": "ExtrudeGeometry",
+        "version": "0.182.0"
+      }
+    },
+    {
+      "file": "tetrahedron-brep.ifc",
+      "product": "34",
+      "representation": "32",
+      "meshes": 1,
+      "vertices": 4,
+      "triangles": 4,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          1,
+          1
+        ]
+      ],
+      "volume": 0.16666666666666666,
+      "reference": {
+        "engine": "three",
+        "shape": "ConvexGeometry",
+        "version": "0.182.0"
+      }
+    },
+    {
+      "file": "complex-product.ifc",
+      "meshes": 0,
+      "issue": "unsupported-complex-product"
+    },
+    {
+      "file": "complex-item.ifc",
+      "meshes": 0,
+      "issue": "unsupported-complex-representation-#10"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+{
+ "$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://semio.tech/ifc/solid-admission-cases",
+ "type":"object","additionalProperties":false,"required":["scope","cases"],
+ "properties":{"scope":{"const":"cooperative-solid-topology"},"cases":{"type":"array","minItems":12,"maxItems":12,"items":{"type":"object","additionalProperties":false,"required":["id","shells","sharedPoints","modifier","expected"],"properties":{
+  "id":{"type":"string","pattern":"^[a-z][a-z-]*$"},"shells":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["low","high","reverse"],"properties":{"low":{"$ref":"#/$defs/point"},"high":{"$ref":"#/$defs/point"},"reverse":{"type":"boolean"}}}},"sharedPoints":{"type":"boolean"},"modifier":{"enum":["none","open","bad-index","degenerate"]},"expected":{"enum":["accept","refuse"]},"volume":{"type":"number","exclusiveMinimum":0}
+ }}}},"$defs":{"point":{"type":"array","minItems":3,"maxItems":3,"items":{"type":"number"}}}
+}

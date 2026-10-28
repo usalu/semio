@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 13,
+      "maxItems": 13,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "x",
+          "y",
+          "depth",
+          "direction",
+          "expected"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "x": {
+            "type": "number"
+          },
+          "y": {
+            "type": "number"
+          },
+          "depth": {
+            "type": "number"
+          },
+          "direction": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "profileOrigin": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "profileX": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "solidOrigin": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "solidZ": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "solidX": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "millimetres": {
+            "type": "boolean"
+          },
+          "profileType": {
+            "enum": [
+              "AREA",
+              "CURVE"
+            ]
+          },
+          "expected": {
+            "enum": [
+              "supported",
+              "refuse"
+            ]
+          },
+          "bounds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "expected": {
+                  "const": "supported"
+                }
+              }
+            },
+            "then": {
+              "properties": {"bounds":{},"volume":{}},
+              "required": [
+                "bounds",
+                "volume"
+              ]
+            },
+            "else": {
+              "not": {
+                "anyOf": [
+                  {
+                    "properties": {"bounds":{}},
+                    "required": [
+                      "bounds"
+                    ]
+                  },
+                  {
+                    "properties": {"volume":{}},
+                    "required": [
+                      "volume"
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {"profileOrigin":{}},
+              "required": [
+                "profileOrigin"
+              ]
+            },
+            "then": {
+              "properties": {"profileX":{}},
+              "required": [
+                "profileX"
+              ]
+            }
+          },
+          {
+            "if": {
+              "properties": {"solidOrigin":{}},
+              "required": [
+                "solidOrigin"
+              ]
+            },
+            "then": {
+              "properties": {"solidZ":{},"solidX":{}},
+              "required": [
+                "solidZ",
+                "solidX"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

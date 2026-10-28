@@ -1,0 +1,7 @@
+/** 🔬 Observe original control custody on the public released-view header wrappers. */
+import {writeFile} from 'node:fs/promises';
+import {ifc4x3MvdDeclarations,ifc4x3MvdDeclarationsAsync,ifc4x3MvdHeaderMutation,ifc4x3MvdHeaderMutationAsync} from 'C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/👁️mvd/header.ts';
+import type {IfcApplyOptions} from 'C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/🔺️diff/🟦️.ts';
+const values=[{kind:'aggregate' as const,value:[{kind:'string' as const,value:'ViewDefinition [ReferenceView]'}]},{kind:'string' as const,value:'2;1'}],routes:[string,(o:IfcApplyOptions)=>unknown][]=[['declarations-sync',o=>ifc4x3MvdDeclarations(values,o)],['declarations-async',o=>ifc4x3MvdDeclarationsAsync(values,o)],['selection-sync',o=>ifc4x3MvdHeaderMutation(values,{view:'ReferenceView'},o)],['selection-async',o=>ifc4x3MvdHeaderMutationAsync(values,{view:'ReferenceView'},o)]];
+const rows=[];for(const [name,run]of routes){for(const redirect of [false,true]){let calls=0,finished=false,code:unknown;const options:IfcApplyOptions={maxDepth:0,onProgress(){calls++;if(redirect)options.maxDepth=256;}};try{await run(options);finished=true;}catch(error){code=(error as {code?:string})?.code;}rows.push({name,redirect,calls,finished,code});}}
+await writeFile(new URL('./🗑️generated/mvd-header-control-probe-after.json',import.meta.url),JSON.stringify({rows},null,2),{flag:'wx'});console.log('[DEBUG] '+JSON.stringify(rows));

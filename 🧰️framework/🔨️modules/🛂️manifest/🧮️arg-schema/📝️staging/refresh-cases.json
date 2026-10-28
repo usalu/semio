@@ -1,0 +1,18 @@
+{
+ "view":{"locale":"de","terminology":"native","focusedWindowId":"right","windowInstances":[{"id":"left","windowKindId":"details"},{"id":"right","windowKindId":"model"}],"activeUtilityByWindowId":{"left":"edit-left","right":"edit-right"}},
+ "targets":[
+  {"key":"form-left","contextWindowId":"left","bodyKey":"framework.action.form","stagedRequest":{"token":{"action":"attachPropertySet","window":"left","generation":"9007199254740993","revision":"ef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd"},"args":{"target":"18446744073709551615"},"locale":"de"}},
+  {"key":"form-right","contextWindowId":"right","bodyKey":"framework.action.form","stagedRequest":{"token":{"action":"attachPropertySet","window":"right","generation":"9007199254740994","revision":"ef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcd"},"args":{"target":"9007199254740993"},"locale":"de"}}
+ ],
+ "refusals":[
+  {"id":"unlisted-real-window","path":["contextWindowId"],"value":"form-left"},
+  {"id":"wrong-token-window","path":["stagedRequest","token","window"],"value":"right"},
+  {"id":"wrong-request-locale","path":["stagedRequest","locale"],"value":"en"},
+  {"id":"unknown-action","path":["stagedRequest","token","action"],"value":"deleteEntity"},
+  {"id":"undeclared-body","path":["bodyKey"],"value":"viewport"},
+  {"id":"overflow-generation","path":["stagedRequest","token","generation"],"value":"18446744073709551616"},
+  {"id":"noncanonical-generation","path":["stagedRequest","token","generation"],"value":"01"},
+  {"id":"empty-revision","path":["stagedRequest","token","revision"],"value":""},
+  {"id":"empty-surface","path":["key"],"value":""}
+ ]
+}

@@ -1,0 +1,22 @@
+{
+  "cases": [
+    { "id": "form", "slot": "form", "kind": "form", "children": [1, 2], "bindings": 0, "admitted": true },
+    { "id": "status-only", "slot": "form", "kind": "form", "children": [1], "bindings": 0, "admitted": true },
+    { "id": "missing-status", "slot": "form", "kind": "form", "children": [], "bindings": 0, "admitted": false },
+    { "id": "duplicate-child", "slot": "form", "kind": "form", "children": [1, 1], "bindings": 0, "admitted": false },
+    { "id": "root-cycle", "slot": "form", "kind": "form", "children": [0], "bindings": 0, "admitted": false },
+    { "id": "form-action", "slot": "form", "kind": "form", "children": [1], "bindings": 1, "admitted": false },
+    { "id": "status", "slot": "status", "kind": "status", "children": [], "bindings": 0, "admitted": true },
+    { "id": "foreign-extension", "slot": "status", "kind": "extension", "children": [], "bindings": 0, "admitted": false },
+    { "id": "field", "slot": "field", "kind": "field", "children": [7], "bindings": 0, "admitted": true },
+    { "id": "multiple-field-controls", "slot": "field", "kind": "field", "children": [7, 8], "bindings": 0, "admitted": false },
+    { "id": "nested-field", "slot": "control", "kind": "field", "children": [7], "bindings": 0, "admitted": false },
+    { "id": "text-input", "slot": "control", "kind": "input", "children": [], "bindings": 1, "admitted": true },
+    { "id": "choice", "slot": "control", "kind": "select", "children": [], "bindings": 1, "admitted": true },
+    { "id": "button", "slot": "control", "kind": "button", "children": [], "bindings": 1, "admitted": true },
+    { "id": "read-only", "slot": "control", "kind": "text", "children": [], "bindings": 0, "admitted": true },
+    { "id": "text-action", "slot": "control", "kind": "text", "children": [], "bindings": 1, "admitted": false },
+    { "id": "leaf-children", "slot": "control", "kind": "input", "children": [8], "bindings": 1, "admitted": false },
+    { "id": "unrelated-slider", "slot": "control", "kind": "slider", "children": [], "bindings": 1, "admitted": false }
+  ]
+}

@@ -1,0 +1,44 @@
+# Rounded Rectangle Profile Independent Plan
+
+Ticket-only schema-first proposal while selected154production is held. No production/frozen source changed and no own rounded-profile producer was run. rounded-rectangle-contract-author.py authors16explicit neutral rows plus closed rounded-rectangle-profile.schema.json; actual Ajv2020strict admission passes16 and rejects an added fullView field. The exact11inspected source paths/bytes/SHA hashes are recorded at generated/rounded-rectangle-source-observations.json.
+
+## Released Declaration, Not a Rectangle Approximation
+
+Pinned ADD2 EXPRESS SHA f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860: IfcRoundedRectangleProfileDef10186–10192 inherits RectangleProfileDef9374–9381, ParameterizedProfileDef8329–8344 and ProfileDef. Flattened direct source roles are ProfileType/ProfileName, optional2D Position, XDim/YDim and required RoundingRadius. XDim/YDim/RoundingRadius are IfcPositiveLengthMeasure→IfcLengthMeasure→REAL. The exact ValidRadius rule allows radius<=XDim/2 AND radius<=YDim/2, including equality. There is no optional radius/default-to-zero rule. Zero radius is not a valid way to silently fall back to RectangleProfileDef.
+
+ExtrudedAreaSolid6588–6596 uses actual SweptArea, optional3D Position, required Direction and positive Depth; ValidExtrusionDirection requires a nonzero component transverse to local+Z. Depth is extrusion length along the normalized actual direction. Position affects the base profile only; profile offset/rotation must not rotate the solid-local extrusion displacement. Require AREA for this solid slice and actual declared owner-qualified source fields/REAL carriers, not ifcNumber coercion or fabricated Circle/Rectangle source wrappers. Full physical constraints remain separate from the selected geometric policy.
+
+## Exact Rounded Boundary and Limit Cases
+
+For widthX,heightY,radiusR, corner centers are (±(X/2-R),±(Y/2-R)). Generate four genuine quarter-circle arcs in CCW order, joining their exact cardinal endpoints by straight edges. Never emit a rectangle with four merely beveled or unrounded corners and call it the profile. Use exact cardinal coordinates at quadrant endpoints; do not leave cos(pi/2) noise that prevents a valid zero-length join collapsing.
+
+Let N=4q be total circular chord count across the four quarters. If both straight extents are positive, unique boundary M=N+4. If one dimension equals2R (capsule), M=N+2. If both equal2R (circle), M=N. Remove only deterministic exact coincident adjacent endpoints; no EPS weld. Equality cases must remain supported if represented coordinates/triangles remain nondegenerate. Reversal for negative local extrusion Z is separate from the one central mapping/world reflection swap.
+
+A convex two-layer sweep has2Mpoints and4M-4triangles, hence18M-12 final coordinate/index scalars. Default relative.001 yields circleN72: ordinary roundedM76/values1356, capsuleM74/1320, circleM72/1284. Preflight exact safe counts before output backing birth, while live workspace must additionally retain sampled boundary/caps/index/normalization/world overlaps under the separate emerging ledger. An output preflight alone is not an allocation/heap certificate.
+
+## Original Adjustable Sampling Contract
+
+Reuse captured original absolute/relative tolerance and the existing world2-basis bound on R*SIscale through frame*profile. Each quarter has the same radius, so the existing conservative sagitta certificate and multiple-of-four search apply to arc chords. Ideal-world chord accuracy remains distinct from binary64 coordinate rounding and GLBfloat32. Translation does not change chord error but may collapse represented points and must still refuse publication through finite normalized per-triangle checks.
+
+Parent approved this policy after the independent proposal: maxSegments caps actual total boundary edgesM, including nonzero straight edges, rather than silently allowing N+4 while displaying an N budget. Pass an adjusted available curved ceiling to the existing sampler: largest multiple4<=maxSegments-S, where S=4/2/0. Minimum ordinary rounded boundary needs8edges, capsule6, circle4. The authored ordinary cap4 row therefore expects resource refusal. The parent explicitly approved total boundary M, mandatory positive radius and capsule/full-circle equality after full154 became terminal. This records the new rounded-profile contract; existing circle policy behavior remains unchanged.
+
+## Existing Extension Points and Native Scope
+
+Actual TS io/geometry/circle.ts already performs exact profile/solid role, owned Radius/Depth query, original unit/frame and transverse-normal range checks before circular-solid.ts. geometry/control.ts owns captured policy and certified segment count. circular-solid.ts computes profile-base then solid-local displacement, preflights output values and checks each represented triangle. rectangle.ts has the same profile/displacement ordering but exact four-corner topology. polyline.ts samples source rings and delegates to shared rings/🟦️.ts before cap/side output.
+
+A clean shared private convex-profile sweep stage can share cap/side/output/precision/orientation work between actual circular and rounded adapters, while source adapters retain their genuine declaration authority. A rounded sampler can return its actual finite M and points through original continuations; do not fake an IFC circle/extrusion entity or expose arbitrary unmetered generator callbacks. Reuse the existing ring core for independent cap/topology comparison or a genuinely shared planar cap route rather than implement a second ear-clipping algorithm. Every source-sized sample/cap/side loop needs original continuation gates and cumulative output/workspace ownership.
+
+Existing native shared rings/🦀️.rs has triangulate_rings(vertices,input,tick) with a synchronous callback/error surface. Existing circle/🦀️.rs is only the fixed-size pure basis-radius function with no work context. Neither is a mounted original-funded native rounded sweep or native continuation certificate. Avoid moving Details and do not invent native receipts from these helpers.
+
+## Authored16-Row Contract
+
+rounded-rectangle-profile-cases.json explicitly records dimensions/radius/depth/direction, profile translation/rotation, solid translation/tilt, mapping scale/reflection, unit prefix, scalar carrier kinds, captured sampling policy, precise damage and separate formal/geometry expected status. Cases: bath cutter dimensions; capsule; full-circle limit; profile position; solid tilt; combined oblique negativeZ+reflection+profileoffset; millimetres; absolute-only tolerance; ordinary cap4; zero/overhalf/unset radius; INTEGER radius; foreign3D profile placement; tangent extrusion; finite huge-translation collapse. Ideal area/volume values are authored analytic expectations, not observed own output or complete schema validity.
+
+Area=XY-(4-pi)R². Finite sampled area is XY-4R²+N*R²*sin(2pi/N)/2, with arc deficit piR²-NR²*sin(2pi/N)/2. Extruded ideal volume multiplies area by depth*abs(normalizedDirectionZ), |worlddeterminant| and SIscale³. Profile rotation/offset do not change this ideal area. Use actual Three rounded sampled-ring extrusion/independent ring triangulation for finite topology/volume and mpmath for sagitta/area bounds; keep external classes behind owned arrays/scalars. Physical fixtures should be written from exact carriers without SDK construction coercion, then parsed/full-validated/meshed through the installed interface. Preserve any normalization gaps and finite backend facet differences.
+
+## Canonical and Control Obligations
+
+Before implementation freeze add exact radius/width/depth central mutation→diff→both inverse forms, raw source STEP preservation and explicit REAL repair, repaired STEP→geometry→GLB/Three/Khronos comparison. Assert source IDs/owner-qualified field pointers and original product/profile/solid placement remain unchanged. Add exact1355/1356default-rounded output boundary only after sampler count is frozen; also workspace measured peak-1/peak and shared public distinct-product output frontiers. Test profile max-radius equality without duplicate/zero triangles, first/interior/completion caller Error/undefined/cancel, once-captured policy/getter/null/reflection and finite cleanup. Full original bath needs the finite Boolean adapter plus this profile; profile support alone does not certify the whole original.
+
+The unchanged bath source SHA4592f3029faa12625494ada734fcfe46e4fc91a33d001198e9e3144721870b95 has external112v/220tvolume.5482863988281255 versus analytic ideal remainder.5480354056994858. Preserve that qualified reference and delta. Different own chord policies require their own approximation bounds rather than exact equal-volume expectations. No claim that ours currently works, no fullMVD/native/runtime/build dependency change.
+

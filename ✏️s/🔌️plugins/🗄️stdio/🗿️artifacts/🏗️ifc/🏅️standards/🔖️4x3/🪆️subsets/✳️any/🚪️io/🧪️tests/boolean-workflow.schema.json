@@ -1,0 +1,179 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "scope",
+    "mapped",
+    "official"
+  ],
+  "properties": {
+    "scope": {
+      "const": "ifc-owned-boolean-workflow"
+    },
+    "mapped": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "operation",
+          "root",
+          "cut",
+          "unitPrefix",
+          "mapping",
+          "expected",
+          "volume"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "operation": {
+            "enum": [
+              "DIFFERENCE",
+              "UNION",
+              "INTERSECTION"
+            ]
+          },
+          "root": {
+            "enum": [
+              "direct",
+              "csg"
+            ]
+          },
+          "cut": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "array",
+              "minItems": 3,
+              "maxItems": 3,
+              "items": {
+                "type": "number"
+              }
+            }
+          },
+          "unitPrefix": {
+            "enum": [
+              null,
+              "MILLI"
+            ]
+          },
+          "mapping": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 2,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "origin",
+                "originRotation",
+                "target",
+                "axes",
+                "scale",
+                "secondary"
+              ],
+              "properties": {
+                "origin": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "originRotation": {
+                  "type": "number"
+                },
+                "target": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "type": "number"
+                  }
+                },
+                "axes": {
+                  "type": "array",
+                  "minItems": 3,
+                  "maxItems": 3,
+                  "items": {
+                    "anyOf": [
+                      {
+                        "type": "array",
+                        "minItems": 3,
+                        "maxItems": 3,
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  }
+                },
+                "scale": {
+                  "type": [
+                    "number",
+                    "null"
+                  ]
+                },
+                "secondary": {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": [
+                      "number",
+                      "null"
+                    ]
+                  }
+                }
+              }
+            }
+          },
+          "expected": {
+            "const": "supported"
+          },
+          "volume": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "official": {
+      "const": {
+        "file": "bath-csg-solid.ifc",
+        "sha256": "4592f3029faa12625494ada734fcfe46e4fc91a33d001198e9e3144721870b95",
+        "product": 225,
+        "root": 208,
+        "profile": 202,
+        "radiusIndex": 5,
+        "radiusMillimetres": 200,
+        "editedRadiusMillimetres": 100,
+        "chords": 72,
+        "volume": 0.5481470113103606,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            0.8,
+            0.8
+          ]
+        ]
+      }
+    }
+  }
+}

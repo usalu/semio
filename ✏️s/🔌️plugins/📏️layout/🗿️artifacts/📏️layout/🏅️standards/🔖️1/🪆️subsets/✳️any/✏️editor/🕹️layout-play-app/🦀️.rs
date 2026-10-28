@@ -2,6 +2,19 @@
 
 use super::*;
 
+/// 🧭️ Each render keeps its original preparation and child source owners until retirement.
+#[derive(semio_framework_value::RetireOwned)]
+pub enum LayoutPanelRenderWork {
+    Canvas(semio_s_artifact_layout_layout_editor_commands::canvas::paragraph_work::LayoutRenderWork),
+    Inspection(inspection_panel::drawing_work::LayoutInspectorWork),
+}
+impl LayoutPanelRenderWork {
+    fn demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        match self { Self::Canvas(work) => work.demand(body), Self::Inspection(work) => work.demand(body) }
+    }
+}
+
+
 //#region 🔖️LayoutPlayApp
 /// 🧪️ Stateless app shell; exact window owners hold persisted view preferences and ephemeral input.
 pub struct LayoutPlayApp;
@@ -45,7 +58,7 @@ impl LayoutPlayApp {
             LAYOUT_PLAY_BODY_PREVIEW => preview::render(document, &config, transient, interaction),
             LAYOUT_PLAY_BODY_ARTIFACT => document_panel::render(document, &config, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_ARTIFACT)),
             LAYOUT_PLAY_BODY_CATALOGUE => catalogue_panel::render(labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_CATALOGUE)),
-            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels),
+            LAYOUT_PLAY_BODY_INSPECTION => inspection_panel::render(document, &config, interaction, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_INSPECTION)),
             LAYOUT_PLAY_BODY_PREFLIGHT => preflight_panel::render(document, labels, &semio_framework_plugin::TreeWindows::for_body(view_state, LAYOUT_PLAY_BODY_PREFLIGHT)),
             _ => semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "layout error text admission failed")),
         }
@@ -236,6 +249,19 @@ impl ArtifactEditor for LayoutPlayApp {
     /// than wiring it into rendering today.
     fn import_media(port: &str, media: &Media, _doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Emit<LayoutMutation, NoConfigMutation, Self::DraftMutation>, MediaError> {
         match port {
+            "artifact:in" => {
+                let document = match &media.payload {
+                    MediaPayload::Structured { schema, json } if schema == semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA => {
+                        let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?;
+                        <LayoutSnapshot as pack::snapshot::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?
+                    },
+                    MediaPayload::Intrinsic { schema, value } if schema == semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA => {
+                        <LayoutSnapshot as semio_framework_value::FromValue>::from_value(value.clone()).map_err(|error| MediaError::Payload(port.into(), error.to_string()))?
+                    },
+                    _ => return Err(MediaError::Payload(port.into(), "artifact:in requires a composed native layout snapshot".into())),
+                };
+                Ok(Emit::mutations(vec![LayoutMutation::ReplaceDocument(semio_s_artifact_layout_layout_mutations_content::replace_document::ReplaceDocument { document })]))
+            },
             "fields:in" => {
                 let MediaPayload::Intrinsic {schema,value}= &media.payload else{return Err(MediaError::Payload(port.to_string(),"fields:in requires an intrinsic form dictionary".into()))};
                 if schema!="form.dictionary"{return Err(MediaError::Payload(port.to_string(),"fields:in requires the declared form.dictionary schema".into()))}
@@ -258,6 +284,22 @@ impl ArtifactEditor for LayoutPlayApp {
         let Some(window_id) = view_state.window_id.clone() else { return HashMap::new() };
         HashMap::from([(window_id, layout_window_engagement(&config, &LayoutWindowTransient::default(), "window", labels))])
     }
+
+    type RenderWork=LayoutPanelRenderWork;
+    fn uses_render_work(body_key:&str)->bool{matches!(body_key,LAYOUT_PLAY_BODY_BLUEPRINT|LAYOUT_PLAY_BODY_PREVIEW|LAYOUT_PLAY_BODY_INSPECTION)}
+    fn begin_render_work(body_key:&str,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<Self::RenderWork>,semio_framework_job::OriginalTurnFailure>{let demand=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self::RenderWork>(),depth:1,..Default::default()};if cx.should_yield()||cx.is_cancelled()||!cx.retained_work_can_enter(demand){return Ok(None);}let work=if body_key==LAYOUT_PLAY_BODY_INSPECTION{LayoutPanelRenderWork::Inspection(inspection_panel::drawing_work::LayoutInspectorWork::new())}else{LayoutPanelRenderWork::Canvas(semio_s_artifact_layout_layout_editor_commands::canvas::paragraph_work::LayoutRenderWork::new())};cx.consume_retained(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})?;cx.consume_fuel(1);Ok(Some(work))}
+    fn render_work_demand(work:&Self::RenderWork,maximum_body_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{work.demand(maximum_body_bytes)}
+    fn render_with_work_context(work:&mut Self::RenderWork,_owner:&semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,body_key:&str,_source:&std::sync::Arc<LayoutSnapshot>,doc:&ArtifactView<'_,LayoutSnapshot>,cfg:&ConfigView<'_,NoConfig>,view_state:&semio_framework_plugin::ViewModel,transient:&semio_framework_plugin::TransientView<'_,semio_framework_plugin::NoTransient>,interaction:&InteractionView<'_>,cx:&mut semio_framework_job::StepContext<'_>)->semio_framework_plugin::OriginalRenderResult<semio_framework_plugin::ComponentTree>{
+        match work {
+            LayoutPanelRenderWork::Inspection(work) => {
+                let config=blueprint::config::current(cfg);
+                if !work.advance(doc,&config,cx)? { return Ok(None); }
+                work.render(doc.snapshot,&config,&LayoutInteractionSnapshot::from_interaction(interaction),layout_labels(view_state),&semio_framework_plugin::TreeWindows::for_body(view_state,LAYOUT_PLAY_BODY_INSPECTION)).map(semio_framework_plugin::built_to_component_tree).map(Some).map_err(Into::into)
+            }
+            LayoutPanelRenderWork::Canvas(work) => {if cx.should_yield()||cx.is_cancelled(){return Ok(None);}if work.needs_inputs(){let mut config=blueprint::config::current(cfg);if body_key==LAYOUT_PLAY_BODY_BLUEPRINT{if let Some(utility)=view_state.active_utility_id.as_deref().filter(|utility|!utility.is_empty()){config.active_utility=utility.to_string();}}work.prepare(doc.snapshot,&config,&blueprint::transient::current(transient),&LayoutInteractionSnapshot::from_interaction(interaction),body_key==LAYOUT_PLAY_BODY_BLUEPRINT).map_err(|_|semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"layout original render preparation failed"))?;cx.consume_fuel(1);return Ok(None);}if !work.advance(doc.snapshot,cx)?{return Ok(None);}work.take_tree().map(Some).map_err(Into::into)}
+        }
+    }
+
 
     fn render_with_request_context(
         _owner: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle,

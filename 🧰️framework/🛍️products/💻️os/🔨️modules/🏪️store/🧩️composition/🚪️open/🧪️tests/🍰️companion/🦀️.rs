@@ -37,5 +37,3 @@ mod history_tests;
 mod member_open_tests;
 #[path = "../../🏭️operation/🛂️receiving/🧪️tests/🦀️.rs"]
 mod receiving_tests;
-#[path = "../../🏭️operation/📏️birth/🧪️tests/📥️snapshot-input/🦀️.rs"]
-mod operation_snapshot_input_tests;

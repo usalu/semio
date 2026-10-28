@@ -4,6 +4,7 @@
 use crate::store;
 use crate::protocol;
 use crate::ChildEmit;
+use semio_framework_plugin_decl_views::child_view::vector_read::command::OriginalChildEditorCommandAuthority;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
 use semio_framework_diagnostic::{Fault,FaultFrom};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
@@ -35,11 +36,13 @@ impl ChildEmitPreparationStep {
 }
 /// 🪵️ Applying child metadata and its original typed source remain one retained owner.
 pub struct OwnedChildEmit {
+    authority:Option<OriginalChildEditorCommandAuthority>,
     metadata:Option<ChildEmit>,
     mutations:Option<store::MemberStoreOwnedBatch>,
 }
 impl OwnedChildEmit {
-    pub fn new(metadata:ChildEmit,mutations:store::MemberStoreOwnedBatch)->Self{Self{metadata:Some(metadata),mutations:Some(mutations)}}
+    pub fn new(metadata:ChildEmit,mutations:store::MemberStoreOwnedBatch)->Self{Self{metadata:Some(metadata),mutations:Some(mutations),authority:None}}
+    pub fn authority(&self)->Option<&OriginalChildEditorCommandAuthority>{self.authority.as_ref()}
     pub fn metadata(&self)->Option<&ChildEmit>{self.metadata.as_ref()}
     pub fn mutations<M:Send+'static>(&self)->Option<&[M]>{self.mutations.as_ref()?.mutations::<M>()}
     pub fn take_parts(&mut self)->Option<(ChildEmit,store::MemberStoreOwnedBatch)>{
@@ -55,6 +58,7 @@ impl OwnedChildEmit {
             demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"owned metadata depth overflow"))?;
             return Ok(demand);
         }
+        if let Some(authority)=self.authority.as_ref(){let mut demand=authority.close_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"qualified child authority depth overflow"))?;return Ok(demand)}
         Ok(Default::default())
     }
     /// 🎟️ Keeps logical work independent from original typed source and metadata physical release.
@@ -79,9 +83,10 @@ impl OwnedChildEmit {
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,metadata.terminal_is_empty(),"original owned child metadata")?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
+        if let Some(authority)=self.authority.as_mut(){authority.begin_close();let step=authority.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})?;if authority.terminal_is_empty(){self.authority=None}return Ok(RetainedCloneStep::Progress(step.progress()))}
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
-    pub fn terminal_is_empty(&self)->bool{self.metadata.is_none()&&self.mutations.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.metadata.is_none()&&self.mutations.is_none()&&self.authority.is_none()}
 }
 impl Drop for OwnedChildEmit{
     fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"applying child emission dropped before original typed source and metadata returned");}
@@ -106,9 +111,27 @@ trait ChildEmitPreparationOwner: Send {
     fn retained_operation_count(&self)->usize;
 }
 pub struct ChildEmitPreparation {
+    authority:Option<OriginalChildEditorCommandAuthority>,
     owner:Box<dyn ChildEmitPreparationOwner>,
 }
 impl ChildEmitPreparation {
+    /// 📐️ Quotes actual one-operation backing, typed owner, copied address and schema allocations.
+    pub fn owned_qualified_birth_demand<M>(slot_bytes:usize,child_bytes:usize)->Result<RetirementDemand,ValueError>{
+        let text=slot_bytes.checked_add(child_bytes).and_then(|size|size.checked_add("child.empty".len())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"qualified child address extent overflow"))?;
+        let capacity_bytes=text.checked_add(size_of::<TypedChildEmitPreparation<M>>()).and_then(|size|size.checked_add(size_of::<M>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"qualified child preparation extent overflow"))?;
+        let copy_bytes=text.checked_add(size_of::<M>()).and_then(|size|size.checked_add(2*size_of::<Self>())).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"qualified child copy quote overflow"))?;
+        Ok(RetirementDemand{copy_bytes,capacity_bytes,depth:1,..Default::default()})
+    }
+    /// 🔐️ Transfers a genuine issued authority with the original typed operation only inside its complete birth grant.
+    pub fn admit_owned_qualified<S,M>(slot:&str,child_id:&str,operation:&mut Option<M>,authority:&mut Option<OriginalChildEditorCommandAuthority>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>
+    where M:protocol::SemanticMutation<S>+::protocol::OpBinary+RetireOwned{
+        let demand=Self::owned_qualified_birth_demand::<M>(slot.len(),child_id.len())?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(None)}
+        if operation.is_none()||authority.as_ref().and_then(OriginalChildEditorCommandAuthority::stamp).is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"qualified child birth requires its original operation and issued authority").with_retained_progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<Self>(),..Default::default()}))}
+        let mut operations=Vec::with_capacity(1);operations.push(operation.take().unwrap());
+        let mut preparation=Self::of_owned::<S,M>(slot.to_owned(),child_id.to_owned(),operations);preparation.authority=authority.take();
+        Ok(Some((preparation,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()})))
+    }
     pub fn of<S,M>(slot:impl Into<String>,child_id:impl Into<String>,operations:Vec<M>)->Self
     where M:protocol::SemanticMutation<S>+::protocol::OpBinary+RetireOwned {
         Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),operations,None,Some((store::os_store::snapshot_read::artifact_retirement_admit_owned::<M>,store::os_store::snapshot_read::artifact_retirement_owned_birth_demands::<M>)))
@@ -141,7 +164,7 @@ impl ChildEmitPreparation {
     where M:protocol::SemanticMutation<S>+::protocol::OpBinary+Send+'static {
         let operation_count=operations.len();
         let backing_bytes=operations.capacity().checked_mul(size_of::<M>()).expect("owned mutation vector allocation has a representable layout");
-        Self{owner:Box::new(TypedChildEmitPreparation::<M>{
+        Self{authority:None,owner:Box::new(TypedChildEmitPreparation::<M>{
             remaining:ManuallyDrop::new(Some(operations.into_iter())),owned_source:ManuallyDrop::new(None),take_batch:None,batch_capacity_bytes:0,backing_bytes,operation_count,
             current:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),retired_schema:ManuallyDrop::new(None),
             prefix:Some(ChildEmit::open(slot,child_id,0)),cause:ManuallyDrop::new(None),close_refusal:ManuallyDrop::new(None),factory:ManuallyDrop::new(factory),closing_factory:ManuallyDrop::new(None),retire_builtin,
@@ -162,23 +185,24 @@ impl ChildEmitPreparation {
     /// 📏️ The minimal grant on every independent axis that the next `step` needs.
     pub fn step_demands(&self)->Result<RetirementDemand,ValueError>{self.owner.step_demands()}
     pub fn preparation_is_ready(&self)->bool{self.owner.preparation_is_ready()}
-    pub fn take_ready(&mut self)->Option<ChildEmit>{self.owner.take_ready()}
+    pub fn take_ready(&mut self)->Option<ChildEmit>{if self.authority.is_some(){None}else{self.owner.take_ready()}}
     /// 🎭️ Turns an applying typed source into a wire preview: the same operation vector, owner and order, now consumed by the incremental encoder instead of handed to a member store.
-    pub fn begin_preview(&mut self){self.owner.begin_preview()}
+    pub fn begin_preview(&mut self){if self.authority.is_none(){self.owner.begin_preview()}}
     pub fn next_owned_capacity_byte_demand(&self)->usize{self.owner.next_owned_capacity_byte_demand()}
-    pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{self.owner.take_ready_owned(grant)}
-    pub fn begin_close(&mut self){self.owner.begin_close()}
-    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{self.owner.close_step(grant)}
-    pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()}
+    pub fn take_ready_owned(&mut self,grant:RetainedCloneGrant)->Result<Option<(ChildEmit,store::MemberStoreOwnedBatch,RetainedCloneProgress)>,ValueError>{if self.authority.is_some(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"qualified child preparation requires its authenticated output owner"))}self.owner.take_ready_owned(grant)}
+    pub fn take_ready_owned_qualified(&mut self,grant:RetainedCloneGrant)->Result<Option<(OwnedChildEmit,RetainedCloneProgress)>,ValueError>{let Some((metadata,mutations,progress))=self.owner.take_ready_owned(grant)?else{return Ok(None)};Ok(Some((OwnedChildEmit{metadata:Some(metadata),mutations:Some(mutations),authority:self.authority.take()},progress)))}
+    pub fn begin_close(&mut self){self.owner.begin_close();if let Some(authority)=self.authority.as_mut(){authority.begin_close()}}
+    pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{if !self.owner.terminal_is_empty(){return self.owner.close_step(grant).map(|step|match step{PluginLifecycleStep::Complete(progress)if self.authority.is_some()=>PluginLifecycleStep::Progress(progress),other=>other})}let Some(authority)=self.authority.as_mut()else{return Ok(PluginLifecycleStep::Complete(Default::default()))};authority.begin_close();let step=authority.close_step(grant).map_err(value_fault)?;if authority.terminal_is_empty(){self.authority=None}Ok(PluginLifecycleStep::retained(step,self.terminal_is_empty()))}
+    pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.authority.is_none()}
     pub fn owner_cell_bytes(&self)->usize{size_of_val(self.owner.as_ref())}
-    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.owner.retirement_demands(body)}
+    pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if self.owner.terminal_is_empty(){self.authority.as_ref().map_or(Ok(Default::default()),|authority|authority.close_demand(body))}else{self.owner.retirement_demands(body)}}
     pub fn refusal(&self)->Option<&::protocol::ProtocolError>{self.owner.refusal()}
     pub fn retirement_refusal(&self)->Option<&ValueError>{self.owner.retirement_refusal()}
     pub fn accepted_prefix(&self)->Option<&ChildEmit>{self.owner.accepted_prefix()}
     pub fn retained_operation_count(&self)->usize{self.owner.retained_operation_count()}
 }
 impl Drop for ChildEmitPreparation {
-    fn drop(&mut self){assert!(std::thread::panicking()||self.owner.terminal_is_empty(),"child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired");}
+    fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"child emission preparation dropped before its exact typed owners and accepted prefix were returned or retired");}
 }
 struct TypedChildEmitPreparation<M> {
     remaining:ManuallyDrop<Option<std::vec::IntoIter<M>>>,

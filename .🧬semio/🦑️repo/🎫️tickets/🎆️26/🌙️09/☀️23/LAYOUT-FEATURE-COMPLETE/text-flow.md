@@ -1,0 +1,19 @@
+# Layout Story Flow Boundary
+
+Source audit of current export paragraph-planning::begin_frame shows each Text frame starts the complete referenced story, using its own width and origin. It does not read columns, thread_next or available height. The old assemble-display-list Text arm similarly ignores those fields. This is an explicit remaining feature boundary, not evidence of completed text flow. Core execution agent has been informed during the shared paragraph/render-work implementation.
+
+Acceptance must cover connected frames sharing one story without duplicated ranges, cross-page links, multiple columns, per-region width/height/insets, stable visual order and overset reporting; disconnected frames referencing the same story keep independent starts. UTF-8 source boundaries and shaping clusters must remain intact. Invalid cycles/references are already graph validator responsibilities, while layout must retain bounded traversal, shaping, progress, cancellation and retirement. Shared neutral fixtures should be checked against an independent paragraph/text engine.
+
+The exact inset semantics need authoritative model/UI confirmation before changing arithmetic: current builders subtract inset.width plus twice inset.x, and inset.height plus twice inset.y. No speculative inset rewrite was made. Native/runtime verification remains unavailable via the cached repo launcher.
+
+## Confirmed Content Rectangle And Implemented Region Owner
+
+The canonical default document establishes the inset contract: Text bounds80×40 have inset{0,0,80,40}; UpdateTextFrame calls these inset origin and size. It is a relative content rectangle. The shared paragraph owner now intersects that rectangle with local frame bounds instead of subtracting its width/height as padding. The original default therefore obtains80 points of content width. Native execution of that repair remains unverified.
+
+New scene/🧵️flow is a schema-first native and TypeScript feedback owner. TextFlowCursor emits one clipped content column per advance, accepts only the paragraph owner’s actual original UTF-8 line end, and continues through next frame ordinals. It supports per-frame rotations/centers, page and inherited source addresses, gutters, zero-area whole-frame skips, independent heads, explicit overset, zero grants, stale-source refusal, cycles, cross-story refusal and cancellation. Native state owns no arbitrary-sized data. A one-row canonical model projection decodes owned IEEE values without cloning strings. The public TypeScript Layout facade exports the owned query types and cursor; the owned verify route is layout-text-flow.
+
+Actual TypeScript source evidence:5 portable flow cases across3 grants,7 refusal checks and1 cancellation check pass. The cases include columns, cross-page continuation, disconnected heads, an empty million-column content rectangle skipped in constant time, overset and empty content. Three0.182.0 independently computes geometry and Ajv8.20.0 admits the neutral schema fixtures; both are isolated test-only dependencies. The real canonical projection and facade test closure has219 source files,0 strict diagnostics. Three native source/module files are grammar-clean; mounted native laws are authored but unrun.
+
+## Remaining Integration
+
+The region owner is not yet the full production story-flow path. The graph execution agent now owns bounded canonical frame/thread projection and validation of linear same-story threads. Core owns retained interactive publication and shared paragraph consumers. Root is implementing a framework paragraph pause/resume boundary that reuses retained story analysis, avoids reshaping/storing the whole remaining tail for each column, and returns exact hard-break/whitespace consumption. Only after those consumers are wired and native/export/UI laws execute can columns, threading and overset be claimed end to end.

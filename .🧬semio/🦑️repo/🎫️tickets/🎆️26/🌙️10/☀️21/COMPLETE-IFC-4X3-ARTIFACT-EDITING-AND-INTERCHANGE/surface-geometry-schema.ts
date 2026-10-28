@@ -1,0 +1,2 @@
+import Ajv from 'ajv/dist/2020.js';import {readFileSync}from'node:fs';const p=import.meta.dir,read=(n:string)=>JSON.parse(readFileSync(p+'/'+n,'utf8').replace(/^\uFEFF/,''));const validate=new Ajv({strict:true}).compile(read('surface-geometry.schema.json'));if(!validate(read('surface-geometry-cases.json')))throw Error(JSON.stringify(validate.errors));console.log('[DEBUG] surface'+read('surface-geometry-cases.json').cases.length+' strict schema valid');
+

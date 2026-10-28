@@ -156,7 +156,12 @@ impl protocol::codec::RetainedWireByteSource for OriginalMemberHistorySource<'_>
  fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.byte_at(self.start.checked_add(index)?)}
 }
 
+/// 📸️ The actual admitted request lends its framed snapshot bytes without copying sealed input pages.
+pub struct OriginalMemberSnapshotSource<'a>{pages:&'a OwnedSchemaDecodePages,start:usize,identity:protocol::codec::OriginalWireSourceIdentity}
+impl protocol::codec::RetainedWireByteSource for OriginalMemberSnapshotSource<'_>{fn original_source_identity(&self)->protocol::codec::OriginalWireSourceIdentity{self.identity}fn byte_at(&self,index:usize)->Option<u8>{if index>=self.identity.extent{return None}self.pages.byte_at(self.start.checked_add(index)?)}}
 impl MemberOpenRequest {
+    pub fn original_snapshot_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberSnapshotSource<'_>,MemberOpenDiagnostic>{self.check_step_authority(cx)?;self.original_snapshot_close_source(cx)}
+    pub fn original_snapshot_close_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberSnapshotSource<'_>,MemberOpenDiagnostic>{if !self.admitted||self.detached||cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(MemberOpenDiagnostic::Stale)}let frame=self.framed.ok_or(MemberOpenDiagnostic::Malformed)?;let(start,extent)=frame.snapshot_range();let pages=self.pages.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}Ok(OriginalMemberSnapshotSource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{range_start:start,address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})}
     pub fn original_history_source(&self,cx:&StepContext<'_>)->Result<OriginalMemberHistorySource<'_>,MemberOpenDiagnostic>{
         self.check_step_authority(cx)?;self.original_history_close_source(cx)
     }
@@ -164,7 +169,7 @@ impl MemberOpenRequest {
         if !self.admitted||self.detached||cx.operation()!=self.operation||cx.generation()!=self.generation{return Err(MemberOpenDiagnostic::Stale)}
         let frame=self.framed.ok_or(MemberOpenDiagnostic::Malformed)?;let(start,extent)=frame.history_range();let pages=self.pages.as_ref().ok_or(MemberOpenDiagnostic::Stale)?;
         if !pages.is_sealed()||start.checked_add(extent).is_none_or(|end|end>pages.byte_count()){return Err(MemberOpenDiagnostic::Malformed)}
-        Ok(OriginalMemberHistorySource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})
+        Ok(OriginalMemberHistorySource{pages,start,identity:protocol::codec::OriginalWireSourceIdentity{range_start:start,address:pages.slot_address(),extent,authority:Some((self.operation.0,self.generation.0))}})
     }
     pub fn new(operation: OperationId, generation: Generation, expires_at_us: u64, expected: ArtifactRef, owner: Option<OwnerRef>, pages: OwnedSchemaDecodePages, actor: semio_framework_os_spr::ActorId) -> Self {
         Self {

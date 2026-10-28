@@ -1,0 +1,5 @@
+/** 🔮️ Ajv checks the actual first-party child/reference schema graph; Lodash compares complete prepared metadata. */
+import{createRequire}from'node:module';
+import{readFile}from'node:fs/promises';
+const require=createRequire(import.meta.url);
+export async function createDrawingBirthOracle(){const Ajv=require('ajv'),lodash=require('lodash'),ajv=new Ajv({strict:false}),read=async name=>JSON.parse(await readFile(new URL(name,import.meta.url),'utf8'));const refs=await read('../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔣️.json'),child=await read('../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🪆️child/🧬️schema/🔣️.json'),layout=await read('../../../../../🧬️schema/🔣️.json');ajv.addSchema(refs);ajv.addSchema(child);const validate=ajv.compile(layout.$defs.LayoutDrawingMember);return{equal:(a,b)=>lodash.isEqual(a,b),validateMember:value=>validate(value)&&value.handle.target.dialect.artifactKind==='s.draw.drawing'&&value.handle.target.dialect.standard==='1'&&value.handle.target.dialect.subset==='*'}}

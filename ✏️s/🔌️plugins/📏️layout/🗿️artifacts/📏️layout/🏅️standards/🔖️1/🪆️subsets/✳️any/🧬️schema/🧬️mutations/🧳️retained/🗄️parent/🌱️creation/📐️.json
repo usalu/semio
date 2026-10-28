@@ -1,0 +1,18 @@
+{
+  "feature": "layout.retained.parent-creation-output",
+  "source": "original authored mutation and base projections; same original prepared ParentPage payload",
+  "stages": [
+    "bind original immutable sources",
+    "prepare ordered cache strings from borrowed authored layers and frames",
+    "fund sparse parent insertion header",
+    "install one derived cache header per original grant into unpublished prepared payload",
+    "move exact prepared ParentPage row into sparse insertion",
+    "retire original displaced authored caches and source aliases"
+  ],
+  "forbidden": [
+    "cold normalize_parent_content",
+    "candidate LayoutSnapshot",
+    "whole-document clone",
+    "unfunded payload replacement"
+  ]
+}

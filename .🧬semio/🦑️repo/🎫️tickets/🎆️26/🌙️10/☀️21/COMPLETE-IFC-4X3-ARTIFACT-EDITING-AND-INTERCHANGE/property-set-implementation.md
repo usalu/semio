@@ -1,0 +1,17 @@
+# Released Template Catalog Implementation
+
+The schema-first IFC4x3 `🧬️schema/🏷️templates` module retains the unchanged official archive, closed canonical JSON contract, immutable own TypeScript interfaces and compiled immutable native Rust data. Counts and source provenance are recorded in `property-set-sources.md`: 645 property sets, 115 quantity sets, 3988 entries, 3814 enumeration-literal occurrences.
+
+Read APIs resolve named templates, distinguish inherited entity/predefined-type applicability and expose localized field-form labels with explicit EN/DE selection. Original source descriptions retain source language `en`; no synthetic translation or language fallback is introduced. Template IDs and names remain original source identifiers. Both implementations retain every source XML name and SHA-256.
+
+`cases.json` and `tests.feature` cover subtype inheritance, unknown entities, exact electric-actuator selectors, missing predefined-type distinction, PEnum_ElementStatus and quantity-area domains. Test-first execution failed before the catalog existed. The initial assumption that IfcWallStandardCase was absent from ADD2 was corrected against the retained schema; it is now an inherited applicability case, and a genuinely unknown entity has its own case. IfcOpenShell's actual template applicability API independently confirms all applicability predicates.
+
+**Executed:** eleven Bun tests pass, zero fail, 30 assertions; strict TypeScript module/test checking passes. Ajv2020 independently admits the complete closed catalog and the retained archive SHA-256 matches. Every value/secondary domain and applicability entity resolves in the full ADD2 catalog. IfcOpenShell 0.9.0.post1 independently resolves those declarations and corroborates all 760 template names/types/applicability strings and 3988 entry names/forms/domains/enum values with zero mismatches. Quantity measure types are independently obtained from actual IfcQuantity* declarations.
+
+**Native written:** same catalog/query/label interfaces, native neutral cases and exhaustive comparison of every static native template/entry field against canonical JSON. Native catalog source and generated immutable data parse/format with rustfmt. Native tests have not executed while authentic compiler ingress remains unavailable; syntax is not type checking.
+
+`property-set-native-review.ts` independently tokenizes the complete compiled Rust literal, including all nested enumeration strings and descriptions, and compares every field with canonical data: **760 native templates and 3988 entries exactly match**. This is full source-data comparison, not merely a count or digest check. Strict TypeScript checking of the registered test module also passes after keeping imported JSON fixture expectations properly typed.
+
+The public IFC4x3 TS facade exports the own APIs/types, the normal package router registers the tests, and the native IFC4x3 crate mounts `templates`. `property-set-research.py`, `property-set-oracle.py` and `property-set-build.py` remain ticket inputs. Original archive and detailed research results stay under generated until the entire shared ticket closes; the intended normative source archive and compiled catalog remain production assets.
+
+Next required authoring work is schema-first property/quantity creation and application through existing mutation/diff/inverse transactions, actual native host controls and declaration-specific enumeration/value behavior. This catalog does not claim that work or complete model-view conformance is finished.

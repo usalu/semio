@@ -1,0 +1,10 @@
+{
+  "$schema":"https://json-schema.org/draft/2020-12/schema",
+  "type":"object","additionalProperties":false,
+  "required":["contract","maximumDepth","maximumTextBytes","cases"],
+  "properties":{
+    "contract":{"const":"native-private-template-page"},
+    "maximumDepth":{"const":16},"maximumTextBytes":{"const":512},
+    "cases":{"type":"array","minItems":1,"items":{"type":"object","additionalProperties":false,"required":["name","path","editable"],"properties":{"name":{"type":"string","minLength":1},"path":{"type":"array","minItems":1,"maxItems":16,"items":{"type":"string","minLength":1}},"editable":{"type":"boolean"}}}}
+  }
+}

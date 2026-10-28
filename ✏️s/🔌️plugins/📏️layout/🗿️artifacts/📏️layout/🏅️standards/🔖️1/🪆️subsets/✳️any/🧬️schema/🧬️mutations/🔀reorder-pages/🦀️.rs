@@ -1,7 +1,6 @@
 //! 🔀 `reorder-pages` — repositions a page within the display-ordered `pages` list (document page
 //! sequence, unlike `stories`/`links` which have no display order).
 
-
 use semio_s_artifact_layout_layout_diff::LayoutPagesDelta;
 use semio_s_artifact_layout_layout_diff::LayoutPageRelocation;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;

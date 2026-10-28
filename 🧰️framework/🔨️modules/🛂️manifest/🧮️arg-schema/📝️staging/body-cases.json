@@ -1,0 +1,21 @@
+{
+ "pageSizes":{"controls":16,"choices":32,"diagnostics":16},
+ "cases":[
+  {"name":"exact-binary64","locale":"en","state":"ready","control":"input","value":"8000000000000000","layout":"preserve","event":"framework.stageActionForm"},
+  {"name":"partial-i64","locale":"de","state":"invalid","control":"input","value":"-","layout":"preserve","event":"framework.stageActionForm"},
+  {"name":"exact-reference","locale":"en","state":"ready","control":"select","value":"18446744073709551615","layout":"replace","event":"framework.stageActionForm"},
+  {"name":"next-source-page","locale":"de","state":"pending","control":"button","layout":"replace","event":"framework.stageActionFormPage"}
+ ],
+ "statuses":[
+  {"state":"pending","ready":false},
+  {"state":"invalid","ready":false},
+  {"state":"cancelled","ready":false},
+  {"state":"resource-refused","ready":false},
+  {"state":"ready","ready":true}
+ ],
+ "collection":{"__proto__":"owned data","bits":"8000000000000000","id":"18446744073709551615"},
+ "requiresInitializedValueSource":true,
+ "payloadMapMembers":32,
+ "payloadMapRefusedMembers":33,
+ "oversizedChoiceKey":{"length":"uiTextCapacity+1","refusal":"staging.resource-limit"}
+}

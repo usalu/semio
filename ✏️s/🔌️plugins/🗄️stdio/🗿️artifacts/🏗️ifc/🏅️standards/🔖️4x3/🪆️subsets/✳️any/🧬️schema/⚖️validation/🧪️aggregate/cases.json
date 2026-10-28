@@ -1,0 +1,437 @@
+{
+  "version": 1,
+  "source": {
+    "file": "source.ifc",
+    "schema": "IFC4X3_ADD2",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "physical": "authored mixed positive and explicit negative weights/segment sources; retain all EXPRESS diagnostics"
+  },
+  "functions": [
+    {
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "id": "ones",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "20"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "20",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "id": "fractions",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "21"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "21",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "id": "zero-first",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "22"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "22",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "id": "zero-last",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "23"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "23",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "id": "negative-first",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "24"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "24",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCCURVEWEIGHTSPOSITIVE",
+      "id": "negative-last",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "25"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "25",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "ones",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "40"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "40",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "fractions",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "41"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "41",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "zero-0-0",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "42"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "42",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "zero-0-1",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "43"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "43",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "zero-1-0",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "44"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "44",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "zero-1-1",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "45"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "45",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "negative-first",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "46"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "46",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "negative-last",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "47"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "47",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "non-square",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "48"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "48",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "non-square-zero-last",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "49"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "49",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCSURFACEWEIGHTSPOSITIVE",
+      "id": "non-square-negative-column",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "50"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "50",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCCONSECUTIVESEGMENTS",
+      "id": "single",
+      "args": [
+        {
+          "kind": "attribute",
+          "id": "71",
+          "name": "SEGMENTS",
+          "declaredBy": "IFCINDEXEDPOLYCURVE"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "71",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCCONSECUTIVESEGMENTS",
+      "id": "lines",
+      "args": [
+        {
+          "kind": "attribute",
+          "id": "72",
+          "name": "SEGMENTS",
+          "declaredBy": "IFCINDEXEDPOLYCURVE"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "72",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCCONSECUTIVESEGMENTS",
+      "id": "arc-line",
+      "args": [
+        {
+          "kind": "attribute",
+          "id": "73",
+          "name": "SEGMENTS",
+          "declaredBy": "IFCINDEXEDPOLYCURVE"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "true"
+      },
+      "sourceEntity": "73",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCCONSECUTIVESEGMENTS",
+      "id": "early-break",
+      "args": [
+        {
+          "kind": "attribute",
+          "id": "74",
+          "name": "SEGMENTS",
+          "declaredBy": "IFCINDEXEDPOLYCURVE"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "74",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCCONSECUTIVESEGMENTS",
+      "id": "late-break",
+      "args": [
+        {
+          "kind": "attribute",
+          "id": "75",
+          "name": "SEGMENTS",
+          "declaredBy": "IFCINDEXEDPOLYCURVE"
+        }
+      ],
+      "expected": {
+        "kind": "logical",
+        "value": "false"
+      },
+      "sourceEntity": "75",
+      "schemaRole": "negative"
+    },
+    {
+      "owner": "IFCMLSTOTALTHICKNESS",
+      "id": "single",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "90"
+        }
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "0.125"
+      },
+      "sourceEntity": "90",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCMLSTOTALTHICKNESS",
+      "id": "three",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "91"
+        }
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "0.875"
+      },
+      "sourceEntity": "91",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCMLSTOTALTHICKNESS",
+      "id": "zero",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "92"
+        }
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "0"
+      },
+      "sourceEntity": "92",
+      "schemaRole": "positive"
+    },
+    {
+      "owner": "IFCMLSTOTALTHICKNESS",
+      "id": "including-zero",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "93"
+        }
+      ],
+      "expected": {
+        "kind": "real",
+        "value": "0.75"
+      },
+      "sourceEntity": "93",
+      "schemaRole": "positive"
+    }
+  ]
+}

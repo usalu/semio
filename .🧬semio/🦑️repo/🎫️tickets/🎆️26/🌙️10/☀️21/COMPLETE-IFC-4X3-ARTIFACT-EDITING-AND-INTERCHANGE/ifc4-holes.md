@@ -1,0 +1,10 @@
+
+# Native Ring Triangulation Port
+
+The owned Rust module `geometry/🕳️rings/🦀️.rs` independently implements the same schema contract as TypeScript: common-extent normalized predicates, planar projection, simple/disjoint/non-nested boundary validation, visible bridges, ear clipping, coverage and domain checks, boundary/interior edge incidence and triangle intersection rejection. It returns original source indices with original outer winding. Only system BTreeMap/BTreeSet are used. All significant validation/bridge/ear/coverage/intersection steps propagate the original caller callback error. No runtime library dependency was added.
+
+Native tests were authored before the port and consume the exact neutral JSON ring fixtures. They cover both windings at scales 1, 1e-120 and 1e120, invalid outside/nested/touching/crossing/nonplanar rings, and interruption at every callback invocation. Both native and TypeScript boundary-incidence regressions preserve exact collinear and near-collinear source segment vertices; only an exact repeated closing endpoint is removed. A fifth schema-first near-collinear fixture was added. The schema description was corrected to state that collinear vertices remain.
+
+Executed TypeScript ring suite: 8/8 tests passed with zero strict compiler diagnostics. Existing Three.js ShapeUtils independently produced the same area for every neutral ring case, scale and winding. The independent web-tree-sitter Rust grammar parsed the new native ring module/tests and native projector/profile tests with no ERROR or missing syntax nodes. Reusable input `ifc4-rust-syntax-check.mjs` is retained in the ticket. These are syntax checks, not native type checking or execution: actual native tests remain gated by the previously documented Windows case-sensitivity build-cache failure. No build/cache code was modified.
+
+New native ring public seam: `triangulate_rings(vertices: &[[f64; 3]], input: &[Vec<u32>], tick: &mut dyn FnMut() -> Result<(), String>) -> Result<Vec<[u32; 3]>, String>`. Integration into the projector and any cross-standard module extraction remain owned by the main execution agents.

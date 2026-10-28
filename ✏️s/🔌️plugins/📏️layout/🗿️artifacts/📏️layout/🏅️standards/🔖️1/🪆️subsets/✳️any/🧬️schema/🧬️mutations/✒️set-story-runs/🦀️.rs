@@ -35,21 +35,12 @@ impl<Op> protocol::ColdMutationKind<LayoutSnapshot, Op> for SetStoryRuns where O
 }
 }
 
-fn run_ok(story_len: usize, content: &str, run: &TextStyleRun, base: &LayoutSnapshot) -> bool {
-    run.start <= run.end
-        && run.end <= u64::try_from(story_len).expect("host string length fits u64")
-        && usize::try_from(run.start).is_ok_and(|value|content.is_char_boundary(value))
-        && usize::try_from(run.end).is_ok_and(|value|content.is_char_boundary(value))
-        && run.paragraph_style_id.as_ref().map(|id| base.paragraph_styles.iter().any(|style| style.id == *id)).unwrap_or(true)
-        && run.character_style_id.as_ref().map(|id| base.character_styles.iter().any(|style| style.id == *id)).unwrap_or(true)
-}
-
 pub fn diff_set_story_runs(payload: &SetStoryRuns, base: &LayoutSnapshot) -> protocol::MutationOutcome<LayoutDiff> {
     let Some(story) = base.stories.iter().find(|story| story.id == payload.id) else {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Story \"{}\" does not exist.", payload.id), [payload.id.clone()]);
     };
-    if payload.runs.iter().any(|run| !run_ok(story.content.len(), &story.content, run, base)) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "A style run stays inside the story, on character boundaries, and names a style that exists.", std::iter::empty::<String>());
+    if let Err(message) = semio_s_artifact_layout_layout_model::validation::validate_style_runs(base, &story.content, &payload.runs) {
+        return protocol::MutationOutcome::fatal("mutation.invariant", message, std::iter::empty::<String>());
     }
     if story.style_runs == payload.runs {
         return protocol::MutationOutcome::empty().warning("mutation.no-op", "Story style runs are already set to that value.");

@@ -1,0 +1,458 @@
+{
+  "schema": "IFC4",
+  "cases": [
+    {
+      "name": "placed-extrusion",
+      "data": "#1=IFCCARTESIANPOINT((10.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCLOCALPLACEMENT($,#2);\n#4=IFCCARTESIANPOINT((0.,20.,0.));\n#5=IFCDIRECTION((0.,1.,0.));\n#6=IFCAXIS2PLACEMENT3D(#4,#11,#5);\n#7=IFCLOCALPLACEMENT(#3,#6);\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,$,$);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#9,$);\n#11=IFCDIRECTION((0.,0.,1.));\n#12=IFCRECTANGLEPROFILEDEF(.AREA.,$,$,2.,4.);\n#13=IFCEXTRUDEDAREASOLID(#12,#9,#11,3.);\n#14=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#13));\n#15=IFCPRODUCTDEFINITIONSHAPE($,$,(#14));\n#16=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Extrusion',$,$,#7,#15,$,$);",
+      "expected": {
+        "products": [
+          16
+        ],
+        "vertices": 8,
+        "triangles": 12,
+        "bounds": [
+          [
+            8,
+            19,
+            0
+          ],
+          [
+            12,
+            21,
+            3
+          ]
+        ],
+        "volume": 24
+      }
+    },
+    {
+      "name": "triangulated",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n#4=IFCPRODUCTDEFINITIONSHAPE($,$,(#3));\n#5=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Triangle',$,$,$,#4,$,$);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);",
+      "expected": {
+        "products": [
+          5
+        ],
+        "vertices": 3,
+        "triangles": 1,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "empty",
+      "data": "",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0
+      }
+    },
+    {
+      "name": "unsupported",
+      "data": "#1=IFCBOOLEANRESULT(.UNION.,#1,#1);\n#2=IFCSHAPEREPRESENTATION($,'Body','CSG',(#1));\n#3=IFCPRODUCTDEFINITIONSHAPE($,$,(#2));\n#4=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Unsupported',$,$,$,#3,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "mapped-triangle",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);\n#9=IFCCARTESIANPOINT((1.,0.,0.));\n#10=IFCAXIS2PLACEMENT3D(#9,$,$);\n#11=IFCREPRESENTATIONMAP(#10,#3);\n#12=IFCCARTESIANPOINT((10.,0.,0.));\n#13=IFCCARTESIANTRANSFORMATIONOPERATOR3D($,$,#12,2.,$);\n#14=IFCMAPPEDITEM(#11,#13);\n#15=IFCSHAPEREPRESENTATION(#8,'Body','MappedRepresentation',(#14));\n#16=IFCPRODUCTDEFINITIONSHAPE($,$,(#15));\n#17=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Mapped Triangle',$,$,$,#16,$,$);",
+      "expected": {
+        "products": [
+          17
+        ],
+        "vertices": 3,
+        "triangles": 1,
+        "bounds": [
+          [
+            12,
+            0,
+            0
+          ],
+          [
+            16,
+            6,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "concave-polygon",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(2.,1.,0.),(1.,1.,0.),(1.,2.,0.),(0.,2.,0.)));\n#2=IFCINDEXEDPOLYGONALFACE((1,2,3,4,5,6));\n#9=IFCPOLYGONALFACESET(#1,.F.,(#2),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#9));\n#4=IFCPRODUCTDEFINITIONSHAPE($,$,(#3));\n#5=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Concave Polygon',$,$,$,#4,$,$);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);",
+      "expected": {
+        "products": [
+          5
+        ],
+        "vertices": 6,
+        "triangles": 4,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            2,
+            0
+          ]
+        ],
+        "area": 3
+      }
+    },
+    {
+      "name": "voided-host",
+      "data": "#1=IFCCARTESIANPOINT((10.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCLOCALPLACEMENT($,#2);\n#4=IFCCARTESIANPOINT((0.,20.,0.));\n#5=IFCDIRECTION((0.,1.,0.));\n#6=IFCAXIS2PLACEMENT3D(#4,#11,#5);\n#7=IFCLOCALPLACEMENT(#3,#6);\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,$,$);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#9,$);\n#11=IFCDIRECTION((0.,0.,1.));\n#12=IFCRECTANGLEPROFILEDEF(.AREA.,$,$,2.,4.);\n#13=IFCEXTRUDEDAREASOLID(#12,#9,#11,3.);\n#14=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#13));\n#15=IFCPRODUCTDEFINITIONSHAPE($,$,(#14));\n#16=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Extrusion',$,$,#7,#15,$,$);\n#17=IFCOPENINGELEMENT('0123456789012345678902',$,'Opening',$,$,#7,#15,$,.OPENING.);\n#18=IFCRELVOIDSELEMENT('0123456789012345678903',$,$,$,#16,#17);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "placement-cycle",
+      "data": "#1=IFCCARTESIANPOINT((10.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCLOCALPLACEMENT(#7,#2);\n#4=IFCCARTESIANPOINT((0.,20.,0.));\n#5=IFCDIRECTION((0.,1.,0.));\n#6=IFCAXIS2PLACEMENT3D(#4,#11,#5);\n#7=IFCLOCALPLACEMENT(#3,#6);\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,$,$);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#9,$);\n#11=IFCDIRECTION((0.,0.,1.));\n#12=IFCRECTANGLEPROFILEDEF(.AREA.,$,$,2.,4.);\n#13=IFCEXTRUDEDAREASOLID(#12,#9,#11,3.);\n#14=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#13));\n#15=IFCPRODUCTDEFINITIONSHAPE($,$,(#14));\n#16=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Extrusion',$,$,#7,#15,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "pn-index",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((99.,99.,99.),(0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),(2,3,4));\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n#4=IFCPRODUCTDEFINITIONSHAPE($,$,(#3));\n#5=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Triangle',$,$,$,#4,$,$);\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);",
+      "expected": {
+        "products": [
+          5
+        ],
+        "vertices": 3,
+        "triangles": 1,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            3,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "name": "faceted-brep",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));\n#2=IFCCARTESIANPOINT((2.,0.,0.));\n#3=IFCCARTESIANPOINT((0.,3.,0.));\n#4=IFCCARTESIANPOINT((0.,0.,4.));\n#5=IFCPOLYLOOP((#1,#3,#2));\n#6=IFCPOLYLOOP((#1,#2,#4));\n#7=IFCPOLYLOOP((#1,#4,#3));\n#8=IFCPOLYLOOP((#2,#3,#4));\n#9=IFCFACEOUTERBOUND(#5,.T.);\n#10=IFCFACEOUTERBOUND(#6,.T.);\n#11=IFCFACEOUTERBOUND(#7,.T.);\n#12=IFCFACEOUTERBOUND(#8,.T.);\n#13=IFCFACE((#9));\n#14=IFCFACE((#10));\n#15=IFCFACE((#11));\n#16=IFCFACE((#12));\n#17=IFCCLOSEDSHELL((#13,#14,#15,#16));\n#18=IFCFACETEDBREP(#17);\n#19=IFCSHAPEREPRESENTATION(#102,'Body','Brep',(#18));\n#20=IFCPRODUCTDEFINITIONSHAPE($,$,(#19));\n#21=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Tetrahedron',$,$,$,#20,$,$);\n#100=IFCCARTESIANPOINT((0.,0.,0.));\n#101=IFCAXIS2PLACEMENT3D(#100,$,$);\n#102=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#101,$);",
+      "expected": {
+        "products": [
+          21
+        ],
+        "vertices": 4,
+        "triangles": 4,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            3,
+            4
+          ]
+        ],
+        "volume": 4
+      }
+    },
+    {
+      "name": "indexed-polygon-with-void",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(10.,0.,0.),(10.,10.,0.),(0.,10.,0.),(3.,3.,0.),(7.,3.,0.),(7.,7.,0.),(3.,7.,0.)));#2=IFCINDEXEDPOLYGONALFACEWITHVOIDS((1,2,3,4),((5,6,7,8)));#3=IFCPOLYGONALFACESET(#1,$,(#2),$);#90=IFCSHAPEREPRESENTATION($,'Body','Tessellation',(#3));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 8,
+        "triangles": 8,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            10,
+            10,
+            0
+          ]
+        ],
+        "area": 84
+      }
+    },
+    {
+      "name": "brep-face-with-void",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));#2=IFCCARTESIANPOINT((10.,0.,0.));#3=IFCCARTESIANPOINT((10.,10.,0.));#4=IFCCARTESIANPOINT((0.,10.,0.));#5=IFCCARTESIANPOINT((3.,3.,0.));#6=IFCCARTESIANPOINT((7.,3.,0.));#7=IFCCARTESIANPOINT((7.,7.,0.));#8=IFCCARTESIANPOINT((3.,7.,0.));#10=IFCPOLYLOOP((#1,#2,#3,#4));#11=IFCPOLYLOOP((#5,#6,#7,#8));#12=IFCFACEOUTERBOUND(#10,.T.);#13=IFCFACEBOUND(#11,.T.);#14=IFCFACE((#13,#12));#15=IFCOPENSHELL((#14));#90=IFCSHAPEREPRESENTATION($,'Body','SurfaceModel',(#15));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 8,
+        "triangles": 8,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            10,
+            10,
+            0
+          ]
+        ],
+        "area": 84
+      }
+    },
+    {
+      "name": "arbitrary-extrusion-with-void",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));#2=IFCCARTESIANPOINT((10.,0.,0.));#3=IFCCARTESIANPOINT((10.,10.,0.));#4=IFCCARTESIANPOINT((0.,10.,0.));#5=IFCCARTESIANPOINT((3.,3.,0.));#6=IFCCARTESIANPOINT((7.,3.,0.));#7=IFCCARTESIANPOINT((7.,7.,0.));#8=IFCCARTESIANPOINT((3.,7.,0.));#10=IFCPOLYLINE((#1,#2,#3,#4,#1));#11=IFCPOLYLINE((#5,#6,#7,#8,#5));#12=IFCARBITRARYPROFILEDEFWITHVOIDS(.AREA.,$,#10,(#11));#13=IFCDIRECTION((0.,0.,1.));#14=IFCEXTRUDEDAREASOLID(#12,$,#13,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#14));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 16,
+        "triangles": 32,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            10,
+            10,
+            2
+          ]
+        ],
+        "area": 280,
+        "volume": 168
+      }
+    },
+    {
+      "name": "hollow-circle-profile",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.));#2=IFCAXIS2PLACEMENT2D(#1,$);#3=IFCCIRCLEHOLLOWPROFILEDEF(.AREA.,$,#2,2.,0.5);#4=IFCDIRECTION((0.,0.,1.));#5=IFCEXTRUDEDAREASOLID(#3,$,#4,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#5));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 288,
+        "triangles": 576,
+        "bounds": [
+          [
+            -2,
+            -2,
+            0
+          ],
+          [
+            2,
+            2,
+            2
+          ]
+        ],
+        "volume": 10.981623586204929
+      }
+    },
+    {
+      "name": "invalid-present-profile-placement",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.));#2=IFCAXIS2PLACEMENT2D(#1,$);#3=IFCCIRCLEHOLLOWPROFILEDEF(.AREA.,$,4,2.,0.5);#4=IFCDIRECTION((0.,0.,1.));#5=IFCEXTRUDEDAREASOLID(#3,$,#4,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#5));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "invalid-3d-profile-placement-coordinate",
+      "data": "#1=IFCCARTESIANPOINT((0.,0.,0.));#2=IFCAXIS2PLACEMENT2D(#1,$);#3=IFCCIRCLEHOLLOWPROFILEDEF(.AREA.,$,#2,2.,0.5);#4=IFCDIRECTION((0.,0.,1.));#5=IFCEXTRUDEDAREASOLID(#3,$,#4,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#5));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "indexed-capsule-arcs",
+      "data": "#1=IFCCARTESIANPOINTLIST2D(((0.,0.),(2.,0.),(3.,1.),(2.,2.),(0.,2.),(-1.,1.)));#2=IFCINDEXEDPOLYCURVE(#1,(IFCLINEINDEX((1,2)),IFCARCINDEX((2,3,4)),IFCLINEINDEX((4,5)),IFCARCINDEX((5,6,1))),.F.);#10=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#2);#11=IFCDIRECTION((0.,0.,1.));#12=IFCEXTRUDEDAREASOLID(#10,$,#11,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#12));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 148,
+        "triangles": 292,
+        "bounds": [
+          [
+            -1,
+            0,
+            0
+          ],
+          [
+            3,
+            2,
+            2
+          ]
+        ],
+        "volume": 14.275213477831388
+      }
+    },
+    {
+      "name": "indexed-major-negative-arc",
+      "data": "#1=IFCCARTESIANPOINTLIST2D(((1.,0.),(-1.,0.),(0.,1.)));#2=IFCINDEXEDPOLYCURVE(#1,(IFCARCINDEX((1,2,3)),IFCLINEINDEX((3,1))),.F.);#10=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#2);#11=IFCDIRECTION((0.,0.,1.));#12=IFCEXTRUDEDAREASOLID(#10,$,#11,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#12));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 110,
+        "triangles": 216,
+        "bounds": [
+          [
+            -1,
+            -1,
+            0
+          ],
+          [
+            1,
+            1,
+            2
+          ]
+        ],
+        "volume": 5.706410108373541
+      }
+    },
+    {
+      "name": "indexed-implicit-polyline",
+      "data": "#1=IFCCARTESIANPOINTLIST2D(((0.,0.),(2.,0.),(2.,2.),(0.,2.),(0.,0.)));#2=IFCINDEXEDPOLYCURVE(#1,$,.F.);#10=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#2);#11=IFCDIRECTION((0.,0.,1.));#12=IFCEXTRUDEDAREASOLID(#10,$,#11,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#12));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 8,
+        "triangles": 12,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            2,
+            2
+          ]
+        ],
+        "volume": 8
+      }
+    },
+    {
+      "name": "indexed-collinear-arc-is-polyline",
+      "data": "#1=IFCCARTESIANPOINTLIST2D(((0.,0.),(1.,0.),(2.,0.),(2.,2.),(0.,2.)));#2=IFCINDEXEDPOLYCURVE(#1,(IFCARCINDEX((1,2,3)),IFCLINEINDEX((3,4,5,1))),.F.);#10=IFCARBITRARYCLOSEDPROFILEDEF(.AREA.,$,#2);#11=IFCDIRECTION((0.,0.,1.));#12=IFCEXTRUDEDAREASOLID(#10,$,#11,2.);#90=IFCSHAPEREPRESENTATION($,'Body','SweptSolid',(#12));#91=IFCPRODUCTDEFINITIONSHAPE($,$,(#90));#92=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Holed',$,$,$,#91,$,$);",
+      "expected": {
+        "products": [
+          92
+        ],
+        "vertices": 10,
+        "triangles": 16,
+        "bounds": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            2,
+            2,
+            2
+          ]
+        ],
+        "volume": 8
+      }
+    },
+    {
+      "name": "reject-3d-placement-2d-location",
+      "data": "#1=IFCCARTESIANPOINT((10.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCLOCALPLACEMENT($,#2);\n#4=IFCCARTESIANPOINT((0.,20.,0.));\n#5=IFCDIRECTION((0.,1.,0.));\n#6=IFCAXIS2PLACEMENT3D(#4,#11,#5);\n#7=IFCLOCALPLACEMENT(#3,#6);\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,$,$);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#9,$);\n#11=IFCDIRECTION((0.,0.,1.));\n#12=IFCRECTANGLEPROFILEDEF(.AREA.,$,$,2.,4.);\n#13=IFCEXTRUDEDAREASOLID(#12,#9,#11,3.);\n#14=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#13));\n#15=IFCPRODUCTDEFINITIONSHAPE($,$,(#14));\n#16=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Extrusion',$,$,#7,#15,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "reject-3d-placement-2d-direction",
+      "data": "#1=IFCCARTESIANPOINT((10.,0.,0.));\n#2=IFCAXIS2PLACEMENT3D(#1,$,$);\n#3=IFCLOCALPLACEMENT($,#2);\n#4=IFCCARTESIANPOINT((0.,20.,0.));\n#5=IFCDIRECTION((0.,1.,0.));\n#6=IFCAXIS2PLACEMENT3D(#4,#11,#5);\n#7=IFCLOCALPLACEMENT(#3,#6);\n#8=IFCCARTESIANPOINT((0.,0.,0.));\n#9=IFCAXIS2PLACEMENT3D(#8,$,$);\n#10=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#9,$);\n#11=IFCDIRECTION((0.,1.));\n#12=IFCRECTANGLEPROFILEDEF(.AREA.,$,$,2.,4.);\n#13=IFCEXTRUDEDAREASOLID(#12,#9,#11,3.);\n#14=IFCSHAPEREPRESENTATION(#10,'Body','SweptSolid',(#13));\n#15=IFCPRODUCTDEFINITIONSHAPE($,$,(#14));\n#16=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Extrusion',$,$,#7,#15,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "reject-3d-mapping-2d-origin",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);\n#9=IFCCARTESIANPOINT((1.,0.,0.));\n#10=IFCAXIS2PLACEMENT3D(#9,$,$);\n#11=IFCREPRESENTATIONMAP(#10,#3);\n#12=IFCCARTESIANPOINT((10.,0.));\n#13=IFCCARTESIANTRANSFORMATIONOPERATOR3D($,$,#12,2.,$);\n#14=IFCMAPPEDITEM(#11,#13);\n#15=IFCSHAPEREPRESENTATION(#8,'Body','MappedRepresentation',(#14));\n#16=IFCPRODUCTDEFINITIONSHAPE($,$,(#15));\n#17=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Mapped Triangle',$,$,$,#16,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "reject-3d-mapping-2d-axis",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);\n#9=IFCCARTESIANPOINT((1.,0.,0.));\n#10=IFCAXIS2PLACEMENT3D(#9,$,$);\n#11=IFCREPRESENTATIONMAP(#10,#3);\n#12=IFCCARTESIANPOINT((10.,0.,0.));\n#13=IFCCARTESIANTRANSFORMATIONOPERATOR3D(#18,$,#12,2.,$);\n#14=IFCMAPPEDITEM(#11,#13);\n#15=IFCSHAPEREPRESENTATION(#8,'Body','MappedRepresentation',(#14));\n#16=IFCPRODUCTDEFINITIONSHAPE($,$,(#15));\n#17=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Mapped Triangle',$,$,$,#16,$,$);#18=IFCDIRECTION((1.,0.));",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "reject-3d-mapping-nonreference-axis",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);\n#9=IFCCARTESIANPOINT((1.,0.,0.));\n#10=IFCAXIS2PLACEMENT3D(#9,$,$);\n#11=IFCREPRESENTATIONMAP(#10,#3);\n#12=IFCCARTESIANPOINT((10.,0.,0.));\n#13=IFCCARTESIANTRANSFORMATIONOPERATOR3D(1,$,#12,2.,$);\n#14=IFCMAPPEDITEM(#11,#13);\n#15=IFCSHAPEREPRESENTATION(#8,'Body','MappedRepresentation',(#14));\n#16=IFCPRODUCTDEFINITIONSHAPE($,$,(#15));\n#17=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Mapped Triangle',$,$,$,#16,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    },
+    {
+      "name": "reject-derived-mapping-scale",
+      "data": "#1=IFCCARTESIANPOINTLIST3D(((0.,0.,0.),(2.,0.,0.),(0.,3.,0.)));\n#2=IFCTRIANGULATEDFACESET(#1,$,.F.,((1,2,3)),$);\n#3=IFCSHAPEREPRESENTATION(#8,'Body','Tessellation',(#2));\n\n#6=IFCCARTESIANPOINT((0.,0.,0.));\n#7=IFCAXIS2PLACEMENT3D(#6,$,$);\n#8=IFCGEOMETRICREPRESENTATIONCONTEXT($,'Model',3,0.00001,#7,$);\n#9=IFCCARTESIANPOINT((1.,0.,0.));\n#10=IFCAXIS2PLACEMENT3D(#9,$,$);\n#11=IFCREPRESENTATIONMAP(#10,#3);\n#12=IFCCARTESIANPOINT((10.,0.,0.));\n#13=IFCCARTESIANTRANSFORMATIONOPERATOR3D($,$,#12,*,$);\n#14=IFCMAPPEDITEM(#11,#13);\n#15=IFCSHAPEREPRESENTATION(#8,'Body','MappedRepresentation',(#14));\n#16=IFCPRODUCTDEFINITIONSHAPE($,$,(#15));\n#17=IFCBUILDINGELEMENTPROXY('0123456789012345678901',$,'Mapped Triangle',$,$,$,#16,$,$);",
+      "expected": {
+        "products": [],
+        "vertices": 0,
+        "triangles": 0,
+        "issue": true
+      }
+    }
+  ]
+}

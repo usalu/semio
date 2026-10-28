@@ -1,0 +1,43 @@
+{
+  "contract": "OriginalRecordMemberSnapshotOpen",
+  "input": "sealed-original-Pack-document-pages",
+  "source": "RetainedRecordReceiving<RecordValue>",
+  "recipient": "NativeReceivingOriginal<RecordValue,Snapshot>",
+  "phases": [
+    "Frame",
+    "Envelope",
+    "Parse",
+    "TakeRecord",
+    "IssueOriginal",
+    "ReceivingShell",
+    "CaptureOriginal",
+    "BirthReceiver",
+    "Receive",
+    "TakeSnapshot",
+    "CloseReceiving",
+    "CloseParser",
+    "Ready"
+  ],
+  "readyRequires": [
+    "snapshot",
+    "request",
+    "empty-native-receiver",
+    "empty-record-parser"
+  ],
+  "transfer": {
+    "items": 1,
+    "depth": 1,
+    "copy": "2*(Option<Snapshot>+Option<MemberOpenRequest>+Option<RecordParser>+Option<NativeRecipient>)+terminal-metadata"
+  },
+  "error": "OriginalTurnFailure-with-paid-child-receipt-and-live-owner",
+  "closeOrder": [
+    "native-recipient",
+    "original-record-source",
+    "parsed-record",
+    "record-parser",
+    "typed-snapshot",
+    "request",
+    "shell"
+  ],
+  "envelope": "exact-declared-ArtifactDsl-envelope-byte-producer-before-Pack-range"
+}

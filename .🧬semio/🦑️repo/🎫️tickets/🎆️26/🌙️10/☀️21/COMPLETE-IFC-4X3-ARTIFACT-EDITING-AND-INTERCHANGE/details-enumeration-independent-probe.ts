@@ -1,0 +1,13 @@
+import {readFile,writeFile} from 'node:fs/promises';
+const base='file:///C:/git/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/';
+const {queryIfcDetailsEnumeration}=await import(base+'🔎️details/contextual.ts');
+const {ifc4x3Catalog}=await import(base+'🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🟦️.ts');
+const {parseIfc4x3Step}=await import(base+'🏅️standards/🔖️4x3/🪆️subsets/✳️any/🚪️io/step.ts');
+const cases=JSON.parse(await readFile(new URL('🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/🏷️templates/✍️apply/native-cases.json',base),'utf8'));
+const source=await parseIfc4x3Step(cases.cases[0].source),propertyIndex=source.entities.length,scalar=bits=>({kind:'typedValue',value:{name:'IFCREAL',items:[{kind:'real',value:{bits}}]}});
+source.entities.push({id:20n,name:'IFCPROPERTYENUMERATEDVALUE',args:[{kind:'string',value:'Actual'},{kind:'unset'},{kind:'aggregate',value:[scalar(0n)]},{kind:'reference',value:21n}],complex:[]},{id:21n,name:'IFCPROPERTYENUMERATION',args:[{kind:'string',value:'Actual'},{kind:'aggregate',value:[scalar(0n)]},{kind:'unset'}],complex:[]});
+const request={token:{action:'edit',generation:'1',revision:'rev:1',window:'details'},path:['entities',propertyIndex,'args',2]},run=()=>queryIfcDetailsEnumeration(source,ifc4x3Catalog,'rev:1',request,{signal:new AbortController().signal});
+const baseline=await run(),target=source.entities.at(-1);target.complex=[{name:'IFCPROPERTYENUMERATION',args:target.args}];target.name='IFCPROPERTYABSTRACTION';target.args=[];
+const complex=await run();target.name='IFCPROPERTYENUMERATION';target.args=target.complex[0].args;target.complex=[];source.entities[propertyIndex].args[2].value[0]=scalar(9223372036854775808n);
+const signedZero=await run(),result={mounted:false,baseline:{available:baseline.available,selected:baseline.selected},complex:{available:complex.available,diagnostic:complex.diagnostic},signedZero:{available:signedZero.available,selected:signedZero.selected}};
+await writeFile(new URL('./🗑️generated/details-enumeration-independent-probe.json',import.meta.url),JSON.stringify(result,null,2));console.log('[DEBUG] '+JSON.stringify(result));

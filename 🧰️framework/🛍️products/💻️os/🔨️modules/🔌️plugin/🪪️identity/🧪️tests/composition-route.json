@@ -1,0 +1,15 @@
+{
+  "valid": [
+    "17:s.stdio.ifc@4x3/*19:s.stdio.txt@utf-8/*",
+    "16:s.test.alpha@1/*19:s.stdio.txt@utf-8/*",
+    "15:s.test.beta@1/*19:s.stdio.txt@utf-8/*"
+  ],
+  "invalid": [
+    "",
+    "s.stdio.ifc@4x3/*->s.stdio.txt@utf-8/*",
+    "017:s.stdio.ifc@4x3/*19:s.stdio.txt@utf-8/*",
+    "18:s.stdio.ifc@4x3/*19:s.stdio.txt@utf-8/*",
+    "17:s.stdio.ifc@4x3/*19:s.stdio.txt@utf-8/*trailing",
+    "17:s.stdio.ifc@4x3/*18:s.stdio.txt@utf-8/*"
+  ]
+}

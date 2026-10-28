@@ -21,6 +21,7 @@ testkit = ["dep:serde", "semio-s-artifact-draw-drawing-diff/testkit", "semio-s-a
 [dependencies]
 semio-framework-ui-locale = { workspace = true }
 semio-framework-schema-state = { workspace = true }
+semio-s-artifact-draw-drawing-geometry = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -59,3 +60,4 @@ semio-s-artifact-draw-drawing-model = { workspace = true, features = ["testkit"]
 semio-s-artifact-draw-drawing-structure = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-style = { workspace = true, features = ["testkit"] }
 semio-s-artifact-draw-drawing-transform = { workspace = true, features = ["testkit"] }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }

@@ -1,3 +1,4 @@
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use super::*;
 use semio_framework_io_ports::testkit::{bind, scene_content};
 
@@ -75,7 +76,7 @@ async fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
         text_runs: Vec::new(),
         strokes: Vec::new(),
         frame_strokes: Vec::new(),
-        images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, rotation: 0.0, placeholder: false, proxy_data_url: None, preview: String::new(), stack: 0 }],
+        images: vec![DisplayImage { drawing_bounds:None, object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, rotation: 0.0, placeholder: false, proxy_data_url: None, preview: String::new(), stack: 0 }],
         guides: Vec::new(),
     };
     assert_eq!(list.hit_test(15.0, 15.0).as_deref(), Some("img-1"));
@@ -182,6 +183,9 @@ async fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset()
 
 #[semio_framework_async_macros::async_test]
 async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
+    let mut engine = LayoutEngine::new();
+    let style = TextStyle { family: FontFamilyChoice::Custom(engine.font), size_px: 12.0 };
+    let font = engine.text.shape("A", &style).glyphs[0].font;
     let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
     let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
     let list = DisplayList {
@@ -206,10 +210,10 @@ async fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
             DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true, stack: 0 },
             DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false, stack: 0 },
         ],
-        text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 12.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]), italic: false }], content: "Hi".into(), origin_x: 0.0, origin_y: 0.0, font_size: 12.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }],
+        text_runs: vec![DisplayTextRun { deferred: None, rotation: 0.0, center: [0.0; 2], object_id: "text-1".into(), glyphs: vec![DisplayGlyph { font, glyph_id: 1, font_size: 12.0, x: 0.0, y: 12.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]), italic: false }], content: "Hi".into(), origin_x: 0.0, origin_y: 0.0, font_size: 12.0, stack: 0, color: [0.0, 0.0, 0.0, 1.0] }],
         strokes: Vec::new(),
         frame_strokes: Vec::new(),
-        images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, rotation: 0.0, placeholder: true, proxy_data_url: None, preview: String::new(), stack: 0 }],
+        images: vec![DisplayImage { drawing_bounds:None, object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, rotation: 0.0, placeholder: true, proxy_data_url: None, preview: String::new(), stack: 0 }],
         guides: vec![DisplayGuide { rect: LayoutRect { x: 0.0, y: 0.0, width: 10.0, height: 0.0 }, kind: "unrecognized".into() }],
     };
     for kind in ["page", "rect", "text", "image", "unrecognized"] {

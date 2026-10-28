@@ -1,3 +1,4 @@
+import {DrawingAssetsOwner,type DrawingImageAsset} from '../../../🧬️schema/🟦️.ts';
 import {parseDrawingFontFamily} from "../../../🧬️schema/📝️text/🔤️family/🟦️.ts";
 /** 🖍️ Handwritten Draw layer forests, geometry, paint and logical sample entities. */
 import sql from "./🗄️.sql" with {type:"text"};
@@ -65,14 +66,14 @@ export async function drawSnapshotFromSqliteDatabase(database:SqliteDatabase,opt
  const list=async(name:string,parent:bigint,foreign=1,ordinal=2):Promise<SqliteRow[]>=>{const key=name+":"+foreign;let indexed=groups.get(key);if(indexed===undefined){indexed=new Map();const source=table(name);let completed=0;for(const row of source.values()){if(row.values[foreign]!==null){const owner=integer(row,foreign),items=indexed.get(owner)??[];items.push(row);indexed.set(owner,items);}if(++completed%256===0)await artifactSqliteCheckpoint(options,"reconstructSnapshot",completed,source.size);}groups.set(key,indexed);}const values=await artifactSqliteOrderedRowsControlled(indexed.get(parent)??[],ordinal,options);indexed.delete(parent);for(const row of values)take(name,row.rowid);return values;};
  const paint=async(id:bigint,rule:string):Promise<DrawingAttributes>=>{const attributes:DrawingAttributes={fillRule:member(rule,["evenodd","nonzero"]) as DrawingAttributes["fillRule"]};if(has("fill",id)){const row=take("fill",id),kind=string(row,1);let fill:DrawingFill;switch(kind){case"solid":fill={kind,color:color(take("fill_solid",id),1)};break;case"linearGradient":fill={kind,...fields("fill_linear",id,["x1","y1","x2","y2"]),stops:[]};break;case"radialGradient":fill={kind,...fields("fill_radial",id,["cx","cy","r"]),stops:[]};break;default:throw Error("unknown Draw fill");}if(fill.kind!=="solid"){const stops:Extract<DrawingFill,{kind:"linearGradient"}>["stops"]=[];for(const row of await list("gradient_stop",id))stops.push({offset:scalar(row,3),color:color(row,4)});fill.stops=stops;}attributes.fill=fill;}
   if(has("stroke",id)){const row=take("stroke",id),stroke:DrawingStroke={color:color(row,1),width:scalar(row,5),cap:member(string(row,6),["butt","round","square"]) as DrawingStroke["cap"],join:member(string(row,7),["miter","round","bevel"]) as DrawingStroke["join"]};if(boolean(row,8)){const dash=[];for(const row of await list("stroke_dash",id))dash.push(scalar(row,3));stroke.dash=dash;}attributes.stroke=stroke;}return attributes;};
- const document=take("document",1n),result:DrawingSnapshot={schema:string(document,1),id:string(document,2),layers:[],assets:{}};if(document.values[3]!==null)result.title=string(document,3);if(has("artboard",1n)){const row=take("artboard",1n);result.artboard={width:scalar(row,1),height:scalar(row,2)};}
+ const assetOwner=DrawingAssetsOwner.builderCold<DrawingImageAsset>();const document=take("document",1n),result:DrawingSnapshot={schema:string(document,1),id:string(document,2),layers:[],assets:DrawingAssetsOwner.fromEntriesCold([])};if(document.values[3]!==null)result.title=string(document,3);if(has("artboard",1n)){const row=take("artboard",1n);result.artboard={width:scalar(row,1),height:scalar(row,2)};}
  for(const row of await list("asset",1n)){
   const key=string(row,3);if(Object.hasOwn(result.assets,key))throw Error("duplicate Draw asset key");
   const width=integer(row,4),height=integer(row,5);if(width<0n||width>0xffffffffn||height<0n||height>0xffffffffn)throw Error("Draw unsigned32 range");
   const samples:DrawingSnapshot['assets'][string]['samples']=[],source=await list("asset_sample",row.rowid);
   if(BigInt(source.length)!==width*height)throw Error("Draw image sample count");
   for(const sample of source){const parts=[];for(let index=3;index<7;index++){const value=integer(sample,index);if(value<0n||value>255n)throw Error("Draw sample component");parts.push(Number(value));}samples.push(parts as [number,number,number,number]);}
-  Object.defineProperty(result.assets,key,{value:{width:Number(width),height:Number(height),samples},writable:true,enumerable:true,configurable:true});
+  assetOwner.append(key,{width:Number(width),height:Number(height),samples});
  }
  type Pending={row:SqliteRow;output:DrawingLayerNode[]};const pending:Pending[]=[];for(const row of(await list("layer",1n,1,3)).reverse())pending.push({row,output:result.layers});
  while(pending.length){const {row,output}=pending.pop()!;if((row.values[1]===null)===(row.values[2]===null))throw Error("ambiguous Draw forest ownership");const id=row.rowid,kind=string(row,4),base:DrawingLayerBase={id:string(row,5),name:string(row,6),visible:boolean(row,7),locked:boolean(row,8),opacity:scalar(row,9),blendMode:string(row,10),transform:fields("transform",id,["x","y","scaleX","scaleY","shear","rotation"]),attributes:await paint(id,string(row,11))};
@@ -89,5 +90,5 @@ export async function drawSnapshotFromSqliteDatabase(database:SqliteDatabase,opt
   }
   output.push(node);await artifactSqliteCheckpoint(options,"reconstructSnapshot",0,0,false);
  }
- for(const map of tables.values())if(map.size)throw Error("orphan Draw entities");return result;
+ for(const map of tables.values())if(map.size)throw Error("orphan Draw entities");result.assets=assetOwner.finish();return result;
 }

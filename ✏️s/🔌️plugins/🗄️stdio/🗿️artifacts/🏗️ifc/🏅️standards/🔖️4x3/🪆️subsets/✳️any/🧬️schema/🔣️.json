@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/s/stdio/ifc/4x3/snapshot.schema.json",
+  "title": "IFC4X3_ADD2 Snapshot Decimal Integer Transport",
+  "description": "JSON transport of the shared IFC Part 21 graph. Native TypeScript integers and identifiers are bigint and real values are Binary64. JSON transport uses decimal strings to preserve every integer and Binary64 bit exactly. EXPRESS conformance requires the separate retained catalog validator.",
+  "$ref": "#/$defs/IfcSnapshot",
+  "$defs": {
+    "Unsigned64": { "type": "string", "pattern": "^(0|[1-9][0-9]*)$", "maxLength": 20 },
+    "Signed64": { "type": "string", "pattern": "^(0|-?[1-9][0-9]*)$", "maxLength": 20 },
+    "EntityId": { "type": "string", "pattern": "^[1-9][0-9]*$", "maxLength": 20 },
+    "Binary64": { "type": "object", "properties": { "bits": { "$ref": "#/$defs/Unsigned64" } }, "required": ["bits"], "additionalProperties": false },
+    "IfcValue": {
+      "oneOf": [
+        { "type": "object", "properties": { "kind": { "enum": ["unset", "derived"] } }, "required": ["kind"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "const": "integer" }, "value": { "$ref": "#/$defs/Signed64" } }, "required": ["kind", "value"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "const": "real" }, "value": { "$ref": "#/$defs/Binary64" } }, "required": ["kind", "value"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "enum": ["string", "enum"] }, "value": { "type": "string" } }, "required": ["kind", "value"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "const": "binary" }, "value": { "type": "string", "pattern": "^(0[0-9A-F]*|1[0-7][0-9A-F]*|2[0-3][0-9A-F]*|3[01][0-9A-F]*)$" } }, "required": ["kind", "value"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "const": "reference" }, "value": { "$ref": "#/$defs/EntityId" } }, "required": ["kind", "value"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "const": "aggregate" }, "value": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } } }, "required": ["kind", "value"], "additionalProperties": false },
+        { "type": "object", "properties": { "kind": { "const": "typedValue" }, "value": { "type": "object", "properties": { "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" }, "items": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } } }, "required": ["name", "items"], "additionalProperties": false } }, "required": ["kind", "value"], "additionalProperties": false }
+      ]
+    },
+    "IfcComplexType": { "type": "object", "properties": { "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" }, "args": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } } }, "required": ["name", "args"], "additionalProperties": false },
+    "IfcEntity": { "type": "object", "properties": { "id": { "$ref": "#/$defs/EntityId" }, "name": { "type": "string", "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" }, "args": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } }, "complex": { "type": "array", "items": { "$ref": "#/$defs/IfcComplexType" } } }, "required": ["id", "name", "args"], "additionalProperties": false },
+    "IfcHeader": { "type": "object", "properties": { "fileDescription": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } }, "fileName": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } }, "fileSchema": { "type": "array", "items": { "$ref": "#/$defs/IfcValue" } } }, "required": ["fileDescription", "fileName", "fileSchema"], "additionalProperties": false },
+    "IfcSnapshot": { "type": "object", "properties": { "schema": { "const": "stdio.ifc" }, "header": { "$ref": "#/$defs/IfcHeader" }, "entities": { "type": "array", "items": { "$ref": "#/$defs/IfcEntity" } } }, "required": ["schema", "header", "entities"], "additionalProperties": false }
+  }
+}

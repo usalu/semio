@@ -1,0 +1,16 @@
+{
+  "$schema": "./exchange-source.schema.json",
+  "schema": "IFC4X3_ADD2",
+  "endpoints": [
+    { "id": "ifc-to-bim", "phase": "bim-import" },
+    { "id": "ifc-to-fem", "phase": "fem-import" },
+    { "id": "ifc-triangles", "phase": "geometry" }
+  ],
+  "capturePhasePrefix": "capture-",
+  "captureCancelAfter": 32,
+  "indexPhase": "index-entities",
+  "indexCancelAfter": 8,
+  "sourceRefusal": "exchange.graph",
+  "cancellation": "io.cancelled",
+  "limits": [ { "maxEntities": 1 }, { "maxValues": 1 }, { "maxDepth": 1 } ]
+}

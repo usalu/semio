@@ -61,3 +61,6 @@ mod composite_timestamp_tests;
 
 #[path = "🚪️diff-codecs/🦀️.rs"]
 mod diff_codec_tests;
+
+#[path = "❄️cold-dispatch/🦀️.rs"]
+mod cold_dispatch_tests;

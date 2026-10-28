@@ -1,0 +1,10 @@
+{
+ "concept":"Object_Composition/Nesting/Alignment_Layouts/Alignment_Layout_-_Horizontal,_Vertical_and_Cant",
+ "predicate":"business-terminal-zero",
+ "source":{"commit":"610ee3f95db9d0380b1eb8de4dc6e17833531518","url":"https://raw.githubusercontent.com/buildingSMART/Standards-builds/610ee3f95db9d0380b1eb8de4dc6e17833531518/IFC/RELEASE/IFC4_3/HTML/concepts/Object_Composition/Nesting/Alignment_Layouts/Alignment_Layout_-_Horizontal,_Vertical_and_Cant/content.html","sha256":"46f10e76e2646fbfd5f3c8e6967c59fb3b522169086dfd9a1af6e0ccfefe7158"},
+ "layouts":[
+  {"kind":"horizontal","layout":"IFCALIGNMENTHORIZONTAL","parameter":"IFCALIGNMENTHORIZONTALSEGMENT","length":"SegmentLength"},
+  {"kind":"vertical","layout":"IFCALIGNMENTVERTICAL","parameter":"IFCALIGNMENTVERTICALSEGMENT","length":"HorizontalLength"},
+  {"kind":"cant","layout":"IFCALIGNMENTCANT","parameter":"IFCALIGNMENTCANTSEGMENT","length":"HorizontalLength"}
+ ]
+}

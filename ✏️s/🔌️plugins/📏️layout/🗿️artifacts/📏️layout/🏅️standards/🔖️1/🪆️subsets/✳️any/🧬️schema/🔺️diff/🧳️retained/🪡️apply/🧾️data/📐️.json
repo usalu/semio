@@ -1,0 +1,11 @@
+{
+  "feature": "layout.retained.dictionary",
+  "presence": {
+    "deleted": "detach old original dictionary, ignore entry payload",
+    "replaced": "empty baseline then admitted entries",
+    "created": "empty if absent, preserve live baseline if present",
+    "missing": "nonempty entries refuse; empty entries preserve absence"
+  },
+  "commit": "typed dictionary header and sparse entry movement",
+  "retirement": "displaced original dictionary stays controlled"
+}

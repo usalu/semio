@@ -1,0 +1,586 @@
+{
+  "schema": "semio.ifc.relation-index.v1",
+  "plan": {
+    "families": [
+      {
+        "key": "groups",
+        "type": "IFCRELASSIGNSTOGROUP",
+        "subtypes": true
+      },
+      {
+        "key": "materials",
+        "type": "IFCMATERIAL",
+        "subtypes": false
+      }
+    ],
+    "roles": [
+      {
+        "key": "group",
+        "family": "groups",
+        "attribute": "RelatingGroup",
+        "owner": "IFCRELASSIGNSTOGROUP",
+        "cardinality": "one"
+      },
+      {
+        "key": "objects",
+        "family": "groups",
+        "attribute": "RelatedObjects",
+        "owner": "IFCRELASSIGNS",
+        "cardinality": "many"
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "source-order-and-duplicate-target",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "b"
+                },
+                {
+                  "kind": "reference",
+                  "value": "a"
+                },
+                {
+                  "kind": "reference",
+                  "value": "a"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ]
+        },
+        {
+          "name": "IFCMATERIAL",
+          "args": [
+            {
+              "kind": "string",
+              "value": "ignored"
+            }
+          ]
+        },
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "a"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ]
+        }
+      ],
+      "role": "objects",
+      "target": "a",
+      "family": [
+        0,
+        2
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": null,
+          "pointer": "/entities/0/args/4"
+        },
+        {
+          "ordinal": 2,
+          "issue": null,
+          "pointer": "/entities/2/args/4"
+        }
+      ]
+    },
+    {
+      "id": "scalar-source-order",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": []
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ]
+        },
+        {
+          "name": "IFCRELASSIGNSTOGROUPBYFACTOR",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": []
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "g"
+            },
+            {
+              "kind": "integer",
+              "value": "2"
+            }
+          ]
+        }
+      ],
+      "role": "group",
+      "target": "g",
+      "family": [
+        0,
+        1
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": null,
+          "pointer": "/entities/0/args/6"
+        },
+        {
+          "ordinal": 1,
+          "issue": null,
+          "pointer": "/entities/1/args/6"
+        }
+      ]
+    },
+    {
+      "id": "exact-complex-owner-slot",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNS",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "a"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCRELASSIGNSTOGROUP",
+              "args": [
+                {
+                  "kind": "reference",
+                  "value": "g"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "role": "group",
+      "target": "g",
+      "family": [
+        0
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": null,
+          "pointer": "/entities/0/complex/0/args/0"
+        }
+      ]
+    },
+    {
+      "id": "complex-related-objects-owner",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNS",
+          "args": [
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "a"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCRELASSIGNSTOGROUP",
+              "args": [
+                {
+                  "kind": "reference",
+                  "value": "g"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "role": "objects",
+      "target": "a",
+      "family": [
+        0
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": null,
+          "pointer": "/entities/0/args/0"
+        }
+      ]
+    },
+    {
+      "id": "scalar-nonreference-is-filter-nonmatch",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": []
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            }
+          ]
+        }
+      ],
+      "role": "group",
+      "target": "g",
+      "family": [
+        0
+      ],
+      "hits": []
+    },
+    {
+      "id": "invalid-aggregate-deferred-source-position",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "a"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ]
+        },
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "h"
+            }
+          ]
+        },
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "aggregate",
+              "value": [
+                {
+                  "kind": "reference",
+                  "value": "a"
+                }
+              ]
+            },
+            {
+              "kind": "unset"
+            },
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ]
+        }
+      ],
+      "role": "objects",
+      "target": "a",
+      "family": [
+        0,
+        1,
+        2
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": null,
+          "pointer": "/entities/0/args/4"
+        },
+        {
+          "ordinal": 1,
+          "issue": "aggregate",
+          "pointer": "/entities/1/args/4"
+        },
+        {
+          "ordinal": 2,
+          "issue": null,
+          "pointer": "/entities/2/args/4"
+        }
+      ]
+    },
+    {
+      "id": "unknown-after-two-owner-matches",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCRELASSIGNSTOGROUP",
+              "args": [
+                {
+                  "kind": "reference",
+                  "value": "g"
+                }
+              ]
+            },
+            {
+              "name": "IFCRELASSIGNSTOGROUP",
+              "args": [
+                {
+                  "kind": "reference",
+                  "value": "g"
+                }
+              ]
+            },
+            {
+              "name": "IFCUNKNOWN",
+              "args": []
+            }
+          ]
+        }
+      ],
+      "role": "group",
+      "target": "g",
+      "family": [
+        0
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": "unknown",
+          "pointer": "/entities/0/args/0"
+        }
+      ]
+    },
+    {
+      "id": "ambiguous-owner-does-not-become-empty",
+      "entities": [
+        {
+          "name": "IFCRELASSIGNSTOGROUP",
+          "args": [
+            {
+              "kind": "reference",
+              "value": "g"
+            }
+          ],
+          "complex": [
+            {
+              "name": "IFCRELASSIGNSTOGROUP",
+              "args": [
+                {
+                  "kind": "reference",
+                  "value": "g"
+                }
+              ]
+            }
+          ]
+        }
+      ],
+      "role": "group",
+      "target": "unrelated",
+      "family": [
+        0
+      ],
+      "hits": [
+        {
+          "ordinal": 0,
+          "issue": "ambiguous",
+          "pointer": "/entities/0/args/0"
+        }
+      ]
+    },
+    {
+      "id": "foreign-material-value-is-uninspected",
+      "entities": [
+        {
+          "name": "IFCMATERIAL",
+          "args": [
+            {
+              "kind": "malformed"
+            }
+          ]
+        },
+        {
+          "name": "IFCPROPERTYSINGLEVALUE",
+          "args": [
+            {
+              "kind": "malformed"
+            }
+          ]
+        }
+      ],
+      "role": "objects",
+      "target": "a",
+      "family": [],
+      "hits": []
+    }
+  ]
+}

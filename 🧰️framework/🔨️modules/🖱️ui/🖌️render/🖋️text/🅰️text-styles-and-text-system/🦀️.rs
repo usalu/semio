@@ -267,3 +267,12 @@ impl TextSystem {
     }
 }
 //#endregion 🔖️Font
+
+impl TextSystem {
+    /// 🔤️ Immutable original font bytes and collection index for an already shaped glyph.
+    pub fn glyph_font_source(&self, font: FontHandle) -> Option<(&[u8], u32)> {
+        self.font_table.get(font.0 as usize).map(|slot| (slot.data.data(), slot.index))
+    }
+}
+
+semio_framework_value::artifact_retire_leaf!(FontHandle);

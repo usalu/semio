@@ -1,0 +1,65 @@
+{
+  "cases": [
+    {
+      "name": "original typed box preserved",
+      "original": true,
+      "accept": true,
+      "decode": false
+    },
+    {
+      "name": "same original repeated loan",
+      "original": true,
+      "repeat": true,
+      "accept": true,
+      "decode": false
+    },
+    {
+      "name": "original checkpoint resumes typed command",
+      "original": true,
+      "checkpoint": true,
+      "accept": true,
+      "decode": false
+    },
+    {
+      "name": "different original caller refused",
+      "original": true,
+      "foreignCaller": true,
+      "accept": false,
+      "decode": false
+    },
+    {
+      "name": "different encoded wire refused",
+      "original": true,
+      "foreignWire": true,
+      "accept": false,
+      "decode": false
+    },
+    {
+      "name": "unfunded original mutable loan",
+      "original": true,
+      "deny": true,
+      "accept": false,
+      "decode": false
+    },
+    {
+      "name": "received wire requires decoder",
+      "original": false,
+      "accept": true,
+      "decode": true
+    },
+    {
+      "name": "original empty payload still preserved",
+      "original": true,
+      "empty": true,
+      "accept": true,
+      "decode": false
+    },
+    {
+      "name": "cancelled original closes same box",
+      "original": true,
+      "cancel": true,
+      "accept": false,
+      "decode": false
+    }
+  ]
+}

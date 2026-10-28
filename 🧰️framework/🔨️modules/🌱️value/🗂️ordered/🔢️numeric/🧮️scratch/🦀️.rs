@@ -17,7 +17,7 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for Node<K,V>{
 }
 
 /// 🌳️ Retains tombstones and backing pages while live-key operations remain logarithmic.
-pub struct NumericIndex<K,V>{nodes:PagedList<Node<K,V>,1048576>,#[doc(hidden)] pub root:Option<usize>,generation:u64}
+pub struct NumericIndex<K,V>{nodes:PagedList<Node<K,V>,{usize::MAX}>,#[doc(hidden)] pub root:Option<usize>,generation:u64}
 impl<K,V> Default for NumericIndex<K,V>{fn default()->Self{Self{nodes:PagedList::empty(),root:None,generation:1}}}
 impl<K:Copy+Ord,V> NumericIndex<K,V>{
  pub fn new()->Self{Self::default()}
@@ -39,6 +39,10 @@ impl<K:Copy+Ord,V> NumericIndex<K,V>{
  pub fn get_mut(&mut self,key:&K)->Option<&mut V>{let index=self.find(key)?;let generation=self.generation;let n=self.node_mut(index);if n.generation==generation{n.value.as_mut()}else{None}}
  pub fn contains_key(&self,key:&K)->bool{self.get(key).is_some()}
  pub fn next_allocation_bytes(&self)->Result<usize,PagedListError>{self.nodes.next_allocation_bytes()}
+ /// 🎟️ Quotes structural copy, backing capacity and traversal depth from the original paged owner.
+ pub fn next_reserve_demand(&self)->Result<crate::RetirementDemand,PagedListError>{Ok(crate::RetirementDemand{copy_bytes:self.nodes.next_reserve_copy_byte_demand()?,capacity_bytes:self.nodes.next_allocation_bytes()?,release_bytes:0,depth:self.nodes.next_reserve_depth_demand()?})}
+ /// 🪪️ Passes the original caller grant to one physical page reservation and returns its exact receipt.
+ pub fn reserve_one_funded(&mut self,grant:crate::RetainedCloneGrant)->Result<crate::RetainedCloneProgress,semio_framework_value_persistent::list::PagedListAllocationError>{self.nodes.reserve_one_funded(grant)}
  pub fn reserve_one(&mut self,bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,semio_framework_value_persistent::list::PagedListAllocationError>{self.nodes.reserve_one(bytes)}
  pub fn insert_reserved(&mut self,key:K,value:V)->Result<Option<V>,(K,V)>{
   let mut parent=None;let mut current=self.root;while let Some(index)=current{match key.cmp(&self.node(index).key){Ordering::Equal=>{let generation=self.generation;let n=self.node_mut(index);let previous=n.value.replace(value);let previous=if n.generation==generation{previous}else{None};n.generation=generation;self.repair(Some(index));return Ok(previous)},order=>{parent=Some(index);current=if order==Ordering::Less{self.node(index).left}else{self.node(index).right}}}}
@@ -53,7 +57,10 @@ impl<K:Copy+Ord,V:Copy> NumericIndex<K,V>{
  pub fn reset(&mut self){self.generation=self.generation.checked_add(1).expect("numeric scratch generation exhausted");}
  pub fn terminal_is_empty(&self)->bool{self.nodes.terminal_is_empty()}
  pub fn next_close_release_byte_demand(&self)->Result<usize,PagedListError>{if self.nodes.is_empty(){self.nodes.next_release_allocation_bytes()}else{Ok(0)}}
- pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{if maximum_items==0{return Ok(semio_framework_value_persistent::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(semio_framework_value_persistent::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}
+ pub fn next_close_copy_byte_demand(&self)->usize{if self.nodes.is_empty(){0}else{std::mem::size_of::<Node<K,V>>()}}
+ /// ❄️ Cold scalar disposal; retained callers separately admit the funded copy demand.
+ pub fn close_copy_step(&mut self,maximum_items:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{self.close_copy_step_funded(maximum_items,usize::MAX,maximum_release_bytes)}
+ pub fn close_copy_step_funded(&mut self,maximum_items:usize,maximum_copy_bytes:usize,maximum_release_bytes:usize)->Result<semio_framework_value_persistent::list::PagedListProgress,PagedListError>{if maximum_items==0||maximum_copy_bytes<self.next_close_copy_byte_demand(){return Ok(semio_framework_value_persistent::list::PagedListProgress::default())}self.root=None;if self.nodes.pop().is_some(){return Ok(semio_framework_value_persistent::list::PagedListProgress{progressed:true,..Default::default()})}self.nodes.release_empty_page(maximum_release_bytes)}
 }
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericIndex<K,V>{
  fn retirement(self)->Box<dyn RetirementCursor>{crate::retirement::sequence(vec![crate::retirement::deferred(self.nodes),crate::retirement::deferred(self.root),crate::retirement::deferred(self.generation)])}
@@ -61,3 +68,5 @@ impl<K:RetireOwned,V:RetireOwned> RetireOwned for NumericIndex<K,V>{
  fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
 }
 
+
+#[cfg(test)]#[path="🎟️reservation/🧪️tests/🦀️.rs"]mod reservation_tests;

@@ -1,0 +1,45 @@
+{
+  "scope": "original-io-control",
+  "properties": [
+    "signal",
+    "progress",
+    "batchSize",
+    "maxEntities",
+    "maxValues",
+    "maxDepth",
+    "maxNumericCodeUnits"
+  ],
+  "routes": [
+    "step-parse",
+    "step-write",
+    "step-stream",
+    "glb-read",
+    "glb-write",
+    "shared-steps",
+    "body-concept"
+  ],
+  "boundaries": [
+    "interior",
+    "completion"
+  ],
+  "failureKinds": [
+    "undefined",
+    "number",
+    "object"
+  ],
+  "limits": {
+    "batchSize": 1,
+    "maxEntities": 77,
+    "maxValues": 88,
+    "maxDepth": 12,
+    "maxNumericCodeUnits": 64
+  },
+  "expected": {
+    "propertyReads": 1,
+    "originalCalls": 1,
+    "replacementCalls": 0,
+    "cancelCode": "io.cancelled",
+    "capturedMutable": false,
+    "observerReceiver": "undefined"
+  }
+}

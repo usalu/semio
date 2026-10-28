@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-persistent = { path = "../../../📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../🗣️dsl/🧬️schema/📦️packages/🦀️rust" }

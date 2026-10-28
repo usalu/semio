@@ -1,0 +1,4 @@
+scalar IdmlByte
+
+type IdmlSnapshotPart { path: String!, bytes: [IdmlByte!]! }
+type IdmlSnapshot { domVersion: String!, parts: [IdmlSnapshotPart!]! }

@@ -1,0 +1,14 @@
+{
+  "$schema":"http://json-schema.org/draft-07/schema#",
+  "type":"object","additionalProperties":false,
+  "required":["schema","encoding","nativeExecution","domains","cases","draft","refusals","controls","originalControl"],
+  "properties":{
+    "schema":{"const":"IFC4X3_ADD2"},"encoding":{"const":"ifc-template-command"},"nativeExecution":{"const":false},
+    "domains":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["entity","attribute","index","select","members","ancestors"],"properties":{"entity":{"enum":["IFCPOINTBYDISTANCEEXPRESSION","IFCLAGTIME"]},"attribute":{"type":"string","minLength":1},"index":{"const":"0"},"select":{"type":"string","minLength":1},"members":{"type":"array","minItems":2,"maxItems":2,"items":{"type":"object","additionalProperties":false,"required":["name","kind"],"properties":{"name":{"type":"string","pattern":"^IFC[A-Z]+$"},"kind":{"enum":["real","string"]}}}},"ancestors":{"type":"array","minItems":1,"maxItems":3,"uniqueItems":true,"items":{"type":"string","minLength":1}}}}},
+    "cases":{"type":"array","minItems":8,"items":{"type":"object","additionalProperties":false,"required":["id","entity","member","kind","raw","admitted"],"properties":{"id":{"type":"string","minLength":1},"entity":{"enum":["IFCPOINTBYDISTANCEEXPRESSION","IFCLAGTIME"]},"member":{"enum":["IFCLENGTHMEASURE","IFCPARAMETERVALUE","IFCDURATION","IFCRATIOMEASURE"]},"kind":{"enum":["real","string"]},"raw":{"type":"string"},"admitted":{"type":"boolean"}}}},
+    "draft":{"const":{"missingUnselected":true,"chosenItems":[],"sameKindPreservesChild":true,"differentKindClearsChild":true,"keepAllControlsEditable":true}},
+    "refusals":{"type":"array","minItems":7,"maxItems":7,"items":{"type":"object"}},
+    "controls":{"const":{"maximumPhysical":16,"maximumChoices":32,"noRequiredDefaults":true}},
+    "originalControl":{"const":{"cancelEveryProgressPrefix":true,"preserveObserverFailureIdentity":true,"preserveSourceAndRequest":true}}
+  }
+}

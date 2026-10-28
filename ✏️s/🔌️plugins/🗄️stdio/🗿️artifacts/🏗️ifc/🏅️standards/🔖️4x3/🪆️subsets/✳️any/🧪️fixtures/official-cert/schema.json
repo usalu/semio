@@ -1,0 +1,171 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/ifc4x3/official-certification-corpus.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "repository",
+    "commit",
+    "notice",
+    "license",
+    "oracle",
+    "cases"
+  ],
+  "properties": {
+    "schema": {
+      "const": "IFC4X3_ADD2"
+    },
+    "repository": {
+      "const": "buildingSMART/Certification-datasets"
+    },
+    "commit": {
+      "const": "80d976a9b193a26a8e928c3e79bff67af1de68a8"
+    },
+    "notice": {
+      "type": "string",
+      "minLength": 1
+    },
+    "license": {
+      "const": {
+        "spdx": "CC-BY-4.0",
+        "url": "https://raw.githubusercontent.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/LICENSE",
+        "file": "LICENSE.txt",
+        "sha256": "3e20c50b6edfdb4be207f64495586115d0574c8394538109d74f79e1d8976d18",
+        "attribution": "buildingSMART International Ltd."
+      }
+    },
+    "oracle": {
+      "const": {
+        "implementation": "IfcOpenShell",
+        "version": "0.9.0.post1",
+        "expressRules": true
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 10,
+      "maxItems": 10,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "path",
+          "url",
+          "blob",
+          "sha256",
+          "bytes",
+          "file",
+          "entities",
+          "headers",
+          "declaredMvd",
+          "diagnostics"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "pattern": "^IFC 4\\.3\\.2\\.0 \\(IFC 4\\.3 ADD2\\)/Simple-Scene/[A-Za-z-]+\\.ifc$"
+          },
+          "url": {
+            "type": "string",
+            "pattern": "^https://raw\\.githubusercontent\\.com/buildingSMART/Certification-datasets/80d976a9b193a26a8e928c3e79bff67af1de68a8/"
+          },
+          "blob": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{40}$"
+          },
+          "sha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "bytes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "file": {
+            "enum": [
+              "Building-Architecture.ifc",
+              "Building-Hvac.ifc",
+              "Building-Landscaping.ifc",
+              "Building-Structural.ifc",
+              "Infra-Bridge.ifc",
+              "Infra-Electrical.ifc",
+              "Infra-Landscaping.ifc",
+              "Infra-Plumbing.ifc",
+              "Infra-Rail.ifc",
+              "Infra-Road.ifc"
+            ]
+          },
+          "entities": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "headers": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "FILE_SCHEMA",
+              "FILE_NAME",
+              "FILE_DESCRIPTION"
+            ],
+            "properties": {
+              "FILE_SCHEMA": {
+                "const": "FILE_SCHEMA(('IFC4X3_ADD2'));"
+              },
+              "FILE_NAME": {
+                "type": "string",
+                "pattern": "^FILE_NAME\\("
+              },
+              "FILE_DESCRIPTION": {
+                "type": "string",
+                "pattern": "^FILE_DESCRIPTION\\("
+              }
+            }
+          },
+          "declaredMvd": {
+            "const": [
+              "ViewDefinition [ReferenceView]"
+            ]
+          },
+          "diagnostics": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "kind",
+                "entityId",
+                "message"
+              ],
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "entityId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "pattern": "^[1-9][0-9]*$"
+                },
+                "message": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "attribute": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "rule": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

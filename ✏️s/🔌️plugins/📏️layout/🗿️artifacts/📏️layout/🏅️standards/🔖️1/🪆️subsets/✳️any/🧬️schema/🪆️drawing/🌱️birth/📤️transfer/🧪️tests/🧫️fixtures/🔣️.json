@@ -1,0 +1,32 @@
+{
+  "cases": [
+    {
+      "name": "document original",
+      "source": true,
+      "destination": false,
+      "cancelled": false,
+      "expected": "moved"
+    },
+    {
+      "name": "empty source",
+      "source": false,
+      "destination": false,
+      "cancelled": false,
+      "expected": "missing"
+    },
+    {
+      "name": "occupied target",
+      "source": true,
+      "destination": true,
+      "cancelled": false,
+      "expected": "occupied"
+    },
+    {
+      "name": "cancel before handoff",
+      "source": true,
+      "destination": false,
+      "cancelled": true,
+      "expected": "cancelled"
+    }
+  ]
+}

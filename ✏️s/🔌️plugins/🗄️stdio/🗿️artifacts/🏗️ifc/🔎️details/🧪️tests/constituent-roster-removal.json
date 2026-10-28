@@ -1,0 +1,9 @@
+{"schema":"IFC4X3_ADD2","nativeExecution":false,"names":["IFCGEOMETRICREPRESENTATIONITEM","IFCPOINT","IFCCARTESIANPOINT"],"cases":[
+{"id":"first","path":"/entities/0/complex/0","admitted":true,"order":[1,2]},
+{"id":"middle","path":"/entities/0/complex/1","admitted":true,"order":[0,2]},
+{"id":"last","path":"/entities/0/complex/2","admitted":true,"order":[0,1]},
+{"id":"maximum-id","entityId":"18446744073709551615","path":"/entities/0/complex/1","admitted":true,"order":[0,2]},
+{"id":"missing","path":"/entities/0/complex/3","admitted":false},
+{"id":"dash","path":"/entities/0/complex/-","admitted":false},
+{"id":"duplicate-id","duplicate":true,"path":"/entities/0/complex/1","admitted":false}
+],"fallback":["last-constituent","derived-declaration","global-id-declaration","derived-direct-value","lowercase-survivor-name","unknown-declaration"]}

@@ -1,0 +1,637 @@
+{
+  "schema": "ifc-csg-circular-supplemental",
+  "version": 1,
+  "nativeExecution": false,
+  "cases": [
+    {
+      "id": "primitive-extra-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "primitive",
+        "operation": "appendUnset",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "primitive-missing-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "primitive",
+        "operation": "removeLast",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "root-extra-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "root",
+        "operation": "appendUnset",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "root-missing-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "root",
+        "operation": "removeLast",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "position-extra-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "position",
+        "operation": "appendUnset",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "position-missing-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "position",
+        "operation": "removeLast",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "point-extra-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "point",
+        "operation": "appendUnset",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "point-missing-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "point",
+        "operation": "removeLast",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "direction-extra-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "direction",
+        "operation": "appendUnset",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "direction-missing-arity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "direction",
+        "operation": "removeLast",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-arity",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "primitive-complex",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "primitive",
+        "operation": "complexConstituent",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "not-asserted",
+        "admission": "refuse-selected-declaration"
+      }
+    },
+    {
+      "id": "root-complex",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "root",
+        "operation": "complexConstituent",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "not-asserted",
+        "admission": "refuse-selected-declaration"
+      }
+    },
+    {
+      "id": "missing-position",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "primitive",
+        "operation": "unsetPosition",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-required",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "foreign-position",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "primitive",
+        "operation": "pointPosition",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "invalid-role",
+        "admission": "refuse"
+      }
+    },
+    {
+      "id": "positive-infinity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "radius",
+        "operation": "realBits",
+        "realWord": "9218868437227405312"
+      },
+      "expected": {
+        "formal": "nonphysical-source",
+        "admission": "refuse-nonfinite"
+      }
+    },
+    {
+      "id": "negative-infinity",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "radius",
+        "operation": "realBits",
+        "realWord": "18442240474082181120"
+      },
+      "expected": {
+        "formal": "nonphysical-source",
+        "admission": "refuse-nonfinite"
+      }
+    },
+    {
+      "id": "quiet-nan",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "radius",
+        "operation": "realBits",
+        "realWord": "9221120237041090560"
+      },
+      "expected": {
+        "formal": "nonphysical-source",
+        "admission": "refuse-nonfinite"
+      }
+    },
+    {
+      "id": "finite-translated-collapse",
+      "base": {
+        "primitive": "cylinder",
+        "height": 3,
+        "radius": 1,
+        "position": {
+          "location": [
+            0,
+            0,
+            0
+          ],
+          "axis": [
+            0,
+            0,
+            1
+          ],
+          "refDirection": [
+            1,
+            0,
+            0
+          ]
+        },
+        "unitPrefix": null
+      },
+      "damage": {
+        "target": "position",
+        "operation": "translateAll1e20",
+        "realWord": null
+      },
+      "expected": {
+        "formal": "valid-physical",
+        "admission": "refuse-projected-degeneracy"
+      }
+    }
+  ]
+}

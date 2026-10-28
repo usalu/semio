@@ -1,0 +1,68 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "definition": "18446744073709551615",
+  "cases": [
+    {
+      "id": "complete-item",
+      "path": "/entities/0/args/2/value/0",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":false}}",
+      "admitted": true
+    },
+    {
+      "id": "complete-list",
+      "path": "/entities/0/args/2",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":true}}",
+      "admitted": true
+    },
+    {
+      "id": "wrong-definition",
+      "path": "/entities/0/args/2/value/0",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":7,\"choice\":\"1\",\"list\":false}}",
+      "admitted": false
+    },
+    {
+      "id": "choice-outside-source",
+      "path": "/entities/0/args/2/value/0",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"2\",\"list\":false}}",
+      "admitted": false
+    },
+    {
+      "id": "noncanonical-choice",
+      "path": "/entities/0/args/2/value/0",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"01\",\"list\":false}}",
+      "admitted": false
+    },
+    {
+      "id": "partial-payload",
+      "path": "/entities/0/args/2/value/0/value/items/0/value",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":false}}",
+      "admitted": false
+    },
+    {
+      "id": "list-on-item",
+      "path": "/entities/0/args/2/value/0",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":true}}",
+      "admitted": false
+    },
+    {
+      "id": "item-on-list",
+      "path": "/entities/0/args/2",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":false}}",
+      "admitted": false
+    },
+    {
+      "id": "append-complete-item",
+      "event": "insert",
+      "path": "/entities/0/args/2/value/-",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":false}}",
+      "admitted": true
+    },
+    {
+      "id": "insert-whole-list",
+      "event": "insert",
+      "path": "/entities/0/args/2",
+      "source": "{\"$ifcEnumerationChoice\":{\"definition\":18446744073709551615,\"choice\":\"1\",\"list\":true}}",
+      "admitted": false
+    }
+  ]
+}

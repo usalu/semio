@@ -464,6 +464,20 @@ mod oracles {
                 Ok(())
             }
 
+            "set-entity-complex" => {
+                let id = u64_field(params, "id")?;
+                let complex = params.array("complex").iter().map(|entry| Ok(Record { name: str_field(entry, "name")?, parameter: Parameter::List(values_from_wire(entry, "args")?) })).collect::<Result<Vec<_>, String>>()?;
+                let section = exchange.data.first_mut().ok_or("input carries no DATA section")?;
+                let entity = section.entities.iter_mut().find(|entity| entity_id(entity) == id).ok_or_else(|| format!("set-entity-complex: no entity with id {id}"))?;
+                let primary = primary_record(entity).clone();
+                *entity = if complex.is_empty() {
+                    EntityInstance::Simple { id, record: primary }
+                } else {
+                    EntityInstance::Complex { id, subsuper: ruststep::ast::SubSuperRecord(std::iter::once(primary).chain(complex).collect()) }
+                };
+                Ok(())
+            }
+
             "set-entity-arg" => {
                 let id = u64_field(params, "id")?;
                 let arg_index = usize_field(params, "index")?;
@@ -559,8 +573,13 @@ mod oracles {
     //#region 🔖️Projection
     fn entity_to_json(entity: &EntityInstance) -> Result<Json, String> {
         let record = primary_record(entity);
-        let args = args(record)?.iter().map(value_to_json).collect();
-        Ok(Json::Object(vec![("id".to_string(), Json::Number(entity_id(entity) as f64)), ("name".to_string(), Json::String(record.name.clone())), ("args".to_string(), Json::Array(args))]))
+        let primary_args = args(record)?.iter().map(value_to_json).collect();
+        let mut members = vec![("id".to_string(), Json::Number(entity_id(entity) as f64)), ("name".to_string(), Json::String(record.name.clone())), ("args".to_string(), Json::Array(primary_args))];
+        if let EntityInstance::Complex { subsuper, .. } = entity {
+            let complex = subsuper.0.iter().skip(1).map(|record| Ok(Json::Object(vec![("name".into(), Json::String(record.name.clone())), ("args".into(), Json::Array(args(record)?.iter().map(value_to_json).collect()))]))).collect::<Result<Vec<_>, String>>()?;
+            members.push(("complex".into(), Json::Array(complex)));
+        }
+        Ok(Json::Object(members))
     }
 
     fn json_number(entry: &Json, key: &str) -> f64 {

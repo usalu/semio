@@ -1,0 +1,6 @@
+import{strictEqual}from'node:assert/strict';
+import corpus from'../../../../🧪️tests/🧫️fixtures/🫙️nullable/🔣️.json'with{type:'json'};
+import{parseImageLinkPatch}from'../../🟦️.ts';
+export interface ProfileFacetOracle{validateWire(value:unknown):boolean;protobuf(value:unknown):unknown;graphql(value:unknown):unknown;facets():{definitions:number;diffFields:number;artifactFields:number;errors:string[]}}
+/** 🧪️ Actual JSON patch parsing and independently compiled GraphQL/Protobuf facets preserve missing, clear and empty profiles. */
+export function checkLayoutNullableProfiles(oracle:ProfileFacetOracle){let cases=0;for(const row of corpus.cases){if(row.owner!=='link')continue;strictEqual(oracle.validateWire(row.value),true);const parsed=parseImageLinkPatch(row.value),present=Object.hasOwn(row.value,'color_profile'),value=present?(row.value as{color_profile:string|null}).color_profile:undefined;strictEqual(Object.hasOwn(parsed,'color_profile'),present);strictEqual(parsed.color_profile,value);const expected=present?{color_profile:value}:{};strictEqual(JSON.stringify(oracle.protobuf(row.value)),JSON.stringify(expected));strictEqual(JSON.stringify(oracle.graphql(row.value)),JSON.stringify(expected));cases++;}const facets=oracle.facets();strictEqual(facets.errors.length,0);strictEqual(facets.diffFields,14);strictEqual(facets.artifactFields,14);return{cases,facets};}

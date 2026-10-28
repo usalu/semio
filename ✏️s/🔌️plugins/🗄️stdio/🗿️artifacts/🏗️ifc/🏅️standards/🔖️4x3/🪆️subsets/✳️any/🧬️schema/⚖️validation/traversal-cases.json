@@ -1,0 +1,144 @@
+{
+  "schema": "IFC4X3_ADD2",
+  "scope": "population-projection-and-cardinality",
+  "physicalValidity": "not-claimed",
+  "initialization": {"absent":"context-state","repeated":"context-state"},
+  "sources": {
+    "zero": "#1=IFCMATERIALLAYER($,1.,$,$,$,$,$);#9=IFCCARTESIANPOINT((0.,0.));",
+    "one": "#1=IFCMATERIALLAYER($,1.,$,$,$,$,$);#9=IFCCARTESIANPOINT((0.,0.));#10=IFCMATERIALLAYERSET((#1),$,$);",
+    "two": "#1=IFCMATERIALLAYER($,1.,$,$,$,$,$);#9=IFCCARTESIANPOINT((0.,0.));#10=IFCMATERIALLAYERSET((#1),$,$);#11=IFCMATERIALLAYERSET((#1),$,$);",
+    "ordered": "#30=IFCCARTESIANPOINT((0.,0.,0.));#20=IFCDIRECTION((1.,0.,0.));#7=IFCPROJECT('0000000000000000000001',$,$,$,$,$,$,$,$);#1=IFCPROJECT('0000000000000000000002',$,$,$,$,$,$,$,$);"
+  },
+  "cohorts": [
+    {
+      "id": "inherit-zero",
+      "source": "zero",
+      "type": "IFCMATERIALDEFINITION",
+      "ids": [
+        "1"
+      ]
+    },
+    {
+      "id": "inherit-one",
+      "source": "one",
+      "type": "IFCMATERIALDEFINITION",
+      "ids": [
+        "1",
+        "10"
+      ]
+    },
+    {
+      "id": "inherit-two",
+      "source": "two",
+      "type": "IFCMATERIALDEFINITION",
+      "ids": [
+        "1",
+        "10",
+        "11"
+      ]
+    },
+    {
+      "id": "concrete-two",
+      "source": "two",
+      "type": "IFCMATERIALLAYERSET",
+      "ids": [
+        "10",
+        "11"
+      ]
+    },
+    {
+      "id": "exclude-unrelated",
+      "source": "two",
+      "type": "IFCCARTESIANPOINT",
+      "ids": [
+        "9"
+      ]
+    },
+    {
+      "id": "empty-known",
+      "source": "two",
+      "type": "IFCWALL",
+      "ids": []
+    },
+    {
+      "id": "empty-unknown",
+      "source": "two",
+      "type": "IFCUNKNOWNCOHORT",
+      "ids": []
+    },
+    {
+      "id": "source-order",
+      "source": "ordered",
+      "type": "IFCREPRESENTATIONITEM",
+      "ids": [
+        "30",
+        "20"
+      ]
+    },
+    {
+      "id": "name-case",
+      "source": "ordered",
+      "type": "IfcRoot",
+      "ids": [
+        "7",
+        "1"
+      ]
+    }
+  ],
+  "inverses": [
+    {
+      "id": "scalar-zero",
+      "source": "zero",
+      "owner": "IFCMATERIALLAYER",
+      "name": "TOMATERIALLAYERSET",
+      "target": "1",
+      "ids": [],
+      "cardinality": "false"
+    },
+    {
+      "id": "scalar-one",
+      "source": "one",
+      "owner": "IFCMATERIALLAYER",
+      "name": "TOMATERIALLAYERSET",
+      "target": "1",
+      "ids": [
+        "10"
+      ],
+      "cardinality": "true"
+    },
+    {
+      "id": "scalar-two",
+      "source": "two",
+      "owner": "IFCMATERIALLAYER",
+      "name": "TOMATERIALLAYERSET",
+      "target": "1",
+      "ids": [
+        "10",
+        "11"
+      ],
+      "cardinality": "false"
+    }
+  ],
+  "globals": [
+    {
+      "id": "zero",
+      "body": "",
+      "result": "true"
+    },
+    {
+      "id": "one",
+      "body": "#7=IFCPROJECT('0000000000000000000001',$,$,$,$,$,$,$,$);",
+      "result": "true"
+    },
+    {
+      "id": "two",
+      "body": "#7=IFCPROJECT('0000000000000000000001',$,$,$,$,$,$,$,$);#1=IFCPROJECT('0000000000000000000002',$,$,$,$,$,$,$,$);",
+      "result": "false"
+    }
+  ],
+  "controls": {
+    "population": 2048,
+    "batchSize": 32,
+    "workAllowance": 4
+  }
+}

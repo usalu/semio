@@ -23,9 +23,9 @@ impl protocol::MutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
 }
 
 impl protocol::ColdMutationKind<IfcSnapshot, IfcMutation> for RemoveEntity {
-    fn diff(&self, _base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
+    fn diff(&self, base: &IfcSnapshot) -> protocol::MutationOutcome<IfcDiff> {
         let Self { id } = self;
-        protocol::MutationOutcome::new(diff::diff_remove_entity(*id))
+        protocol::MutationOutcome::new(diff::diff_remove_entity(*id, base.entities.iter().position(|entity| entity.id == *id).unwrap_or(base.entities.len())))
     }
     fn inverse(&self, base: &IfcSnapshot) -> Result<Vec<IfcMutation>, semio_framework_value::ValueError> {
         let _entity = |id: u64| base.entities.iter().find(|e| e.id == id);

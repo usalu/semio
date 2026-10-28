@@ -1,0 +1,10 @@
+{
+  "cases": [
+    { "id": "authored-convention", "row": "form/name", "description": false, "error": false, "expected": { "target": "form/name.control", "label": "form/name.label" } },
+    { "id": "explicit-owned-target", "row": "window/stage.field.7", "control": "window/stage.field.7/stage.control.7", "description": true, "error": true, "expected": { "target": "window/stage.field.7/stage.control.7", "label": "window/stage.field.7.label", "description": "window/stage.field.7.description", "error": "window/stage.field.7.error", "describedBy": "window/stage.field.7.description window/stage.field.7.error" } },
+    { "id": "read-only-value", "row": "window/field", "control": null, "description": true, "error": false, "expected": { "label": "window/field.label", "description": "window/field.description", "describedBy": "window/field.description" } },
+    { "id": "unaddressed-field", "description": true, "error": true, "expected": {} },
+    { "id": "explicit-target-without-row", "control": "custom-input", "description": false, "error": false, "expected": { "target": "custom-input" } },
+    { "id": "error-only", "row": "fenster/zahl", "description": false, "error": true, "expected": { "target": "fenster/zahl.control", "label": "fenster/zahl.label", "error": "fenster/zahl.error", "describedBy": "fenster/zahl.error" } }
+  ]
+}

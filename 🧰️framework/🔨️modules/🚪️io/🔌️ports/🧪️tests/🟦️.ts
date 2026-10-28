@@ -4,6 +4,7 @@ import { embeddedChildSlotV1, type EmbeddedChildCodecV1 } from "../🟦️.ts";
 
 const codec = (tag: string): EmbeddedChildCodecV1<string> => ({
   parse: (value, at) => { if (typeof value !== "string") throw new Error(`${at}: ${tag} text required`); return value; },
+  lowerStep:(content,cursor,grant)=>cursor.advance(content,grant),
   nativeJson: { from: (value) => String(value), to: (content) => content },
   sqlite: { schema: `-- ${tag}`, project: async () => {}, reconstruct: async () => tag },
 });

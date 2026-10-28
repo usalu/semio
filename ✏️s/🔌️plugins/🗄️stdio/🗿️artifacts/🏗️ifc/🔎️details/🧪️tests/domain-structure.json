@@ -1,0 +1,16 @@
+{
+  "schema":"stdio.ifc.constituent-domain-tests/1",
+  "scope":"Prepared component-set domain and derived-marker consistency; external physical complex mapping conformance is not asserted.",
+  "cases":[
+    {"name":"Insert SI","operation":"insert","before":[],"index":0,"part":{"name":"IFCSIUNIT","args":[{"kind":"unset"},{"kind":"enum","value":"METRE"}]},"admitted":true,"derived":true},
+    {"name":"Reject SI name outside enumeration","operation":"insert","before":[],"index":0,"part":{"name":"IFCSIUNIT","args":[{"kind":"unset"},{"kind":"enum","value":"INVALID"}]},"admitted":false},
+    {"name":"Reject SI prefix wrong domain","operation":"insert","before":[],"index":0,"part":{"name":"IFCSIUNIT","args":[{"kind":"integer","value":7},{"kind":"enum","value":"METRE"}]},"admitted":false},
+    {"name":"Reject constituent arity","operation":"insert","before":[],"index":0,"part":{"name":"IFCSIUNIT","args":[{"kind":"unset"}]},"admitted":false},
+    {"name":"Progressive conversion creation","operation":"insert","before":[],"index":0,"part":{"name":"IFCCONVERSIONBASEDUNIT","args":[{"kind":"string","value":"Custom unit"},{"kind":"unset"}]},"admitted":true,"derived":false},
+    {"name":"Reject missing conversion reference","operation":"insert","before":[],"index":0,"part":{"name":"IFCCONVERSIONBASEDUNIT","args":[{"kind":"string","value":"Custom unit"},{"kind":"reference","value":9999}]},"admitted":false},
+    {"name":"Insert before retained constituent","operation":"insert","before":[{"name":"IFCCONVERSIONBASEDUNIT","args":[{"kind":"string","value":"Custom unit"},{"kind":"unset"}]}],"index":0,"part":{"name":"IFCSIUNIT","args":[{"kind":"unset"},{"kind":"enum","value":"METRE"}]},"admitted":true,"derived":true},
+    {"name":"Remove SI restores explicit Dimensions","operation":"remove","before":[{"name":"IFCSIUNIT","args":[{"kind":"unset"},{"kind":"enum","value":"METRE"}]}],"index":0,"admitted":true,"derived":false},
+    {"name":"Remove SI before retained constituent","operation":"remove","before":[{"name":"IFCSIUNIT","args":[{"kind":"unset"},{"kind":"enum","value":"METRE"}]},{"name":"IFCCONVERSIONBASEDUNIT","args":[{"kind":"string","value":"Custom unit"},{"kind":"unset"}]}],"index":0,"admitted":true,"derived":false},
+    {"name":"Move retained SI constituent","operation":"move","before":[{"name":"IFCSIUNIT","args":[{"kind":"unset"},{"kind":"enum","value":"METRE"}]},{"name":"IFCCONVERSIONBASEDUNIT","args":[{"kind":"string","value":"Custom unit"},{"kind":"unset"}]}],"from":0,"index":1,"admitted":true,"derived":true}
+  ]
+}

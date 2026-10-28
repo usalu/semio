@@ -1,0 +1,23 @@
+{
+  "title": "Complete IFC 4x3 Artifact Editing and Interchange",
+  "emoji": "🏗",
+  "status": "open",
+  "description": "Complete IFC4x3 editing across all MVDs, mutations/diffs/inverse, STEP I/O, BIM/FEM3D/GLB interchange, official compliance fixtures and UI inputs. Actual execution model GPT 6.1 Sol xhigh coordinator; High implementers; Low read-only auditors. Tool model enum does not yet recognize GPT6.1 so generic codex metadata used.",
+  "goal": "runningifc",
+  "sessions": [
+    "fbb8e81f-1bfa-4e53-89a6-508df0a70b35"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-21 02:35:00",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Complete IFC4x3 editing across all MVDs, mutations/diffs/inverse, STEP I/O, BIM/FEM3D/GLB interchange, official compliance fixtures and UI inputs. Actual execution model GPT 6.1 Sol xhigh coordinator; High implementers; Low read-only auditors. Tool model enum does not yet recognize GPT6.1 so generic codex metadata used.",
+      "llm": "codex",
+      "effort": "high"
+    }
+  ]
+}

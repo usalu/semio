@@ -12,6 +12,7 @@ pub enum TypedJsonNode {
     OwnedString { value: String, cursor: JsonStringWriteCursor },
     Document,
     Dictionary(DictionaryJsonCursor),
+    Child(ChildJsonCursor),
     Grid,
     TopArray { kind: TopArrayKind, index: usize, opened: bool },
     Paragraph(usize),
@@ -77,19 +78,20 @@ pub struct TypedJsonCursor {
 
 fn typed_string_source_owned_bytes(source: &StringSource) -> usize {
     match source {
-        StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => path.len().saturating_mul(size_of::<usize>()),
+        StringSource::DrawNodeValue { path, .. } | StringSource::DrawNodeStyle { path, .. } | StringSource::DrawNodeMime { path, .. } => path.capacity().saturating_mul(size_of::<usize>()),
         _ => 0,
     }
 }
 
 pub fn typed_json_node_owned_bytes(node: &TypedJsonNode) -> usize {
     match node {
-        TypedJsonNode::Scalar { bytes, .. } => bytes.len(),
+        TypedJsonNode::Scalar { bytes, .. } => bytes.capacity(),
         TypedJsonNode::Dictionary(cursor) => cursor.owned_bytes(),
+        TypedJsonNode::Child(cursor) => cursor.owned_bytes(),
         TypedJsonNode::String { source, .. } => typed_string_source_owned_bytes(source),
-        TypedJsonNode::OwnedString { value, .. } => value.len(),
+        TypedJsonNode::OwnedString { value, .. } => value.capacity(),
         TypedJsonNode::DrawNode { path, .. } | TypedJsonNode::DrawChildren { path, .. } | TypedJsonNode::DrawSegments { path, .. } | TypedJsonNode::DrawSegment { path, .. } | TypedJsonNode::DrawBytes { path, .. } => {
-            path.len().saturating_mul(size_of::<usize>())
+            path.capacity().saturating_mul(size_of::<usize>())
         }
         _ => 0,
     }
@@ -155,3 +157,5 @@ impl JsonScalar for [f32; 4] {
         Ok(bytes)
     }
 }
+
+impl TypedJsonCursor{pub fn retirement_stack_bytes(&self)->usize{self.stack.capacity().saturating_mul(size_of::<TypedJsonNode>())}}

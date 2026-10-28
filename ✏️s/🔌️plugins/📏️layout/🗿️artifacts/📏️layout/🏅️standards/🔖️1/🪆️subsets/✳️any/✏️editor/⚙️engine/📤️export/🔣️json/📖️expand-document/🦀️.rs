@@ -115,7 +115,7 @@ impl TypedJsonCursor {
             }
             TypedJsonNode::Override { page, value } => self.expand_override(page, value, snapshot)?,
             TypedJsonNode::OverrideBounds { page, value } => self.expand_override_bounds(page, value, snapshot)?,
-            TypedJsonNode::BackgroundDrawing => self.push_sequence(vec![Self::static_node(b"{\"handle\":"), TypedJsonNode::ChildHandle, Self::static_node(b",\"content\":"), TypedJsonNode::Drawing, Self::static_node(b"}")]),
+            TypedJsonNode::BackgroundDrawing => self.stack.push(TypedJsonNode::Child(ChildJsonCursor::new(semio_s_artifact_layout_layout_model::DrawingSourceAddress::Document))),
             TypedJsonNode::ChildHandle => {
                 self.push_sequence(vec![Self::static_node(b"{\"childId\":"), Self::string(StringSource::ChildId), Self::static_node(b",\"target\":"), TypedJsonNode::ArtifactRef { referenced: false }, Self::static_node(b"}")]);
             }

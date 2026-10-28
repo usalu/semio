@@ -41,3 +41,10 @@ fn dynamic_json_validation_never_scans_more_than_its_input_credit() {
         }
     }
 }
+
+#[test]
+fn page_drawing_json_loans_original_values_and_matches_independent_serde(){
+ bind(&semio_s_artifact_layout_layout_model::LAYOUT_BACKGROUND_DRAWING);bind(&semio_s_artifact_layout_layout_model::LAYOUT_PAGE_DRAWING);let source:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧪️tests/🧫️fixtures/🕸️graph/🔣️.json")).unwrap();let mut snapshot:LayoutSnapshot=semio_framework_pack_json::from_json_str(&source["cases"][0]["before"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();snapshot.pages.push(snapshot.pages[0].clone());
+ for(index,page)in snapshot.pages.iter_mut().enumerate(){let scene=VectorScene{schema:"stdio.semio.drawing".into(),canvas:semio_framework_io_ports::VectorCanvas{width:200.0+index as f64,height:300.0,background:None},styles:Vec::new(),layers:vec![semio_framework_io_ports::VectorLayer{id:"paint".into(),name:"Paint".into(),visible:true,root:VectorNode::Text{value:format!("Seite {index} Ä😀"),at:VectorPoint2{x:20.0,y:30.0},style:None}}]};page.background_drawing=Some(semio_s_artifact_layout_layout_model::page_drawing_child_handle(&format!("page-{index}"),&scene_content(&scene)).unwrap());}
+ let original=snapshot.clone();let expected:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).unwrap();let mut cursor=TypedJsonCursor::document();let mut bytes=Vec::new();loop{let(chunk,done)=cursor.advance(&snapshot).unwrap();assert!(chunk.len()<=JSON_OUTPUT_BYTES_PER_UNIT);bytes.extend(chunk);if done{break}}assert_eq!(serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),expected);assert_eq!(snapshot,original);assert!(cursor.drawing.is_none(),"original page content requires no whole VectorScene lower");
+}

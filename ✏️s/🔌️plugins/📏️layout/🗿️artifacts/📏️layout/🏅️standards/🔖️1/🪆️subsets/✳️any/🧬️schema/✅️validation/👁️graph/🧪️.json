@@ -1,0 +1,14 @@
+{
+  "title": "Borrowed Virtual Final Graph Laws",
+  "cases": [
+    "Untouched live fields retain original reference identity",
+    "Authored final replacement fields retain authored reference identity",
+    "Sparse final row ordinal follows its paid plan rather than live index",
+    "Final thread predecessor collision is observable",
+    "Final page parent removal invalidates inherited override",
+    "Layer and frame paint-order caches read their exact virtual final order",
+    "Both source replacement identities refuse before continuation polling",
+    "No denied turn reads the source and every partial owner closes"
+  ],
+  "oracle": "Existing owned semantic corpus AJV/reference graph oracle after independently applying test-only patches"
+}

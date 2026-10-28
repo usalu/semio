@@ -2,6 +2,7 @@
 //!
 //! 📍️ The addressed row sits in the MIDDLE of its ordered collection, so the concrete inverse must put it back at its original index, and the inverse steps' diffs must sum to the negative of the forward diff.
 
+use protocol::{ColdMutation as _, ColdMutationDiff as _, ColdDiffAlgebra as _};
 use semio_framework_test_fixtures::fixture_text;
 use semio_s_artifact_layout_layout_mutations::LayoutMutation;
 use semio_s_artifact_layout_layout_model::snapshot::LayoutSnapshot;

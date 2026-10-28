@@ -20,6 +20,7 @@ impl DrawingMutationDigestAuthority {
 
     pub fn variant(mutation: &DrawingMutation) -> u8 {
         match mutation {
+            DrawingMutation::SetArtboard(_) => 27,
             DrawingMutation::ImportImageAsset(_) => 25,
             DrawingMutation::RemoveImageAsset(_) => 26,
             DrawingMutation::SetLayerVisible(_) => 1,
@@ -77,6 +78,7 @@ impl DrawingMutationDigestAuthority {
         }
         if self.phase == 1 {
             match mutation {
+                DrawingMutation::SetArtboard(value)=>{self.credit.observe(digest,2,&[u8::from(value.artboard.is_some())],cx)?;self.phase=2;}
                 DrawingMutation::CreateLayer(value) => {
                     self.credit.add_source_owner(1, size_of::<Box<DrawingLayerNode>>())?;
                     self.credit.add_derived_owner(1, size_of::<Box<DrawingLayerNode>>())?;
@@ -102,6 +104,7 @@ impl DrawingMutationDigestAuthority {
             return Ok(false);
         }
         match mutation {
+            DrawingMutation::SetArtboard(value)=>{if let Some(value)=value.artboard.as_ref(){match self.phase{2=>{self.credit.scalar_f64(digest,3,value.width,cx)?;self.phase=3;Ok(false)},3=>{self.credit.scalar_f64(digest,4,value.height,cx)?;self.phase=4;Ok(false)},_=>self.finish(digest,cx)}}else{self.finish(digest,cx)}}
             DrawingMutation::DragLayers(semio_s_artifact_draw_drawing_transform::drag_layers::mutation::DragLayers { targets, .. }) | DrawingMutation::RotateLayers(semio_s_artifact_draw_drawing_transform::rotate_layers::mutation::RotateLayers { targets, .. }) | DrawingMutation::ScaleLayers(semio_s_artifact_draw_drawing_transform::scale_layers::mutation::ScaleLayers { targets, .. }) => {
                 if let Some(target) = targets.get(self.segment_index) {
                     if !self.credit.observe_owned_string(digest, 3, target, false, cx)? { return Ok(false); }

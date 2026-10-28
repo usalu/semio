@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["leases","reads","maintenanceTurns","yieldEvery"],"properties":{"leases":{"const":64},"reads":{"const":64},"maintenanceTurns":{"const":65536},"yieldEvery":{"const":32}}}

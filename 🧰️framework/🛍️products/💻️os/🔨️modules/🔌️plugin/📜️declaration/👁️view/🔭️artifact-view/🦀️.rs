@@ -145,6 +145,9 @@ impl<'a, P> ArtifactView<'a, P> {
         self
     }
 
+    /// 🎯️ Borrows a real typed child under this same original parent read and canonical operation revision.
+    pub fn child_editor_read<S:pack::snapshot::ArtifactPack+store::os_store::serialization::ArtifactStoreSnapshot+Send+Sync+'static>(&self,key:crate::child_view::MemberKeyRef<'_>)->Result<crate::child_view::editor::read::ChildEditorRead<'_,S>,Fault>{let(parent,revision)=if let Some(operation)=self.operation.as_ref(){if self.parent_document_id.is_some_and(|parent|parent!=operation.parent_document_id){return Err(plugin_sdk_fault("child editor parent identity differs from original command"));}(operation.parent_document_id.as_str(),&operation.canonical_base_revision)}else if let Some(operation)=self.render_operation.as_ref(){(self.parent_document_id.ok_or_else(||plugin_sdk_fault("child editor requires its real parent artifact identity"))?,&operation.canonical_base_revision)}else{return Err(plugin_sdk_fault("child editor requires an original parent command or render operation"));};self.children.editor_read_at(key,self.snapshot as*const P as usize,parent,revision)}
+
     /// 🪪️ Returns the actual public job authority for command handlers.
     pub fn operation(&self) -> Result<&AppOperationContext, Fault> {
         self.operation.as_ref().ok_or_else(|| plugin_sdk_fault("the artifact view is not bound to a public command operation"))
@@ -163,6 +166,9 @@ impl<'a, P> ArtifactView<'a, P> {
     }
 
     /// 🎨️ Returns the immutable identity observed by a live render/refresh pass.
+    /// 🪞️ Lends the actual render operation metadata to bounded source readers without copying its context.
+    pub fn render_operation_ref(&self)->Option<&AppRenderOperationContext>{self.render_operation.as_ref()}
+
     pub fn render_operation(&self) -> Option<AppRenderOperationContext> {
         self.render_operation
     }

@@ -1,0 +1,1105 @@
+{
+  "schema": "ifc-faceted-brep-geometry-vectors-v1",
+  "nativeExecution": false,
+  "cases": [
+    {
+      "id": "box",
+      "expected": "supported",
+      "volume": 6,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "concave",
+      "expected": "supported",
+      "volume": 10,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          3,
+          3,
+          2
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            3,
+            0
+          ],
+          [
+            3,
+            1
+          ],
+          [
+            1,
+            1
+          ],
+          [
+            1,
+            3
+          ],
+          [
+            0,
+            3
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 2,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "face-hole",
+      "expected": "supported",
+      "volume": 64,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          6,
+          6,
+          2
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "holes": [
+          [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              2
+            ]
+          ]
+        ],
+        "base": 0,
+        "height": 2,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "false-orientation-equivalent",
+      "expected": "supported",
+      "volume": 6,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": true,
+        "bound": false
+      },
+      "modifier": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "rigid-placement",
+      "expected": "supported",
+      "volume": 6,
+      "bounds": [
+        [
+          9.70447979333866,
+          20,
+          30
+        ],
+        [
+          11.910672978251212,
+          21.546376902448287,
+          33
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          10,
+          20,
+          30
+        ],
+        "rotation": 0.3
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "millimetres",
+      "expected": "supported",
+      "volume": 6,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": "MILLI",
+        "coordinateScale": 1000,
+        "siScale": 0.001
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "none"
+      }
+    },
+    {
+      "id": "with-voids",
+      "expected": "supported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": [
+          {
+            "outer": [
+              [
+                0.5,
+                0.25
+              ],
+              [
+                1.5,
+                0.25
+              ],
+              [
+                1.5,
+                0.75
+              ],
+              [
+                0.5,
+                0.75
+              ]
+            ],
+            "holes": [],
+            "base": 1,
+            "height": 1,
+            "reverse": true
+          }
+        ]
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "none"
+      },
+      "volume": 5.5,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "nonplanar-face",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "point-coordinates",
+        "ordinal": 0,
+        "coordinates": [
+          0,
+          0,
+          0.2
+        ]
+      }
+    },
+    {
+      "id": "self-crossing-face",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "polygon-order",
+        "ordinal": 0,
+        "order": [
+          0,
+          2,
+          1,
+          3
+        ]
+      }
+    },
+    {
+      "id": "missing-outer-marker",
+      "expected": "supported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "no-outer"
+      },
+      "volume": 6,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          2,
+          1,
+          3
+        ]
+      ]
+    },
+    {
+      "id": "duplicate-outer-marker",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "two-outer"
+      }
+    },
+    {
+      "id": "empty-bounds",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "empty-bounds"
+      }
+    },
+    {
+      "id": "wrong-bound-role",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "wrong-bound"
+      }
+    },
+    {
+      "id": "wrong-loop-role",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "wrong-loop"
+      }
+    },
+    {
+      "id": "wrong-point-role",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "wrong-point"
+      }
+    },
+    {
+      "id": "two-dimensional-point",
+      "expected": "unsupported",
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            2,
+            0
+          ],
+          [
+            2,
+            1
+          ],
+          [
+            0,
+            1
+          ]
+        ],
+        "holes": [],
+        "base": 0,
+        "height": 3,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "point-coordinates",
+        "ordinal": 0,
+        "dimensions": 2
+      }
+    },
+    {
+      "id": "hole-no-outer",
+      "expected": "supported",
+      "volume": 64,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          6,
+          6,
+          2
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "holes": [
+          [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              2
+            ]
+          ]
+        ],
+        "base": 0,
+        "height": 2,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "no-outer"
+      }
+    },
+    {
+      "id": "outer-marker-reordered",
+      "expected": "supported",
+      "volume": 64,
+      "bounds": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          6,
+          6,
+          2
+        ]
+      ],
+      "geometry": {
+        "outer": [
+          [
+            0,
+            0
+          ],
+          [
+            6,
+            0
+          ],
+          [
+            6,
+            6
+          ],
+          [
+            0,
+            6
+          ]
+        ],
+        "holes": [
+          [
+            [
+              2,
+              2
+            ],
+            [
+              2,
+              4
+            ],
+            [
+              4,
+              4
+            ],
+            [
+              4,
+              2
+            ]
+          ]
+        ],
+        "base": 0,
+        "height": 2,
+        "voids": []
+      },
+      "unit": {
+        "prefix": null,
+        "coordinateScale": 1,
+        "siScale": 1
+      },
+      "placement": {
+        "origin": [
+          0,
+          0,
+          0
+        ],
+        "rotation": 0
+      },
+      "orientation": {
+        "reversePolygon": false,
+        "bound": true
+      },
+      "modifier": {
+        "kind": "outer-last"
+      }
+    }
+  ]
+}

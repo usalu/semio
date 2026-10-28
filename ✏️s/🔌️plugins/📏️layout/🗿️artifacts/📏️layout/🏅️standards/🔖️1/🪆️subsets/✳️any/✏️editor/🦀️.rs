@@ -154,7 +154,7 @@ pub use layout_app_manifest::create_layout_app;
 
 #[path = "📤️export-tool-job/🦀️.rs"]
 mod export_tool_job;
-pub use export_tool_job::{LayoutExportJobFactory, LayoutExportToolJob, LayoutExportToolPayload};
+pub use export_tool_job::LayoutExportJobFactory;
 
 #[path = "🎥️media-export-job-and-factories/🦀️.rs"]
 mod media_export_job_and_factories;
@@ -191,6 +191,8 @@ semio_framework_plugin::app_commands! {
         "exportPng" as "export-png" => export_png::ExportPng,
         "exportSvg" as "export-svg" => export_svg::ExportSvg,
         "exportPdf" as "export-pdf" => export_pdf::ExportPdf,
+        "exportStep" as "export-step" => export_step::ExportStep,
+        "exportIdml" as "export-idml" => export_idml::ExportIdml,
         "exportPackage" as "export-package" => export_package::ExportPackage,
         "engagementSubmit" as "engagement-submit" => engagement_submit::EngagementSubmit,
         "deleteSelection" as "delete-selection" => delete_selection::DeleteSelection,
@@ -216,6 +218,7 @@ use semio_s_artifact_layout_layout_editor_commands::engagement_input;
 use semio_s_artifact_layout_layout_editor_commands::engagement_submit;
 use semio_s_artifact_layout_layout_editor_commands::export_package;
 use semio_s_artifact_layout_layout_editor_commands::export_pdf;
+use semio_s_artifact_layout_layout_editor_commands::{export_step, export_idml};
 use semio_s_artifact_layout_layout_editor_commands::export_png;
 use semio_s_artifact_layout_layout_editor_commands::export_svg;
 use semio_s_artifact_layout_layout_editor_panels::focus_preflight_issue;

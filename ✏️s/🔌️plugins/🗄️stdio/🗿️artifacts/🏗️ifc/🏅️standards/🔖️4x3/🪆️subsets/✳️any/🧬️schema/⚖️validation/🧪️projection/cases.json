@@ -1,0 +1,1126 @@
+{
+  "version": 1,
+  "numericEquality": "finite-real-value-with-zero-sign-equivalence",
+  "source": {
+    "file": "../\ud83e\uddea\ufe0fvector/source.ifc",
+    "schema": "IFC4X3_ADD2",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860"
+  },
+  "functions": [
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "absent-z",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "default-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "default-positive-x",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "default-negative-x",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "7"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          1,
+          0,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "parallel-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "9"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "argument-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "z-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "negative-x",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "7"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          -1,
+          0,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "oblique-xy",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "8"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0.6,
+          0.8,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCFIRSTPROJAXIS",
+      "id": "oblique-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "10"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0.9428090415820635,
+          -0.23570226039551587,
+          -0.23570226039551587
+        ]
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "default-y",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "explicit-y",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "parallel-negative-x",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "7"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "parallel-z",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "9"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "oblique-argument",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "10"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "negative-first-axis",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "7"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          1,
+          0
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "default-parallel-first",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "argument-2d",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "absent-z",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "absent-x",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSECONDPROJAXIS",
+      "id": "negative-projection",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "7"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        },
+        {
+          "kind": "entity",
+          "id": "10"
+        }
+      ],
+      "expected": {
+        "kind": "direction",
+        "ratios": [
+          0,
+          0,
+          1
+        ]
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-defaults",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-first-x",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-first-y-flip",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0,
+            1
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-second-y",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-second-x",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0,
+            -1
+          ],
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-scaled",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0.6,
+            0.8
+          ],
+          [
+            -0.8,
+            0.6
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-scaled-no-flip",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "entity",
+          "id": "3"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0.6,
+            0.8
+          ],
+          [
+            -0.8,
+            0.6
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "2d-scaled-flip",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0.6,
+            0.8
+          ],
+          [
+            0.8,
+            -0.6
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-defaults",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-first-y-partial",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "9"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0,
+            1,
+            0
+          ],
+          null,
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-first-y-explicit-second",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        },
+        {
+          "kind": "entity",
+          "id": "7"
+        },
+        {
+          "kind": "entity",
+          "id": "9"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            -1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-default-third",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-third-x-partial",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0,
+            1,
+            0
+          ],
+          null,
+          [
+            1,
+            0,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-third-x-explicit-second",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "9"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            1,
+            0,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-parallel-first-third",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "entity",
+          "id": "6"
+        },
+        {
+          "kind": "entity",
+          "id": "7"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          null,
+          null,
+          [
+            -1,
+            0,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "non3-else",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "0"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "unknown-dimension-else",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          [
+            1,
+            0
+          ],
+          [
+            0,
+            1
+          ]
+        ]
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCBASEAXIS",
+      "id": "3d-2d-third",
+      "args": [
+        {
+          "kind": "integer",
+          "value": "3"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "axes",
+        "items": [
+          null,
+          null,
+          [
+            1,
+            0
+          ]
+        ]
+      },
+      "tolerance": 0
+    }
+  ]
+}

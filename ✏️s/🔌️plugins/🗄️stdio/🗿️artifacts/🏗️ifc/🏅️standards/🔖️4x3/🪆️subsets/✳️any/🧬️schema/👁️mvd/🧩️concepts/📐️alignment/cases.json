@@ -1,0 +1,404 @@
+{
+ "cases": [
+  {
+   "id": "horizontal-terminal-zero",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass"
+  },
+  {
+   "id": "vertical-terminal-zero",
+   "kind": "vertical",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass"
+  },
+  {
+   "id": "cant-terminal-zero",
+   "kind": "cant",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass"
+  },
+  {
+   "id": "horizontal-terminal-nonzero",
+   "kind": "horizontal",
+   "lengths": [
+    0,
+    10
+   ],
+   "applicable": true,
+   "expected": "fail"
+  },
+  {
+   "id": "vertical-terminal-nonzero",
+   "kind": "vertical",
+   "lengths": [
+    0,
+    10
+   ],
+   "applicable": true,
+   "expected": "fail"
+  },
+  {
+   "id": "cant-terminal-nonzero",
+   "kind": "cant",
+   "lengths": [
+    0,
+    10
+   ],
+   "applicable": true,
+   "expected": "fail"
+  },
+  {
+   "id": "signedzero-terminal",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass",
+   "variant": "signedzero"
+  },
+  {
+   "id": "empty-list",
+   "kind": "horizontal",
+   "lengths": [],
+   "applicable": true,
+   "expected": "incomplete"
+  },
+  {
+   "id": "unknown-applicability",
+   "kind": "vertical",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": null,
+   "expected": "incomplete"
+  },
+  {
+   "id": "explicit-not-applicable",
+   "kind": "cant",
+   "lengths": [
+    10,
+    1
+   ],
+   "applicable": false,
+   "expected": "not-applicable"
+  },
+  {
+   "id": "wrong-design-domain",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "wrong-design"
+  },
+  {
+   "id": "complex-direct-slots",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass",
+   "variant": "complex"
+  },
+  {
+   "id": "duplicate-target",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "duplicate-target"
+  },
+  {
+   "id": "complex-vertical-direct-slots",
+   "kind": "vertical",
+   "lengths": [10,0],
+   "applicable": true,
+   "expected": "pass",
+   "variant": "complex"
+  },
+  {
+   "id": "complex-cant-direct-slots",
+   "kind": "cant",
+   "lengths": [10,0],
+   "applicable": true,
+   "expected": "pass",
+   "variant": "complex"
+  },
+  {
+   "id": "missing-target",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "missing-target"
+  },
+  {
+   "id": "wrong-target-kind",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "fail",
+   "variant": "wrong-target"
+  },
+  {
+   "id": "unknown-target-kind",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "unknown-target"
+  },
+  {
+   "id": "mixed-layout-kinds",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "mixed-layout"
+  },
+  {
+   "id": "competing-lists",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "competing-lists"
+  },
+  {
+   "id": "unrelated-relationship",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "unrelated-relationship"
+  },
+  {
+   "id": "other-reference-is-not-owner",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "other-owner"
+  },
+  {
+   "id": "duplicate-related-attribute",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "duplicate-attribute"
+  },
+  {
+   "id": "nonreference-member",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "nonreference-member"
+  },
+  {
+   "id": "dangling-terminal",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "dangling-terminal"
+  },
+  {
+   "id": "ambiguous-terminal",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "ambiguous-terminal"
+  },
+  {
+   "id": "wrong-member",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "wrong-member"
+  },
+  {
+   "id": "dangling-design",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "dangling-design"
+  },
+  {
+   "id": "typed-measure",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass",
+   "variant": "typed-measure"
+  },
+  {
+   "id": "wrong-measure-tag",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "wrong-measure-tag"
+  },
+  {
+   "id": "typed-multiple-items",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "typed-multiple-items"
+  },
+  {
+   "id": "integer-zero",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "pass",
+   "variant": "integer-zero"
+  },
+  {
+   "id": "integer-large",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "fail",
+   "variant": "integer-large"
+  },
+  {
+   "id": "tiny-nonzero",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "fail",
+   "variant": "tiny"
+  },
+  {
+   "id": "negative-nonzero",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "fail",
+   "variant": "negative"
+  },
+  {
+   "id": "string-zero",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "string-zero"
+  },
+  {
+   "id": "unknown-complex",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "unknown-complex"
+  },
+  {
+   "id": "earlier-unresolved-over-fail",
+   "kind": "horizontal",
+   "lengths": [
+    10,
+    0
+   ],
+   "applicable": true,
+   "expected": "incomplete",
+   "variant": "earlier-unresolved"
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+# IFC4 Semantic Inspector Final Peer Review
+
+Read-only source review2026-10-21 of current schema/🔎️semantics, io/🔎️inspector, editor/viewer and geometry surface integration. No production edits, native typecheck or UI dispatch execution. Existing report ifc4-inspector.md was read; current TS source now has8 test groups, so older5-group count is stale. Execution results belong to author; this audit inspected actual tests and code.
+
+## Findings Surfaced to Author
+
+**P2: GlobalId duplicate detection skips valid unsupported IfcRoot types.** schema/🔎️semantics/🦀️.rs edit_semantic checks another entity only when descriptors(candidate) exposes globalId. The explicit supported type map omits valid root entities such as IFCACTOR and IFCACTIONREQUEST, as well as complex roots. Consequently changing a supported IFCWALL GlobalId to an existing unsupported root's GUID is accepted. The selected field is advertised as validated editable IFC GlobalId, so uniqueness must check the full IFC root population. Use the upcoming official catalog subtype membership (IfcRoot) or an explicit complete root classification; do not reuse the limited UI descriptor whitelist as schema membership. Add unsupported-root and complex-root collision neutral cases; readonly GlobalId is safer until completeness is established. TypeScript parity must use the same complete check.
+
+**P2: Stale selection/cancellation exposes raw internal error strings in UI.** io/🔎️inspector/🦀️.rs render converts every project_semantics Err(reason) to message(&reason), so a canonical stale ifc-ID prints semantic-entity-missing; original cancellation/yield prints cancelled/limited in either locale. Missing selected id can occur before topology pruning or by an invalid incoming selection. Localize these expected states with the same explicit Locale match as the empty prompt and distinguish cancellation/limit from a successful inspector projection. Retain diagnostic code separately if needed. Native rendering should not publish a partial field set as complete after projection cancellation (currently it does abort before fields, which is sound).
+
+## Framework API Checks
+
+Earlier concrete builder defects are fixed: navigation now uses ui::button(ui::Label(...)), Trigger::Activate, UiMapBuilder.try_insert(String,UiValue), ui::text(ui::Label(...)); these match the admitted PDF sibling APIs. Shared provider exact call order provider,publication_revision,locale,controller,TreeWindows is correct. ActionId::try_v1 uses the owning controller plus framework interactionSelect id, and navigation args carry domainId/targets/merge/method with exact decimal text. No additional proved native API/signature mismatch was found in current source.
+
+ArtifactEditor/ArtifactViewer interaction_topology is synchronous and returns Result<protocol::InteractionTopology,semio_framework_value::ValueError>; current overrides match. HierarchyProvider::Topology is a unit variant, current domain installation matches. One TopologyNode per actual entity preserves reference navigation to metadata/geometry as well as products, and domain generation removes deleted identities through framework topology pruning. The main world3d render now publishes method pick (matching declared Pick) and entity granularity; previous rectangle mismatch was avoided. All surface main/inspector original-context render routes receive the original InteractionView and StepContext.
+
+## Event and Inverse Pipeline
+
+Stable /ifc-DECIMAL_U64/attribute paths bypass only the default persisted-path admission through snapshot_edit_is_admitted, then snapshot_edit_special resolves them before generic paths. Ordinary snapshot paths fall back to existing generic admission/rules; existing complex edits remain the next special handler. Recognized malformed semantic paths fail closed. Per-action paths do not reference current selection, so changing selection while a draft is open cannot redirect edits to another entity.
+
+semantic_edit_admission bounds path length128 and string bytes8192 before semantic planning; unsupported non-scalar events refuse. However full graph target lookup and GUID collision checks are synchronous during bounded-first-step admission with no progress tick. Existing type map/field count are finite; large document search cost remains an explicit control limitation. Do not claim fully resumable inspector edit admission from scalar-size checks alone.
+
+Semantic SetValue translates to existing IfcMutation::SetEntityArg targeting stable id/index, skips noops, and shared snapshot factory publishes through check_publication_limits and retained store preparation. Optional RemoveValue maps Null->IfcValue::Unset; it does not RemoveEntityArg or shift inherited tuple slots. Existing TS tests apply central mutation and central inverse and compare original snapshot exactly, including entity-order reversal.
+
+## Fields, Empty/Unset, Locale and Exact Identity
+
+Canonical parser roundtrips decimal u64 (reject0/leadingzero/negative/extra segments/overflow); no id->Number conversion appears. Provider readonly capabilities disable rename/reorder, reference fields and malformed/too-large projections. Optional valid Unset has a typed empty-string creation template, while an empty string remains distinct from Unset. Generic full snapshot Details remains available in editor's inspector/details tab stack, permitting repair of unsupported/invalid fields. Viewer renders same provider with editable=false; edit/remove capabilities disabled. Normal field and empty-state labels explicitly support EN/DE.
+
+Reference collection traverses primary, additional complex constituents, nested aggregates and typed values under caller tick, preserving exact IDs. Forward links include dangling ids (no current entity filter); pressing such a link is handled by topology or stale-state message, not an artifact write. Duplicate source entity ids are diagnosed by projection, but edit_semantic alone finds first target; malformed snapshot admission should reject duplicate ids before retained mutation publication. Add a direct duplicate-id semantic edit refusal if author promises semantic helper safety independently of store admission.
+
+## Tests and Remaining Evidence Gaps
+
+Current TS source8groups cover neutral attributes/references, mutation+inverse/entity-reorder, Unicode limits/emptyvsUnset, every projection cancellation tick, u64canonical IDs, independentAJV shape values, nested typed/complex references, large/malformed read-only projection. These do not exercise native UI tree bindings/retained synthetic-path admission, view-only provider capabilities, field draft identity on selection change, optional Clear/thenCreate UI controls, stale selection topology invalidation, localized cancellation/limit/missing states, GlobalId collision outside supported type map, or long bounded admission timing. Add native assembly/admission tests and one actual host dispatch test when build is available; grammar parse alone cannot establish correct component/builder types or action routing.
+
+## Scope
+
+The current type whitelist is an intentionally partial semantic UI vocabulary, not the complete776-entity IFC4 declaration catalog. Full details remains structural editing; this peer audit does not claim complete EXPRESS/MVD validation or native end-to-end success. Upcoming catalog extraction should derive inherited field metadata once and reuse this UI edit policy instead of growing a parallel handwritten full IFC schema.
+
+## Author Correction Follow-Up
+
+Later source readiness includes normative catalog ifc4_is_subtype for full IfcRoot GlobalId duplicate classification (rather than partial UI whitelist), unsupportedIFCACTOR/nonrootCOLOURRGB regression cases, localized stale/cancel/limit UI states, final projection original-control checks, and missing reference diagnostics/navigation filtering. Actual final source read confirms localized failures and final guards; author reports11TSsemantic groups passed0diagnostics, not independently executed by this audit. Earlier findings describe reviewed snapshot; they are no longer claimed outstanding after these changes. Shared contextual lifecycle has separate ifc-contextual-edit-audit.md with final source verification.

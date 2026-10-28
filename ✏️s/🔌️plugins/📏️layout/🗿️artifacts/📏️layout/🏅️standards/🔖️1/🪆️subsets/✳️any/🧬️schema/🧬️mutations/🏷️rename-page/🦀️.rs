@@ -1,6 +1,5 @@
 //! 🏷️ `rename-page` — changes a page's identity `name` field.
 
-
 use semio_s_artifact_layout_layout_diff::{LayoutPagesDelta, PagePatch};
 use semio_s_artifact_layout_layout_diff::LayoutPagesModification;
 use semio_s_artifact_layout_layout_diff::LayoutDiff;

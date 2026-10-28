@@ -45,7 +45,7 @@ CREATE TABLE ifc_argument (
 );
 CREATE TABLE ifc_value (
   id INTEGER PRIMARY KEY,
-  kind TEXT NOT NULL CHECK (kind IN ('unset','derived','integer','real','string','enum','reference','aggregate','typedValue')),
+  kind TEXT NOT NULL CHECK (kind IN ('unset','derived','integer','real','string','binary','enum','reference','aggregate','typedValue')),
   integer_value INTEGER,
   real_value REAL,
   string_value TEXT,
@@ -56,7 +56,7 @@ CREATE TABLE ifc_value (
   real_bits INTEGER,
   real_class TEXT CHECK (real_class IN ('finite','positiveInfinity','negativeInfinity','nan')),
   CHECK ((kind = 'integer') = (integer_value IS NOT NULL)),
-  CHECK ((kind = 'string') = (string_value IS NOT NULL)),
+  CHECK ((kind IN ('string','binary')) = (string_value IS NOT NULL)),
   CHECK ((kind = 'enum') = (enum_value IS NOT NULL)),
   CHECK ((kind = 'reference') = (reference_instance_id IS NOT NULL)),
   CHECK (kind = 'reference' OR reference_entity_id IS NULL),

@@ -1,0 +1,246 @@
+{
+  "scope": "explicit-three-representation-clauses",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "extruded",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "revolved",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcRevolvedAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "extruded-tapered",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolidTapered"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "revolved-tapered",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcRevolvedAreaSolidTapered"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "fixed-reference",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcFixedReferenceSweptAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "surface-curve",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSurfaceCurveSweptAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "directrix-derived",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcDirectrixDerivedReferenceSweptAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "disk",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSweptDiskSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "disk-polygonal",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSweptDiskSolidPolygonal"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "abstract-area-membership",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSweptAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "abstract-directrix-membership",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcDirectrixCurveSweptAreaSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "mixed-area-disk",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolidTapered",
+        "IfcSweptDiskSolid"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "horizontal-sectioned-concept-boundary",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSectionedSolidHorizontal"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "sectioned-spine",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSectionedSpine"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "sectioned-surface",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSectionedSurface"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "faceted-brep",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "tessellation",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-foreign",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSweptDiskSolid",
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "empty-items",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [],
+      "expected": "pass"
+    },
+    {
+      "id": "wrong-identifier",
+      "applicable": true,
+      "identifier": "Axis",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSweptDiskSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "basic-type",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "excluded",
+      "applicable": false,
+      "identifier": "Axis",
+      "type": "Tessellation",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "not-applicable"
+    },
+    {
+      "id": "unresolved",
+      "applicable": null,
+      "identifier": "Body",
+      "type": "AdvancedSweptSolid",
+      "items": [
+        "IfcSweptDiskSolid"
+      ],
+      "expected": "incomplete"
+    }
+  ]
+}

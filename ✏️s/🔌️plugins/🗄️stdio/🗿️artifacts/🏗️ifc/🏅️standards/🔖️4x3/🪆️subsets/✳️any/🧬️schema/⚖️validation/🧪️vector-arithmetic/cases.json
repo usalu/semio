@@ -1,0 +1,619 @@
+{
+  "version": 1,
+  "numericEquality": "finite-real-value-with-zero-sign-equivalence",
+  "source": {
+    "file": "../\ud83e\uddea\ufe0fvector/source.ifc",
+    "schema": "IFC4X3_ADD2",
+    "expSha256": "f67c8762b13a099c28082061e6f16b9ef1284ceec34069792afc702725675860",
+    "physical": "unchanged authored closed vector source; no duplicate source asset"
+  },
+  "functions": [
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "direction-positive",
+      "args": [
+        {
+          "kind": "real",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0.6,
+          0.8
+        ],
+        "magnitude": 2
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "direction-negative",
+      "args": [
+        {
+          "kind": "real",
+          "value": "-2"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          -0.6,
+          -0.8
+        ],
+        "magnitude": 2
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "direction-zero",
+      "args": [
+        {
+          "kind": "real",
+          "value": "0"
+        },
+        {
+          "kind": "entity",
+          "id": "4"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0.6,
+          0.8
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "vector-positive",
+      "args": [
+        {
+          "kind": "real",
+          "value": "2"
+        },
+        {
+          "kind": "entity",
+          "id": "11"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0.6,
+          0.8,
+          0
+        ],
+        "magnitude": 10
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "vector-negative",
+      "args": [
+        {
+          "kind": "real",
+          "value": "-2"
+        },
+        {
+          "kind": "entity",
+          "id": "11"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          -0.6,
+          -0.8,
+          0
+        ],
+        "magnitude": 10
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "zero-vector",
+      "args": [
+        {
+          "kind": "real",
+          "value": "-2"
+        },
+        {
+          "kind": "entity",
+          "id": "12"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0.6,
+          0.8,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "absent-scalar",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "11"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCSCALARTIMESVECTOR",
+      "id": "absent-vector",
+      "args": [
+        {
+          "kind": "real",
+          "value": "2"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "orthogonal2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1,
+          1
+        ],
+        "magnitude": 1.4142135623730951
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "scaled2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1.6,
+          0.8
+        ],
+        "magnitude": 1.788854381999832
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "parallel2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          2,
+          0
+        ],
+        "magnitude": 2
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "opposite2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "3"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "vector-direction3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          4,
+          4,
+          0
+        ],
+        "magnitude": 5.656854249492381
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "vector-vector3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "entity",
+          "id": "11"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          6,
+          8,
+          0
+        ],
+        "magnitude": 10
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "zero-vector3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "entity",
+          "id": "12"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          3,
+          4,
+          0
+        ],
+        "magnitude": 5
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "dimension-mismatch",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "absent-left",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORSUM",
+      "id": "absent-right",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "orthogonal2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "2"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1,
+          -1
+        ],
+        "magnitude": 1.4142135623730951
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "scaled2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "4"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          -0.4,
+          0.8
+        ],
+        "magnitude": 0.894427190999916
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "parallel2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "1"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          1,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "opposite2",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "3"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          2,
+          0
+        ],
+        "magnitude": 2
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "vector-direction3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          2,
+          4,
+          0
+        ],
+        "magnitude": 4.47213595499958
+      },
+      "tolerance": 1e-15
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "vector-vector3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "entity",
+          "id": "11"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          0.6,
+          0.8,
+          0
+        ],
+        "magnitude": 0
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "zero-vector3",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "11"
+        },
+        {
+          "kind": "entity",
+          "id": "12"
+        }
+      ],
+      "expected": {
+        "kind": "vector",
+        "orientation": [
+          3,
+          4,
+          0
+        ],
+        "magnitude": 5
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "dimension-mismatch",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "1"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "absent-left",
+      "args": [
+        {
+          "kind": "unknown"
+        },
+        {
+          "kind": "entity",
+          "id": "5"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    },
+    {
+      "owner": "IFCVECTORDIFFERENCE",
+      "id": "absent-right",
+      "args": [
+        {
+          "kind": "entity",
+          "id": "5"
+        },
+        {
+          "kind": "unknown"
+        }
+      ],
+      "expected": {
+        "kind": "unknown"
+      },
+      "tolerance": 0
+    }
+  ]
+}

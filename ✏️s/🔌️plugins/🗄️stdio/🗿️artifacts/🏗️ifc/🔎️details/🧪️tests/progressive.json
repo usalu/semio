@@ -1,0 +1,18 @@
+{
+  "schema":"stdio.ifc.progressive-preimage-tests/1",
+  "snapshot":{"schema":"stdio.ifc","header":{"fileDescription":[],"fileName":[],"fileSchema":[]},"entities":[{"id":1,"name":"IFCORGANIZATION","args":[{"kind":"string","value":"original"},{"kind":"real","value":-0.0},{"kind":"integer","value":2},{"kind":"integer","value":3}],"complex":[]},{"id":2,"name":"IFCORGANIZATION","args":[],"complex":[]}]},
+  "cases":[
+    {"name":"Repeated same slot","mutations":[{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"first"}},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"second"}}]},
+    {"name":"Inserted entity then leaf write","mutations":[{"mutation":"insertEntity","index":0,"entity":{"id":3,"name":"IFCORGANIZATION","args":[{"kind":"string","value":"created"}],"complex":[]}},{"mutation":"setEntityArg","id":3,"index":0,"value":{"kind":"string","value":"edited"}}]},
+    {"name":"Argument index shifts","mutations":[{"mutation":"insertEntityArg","id":1,"index":0,"value":{"kind":"string","value":"inserted"}},{"mutation":"setEntityArg","id":1,"index":1,"value":{"kind":"string","value":"shifted"}},{"mutation":"removeEntityArg","id":1,"index":2}]},
+    {"name":"Ascending sparse removals","mutations":[{"mutation":"removeEntityArg","id":1,"index":0},{"mutation":"removeEntityArg","id":1,"index":1}]},
+    {"name":"Descending sparse removals","mutations":[{"mutation":"removeEntityArg","id":1,"index":3},{"mutation":"removeEntityArg","id":1,"index":1}]},
+    {"name":"Delete reinsert same identity then edit","mutations":[{"mutation":"removeEntity","id":1},{"mutation":"insertEntity","index":1,"entity":{"id":1,"name":"IFCORGANIZATION","args":[{"kind":"string","value":"replacement"}],"complex":[]}},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"final"}}]},
+    {"name":"Inserted entity then delete","mutations":[{"mutation":"insertEntity","index":1,"entity":{"id":3,"name":"IFCORGANIZATION","args":[{"kind":"real","value":-0.0}],"complex":[]}},{"mutation":"removeEntity","id":3}]},
+    {"name":"Edited entity then remove with shifted position","mutations":[{"mutation":"insertEntity","index":0,"entity":{"id":3,"name":"IFCORGANIZATION","args":[],"complex":[]}},{"mutation":"setEntityName","id":1,"name":"IFCPERSON"},{"mutation":"setEntityComplex","id":1,"complex":[{"name":"IFCACTORROLE","args":[{"kind":"unset"}]}]},{"mutation":"setEntityArg","id":1,"index":0,"value":{"kind":"string","value":"immediate"}},{"mutation":"removeEntity","id":1}]},
+    {"name":"Repeated header tuple","mutations":[{"mutation":"setFileName","values":[{"kind":"string","value":"first"}]},{"mutation":"setFileName","values":[{"kind":"string","value":"second"}]}]},
+    {"name":"Repeated name and complex owners","mutations":[{"mutation":"setEntityName","id":1,"name":"IFCPERSON"},{"mutation":"setEntityName","id":1,"name":"IFCORGANIZATION"},{"mutation":"setEntityComplex","id":1,"complex":[{"name":"IFCACTORROLE","args":[]}]},{"mutation":"setEntityComplex","id":1,"complex":[]}]},
+    {"name":"Exact signed zero preimage","mutations":[{"mutation":"setEntityArg","id":1,"index":1,"value":{"kind":"real","value":0.0}},{"mutation":"setEntityArg","id":1,"index":1,"value":{"kind":"real","value":-0.0}}]}
+  ],
+  "assertions":["Each inverse equals the central immediate preimage byte for byte","Undo restores all original real bits and graph values","Original cancellation before every retained advance emits no batch","Original and pending body owners stay stable until controlled close","Different temporary facades may borrow the same retained original owner","Changing the original owner or pending slice is refused before continued encoding"]
+}

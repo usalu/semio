@@ -1,0 +1,10 @@
+from pathlib import Path
+p=Path('✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🔎️details/type_input_set_controls.rs')
+s=p.read_text(encoding='utf-8')
+s=s.replace('//! 🧷️ SET operations bind exact original array addresses without manufacturing semantic members.','//! 🧷️ Collection operations bind exact original array addresses without manufacturing semantic members.')
+s=s.replace('2*size_of::<(String,DslValue)>()+18','if !create&&field.kind==InputKind::Array{3*size_of::<(String,DslValue)>()+17}else{2*size_of::<(String,DslValue)>()+18}')
+s=s.replace('if create{"aggregate"}else{"reference"}', 'if create{"aggregate"}else if field.kind==InputKind::Array{"real"}else{"reference"}')
+s=s.replace('if create{DslValue::Array(Vec::new())}else{DslValue::String(String::new())}', 'if create{DslValue::Array(Vec::new())}else if field.kind==InputKind::Array{DslValue::Object(vec![("bits".into(),DslValue::String(String::new()))])}else{DslValue::String(String::new())}')
+s=s.replace('if let DslValue::String(value)=value{retained+=value.capacity();}', 'match value{DslValue::String(value)=>retained+=value.capacity(),DslValue::Object(fields)=>{retained+=fields.capacity()*size_of::<(String,DslValue)>();for(key,value)in fields{retained+=key.capacity();if let DslValue::String(value)=value{retained+=value.capacity();}}},_=>{}}')
+s=s.replace('fn text_path(row:&str,member:&str)->Vec<String>{["value","$ifcInputs",row,"value","value","items","0","value",member,"value"].iter().map(|word|String::from(*word)).collect()}', 'fn text_path(row:&str,member:&str,real:bool)->Vec<String>{let words=["value","$ifcInputs",row,"value","value","items","0","value",member,"value","bits"];words[..if real{11}else{10}].iter().map(|word|String::from(*word)).collect()}')
+p.write_text(s,encoding='utf-8',newline='\n')

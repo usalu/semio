@@ -1,0 +1,124 @@
+{
+  "cases": [
+    {
+      "name": "ASCII",
+      "input": "a",
+      "body": "a",
+      "quoted": "\"a\""
+    },
+    {
+      "name": "apostrophe",
+      "input": "'",
+      "body": "'",
+      "quoted": "\"'\""
+    },
+    {
+      "name": "double quote",
+      "input": "\"",
+      "body": "\\\"",
+      "quoted": "\"\\\"\""
+    },
+    {
+      "name": "backslash",
+      "input": "\\",
+      "body": "\\\\",
+      "quoted": "\"\\\\\""
+    },
+    {
+      "name": "line feed",
+      "input": "\n",
+      "body": "\\n",
+      "quoted": "\"\\n\""
+    },
+    {
+      "name": "tab",
+      "input": "\t",
+      "body": "\\t",
+      "quoted": "\"\\t\""
+    },
+    {
+      "name": "carriage return",
+      "input": "\r",
+      "body": "\\r",
+      "quoted": "\"\\r\""
+    },
+    {
+      "name": "nul",
+      "input": "\u0000",
+      "body": "\\0",
+      "quoted": "\"\\0\""
+    },
+    {
+      "name": "escape",
+      "input": "\u001b",
+      "body": "\\u{1b}",
+      "quoted": "\"\\u{1b}\""
+    },
+    {
+      "name": "NEL",
+      "input": "",
+      "body": "\\u{85}",
+      "quoted": "\"\\u{85}\""
+    },
+    {
+      "name": "NBSP",
+      "input": " ",
+      "body": "\\u{a0}",
+      "quoted": "\"\\u{a0}\""
+    },
+    {
+      "name": "BOM",
+      "input": "﻿",
+      "body": "\\u{feff}",
+      "quoted": "\"\\u{feff}\""
+    },
+    {
+      "name": "combining accent",
+      "input": "́",
+      "body": "\\u{301}",
+      "quoted": "\"\\u{301}\""
+    },
+    {
+      "name": "joiner",
+      "input": "‍",
+      "body": "\\u{200d}",
+      "quoted": "\"\\u{200d}\""
+    },
+    {
+      "name": "private use",
+      "input": "",
+      "body": "\\u{e000}",
+      "quoted": "\"\\u{e000}\""
+    },
+    {
+      "name": "unassigned",
+      "input": "͸",
+      "body": "\\u{378}",
+      "quoted": "\"\\u{378}\""
+    },
+    {
+      "name": "halfwidth voiced",
+      "input": "ﾞ",
+      "body": "ﾞ",
+      "quoted": "\"ﾞ\""
+    },
+    {
+      "name": "halfwidth semi-voiced",
+      "input": "ﾟ",
+      "body": "ﾟ",
+      "quoted": "\"ﾟ\""
+    },
+    {
+      "name": "CJK",
+      "input": "親",
+      "body": "親",
+      "quoted": "\"親\""
+    },
+    {
+      "name": "emoji",
+      "input": "🌍",
+      "body": "🌍",
+      "quoted": "\"🌍\""
+    }
+  ]
+}

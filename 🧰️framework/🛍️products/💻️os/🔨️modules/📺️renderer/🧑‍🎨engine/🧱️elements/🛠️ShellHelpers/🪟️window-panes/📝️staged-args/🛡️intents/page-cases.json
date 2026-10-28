@@ -1,0 +1,13 @@
+{
+  "page": { "fieldOffset": "9007199254740993", "diagnosticOffset": "18446744073709551615", "choice": { "path": ["entries", "0", "template"], "offset": "32" } },
+  "attacks": [
+    { "id": "surface", "field": "surface", "value": "other" },
+    { "id": "publication", "field": "revision", "value": "other" },
+    { "id": "node", "field": "node", "value": "other" },
+    { "id": "key", "field": "nodeKey", "value": "other" },
+    { "id": "trigger", "field": "trigger", "value": "change" },
+    { "id": "version", "field": "action", "value": { "scope": "ifc", "name": "framework.stageActionFormPage", "version": 2 } },
+    { "id": "raw-input", "field": "input", "value": "64" },
+    { "id": "non-integer-sequence", "field": "seq", "value": "2" }
+  ]
+}

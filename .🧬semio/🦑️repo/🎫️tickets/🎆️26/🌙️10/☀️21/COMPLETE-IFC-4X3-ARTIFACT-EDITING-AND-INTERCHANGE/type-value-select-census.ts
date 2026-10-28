@@ -1,0 +1,8 @@
+import{writeFileSync}from'node:fs';
+import{ifc4x3Catalog as catalog}from'../../../../../../../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/🏅️standards/🔖️4x3/🪆️subsets/✳️any/🧬️schema/📚️catalog/🟦️.ts';
+const paths:{name:string,path:string[],kind:string,expression:unknown,where:unknown}[]=[];
+function scan(name:string,path:string[]){if(path.includes(name))throw Error('cycle');const type=catalog.types[name];if(type?.kind==='select'){for(const member of type.members)scan(member,[...path,name]);return;}let expr=type?.typeExpr;const chain:string[]=[];for(let depth=0;depth<64&&expr?.kind==='named'&&expr.name;depth++){if(chain.includes(expr.name))throw Error('alias cycle');chain.push(expr.name);const declaration=catalog.types[expr.name];if(declaration?.kind!=='defined'||!declaration.typeExpr)break;expr=declaration.typeExpr;}paths.push({name,path,kind:expr?.kind==='named'?expr.name??'unknown':expr?.kind??'unknown',expression:expr,where:type?.whereRules});}
+scan('IFCVALUE',[]);
+const result={schema:catalog.schema,root:catalog.types.IFCVALUE,owner:catalog.entities.IFCMEASUREWITHUNIT,total:paths.length,unique:new Set(paths.map(row=>row.name)).size,classes:Object.fromEntries([...new Set(paths.map(row=>row.kind))].map(kind=>[kind,paths.filter(row=>row.kind===kind).length])),paths};
+writeFileSync(new URL('./🗑️generated/type-value-select-census.json',import.meta.url),JSON.stringify(result,null,2)+'\n');
+console.log('[DEBUG]',JSON.stringify({total:result.total,unique:result.unique,classes:result.classes,root:result.root,owner:result.owner,nonNumeric:paths.filter(row=>!['REAL','NUMBER','INTEGER'].includes(row.kind))}));

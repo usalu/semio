@@ -1,0 +1,15 @@
+{
+ "version":1,
+ "conformance":"not-evaluated",
+ "cases":[
+  {"id":"empty-population","header":"IFC4X3_ADD2","entities":[],"queries":["1"],"expected":{"container":"prepared","matches":[{"id":"1","status":"missing"}]}},
+  {"id":"original-source-order","header":"IFC4X3_ADD2","entities":[{"id":"9","name":"IFCREPRESENTATIONITEM"},{"id":"2","name":"IFCREPRESENTATIONITEM"},{"id":"5","name":"IFCREPRESENTATIONITEM"}],"queries":["2","9","8"],"expected":{"container":"prepared","matches":[{"id":"2","status":"unique","ordinal":1},{"id":"9","status":"unique","ordinal":0},{"id":"8","status":"missing"}]}},
+  {"id":"duplicate-identities","header":"IFC4X3_ADD2","entities":[{"id":"9","name":"IFCREPRESENTATIONITEM"},{"id":"2","name":"IFCREPRESENTATIONITEM"},{"id":"9","name":"IFCREPRESENTATIONITEM"}],"queries":["9","2"],"expected":{"container":"prepared","matches":[{"id":"9","status":"ambiguous"},{"id":"2","status":"unique","ordinal":1}]}},
+  {"id":"unknown-declaration-retained","header":"IFC4X3_ADD2","entities":[{"id":"3","name":"IFCUNKNOWN"}],"queries":["3"],"expected":{"container":"prepared","matches":[{"id":"3","status":"unique","ordinal":0}]}},
+  {"id":"exact-u64-identity","header":"IFC4X3_ADD2","entities":[{"id":"18446744073709551615","name":"IFCREPRESENTATIONITEM"},{"id":"2","name":"IFCREPRESENTATIONITEM"}],"queries":["18446744073709551615","3"],"expected":{"container":"prepared","matches":[{"id":"18446744073709551615","status":"unique","ordinal":0},{"id":"3","status":"missing"}]}},
+  {"id":"other-schema-unavailable","header":"IFC4","entities":[{"id":"1","name":"IFCREPRESENTATIONITEM"}],"queries":["1"],"expected":{"container":"unavailable","matches":[]}},
+  {"id":"zero-source-id-unavailable","header":"IFC4X3_ADD2","entities":[{"id":"0","name":"IFCREPRESENTATIONITEM"}],"queries":["1"],"expected":{"container":"unavailable","matches":[]}},
+  {"id":"zero-reference-unavailable","header":"IFC4X3_ADD2","entities":[{"id":"1","name":"IFCREPRESENTATIONITEM","reference":"0"}],"queries":["1"],"expected":{"container":"unavailable","matches":[]}}
+ ]
+}
+

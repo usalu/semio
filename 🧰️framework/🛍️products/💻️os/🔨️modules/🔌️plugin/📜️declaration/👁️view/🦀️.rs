@@ -1,6 +1,8 @@
 //! 👁️ The read views an app receives, its operation contexts and the empty state lanes.
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
+#[path="staged-form/🦀️.rs"]
+pub mod staged_form;
 
 #[doc(hidden)]
 #[path = "../🪆️child/🦀️.rs"]

@@ -1,0 +1,207 @@
+{
+  "scope": "explicit-three-representation-clauses",
+  "physicalValidity": "not-claimed",
+  "cases": [
+    {
+      "id": "advanced",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrep"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "advanced-voids",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrepWithVoids"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "faceted",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "faceted-voids",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcFacetedBrepWithVoids"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "mixed-concrete",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrep",
+        "IfcFacetedBrepWithVoids"
+      ],
+      "expected": "pass"
+    },
+    {
+      "id": "abstract-manifold-projection",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcManifoldSolidBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "closed-shell",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcClosedShell"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "face-model",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcFaceBasedSurfaceModel"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "shell-model",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcShellBasedSurfaceModel"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "tessellated",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "swept",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "CSG",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcCsgSolid"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-foreign",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrep",
+        "IfcTriangulatedFaceSet"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "mixed-unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcFacetedBrep",
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "unknown",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcUnknownItem"
+      ],
+      "expected": "incomplete"
+    },
+    {
+      "id": "empty-items",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [],
+      "expected": "pass"
+    },
+    {
+      "id": "wrong-identifier",
+      "applicable": true,
+      "identifier": "Axis",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "basic-label",
+      "applicable": true,
+      "identifier": "Body",
+      "type": "Brep",
+      "items": [
+        "IfcFacetedBrep"
+      ],
+      "expected": "fail"
+    },
+    {
+      "id": "excluded",
+      "applicable": false,
+      "identifier": "Axis",
+      "type": "SweptSolid",
+      "items": [
+        "IfcExtrudedAreaSolid"
+      ],
+      "expected": "not-applicable"
+    },
+    {
+      "id": "unresolved",
+      "applicable": null,
+      "identifier": "Body",
+      "type": "AdvancedBrep",
+      "items": [
+        "IfcAdvancedBrep"
+      ],
+      "expected": "incomplete"
+    }
+  ]
+}
