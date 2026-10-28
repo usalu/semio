@@ -3,6 +3,18 @@ use semio_framework_value::{DslValue,ToValue,FromValue};
 use semio_framework_pack_error::PackError;
 use crate::record::{EncodeOptions as PackEncodeOptions,DecodeOptions as PackDecodeOptions};
 use semio_framework_dsl_record::{RecordSpecProducer,BorrowedRecordSpecProducer};
+/// 🧬️ Native snapshot registration depends only on authentic immutable Pack metadata.
+pub trait ArtifactPackMetadata:Sized{
+    const EXTENSION:&'static str;
+    fn native_record_spec_producer()->Option<BorrowedRecordSpecProducer>;
+    fn native_pack_schema_hash()->[u8;32];
+}
+impl<T:ArtifactPack+super::ArtifactDsl> ArtifactPackMetadata for T{
+    const EXTENSION:&'static str=<T as super::ArtifactDsl>::EXTENSION;
+    fn native_record_spec_producer()->Option<BorrowedRecordSpecProducer>{<T as ArtifactPack>::borrowed_record_spec_producer()}
+    fn native_pack_schema_hash()->[u8;32]{<T as ArtifactPack>::record_spec().map_or([0;32],|spec|crate::record::schema_hash(&spec))}
+}
+
 /// 📦️ A snapshot binary representation over first-party options, errors and authored record metadata.
 pub trait ArtifactPack: Sized {
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;

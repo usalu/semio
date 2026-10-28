@@ -50,7 +50,10 @@ pub struct ChildComposition<M: ReferenceSpaceMember + MemberFactory> {
     pub composition: CompositionCoordinator,
 }
 
-impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
+impl<M: SpaceMember + MemberFactory + 'static> ChildComposition<M> {
+    /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.private_child_groups,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_content_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.child_member_retirements,64)?,semio_framework_plugin_child::ChildMemberRegistry::<M>::birth_demands()?.capacity_bytes])}
+
     /// 🛶️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new(composition: CompositionCoordinator) -> Self {
         Self {
@@ -86,6 +89,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     pub async fn child_head_packs(&self) -> Result<Vec<protocol::ChildHeadPackEntry>, semio_framework::Fault> {
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
 
         let mut entries: Vec<protocol::ChildHeadPackEntry> = Vec::with_capacity(self.children.len());
         for (key, entry) in self.children.keyed_entries() {

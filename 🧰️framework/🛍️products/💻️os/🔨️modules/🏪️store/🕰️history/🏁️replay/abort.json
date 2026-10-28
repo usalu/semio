@@ -1,0 +1,10 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "genesis": 1.25,
+  "streamed": 2.5,
+  "restored": 1.25,
+  "transaction": "energy-stream-λ",
+  "cancelCuts": [0, 1, 2, 8, 32, 128],
+  "afterAbort": {"messages": 0, "edits": 0, "applied": 0, "redo": 0, "transitions": 0, "outbox": 0, "open": false},
+  "deniedAxes": ["items", "copy", "capacity", "release", "depth"]
+}

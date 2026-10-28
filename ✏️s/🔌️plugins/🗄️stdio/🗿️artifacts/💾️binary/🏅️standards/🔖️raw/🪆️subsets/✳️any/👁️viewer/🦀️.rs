@@ -69,9 +69,9 @@ impl ArtifactViewer for BinaryViewer {
     const DIALECT: Dialect = BINARY_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_BINARY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> BinarySnapshot {
+    fn reference_birth()->Option<fn()->BinarySnapshot>{Some(||{
         BinarySnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `BinaryViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.

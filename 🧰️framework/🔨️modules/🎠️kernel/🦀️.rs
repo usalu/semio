@@ -552,6 +552,7 @@ pub use ::replication::UndoPolicy;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InvocationResult {
     pub output: DslValue,
     pub mutations: Vec<KernelMutation>,

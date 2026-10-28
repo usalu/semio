@@ -54,9 +54,9 @@ impl ArtifactViewer for Pdf14Viewer {
     const DIALECT: Dialect = PDF14_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PDF_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PdfSnapshot {
+    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
         PdfSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change. Kept as a
     /// real dispatch (not `unreachable!()`) so a future view-only action is a pure addition.

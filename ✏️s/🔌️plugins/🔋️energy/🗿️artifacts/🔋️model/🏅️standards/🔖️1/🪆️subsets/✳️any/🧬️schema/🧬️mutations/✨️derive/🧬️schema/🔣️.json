@@ -1,0 +1,1417 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "category",
+    "labels",
+    "semantics",
+    "diagnostics"
+  ],
+  "properties": {
+    "category": {
+      "enum": [
+        "scalar-row",
+        "enum-row",
+        "reference-row",
+        "name-row",
+        "scalar-field",
+        "owned-row",
+        "create-row",
+        "delete-row",
+        "facet-row",
+        "membership-row",
+        "fixed-row",
+        "slot-field",
+        "root-link",
+        "schedule-row",
+        "adjacency-row",
+        "output-variable-row",
+        "network-singleton"
+      ]
+    },
+    "row": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "branchType": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "branch": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "collection": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "field": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "input": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "key": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "labels": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "semantics": {
+      "type": "object",
+      "required": [
+        "verb",
+        "entity",
+        "kind",
+        "record"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "verb": {
+          "type": "string",
+          "minLength": 1
+        },
+        "entity": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "record": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "required": [
+        "invalid",
+        "unchanged"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "invalid": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "missing": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "unchanged": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "reference": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "duplicate": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "context": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "referenced": {
+          "$ref": "#/$defs/diagnostic"
+        },
+        "cascade": {
+          "$ref": "#/$defs/diagnostic"
+        }
+      }
+    },
+    "references": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "Zones",
+          "Surfaces",
+          "Spaces",
+          "Constructions",
+          "Materials",
+          "IdealLoads",
+          "AirLoops",
+          "DailySchedules",
+          "ConstantSchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules",
+          "PvSystems",
+          "Batteries"
+        ]
+      }
+    },
+    "unique": {
+      "type": "boolean"
+    },
+    "referenceTarget": {
+      "enum": [
+        "input",
+        "key"
+      ]
+    },
+    "nested": {
+      "const": "schedules"
+    },
+    "scope": {
+      "enum": [
+        "site",
+        "ground_temperature",
+        "run_period"
+      ]
+    },
+    "calendarInterval": {
+      "const": true
+    },
+    "validation": {
+      "enum": [
+        "finite-numbers",
+        "finite-points",
+        "permutation",
+        "host-plane"
+      ]
+    },
+    "name": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "inverse": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "validationBeforeRank": {
+      "type": "boolean"
+    },
+    "restriction": {
+      "oneOf": [
+        {
+          "const": "none"
+        },
+        {
+          "$ref": "#/$defs/originalReference"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "sources"
+          ],
+          "properties": {
+            "kind": {
+              "const": "all"
+            },
+            "sources": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 32,
+              "items": {
+                "$ref": "#/$defs/referenceSource"
+              }
+            }
+          }
+        }
+      ]
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 32,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "input",
+          "kind"
+        ],
+        "properties": {
+          "input": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "kind": {
+            "enum": [
+              "reference",
+              "finite-values",
+              "finite-points",
+              "ordered-identifiers",
+              "ascending-identifiers",
+              "native-identifiers",
+              "optional-positive-number",
+              "paired-bounds",
+              "surface-boundary",
+              "setpoint-kind",
+              "present-reference"
+            ]
+          },
+          "storage": {
+            "enum": [
+              "direct",
+              "array",
+              "optional",
+              "present"
+            ]
+          },
+          "collections": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "enum": [
+                "Zones",
+                "Surfaces",
+                "Spaces",
+                "Constructions",
+                "Materials",
+                "IdealLoads",
+                "AirLoops",
+                "DailySchedules",
+                "ConstantSchedules",
+                "WeeklySchedules",
+                "AnnualSchedules",
+                "TimeSeriesSchedules",
+                "PvSystems",
+                "Batteries"
+              ]
+            }
+          },
+          "target": {
+            "enum": [
+              "row",
+              "input"
+            ]
+          },
+          "presence": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "partner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "limits": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "reference"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "storage",
+                "collections",
+                "target"
+              ],
+              "properties": {
+                "storage": true,
+                "collections": true,
+                "target": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "optional-positive-number"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "presence"
+              ],
+              "properties": {
+                "presence": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "kind": {
+                  "const": "paired-bounds"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "partner"
+              ],
+              "properties": {
+                "partner": true
+              }
+            }
+          }
+        ]
+      }
+    },
+    "defaultRank": {
+      "enum": [
+        "explicit",
+        "id-order",
+        "append"
+      ]
+    },
+    "nameValidation": {
+      "enum": [
+        "verbatim",
+        "nonblank"
+      ]
+    },
+    "scalarOrder": {
+      "enum": [
+        "before-rules",
+        "after-rules"
+      ]
+    },
+    "identityCollections": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ]
+      }
+    },
+    "presence": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "facet": {
+      "enum": [
+        "optional-positive-number",
+        "optional-reference",
+        "present-reference",
+        "glazing-construction",
+        "paired-bounds",
+        "fixed-pair",
+        "surface-boundary",
+        "setpoint-kind"
+      ]
+    },
+    "assignment": {
+      "enum": [
+        "bind",
+        "clear"
+      ]
+    },
+    "inverseBind": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "inverseClear": {
+      "type": "string",
+      "pattern": "^[A-Z][A-Za-z0-9]*$"
+    },
+    "upper": {
+      "type": "string",
+      "minLength": 1
+    },
+    "membership": {
+      "enum": [
+        "insert",
+        "remove-value",
+        "remove-index"
+      ]
+    },
+    "member": {
+      "type": "string",
+      "minLength": 1
+    },
+    "memberKind": {
+      "enum": [
+        "EntityId"
+      ]
+    },
+    "index": {
+      "type": "string",
+      "minLength": 1
+    },
+    "indexMode": {
+      "enum": [
+        "required",
+        "optional-sorted",
+        "absent"
+      ]
+    },
+    "duplicate": {
+      "enum": [
+        "allow",
+        "no-op",
+        "fatal"
+      ]
+    },
+    "rankBeforeDuplicate": {
+      "type": "boolean"
+    },
+    "positiveMember": {
+      "type": "boolean"
+    },
+    "inverseMember": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inverseIndex": {
+      "type": "string",
+      "minLength": 1
+    },
+    "inverseOptionalIndex": {
+      "type": "boolean"
+    },
+    "inverseByIndex": {
+      "type": "boolean"
+    },
+    "memberReference": {
+      "enum": [
+        null,
+        "Zones",
+        "Spaces",
+        "Materials",
+        "PvSystems",
+        "Batteries"
+      ]
+    },
+    "slotCount": {
+      "const": 12
+    },
+    "slotBase": {
+      "const": 1
+    },
+    "intent": {
+      "enum": [
+        "attach",
+        "detach",
+        "insert",
+        "remove"
+      ]
+    },
+    "attach": {
+      "enum": [
+        "BindWeatherFile",
+        "ConnectReferencedModel"
+      ]
+    },
+    "detach": {
+      "enum": [
+        "UnbindWeatherFile",
+        "DisconnectReferencedModel"
+      ]
+    },
+    "pairedField": {
+      "type": "string",
+      "minLength": 1
+    },
+    "partner": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "limits": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$"
+      }
+    },
+    "scheduleAction": {
+      "enum": [
+        "insert-rule",
+        "remove-rule",
+        "reorder-rules",
+        "add-holiday",
+        "remove-holiday",
+        "change-day"
+      ]
+    },
+    "adjacency": {
+      "enum": [
+        "connect",
+        "disconnect"
+      ]
+    },
+    "inverseMode": {
+      "enum": [
+        "fenestration",
+        "annual",
+        "surface"
+      ]
+    },
+    "identity": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": "name"
+        },
+        {
+          "const": "key"
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "cascade": {
+      "const": [
+        "fenestrations",
+        "adjacency_pairs"
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "enum": [
+              "scalar-field",
+              "slot-field"
+            ]
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "scope"
+        ],
+        "type": "object",
+        "properties": {
+          "scope": true
+        }
+      },
+      "else": {
+        "if": {
+          "properties": {
+            "category": {
+              "const": "root-link"
+            }
+          }
+        },
+        "then": {
+          "required": [
+            "field",
+            "intent",
+            "attach",
+            "detach"
+          ],
+          "properties": {
+            "field": true,
+            "intent": true,
+            "attach": true,
+            "detach": true
+          }
+        },
+        "else": {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "output-variable-row"
+              }
+            }
+          },
+          "then": {
+            "required": [
+              "row",
+              "branchType",
+              "branch",
+              "collection",
+              "identity",
+              "intent"
+            ],
+            "properties": {
+              "row": {
+                "const": "StateOutputVariableSpec"
+              },
+              "branchType": {
+                "const": "ModelOutputState"
+              },
+              "branch": {
+                "const": "outputs"
+              },
+              "collection": {
+                "const": "output_variables"
+              },
+              "identity": {
+                "const": [
+                  "name",
+                  "key"
+                ]
+              },
+              "intent": {
+                "enum": [
+                  "insert",
+                  "remove"
+                ]
+              }
+            }
+          },
+          "else": {
+            "if": {
+              "properties": {
+                "category": {
+                  "const": "network-singleton"
+                }
+              }
+            },
+            "then": {
+              "required": [
+                "row",
+                "branchType",
+                "branch",
+                "field"
+              ],
+              "properties": {
+                "row": {
+                  "const": "StateAirflowNetworkDefinition"
+                },
+                "branchType": {
+                  "const": "ModelSystemState"
+                },
+                "branch": {
+                  "const": "systems"
+                },
+                "field": {
+                  "const": "airflow_network"
+                }
+              }
+            },
+            "else": {
+              "required": [
+                "row",
+                "branchType",
+                "branch",
+                "collection",
+                "key"
+              ],
+              "properties": {
+                "diagnostics": {
+                  "required": [
+                    "missing"
+                  ],
+                  "type": "object",
+                  "properties": {
+                    "missing": true
+                  }
+                },
+                "row": true,
+                "branchType": true,
+                "branch": true,
+                "collection": true,
+                "key": true
+              },
+              "type": "object"
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "reference-row"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "references",
+          "referenceTarget"
+        ],
+        "properties": {
+          "diagnostics": {
+            "required": [
+              "reference"
+            ],
+            "type": "object",
+            "properties": {
+              "reference": true
+            }
+          },
+          "references": true,
+          "referenceTarget": true
+        },
+        "type": "object"
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "name-row"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "unique"
+        ],
+        "properties": {
+          "diagnostics": {
+            "required": [
+              "duplicate"
+            ],
+            "type": "object",
+            "properties": {
+              "duplicate": true
+            }
+          },
+          "unique": true
+        },
+        "type": "object"
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "scope"
+        ],
+        "properties": {
+          "scope": {
+            "const": "run_period"
+          }
+        },
+        "type": "object"
+      },
+      "then": {
+        "required": [
+          "calendarInterval"
+        ],
+        "properties": {
+          "diagnostics": {
+            "required": [
+              "context"
+            ],
+            "type": "object",
+            "properties": {
+              "context": true
+            }
+          },
+          "calendarInterval": true
+        },
+        "type": "object"
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "nested"
+        ],
+        "type": "object",
+        "properties": {
+          "nested": true
+        }
+      },
+      "then": {
+        "properties": {
+          "branch": {
+            "const": "outputs"
+          },
+          "branchType": {
+            "const": "StateScheduleSet"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "owned-row"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "validation"
+        ],
+        "properties": {
+          "validation": true
+        }
+      }
+    },
+    {
+      "if": {
+        "not": {
+          "properties": {
+            "category": {
+              "enum": [
+                "output-variable-row",
+                "network-singleton"
+              ]
+            }
+          }
+        }
+      },
+      "then": {
+        "if": {
+          "properties": {
+            "category": {
+              "const": "create-row"
+            }
+          }
+        },
+        "then": {
+          "type": "object",
+          "required": [
+            "inverse",
+            "validationBeforeRank",
+            "defaultRank"
+          ],
+          "properties": {
+            "name": true,
+            "inverse": true,
+            "unique": true,
+            "diagnostics": {
+              "type": "object",
+              "required": [
+                "duplicate"
+              ],
+              "properties": {
+                "duplicate": true
+              }
+            },
+            "validationBeforeRank": true,
+            "defaultRank": true
+          },
+          "allOf": [
+            {
+              "if": {
+                "required": [
+                  "name"
+                ],
+                "type": "object",
+                "properties": {
+                  "name": true
+                }
+              },
+              "then": {
+                "type": "object",
+                "required": [
+                  "unique",
+                  "nameValidation"
+                ],
+                "properties": {
+                  "unique": true,
+                  "nameValidation": true
+                }
+              }
+            }
+          ]
+        },
+        "else": {
+          "if": {
+            "properties": {
+              "category": {
+                "const": "delete-row"
+              }
+            }
+          },
+          "then": {
+            "type": "object",
+            "required": [
+              "inverse",
+              "restriction"
+            ],
+            "properties": {
+              "inverse": true,
+              "restriction": true,
+              "diagnostics": {
+                "type": "object",
+                "required": [
+                  "referenced"
+                ],
+                "properties": {
+                  "referenced": true
+                }
+              }
+            }
+          },
+          "else": {
+            "type": "object",
+            "required": [
+              "field"
+            ],
+            "properties": {
+              "field": true,
+              "input": true
+            },
+            "allOf": [
+              {
+                "if": {
+                  "anyOf": [
+                    {
+                      "required": [
+                        "facet",
+                        "assignment"
+                      ],
+                      "properties": {
+                        "facet": {
+                          "const": "glazing-construction"
+                        },
+                        "assignment": {
+                          "const": "clear"
+                        }
+                      },
+                      "type": "object"
+                    },
+                    {
+                      "required": [
+                        "category",
+                        "intent"
+                      ],
+                      "properties": {
+                        "category": {
+                          "const": "root-link"
+                        },
+                        "intent": {
+                          "const": "detach"
+                        }
+                      }
+                    }
+                  ]
+                },
+                "else": {
+                  "type": "object",
+                  "required": [
+                    "input"
+                  ],
+                  "properties": {
+                    "input": true
+                  }
+                }
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "type": "object",
+        "required": [
+          "rules"
+        ],
+        "properties": {
+          "rules": true
+        }
+      },
+      "then": {
+        "properties": {
+          "category": {
+            "const": "create-row"
+          },
+          "scalarOrder": true
+        },
+        "type": "object",
+        "required": [
+          "scalarOrder"
+        ]
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "facet-row"
+          }
+        }
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "presence": true,
+          "facet": true
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "facet": {
+                  "enum": [
+                    "optional-positive-number",
+                    "present-reference"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "presence"
+              ],
+              "properties": {
+                "presence": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "facet": {
+                  "enum": [
+                    "optional-reference",
+                    "present-reference"
+                  ]
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "references",
+                "referenceTarget"
+              ],
+              "properties": {
+                "references": true,
+                "referenceTarget": true
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "glazing-construction"
+          }
+        },
+        "type": "object"
+      },
+      "then": {
+        "type": "object",
+        "required": [
+          "assignment",
+          "inverseBind",
+          "inverseClear",
+          "references",
+          "referenceTarget"
+        ],
+        "properties": {
+          "assignment": true,
+          "inverseBind": true,
+          "inverseClear": true,
+          "references": true,
+          "referenceTarget": true
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "paired-bounds"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "upper"
+        ],
+        "properties": {
+          "upper": true
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "membership-row"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "membership",
+          "memberKind",
+          "indexMode",
+          "duplicate",
+          "rankBeforeDuplicate",
+          "positiveMember",
+          "inverse",
+          "inverseMember",
+          "memberReference"
+        ],
+        "properties": {
+          "membership": true,
+          "member": true,
+          "memberKind": true,
+          "index": true,
+          "indexMode": true,
+          "duplicate": true,
+          "rankBeforeDuplicate": true,
+          "positiveMember": true,
+          "inverseMember": true,
+          "inverseIndex": true,
+          "inverseOptionalIndex": true,
+          "inverseByIndex": true,
+          "memberReference": true
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "slot-field"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "scope",
+          "index",
+          "slotCount",
+          "slotBase"
+        ],
+        "properties": {
+          "scope": true,
+          "index": true,
+          "slotCount": true,
+          "slotBase": true
+        }
+      }
+    },
+    {
+      "if": {
+        "required": [
+          "facet"
+        ],
+        "properties": {
+          "facet": {
+            "const": "fixed-pair"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "upper",
+          "pairedField"
+        ],
+        "properties": {
+          "upper": true,
+          "pairedField": true
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "schedule-row"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "scheduleAction",
+          "nested"
+        ],
+        "properties": {
+          "scheduleAction": true,
+          "nested": true
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "category": {
+            "const": "adjacency-row"
+          }
+        }
+      },
+      "then": {
+        "required": [
+          "adjacency",
+          "partner",
+          "inverse"
+        ],
+        "properties": {
+          "adjacency": true,
+          "partner": true,
+          "inverse": true
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "diagnostic": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "level",
+        "code",
+        "message"
+      ],
+      "properties": {
+        "level": {
+          "enum": [
+            "fatal",
+            "error",
+            "warning",
+            "info"
+          ]
+        },
+        "code": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4096
+        }
+      }
+    },
+    "originalReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "row",
+        "branch",
+        "collection",
+        "field",
+        "storage"
+      ],
+      "properties": {
+        "kind": {
+          "const": "references"
+        },
+        "row": {
+          "type": "string",
+          "pattern": "^[A-Z][A-Za-z0-9]*$"
+        },
+        "branch": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "collection": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "storage": {
+          "enum": [
+            "direct",
+            "shared-array",
+            "shared-optional",
+            "shared-record-array"
+          ]
+        },
+        "nested": {
+          "const": "schedules"
+        },
+        "member": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        }
+      }
+    },
+    "originalRootReference": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "branch",
+        "owner",
+        "field",
+        "storage",
+        "tupleIndex"
+      ],
+      "properties": {
+        "kind": {
+          "const": "root"
+        },
+        "branch": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "owner": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "field": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "storage": {
+          "const": "optional-shared-tuples"
+        },
+        "tupleIndex": {
+          "const": 0
+        }
+      }
+    },
+    "referenceSource": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/originalReference"
+        },
+        {
+          "$ref": "#/$defs/originalRootReference"
+        }
+      ]
+    }
+  }
+}

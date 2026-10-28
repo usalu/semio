@@ -69,9 +69,9 @@ impl ArtifactViewer for DocxTransitionalViewer {
     const DIALECT: Dialect = DOCX_TRANSITIONAL_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DOCX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DocxSnapshot {
+    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
         DocxSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `DocxTransitionalViewCommand::Noop` variant never
     /// carries a config change, so this always returns the empty `ViewEmit`.

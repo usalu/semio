@@ -24,14 +24,20 @@ use semio_framework_plugin_instance_docs::docs_maintenance_ladder::item;
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
     #[inline(never)]
     pub fn retire_typed_operation_unit(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
-        let grant=cx.retained_grant();let demand=self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, grant.maximum_copy_bytes)?;
+        let grant=cx.retained_grant();let demand=self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.retire_typed_operation_granted(operation_id,same,actual).map(|step|(step,false)))
     }
 
     fn retire_typed_operation_granted(&mut self,operation_id:u64,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.pending_stream_abort.is_some()){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.tools.tool_operations.get_mut(operation_id).unwrap().close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.terminal_is_empty()){
+            let d=self.tools.tool_operations.get(operation_id).unwrap().original_frame_release_demands();if !plugin_grant_funds(d,grant)||grant.maximum_items==0{return Ok(PluginLifecycleStep::Progress(Default::default()))}
+            let original=self.tools.tool_operations.remove(operation_id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);
+            return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))
+        }
         self.as_render().request_gesture_cancellation(operation_id);
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
-        if self.tools.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::close_fault_pending){return self.tools.tool_operations.get_mut(operation_id).unwrap().close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.close_fault_pending()){return self.tools.tool_operations.get_mut(operation_id).unwrap().close_fault_step(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(Into::into);}
         if let Some(group) = self.tools.tool_operations.get(operation_id).and_then(|operation| operation.owned_child_group) {
             if self.child_composition.private_child_groups.get(group).is_some() {
                 return Ok(match self.child_composition.close_private_child_group_operation_step(&mut *self.stores, group, cx, grant)? {
@@ -43,7 +49,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.tools.tool_operations.get_mut(operation_id).unwrap().owned_child_group = None;
             return Ok(PluginLifecycleStep::Progress(item));
         }
-        if self.tools.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::lease_retirement_ready){let step=self.tools.tool_operations.get_mut(operation_id).unwrap().lease_retirement_step(&self.tools.tool_cancellations,grant).map_err(plugin_retirement_fault)?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
+        if self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.lease_retirement_ready()){let step=self.tools.tool_operations.get_mut(operation_id).unwrap().lease_retirement_step(&self.tools.tool_cancellations,grant).map_err(plugin_retirement_fault)?;return Ok(PluginLifecycleStep::Progress(step.progress()));}
         self.tools.record_settled_typed_operation_command(&mut *self.history, &mut *self.host_events, operation_id);
         let operation = self
             .tools.tool_operations
@@ -51,15 +57,10 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "typed operation owner changed during one bounded retirement unit"))?;
         let step = operation.retirement_step(cx)?;
         let PluginLifecycleStep::Complete(progress) = step else { return Ok(step) };
-        if !self.tools.tool_operations.get(operation_id).is_some_and(MountedTypedCommandFullOperation::terminal_is_empty) {
+        if !self.tools.tool_operations.get(operation_id).is_some_and(|owner|owner.terminal_is_empty()) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-terminal"), "typed operation reported Complete without exact terminal emptiness").into());
         }
-        let operation =
-            self.tools.tool_operations.remove(operation_id).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.typed-operation-retirement-authority"), "terminal typed operation changed before exact removal"))?;
-        self.tools.operation_progress_retired |= operation.progress.is_some();
-        drop(operation);
-        self.tools.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
-        Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }))
+        Ok(PluginLifecycleStep::Progress(progress))
     }
 
     /// ♻️ Drives ONE retiring typed operation for a bounded slice of this turn, the exact twin of the
@@ -84,8 +85,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 let owner=self.tools.tool_operations.get_mut(operation_id).unwrap();assert!(owner.original_retirement_receipt.is_none(),"original mounted Close receipt cannot be overwritten before acknowledgement");owner.original_retirement_receipt=Some((grant,progress));return Ok(());
 
             }
-            let grant = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
-            let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, grant.maximum_copy_bytes)?;
+            let grant = semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.close, cx.retained_grant());
+            let demand = self.tools.typed_operation_retirement_demands(&*self.child_composition, operation_id, &*self.stores, grant.maximum_copy_bytes)?;
             if !plugin_grant_funds(demand, grant) {
                 return Ok(());
             }

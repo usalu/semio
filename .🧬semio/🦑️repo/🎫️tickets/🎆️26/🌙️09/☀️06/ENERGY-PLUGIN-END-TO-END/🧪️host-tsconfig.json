@@ -1,0 +1,13 @@
+{
+  "extends": "/home/deck/semio/tsconfig.json",
+  "files": [
+    "/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/📖️snapshot-read/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/📖️snapshot-read/🎭️actor/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/📖️snapshot-read/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🔗️linked-read/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🔗️linked-read/🧪️tests/🟦️.ts",
+    "/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🧷️actor-reservation/🟦️.ts"
+  ],
+  "include": [],
+  "exclude": []
+}

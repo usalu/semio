@@ -60,9 +60,9 @@ impl ArtifactViewer for WavViewer {
     const DIALECT: Dialect = WAV_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_WAV_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         WavSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

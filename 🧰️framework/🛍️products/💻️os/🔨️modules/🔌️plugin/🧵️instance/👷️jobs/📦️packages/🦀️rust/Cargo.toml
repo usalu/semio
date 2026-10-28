@@ -59,6 +59,8 @@ semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owne
 semio-framework-ui-locale = { path = "../../../../../../../../🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio_framework_ui_runtime = { path = "../../../../../../../../🔨️modules/🖱️ui/🧠️runtime/📦️packages/🦀️rust", package = "semio-framework-ui-runtime" }
 
+semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
+
 [dev-dependencies]
 serde_json = { workspace = true }
 

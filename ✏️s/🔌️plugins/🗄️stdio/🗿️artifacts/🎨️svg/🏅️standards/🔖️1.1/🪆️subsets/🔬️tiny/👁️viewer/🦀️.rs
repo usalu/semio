@@ -60,9 +60,9 @@ impl ArtifactViewer for SvgTinyViewer {
     const DIALECT: Dialect = SVG_TINY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_SVG_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         SvgSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

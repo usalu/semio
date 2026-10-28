@@ -7,7 +7,7 @@
 
 use crate::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 
 #[allow(unused_variables, unused_mut)]
@@ -18,7 +18,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::schedule::ScheduleId(1), value: 20.0 });
     model.schedules.constants.push(crate::schedule::ConstantSchedule { id: crate::schedule::ScheduleId(2), value: 27.0 });
     model.setpoint_managers.push(crate::model::SetpointManager { id: crate::model::EntityId(16), name: "SUPPLY SPM".into(), kind: crate::model::SetpointManagerKind::Scheduled, schedule_id: Some(crate::schedule::ScheduleId(1)) });
-    (snapshot(model), super::replace_setpoint_manager_kind(crate::model::EntityId(16), "WarmestZone".to_string(), -10.0, 20.0, 16.0, 12.0))
+    (snapshot(model), super::replace_setpoint_manager_kind(crate::model::EntityId(16), crate::model::SetpointManagerKindTag::WarmestZone, -10.0, 20.0, 16.0, 12.0))
 }
 
 fn case() -> Case {

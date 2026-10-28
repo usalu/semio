@@ -1,9 +1,9 @@
 //! ⚖️ Laws of the energy mutation fixtures: the committed document readers, the fixture writer and the eight laws every vector is held to, with the codec round-trip test. See [`super`].
 
 use super::case::{fixture_root, Case};
-use crate::diff::EnergyModelDiff;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 use protocol::{ColdMutation, Mutation, SemanticMutation};
 use semio_framework_value::ToValue;
 

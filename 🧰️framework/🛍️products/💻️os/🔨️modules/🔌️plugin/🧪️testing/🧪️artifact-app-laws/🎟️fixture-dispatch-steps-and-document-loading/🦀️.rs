@@ -87,7 +87,7 @@ pub async fn take_fixture_media_export_chunk<P:PluginApp>(app:&mut P,handle:&sem
 }
 
 /// 📨️ Exercises the real continuation receiver with one original argument and fault pair.
-pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,meta:&ActionMeta,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
+pub async fn dispatch_fixture_response_action<P:PluginApp>(app:&mut P,action:&str,args:Option<semio_framework_value::DslValue>,fault:Option<semio_framework::Fault>,meta:&mut Option<ActionMeta>,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>,close_loan:RetainedCloneGrant)->Result<semio_framework::kernel::InvocationResult,semio_framework_job::OriginalTurnFailure>{
     let(mut original_args,mut original_fault)=(args,fault);let mut result=Ok(None);
     for _ in 0..OriginalFixtureCaller::maximum_turns(){result=app.handle_response_action(action,&mut original_args,&mut original_fault,meta,identity,cx).await;if !matches!(result,Ok(None)){break}if let Err(failure)=app.maintenance_step(cx,close_loan){result=Err(failure.into());break}}
     close_fixture_action_inputs(original_args,original_fault,cx,close_loan);
@@ -432,12 +432,12 @@ where
 /// surface that stops deriving its children cannot turn the assertion vacuous. Any bundle
 /// registering `E` instantiates that same roster, so one assertion covers every bundle.
 pub fn assert_editor_genesis_children_declared<E: semio_framework_plugin_decl_surface::ArtifactEditor>() -> Result<usize, semio_framework::Fault> {
-    genesis_children_declared::<E::Snapshot, E::Members>(E::initial_snapshot(), |snapshot, slot, child_id| E::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
+    genesis_children_declared::<E::Snapshot, E::Members>(E::reference_birth().expect("explicit reference snapshot producer")(), |snapshot, slot, child_id| E::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
 }
 
 /// 👁️🌱️ Viewer twin of `assert_editor_genesis_children_declared`.
 pub fn assert_viewer_genesis_children_declared<V: semio_framework_plugin_decl_surface::ArtifactViewer>() -> Result<usize, semio_framework::Fault> {
-    genesis_children_declared::<V::Snapshot, V::Members>(V::initial_snapshot(), |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
+    genesis_children_declared::<V::Snapshot, V::Members>(V::reference_birth().expect("explicit reference snapshot producer")(), |snapshot, slot, child_id| V::genesis_child_pack(snapshot, slot, child_id).map(|value| value.is_some()))
 }
 
     /// 📨️ Projects authored external unit and data variants before their fixture action enters the original source.

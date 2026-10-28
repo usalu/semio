@@ -1,12 +1,11 @@
 //! 🕟️ Energy model mutation — `ChangeDailyScheduleLimits`: Sets the optional clamp a daily profile's lookups are bounded by. Lower and upper are one inseparable pair — a half-stated pair is refused — and stating neither clears the clamp entirely.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🕟️ `change-daily-schedule-limits` payload. Sets the optional clamp a daily profile's lookups are bounded by. Lower and upper are one inseparable pair — a half-stated pair is refused — and stating neither clears the clamp entirely.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -22,39 +21,6 @@ pub fn change_daily_schedule_limits<Op: From<ChangeDailyScheduleLimits>>(id: cra
     ChangeDailyScheduleLimits { id, new_limits_min, new_limits_max }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeDailyScheduleLimits
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeDailyScheduleLimits>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "daily-schedule", kind: "change-daily-schedule-limits", record: "ChangedDailyScheduleLimits" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change daily schedule {} limits", self.id.0), &format!("Grenzwerte von Tageszeitplan {} ändern", self.id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeDailyScheduleLimits
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeDailyScheduleLimits>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

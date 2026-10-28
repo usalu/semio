@@ -123,7 +123,8 @@
         "precision": 1,
         "group": "gains",
         "order": 50
-      }
+      },
+      "minimum": 0
     },
     "radiantFraction": {
       "type": "number",
@@ -146,7 +147,9 @@
         "softMax": 1,
         "group": "gains",
         "order": 60
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     },
     "visibleFraction": {
       "type": "number",
@@ -169,7 +172,9 @@
         "softMax": 1,
         "group": "gains",
         "order": 70
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     },
     "returnAirFraction": {
       "type": "number",
@@ -192,7 +197,123 @@
         "softMax": 1,
         "group": "gains",
         "order": 80
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateLightingGain",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "schedule_id",
+        "input": "schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "watts_per_area",
+        "input": "watts_per_area",
+        "storage": "fixed"
+      },
+      {
+        "field": "radiant_fraction",
+        "input": "radiant_fraction",
+        "storage": "fixed"
+      },
+      {
+        "field": "visible_fraction",
+        "input": "visible_fraction",
+        "storage": "fixed"
+      },
+      {
+        "field": "return_air_fraction",
+        "input": "return_air_fraction",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateLightingGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "lighting",
+    "key": "id",
+    "inverse": "DeleteLightingGain",
+    "labels": {
+      "en": "Create Lighting Gain at index",
+      "de": "Beleuchtungswärmegewinn an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "lighting-gain",
+      "kind": "create-lighting-gain",
+      "record": "CreatedLightingGain"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

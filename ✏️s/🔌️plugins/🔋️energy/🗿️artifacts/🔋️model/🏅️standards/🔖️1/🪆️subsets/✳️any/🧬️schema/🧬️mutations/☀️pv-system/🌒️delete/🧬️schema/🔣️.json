@@ -33,5 +33,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "key": "id",
+    "inverse": "CreatePvSystem",
+    "restriction": {
+      "row": "StateElectricalLoadCenter",
+      "branch": "systems",
+      "collection": "electrical_load_centers",
+      "field": "pv_ids",
+      "storage": "shared-array",
+      "kind": "references"
+    },
+    "labels": {
+      "en": "Delete Pv System",
+      "de": "PV-Anlage löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "pv-system",
+      "kind": "delete-pv-system",
+      "record": "DeletedPvSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv-system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

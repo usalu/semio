@@ -17,3 +17,6 @@ pub mod sdk_fault;
 pub mod store_lifecycle;
 #[path = "../../🫧️transient/🧵️publication/🦀️.rs"]
 pub mod transient_publication;
+
+#[path="../../🌱️initialization/🌱️genesis/🦀️.rs"]
+pub mod original_store_genesis;

@@ -259,9 +259,9 @@ impl ArtifactEditor for RasterPlayApp {
     /// through the bounded `set-active-example` mutations (the same document flow block2d/forms
     /// use). Found at the first react boots of ticket 26/09/05/RASTER-PLUGIN-END-TO-END
     /// (2026-09-16).
-    fn initial_snapshot() -> RasterSnapshot {
+    fn reference_birth()->Option<fn()->RasterSnapshot>{Some(||{
         semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(raster_io())

@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioFlowViewer {
     const DIALECT: Dialect = SEMIO_FLOW_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_FLOW_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioFlowSnapshot {
+    fn reference_birth()->Option<fn()->SemioFlowSnapshot>{Some(||{
         SemioFlowSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

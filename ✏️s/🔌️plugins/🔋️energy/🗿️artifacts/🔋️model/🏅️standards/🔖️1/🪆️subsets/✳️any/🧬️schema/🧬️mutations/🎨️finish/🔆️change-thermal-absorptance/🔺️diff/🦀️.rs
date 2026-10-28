@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeMaterialThermalAbsorptance` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, MaterialPatch, ModelPatch};
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, MaterialPatch, ModelPatch};
 use crate::diff_patch::{Rows};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeMaterialThermalAbsorptance, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

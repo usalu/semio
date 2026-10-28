@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-store-operation-wire = { path = "../../../🧵️operation-wire/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-replay = { path = "../../../🔁️replay/📦️packages/🦀️rust" }
@@ -45,3 +46,4 @@ serde = { version = "1.0.219", features = ["derive"] }
 [dev-dependencies]
 semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0"

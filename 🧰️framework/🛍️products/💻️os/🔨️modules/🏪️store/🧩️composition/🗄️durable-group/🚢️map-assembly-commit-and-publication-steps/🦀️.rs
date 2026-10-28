@@ -4,12 +4,12 @@ use super::*;
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStoreCommitV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + semio_framework_os_spr::ColdMutation<ParentP> + 'static,
-    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + semio_framework_os_spr::ColdMutation<DrawingP> + 'static,
-    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + semio_framework_os_spr::ColdMutation<ValueP> + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn phase(&self) -> DurableOwnedThreeStoreCommitPhaseV1 {
         self.phase
@@ -364,12 +364,12 @@ impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> 
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + semio_framework_os_spr::ColdMutation<ParentP> + 'static,
-    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + semio_framework_os_spr::ColdMutation<DrawingP> + 'static,
-    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-    ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + semio_framework_os_spr::OpBinary + semio_framework_os_spr::OpText + Send + semio_framework_os_spr::ColdMutation<ValueP> + 'static,
+    ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + 'static,
+    DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + Send + 'static,
+    ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + Send + 'static,
 {
     pub fn phase(&self) -> Option<DurableOwnedThreeStoreCommitPhaseV1> {
         self.coordinator.as_ref().map(DurableOwnedThreeStoreCommitV1::phase)
@@ -421,12 +421,12 @@ where
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> Drop for DurableOwnedMapCommitOperationV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
 where
-    ParentP: ValueToValue + Clone + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ParentP>,
-    DrawingP: ValueToValue + Clone + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<DrawingP>,
-    ValueP: ValueToValue + Clone + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ValueP>,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || (self.parent.is_none() && self.drawing.is_none() && self.value.is_none() && self.coordinator.is_none() && self.sink.is_none()), "retained Map commit operation reached Drop before exact terminal owner handoff");

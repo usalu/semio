@@ -79,7 +79,8 @@
         "precision": 2,
         "group": "capacity",
         "order": 30
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "areaM2": {
       "type": "number",
@@ -95,7 +96,8 @@
         "precision": 2,
         "group": "geometry",
         "order": 40
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "tiltDeg": {
       "type": "number",
@@ -126,7 +128,9 @@
         ],
         "group": "orientation",
         "order": 50
-      }
+      },
+      "minimum": 0,
+      "maximum": 90
     },
     "azimuthDeg": {
       "type": "number",
@@ -155,7 +159,9 @@
         ],
         "group": "orientation",
         "order": 60
-      }
+      },
+      "minimum": 0,
+      "maximum": 360
     },
     "moduleEfficiency": {
       "type": "number",
@@ -174,7 +180,9 @@
         "softMax": 1,
         "group": "efficiency",
         "order": 70
-      }
+      },
+      "exclusiveMinimum": 0,
+      "maximum": 1
     },
     "inverterEfficiency": {
       "type": "number",
@@ -193,13 +201,14 @@
         "softMax": 1,
         "group": "efficiency",
         "order": 80
-      }
+      },
+      "exclusiveMinimum": 0,
+      "maximum": 1
     },
     "faimanHeatLossWindWSM3k": {
       "type": "number",
-      "minimum": 0,
       "x-semio-ui": {
-        "widget": "number",
+        "widget": "stepper",
         "role": "value",
         "label": {
           "en": "Wind heat loss",
@@ -209,7 +218,8 @@
         "order": 20,
         "displayUnit": "W·s/(m³·K)",
         "precision": 2
-      }
+      },
+      "minimum": 0
     },
     "mounting": {
       "type": "string",
@@ -245,9 +255,8 @@
     },
     "faimanHeatLossConstantWM2k": {
       "type": "number",
-      "exclusiveMinimum": 0,
       "x-semio-ui": {
-        "widget": "number",
+        "widget": "stepper",
         "role": "value",
         "label": {
           "en": "Constant heat loss",
@@ -257,12 +266,13 @@
         "order": 20,
         "displayUnit": "W/(m²·K)",
         "precision": 2
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "temperatureCoefficient": {
       "type": "number",
       "x-semio-ui": {
-        "widget": "number",
+        "widget": "stepper",
         "role": "value",
         "label": {
           "en": "Temperature coefficient",
@@ -276,5 +286,109 @@
         "precision": 2
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StatePvSystemAssignment",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "dc_capacity_w",
+        "input": "dc_capacity_w",
+        "storage": "fixed"
+      },
+      {
+        "field": "area_m2",
+        "input": "area_m2",
+        "storage": "fixed"
+      },
+      {
+        "field": "tilt_deg",
+        "input": "tilt_deg",
+        "storage": "fixed"
+      },
+      {
+        "field": "azimuth_deg",
+        "input": "azimuth_deg",
+        "storage": "fixed"
+      },
+      {
+        "field": "module_efficiency",
+        "input": "module_efficiency",
+        "storage": "fixed"
+      },
+      {
+        "field": "inverter_efficiency",
+        "input": "inverter_efficiency",
+        "storage": "fixed"
+      },
+      {
+        "field": "temperature_coefficient",
+        "input": "temperature_coefficient",
+        "storage": "fixed"
+      },
+      {
+        "field": "faiman_heat_loss_constant_w_m2k",
+        "input": "faiman_heat_loss_constant_w_m2k",
+        "storage": "fixed"
+      },
+      {
+        "field": "faiman_heat_loss_wind_w_s_m3k",
+        "input": "faiman_heat_loss_wind_w_s_m3k",
+        "storage": "fixed"
+      },
+      {
+        "field": "mounting",
+        "input": "mounting",
+        "storage": "sealed-copy"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "key": "id",
+    "inverse": "DeletePvSystem",
+    "labels": {
+      "en": "Create photovoltaic system",
+      "de": "Photovoltaikanlage erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "pv-system",
+      "kind": "create-pv-system",
+      "record": "CreatedPvSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit"
   }
 }

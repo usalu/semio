@@ -4,7 +4,7 @@ use super::*;
 
 //#region 🔖️Definition
 /// 🧵️ Id of a job kind registered in the artifact tool factory registry.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct JobKindId(pub String);
@@ -20,7 +20,7 @@ impl JobKindId {
 }
 
 /// 🔄️ How a mutating run reacts to head changes (§2.7.5).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunRebasePolicy {
@@ -29,8 +29,8 @@ pub enum ToolRunRebasePolicy {
     Freeze,
 }
 
-/// 🔧️ How a run reacts to settings changes (§3.3).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+/// 🎚️ How a run reacts to settings changes (§3.3).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunReconfigurePolicy {
@@ -39,7 +39,7 @@ pub enum ToolRunReconfigurePolicy {
 }
 
 /// 🫥️ Trace subject kind a run emits.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ToolRunTraceKind {
@@ -50,7 +50,7 @@ pub enum ToolRunTraceKind {
 }
 
 /// 🪜️ One algorithm stage.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunStageDefinition {
@@ -59,7 +59,7 @@ pub struct ToolRunStageDefinition {
 }
 
 /// 🔟️ One progress counter.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunCounterDefinition {
@@ -68,7 +68,7 @@ pub struct ToolRunCounterDefinition {
 }
 
 /// 🗯️ One reason code with its verdict and EN/DE template (`{0}`..`{3}` take step arguments).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunReasonDefinition {
@@ -82,7 +82,7 @@ pub struct ToolRunReasonDefinition {
 /// window kind id, into that kind's window config documents. `settingsChanged` fires only when a value
 /// behind one of them changes; an empty declaration reads no settings, so no settings publication ever
 /// reconfigures the run.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunSettingsReads {
@@ -124,7 +124,7 @@ pub fn tool_run_pointer_value<'a>(document: &'a semio_framework_value::DslValue,
 }
 
 /// 📜️ Static run declaration attached to tool and utility definitions (§2.4).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunDefinition {
@@ -158,7 +158,7 @@ pub struct ToolRunDefinition {
 }
 
 /// 🚫️ Why a `ToolRunDefinition` violates the contract.
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::RetireOwned)]
 pub enum ToolRunDefinitionError {
     InvalidReceivingLimits,
     NoStages,

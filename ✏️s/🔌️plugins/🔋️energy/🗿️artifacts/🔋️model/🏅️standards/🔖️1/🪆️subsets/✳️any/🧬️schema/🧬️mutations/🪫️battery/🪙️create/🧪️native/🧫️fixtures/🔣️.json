@@ -1,0 +1,113 @@
+{
+  "contract": "semio.energy.original-createbattery/v1",
+  "collection": "battery_storage",
+  "existingRows": [
+    {
+      "id": 1,
+      "capacity_kwh": 10,
+      "max_charge_w": 1000,
+      "max_discharge_w": 1000,
+      "round_trip_efficiency": 0.9
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "capacityKwh": 10,
+        "maxChargeW": 1000,
+        "maxDischargeW": 1000,
+        "roundTripEfficiency": 0.9
+      },
+      "outcome": "changed",
+      "after": [
+        1,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "index": 0,
+        "id": 3,
+        "capacityKwh": 10,
+        "maxChargeW": 1000,
+        "maxDischargeW": 1000,
+        "roundTripEfficiency": 0.9
+      },
+      "outcome": "changed",
+      "after": [
+        3,
+        1
+      ]
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 1,
+        "capacityKwh": 10,
+        "maxChargeW": 1000,
+        "maxDischargeW": 1000,
+        "roundTripEfficiency": 0.9
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 3,
+        "capacityKwh": 10,
+        "maxChargeW": 1000,
+        "maxDischargeW": 1000,
+        "roundTripEfficiency": 0.9
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "capacityKwh": 10,
+        "maxChargeW": 1000,
+        "maxDischargeW": 1000,
+        "roundTripEfficiency": 1.1
+      },
+      "outcome": "invalid"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "recreate": {
+    "original": {
+      "id": 1,
+      "capacity_kwh": 10,
+      "max_charge_w": 1000,
+      "max_discharge_w": 1000,
+      "round_trip_efficiency": 0.9
+    },
+    "rank": 7,
+    "payload": {
+      "id": 1,
+      "capacityKwh": 10,
+      "maxChargeW": 1000,
+      "maxDischargeW": 1000,
+      "roundTripEfficiency": 0.9,
+      "index": 7
+    }
+  }
+}

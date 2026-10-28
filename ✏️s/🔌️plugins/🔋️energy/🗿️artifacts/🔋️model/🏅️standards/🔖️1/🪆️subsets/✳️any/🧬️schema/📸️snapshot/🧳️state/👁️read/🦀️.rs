@@ -1,0 +1,108 @@
+//! 👁️ Borrowed native model fields preserve the sole immutable page and row authorities.
+use super::*;
+/// 🪟️ A fixed set of references gives consumers flat model fields without building a numerical mirror.
+pub struct EnergyModelView<'a>{
+ pub name:&'a String,
+ pub version:&'a String,
+ pub site:&'a StateSite,
+ pub ground_temperature:&'a StateGroundTemperatureConfig,
+ pub run_period:&'a crate::calendar::RunPeriod,
+ pub zones:&'a PersistentList<StateZone>,
+ pub spaces:&'a PersistentList<StateSpace>,
+ pub surfaces:&'a PersistentList<StateSurface>,
+ pub fenestrations:&'a PersistentList<StateFenestration>,
+ pub shading_surfaces:&'a PersistentList<StateShadingSurface>,
+ pub space_lists:&'a PersistentList<StateSpaceList>,
+ pub thermal_enclosures:&'a PersistentList<StateThermalEnclosure>,
+ pub adjacency_pairs:&'a PersistentList<StateAdjacencyPair>,
+ pub materials:&'a PersistentList<StateMaterial>,
+ pub glazing_materials:&'a PersistentList<StateGlazingMaterial>,
+ pub gas_materials:&'a PersistentList<StateGasMaterial>,
+ pub constructions:&'a PersistentList<StateConstruction>,
+ pub people:&'a PersistentList<StatePeopleGain>,
+ pub lighting:&'a PersistentList<StateLightingGain>,
+ pub equipment:&'a PersistentList<StateEquipmentGain>,
+ pub infiltrations:&'a PersistentList<StateInfiltration>,
+ pub mechanical_ventilations:&'a PersistentList<StateMechanicalVentilation>,
+ pub daylight_zones:&'a PersistentList<StateDaylightZoneConfig>,
+ pub room_air_models:&'a PersistentList<StateRoomAirModelAssignment>,
+ pub thermostats:&'a PersistentList<StateThermostat>,
+ pub humidistats:&'a PersistentList<StateHumidistat>,
+ pub setpoint_managers:&'a PersistentList<StateSetpointManager>,
+ pub ideal_loads:&'a PersistentList<StateIdealLoadsSystem>,
+ pub zone_equipment:&'a PersistentList<StateZoneEquipmentAssignment>,
+ pub air_loops:&'a PersistentList<StateModelAirLoop>,
+ pub plant_loops:&'a PersistentList<StatePlantLoopConfig>,
+ pub outdoor_air_systems:&'a PersistentList<StateOutdoorAirSystem>,
+ pub airflow_network:Option<&'a StateAirflowNetworkDefinition>,
+ pub electrical_load_centers:&'a PersistentList<StateElectricalLoadCenter>,
+ pub pv_systems:&'a PersistentList<StatePvSystemAssignment>,
+ pub battery_storage:&'a PersistentList<StateBatteryAssignment>,
+ pub shw_systems:&'a PersistentList<StateShwSystemConfig>,
+ pub solar_thermal_systems:&'a PersistentList<StateSolarThermalConfig>,
+ pub refrigeration_systems:&'a PersistentList<StateRefrigerationConfig>,
+ pub water_systems:&'a PersistentList<StateWaterSystemConfig>,
+ pub faults:&'a PersistentList<StateFaultDefinition>,
+ pub output_variables:&'a PersistentList<StateOutputVariableSpec>,
+ pub sizing_objects:&'a PersistentList<StateSizingObject>,
+ pub schedules:&'a StateScheduleSet,
+}
+impl EnergyModelState{
+ /// 🔎️ Borrows the original branch fields without allocating or duplicating their shared sources.
+ pub fn read(&self)->EnergyModelView<'_>{let state=self;EnergyModelView{
+ name:state.identity.name.get(),
+ version:state.identity.version.get(),
+ site:state.identity.site.get(),
+ ground_temperature:state.identity.ground_temperature.get(),
+ run_period:state.identity.run_period.get(),
+ zones:&state.geometry.zones,
+ spaces:&state.geometry.spaces,
+ surfaces:&state.geometry.surfaces,
+ fenestrations:&state.geometry.fenestrations,
+ shading_surfaces:&state.geometry.shading_surfaces,
+ space_lists:&state.geometry.space_lists,
+ thermal_enclosures:&state.geometry.thermal_enclosures,
+ adjacency_pairs:&state.geometry.adjacency_pairs,
+ materials:&state.materials.materials,
+ glazing_materials:&state.materials.glazing_materials,
+ gas_materials:&state.materials.gas_materials,
+ constructions:&state.materials.constructions,
+ people:&state.loads.people,
+ lighting:&state.loads.lighting,
+ equipment:&state.loads.equipment,
+ infiltrations:&state.loads.infiltrations,
+ mechanical_ventilations:&state.loads.mechanical_ventilations,
+ daylight_zones:&state.loads.daylight_zones,
+ room_air_models:&state.loads.room_air_models,
+ thermostats:&state.controls.thermostats,
+ humidistats:&state.controls.humidistats,
+ setpoint_managers:&state.controls.setpoint_managers,
+ ideal_loads:&state.controls.ideal_loads,
+ zone_equipment:&state.controls.zone_equipment,
+ air_loops:&state.systems.air_loops,
+ plant_loops:&state.systems.plant_loops,
+ outdoor_air_systems:&state.systems.outdoor_air_systems,
+ airflow_network:state.systems.airflow_network.as_ref().map(|source|source.get()),
+ electrical_load_centers:&state.systems.electrical_load_centers,
+ pv_systems:&state.generation.pv_systems,
+ battery_storage:&state.generation.battery_storage,
+ shw_systems:&state.generation.shw_systems,
+ solar_thermal_systems:&state.generation.solar_thermal_systems,
+ refrigeration_systems:&state.generation.refrigeration_systems,
+ water_systems:&state.generation.water_systems,
+ faults:&state.generation.faults,
+ output_variables:&state.outputs.output_variables,
+ sizing_objects:&state.outputs.sizing_objects,
+ schedules:state.outputs.schedules.get(),
+ }}
+}
+
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+
+impl semio_s_plugin_energy_engine_scene::EnergySceneModel for EnergyModelView<'_>{
+ fn name(&self)->&str{self.name}
+ fn surfaces(&self)->impl Iterator<Item=semio_s_plugin_energy_engine_scene::EnergySceneSurface<'_>>{self.surfaces.iter().map(|row|semio_s_plugin_energy_engine_scene::EnergySceneSurface{id:row.id,zone_id:row.zone_id,name:&row.name,class:*row.class.get(),vertices_m:&row.vertices_m})}
+ fn fenestrations(&self)->impl Iterator<Item=semio_s_plugin_energy_engine_scene::EnergySceneWindow<'_>>{self.fenestrations.iter().map(|row|semio_s_plugin_energy_engine_scene::EnergySceneWindow{id:row.id,surface_id:row.surface_id,name:&row.name,area_m2:row.area_m2,height_m:row.height_m,sill_height_m:row.sill_height_m,vertices_m:&row.vertices_m})}
+ fn shading_surfaces(&self)->impl Iterator<Item=semio_s_plugin_energy_engine_scene::EnergySceneShading<'_>>{self.shading_surfaces.iter().map(|row|semio_s_plugin_energy_engine_scene::EnergySceneShading{id:row.id,name:&row.name,vertices_m:&row.vertices_m})}
+ fn zones(&self)->impl Iterator<Item=semio_s_plugin_energy_engine_scene::EnergySceneZone<'_>>{self.zones.iter().map(|row|semio_s_plugin_energy_engine_scene::EnergySceneZone{id:row.id,name:&row.name})}
+}

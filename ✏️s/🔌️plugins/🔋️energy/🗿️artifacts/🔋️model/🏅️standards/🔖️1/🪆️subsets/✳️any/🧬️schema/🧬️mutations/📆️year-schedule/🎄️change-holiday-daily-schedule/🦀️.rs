@@ -1,14 +1,13 @@
 //! 🎄️ Energy model mutation — `ChangeAnnualScheduleHolidayDailySchedule`: Re-points — or clears, with a null — the profile a year uses on the dates it holds as holidays.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🎄️ `change-annual-schedule-holiday-daily-schedule` payload. Re-points — or clears, with a null — the profile a year uses on the dates it holds as holidays.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-annual-schedule-holiday-daily-schedule")]
 pub struct ChangeAnnualScheduleHolidayDailySchedule {
@@ -21,39 +20,6 @@ pub fn change_annual_schedule_holiday_daily_schedule<Op: From<ChangeAnnualSchedu
     ChangeAnnualScheduleHolidayDailySchedule { id, new_holiday_daily_schedule_id }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeAnnualScheduleHolidayDailySchedule
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeAnnualScheduleHolidayDailySchedule>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "annual-schedule", kind: "change-annual-schedule-holiday-daily-schedule", record: "ChangedAnnualScheduleHolidayDailySchedule" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Annual Schedule Holiday Daily Schedule of annual schedule {}", self.id.0), &format!("Feiertags-Tageszeitplan von Jahreszeitplan {} ändern", self.id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeAnnualScheduleHolidayDailySchedule
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeAnnualScheduleHolidayDailySchedule>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

@@ -59,5 +59,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "row": "StatePeopleGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "people",
+    "field": "activity_schedule_id",
+    "input": "new_activity_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Change people gain: Activity schedule",
+      "de": "Aktivitätszeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "people-gain",
+      "kind": "change-people-gain-activity-schedule",
+      "record": "ChangedPeopleGainActivitySchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Activity schedule violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed people gain does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced activity schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The people gain already carries this activity schedule reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

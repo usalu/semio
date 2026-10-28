@@ -194,5 +194,104 @@
         "de": "Die Komponenten-IDs sind streng aufsteigend sortiert."
       }
     }
-  ]
+  ],
+  "x-semio-energy-row-birth": {
+    "row": "StatePlantLoopConfig",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "loop_type",
+        "input": "loop_type",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "supply_temperature_c",
+        "input": "supply_temperature_c",
+        "storage": "fixed"
+      },
+      {
+        "field": "return_temperature_c",
+        "input": "return_temperature_c",
+        "storage": "fixed"
+      },
+      {
+        "field": "design_flow_kg_s",
+        "input": "design_flow_kg_s",
+        "storage": "fixed"
+      },
+      {
+        "field": "equipment_ids",
+        "input": "equipment_ids",
+        "storage": "sealed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StatePlantLoopConfig",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "plant_loops",
+    "key": "id",
+    "inverse": "DeletePlantLoop",
+    "labels": {
+      "en": "Create plant loop",
+      "de": "Anlagenkreislauf erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "plant-loop",
+      "kind": "create-plant-loop",
+      "record": "CreatedPlantLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "equipment_ids",
+        "kind": "ordered-identifiers"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "before-rules",
+    "name": "name",
+    "nameValidation": "nonblank",
+    "unique": true
+  }
 }

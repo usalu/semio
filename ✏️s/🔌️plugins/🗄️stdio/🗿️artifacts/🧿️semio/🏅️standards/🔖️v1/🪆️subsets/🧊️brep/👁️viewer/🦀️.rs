@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioBrepViewer {
     const DIALECT: Dialect = SEMIO_BREP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_BREP_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioBrepSnapshot {
+    fn reference_birth()->Option<fn()->SemioBrepSnapshot>{Some(||{
         SemioBrepSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

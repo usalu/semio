@@ -152,6 +152,7 @@ include!("../🧪️tests/🔬️app-artifact-inference-wire/🦀️.rs");
 
 /// ⚠️ Original typed causes cross the recipient without display allocation.
 #[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub enum ArtifactInferenceGatewayFailure{Native(ValueError),Json(semio_framework_pack_json::JsonError),Execution(ArtifactInferenceExecutionError),Literal(&'static str)}
 
 /// 🧾️ Holds the original semantic cause and a distinct original receipt refusal.

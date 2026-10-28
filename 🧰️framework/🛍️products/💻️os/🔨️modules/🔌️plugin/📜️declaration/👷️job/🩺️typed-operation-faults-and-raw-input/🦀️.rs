@@ -69,6 +69,7 @@ impl ArtifactBoundedToolFault {
 
 semio_framework_value::artifact_retire_leaf!(ArtifactBoundedToolFault);
 
+#[derive(semio_framework_value::RetireOwned)]
 pub enum ArtifactToolCompletionValue<A: ArtifactApp> {
     Emit(ArtifactMutationOutcome<<A as ArtifactApp>::Mutation, <A as ArtifactApp>::ConfigMutation, <A as ArtifactApp>::DraftMutation, ArtifactCompletionFault>, EphemeralEmit<A>),
     Download(Result<ArtifactDownloadOutput, ArtifactCompletionFault>, EphemeralEmit<A>),

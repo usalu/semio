@@ -237,9 +237,9 @@ impl ArtifactEditor for SemioBrepEditor {
         editing::snapshot_editing_command_id(command, |_| "set-vertex")
     }
 
-    fn initial_snapshot() -> SemioBrepSnapshot {
+    fn reference_birth()->Option<fn()->SemioBrepSnapshot>{Some(||{
         SemioBrepSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

@@ -704,19 +704,11 @@
           "type": "object",
           "additionalProperties": false,
           "required": [
-            "type",
-            "inputs"
+            "type"
           ],
           "properties": {
             "type": {
               "const": "commitOverwrite"
-            },
-            "inputs": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "$ref": "#/$defs/SupersededInput"
-              }
             }
           }
         },
@@ -725,8 +717,7 @@
           "additionalProperties": false,
           "required": [
             "type",
-            "name",
-            "inputs"
+            "name"
           ],
           "properties": {
             "type": {
@@ -734,13 +725,6 @@
             },
             "name": {
               "$ref": "#/$defs/AlternativeName"
-            },
-            "inputs": {
-              "type": "array",
-              "minItems": 1,
-              "items": {
-                "$ref": "#/$defs/SupersededInput"
-              }
             }
           }
         }

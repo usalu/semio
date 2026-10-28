@@ -124,15 +124,15 @@ pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
 
 /// 📖️ Reads an unsigned LEB128 varint starting at `*pos`, advancing `*pos` past it.
 /// Errors `Malformed` on a >10-byte (overlong) encoding, `Truncated` on running out of bytes.
-pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, PackRefusal> {
+pub fn read_varint_u64(bytes: &(impl semio_framework_value::ByteReadSource+?Sized), pos: &mut usize) -> Result<u64, PackRefusal> {
     let start = *pos;
     let mut result: u64 = 0;
     for i in 0..10usize {
         let idx = *pos;
-        if idx >= bytes.len() {
+        if idx >= bytes.byte_len() {
             return Err(PackRefusal::Truncated(idx as u64));
         }
-        let byte = bytes[idx];
+        let byte = bytes.byte_at(idx).ok_or(PackRefusal::Truncated(idx as u64))?;
         *pos += 1;
         let more = byte & 0x80 != 0;
         let payload = (byte & 0x7F) as u64;
@@ -152,8 +152,8 @@ pub fn write_varint_i64(out: &mut Vec<u8>, value: i64) {
     write_varint_u64(out, zigzag_encode(value));
 }
 
-/// 🖊️ Reads a zigzag-encoded signed varint starting at `*pos`.
-pub fn read_varint_i64(bytes: &[u8], pos: &mut usize) -> Result<i64, PackRefusal> {
+/// 📖️ Reads a zigzag-encoded signed varint starting at `*pos`.
+pub fn read_varint_i64(bytes: &(impl semio_framework_value::ByteReadSource+?Sized), pos: &mut usize) -> Result<i64, PackRefusal> {
     let raw = read_varint_u64(bytes, pos)?;
     Ok(zigzag_decode(raw))
 }
@@ -177,7 +177,7 @@ pub fn is_minimal_varint(bytes: &[u8]) -> bool {
 
 //#region 🔖️Bytes
 #[derive(Clone, Copy)]
-enum ByteStorage<'a> { Slice(&'a [u8]), Paged(&'a crate::io::binary::operation_bytes::OwnedOperationBytes) }
+enum ByteStorage<'a>{Slice(&'a[u8]),Paged(&'a crate::io::binary::operation_bytes::OwnedOperationBytes),Borrowed(&'a dyn semio_framework_value::ByteReadSource)}
 
 /// ☑️ A checked finite range retains the exact borrowed source owner.
 #[derive(Clone, Copy)]
@@ -185,23 +185,21 @@ pub struct ByteSpan<'a> { source: ByteStorage<'a>, offset: usize, length: usize 
 impl<'a> ByteSpan<'a> {
     pub fn from_slice(bytes: &'a [u8]) -> Self { Self { source: ByteStorage::Slice(bytes), offset: 0, length: bytes.len() } }
     pub fn from_source(source: &'a crate::io::binary::operation_bytes::OwnedOperationBytes) -> Self { Self { source: ByteStorage::Paged(source), offset: 0, length: source.len() } }
+    pub fn from_bytes(source:&'a dyn semio_framework_value::ByteReadSource)->Self{Self{source:ByteStorage::Borrowed(source),offset:0,length:source.byte_len()}}
     pub fn len(self) -> usize { self.length }
     pub fn is_empty(self) -> bool { self.length == 0 }
-    pub fn get(self, offset: usize) -> Option<&'a u8> {
+    pub fn get(self, offset: usize) -> Option<u8> {
         if offset >= self.length { return None; }
-        match self.source { ByteStorage::Slice(bytes) => bytes.get(self.offset + offset), ByteStorage::Paged(source) => source.byte_ref(self.offset + offset) }
+        match self.source { ByteStorage::Slice(bytes)=>bytes.get(self.offset+offset).copied(),ByteStorage::Paged(source)=>source.byte_ref(self.offset+offset).copied(),ByteStorage::Borrowed(source)=>source.byte_at(self.offset+offset) }
     }
     pub fn slice(self, offset: usize, length: usize) -> Result<Self, PackRefusal> {
         if offset.checked_add(length).is_none_or(|end| end > self.length) { return Err(PackRefusal::Truncated(offset as u64)); }
         Ok(Self { source: self.source, offset: self.offset + offset, length })
     }
-    pub fn contiguous(self) -> Option<&'a [u8]> { match self.source { ByteStorage::Slice(bytes) => Some(&bytes[self.offset..self.offset + self.length]), ByteStorage::Paged(_) => None } }
-    pub fn iter(self) -> impl Iterator<Item = u8> + ExactSizeIterator + 'a { (0..self.length).map(move |index| *self.get(index).expect("checked borrowed operation byte range")) }
+    pub fn contiguous(self) -> Option<&'a [u8]> { match self.source { ByteStorage::Slice(bytes) => Some(&bytes[self.offset..self.offset + self.length]), ByteStorage::Paged(_)|ByteStorage::Borrowed(_) => None } }
+    pub fn iter(self) -> impl Iterator<Item = u8> + ExactSizeIterator + 'a { (0..self.length).map(move |index| self.get(index).expect("checked borrowed operation byte range")) }
 }
-impl std::ops::Index<usize> for ByteSpan<'_> {
-    type Output = u8;
-    fn index(&self, index: usize) -> &u8 { self.get(index).expect("checked borrowed operation byte offset") }
-}
+impl semio_framework_value::ByteReadSource for ByteSpan<'_>{fn byte_len(&self)->usize{self.length}fn byte_at(&self,index:usize)->Option<u8>{self.get(index)}fn read_bytes(&self,offset:usize,output:&mut[u8])->usize{let length=self.length.saturating_sub(offset).min(output.len());if length==0{return 0}match self.source{ByteStorage::Borrowed(source)=>source.read_bytes(self.offset+offset,&mut output[..length]),ByteStorage::Slice(source)=>{output[..length].copy_from_slice(&source[self.offset+offset..self.offset+offset+length]);length},ByteStorage::Paged(_)=>{for(index,byte)in output[..length].iter_mut().enumerate(){*byte=self.get(offset+index).expect("checked original source range");}length}}}}
 
 /// 👓️ One bounds-checked cursor borrows either a slice or the genuine paged operation owner.
 pub struct ByteReader<'a> { bytes: ByteSpan<'a>, pos: usize }
@@ -225,7 +223,7 @@ impl<'a> ByteReader<'a> {
         self.pos += length;
         Ok(bytes)
     }
-    pub fn read_u8(&mut self) -> Result<u8, PackRefusal> { Ok(self.read_span(1)?[0]) }
+    pub fn read_u8(&mut self) -> Result<u8, PackRefusal> { self.read_span(1)?.get(0).ok_or(PackRefusal::Truncated(self.pos as u64)) }
     fn array<const N: usize>(&mut self) -> Result<[u8; N], PackRefusal> {
         let span = self.read_span(N)?;
         let mut bytes = [0; N];
@@ -296,8 +294,8 @@ impl ByteWriter {
         write_varint_i64(&mut self.buf, v);
     }
 
-    pub fn write_bytes(&mut self, bytes: &[u8]) {
-        self.buf.extend_from_slice(bytes);
+    pub fn write_bytes(&mut self, bytes: &(impl semio_framework_value::ByteReadSource + ?Sized)) {
+        let mut fragment=[0;256];let mut offset=0;while offset<bytes.byte_len(){let count=bytes.read_bytes(offset,&mut fragment);assert!(count!=0,"byte source length changed during encoding");self.buf.extend_from_slice(&fragment[..count]);offset+=count;}
     }
 }
 

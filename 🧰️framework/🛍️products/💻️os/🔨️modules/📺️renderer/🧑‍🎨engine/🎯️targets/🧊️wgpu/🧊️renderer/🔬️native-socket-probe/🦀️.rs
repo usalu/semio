@@ -46,6 +46,8 @@ impl pack::snapshot::ArtifactPack for NativeSocketProbeSnapshot {
 }
 #[cfg(not(target_arch = "wasm32"))]
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NativeSocketProbeSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::Dialect,store::os_store::serialization::ArtifactCodec)>{
         Some((native_socket_sqlite::DIALECT,store::os_store::artifact_codec::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))
     }

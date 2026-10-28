@@ -5,7 +5,7 @@ use super::*;
 // #region 🛂️Manifest
 //#region 🔖️Manifest
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ModeDefinition {
@@ -29,7 +29,7 @@ pub struct ModeDefinition {
 /// 🚫️ A non-empty, order-preserving list — construction-time enforcement replaces what used to be a
 /// runtime `assert!` deep inside `AppBuilder::build_definition`. The first entry is the implicit
 /// fallback default when nothing else specifies one.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct NonEmptyVec<T> {
     pub(super) first: T,
     rest: Vec<T>,

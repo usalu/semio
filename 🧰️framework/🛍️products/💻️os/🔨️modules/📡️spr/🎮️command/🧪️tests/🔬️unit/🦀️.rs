@@ -67,7 +67,7 @@ fn operation_diff_absorb_accumulates() {
 #[test]
 fn operation_defaults_are_stable() {
     let op = CounterMutation::AddCounter(AddCounter { delta: 1 });
-    assert_eq!(op.mutation_id(), None);
+    assert_eq!(op.mutation_id().cloned(), None);
     assert!(op.dependencies().is_empty());
     assert_eq!(op.base_version(), None);
     assert_eq!(op.author_id(), None);

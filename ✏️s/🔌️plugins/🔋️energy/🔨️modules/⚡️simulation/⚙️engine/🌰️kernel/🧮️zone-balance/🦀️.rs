@@ -506,7 +506,7 @@ impl TimestepWork {
     }
 
 
-    fn thermal_demand(&self) -> DenseSolveDemand {
+    pub(super) fn thermal_demand(&self) -> DenseSolveDemand {
         let Some(work)=self.balance.as_ref() else {return DenseSolveDemand::default()};
         if !matches!(work.stage,BalanceStage::Solve|BalanceStage::Settle){return DenseSolveDemand::default();}
         match work.thermal_phase {

@@ -219,9 +219,9 @@ impl ArtifactEditor for SemioModelEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_model_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> SemioModelSnapshot {
+    fn reference_birth()->Option<fn()->SemioModelSnapshot>{Some(||{
         SemioModelSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-s-artifact-energy-model-initialization"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Original Energy model genesis and installed native Store authorities"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
+semio-framework-os-store-operation-wire = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-snapshot = { path = "../../../🧬️schema/📸️snapshot/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-mutations = { path = "../../../🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-job = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+serde_json.workspace = true

@@ -44,7 +44,7 @@ pub const TOOL_RUN_STEP_RING_CAPACITY: usize = 64;
 /// 🧷️ Arguments one step substitutes into its reason template.
 pub const TOOL_RUN_STEP_ARGS_MAX: usize = 4;
 /// 🧮️ Counters one progress snapshot carries.
-pub const TOOL_RUN_COUNTERS_MAX: usize = 8;
+pub const TOOL_RUN_COUNTERS_MAX: usize = 9;
 /// 🧱️ Provisional document ops one run may hold (§2.8).
 pub const TOOL_RUN_PROVISIONAL_OPS_MAX: u32 = 65_536;
 /// 🪆️ Provisional member ops one member-target run may hold: its finalize publishes them as ONE composed-child group in a
@@ -86,6 +86,12 @@ pub struct ToolRunId {
 
 impl ToolRunId {
     /// 🎫️ The `group_id` of the single `Edit` this run publishes at finalize.
+    /// 🧵️ Writes the exact run group identity into caller-owned fixed storage.
+    pub fn group_id_into(self,buffer:&mut [u8;32])->&str{
+        let prefix=TOOL_RUN_GROUP_ID_PREFIX.as_bytes();buffer[..prefix.len()].copy_from_slice(prefix);let mut digits=[0u8;20];let mut cursor=20;let mut value=self.run;loop{cursor-=1;digits[cursor]=b'0'+(value%10)as u8;value/=10;if value==0{break}}
+        let length=prefix.len()+20-cursor;buffer[prefix.len()..length].copy_from_slice(&digits[cursor..]);std::str::from_utf8(&buffer[..length]).unwrap()
+    }
+
     pub fn group_id(self) -> String {
         format!("{TOOL_RUN_GROUP_ID_PREFIX}{}", self.run)
     }
@@ -156,3 +162,11 @@ pub use actions_labels::*;
 #[path="♻️retirement/🦀️.rs"]
 mod original_retirement;
 
+
+#[cfg(test)]
+#[global_allocator]
+static TOOL_RUN_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+
+#[cfg(test)]
+#[path="🪪️group/🦀️.rs"]
+mod original_group_tests;

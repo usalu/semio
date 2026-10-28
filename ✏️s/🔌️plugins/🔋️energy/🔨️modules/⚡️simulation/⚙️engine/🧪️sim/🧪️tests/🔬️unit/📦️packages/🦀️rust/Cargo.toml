@@ -18,8 +18,9 @@ path = "../../🦀️.rs"
 [dependencies]
 
 [dev-dependencies]
+semio-s-plugin-energy-engine-units = { workspace = true }
 semio-framework-test-fixtures = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
-semio-s-plugin-energy-engine-sim = { path = "../../../../📦️packages/🦀️rust", features = ["testkit"] }
+semio-s-plugin-energy-engine-sim = { path = "../../../../📦️packages/🦀️rust", features = ["testkit", "testing"] }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-s-plugin-energy-engine-calendar = { workspace = true }
@@ -34,6 +35,6 @@ semio-s-plugin-energy-engine-sim-wire = { workspace = true }
 semio-s-plugin-energy-engine-site = { workspace = true }
 semio-s-plugin-energy-engine-sizing = { workspace = true }
 serde_json = { workspace = true }
-semio-framework-os-kernel = { path = "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-os-store-canonical-json = { path = "../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-framework-trace = { path = "../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-bestest = { workspace = true }

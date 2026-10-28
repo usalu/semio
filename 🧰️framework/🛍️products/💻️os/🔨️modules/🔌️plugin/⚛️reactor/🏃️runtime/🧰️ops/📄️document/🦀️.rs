@@ -347,7 +347,7 @@ pub async fn register_document_codec_for_app<A: ArtifactApp>(schema: impl Into<S
 where
     A::Mutation: Sync,
 {
-    let codec = store::bare_artifact_codec::<A::Snapshot, A::Mutation>(schema);
+    let codec = store::native_artifact_codec::<A::Snapshot>(schema);
     let app = A::default();
     let owner = app.instance_id().await.to_string();
     let document_bindings = vec![semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::DirectDocumentNative, owner.clone(), Some(A::DIALECT.artifact_kind.to_string()), vec![owner], Some(A::DIALECT.into()), None, &codec)];

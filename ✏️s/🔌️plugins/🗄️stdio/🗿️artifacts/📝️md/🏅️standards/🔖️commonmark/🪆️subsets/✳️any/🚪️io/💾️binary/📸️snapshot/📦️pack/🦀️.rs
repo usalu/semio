@@ -24,6 +24,8 @@ impl pack::snapshot::ArtifactPack for MdSnapshot{
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;if !envelope.matches_identity("stdio.md",store::semio_format::Component::Pack,1){return Err(store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue,"CommonMark pack identity differs")))}let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;let snapshot=Snapshot::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?;snapshot.try_into().map_err(|error|store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue,error)))}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for MdSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
 

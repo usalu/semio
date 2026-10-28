@@ -1,0 +1,65 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Command Wire Custody",
+  "type": "object",
+  "properties": {
+    "header": {
+      "const": [
+        67,
+        11
+      ]
+    },
+    "textBytes": {
+      "const": 8197
+    },
+    "cancelAfter": {
+      "const": [
+        0,
+        1,
+        5,
+        30,
+        200
+      ]
+    },
+    "copyBytes": {
+      "const": 32768
+    },
+    "capacityBytes": {
+      "const": 16777216
+    }
+  },
+  "required": [
+    "header",
+    "textBytes",
+    "cancelAfter",
+    "copyBytes",
+    "capacityBytes"
+  ],
+  "header": [
+    67,
+    11
+  ],
+  "textBytes": 8197,
+  "cancelAfter": [
+    0,
+    1,
+    5,
+    30,
+    200
+  ],
+  "copyBytes": 32768,
+  "capacityBytes": 16777216,
+  "textSha256": "f6eb9a7f05b2642cace32c1b45edf62c5570adb1ef27c96b4f9fcb77244f764a",
+  "packSha256": "72233628bd8ae1e6ae785392f24ff280663f04e4648c613c7e998d54bd75276c",
+  "packPrefix": [
+    1,
+    11,
+    0,
+    1,
+    1,
+    7,
+    133,
+    64
+  ],
+  "packSuffix": []
+}

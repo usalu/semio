@@ -1,0 +1,1 @@
+{"version":1,"cases":[{"scope":null,"actor":"original-author","transition":"transition-original","payloadBytes":8197,"expectedTargets":["operation-a","operation-b"]},{"scope":"alternative-α","actor":"作者-original","transition":"transition-scoped","payloadBytes":17,"expectedTargets":["operation-a","operation-b"]}]}

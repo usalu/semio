@@ -17,7 +17,7 @@ mod message_copy;
 pub use message_copy::MessageCopyCursor;
 #[path = "../../../♻️retirement/🦀️.rs"]
 mod replay_retirement;
-pub use replay_retirement::{ArtifactReplayRetirementFactory, ReplayRetirement, registered_replay_retirement_factory};
+pub use replay_retirement::{ArtifactReplayRetirementFactory, ReplayRetirement, registered_replay_retirement_factory,registered_replay_retirement_factory_allocation_bytes};
 #[path = "../../../🧳️prepared/🦀️.rs"]
 mod prepared;
 pub use prepared::{ArtifactReplayPrepared,retirement as prepared_retirement};

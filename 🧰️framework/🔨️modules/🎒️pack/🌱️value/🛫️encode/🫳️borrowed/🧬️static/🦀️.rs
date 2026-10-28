@@ -82,8 +82,8 @@ impl Discover<'_>{
             V::Map(length)=>{for index in 0..length{self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Key(index))?,false,control)?;let next=child(path,depth,index,maximum)?;self.projected(source,edge(shape,2,control)?,path,next,level+1,maximum,false,control)?;}},
             V::Statements(length)=>{for index in 0..length{let keyword=source.projection_key(&path[..depth],index)?;self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::Key(index))?,true,control)?;let spec=statements_variants(shape).and_then(|variants|variants.iter().find(|(key,_)|*key==keyword)).map(|(_,producer)|read_record(*producer,control)).transpose()?;let next=child(path,depth,index,maximum)?;let ids=record_ids(source,&path[..next])?;self.projected_fields(source,spec.as_ref(),ids,path,next,level+1,maximum,control)?;}},
             V::Wire(_)=>{for index in 0..6{let next=child(path,depth,index,maximum)?;match source.projection_view(&path[..next])?{V::Text(_)|V::TextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..next],SourceTextKind::Text)?,false,control)?,V::Absent=>{},_=>return Err(mismatch())}}let next=child(path,depth,8,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;},
-            V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
-            V::Expr(_)|V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)=>{},
+            V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicBytesSource(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)=>self.projected_dynamic(source,path,depth,level+1,maximum,control)?,
+            V::Expr(_)|V::Absent|V::Bool(_)|V::Int(_)|V::UInt(_)|V::Float(_)|V::Enum(_)|V::Bytes(_)|V::BytesSource(_)=>{},
         }Ok(())
     }
     fn projected_fields<T:FieldProjectionSource>(&mut self,source:&T,spec:Option<&S>,ids:&[u16],path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
@@ -92,7 +92,7 @@ impl Discover<'_>{
     }
     fn projected_dynamic<T:FieldProjectionSource>(&mut self,source:&T,path:&mut[usize;64],depth:usize,level:u16,maximum:u16,control:&mut NativeEncodeControl<'_>)->Result<(),PackRefusal>{
         level_limit(level,maximum)?;control.checkpoint()?;control.step()?;
-        match source.projection_view(&path[..depth])?{V::IntrinsicText(_)|V::IntrinsicTextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::IntrinsicText)?,false,control)?,V::IntrinsicArray(length)|V::IntrinsicObject(length)=>{for index in 0..length{let next=child(path,depth,index,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;}},V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicBytes(_)=>{},_=>return Err(mismatch())}Ok(())
+        match source.projection_view(&path[..depth])?{V::IntrinsicText(_)|V::IntrinsicTextSource(_)=>self.scratch.note(source,SourceTextLocator::new(&path[..depth],SourceTextKind::IntrinsicText)?,false,control)?,V::IntrinsicArray(length)|V::IntrinsicObject(length)=>{for index in 0..length{let next=child(path,depth,index,maximum)?;self.projected_dynamic(source,path,next,level+1,maximum,control)?;}},V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicBytes(_)|V::IntrinsicBytesSource(_)=>{},_=>return Err(mismatch())}Ok(())
     }
 }
 
@@ -102,6 +102,12 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
     fn source_text(&mut self,text:TextReadView<'_>,inline:bool,output:&mut Output<'_>)->Result<(),PackRefusal>{if !inline{if let Some(index)=self.symbols.index(self.source,text,self.control)?{output.byte(TAG_STR,self.control)?;return output.varint(index,self.control)}}output.byte(TAG_STR_INLINE,self.control)?;output.varint(text.len()as u64,self.control)?;self.source_bytes(text,output)}
     fn text(&mut self,text:&str,inline:bool,output:&mut Output<'_>)->Result<(),PackRefusal>{self.source_text(TextReadView::from_str(text),inline,output)}
     fn forced(&mut self,text:&str,output:&mut Output<'_>)->Result<(),PackRefusal>{let index=self.symbols.index(self.source,TextReadView::from_str(text),self.control)?.ok_or_else(mismatch)?;output.varint(index,self.control)}
+    fn source_octets(&mut self,source:&dyn semio_framework_value::paged::ByteReadSource,output:&mut Output<'_>)->Result<(),PackRefusal>{
+        output.byte(TAG_BYTES,self.control)?;output.varint(source.byte_len() as u64,self.control)?;
+        let mut offset=0;let mut buffer=[0;256];
+        while offset<source.byte_len(){self.control.checkpoint()?;let count=(source.byte_len()-offset).min(buffer.len());if source.read_bytes(offset,&mut buffer[..count])!=count{return Err(mismatch())}output.bytes(&buffer[..count],self.control)?;offset+=count;}
+        Ok(())
+    }
     fn bytes(&mut self,bytes:&[u8],output:&mut Output<'_>)->Result<(),PackRefusal>{output.byte(TAG_BYTES,self.control)?;output.varint(bytes.len()as u64,self.control)?;output.bytes(bytes,self.control)}
     fn symbols(&mut self,output:&mut Output<'_>)->Result<(),PackRefusal>{let length=self.symbols.len()?;output.varint(length as u64,self.control)?;for index in 0..length{self.control.checkpoint()?;let text=self.symbols.locator(index)?.resolve(self.source)?;output.varint(text.len()as u64,self.control)?;self.source_bytes(text,output)?;}Ok(())}
     fn projected_fields(&mut self,source:&T,spec:Option<&S>,path:&mut[usize;64],depth:usize,level:u16,output:&mut Output<'_>)->Result<(),PackRefusal>{
@@ -117,11 +123,11 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
         level_limit(level,self.options.limits.max_depth.min(64))?;
         self.control.checkpoint()?;
         let view=source.projection_view(&path[..depth])?;
-        if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)){output.byte(TAG_VALUE,self.control)?;return self.projected_dynamic(source,path,depth,level+1,output)}
+        if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicBytesSource(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)){output.byte(TAG_VALUE,self.control)?;return self.projected_dynamic(source,path,depth,level+1,output)}
         match view{
             V::Absent=>output.byte(TAG_ABSENT,self.control),V::Bool(value)=>output.byte(if value{TAG_TRUE}else{TAG_FALSE},self.control),
             V::Int(value)=>{output.byte(TAG_INT,self.control)?;output.signed(value,self.control)},V::UInt(value)=>{output.byte(TAG_UINT,self.control)?;output.varint(value,self.control)},V::Float(value)=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)},V::Enum(value)=>{output.byte(TAG_ENUM,self.control)?;output.varint(u64::from(value),self.control)},
-            V::Text(text)=>self.text(text,false,output),V::TextSource(text)=>self.source_text(text,false,output),V::Bytes(bytes)=>self.bytes(bytes,output),
+            V::Text(text)=>self.text(text,false,output),V::TextSource(text)=>self.source_text(text,false,output),V::Bytes(bytes)=>self.bytes(bytes,output),V::BytesSource(bytes)=>self.source_octets(bytes,output),
             V::Record(_)=>{let spec=record(shape,self.control)?;output.byte(TAG_RECORD,self.control)?;self.projected_fields(source,spec.as_ref(),path,depth,level+1,output)},
             V::List(length)|V::Tuple(length)=>{if let Some(producer)=table_spec_of(shape){self.projected_table(source,producer,length,path,depth,level,output)}else{{let shape=inner(shape,self.control)?;self.projected_sequence(source,shape,length,matches!(view,V::Tuple(_)),path,depth,level,output)}}},
             V::Block=>{output.byte(TAG_BLOCK,self.control)?;let next=child(path,depth,0,self.options.limits.max_depth.min(64))?;{let shape=edge(shape,1,self.control)?;self.projected(source,shape,path,next,level+1,output)}},
@@ -151,7 +157,7 @@ impl<T:FieldProjectionSource> BorrowedEncoder<'_,'_,'_,T>{
         match source.projection_view(&path[..depth])?{
             V::IntrinsicNull=>output.byte(TAG_NULL,self.control),V::IntrinsicBool(value)=>output.byte(if value{TAG_TRUE}else{TAG_FALSE},self.control),
             V::IntrinsicNumber(Number::UInt(value))=>{output.byte(TAG_UINT,self.control)?;output.varint(value,self.control)},V::IntrinsicNumber(Number::Int(value))=>{output.byte(TAG_INT,self.control)?;output.signed(value,self.control)},V::IntrinsicNumber(Number::Float(value))=>{output.byte(TAG_F64,self.control)?;output.bytes(&value.to_le_bytes(),self.control)},
-            V::IntrinsicText(text)=>self.text(text,false,output),V::IntrinsicTextSource(text)=>self.source_text(text,false,output),V::IntrinsicBytes(bytes)=>self.bytes(bytes,output),
+            V::IntrinsicText(text)=>self.text(text,false,output),V::IntrinsicTextSource(text)=>self.source_text(text,false,output),V::IntrinsicBytes(bytes)=>self.bytes(bytes,output),V::IntrinsicBytesSource(bytes)=>self.source_octets(bytes,output),
             V::IntrinsicArray(length)=>{output.byte(TAG_LIST,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)?;}Ok(())},
             V::IntrinsicObject(length)=>{output.byte(TAG_MAP,self.control)?;output.varint(length as u64,self.control)?;for index in 0..length{let key=source.projection_key(&path[..depth],index)?;self.text(key,true,output)?;let next=child(path,depth,index,self.options.limits.max_depth.min(64))?;self.projected_dynamic(source,path,next,level+1,output)?;}Ok(())},
             _=>Err(mismatch()),

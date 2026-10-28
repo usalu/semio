@@ -6540,31 +6540,7 @@
           },
           "effects": [
             {
-              "type": "commitOverwrite",
-              "inputs": [
-                {
-                  "target": "a",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      10,
-                      2
-                    ]
-                  }
-                },
-                {
-                  "target": "b",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      11,
-                      2
-                    ]
-                  }
-                }
-              ]
+              "type": "commitOverwrite"
             }
           ]
         }
@@ -6755,31 +6731,7 @@
           "effects": [
             {
               "type": "commitAlternative",
-              "name": "Edited history",
-              "inputs": [
-                {
-                  "target": "a",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      10,
-                      2
-                    ]
-                  }
-                },
-                {
-                  "target": "b",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      11,
-                      2
-                    ]
-                  }
-                }
-              ]
+              "name": "Edited history"
             }
           ]
         }
@@ -9301,31 +9253,7 @@
           "effects": [
             {
               "type": "commitAlternative",
-              "name": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää",
-              "inputs": [
-                {
-                  "target": "a",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      10,
-                      2
-                    ]
-                  }
-                },
-                {
-                  "target": "b",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      11,
-                      2
-                    ]
-                  }
-                }
-              ]
+              "name": "ääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääääää"
             }
           ]
         }
@@ -9516,31 +9444,7 @@
           "effects": [
             {
               "type": "commitAlternative",
-              "name": " Edited history ",
-              "inputs": [
-                {
-                  "target": "a",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      10,
-                      2
-                    ]
-                  }
-                },
-                {
-                  "target": "b",
-                  "replacement": {
-                    "kind": "input",
-                    "schema": "s.demo.op",
-                    "payload": [
-                      11,
-                      2
-                    ]
-                  }
-                }
-              ]
+              "name": " Edited history "
             }
           ]
         }

@@ -32,6 +32,8 @@ impl pack::snapshot::ArtifactPack for BinarySnapshot {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for BinarySnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }

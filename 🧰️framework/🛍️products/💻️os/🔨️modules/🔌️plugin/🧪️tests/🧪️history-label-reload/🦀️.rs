@@ -160,9 +160,9 @@ impl ArtifactApp for LabelReloadApp {
         }
     }
 
-    async fn initial_snapshot() -> TestSnapshot {
+    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
         TestSnapshot::default()
-    }
+    })}
 
     async fn handle(
         command: &LabelReloadCommand,

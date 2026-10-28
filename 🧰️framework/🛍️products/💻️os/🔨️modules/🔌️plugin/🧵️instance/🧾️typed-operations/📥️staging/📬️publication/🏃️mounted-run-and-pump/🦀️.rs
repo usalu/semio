@@ -67,7 +67,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.publish_mounted_owned_child_operation_unit(mounted,cx).await?;
             } else if mounted.pending_child_publication.is_some() {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
-                self.publish_mounted_typed_child_operation_unit(mounted, identity).await?;
+                self.publish_mounted_typed_child_operation_unit(mounted, cx).await?;
             } else if mounted_typed_interaction_writes_are_next::<A>(mounted) {
                 record_typed_operation_unit(TypedOperationUnitKind::Store);
                 self.publish_mounted_typed_interaction_unit(mounted, identity).await?;
@@ -76,12 +76,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.publish_mounted_typed_inline_interaction_unit(mounted, identity).await?;
             } else {
                 let before = (mounted.publication_progress, mounted.publication.is_some(), mounted.pending_artifact_publication.is_some(), mounted.stage);
-                let unit_grant=semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent)));
-                cx.with_native_receiving::<_,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>(|receiving|Ok(self.publish_mounted_typed_operation_unit(mounted,unit_grant,receiving)))??;
+                let original_before=cx.retained_progress();
+                self.publish_mounted_typed_operation_unit(mounted,semio_framework_plugin_reactor_app::original_plugin_turn_grant(self.mounted_policy.preparation,semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_grant(cx,semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent))),cx)?;
                 let receipt = mounted.publication_ownership_progress.take();
                 if receipt.is_none() { cx.settle_receiving_scope()?; }
                 if let Some((_, unit)) = receipt {
-                    match cx.receiving_issued_grant() { Some(issued) => cx.consume_receiving_retained(issued, unit)?, None => cx.consume_retained(unit)? }
+                    let unposted=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_unposted(unit,original_before,cx.retained_progress())?;
+                    cx.consume_retained(unposted)?;
                     *spent = spent.checked_add(unit).map_err(|error| plugin_sdk_fault(error.to_string()))?;
                     if cx.fuel_remaining()==fuel{cx.consume_fuel(1)}
                     if unit.copied_items == 0 || semio_framework_plugin_reactor_app::remaining_plugin_turn_grant(turn,*spent).maximum_items == 0 { return Ok(()); }

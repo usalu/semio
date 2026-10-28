@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🪞️ Delegates to [`StoreWire::ensure_durable_group_idle`].
     #[inline] pub fn ensure_durable_group_idle(&self) -> Result<(), VcsError> { self.wire.ensure_durable_group_idle() }
@@ -150,10 +150,15 @@ where
     
 
     /// 🪞️ Delegates to [`StoreCursor::finish_derived_report_replay`].
+    /// 🎁️ Moves the completed original result while preserving all typed source and recipient identity.
+    #[inline] pub fn take_derived_report_result(&self,owner:&mut Option<ArtifactDerivedReplay<P,Mutation>>)->Result<EditReplayResult<P,Mutation>,VcsError>{self.cursor.take_derived_report_result(&self.owners,&self.wire,owner)}
     #[inline] pub fn finish_derived_report_replay(&self, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> { self.cursor.finish_derived_report_replay(&self.owners, &self.wire, owner) }
 
     /// 🪞️ Delegates to [`StoreLive::snapshot_read`].
     #[inline] pub fn snapshot_read(&self) -> Result<SnapshotRead<P>, VcsError> where P: Sync, { self.live.snapshot_read(&self.owners, &self.wire, &self.cursor) }
+    /// 🎟️ Preserves the exact original read issuer and native refusal without constructing an owned error message.
+    #[inline] pub fn snapshot_read_original(&self) -> Result<SnapshotRead<P>, semio_framework_value::ValueError> where P: Sync, { self.live.snapshot_read_original(&self.owners,&self.wire,&self.cursor) }
+
 
     /// 🪞️ Delegates to [`StoreLive::snapshot_owner`].
     #[inline] pub fn snapshot_owner(&self) -> Arc<P> { self.live.snapshot_owner(&self.wire) }
@@ -279,7 +284,7 @@ where
     #[inline] pub fn outstanding_snapshot_read_count(&self) -> usize { self.owners.outstanding_snapshot_read_count() }
 
     /// 🪞️ Delegates to [`StoreLive::fold_current`].
-    #[inline] pub async fn fold_current(&self) -> Result<P, VcsError> { self.live.fold_current(&self.log).await }
+    #[inline] pub async fn fold_current(&self) -> Result<P, VcsError> where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> { self.live.fold_current(&self.log).await }
 
     /// 🪞️ Delegates to [`StoreReplay::replay_suffix_partitioned`].
     #[inline] pub fn replay_suffix_partitioned( base: Arc<P>, order: &[String], k: usize, edits: &impl ReplayEdits<Mutation>, schema: &str, supersessions: &EffectiveSupersessions, policy: semio_framework_os_spr::MergePolicy, ) -> Result<EditReplayResult<P, Mutation>, VcsError> { StoreReplay::<P, Mutation>::replay_suffix_partitioned(base, order, k, edits, schema, supersessions, policy) }

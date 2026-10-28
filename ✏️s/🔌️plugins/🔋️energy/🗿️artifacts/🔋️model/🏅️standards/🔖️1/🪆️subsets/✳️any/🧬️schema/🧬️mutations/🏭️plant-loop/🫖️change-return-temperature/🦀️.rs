@@ -1,14 +1,13 @@
 //! 🧫️ Energy model mutation — `ChangePlantLoopReturnTemperature`: Sets the temperature the loop returns at, in °C.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🧫️ `change-plant-loop-return-temperature` payload. Sets the temperature the loop returns at, in °C.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-plant-loop-return-temperature")]
 pub struct ChangePlantLoopReturnTemperature {
@@ -19,41 +18,5 @@ pub struct ChangePlantLoopReturnTemperature {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn change_plant_loop_return_temperature<Op: From<ChangePlantLoopReturnTemperature>>(id: crate::model::EntityId, new_return_temperature_c: f64) -> Op {
     ChangePlantLoopReturnTemperature { id, new_return_temperature_c }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangePlantLoopReturnTemperature
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangePlantLoopReturnTemperature>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "plant-loop", kind: "change-plant-loop-return-temperature", record: "ChangedPlantLoopReturnTemperature" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change plant loop {} return temperature to {:?}", self.id.0, self.new_return_temperature_c), &format!("Rücklauftemperatur von Anlagenkreislauf {} auf {:?} ändern", self.id.0, self.new_return_temperature_c))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangePlantLoopReturnTemperature
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangePlantLoopReturnTemperature>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

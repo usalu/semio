@@ -1,0 +1,65 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "input",
+    "operation",
+    "expected",
+    "historyCount",
+    "outboxCount",
+    "limits",
+    "cancelAt",
+    "cancelled"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.original-publication/v1"
+    },
+    "input": {
+      "const": {
+        "zoom": 1.25
+      }
+    },
+    "operation": {
+      "const": {
+        "kind": "zoom",
+        "zoom": 7.5
+      }
+    },
+    "expected": {
+      "const": {
+        "zoom": 7.5
+      }
+    },
+    "historyCount": {
+      "const": 1
+    },
+    "outboxCount": {
+      "const": 1
+    },
+    "limits": {
+      "const": {
+        "copy": 4096,
+        "capacity": 4096,
+        "ownerFrames": "original-demand"
+      }
+    },
+    "cancelAt": {
+      "const": [
+        "message",
+        "seeds",
+        "metadata",
+        "publish"
+      ]
+    },
+    "cancelled": {
+      "const": {
+        "zoom": 1.25,
+        "historyCount": 0,
+        "outboxCount": 0
+      }
+    }
+  }
+}

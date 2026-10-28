@@ -204,7 +204,7 @@ pub fn runtime_close_retire_cell<PA: PluginApp>(state: &RuntimeCloseWorkerState<
             Err(RuntimeInstanceRefusal::Contended) => return RuntimeCloseStatus::Ready,
             Err(RuntimeInstanceRefusal::Poisoned) => return runtime_close_fault(state, RuntimeCleanupFault::InstancePoisoned),
         };
-        if !instance.app.close_terminal_is_empty() {
+        if !instance.app.close_terminal_is_empty()||!instance.surface_contexts.original_terminal_is_empty() {
             return runtime_close_fault(state, RuntimeCleanupFault::InstanceNotDrained);
         }
         let maintenance = match cell.maintenance_pump.try_lock() {

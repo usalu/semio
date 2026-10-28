@@ -1,0 +1,56 @@
+{
+  "parent": "parent-λ",
+  "changes": [
+    {
+      "id": "change-a",
+      "editIds": [
+        "edit-a"
+      ],
+      "savedAt": "11"
+    },
+    {
+      "id": "change-b",
+      "editIds": [
+        "edit-β"
+      ],
+      "description": "quoted \" λ",
+      "savedAt": "12"
+    }
+  ],
+  "changeIds": [
+    "change-a",
+    "missing",
+    "change-b"
+  ],
+  "message": "Energy checkpoint λ",
+  "authors": [
+    "author-a",
+    "author-β"
+  ],
+  "timestamp": "2026-10-21",
+  "pins": [
+    {
+      "id": "energy-a",
+      "kind": "s.energy.model",
+      "standard": "1",
+      "subset": "*",
+      "checkpoint": "ck-child-a"
+    },
+    {
+      "id": "energy-β",
+      "kind": "s.energy.model",
+      "standard": "1",
+      "subset": "*",
+      "checkpoint": "ck-child-β"
+    }
+  ],
+  "width": 64,
+  "cuts": [
+    0,
+    1,
+    7,
+    32,
+    128
+  ],
+  "digest": "6a6108db2b56ac9269cf9f64284460c644bbb1c0998ea1cb68f5234a5cd41115"
+}

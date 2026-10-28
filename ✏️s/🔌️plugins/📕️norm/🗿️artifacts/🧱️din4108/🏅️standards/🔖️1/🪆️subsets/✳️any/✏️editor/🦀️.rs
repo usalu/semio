@@ -132,9 +132,9 @@ impl ArtifactEditor for Din4108PlayApp {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn initial_snapshot() -> Din4108Snapshot {
+    fn reference_birth()->Option<fn()->Din4108Snapshot>{Some(||{
         Din4108Snapshot::default()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))

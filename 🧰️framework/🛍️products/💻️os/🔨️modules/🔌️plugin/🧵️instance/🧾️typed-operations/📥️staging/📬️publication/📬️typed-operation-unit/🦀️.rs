@@ -2,15 +2,15 @@
 
 use super::*;
 
-impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
+    pub fn publish_mounted_typed_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, retained:RetainedCloneGrant, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if mounted.reject_cancelled_publication()? {
             self.stores.handoff_mounted_durable_publication(mounted)?;
             return Ok(());
         }
         let _permit = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication).ok_or_else(|| plugin_sdk_fault("typed-operation publication claim is cancelled or occupied"))?;
         if mounted.publication.is_none() {
-            let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication")) };
+            let Some(completion) = mounted.completion.as_ref() else { return Err(plugin_sdk_fault("typed-operation completion owner was retired before publication").into()) };
             let Some(mut publication) = completion.take()? else { return Ok(()) };
             mounted.ui_pending = matches!(publication, ArtifactToolCompletionValue::Emit(Ok(_), _));
             self.as_render().settle_tool_operation(mounted, &mut publication)?;
@@ -26,21 +26,25 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return Ok(());
             }
         }
+        if let Some((generation,revision))=mounted.pending_stream_abort.as_ref().and_then(|owner|owner.published_frontier()){
+            if generation!=self.stores.store.generation_now()||revision!=self.stores.store.content_revision_now(){return Err(plugin_sdk_fault("stream abort original published frontier changed before mounted acknowledgement").into())}
+            if mounted.artifact_generation!=generation{let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:2*std::mem::size_of::<u64>()+2*std::mem::size_of::<[u8;32]>(),capacity_bytes:0,release_bytes:0,depth:1},|_|{mounted.artifact_generation=generation;mounted.canonical_revision=revision;mounted.operation.base_revision=semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap()));mounted.operation.generation=semio_framework_job::Generation(generation);Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:2*std::mem::size_of::<u64>()+2*std::mem::size_of::<[u8;32]>(),..Default::default()}))})?;return Ok(())}
+        }
         let live_revision = self.stores.store.content_revision_now();
         let live_generation = self.stores.store.generation_now();
         if !typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation) {
             if self.stores.handoff_mounted_durable_publication(mounted)? {
-                return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root"));
+                return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root").into());
             }
             if let Some(pending)=mounted.pending_artifact_publication.as_mut(){pending.begin_close();}
-            return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root"));
+            return Err(plugin_sdk_fault("typed-operation pending publication rejected a stale immutable document root").into());
         }
         if mounted.pending_artifact_publication.is_none() && matches!(mounted.publication.as_ref(),Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))if !emit.artifact_mutations.is_empty()||!emit.config_mutations.is_empty()||!emit.draft_mutations.is_empty()||!emit.window_config_mutations.is_empty()) && mounted.admit_actor_capture(retained)? {return Ok(());}
         if let Some(pending) = mounted.pending_artifact_publication.as_mut() {
             let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(retained);
             let (pending_lane, _) = pending.lane();
             if pending.is_closing(){return Ok(());}
-            if mounted.pending_window_config_receipt.is_some() { return self.advance_mounted_window_config_refresh(mounted, retained); }
+            if mounted.pending_window_config_receipt.is_some() { return self.advance_mounted_window_config_refresh(mounted, retained).map_err(Into::into); }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
             if matches!(pending, PendingArtifactStorePublication::Artifact(_))
                 && self.stores.store.returned_snapshot_read_count() > PUBLICATION_RETURNED_ROOT_ALLOWANCE
@@ -49,15 +53,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return Ok(());
             }
             let pending = mounted.pending_artifact_publication.as_mut().expect("pending publication checked above");
-            let advance = match pending {
-                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch(publication, grant.maximum_copy_bytes, grant, receiving).map_err(store_publication_fault)?,
-                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch(publication, grant.maximum_copy_bytes, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch(publication, grant.maximum_copy_bytes, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant, receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
-                PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(), grant)?,
+            let result = cx.with_native_receiving(|receiving|Ok::<_,Fault>(match pending {
+                PendingArtifactStorePublication::Artifact(publication) => self.stores.store.advance_apply_batch(publication, retained.maximum_copy_bytes, grant,receiving).map_err(store_publication_fault)?,
+                PendingArtifactStorePublication::Config(publication) => self.stores.config_store.advance_apply_batch(publication, retained.maximum_copy_bytes, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Draft(publication) => self.stores.draft_store.advance_apply_batch(publication, retained.maximum_copy_bytes, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Presence(publication) => self.stores.presence_store.advance_publish_one(publication, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::Transient(publication) => self.stores.transient_store.advance_publish_one(publication, grant,receiving).map_err(|error| plugin_sdk_fault(error.to_string()))?,
+                PendingArtifactStorePublication::WindowConfig(publication) => self.stores.window_config_store.advance(publication.as_mut(),retained.maximum_copy_bytes, grant,receiving)?,
                 PendingArtifactStorePublication::WindowTransient(publication) => self.stores.window_transient_store.advance(publication.as_mut(), grant)?,
-            };
+            }));
+            let ownership=match &result{Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(_,receipt))=>*receipt,Err(error)=>error.retained_progress(),_=>Default::default()};
+            cx.consume_receiving_retained(retained,ownership)?;
+            let advance=result?;
             return match advance {
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(receipt, ownership) => {
                     if ownership!=RetainedCloneProgress::default(){
@@ -83,7 +90,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         TypedOperationResultLane::WindowConfig => {
                             mounted.published_window_config = true;
                             mounted.pending_window_config_receipt = Some(receipt);
-                            return self.advance_mounted_window_config_refresh(mounted, retained);
+                            return self.advance_mounted_window_config_refresh(mounted, retained).map_err(Into::into);
                         }
                         TypedOperationResultLane::WindowTransient => {
                             let authority = mounted.window_transient_authority.as_mut().ok_or_else(|| plugin_sdk_fault("window transient receipt lost its captured window authority"))?;
@@ -92,14 +99,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         _ => unreachable!("pending artifact publication has one durable store lane"),
                     }
                     let token = mounted.next_token();
-                    mounted.queue_page(TypedOperationResultPage::try_serialize_cold(token, pending_lane, &receipt)?)
+                    mounted.queue_page(TypedOperationResultPage::try_serialize_cold(token, pending_lane, &receipt)?).map_err(Into::into)
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(checkpoint) => {
                     mounted.note_publication_checkpoint(checkpoint);
                     Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(checkpoint, ownership) => {
-                    if !ownership.fits(grant.retained_grant())||grant.maximum_depth==0&&ownership!=RetainedCloneProgress::default(){return Err(plugin_sdk_fault("typed preparation violated its original full grant"));}
+                    if !ownership.fits(grant.retained_grant())||grant.maximum_depth==0&&ownership!=RetainedCloneProgress::default(){return Err(plugin_sdk_fault("typed preparation violated its original full grant").into());}
                     assert!(mounted.publication_ownership_progress.is_none(),"typed preparation cannot overwrite an unreturned original receipt");
                     mounted.publication_ownership_progress=Some((retained,ownership));
                     mounted.note_publication_checkpoint(checkpoint);
@@ -113,8 +120,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     Ok(())
                 }
                 store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => Ok(()),
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Err(plugin_sdk_fault("artifact-store publication awaits an ACK without its retained host page")),
-                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK")),
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => Err(plugin_sdk_fault("artifact-store publication awaits an ACK without its retained host page").into()),
+                store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => Err(plugin_sdk_fault("artifact-store publication completed before result ACK").into()),
             };
         }
         let token = mounted.next_token();
@@ -130,7 +137,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     || (!ephemeral.transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Transient))
                     || (!ephemeral.window_transient.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowTransient))
                 {
-                    return Err(plugin_sdk_fault("typed-operation emitted an undeclared ephemeral publication lane"));
+                    return Err(plugin_sdk_fault("typed-operation emitted an undeclared ephemeral publication lane").into());
                 }
                 if let Some(mutation) = ephemeral.presence.pop() {
                     match self.stores.presence_store.begin_publish_one(mounted.operation.operation, mounted.presence_generation, mutation, self.stores.presence_one_item_factory.as_deref(), self.stores.presence_local_root_retirement_factory.clone()) {
@@ -141,7 +148,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.presence.push(mutation);
-                            return Err(plugin_sdk_fault(reason));
+                            return Err(plugin_sdk_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.transient.pop() {
@@ -153,7 +160,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.transient.push(mutation);
-                            return Err(plugin_sdk_fault(reason));
+                            return Err(plugin_sdk_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.window_transient.pop() {
@@ -161,12 +168,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Some(authority) => authority,
                         None => {
                             ephemeral.window_transient.push(mutation);
-                            return Err(plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"));
+                            return Err(plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority").into());
                         }
                     };
                     let grant=self.mounted_policy.maintenance;
                     let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
-                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault);}}
+                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
@@ -174,7 +181,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                         Err(semio_framework_plugin_window_transient::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
                             ephemeral.window_transient.push(mutation);
-                            return Err(fault);
+                            return Err(fault.into());
                         }
                     }
                 } else {
@@ -187,15 +194,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             ArtifactToolCompletionValue::Emit(Ok(emit), ephemeral) => {
                 let preparation=match emit.prepare_child_one(retained){Ok(step)=>step,Err(fault)=>{
-                    let progress=fault.retained_progress();if !progress.fits(retained){return Err(plugin_sdk_fault("original child preparation error exceeded mounted caller policy"));}
-                    if progress!=RetainedCloneProgress::default(){assert!(mounted.publication_ownership_progress.is_none(),"child preparation error cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));}return Err(fault);
+                    let progress=fault.retained_progress();if !progress.fits(retained){return Err(plugin_sdk_fault("original child preparation error exceeded mounted caller policy").into());}
+                    if progress!=RetainedCloneProgress::default(){assert!(mounted.publication_ownership_progress.is_none(),"child preparation error cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));}return Err(fault.into());
                 }};
                 let progress=preparation.progress();
-                if !progress.fits(retained){return Err(plugin_sdk_fault("original emitted child preparation exceeded mounted caller policy"));}
+                if !progress.fits(retained){return Err(plugin_sdk_fault("original emitted child preparation exceeded mounted caller policy").into());}
                 if progress!=RetainedCloneProgress::default(){
                     assert!(mounted.publication_ownership_progress.is_none(),"child preparation cannot overwrite an original receipt");mounted.publication_ownership_progress=Some((retained,progress));return Ok(());
                 }
-                match preparation{ChildEmitPreparationStep::Ready(_)=>{},ChildEmitPreparationStep::Pending(_)=>return Ok(()),ChildEmitPreparationStep::Refused(fault,_)=>return Err(fault)}
+                match preparation{ChildEmitPreparationStep::Ready(_)=>{},ChildEmitPreparationStep::Pending(_)=>return Ok(()),ChildEmitPreparationStep::Refused(fault,_)=>return Err(fault.into())}
                 if (!emit.artifact_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Artifact))
                     || (!emit.config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Config))
                     || (!emit.window_config_mutations.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::WindowConfig))
@@ -206,27 +213,27 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     || ((!emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty()) && !publication_lanes.contains(&ArtifactToolPublicationLane::Child))
                     || (!emit.interaction_writes.is_empty() && !publication_lanes.contains(&ArtifactToolPublicationLane::Interaction))
                 {
-                    return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract"));
+                    return Err(plugin_sdk_fault("typed-operation emitted a store lane absent from its exact factory publication contract").into());
                 }
                 if !emit.artifact_mutations.is_empty() || !emit.owned_child_emits.is_empty() {
                     self.media.require_operation_emitting_kind(&mounted.verb, self.tools.declared_dispatch_kind(&*self.host_events, &mounted.verb))?;
                     if A::ROLE == AppRole::Viewer {
-                        return Err(viewer_read_only_fault(&mounted.verb));
+                        return Err(viewer_read_only_fault(&mounted.verb).into());
                     }
                     if let Some(fault) = X::mutation_refusal(&*self.time_travel, &*self.tool_runs, &mounted.verb) {
-                        return Err(fault);
+                        return Err(fault.into());
                     }
                     if let Some(pending_txn_id) = self.txn.pending_transaction.as_ref().map(|pending| pending.txn_id.clone()) {
-                        return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", format!("verb {:?} would emit artifact mutations while transaction {pending_txn_id:?} is pending on this instance", mounted.verb)));
+                        return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::Plugin, "transaction.instance-busy", format!("verb {:?} would emit artifact mutations while transaction {pending_txn_id:?} is pending on this instance", mounted.verb)).into());
                     }
                     if emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps) {
                         let mut running = self.stores.store.snapshot().map_err(|error| error.into_fault())?;
                         let foreign = Vec::new();
                         for op in emit.artifact_mutations.iter() {
-                            if ColdMutation::foreign_step_source(op, &running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient")); }
-                            let outcome = ColdMutation::diff(op, &running);
+                            if op.foreign_step_source(&running, 0).map_err(|error| error.into_fault())?.is_some() { return Err(plugin_sdk_fault("foreign transaction output awaits its original staged preparation recipient").into()); }
+                            let outcome = op.diff(&running);
                             if !outcome.is_applicable(protocol::MergePolicy::default()) {
-                                return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())));
+                                return Err(MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", format!("mutation outcome was rejected: {:?}", outcome.messages())).into());
                             }
                             running = protocol::apply_diff_cold(outcome.diff(), &running).map_err(|error| MediaTransfers::<A>::transaction_fault(FaultOrigin::App, "transaction.member-rejected", error.to_string()))?;
                         }
@@ -249,22 +256,22 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     !emit.artifact_mutations.is_empty(),
                     emit.artifact_mutations.iter().any(Mutation::may_emit_foreign_steps),
                 ) {
-                    return Err(fault);
+                    return Err(fault.into());
                 }
                 if !emit.artifact_mutations.is_empty() || !emit.child_emits.is_empty() || !emit.owned_child_emits.is_empty() {
                     if let Some(fault) = X::document_refusal(&*self.time_travel, &*self.tool_runs, &mounted.verb) {
-                        return Err(fault);
+                        return Err(fault.into());
                     }
                 }
-                self.history.close_streamed_transaction_unit(&mut *self.stores, emit)?;
+                if !self.history.close_streamed_transaction_unit(&mut *self.stores,emit,&mut mounted.pending_stream_abort,&mut mounted.stream_abort_completed,cx)?{return Ok(())}
                 if !emit.owned_child_emits.is_empty() {
-                    if !emit.child_emits.is_empty() || emit.owned_child_emits.len() > PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN { return Err(plugin_sdk_fault("mounted owned child group requires its one exact admitted typed source family")); }
+                    if !emit.child_emits.is_empty() || emit.owned_child_emits.len() > PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN { return Err(plugin_sdk_fault("mounted owned child group requires its one exact admitted typed source family").into()); }
                     let operation = mounted.operation.operation.0;
                     let captured_millis = i64::try_from(store::os_store::document_materialize::now_ms()).map_err(|_|plugin_sdk_fault("mounted child publication requires its original UTC clock capture"))?;
                     let grant=retained;
                     let step=self.child_composition.admit_private_child_group_frame(operation, captured_millis, u64::MAX, grant)?;
                     let progress=step.progress();
-                    if !progress.fits(grant){return Err(plugin_sdk_fault("mounted child frame exceeded its original preparation grant"));}
+                    if !progress.fits(grant){return Err(plugin_sdk_fault("mounted child frame exceeded its original preparation grant").into());}
                     if progress!=RetainedCloneProgress::default(){
                         assert!(mounted.publication_ownership_progress.is_none(),"mounted child frame cannot overwrite its original unreturned receipt");
                         mounted.publication_ownership_progress=Some((retained,progress));
@@ -274,14 +281,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 if emit.child_emits.is_empty() && emit.owned_child_emits.is_empty() && !emit.artifact_mutations.is_empty() {
                     if let Some(fault) = self.stores.open_transaction_admission_fault(emit.transaction.as_ref()) {
-                        return Err(fault);
+                        return Err(fault.into());
                     }
                     if let Err(error) = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<A::Snapshot, A::Mutation>(&emit.artifact_mutations) {
-                        return Err(error.into_fault());
+                        return Err(error.into_fault().into());
                     }
                     let streams=emit.transaction_phase==TransactionPhase::Stream;
                     let outbound=self.stores.store.backbone_ref().is_some();
-                    if let Some((mut publication,ownership))=self.stores.store.admit_apply_batch(mounted.operation.operation,mounted.artifact_generation,mounted.canonical_revision,&mut mounted.actor_capture,&mut emit.artifact_mutations,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut emit.transaction,Some(&mounted.verb),outbound,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
+                    if let Some((mut publication,ownership))=self.stores.store.admit_apply_batch(mounted.operation.operation,mounted.artifact_generation,mounted.canonical_revision,&mut mounted.actor_capture,&mut emit.artifact_mutations,HistoryLane::Document,self.stores.artifact_one_item_factory.as_ref(),&mut emit.transaction,Some(&mounted.verb),None,outbound,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
                         publication.set_transaction_open(streams);
                         emit.transaction_phase=TransactionPhase::Commit;
                         mounted.publication_ownership_progress=Some((retained,ownership));
@@ -292,7 +299,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 if !emit.config_mutations.is_empty() {
                     let revision=self.stores.config_store.content_revision_now();
                     let mut transaction=None;
-                    if let Some((publication,ownership))=self.stores.config_store.admit_apply_batch(mounted.operation.operation,mounted.config_generation,revision,&mut mounted.actor_capture,&mut emit.config_mutations,HistoryLane::Document,self.stores.config_one_item_factory.as_ref(),&mut transaction,Some(&mounted.verb),false,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
+                    if let Some((publication,ownership))=self.stores.config_store.admit_apply_batch(mounted.operation.operation,mounted.config_generation,revision,&mut mounted.actor_capture,&mut emit.config_mutations,HistoryLane::Document,self.stores.config_one_item_factory.as_ref(),&mut transaction,Some(&mounted.verb),None,false,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
                         mounted.publication_ownership_progress=Some((retained,ownership));
                         mounted.pending_artifact_publication=Some(PendingArtifactStorePublication::Config(publication));
                     }
@@ -307,7 +314,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 } else if !emit.draft_mutations.is_empty() {
                     let revision=self.stores.draft_store.content_revision_now();
                     let mut transaction=None;
-                    if let Some((publication,ownership))=self.stores.draft_store.admit_apply_batch(mounted.operation.operation,mounted.draft_generation,revision,&mut mounted.actor_capture,&mut emit.draft_mutations,HistoryLane::Document,self.stores.draft_one_item_factory.as_ref(),&mut transaction,Some(&mounted.verb),false,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
+                    if let Some((publication,ownership))=self.stores.draft_store.admit_apply_batch(mounted.operation.operation,mounted.draft_generation,revision,&mut mounted.actor_capture,&mut emit.draft_mutations,HistoryLane::Document,self.stores.draft_one_item_factory.as_ref(),&mut transaction,Some(&mounted.verb),None,false,retained).map_err(|error|plugin_sdk_fault(error.to_string()))? {
                         mounted.publication_ownership_progress=Some((retained,ownership));
                         mounted.pending_artifact_publication=Some(PendingArtifactStorePublication::Draft(publication));
                     }
@@ -321,7 +328,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.presence.push(mutation);
-                            return Err(plugin_sdk_fault(reason));
+                            return Err(plugin_sdk_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.transient.pop() {
@@ -333,7 +340,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Err(rejected) => {
                             let (reason, mutation) = rejected.into_owners();
                             ephemeral.transient.push(mutation);
-                            return Err(plugin_sdk_fault(reason));
+                            return Err(plugin_sdk_fault(reason).into());
                         }
                     }
                 } else if let Some(mutation) = ephemeral.window_transient.pop() {
@@ -341,12 +348,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         Some(authority) => authority,
                         None => {
                             ephemeral.window_transient.push(mutation);
-                            return Err(plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority"));
+                            return Err(plugin_sdk_fault("window transient emission requires one exact captured ViewModel window authority").into());
                         }
                     };
                     let grant=self.mounted_policy.maintenance;
                     let refresh=match self.stores.window_transient_store.refresh_demands(authority,grant.maximum_copy_bytes){Ok(_)=>self.stores.window_transient_store.refresh(authority,grant),Err(error)=>Err(plugin_retirement_fault(error))};
-                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault);}}
+                    match refresh{Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Ready(_))=>{},Ok(semio_framework_plugin_window_config::window_mutation::refresh::WindowAuthorityRefreshStep::Pending(_))=>{ephemeral.window_transient.push(mutation);return Ok(());},Err(fault)=>{ephemeral.window_transient.push(mutation);return Err(fault.into());}}
                     match self.stores.window_transient_store.begin(mounted.operation.operation, authority, mutation) {
                         Ok(publication) => {
                             mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::WindowTransient(publication));
@@ -354,12 +361,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         }
                         Err(semio_framework_plugin_window_transient::window_transient::RejectedWindowTransientEmission { mutation, fault }) => {
                             ephemeral.window_transient.push(mutation);
-                            return Err(fault);
+                            return Err(fault.into());
                         }
                     }
                 } else if !emit.child_emits.is_empty() {
                     if mounted.pending_child_publication.is_some() {
-                        return Err(plugin_sdk_fault("typed-operation retained more than one child-group publication owner"));
+                        return Err(plugin_sdk_fault("typed-operation retained more than one child-group publication owner").into());
                     }
                     mounted.pending_child_publication = Some(PendingChildGroupPublication::new(std::mem::take(&mut emit.artifact_mutations), std::mem::take(&mut emit.child_emits), emit.transaction.take())?);
                     return Ok(());
@@ -369,13 +376,13 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         let effect = self.stores.stamp_load_document_identity(effect)?;
                         if let Err(effect) = self.tools.typed_effect_outbox.push(effect) {
                             emit.effects.push(effect);
-                            return Err(plugin_sdk_fault("typed-operation effect receiver is saturated"));
+                            return Err(plugin_sdk_fault("typed-operation effect receiver is saturated").into());
                         }
                         TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Effect, &("accepted", self.tools.typed_effect_outbox.len()))?
                     } else if let Some(event) = emit.events.pop() {
                         if let Err(event) = self.tools.typed_event_outbox.push(event) {
                             emit.events.push(event);
-                            return Err(plugin_sdk_fault("typed-operation event receiver is saturated"));
+                            return Err(plugin_sdk_fault("typed-operation event receiver is saturated").into());
                         }
                         TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Event, &("accepted", self.tools.typed_event_outbox.len()))?
                     } else {
@@ -387,14 +394,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                             }
                             () if mounted.ui_pending => {
                                 if let Err(_scope) = self.tools.typed_ui_outbox.push(emit.ui_scope.clone()) {
-                                    return Err(plugin_sdk_fault("typed-operation UI receiver is saturated"));
+                                    return Err(plugin_sdk_fault("typed-operation UI receiver is saturated").into());
                                 }
                                 mounted.ui_pending = false;
                                 TypedOperationResultPage::try_serialize_cold(token, TypedOperationResultLane::Ui, &emit.ui_scope)?
                             }
                             () => {
                                 if self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: token.operation, ui_scope: emit.ui_scope.clone() }).is_err() {
-                                    return Err(plugin_sdk_fault("typed-operation completion receiver is saturated"));
+                                    return Err(plugin_sdk_fault("typed-operation completion receiver is saturated").into());
                                 }
                                 TypedOperationResultPage::try_new(token, TypedOperationResultLane::Terminal, b"typed-operation-complete")?
                             }
@@ -403,6 +410,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
             }
         };
-        mounted.queue_page(page)
+        mounted.queue_page(page).map_err(Into::into)
     }
 }

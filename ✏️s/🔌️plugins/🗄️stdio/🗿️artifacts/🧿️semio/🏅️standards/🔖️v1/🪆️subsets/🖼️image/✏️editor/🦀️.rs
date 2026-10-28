@@ -220,9 +220,9 @@ impl ArtifactEditor for SemioImageEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_image_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> SemioImageSnapshot {
+    fn reference_birth()->Option<fn()->SemioImageSnapshot>{Some(||{
         SemioImageSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

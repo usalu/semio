@@ -110,6 +110,9 @@ impl<T: RetireOwned> ControlledRetirement<T> {
     /// 🧩️ Borrows all currencies from the same selected source, structural birth, payload or physical release event.
     pub fn selected_demand(&self,body:usize)->Result<crate::RetirementDemand,ValueError>{self.next_demand(body)}
 
+    /// 🧷️ Loans the original typed frontier while its complete selected quote is admitted or refused.
+    pub fn select(&mut self,body:usize)->Result<crate::RetirementSelection<'_,Self>,ValueError>{crate::select_retirement_cursor(self,body)}
+
     /// 🧮️ Borrows the active payload work without charging future constructor movement as input copying.
     pub fn next_copy_byte_demand(&self) -> Result<usize, ValueError> {
         if self.value.is_some() && !T::controlled_retirement_supported() { return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "typed owner has no controlled retirement authority")); }
@@ -258,7 +261,7 @@ fn refusal(message: &'static str) -> ValueError { ValueError::literal(ValueRefus
 impl<T: RetireOwned> RetireOwned for ControlledRetirement<T> {
     fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(self) }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<Self>()) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 
 impl<T: RetireOwned> RetirementCursor for ControlledRetirement<T> {

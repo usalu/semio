@@ -86,5 +86,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "field": "roughness",
+    "input": "new_roughness",
+    "key": "id",
+    "labels": {
+      "en": "Change material: Roughness",
+      "de": "Rauigkeit ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "material",
+      "kind": "change-material-roughness",
+      "record": "ChangedMaterialRoughness"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Roughness violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The material already carries this roughness value."
+      }
+    }
   }
 }

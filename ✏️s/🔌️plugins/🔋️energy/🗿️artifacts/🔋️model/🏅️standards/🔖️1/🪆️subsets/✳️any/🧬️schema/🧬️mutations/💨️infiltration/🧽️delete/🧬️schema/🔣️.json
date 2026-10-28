@@ -35,5 +35,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "key": "id",
+    "inverse": "CreateInfiltration",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete Infiltration",
+      "de": "Infiltration löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "infiltration",
+      "kind": "delete-infiltration",
+      "record": "DeletedInfiltration"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

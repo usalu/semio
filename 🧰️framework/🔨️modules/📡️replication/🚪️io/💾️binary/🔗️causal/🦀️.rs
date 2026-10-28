@@ -1,5 +1,6 @@
 //! 🔗️ Binary causal envelope, frontier and bounded batch representations.
 use crate::{ArtifactDiff, FrontierSummary, InverseMutation, MutationEnvelope};
+use semio_framework_value::ByteReadSource;
 
 //#region 🔖️EnvelopeCodec
 /// 🎞️ Binary record codec for `MutationEnvelope`/`FrontierSummary`, built on
@@ -93,7 +94,7 @@ pub fn decode_envelope(bytes: &[u8], pos: &mut usize) -> Result<MutationEnvelope
     let transaction = if flags & 0b01 != 0 { Some(semio_framework_replication_edit::TransactionRef { id: semio_framework_replication_wire_core::read_str(bytes, pos)?, tool: semio_framework_replication_wire_core::read_str(bytes, pos)? }) } else { None };
     let verb = if flags & 0b10 != 0 { Some(semio_framework_replication_wire_core::read_str(bytes, pos)?) } else { None };
     let line = if flags & 0b100 != 0 { Some(semio_framework_replication_wire_core::read_str(bytes, pos)?) } else { None };
-    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction, verb, line })
+    Ok(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload:crate::CausalPayload::try_from_slice(&diff_payload).map_err(|_|semio_framework_replication_error::ProtocolError::LimitExceeded("causal diff payload"))? }, inverse: InverseMutation { schema: inverse_schema, payload:crate::CausalPayload::try_from_slice(&inverse_payload).map_err(|_|semio_framework_replication_error::ProtocolError::LimitExceeded("causal inverse payload"))? }, timestamp, transaction, verb, line })
 }
 
 /// 📄️ `document_id str | head_edit_ordinal varint | head_edit_id str | last_commit_seq
@@ -173,41 +174,29 @@ fn document_backbone_batch_malformed(offset: usize, detail: impl Into<String>) -
     semio_framework_replication_error::ProtocolError::Malformed { what: "document backbone batch", offset: offset as u64, detail: detail.into() }
 }
 
-fn read_document_backbone_u64(bytes: &[u8], position: &mut usize) -> Result<u64, semio_framework_replication_error::ProtocolError> {
-    let start = *position;
-    let value = semio_framework_replication_wire_core::read_varint_u64(bytes, position)?;
-    let mut canonical = Vec::new();
-    semio_framework_replication_wire_core::write_varint_u64(&mut canonical, value);
-    if bytes.get(start..*position) != Some(canonical.as_slice()) {
-        return Err(document_backbone_batch_malformed(start, "nonminimal-varint"));
-    }
-    Ok(value)
+fn read_document_backbone_u64(bytes:&(impl ByteReadSource+?Sized),position:&mut usize)->Result<u64,semio_framework_replication_error::ProtocolError>{
+    let start=*position;let mut value=0u64;
+    for shift in (0..70).step_by(7){let byte=bytes.byte_at(*position).ok_or_else(||document_backbone_batch_malformed(*position,"truncated"))?;*position+=1;if shift==63&&byte>1{return Err(document_backbone_batch_malformed(start,"varint-overflow"))}value|=u64::from(byte&127)<<shift;if byte&128==0{if shift!=0&&byte==0{return Err(document_backbone_batch_malformed(start,"nonminimal-varint"))}return Ok(value)}}
+    Err(document_backbone_batch_malformed(start,"varint-overflow"))
 }
 
-fn read_document_backbone_count(bytes: &[u8], position: &mut usize, maximum: usize, limit: &'static str) -> Result<usize, semio_framework_replication_error::ProtocolError> {
-    let value = read_document_backbone_u64(bytes, position)?;
-    if value > maximum as u64 {
-        return Err(document_backbone_batch_limit(limit));
-    }
-    Ok(value as usize)
+fn read_document_backbone_count(bytes:&(impl ByteReadSource+?Sized),position:&mut usize,maximum:usize,limit:&'static str)->Result<usize,semio_framework_replication_error::ProtocolError>{let value=read_document_backbone_u64(bytes,position)?;if value>maximum as u64{return Err(document_backbone_batch_limit(limit))}Ok(value as usize)}
+
+fn read_document_backbone_extent(bytes:&(impl ByteReadSource+?Sized),position:&mut usize,maximum:usize,limit:&'static str)->Result<usize,semio_framework_replication_error::ProtocolError>{let length=read_document_backbone_count(bytes,position,maximum,limit)?;let end=position.checked_add(length).ok_or_else(||document_backbone_batch_malformed(*position,"length-overflow"))?;if end>bytes.byte_len(){return Err(document_backbone_batch_malformed(*position,"truncated"))}Ok(end)}
+
+fn read_document_backbone_bytes(bytes:&(impl ByteReadSource+?Sized),position:&mut usize,maximum:usize,limit:&'static str)->Result<Vec<u8>,semio_framework_replication_error::ProtocolError>{let end=read_document_backbone_extent(bytes,position,maximum,limit)?;let mut value=vec![0;end-*position];if bytes.read_bytes(*position,&mut value)!=value.len(){return Err(document_backbone_batch_malformed(*position,"truncated"))}*position=end;Ok(value)}
+
+fn read_document_backbone_payload(bytes:&(impl ByteReadSource+?Sized),position:&mut usize,maximum:usize)->Result<crate::CausalPayload,semio_framework_replication_error::ProtocolError>{
+    let end=read_document_backbone_extent(bytes,position,maximum,"payload-bytes")?;let mut output=crate::CausalPayload::default();let mut scratch=[0;256];
+    while *position<end{let count=(end-*position).min(scratch.len());if bytes.read_bytes(*position,&mut scratch[..count])!=count{return Err(document_backbone_batch_malformed(*position,"truncated"))}for byte in &scratch[..count]{output.retained_bytes_mut().try_push(*byte).map_err(|_|document_backbone_batch_limit("payload-bytes"))?;}*position+=count;}
+    Ok(output)
 }
 
-fn read_document_backbone_bytes(bytes: &[u8], position: &mut usize, maximum: usize, limit: &'static str) -> Result<Vec<u8>, semio_framework_replication_error::ProtocolError> {
-    let length = read_document_backbone_count(bytes, position, maximum, limit)?;
-    let end = (*position).checked_add(length).ok_or_else(|| document_backbone_batch_malformed(*position, "length-overflow"))?;
-    let value = bytes.get(*position..end).ok_or_else(|| document_backbone_batch_malformed(*position, "truncated"))?.to_vec();
-    *position = end;
-    Ok(value)
-}
-
-fn read_document_backbone_text(bytes: &[u8], position: &mut usize, maximum: usize, limit: &'static str) -> Result<String, semio_framework_replication_error::ProtocolError> {
-    let start = *position;
-    String::from_utf8(read_document_backbone_bytes(bytes, position, maximum, limit)?).map_err(|_| document_backbone_batch_malformed(start, "utf8"))
-}
+fn read_document_backbone_text(bytes:&(impl ByteReadSource+?Sized),position:&mut usize,maximum:usize,limit:&'static str)->Result<String,semio_framework_replication_error::ProtocolError>{let start=*position;String::from_utf8(read_document_backbone_bytes(bytes,position,maximum,limit)?).map_err(|_|document_backbone_batch_malformed(start,"utf8"))}
 
 /// 🪢️ Decodes one terminal canonical causal batch under the shared hot-port limits,
 /// checking every count and length before allocating its retained owner.
-pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits: DocumentBackboneBatchLimitsV1) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
+pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &(impl ByteReadSource+?Sized), limits: DocumentBackboneBatchLimitsV1) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
     let ceiling = DocumentBackboneBatchLimitsV1::default();
     if limits.maximum_bytes > ceiling.maximum_bytes
         || limits.maximum_envelopes > ceiling.maximum_envelopes
@@ -221,7 +210,7 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
     {
         return Err(document_backbone_batch_limit("invalid-limits"));
     }
-    if bytes.len() > limits.maximum_bytes {
+    if bytes.byte_len() > limits.maximum_bytes {
         return Err(document_backbone_batch_limit("batch-bytes"));
     }
     let mut position = 0usize;
@@ -259,10 +248,10 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
             target.push(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?);
         }
         let diff_schema = semio_framework_replication_ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
-        let diff_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
+        let diff_payload = read_document_backbone_payload(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes))?;
         total_payload_bytes += diff_payload.len();
         let inverse_schema = semio_framework_replication_ids::SchemaId(read_document_backbone_text(bytes, &mut position, limits.maximum_schema_bytes, "schema-bytes")?);
-        let inverse_payload = read_document_backbone_bytes(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes), "payload-bytes")?;
+        let inverse_payload = read_document_backbone_payload(bytes, &mut position, limits.maximum_payload_bytes.saturating_sub(total_payload_bytes))?;
         total_payload_bytes += inverse_payload.len();
         let timestamp = semio_framework_replication_ids::HybridLogicalTimestamp { actor: read_document_backbone_u64(bytes, &mut position)?, physical_ms: read_document_backbone_u64(bytes, &mut position)?, logical: read_document_backbone_u64(bytes, &mut position)? };
         let flags_at = position;
@@ -280,32 +269,21 @@ pub fn decode_document_backbone_envelopes_exact_with_limits(bytes: &[u8], limits
         };
         let verb = if flags & 0b10 != 0 { Some(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?) } else { None };
         let line = if flags & 0b100 != 0 { Some(read_document_backbone_text(bytes, &mut position, limits.maximum_identifier_bytes, "identifier-bytes")?) } else { None };
-        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload: diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload: inverse_payload }, timestamp, transaction, verb, line });
+        envelopes.push(MutationEnvelope { mutation_id, document_id, actor, dependencies, observed, target, diff: ArtifactDiff { schema: diff_schema, payload:diff_payload }, inverse: InverseMutation { schema: inverse_schema, payload:inverse_payload }, timestamp, transaction, verb, line });
     }
-    if position != bytes.len() {
+    if position != bytes.byte_len() {
         return Err(document_backbone_batch_malformed(position, "trailing-bytes"));
-    }
-    if encode_envelopes(&envelopes) != bytes {
-        return Err(document_backbone_batch_malformed(0, "noncanonical"));
     }
     Ok(envelopes)
 }
 
 /// 🔐️ Shared production-limit decoder for one hot document-backbone mutation batch.
-pub fn decode_document_backbone_envelopes_exact(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
+pub fn decode_document_backbone_envelopes_exact(bytes: &(impl ByteReadSource+?Sized)) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
     decode_document_backbone_envelopes_exact_with_limits(bytes, DocumentBackboneBatchLimitsV1::default())
 }
 
-/// 📨️ Inverse of [`encode_envelopes`].
-pub fn decode_envelopes(bytes: &[u8]) -> Result<Vec<MutationEnvelope>, semio_framework_replication_error::ProtocolError> {
-    let mut pos = 0usize;
-    let count = semio_framework_replication_wire_core::read_varint_u64(bytes, &mut pos)?;
-    let mut envelopes = Vec::with_capacity(count as usize);
-    for _ in 0..count {
-        envelopes.push(decode_envelope(bytes, &mut pos)?);
-    }
-    Ok(envelopes)
-}
+/// 🎯️ Inverse of [`encode_envelopes`].
+pub fn decode_envelopes(bytes:&(impl ByteReadSource+?Sized))->Result<Vec<MutationEnvelope>,semio_framework_replication_error::ProtocolError>{decode_document_backbone_envelopes_exact(bytes)}
 
 /// 📦️ `count varint | (len varint | bytes) each` — a binary vec-of-op-payloads framing,
 /// replacing the `serde_json::json!({"inverse": [...]})` convention for `InverseMutation`
@@ -330,3 +308,6 @@ pub fn decode_ops_vec(bytes: &[u8]) -> Result<Vec<Vec<u8>>, semio_framework_repl
     Ok(ops)
 }
 //#endregion 🔖️EnvelopeCodec
+
+#[path="🛫️native/🦀️.rs"]
+pub mod native_encoding;

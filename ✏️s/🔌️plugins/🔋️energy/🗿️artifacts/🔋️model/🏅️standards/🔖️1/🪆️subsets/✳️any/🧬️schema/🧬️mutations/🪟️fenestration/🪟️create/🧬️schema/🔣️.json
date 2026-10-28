@@ -360,5 +360,168 @@
         "order": 160
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateFenestration",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "surface_id",
+        "input": "surface_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "u_value_w_m2k",
+        "input": "u_value_w_m2k",
+        "storage": "fixed"
+      },
+      {
+        "field": "shgc",
+        "input": "shgc",
+        "storage": "fixed"
+      },
+      {
+        "field": "vlt",
+        "input": "vlt",
+        "storage": "fixed"
+      },
+      {
+        "field": "area_m2",
+        "input": "area_m2",
+        "storage": "fixed"
+      },
+      {
+        "field": "height_m",
+        "input": "height_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "sill_height_m",
+        "input": "sill_height_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "frame_conductance_w_k",
+        "input": "frame_conductance_w_k",
+        "storage": "fixed"
+      },
+      {
+        "field": "divider_conductance_w_k",
+        "input": "divider_conductance_w_k",
+        "storage": "fixed"
+      },
+      {
+        "field": "overhang_depth_m",
+        "input": "overhang_depth_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "overhang_offset_m",
+        "input": "overhang_offset_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "fin_depth_m",
+        "input": "fin_depth_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "fin_offset_m",
+        "input": "fin_offset_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "glazing_construction_id",
+        "input": "glazing_construction_id",
+        "storage": "sealed"
+      },
+      {
+        "field": "vertices_m",
+        "storage": "empty-vector",
+        "item": "[f64;3]"
+      }
+    ],
+    "recreation": "separate-intents"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "key": "id",
+    "inverse": "DeleteFenestration",
+    "labels": {
+      "en": "Create fenestration",
+      "de": "Fensterfläche erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "fenestration",
+      "kind": "create-fenestration",
+      "record": "CreatedFenestration"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "surface_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Surfaces"
+        ],
+        "target": "row"
+      },
+      {
+        "input": "glazing_construction_id",
+        "kind": "reference",
+        "storage": "optional",
+        "collections": [
+          "Constructions"
+        ],
+        "target": "row"
+      }
+    ],
+    "defaultRank": "id-order",
+    "scalarOrder": "after-rules",
+    "name": "name",
+    "nameValidation": "nonblank",
+    "unique": false
   }
 }

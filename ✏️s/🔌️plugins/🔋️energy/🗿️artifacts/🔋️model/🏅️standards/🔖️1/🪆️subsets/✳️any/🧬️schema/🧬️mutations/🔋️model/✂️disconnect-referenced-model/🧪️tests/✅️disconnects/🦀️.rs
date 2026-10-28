@@ -7,7 +7,7 @@
 
 use crate::fixtures::{self, link, snapshot, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 
 #[allow(unused_variables, unused_mut)]

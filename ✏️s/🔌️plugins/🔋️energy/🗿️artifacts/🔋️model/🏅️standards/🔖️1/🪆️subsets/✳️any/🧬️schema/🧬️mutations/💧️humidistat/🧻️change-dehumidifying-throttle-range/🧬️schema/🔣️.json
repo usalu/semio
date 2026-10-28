@@ -56,5 +56,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateHumidistat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "humidistats",
+    "field": "dehumidifying_throttle_range",
+    "input": "new_dehumidifying_throttle_range",
+    "key": "id",
+    "labels": {
+      "en": "Change humidistat: Dehumidifying throttle range",
+      "de": "Entfeuchtungs-Proportionalbereich ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "humidistat",
+      "kind": "change-humidistat-dehumidifying-throttle-range",
+      "record": "ChangedHumidistatDehumidifyingThrottleRange"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Dehumidifying throttle range violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed humidistat does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The humidistat already carries this dehumidifying throttle range value."
+      }
+    }
   }
 }

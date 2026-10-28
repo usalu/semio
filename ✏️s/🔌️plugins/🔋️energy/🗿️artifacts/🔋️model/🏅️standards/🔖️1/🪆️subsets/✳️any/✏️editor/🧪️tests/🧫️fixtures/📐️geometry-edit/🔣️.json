@@ -1,0 +1,38 @@
+{
+  "surface": {
+    "id": 40,
+    "property": "vertex:0:x",
+    "value": "0.25",
+    "kind": "replace-surface-vertices"
+  },
+  "fenestration": {
+    "id": 50,
+    "property": "vertex:0:z",
+    "value": "1.1",
+    "kind": "replace-fenestration-vertices"
+  },
+  "invalid": [
+    "vertex:999:x",
+    "vertex:0:w",
+    "vertex:bad:x",
+    "vertex:0:x:extra"
+  ],
+  "nonfinite": [
+    "NaN",
+    "inf",
+    "-inf"
+  ],
+  "shading": {
+    "id": 500,
+    "name": "Roof canopy",
+    "nameKind": "rename-shading-surface",
+    "coordinateKind": "replace-shading-surface-vertices"
+  },
+  "space": {
+    "id": 501,
+    "name": "Main office",
+    "floorAreaM2": 25.0,
+    "nameKind": "rename-space",
+    "areaKind": "change-space-floor-area"
+  }
+}

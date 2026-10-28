@@ -1,7 +1,15 @@
 //! 🧪️ Exact serde operation wire and same-thread allocator witnesses across admitted copy and cancellation turns.
+#[global_allocator]
+static ALLOCATOR:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 use super::*;
 use semio_framework_pack_json::ArtifactCanonicalJsonNode;
 use semio_framework_os_store_canonical_json::ArtifactCanonicalJson;
+
+fn original_codec(source:ArtifactPreparedOperationSource<'_>)->ArtifactPreparedOperationCursor{
+    let(mut cursor,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let copied_bytes=cursor.codec_birth_copy_bytes();assert!(copied_bytes<=4096);let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copied_bytes,maximum_depth:1,..Default::default()};
+    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.admit_codec(source,grant).unwrap().unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(step.copied_bytes,copied_bytes);assert_eq!(step.processed_items,1);cursor
+}
 
 struct OracleSource(serde_json::Value);
 impl OracleSource {
@@ -67,8 +75,7 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
         let mut expected = header.to_vec();
         TextOracle::independent(&source.0, &mut expected);
         for maximum in [1, 3, 7, 64, 256] {
-            let (mut cursor, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);
-            assert_eq!((birth.requested_bytes, birth.released_bytes), (0, 0));
+            let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header,body:&source});
             let mut actual = Vec::with_capacity(expected.len());
             for _ in 0..expected.len() * 4 + 64 {
                 let mut output = [0; 256];
@@ -86,7 +93,7 @@ fn prepared_operation_wire_borrowed_text_matches_neutral_ordered_tuple_and_hex()
             assert_eq!(actual, expected);
         }
         for stop in fixture["cancelStops"].as_array().unwrap() {
-            let mut cursor = ArtifactPreparedOperationCursor::default();
+            let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header,body:&source});
             for _ in 0..stop.as_u64().unwrap() { cursor.advance(ArtifactPreparedOperationSource::Text { header, body: &source }, &mut [0; 64], RetainedCloneGrant::one_payload_turn(64, 64)).unwrap(); }
             let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.close(RetainedCloneGrant { maximum_items: 1, maximum_depth: 8, ..Default::default() }).unwrap());
             assert!(progress.complete);
@@ -130,8 +137,7 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
         if hex { expected.extend_from_slice(b"snapshot="); for byte in raw { expected.push(b"0123456789abcdef"[usize::from(byte >> 4)]); expected.push(b"0123456789abcdef"[usize::from(byte & 15)]); } } else { expected.extend(raw); }
         let wire_source = || if hex { ArtifactPreparedOperationSource::HexJson { header, prefix: b"snapshot=", body: &source } } else { ArtifactPreparedOperationSource::CanonicalJson { header, body: &source } };
         for maximum in [1, 3, 7, 64, 256] {
-            let (mut cursor, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);
-            assert_eq!((birth.requested_bytes, birth.released_bytes), (0, 0));
+            let mut cursor=original_codec(wire_source());
             let mut actual = Vec::with_capacity(expected.len());
             for _ in 0..expected.len() * 2 + 8 {
                 let mut output = [0; 256];
@@ -141,7 +147,7 @@ fn prepared_operation_wire_borrowed_json_matches_serde_without_birth_or_owner_co
                     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
                 }
                 let (progress, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| cursor.advance(wire_source(), &mut output[..maximum.min(64)], original_json_policy(&fixture)).unwrap());
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0), "row={row_index} hex={hex} maximum={maximum} progress={progress:?} frames={:?}",cursor.json().depth);
                 assert!(progress.processed_items <= 1);
                 assert!(progress.written_bytes <= maximum.min(64));
                 actual.extend_from_slice(&output[..progress.written_bytes]);
@@ -206,7 +212,7 @@ fn original_text_failure_preserves_initialized_prefix_and_real_system_receipt() 
     }
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let row=&fixture["textFailure"];let p=&row["policy"];
     let grant=RetainedCloneGrant{maximum_items:p["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:p["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:p["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:p["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:p["maximumDepth"].as_u64().unwrap()as usize};
-    let original=OriginalScalar("Tür🚪".as_bytes());let pointer=original.0.as_ptr();let mut cursor=ArtifactPreparedOperationCursor::default();let mut output=[0xa5;64];
+    let original=OriginalScalar("Tür🚪".as_bytes());let pointer=original.0.as_ptr();let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original});let mut output=[0xa5;64];
     let (first,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,grant).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!((first.written_bytes,first.copied_bytes),(2,2));let header=[output[0],output[1]];
     output.fill(0xa5);let (failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[1,5],body:&original},&mut output,grant).unwrap_err());
     assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(failure.written_bytes,2);assert_eq!(failure.reason.retained_progress().copied_items,1);assert_eq!(failure.reason.retained_progress().copied_bytes,2);assert!(failure.reason.retained_progress().fits(grant));assert_eq!(&output[2..],&[0xa5;62]);assert_eq!(original.0.as_ptr(),pointer);
@@ -218,7 +224,7 @@ fn original_text_failure_preserves_initialized_prefix_and_real_system_receipt() 
 fn original_text_frontier_uses_supplied_depth_and_zero_system_birth() {
  let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();let policy=&fixture["textFailure"]["policy"];
  for row in fixture["textDepthRows"].as_array().unwrap(){
-  let source=TextOracle(row["node"].clone());let pointer=&source.0 as *const _;let mut actual=Vec::new();let(mut cursor,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(ArtifactPreparedOperationCursor::default);assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));
+  let source=TextOracle(row["node"].clone());let pointer=&source.0 as *const _;let mut actual=Vec::new();let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header:&[],body:&source});
   let grant=RetainedCloneGrant{maximum_items:policy["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:policy["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:policy["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:policy["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:row["maximumDepth"].as_u64().unwrap()as usize};let mut refused=false;let mut complete=false;
   for _ in 0..128{
    let mut output=[0xa5;64];let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(ArtifactPreparedOperationSource::Text{header:&[],body:&source},&mut output,grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -284,16 +290,16 @@ fn original_operation_rows_preserve_each_buffer_and_paid_collection_cancel_cut()
 }
 
 #[test]
-fn the_operation_image_is_the_exact_default_authoring_wire_of_its_bytes() {
+fn the_operation_text_is_the_exact_default_authoring_wire_of_its_bytes() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap() {
         let image_bytes = serde_json::to_vec(&row["body"]).unwrap();
-        let image = super::ArtifactOperationImage::from_bytes(image_bytes.clone());
+        let image=TextOracle(serde_json::json!({"kind":"bytes","text":std::str::from_utf8(&image_bytes).unwrap()}));
         let header: &'static [u8] = b"op";
         let mut expected = header.to_vec();
         expected.extend_from_slice(&image_bytes);
         for maximum in [1usize, 7, 64] {
-            let mut cursor = ArtifactPreparedOperationCursor::default();
+            let mut cursor=original_codec(ArtifactPreparedOperationSource::Text{header,body:&image});
             let mut actual = Vec::with_capacity(expected.len());
             for _ in 0..expected.len() * 4 + 64 {
                 let mut output = [0; 64];

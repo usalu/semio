@@ -1,0 +1,100 @@
+{
+  "contract": "semio.energy.original-fixed-optical-pair/v1",
+  "collection": "glazing_materials",
+  "field": "infrared_emissivity_front",
+  "pairedField": "infrared_emissivity_back",
+  "branch": "materials",
+  "original": {
+    "id": 7,
+    "name": "clear",
+    "thickness_m": 0.006,
+    "conductivity_w_m_k": 1.0,
+    "solar_transmittance": 0.6,
+    "solar_reflectance_front": 0.1,
+    "solar_reflectance_back": 0.1,
+    "visible_transmittance": 0.7,
+    "visible_reflectance_front": 0.1,
+    "visible_reflectance_back": 0.1,
+    "infrared_transmittance": 0.0,
+    "infrared_emissivity_front": 0.81,
+    "infrared_emissivity_back": 0.69
+  },
+  "originalValue": [
+    0.81,
+    0.69
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newInfraredEmissivityFront": 0.8,
+        "newInfraredEmissivityBack": 0.7
+      },
+      "outcome": "changed",
+      "after": [
+        0.8,
+        0.7
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newInfraredEmissivityFront": 0,
+        "newInfraredEmissivityBack": 1
+      },
+      "outcome": "changed",
+      "after": [
+        0,
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newInfraredEmissivityFront": 0.81,
+        "newInfraredEmissivityBack": 0.69
+      },
+      "outcome": "no-op"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newInfraredEmissivityFront": -0.1,
+        "newInfraredEmissivityBack": 0.8
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newInfraredEmissivityFront": 0.8,
+        "newInfraredEmissivityBack": 1.1
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newInfraredEmissivityFront": -0.1,
+        "newInfraredEmissivityBack": 1.1
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

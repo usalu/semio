@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "overhang_offset_m",
+    "input": "new_overhang_offset_m",
+    "key": "id",
+    "labels": {
+      "en": "Change fenestration: Overhang offset",
+      "de": "Überstandsabstand ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fenestration",
+      "kind": "change-fenestration-overhang-offset",
+      "record": "ChangedFenestrationOverhangOffset"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Overhang offset violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fenestration already carries this overhang offset value."
+      }
+    }
   }
 }

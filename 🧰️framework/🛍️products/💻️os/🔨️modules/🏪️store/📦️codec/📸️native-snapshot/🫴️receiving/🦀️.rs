@@ -66,9 +66,17 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalSnapshotRecordReceivin
    _=>unreachable!(),
   }Ok(receipt(demand))
  }
+ /// 📑️ The schema-checked original Record may be projected in bounded domain rows before whole-owner binding.
+ pub fn record_is_ready(&self)->bool{self.phase==3&&!self.closing&&!self.closed&&matches!(self.generic.value.as_ref(),Some(FieldValue::Record(_)))}
+ /// 📬️ Transfers that exact generic Record once; its recipient owns all domain projection and retirement.
+ pub fn take_record_into(&mut self,output:&mut Option<semio_framework_dsl_record::RecordValue>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+  let demand=metadata::<semio_framework_dsl_record::RecordValue>();if output.is_some()||!self.record_is_ready()||!funds(grant,demand){return Ok(Default::default())}
+  let Some(FieldValue::Record(record))=self.generic.value.take()else{unreachable!()};*output=Some(record);self.phase=5;Ok(receipt(demand))
+ }
  /// 👁️ Completion includes the actual authored typed destination, independently of later source cleanup.
  pub fn is_ready(&self)->bool{self.phase==4&&!self.closing&&!self.closed&&self.output.value.is_some()}
  /// 📬️ Moves the same typed owner after a separately funded recipient admission.
+ pub fn take_demand(&self)->Result<RetirementDemand,ValueError>{Ok(metadata::<T>())}
  pub fn take_into(&mut self,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let demand=metadata::<T>();if output.is_some()||!self.is_ready()||!funds(grant,demand){return Ok(Default::default())}*output=self.output.value.take();self.phase=5;Ok(receipt(demand))}
  /// 🧹️ Each retained typed, generic and physical parser owner closes under its own next demand.
  pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -97,6 +105,16 @@ impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> semio_framework_value::retirem
  fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{match self.retire_step(grant){Ok(step)=>semio_framework_value::retirement::RetirementStep::Progress(step.progress()),Err(error)=>semio_framework_value::retirement::RetirementStep::Failure(error)}}
  fn terminal_is_empty(&self)->bool{Self::terminal_is_empty(self)}
  fn terminal_release_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
+}
+impl<T:DslOwnedReceivingRecord+BorrowedDslRecord> OriginalArtifactSnapshotReceiving<T> for OriginalSnapshotRecordReceiving<T>{
+ fn demands(&self,source:&[u8],body:usize)->Result<RetirementDemand,ValueError>{self.demands(source,body)}
+ fn step(&mut self,source:&[u8],native:&mut NativeDecodeControl<'_>,body:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.step(source,native,body,grant)}
+ fn is_ready(&self)->bool{self.is_ready()}
+ fn take_demand(&self)->Result<RetirementDemand,ValueError>{self.take_demand()}
+ fn take_into(&mut self,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{self.take_into(output,grant)}
+ fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{self.close_demands(body)}
+ fn close_step(&mut self,native:&mut dyn NativeDecodeCloseControl,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.close_step(native,grant)}
+ fn terminal_is_empty(&self)->bool{self.terminal_is_empty()}
 }
 
 #[cfg(test)]

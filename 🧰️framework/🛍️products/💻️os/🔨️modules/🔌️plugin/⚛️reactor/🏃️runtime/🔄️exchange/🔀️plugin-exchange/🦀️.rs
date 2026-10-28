@@ -270,8 +270,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 match result{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure.into());true}}
             },
             Some(protocol::AppCommand::SubmitMediaExport{..})=>{
-                let(port,parent,revision,receiver)=owner.media_submission_parts()?;
-                match plugin_submit_media_export(runtime,instance_id,port,parent,revision,receiver,cx).await{Ok(ready)=>original_media_submission_ready=ready,Err(failure)=>original_media_failure=Some(failure.into())};
+                let(port,parent,revision,checkpoint,receiver)=owner.media_submission_parts()?;
+                match plugin_submit_media_export(runtime,instance_id,port,parent,revision,checkpoint,receiver,cx).await{Ok(ready)=>original_media_submission_ready=ready,Err(failure)=>original_media_failure=Some(failure.into())};
                 !original_media_submission_ready
             },
             Some(protocol::AppCommand::PollMediaExport{..})=>{
@@ -287,6 +287,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 let grant=cx.retained_grant();let artifact=identity.encode(|native|{let mut encoder=semio_framework_os_kernel::io::control::NativeSnapshotEncodeOwner::new(native,grant);let result=::semio_framework_async::poll::resolve_ready(plugin_produce_media(runtime,instance_id,port,"",&mut encoder,cx));cx.consume_retained(encoder.progress()).map_err(semio_framework_plugin_decl_app::MediaArtifactOperationFailure::from)?;result});
                 match artifact{Ok(result)=>original_media_artifact=result,Err(semio_framework_plugin_decl_app::MediaArtifactOperationFailure::Original(failure))=>original_media_failure=Some(failure.into()),Err(semio_framework_plugin_decl_app::MediaArtifactOperationFailure::Domain(source))=>original_media_domain=Some(source)};
                 original_media_artifact.is_none()
+            },
+            Some(protocol::AppCommand::LoadWindowConfig{..})=>{
+                let(entry,load)=owner.window_load_parts()?;
+                let result=with_instances_original_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;instance.app.advance_window_config_load(load,entry,cx).map_err(Into::into)}).await;
+                match result{Ok(ready)=>!ready,Err(failure)=>{original_media_failure=Some(failure.into());true}}
             },
             Some(protocol::AppCommand::ConfigCommand{..})=>{
                 let meta=ActionMeta{actor:instance_actor(runtime,instance_id).await?.into(),instance_id,view_state:None};let command=owner.configuration_bytes_mut()?;

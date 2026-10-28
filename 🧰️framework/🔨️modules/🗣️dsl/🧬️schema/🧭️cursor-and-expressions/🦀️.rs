@@ -146,7 +146,7 @@ pub(super) fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldVa
         Shape::Bytes64 => {
             let token = cursor.expect(TokenKind::Text)?;
             let bytes = base64_decode(&token.text.as_str()).map_err(|e| TextError::new(ValueRefusalKind::InvalidValue,e,token.span))?;
-            Ok(FieldValue::Bytes64(bytes))
+            Ok(FieldValue::Bytes64(super::RecordBytes::try_from_slice(&bytes).map_err(|e|TextError::from_value_error(e,token.span))?))
         }
         Shape::Enum(variants) => {
             let token = cursor.expect(TokenKind::Ident)?;

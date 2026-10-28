@@ -542,9 +542,9 @@ impl ArtifactEditor for TsvEditor {
         tsv_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> TsvSnapshot {
+    fn reference_birth()->Option<fn()->TsvSnapshot>{Some(||{
         TsvSnapshot::default()
-    }
+    })}
 
     /// ✏️ Stale revisions, rows, and columns fault without publishing a mutation.
     fn handle(

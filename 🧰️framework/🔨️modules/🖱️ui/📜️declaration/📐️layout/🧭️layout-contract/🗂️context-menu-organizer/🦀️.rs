@@ -8,7 +8,7 @@ use super::*;
 /// bytes only, never items. At right-click time the host resolves the nearest `menu` up the tree and
 /// asks the owning plugin's `context-menu` WIT export to compute rows fresh (see
 /// `ContextMenuRequest`/`ContextMenuResponse`); nothing here is cached across clicks.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct UiMenuRef {
@@ -21,7 +21,7 @@ pub struct UiMenuRef {
 /// 📕️ One row of a resolved context menu — serde camelCase twin of TS `ContextMenuItemSpec`
 /// (`framework/core/js/index.ts`). Plugins build these with `MenuBuilder`; the host maps them
 /// through `ContextMenuController` (React) / `render_context_menu` (wgpu) unchanged.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuItemSpec {

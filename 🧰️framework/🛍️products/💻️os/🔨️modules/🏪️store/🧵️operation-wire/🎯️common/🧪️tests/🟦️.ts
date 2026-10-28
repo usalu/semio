@@ -1,0 +1,6 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv2020 from "ajv/dist/2020";
+import {readFileSync} from "node:fs";
+const law=JSON.parse(readFileSync(new URL("🔣️.json",import.meta.url),"utf8"));
+test("original common target agrees with independent SQLite segment equality",()=>{expect(new Ajv2020({strict:true}).compile(JSON.parse(readFileSync(new URL("../🧬️.json",import.meta.url),"utf8")))(law)).toBe(true);for(const row of law.cases){const db=new Database(":memory:");db.exec("CREATE TABLE paths (source INTEGER, ordinal INTEGER, value TEXT)");let minimum=Infinity;for(const[source,path]of row.paths.entries()){const segments=path??[];minimum=Math.min(minimum,segments.length);for(const[ordinal,value]of segments.entries())db.query("INSERT INTO paths VALUES (?, ?, ?)").run(source,ordinal,value);}const selected=db.query("SELECT ordinal, MIN(value) AS value, COUNT(DISTINCT value) AS variants, COUNT(*) AS sources FROM paths GROUP BY ordinal ORDER BY ordinal").all()as{ordinal:number,value:string,variants:number,sources:number}[];const prefix:string[]=[];for(const segment of selected){if(segment.ordinal>=minimum||segment.variants!==1||segment.sources!==row.paths.length)break;prefix.push(segment.value);}expect(prefix).toEqual(row.expected);db.close();}});

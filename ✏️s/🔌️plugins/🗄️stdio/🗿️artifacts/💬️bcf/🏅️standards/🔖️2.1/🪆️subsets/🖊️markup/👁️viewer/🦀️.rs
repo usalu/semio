@@ -71,9 +71,9 @@ impl ArtifactViewer for BcfAnyViewer {
     const DIALECT: Dialect = BCF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = BCF_ANY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> BcfSnapshot {
+    fn reference_birth()->Option<fn()->BcfSnapshot>{Some(||{
         BcfSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

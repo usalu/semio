@@ -94,6 +94,8 @@ macro_rules! json_store {
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error)) }
         }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
     };
@@ -140,6 +142,8 @@ impl pack::snapshot::ArtifactPack for NoteCompositeWindowConfig {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoteCompositeWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 impl store::ConfigRecord for NoteCompositeWindowConfig {}

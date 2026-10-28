@@ -15,8 +15,8 @@ impl ToolRunEntityVersion {
  pub fn revision(&self)->u64{self.revision}
  pub fn identity(&self)->usize{self.entities.identity()}
 }
-#[derive(semio_framework_value::RetireOwned)]
 struct State {original:Option<ToolRunEntityVersion>,source:Option<RetainedCloneSource<EntityMap,ToolRunEntityVersion>>,clone:Option<RetainedOrderedMapCloneCursor<u64,()>>,edit:Option<ToolRunEntityEdit>,edit_close:Option<ControlledRetirement<ToolRunEntityEdit>>,candidate:Option<EntityMap>,targets:Option<Vec<u64>>,kind:ToolRunEntityEditKind,next_revision:Option<u64>,capacity_bound:usize,phase:u8,cancelled:bool}
+semio_framework_value::artifact_retire_struct!(State{original,source,clone,edit,edit_close,candidate,targets,kind,next_revision,capacity_bound,phase,cancelled});
 /// 🏭️ Keeps each captured original and unpublished candidate until real publication or controlled closure.
 pub struct ToolRunEntityVersionEdit {state:ManuallyDrop<State>,transferred:bool}
 impl ToolRunEntityVersionEdit {

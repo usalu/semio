@@ -223,9 +223,9 @@ impl ArtifactEditor for StepAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); step_any_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> StepSnapshot {
+    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
         StepSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

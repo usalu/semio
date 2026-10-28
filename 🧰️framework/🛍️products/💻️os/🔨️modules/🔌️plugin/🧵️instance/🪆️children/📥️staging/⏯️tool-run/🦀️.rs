@@ -49,8 +49,8 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     /// 🔁️ [`Self::refresh_tool_run_member`] on a member taken out of its entry: `(fold pending, conflicts, rebased)`, or
-    /// `None` when the overlay already shows every op; `receipt` carries the retained progress the fold paid for, to be retained on the run ledger.
-    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>,receipt:&mut semio_framework_value::RetainedCloneProgress) -> Result<Option<(bool, u32, bool)>, Fault> {
+    /// `None` when the overlay already shows every op.
+    pub fn refresh_member_overlay(&mut self, member: &mut ToolRunMemberRun, deadline: u64,grant:RetainedCloneGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>,progress:&mut semio_framework_value::RetainedCloneProgress) -> Result<Option<(bool, u32, bool)>, Fault> {
         let stale = std::mem::take(&mut member.stale);
         self.retire_tool_run_views(stale, &mut member.stale)?;
         if !member.rebase && member.shown == member.ops.len() {
@@ -58,11 +58,11 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         }
         let child = self.children.get(&(member.slot.clone(), member.child_id.clone())).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("toolRun.member-gone"), format!("the member {}/{} a tool run edits is gone", member.slot, member.child_id)))?;
         let rebased = member.rebase;
-        let folded = match child.member.visit_member(ToolRunMemberFold { owners: &mut member.owners, ops: &member.ops, shown: member.shown, rebase: member.rebase, deadline_us: deadline,grant,receiving }){Ok(folded)=>folded,Err(ToolRunMemberFoldRefusal::Native(error))=>{*receipt=error.retained_progress();return Err(error.into_fault())},Err(ToolRunMemberFoldRefusal::Semantic(error))=>return Err(error)};
-        *receipt=folded.progress;
+        let folded = match child.member.visit_member(ToolRunMemberFold { owners: &mut member.owners, ops: &member.ops, shown: member.shown, rebase: member.rebase, deadline_us: deadline,grant,receiving }){Ok(folded)=>folded,Err(ToolRunMemberFoldRefusal::Native(error))=>{*progress=error.retained_progress();return Err(error.into_fault())},Err(ToolRunMemberFoldRefusal::Semantic(error))=>return Err(error)};
+        *progress=folded.progress();
         member.rebase = false;
         member.shown = folded.shown;
-        let pending = folded.pending;
+        let pending = folded.pending();
         if !pending {
             let next = match folded.read {
                 Some((read, revision)) => Some(self.child_content_root.with_member_read(MemberKeyRef::root(&member.slot, &member.child_id), &member.dialect, revision, read)?),

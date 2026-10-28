@@ -49,5 +49,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "wind_exposed",
+    "input": "new_wind_exposed",
+    "key": "id",
+    "labels": {
+      "en": "Change surface: Wind exposed",
+      "de": "Windexponiert ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "surface",
+      "kind": "change-surface-wind-exposed",
+      "record": "ChangedSurfaceWindExposed"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Wind exposed violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The surface already carries this wind exposed value."
+      }
+    }
   }
 }

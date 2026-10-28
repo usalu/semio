@@ -170,9 +170,9 @@ impl ArtifactEditor for Process3dPlayApp {
 })())
 }
 
-    fn initial_snapshot() -> Process3dSnapshot {
+    fn reference_birth()->Option<fn()->Process3dSnapshot>{Some(||{
         semio_s_artifact_process_process3d_model::standards::v1::subsets::any::io::text::snapshot::default_document()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(process3d_io())

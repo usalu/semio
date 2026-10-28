@@ -23,6 +23,8 @@ impl pack::snapshot::ArtifactPack for CollectionSnapshot {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for CollectionSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, store::os_store::serialization::ArtifactCodec)> {
         Some((SQLITE_SNAPSHOT_DIALECT, store::bare_artifact_codec::<Self, CollectionMutation>(S_COLLECTION_SCHEMA)))
     }

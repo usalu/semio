@@ -29,7 +29,7 @@ fn the_viewer_declares_one_read_only_window() {
 
 #[test]
 fn the_viewer_boots_the_same_committed_example_the_editor_does() {
-    assert_eq!(<Grid2dViewer as ArtifactViewer>::initial_snapshot(), crate::examples::grid2d::pipes::document());
+    assert_eq!(<Grid2dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::grid2d::pipes::document());
 }
 
 /// 👁️ Every row of the view command channel is a HOST-dispatched verb the window must declare —

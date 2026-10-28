@@ -45,6 +45,7 @@
 /// operation (`None` for every transition and for operations no verb authored), so a peer labels its history row
 /// exactly as the author does.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct MutationEnvelope {
     pub mutation_id: semio_framework_replication_ids::MutationId,
     pub document_id: semio_framework_replication_ids::ArtifactId,
@@ -64,11 +65,15 @@ pub struct MutationEnvelope {
 
 
 
+/// 📦️ Canonical causal payload octets retain separately admitted native pages.
+pub type CausalPayload=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
+
 /// 🧮️ A schema-tagged, opaque binary forward-op payload.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct ArtifactDiff {
     pub schema: semio_framework_replication_ids::SchemaId,
-    pub payload: Vec<u8>,
+    pub payload: CausalPayload,
 }
 
 
@@ -76,9 +81,10 @@ pub struct ArtifactDiff {
 
 /// ↩️ A schema-tagged, opaque binary inverse-op payload.
 #[derive(Clone, Debug, PartialEq)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct InverseMutation {
     pub schema: semio_framework_replication_ids::SchemaId,
-    pub payload: Vec<u8>,
+    pub payload: CausalPayload,
 }
 
 
@@ -160,6 +166,23 @@ impl<T> MutationDagFixedSlots<T> {
         }
     }
 
+    fn birth_bytes(&self)->usize{
+        if self.slots.is_empty(){return MUTATION_DAG_PAGE_COUNT*std::mem::size_of::<Option<Box<[std::mem::MaybeUninit<T>;MUTATION_DAG_PAGE_SLOTS]>>>()}
+        if self.slots.iter().any(Option::is_none){return std::mem::size_of::<[std::mem::MaybeUninit<T>;MUTATION_DAG_PAGE_SLOTS]>()}
+        if self.generations.is_empty(){return MUTATION_DAG_CAPACITY*std::mem::size_of::<u32>()}
+        if self.occupied.is_empty(){return MUTATION_DAG_CAPACITY*std::mem::size_of::<bool>()}
+        if self.next.is_empty()||self.previous.is_empty()||self.free.is_empty(){return MUTATION_DAG_CAPACITY*std::mem::size_of::<u16>()}0
+    }
+    fn admit_backing(&mut self){
+        if self.slots.is_empty(){self.slots=(0..MUTATION_DAG_PAGE_COUNT).map(|_|None).collect::<Vec<_>>().into_boxed_slice();}
+        else if let Some(slot)=self.slots.iter_mut().find(|slot|slot.is_none()){*slot=Some(Box::new([const{std::mem::MaybeUninit::<T>::uninit()};MUTATION_DAG_PAGE_SLOTS]));}
+        else if self.generations.is_empty(){self.generations=vec![0;MUTATION_DAG_CAPACITY].into_boxed_slice();}
+        else if self.occupied.is_empty(){self.occupied=vec![false;MUTATION_DAG_CAPACITY].into_boxed_slice();}
+        else if self.next.is_empty(){self.next=vec![MUTATION_DAG_SLOT_NONE;MUTATION_DAG_CAPACITY].into_boxed_slice();}
+        else if self.previous.is_empty(){self.previous=vec![MUTATION_DAG_SLOT_NONE;MUTATION_DAG_CAPACITY].into_boxed_slice();}
+        else if self.free.is_empty(){self.free=(0..MUTATION_DAG_CAPACITY).rev().map(|slot|slot as u16).collect::<Vec<_>>().into_boxed_slice();self.free_len=MUTATION_DAG_CAPACITY;}
+    }
+
     fn slot(&self, slot: usize) -> &std::mem::MaybeUninit<T> {
         &self.slots[slot / MUTATION_DAG_PAGE_SLOTS].as_ref().expect("causal page remains retained")[slot % MUTATION_DAG_PAGE_SLOTS]
     }
@@ -175,7 +198,7 @@ impl<T> MutationDagFixedSlots<T> {
     fn next_backing_release_byte_demand(&self) -> usize {
         if !self.is_empty() { return 0; }
         if !self.slots.is_empty() {
-            return if self.close_page < self.slots.len() { size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>() } else { size_of_val(&*self.slots) };
+            return if self.slots[self.close_page..].iter().any(Option::is_some) { size_of::<[std::mem::MaybeUninit<T>; MUTATION_DAG_PAGE_SLOTS]>() } else { size_of_val(&*self.slots) };
         }
         if !self.generations.is_empty() { return size_of_val(&*self.generations); }
         if !self.occupied.is_empty() { return size_of_val(&*self.occupied); }
@@ -189,9 +212,9 @@ impl<T> MutationDagFixedSlots<T> {
         let demand = self.next_backing_release_byte_demand();
         if !self.is_empty() || maximum_items == 0 || maximum_release_bytes < demand { return (0, 0, false); }
         if !self.slots.is_empty() {
-            if self.close_page < self.slots.len() {
-                drop(self.slots[self.close_page].take());
-                self.close_page += 1;
+            if let Some(offset)=self.slots[self.close_page..].iter().position(Option::is_some) {
+                let index=self.close_page+offset;drop(self.slots[index].take());
+                self.close_page = index+1;
             } else { self.slots = Vec::new().into_boxed_slice(); }
         } else if !self.generations.is_empty() { self.generations = Vec::new().into_boxed_slice(); }
         else if !self.occupied.is_empty() { self.occupied = Vec::new().into_boxed_slice(); }
@@ -315,6 +338,8 @@ impl<T> Drop for MutationDagFixedSlots<T> {
 
 #[derive(Debug, PartialEq)]
 pub struct MutationDag {
+    original_seed_stage:Option<original_seeds::OriginalSeedStage>,
+    original_seed_epoch:u64,
     envelopes: MutationDagFixedSlots<MutationEnvelope>,
     applied: MutationDagFixedSlots<String>,
     drained: usize,
@@ -323,13 +348,14 @@ pub struct MutationDag {
 
 impl Default for MutationDag {
     fn default() -> Self {
-        Self { envelopes: MutationDagFixedSlots::new(), applied: MutationDagFixedSlots::new(), drained: 0, pending: MutationDagFixedSlots::new() }
+        Self { original_seed_stage:None,original_seed_epoch:0,envelopes: MutationDagFixedSlots::new(), applied: MutationDagFixedSlots::new(), drained: 0, pending: MutationDagFixedSlots::new() }
     }
 }
 
 impl Clone for MutationDag {
     fn clone(&self) -> Self {
-        Self { envelopes: self.envelopes.clone(), applied: self.applied.clone(), drained: self.drained, pending: self.pending.clone() }
+        assert!(self.original_seed_stage.is_none(),"original causal seed reservation must settle before cold cloning");
+        Self { original_seed_stage:None,original_seed_epoch:self.original_seed_epoch,envelopes: self.envelopes.clone(), applied: self.applied.clone(), drained: self.drained, pending: self.pending.clone() }
     }
 }
 
@@ -356,6 +382,7 @@ pub enum MutationDagError {
     Duplicate,
     Capacity,
     IdentifierTooLong,
+    OriginalSeedActive,
 }
 
 impl std::fmt::Display for MutationDagError {
@@ -363,6 +390,7 @@ impl std::fmt::Display for MutationDagError {
         match self {
             MutationDagError::Duplicate => write!(f, "duplicate mutation id"),
             MutationDagError::Capacity => write!(f, "mutation dag fixed capacity exhausted"),
+            MutationDagError::OriginalSeedActive=>write!(f,"original causal seed reservation is active"),
             MutationDagError::IdentifierTooLong => write!(f, "mutation dag identifier exceeds its fixed byte authority"),
         }
     }
@@ -409,7 +437,16 @@ pub enum MutationDagAppliedStep {
 impl MutationDag {
     /// 🪹️ An allocation-free terminal shell for granted transfer of the original causal owner.
     pub fn empty() -> Self {
-        Self { envelopes: MutationDagFixedSlots::empty(), applied: MutationDagFixedSlots::empty(), drained: 0, pending: MutationDagFixedSlots::empty() }
+        Self { original_seed_stage:None,original_seed_epoch:0,envelopes: MutationDagFixedSlots::empty(), applied: MutationDagFixedSlots::empty(), drained: 0, pending: MutationDagFixedSlots::empty() }
+    }
+
+    /// 📏️ Quotes one actual original causal page or fixed metadata allocation.
+    pub fn backing_admission_demands(&self)->semio_framework_value::RetirementDemand{let capacity_bytes=[self.envelopes.birth_bytes(),self.applied.birth_bytes(),self.pending.birth_bytes()].into_iter().find(|bytes|*bytes>0).unwrap_or(0);semio_framework_value::RetirementDemand{capacity_bytes,depth:1,..Default::default()}}
+    /// 🎟️ Admits one original page without growing a private budget or replacing retained sources.
+    pub fn admit_backing_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedCloneProgress{
+        let d=self.backing_admission_demands();if d.capacity_bytes==0||!semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Default::default()}
+        if self.envelopes.birth_bytes()>0{self.envelopes.admit_backing();}else if self.applied.birth_bytes()>0{self.applied.admit_backing();}else{self.pending.admit_backing();}
+        semio_framework_value::RetainedCloneProgress{copied_items:1,retained_capacity_bytes:d.capacity_bytes,..Default::default()}
     }
 
     pub fn new() -> Self {
@@ -418,7 +455,7 @@ impl MutationDag {
 
     /// 🧹 Proves every original mutation and identity owner has been detached; backing remains separately retained.
     pub fn terminal_is_empty(&self) -> bool {
-        self.envelopes.is_empty() && self.applied.is_empty() && self.pending.is_empty()
+        self.original_seed_stage.is_none() && self.envelopes.is_empty() && self.applied.is_empty() && self.pending.is_empty()
     }
 
     /// 🪫️ Proves all causal payload pages and fixed metadata allocations have been funded and released.
@@ -461,21 +498,22 @@ impl MutationDag {
     /// successful step moves one id out of `pending`, which is fixed-capacity.
     #[expect(clippy::result_large_err, reason = "Fixed-capacity admission returns the original envelope without allocating on rejection.")]
     pub fn insert(&mut self, envelope: MutationEnvelope) -> Result<InsertResult, MutationDagInsertRejected> {
+        if self.original_seed_stage.is_some(){return Err(MutationDagInsertRejected{error:MutationDagError::OriginalSeedActive,envelope})}
         let id = envelope.mutation_id.0.as_str();
         if id.len() > MUTATION_DAG_IDENTIFIER_BYTES || envelope.dependencies.iter().any(|dependency| dependency.0.len() > MUTATION_DAG_IDENTIFIER_BYTES) {
             return Err(MutationDagInsertRejected { error: MutationDagError::IdentifierTooLong, envelope });
         }
-        if self.applied.iter().any(|applied| applied == id) {
+        if self.visible_applied().any(|applied| applied == id) {
             return Ok(InsertResult::AlreadyApplied(envelope));
         }
         if self.envelopes.iter().any(|known| known.mutation_id.0 == id) {
             return Err(MutationDagInsertRejected { error: MutationDagError::Duplicate, envelope });
         }
-        let seeded_only = self.applied.iter().filter(|applied| !self.envelopes.iter().any(|known| known.mutation_id.0.as_str() == applied.as_str())).count();
+        let seeded_only = self.visible_applied().filter(|applied| !self.envelopes.iter().any(|known| known.mutation_id.0.as_str() == applied.as_str())).count();
         if self.envelopes.len() + seeded_only == MUTATION_DAG_CAPACITY {
             return Err(MutationDagInsertRejected { error: MutationDagError::Capacity, envelope });
         }
-        let pending = envelope.dependencies.iter().any(|dependency| !self.applied.iter().any(|applied| applied == &dependency.0));
+        let pending = envelope.dependencies.iter().any(|dependency| !self.visible_applied().any(|applied| applied == &dependency.0));
         let id = envelope.mutation_id.0.clone();
         self.envelopes.push_reserved(envelope);
         if pending {
@@ -490,11 +528,13 @@ impl MutationDag {
     /// ✅️ Borrows one ready identity at a caller-owned cursor without materializing a list.
     pub fn ready_identity_at(&self, cursor: usize) -> Option<&str> {
         let id = self.pending.get(cursor)?;
-        self.envelopes.iter().find(|envelope| envelope.mutation_id.0 == *id).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.iter().any(|applied| applied == &dependency.0))).map(|envelope| envelope.mutation_id.0.as_str())
+        self.envelopes.iter().find(|envelope| envelope.mutation_id.0 == *id).filter(|envelope| envelope.dependencies.iter().all(|dependency| self.visible_applied().any(|applied| applied == &dependency.0))).map(|envelope| envelope.mutation_id.0.as_str())
     }
 
     /// 🧺️ Transfers at most one exact applied owner at the retained drain cursor.
     pub fn take_next_applied(&mut self) -> MutationDagAppliedStep {
+        if self.original_seed_stage.is_some(){return MutationDagAppliedStep::Complete}
+        if self.drained>=self.visible_applied_len(){return MutationDagAppliedStep::Complete}
         let Some(id) = self.applied.get(self.drained) else { return MutationDagAppliedStep::Complete };
         self.drained += 1;
         let Some(index) = self.envelopes.iter().position(|envelope| envelope.mutation_id.0 == *id) else {
@@ -508,23 +548,21 @@ impl MutationDag {
     /// stays `Pending` forever, since `insert` only recognizes a dependency as satisfied through
     /// this dag's own `envelopes`/`applied` bookkeeping, never through edits a peer adopted by some
     /// other route.
-    pub fn seed_applied(&mut self, mutation_id: semio_framework_replication_ids::MutationId) -> Result<(), MutationDagSeedRejected> {
-        if mutation_id.0.len() > MUTATION_DAG_IDENTIFIER_BYTES {
-            return Err(MutationDagSeedRejected { error: MutationDagError::IdentifierTooLong, mutation_id });
-        }
-        if self.applied.iter().any(|applied| applied == &mutation_id.0) {
-            return Err(MutationDagSeedRejected { error: MutationDagError::Duplicate, mutation_id });
-        }
-        let unique_seed = !self.envelopes.iter().any(|envelope| envelope.mutation_id == mutation_id);
-        let seeded_only = self.applied.iter().filter(|id| !self.envelopes.iter().any(|envelope| envelope.mutation_id.0.as_str() == id.as_str())).count();
-        if unique_seed && self.envelopes.len() + seeded_only == MUTATION_DAG_CAPACITY {
-            return Err(MutationDagSeedRejected { error: MutationDagError::Capacity, mutation_id });
-        }
-        self.mark_applied(&mutation_id.0);
+    /// 🔎️ Checks the actual borrowed seed identity before any original string is copied.
+    pub fn validate_seed(&self,id:&str)->Result<(),MutationDagError>{
+        if self.original_seed_stage.is_some(){return Err(MutationDagError::OriginalSeedActive)}
+        if id.len()>MUTATION_DAG_IDENTIFIER_BYTES{return Err(MutationDagError::IdentifierTooLong)}
+        if self.visible_applied().any(|applied|applied==id){return Err(MutationDagError::Duplicate)}
+        let unique_seed=!self.envelopes.iter().any(|envelope|envelope.mutation_id.0==id);let seeded_only=self.visible_applied().filter(|known|!self.envelopes.iter().any(|envelope|envelope.mutation_id.0.as_str()==known.as_str())).count();if unique_seed&&self.envelopes.len()+seeded_only==MUTATION_DAG_CAPACITY{return Err(MutationDagError::Capacity)}Ok(())
+    }
+    pub fn seed_applied(&mut self,mutation_id:semio_framework_replication_ids::MutationId)->Result<(),MutationDagSeedRejected>{
+        if let Err(error)=self.validate_seed(&mutation_id.0){return Err(MutationDagSeedRejected{error,mutation_id})}
+        if let Some(index)=self.pending.iter().position(|pending|pending==&mutation_id.0){let pending=self.pending.swap_remove(index).expect("original pending identity");self.applied.push_reserved(pending);}else{self.applied.push_reserved(mutation_id.0);}
         Ok(())
     }
 
     pub fn take_one_close_owner(&mut self) -> Option<MutationDagCloseOwner> {
+        if self.original_seed_stage.is_some(){return None}
         if let Some(id) = self.pending.pop() {
             return Some(MutationDagCloseOwner::Identity(id));
         }
@@ -545,10 +583,11 @@ impl MutationDag {
     }
 
     pub fn advance_ready_one(&mut self) -> bool {
+        if self.original_seed_stage.is_some(){return false}
         let ready = self
             .pending
             .iter()
-            .find(|id| self.envelopes.iter().find(|envelope| envelope.mutation_id.0.as_str() == id.as_str()).is_some_and(|envelope| envelope.dependencies.iter().all(|dependency| self.applied.iter().any(|applied| applied == &dependency.0))))
+            .find(|id| self.envelopes.iter().find(|envelope| envelope.mutation_id.0.as_str() == id.as_str()).is_some_and(|envelope| envelope.dependencies.iter().all(|dependency| self.visible_applied().any(|applied| applied == &dependency.0))))
             .cloned();
         let Some(id) = ready else { return false };
         self.mark_applied(&id);
@@ -682,7 +721,7 @@ pub fn mutation_id_for_edit_operation<P, Op: semio_framework_replication_mutatio
 fn edit_operation_mutation_id<P, Op: semio_framework_replication_mutation::Mutation<P>>(edit: &semio_framework_replication_edit::Edit<Op>, index: usize, op: &Op) -> semio_framework_replication_ids::MutationId {
     match edit.mutation_meta.get(index).and_then(|m| m.mutation_id.clone()) {
         Some(id) => id,
-        None => match op.mutation_id() {
+        None => match op.mutation_id().cloned() {
             Some(id) => id,
             None => semio_framework_replication_ids::MutationId(format!("{}#{index}", edit.id)),
         },
@@ -741,8 +780,8 @@ pub fn mutation_envelopes_from_edit_since<P, Op: semio_framework_replication_mut
             dependencies,
             observed: None,
             target: op.conflict_target(),
-            diff: ArtifactDiff { schema: schema.clone(), payload },
-            inverse: InverseMutation { schema: schema.clone(), payload: inverse_payload },
+            diff: ArtifactDiff { schema: schema.clone(), payload:CausalPayload::try_from_slice(&payload).map_err(|_|semio_framework_replication_error::ProtocolError::LimitExceeded("causal operation payload"))? },
+            inverse: InverseMutation { schema: schema.clone(), payload: CausalPayload::try_from_slice(&inverse_payload).map_err(|_|semio_framework_replication_error::ProtocolError::LimitExceeded("causal inverse payload"))? },
             timestamp,
             transaction: meta.and_then(|m| m.transaction.clone()), verb: edit.verb.clone(), line: edit.line.clone(),
         });
@@ -767,3 +806,10 @@ mod owned_retirement {
     semio_framework_value::artifact_retire_struct!(ArtifactDiff { schema, payload });
     semio_framework_value::artifact_retire_struct!(InverseMutation { schema, payload });
 }
+
+#[path="🌱️original-seeds/🦀️.rs"]
+pub mod original_seeds;
+
+#[cfg(test)]
+#[path="🧬️clone/🧪️tests/🦀️.rs"]
+mod original_clone_tests;

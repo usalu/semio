@@ -74,11 +74,21 @@ pub struct RetainedOriginalSlot<T>{original:Option<T>,read:Option<Box<dyn Retain
 static ORIGINAL_SLOT_ISSUANCE:std::sync::atomic::AtomicU64=std::sync::atomic::AtomicU64::new(1);
 impl<T> RetainedOriginalSlot<T>{
  pub fn new(original:T)->Self{Self{original:Some(original),read:None,issuance:ORIGINAL_SLOT_ISSUANCE.fetch_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|issuance|issuance.checked_add(1)).expect("original slot issuance exhausted"),generation:0}}
+ /// 🪟️ Exclusive mutation borrows are available only while the original slot has no immutable source loan.
+ pub fn get_mut_unissued(&mut self)->Option<&mut T>{if self.read.is_some(){None}else{self.original.as_mut()}}
  pub fn get(&self)->&T{self.original.as_ref().unwrap_or_else(||self.read.as_ref().expect("original slot retains value or source").get())}
+ /// 🪹️ A withdrawn resident retains its sealed address without a fabricated payload.
+ pub fn is_empty(&self)->bool{self.original.is_none()&&self.read.is_none()}
+ /// 📏️ Quotes the exact payload and slot-generation moves for an original handoff.
+ pub fn transfer_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>()+size_of::<Option<T>>()+size_of::<u64>(),depth:1,..Default::default()}}
+ /// 📤️ Withdraws the same original after every reader returns, preserving the resident slot identity.
+ pub fn take_original(&mut self,key:RetainedOriginalSlotKey,output:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.admit_key(key)?;if self.read.is_some()||self.original.is_none()||output.is_some(){return Err(fault("original slot withdrawal requires its unique payload and empty recipient"));}let generation=self.generation.checked_add(1).ok_or_else(||fault("original slot generation exhausted"))?;let d=Self::transfer_demand();if !retained_clone_grant_admits(grant,d){return Ok(None)}*output=self.original.take();self.generation=generation;Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+ /// 📥️ Adopts an actual original into its vacant resident without allocating an address or cloning a payload.
+ pub fn install_original(&mut self,key:RetainedOriginalSlotKey,input:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{self.admit_key(key)?;if !self.is_empty()||input.is_none(){return Err(fault("original slot installation requires its vacant resident and original input"));}let generation=self.generation.checked_add(1).ok_or_else(||fault("original slot generation exhausted"))?;let d=Self::transfer_demand();if !retained_clone_grant_admits(grant,d){return Ok(None)}self.original=input.take();self.generation=generation;Ok(Some(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
  pub fn key(&self)->RetainedOriginalSlotKey{RetainedOriginalSlotKey{issuance:self.issuance,generation:self.generation}}
  fn admit_key(&self,key:RetainedOriginalSlotKey)->Result<(),ValueError>{if self.key()==key{Ok(())}else{Err(fault("original slot read belongs to another source generation"))}}
  pub fn has_read(&self)->bool{self.read.is_some()}
- pub fn try_into_original(mut self)->Result<T,Self>{if self.read.is_some(){return Err(self);}Ok(self.original.take().expect("owned original slot value"))}
+ pub fn try_into_original(mut self)->Result<T,Self>{if self.read.is_some()||self.original.is_none(){return Err(self);}Ok(self.original.take().unwrap())}
  /// 📏️ Quotes only original field exchange; variable payload allocations keep their native owners.
  pub fn replace_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>()+size_of::<Option<T>>()+size_of::<u64>(),depth:1,..Default::default()}}
  /// 🔁️ Exchanges actual native fields after all readers return and every original currency is admitted.
@@ -97,8 +107,8 @@ impl<T> RetainedOriginalSlot<T>{
 }
 impl<T> Drop for RetainedOriginalSlot<T>{fn drop(&mut self){assert!(self.read.is_none()||std::thread::panicking(),"original slot dropped with immutable readers");}}
 
-impl<T:std::fmt::Debug> std::fmt::Debug for RetainedOriginalSlot<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{self.get().fmt(f)}}
-impl<T:PartialEq> PartialEq for RetainedOriginalSlot<T>{fn eq(&self,other:&Self)->bool{self.get()==other.get()}}
+impl<T:std::fmt::Debug> std::fmt::Debug for RetainedOriginalSlot<T>{fn fmt(&self,f:&mut std::fmt::Formatter<'_>)->std::fmt::Result{if self.is_empty(){f.write_str("Vacant")}else{self.get().fmt(f)}}}
+impl<T:PartialEq> PartialEq for RetainedOriginalSlot<T>{fn eq(&self,other:&Self)->bool{match(self.is_empty(),other.is_empty()){(true,true)=>true,(false,false)=>self.get()==other.get(),_=>false}}}
 impl<T:Eq> Eq for RetainedOriginalSlot<T>{}
 
 #[path="♻️retirement/🦀️.rs"]

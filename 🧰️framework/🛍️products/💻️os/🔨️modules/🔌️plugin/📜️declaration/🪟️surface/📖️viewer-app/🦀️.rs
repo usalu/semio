@@ -23,6 +23,8 @@ impl<V: ArtifactViewer> Default for ViewerApp<V> {
 }
 
 impl<V: ArtifactViewer> ViewerApp<V> {
+    /// 🌱️ Moves the already admitted original surface identity into this concrete controller.
+    pub(super) fn from_admitted_identity(id:String)->Self{Self{id,_viewer:std::marker::PhantomData}}
     /// 🪪️ The real derived surface id — see `EditorApp::surface_id`.
     pub async fn surface_id(&self) -> &str {
         &self.id
@@ -198,9 +200,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         V::fault_notices()
     }
-    async fn initial_snapshot() -> Self::Snapshot {
-        V::initial_snapshot()
-    }
+    fn reference_birth()->Option<fn()->Self::Snapshot>{V::reference_birth()}
     async fn initial_config() -> Self::Config {
         V::initial_config()
     }
@@ -219,6 +219,7 @@ impl<V: ArtifactViewer> ArtifactApp for ViewerApp<V> {
     async fn command_id(command: &Self::Command) -> &'static str {
         V::command_id(command)
     }
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{V::original_action_command_producer()}
     async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         V::command_from_action(action, args, original_fault)
     }

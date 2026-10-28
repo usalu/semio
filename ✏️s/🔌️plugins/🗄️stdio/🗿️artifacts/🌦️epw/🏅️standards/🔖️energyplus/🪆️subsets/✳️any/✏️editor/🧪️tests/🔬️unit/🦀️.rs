@@ -114,3 +114,6 @@ async fn details_edits_resolve_to_the_kind_of_the_addressed_field() {
     assert!(matches!(removed.artifact_mutations.as_slice(), [EpwMutation::RemoveRecord(_)]));
     assert_eq!(emit(SnapshotEditEvent::SetValue { path: "/schema".into(), value: semio_framework_value::DslValue::String("other".into()) }).err().expect("no kind").code.0, "snapshot-edit.unsupported-path");
 }
+
+#[path="📸️native-export/🦀️.rs"]
+mod native_export;

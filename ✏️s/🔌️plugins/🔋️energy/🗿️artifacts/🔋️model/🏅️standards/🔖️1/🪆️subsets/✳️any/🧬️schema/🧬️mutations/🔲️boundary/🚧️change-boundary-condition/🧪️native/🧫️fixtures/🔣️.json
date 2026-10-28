@@ -1,0 +1,158 @@
+{
+  "contract": "semio.energy.original-surface-boundary/v1",
+  "collection": "surfaces",
+  "field": "outside_boundary_condition",
+  "branch": "geometry",
+  "original": {
+    "id": 7,
+    "name": "wall",
+    "zone_id": 1,
+    "class": "ExteriorWall",
+    "vertices_m": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        1
+      ]
+    ],
+    "construction_id": 3,
+    "outside_boundary_condition": "OutdoorAir",
+    "sun_exposed": true,
+    "wind_exposed": true,
+    "multiplier": 1
+  },
+  "siblings": [
+    {
+      "id": 8,
+      "name": "partner",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    }
+  ],
+  "originalValue": [
+    "OutdoorAir",
+    null
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "Ground",
+        "newInterzoneSurfaceId": null
+      },
+      "outcome": "changed",
+      "after": [
+        "Ground",
+        null
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "Interzone",
+        "newInterzoneSurfaceId": 8
+      },
+      "outcome": "changed",
+      "after": [
+        "Interzone",
+        8
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "OutdoorAir",
+        "newInterzoneSurfaceId": null
+      },
+      "outcome": "no-op"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "Interzone",
+        "newInterzoneSurfaceId": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "Ground",
+        "newInterzoneSurfaceId": 8
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "Interzone",
+        "newInterzoneSurfaceId": 7
+      },
+      "outcome": "invalid-reference"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newBoundary": "Interzone",
+        "newInterzoneSurfaceId": 99
+      },
+      "outcome": "invalid-reference"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newBoundary": "Interzone",
+        "newInterzoneSurfaceId": null
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

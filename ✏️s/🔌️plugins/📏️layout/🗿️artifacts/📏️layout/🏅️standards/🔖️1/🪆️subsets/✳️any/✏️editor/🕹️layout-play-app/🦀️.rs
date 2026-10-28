@@ -87,9 +87,9 @@ impl ArtifactEditor for LayoutPlayApp {
     const DIALECT: Dialect = semio_s_artifact_layout_layout_model::LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = semio_s_artifact_layout_layout_model::LAYOUT_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> LayoutSnapshot {
+    fn reference_birth()->Option<fn()->LayoutSnapshot>{Some(||{
         semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(semio_s_artifact_layout_layout_engine::layout_io())

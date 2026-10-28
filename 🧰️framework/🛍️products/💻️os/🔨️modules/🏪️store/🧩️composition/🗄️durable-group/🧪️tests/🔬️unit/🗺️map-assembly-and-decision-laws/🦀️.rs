@@ -281,7 +281,7 @@ fn durable_owned_group_decision_rejects_forged_identity_commitment_and_capacity(
 fn durable_semantic_sources_preserve_original_decision_order_without_value_projection() {
     use semio_framework_value::NativeEncodeControl;
     let decision = decision();
-    for (source, expected) in [(planning::DurableBorrowedValue::Decision(&decision), decision.canonical_json()), (planning::DurableBorrowedValue::Unsigned(&decision), decision.canonical_unsigned_json())] {
+    for (source, expected) in [(planning::decision_source(&decision,false), decision.canonical_json()), (planning::decision_source(&decision,true), decision.canonical_unsigned_json())] {
         let mut output = planning::DurableCanonicalOutputV1::default();
         let mut accepted = |_| true;
         let mut native = NativeEncodeControl::new_retained(&mut accepted);

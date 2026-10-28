@@ -35,5 +35,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateShadingSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "shading_surfaces",
+    "key": "id",
+    "inverse": "CreateShadingSurface",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete shading surface",
+      "de": "Verschattungsfläche löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "shading-surface",
+      "kind": "delete-shading-surface",
+      "record": "DeletedShadingSurface"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed shading-surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

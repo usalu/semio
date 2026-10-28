@@ -79,30 +79,5 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         ordered.or_else(|| candidates.first().map(|(_, group_id)| group_id.clone()))
     }
 
-    /// 🌱️ Absorbs every `store::os_store::composition_coordinator::GroupReceipt::created_children` entry into the live
-    /// `self.children` map — B2 flagged that a `ChildGenesis`-created member has no pre-existing
-    /// caller-held reference the way an already-registered child does, so without this it would
-    /// be silently dropped the moment `dispatch_group` returns, making `ChildGenesis` pointless
-    /// (see `GroupReceipt::created_children`'s own doc comment). The slot name is recovered from
-    /// `self.composition`'s own graph (`dispatch_group`'s phase 2 already called `insert_owns`
-    /// for every genesis child before returning the receipt, so `slot_of` is always populated
-    /// here). A free-standing method (not inlined into `dispatch_emit_group`) so it is directly
-    /// unit-testable against a synthetic `created_children` list, independent of the `ChildEmit`
-    /// wire path (which never emits a `ChildGenesis` itself today).
-    pub async fn absorb_created_children<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, created_children: Vec<(ArtifactRef, M)>) -> Result<(), Fault> {
-        for (target, mut member) in created_children {
-            let publication_generation = self.admit_child_content_publication()?;
-            let slot = self.composition.graph().await.slot_of(&target.artifact_id).await.ok_or_else(|| plugin_sdk_fault("created child has no exact target ownership slot"))?.to_owned();
-            let projection = semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(stores.store.snapshot_ref()).map_err(|error| plugin_sdk_fault(format!("created child projection failed: {error}")))?;
-            let child_id = (0..projection.len()).filter_map(|index| projection.get(index)).find(|(declared, fields)| *declared == slot && fields.artifact_id == target.artifact_id && fields.artifact_kind == target.dialect.artifact_kind && fields.standard == target.dialect.standard && fields.subset == target.dialect.subset).map(|(_, fields)| fields.child_id.to_owned()).ok_or_else(|| plugin_sdk_fault("created child is not declared by the published parent"))?;
-            ChildContentView::hash(MemberKeyRef::root(&slot, &child_id))?;
-            let admission = self.children.admit(&(slot.clone(), child_id.clone()))?;
-            let parent = ArtifactRef { artifact_id: stores.store.envelope().id.clone(), dialect: A::DIALECT.into() };
-            let owner = store::OwnerRef { parent, slot: slot.clone(), child_id: child_id.clone() };
-            member.set_owner(Some(owner.clone())).await;
-            self.children.insert_admitted(admission, target, owner, member);
-            self.publish_child_content_member(publication_generation, &slot, &child_id).await?;
-        }
-        Ok(())
-    }
+
 }

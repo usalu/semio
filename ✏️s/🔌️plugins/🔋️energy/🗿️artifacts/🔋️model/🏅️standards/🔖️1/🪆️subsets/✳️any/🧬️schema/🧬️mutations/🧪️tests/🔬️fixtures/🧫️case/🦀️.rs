@@ -1,7 +1,7 @@
 //! 🧫️ Case of the energy mutation fixtures: the committed-vector shape with its run-time loader and the fixture root. See [`super`].
 
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 use semio_framework_test_fixtures::fixture_path;
 
 /// 🧫️ One committed specification vector and the typed scenario it was generated from.

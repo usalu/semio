@@ -1,0 +1,16 @@
+[package]
+name="energy-link-resolver-verification"
+version="0.1.0"
+edition="2024"
+[workspace]
+[lib]
+path="main.rs"
+[dependencies]
+semio-framework-os-vcs={path="/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/📦️packages/🦀️rust"}
+semio-framework-os-store-child={path="/home/deck/semio/🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/📦️packages/🦀️rust"}
+semio-framework-os-store-link-schema={path="/home/deck/semio/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust"}
+semio-framework-os-store-blob-identity={path="/home/deck/semio/🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/📦️blob/🧬️schema/📦️packages/🦀️rust"}
+semio-framework-artifact-reference={path="/home/deck/semio/🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"}
+semio-framework-hash={path="/home/deck/semio/🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust"}
+[dev-dependencies]
+serde_json="1"

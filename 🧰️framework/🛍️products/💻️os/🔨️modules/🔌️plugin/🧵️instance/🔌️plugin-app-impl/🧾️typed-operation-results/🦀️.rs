@@ -4,10 +4,9 @@ use super::*;
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> VcsArtifactApp<A, M> {
     pub(super) async fn tool_public_contracts(&self) -> Vec<ArtifactToolPublicContract> {
-        self.tools.bounded_tool_contracts
-            .iter()
+        self.tools.bounded_contracts()
             .cloned()
-            .chain(self.tools.framework_tool_registrations.values().map(|registration| ArtifactToolPublicContract {
+            .chain(self.tools.framework_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
                 owner: registration.owner,
                 controller_id: registration.key.controller_id.clone(),
                 tool_id: registration.key.tool_id.clone(),
@@ -15,7 +14,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                 max_raw_wire_bytes: registration.contract.max_raw_wire_bytes,
                 publication_lanes: registration.publication_lanes,
             }))
-            .chain(self.tools.app_tool_registrations.values().map(|registration| ArtifactToolPublicContract {
+            .chain(self.tools.app_registrations().map(|(_,row)|row).map(|registration| ArtifactToolPublicContract {
                 owner: registration.owner,
                 controller_id: registration.key.controller_id.clone(),
                 tool_id: registration.key.tool_id.clone(),

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-schema-state = { path = "../../../../../../../🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
 semio-framework-os-command = { path = "../../../../📡️spr/🎮️command/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }

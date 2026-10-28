@@ -57,7 +57,7 @@ impl SimDate {
 
 // #region 🔖️RunPeriod
 /// 📅️ Run period specification.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive, semio_framework_value::SnapshotProjection)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct RunPeriod {
     pub start_month: u8,

@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }

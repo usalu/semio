@@ -6,13 +6,16 @@ use std::{marker::PhantomData, mem::ManuallyDrop, sync::Arc};
 
 #[path="📋️original-vector/🦀️.rs"]
 pub mod original_vector;
+#[path="📦️box/🦀️.rs"]
+pub mod original_box;
+use original_box::BoxedOwner;
 
 #[path="⚖️result/🦀️.rs"]
 mod original_result;
 
-#[path="🌀️support/🦀️.rs"]
-mod support;
-pub use support::conjunctive_retirement_support;
+#[path="🧭️support/🦀️.rs"]
+pub mod support;
+pub use support::RetirementSupport;
 
 pub trait RetireOwned: Send + 'static {
     fn retirement(self) -> Box<dyn RetirementCursor>;
@@ -21,8 +24,14 @@ pub trait RetireOwned: Send + 'static {
     fn shared_original_birth_bytes(&self)->Option<usize> where Self:Sized+Sync{None}
     /// 🏠️ Admits one exact shared original without extracting its complete inline value; refusal retains the original slot.
     fn shared_original_retirement(_original:&mut Option<arc_custody::original::SharedOriginal<Self>>,_grant:RetainedCloneGrant)->Result<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> where Self:Sized+Sync{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place shared original retirement"))}
+    /// 📦️ Quotes field-wise retirement on this exact unique Box allocation when explicitly authored.
+    fn boxed_original_demands(&self)->Result<Option<crate::RetirementDemand>,crate::ValueError> where Self:Sized{Ok(None)}
+    /// 🎟️ Transfers unique original allocation custody only after its actual cursor birth is funded.
+    fn boxed_original_retirement(_original:&mut Option<original_box::BoxOriginal<Self>>,_grant:RetainedCloneGrant)->Result<Option<(Box<dyn RetirementCursor>,crate::retained_clone::RetainedCloneProgress)>,crate::ValueError> where Self:Sized{Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"owner has no in-place original Box retirement"))}
     /// 🔐️ Whether this owner retires through a controlled cursor whose births and releases are priced up front. Required, never defaulted: an owner that forgot to declare it was refused by every factory that demands controlled retirement, and the refusal only surfaced after a fixture deadline.
     fn controlled_retirement_supported() -> bool;
+    /// 🪢️ Composite owners propagate this borrowed type path; authored terminal owners retain their defining capability verdict.
+    fn controlled_retirement_supported_in(_path:&RetirementSupport<'_>)->bool where Self:Sized{Self::controlled_retirement_supported()}
     /// 🧮️ Declares an element's complete inline payload work before a collection discards it.
     fn retirement_element_copy_bytes() -> usize { 0 }
 }
@@ -228,7 +237,9 @@ impl<T: RetireOwned> RetirementCursor for Collection<T> {
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(if !std::mem::needs_drop::<T>()&&!self.0.is_empty(){T::retirement_element_copy_bytes()}else{0})}
     fn next_selected_work_byte_demand(&self,maximum_body_bytes:usize)->Result<usize,crate::ValueError> {
         let atom=self.next_work_byte_demand()?;
-        Ok(if maximum_body_bytes<atom&&self.next_birth_bytes(maximum_body_bytes).is_some_and(|bytes|bytes!=0) {0}else {atom})
+        if maximum_body_bytes<atom{return Ok(if self.next_birth_bytes(maximum_body_bytes).is_some_and(|bytes|bytes!=0){0}else{atom})}
+        let width=size_of::<T>();
+        Ok(if width==0||atom==0{0}else{(maximum_body_bytes/width).min(self.0.len())*width})
     }
     fn allows_admitted_narrow_work(&self)->bool{!std::mem::needs_drop::<T>()&&!self.0.is_empty()&&T::retirement_element_copy_bytes()!=0}
     fn next_birth_bytes(&self, maximum_bytes: usize) -> Option<usize> {
@@ -248,7 +259,7 @@ impl<T: RetireOwned> RetireOwned for Vec<T> {
         Box::new(Collection(ManuallyDrop::new(self)))
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<Collection<T>>()) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 
 struct DequeCollection<T: RetireOwned>(ManuallyDrop<std::collections::VecDeque<T>>);
@@ -277,7 +288,7 @@ impl<T: RetireOwned> Drop for DequeCollection<T> {
 impl<T: RetireOwned> RetireOwned for std::collections::VecDeque<T> {
     fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(DequeCollection(ManuallyDrop::new(self))) }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<DequeCollection<T>>()) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 
 struct VectorIterator<T:RetireOwned>(ManuallyDrop<std::vec::IntoIter<T>>);
@@ -320,7 +331,7 @@ impl<T: RetireOwned> Drop for UnorderedSet<T> {
 impl<T: RetireOwned + std::hash::Hash + Eq> RetireOwned for std::collections::HashSet<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {let table=std_hash_table_bytes::<T>(self.capacity());Box::new(UnorderedSet::new(self.into_iter(),table))}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<UnorderedSet<T>>())}
-    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 
 /// 🗺️ Drains one hashed entry per turn; its terminal release is the cursor shell plus the standard table backing the iterator still owns.
@@ -343,7 +354,7 @@ impl<K: RetireOwned,V: RetireOwned> Drop for UnorderedMap<K,V> {
 impl<K: RetireOwned + std::hash::Hash + Eq,V: RetireOwned> RetireOwned for std::collections::HashMap<K,V> {
     fn retirement(self)->Box<dyn RetirementCursor> {let table=std_hash_table_bytes::<(K,V)>(self.capacity());Box::new(UnorderedMap::new(self.into_iter(),table))}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<UnorderedMap<K,V>>())}
-    fn controlled_retirement_supported()->bool {K::controlled_retirement_supported()&&V::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<K>()&&path.supports::<V>()}
 }
 
 /// 🔃️ Drains one ordered element per turn; the standard node backing is not priced, only the element scaffolds and this cursor shell.
@@ -363,17 +374,17 @@ impl<T: RetireOwned + Ord> Drop for OrderedSet<T> {
 impl<T: RetireOwned + Ord> RetireOwned for std::collections::BTreeSet<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(OrderedSet(ManuallyDrop::new(self)))}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<OrderedSet<T>>())}
-    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 impl<T: RetireOwned + Ord> RetireOwned for std::collections::BinaryHeap<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {self.into_vec().retirement()}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<Collection<T>>())}
-    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 impl<T: RetireOwned> RetireOwned for std::cmp::Reverse<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {self.0.retirement()}
     fn retirement_birth_bytes(&self)->Option<usize> {self.0.retirement_birth_bytes()}
-    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
     fn retirement_element_copy_bytes()->usize {T::retirement_element_copy_bytes()}
 }
 
@@ -406,14 +417,14 @@ impl<K: RetireOwned + Ord, V: RetireOwned> RetireOwned for std::collections::BTr
         Box::new(OrderedMap(ManuallyDrop::new(self)))
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<OrderedMap<K, V>>()) }
-    fn controlled_retirement_supported() -> bool { K::controlled_retirement_supported() && V::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<K>()&&path.supports::<V>()}
 }
 impl<T: RetireOwned> RetireOwned for Option<T> {
     fn retirement(self) -> Box<dyn RetirementCursor> {
         Box::new(Optional { original:ManuallyDrop::new(Some(self)) })
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<Optional<T>>()) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
     fn retirement_element_copy_bytes() -> usize { composite_copy_bytes::<Self>(&[T::retirement_element_copy_bytes()]) }
 }
 struct Optional<T:RetireOwned>{original:ManuallyDrop<Option<Option<T>>>}
@@ -437,47 +448,17 @@ impl<T:RetireOwned> RetirementCursor for Optional<T>{
 impl<T:RetireOwned> Drop for Optional<T>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"optional original abandoned before terminal-empty");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.original)}}}}
 /// 📏️ Prices the concrete cursor that retains an original typed box.
 pub const fn boxed_owner_birth_bytes<T:RetireOwned>()->usize{size_of::<BoxedOwner<T>>()}
-struct BoxedOwner<T: RetireOwned> {
-    boxed: ManuallyDrop<Option<Box<T>>>,
-    value: ManuallyDrop<Option<T>>,
-}
-impl<T: RetireOwned> RetirementCursor for BoxedOwner<T> {
-    fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{capacity_bytes:self.value.as_ref().map_or(Some(0),RetireOwned::retirement_birth_bytes).ok_or_else(||crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"original boxed child lacks a birth quote"))?,release_bytes:if self.boxed.is_some(){size_of::<T>()}else{0},depth:usize::from(!self.terminal_is_empty()),..Default::default()})}
-
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> RetirementStep {
-        if grant.maximum_items == 0 { return RetirementStep::BudgetExhausted; }
-        let maximum_bytes = grant.maximum_release_bytes;
-        if self.boxed.is_some() {
-            let bytes = size_of::<T>();
-            if bytes > maximum_bytes { return RetirementStep::BudgetExhausted; }
-            *self.value = Some(*self.boxed.take().unwrap());
-            return RetirementStep::Bytes(bytes);
-        }
-        if let Some(value) = self.value.take() { return RetirementStep::Child(value.retirement()); }
-        RetirementStep::Complete
-    }
-    fn terminal_is_empty(&self) -> bool { self.boxed.is_none() && self.value.is_none() }
-    fn next_close_byte_demand(&self) -> Option<usize> { Some(if self.boxed.is_some() { size_of::<T>() } else { 0 }) }
-    fn next_birth_bytes(&self, _: usize) -> Option<usize> { self.value.as_ref().map_or(Some(0), RetireOwned::retirement_birth_bytes) }
-    fn terminal_release_bytes(&self) -> Option<usize> { self.terminal_is_empty().then_some(size_of::<Self>()) }
-}
-impl<T: RetireOwned> Drop for BoxedOwner<T> {
-    fn drop(&mut self) {
-        assert!(std::thread::panicking() || self.terminal_is_empty(), "boxed retirement abandoned before terminal-empty");
-        if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.boxed); ManuallyDrop::drop(&mut self.value); } }
-    }
-}
 impl<T: RetireOwned> RetireOwned for Box<T> {
-    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(BoxedOwner { boxed: ManuallyDrop::new(Some(self)), value: ManuallyDrop::new(None) }) }
+    fn retirement(self) -> Box<dyn RetirementCursor> { Box::new(BoxedOwner::new(self)) }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(size_of::<BoxedOwner<T>>()) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 macro_rules! retire_tuple {
     ($($type:ident:$index:tt),+) => {
         impl<$($type:RetireOwned),+> RetireOwned for ($($type,)+) {
             fn retirement(self)->Box<dyn RetirementCursor> {sequence(vec![$(deferred(self.$index)),+])}
             fn retirement_birth_bytes(&self)->Option<usize> {sequence_birth_bytes(&[$(deferred_birth_bytes::<$type>()),+])}
-            fn controlled_retirement_supported()->bool {true$(&&$type::controlled_retirement_supported())+}
+            fn controlled_retirement_supported()->bool {crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{true$(&&path.supports::<$type>())+}
             fn retirement_element_copy_bytes()->usize {composite_copy_bytes::<Self>(&[$($type::retirement_element_copy_bytes()),+])}
         }
     };
@@ -543,7 +524,9 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PlainArray<T, N> {
     fn next_work_byte_demand(&self) -> Result<usize, crate::ValueError> { Ok(if self.remaining != 0 { T::retirement_element_copy_bytes() } else { 0 }) }
     fn next_selected_work_byte_demand(&self,body:usize)->Result<usize,crate::ValueError> {
         let atom=self.next_work_byte_demand()?;
-        Ok(if body<atom&&self.next_birth_bytes(body).is_some_and(|bytes|bytes!=0) {0}else {atom})
+        if body<atom{return Ok(if self.next_birth_bytes(body).is_some_and(|bytes|bytes!=0){0}else{atom})}
+        let width=size_of::<T>();
+        Ok(if width==0{0}else{(body/width).min(self.remaining)*width})
     }
     fn allows_admitted_narrow_work(&self) -> bool { self.remaining != 0 }
     fn next_birth_bytes(&self,body:usize)->Option<usize> {
@@ -563,7 +546,7 @@ impl<T: RetireOwned, const N: usize> RetireOwned for [T; N] {
         Box::new(FixedArray { items: ManuallyDrop::new(self.map(Some)) })
     }
     fn retirement_birth_bytes(&self) -> Option<usize> { Some(if plain_elements::<T>() { size_of::<PlainArray<T, N>>() } else { size_of::<FixedArray<T, N>>() }) }
-    fn controlled_retirement_supported() -> bool { T::controlled_retirement_supported() }
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
     fn retirement_element_copy_bytes() -> usize { if plain_elements::<T>() { size_of::<Self>() } else { 0 } }
 }
 
@@ -678,7 +661,7 @@ pub struct PagedListRetirement<T: RetireOwned, const N: usize> {
 impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T, N> {
     fn next_demand(&self, body: usize) -> Result<crate::RetirementDemand, crate::ValueError> {
         Ok(crate::RetirementDemand {
-            copy_bytes: if !std::mem::needs_drop::<T>() && !self.released && !self.owner.is_empty() { T::retirement_element_copy_bytes() } else { 0 },
+            copy_bytes: self.next_selected_work_byte_demand(body)?,
             capacity_bytes: self.next_birth_bytes(body).ok_or_else(|| crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner, "original paged child lacks a birth quote"))?,
             release_bytes: self.next_close_byte_demand().unwrap_or(0),
             depth: self.next_depth_demand()?,
@@ -725,7 +708,9 @@ impl<T: RetireOwned, const N: usize> RetirementCursor for PagedListRetirement<T,
     fn next_work_byte_demand(&self)->Result<usize,crate::ValueError> {Ok(if !self.released && !self.owner.is_empty() && !std::mem::needs_drop::<T>() { size_of::<T>() } else { 0 })}
     fn next_selected_work_byte_demand(&self,maximum_body_bytes:usize)->Result<usize,crate::ValueError> {
         let atom=self.next_work_byte_demand()?;
-        Ok(if maximum_body_bytes<atom&&self.next_birth_bytes(maximum_body_bytes).is_some_and(|bytes|bytes!=0) {0}else {atom})
+        if maximum_body_bytes<atom{return Ok(if self.next_birth_bytes(maximum_body_bytes).is_some_and(|bytes|bytes!=0){0}else{atom})}
+        let width=size_of::<T>();
+        Ok(if width==0||atom==0{0}else{(maximum_body_bytes/width).min(self.owner.len())*width})
     }
 
     fn allows_admitted_narrow_work(&self)->bool { !self.released&&!self.owner.is_empty()&&!std::mem::needs_drop::<T>()&&self.owner.get(self.owner.len()-1).is_some_and(|value|value.retirement_birth_bytes().is_some_and(|bytes|bytes!=0)) }
@@ -758,3 +743,20 @@ impl<T: RetireOwned, const N: usize> RetireOwned for crate::list::PagedList<T, N
     fn controlled_retirement_supported() -> bool { true }
 }
 
+
+struct OwnedAtomicU64Retirement(Option<std::sync::atomic::AtomicU64>);
+impl RetireOwned for std::sync::atomic::AtomicU64{
+ fn retirement(self)->Box<dyn RetirementCursor>{Box::new(OwnedAtomicU64Retirement(Some(self)))}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OwnedAtomicU64Retirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl RetirementCursor for OwnedAtomicU64Retirement{
+ fn next_demand(&self,_:usize)->Result<crate::RetirementDemand,crate::ValueError>{Ok(crate::RetirementDemand{depth:usize::from(self.0.is_some()),..Default::default()})}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep{if self.0.is_none(){return RetirementStep::Complete}if grant.maximum_items==0||grant.maximum_depth==0{return RetirementStep::BudgetExhausted}self.0=None;RetirementStep::Progress(crate::RetainedCloneProgress{copied_items:1,..Default::default()})}
+ fn terminal_is_empty(&self)->bool{self.0.is_none()}
+ fn terminal_release_bytes(&self)->Option<usize>{self.0.is_none().then_some(size_of::<Self>())}
+}
+
+#[cfg(test)]
+#[path="🧪️tests/🎯️selected/🦀️.rs"]
+mod original_selected_body_tests;

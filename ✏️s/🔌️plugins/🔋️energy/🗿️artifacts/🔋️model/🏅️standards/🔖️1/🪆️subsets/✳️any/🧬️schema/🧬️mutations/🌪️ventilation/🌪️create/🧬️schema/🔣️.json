@@ -120,7 +120,8 @@
         "precision": 0,
         "group": "ventilation",
         "order": 50
-      }
+      },
+      "minimum": 0
     },
     "fanTotalEfficiency": {
       "type": "number",
@@ -139,7 +140,9 @@
         "softMax": 1,
         "group": "ventilation",
         "order": 60
-      }
+      },
+      "maximum": 1,
+      "exclusiveMinimum": 0
     },
     "fanDeltaPressurePa": {
       "type": "number",
@@ -155,7 +158,117 @@
         "precision": 0,
         "group": "ventilation",
         "order": 70
-      }
+      },
+      "minimum": 0
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateMechanicalVentilation",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "schedule_id",
+        "input": "schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "design_flow_m3_s",
+        "input": "design_flow_m3_s",
+        "storage": "fixed"
+      },
+      {
+        "field": "fan_total_efficiency",
+        "input": "fan_total_efficiency",
+        "storage": "fixed"
+      },
+      {
+        "field": "fan_delta_pressure_pa",
+        "input": "fan_delta_pressure_pa",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateMechanicalVentilation",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "mechanical_ventilations",
+    "key": "id",
+    "inverse": "DeleteMechanicalVentilation",
+    "labels": {
+      "en": "Create Mechanical Ventilation at index",
+      "de": "Mechanische Lüftung an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "mechanical-ventilation",
+      "kind": "create-mechanical-ventilation",
+      "record": "CreatedMechanicalVentilation"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

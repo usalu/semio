@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "field": "solar_absorptance",
+    "input": "new_solar_absorptance",
+    "key": "id",
+    "labels": {
+      "en": "Change material: Solar absorptance",
+      "de": "Solarer Absorptionsgrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "material",
+      "kind": "change-material-solar-absorptance",
+      "record": "ChangedMaterialSolarAbsorptance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Solar absorptance violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The material already carries this solar absorptance value."
+      }
+    }
   }
 }

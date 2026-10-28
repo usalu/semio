@@ -43,7 +43,7 @@ pub fn editor_surface<E: ArtifactEditor, PA: PluginApp + From<VcsArtifactApp<Edi
         mount_natural_file_actions(&mut def, codec);
     }
     stamp_fault_notices::<EditorApp<E>>(&mut def);
-    SurfaceDeclaration { definition: def, factory: factory::<E, PA>, app_schema: app_schema::<E>, document_schema: E::DOCUMENT_SCHEMA, codec: artifact_codec_table::<EditorApp<E>>(), mutation_roster: None, rights: Rights::Write }
+    SurfaceDeclaration { definition: def,original_factory:None, factory: Some(factory::<E, PA>), app_schema: app_schema::<E>, document_schema: E::DOCUMENT_SCHEMA, codec: artifact_codec_table::<EditorApp<E>>(), mutation_roster: None, rights: Rights::Write }
 }
 
 /// 👁️ Viewer twin of `editor_surface` — `rights: Rights::Read` (baseline Read only, contract
@@ -64,7 +64,7 @@ pub fn viewer_surface<V: ArtifactViewer, PA: PluginApp + From<VcsArtifactApp<Vie
         def.io.artifact_schema = V::DOCUMENT_SCHEMA.to_string();
     }
     stamp_fault_notices::<ViewerApp<V>>(&mut def);
-    SurfaceDeclaration { definition: def, factory: factory::<V, PA>, app_schema: app_schema::<V>, document_schema: V::DOCUMENT_SCHEMA, codec: artifact_codec_table::<ViewerApp<V>>(), mutation_roster: None, rights: Rights::Read }
+    SurfaceDeclaration { definition: def,original_factory:None, factory: Some(factory::<V, PA>), app_schema: app_schema::<V>, document_schema: V::DOCUMENT_SCHEMA, codec: artifact_codec_table::<ViewerApp<V>>(), mutation_roster: None, rights: Rights::Read }
 }
 
 /// 🎭️ Authoring traits for artifact surfaces split by mutation capability (ticket
@@ -82,3 +82,17 @@ pub type EditorSurfaceApp<E> = VcsArtifactApp<EditorApp<E>, <E as ArtifactEditor
 
 /// 👁️🧩️ Viewer twin of [`EditorSurfaceApp`].
 pub type ViewerSurfaceApp<V> = VcsArtifactApp<ViewerApp<V>, <V as ArtifactViewer>::Members>;
+
+/// 🌱️ Declares an editor whose only mounted constructor is its original retained producer.
+pub fn native_editor_surface<E:semio_framework_plugin_decl_surface::OriginalArtifactEditorBirth,PA:PluginApp>(mut definition:AppDefinition,factory:semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>)->SurfaceDeclaration<PA>{
+ if definition.io.artifact_schema.is_empty(){definition.io.artifact_schema=E::DOCUMENT_SCHEMA.into()}
+ if let Some(codec)=E::natural_file_codec(){mount_natural_file_actions(&mut definition,codec)}
+ stamp_fault_notices::<EditorApp<E>>(&mut definition);
+ SurfaceDeclaration{definition,original_factory:Some(factory),factory:None,app_schema:E::app_schema,document_schema:E::DOCUMENT_SCHEMA,codec:artifact_codec_table::<EditorApp<E>>(),mutation_roster:None,rights:Rights::Write}
+}
+/// 🌱️ Declares a viewer whose real read-only document source is admitted under its opening caller.
+pub fn native_viewer_surface<V:semio_framework_plugin_decl_surface::OriginalArtifactViewerBirth,PA:PluginApp>(mut definition:AppDefinition,factory:semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>)->SurfaceDeclaration<PA>{
+ if definition.io.artifact_schema.is_empty(){definition.io.artifact_schema=V::DOCUMENT_SCHEMA.into()}
+ stamp_fault_notices::<ViewerApp<V>>(&mut definition);
+ SurfaceDeclaration{definition,original_factory:Some(factory),factory:None,app_schema:V::app_schema,document_schema:V::DOCUMENT_SCHEMA,codec:artifact_codec_table::<ViewerApp<V>>(),mutation_roster:None,rights:Rights::Read}
+}

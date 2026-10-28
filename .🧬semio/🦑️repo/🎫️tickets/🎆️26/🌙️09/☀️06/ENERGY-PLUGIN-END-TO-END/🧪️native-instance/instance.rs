@@ -1,0 +1,63 @@
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🏪️stores/🦀️.rs"]pub mod original_instance_stores;
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🧪️tests/🪟️native-window/🦀️.rs"]mod fixture;
+#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+use original_instance_stores::*;
+use semio_framework_job::*;
+use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetirementDemand};
+use semio_framework_os_kernel as store;
+const TURN:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:1<<20,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};
+fn caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(8821),Generation(63),RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<29,maximum_release_bytes:1<<29,maximum_depth:4096},default_now_us,u64::MAX,1<<30)}
+fn turn<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,f:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(TURN,decoder,f));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes),"original four-lane physical receipt: {p:?} failure={:?}",result.as_ref().err());result.unwrap()}
+#[test]fn original_four_lane_instance_stores_retain_native_source_and_close(){let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let actor=store::ActorId("native-app-reader".into());let mut owner=None;assert!(turn(&mut caller,&mut decoder,|cx|OriginalArtifactStoreSet::<fixture::NativeWindowApp>::admit("native-window",&actor,cx,&mut owner)));let owned=owner.as_mut().unwrap();let mut ready=false;for index in 0..1048576{ready=turn(&mut caller,&mut decoder,|cx|owned.step(cx));if ready{break}assert!(index<1048575,"native four-lane genesis did not finish: {:?}",owned.progress());}assert!(ready);let mut output=None;assert!(turn(&mut caller,&mut decoder,|cx|owned.take(&mut output,cx)));let mut stores=output.unwrap();let law:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🧪️tests/📜️contract/🔣️.json")).unwrap();assert_eq!(stores.document.envelope().id,law["lanes"][0]["id"].as_str().unwrap());assert_eq!(stores.document.snapshot().unwrap().zoom,law["lanes"][0]["zoom"].as_f64().unwrap());assert_eq!(stores.document.snapshot().unwrap().zoom,1.25);assert_eq!(stores.config.snapshot().unwrap().zoom,1.25);assert_eq!(stores.draft.snapshot().unwrap().zoom,1.25);assert_eq!(stores.interaction.snapshot().unwrap(),store::InteractionState::default());assert_eq!(stores.document.envelope().id,"native-window");assert_eq!(stores.config.envelope().id,"native-window-config");assert_eq!(stores.draft.envelope().id,"native-window-draft");assert_eq!(stores.interaction.envelope().id,"native-window-interaction");for index in 0..1048576{if turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|owned.close_step(cx))){break}assert!(index<1048575);}assert!(owned.terminal_is_empty());release_owner(&mut owner,&mut caller,&mut decoder);for lane in 0..4{for index in 0..1048576{let terminal=match lane{0=>stores.document.close_owned_store_terminal_is_empty(),1=>stores.config.close_owned_store_terminal_is_empty(),2=>stores.draft.close_owned_store_terminal_is_empty(),_=>stores.interaction.close_owned_store_terminal_is_empty()};if terminal{break}turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|{let(d,step)=match lane{0=>{let d=stores.document.close_owned_demands(4096)?;(d,0)},1=>{let d=stores.config.close_owned_demands(4096)?;(d,1)},2=>{let d=stores.draft.close_owned_demands(4096)?;(d,2)},_=>{let d=stores.interaction.close_owned_demands(4096)?;(d,3)}};close_original_retained_step(cx,d,|g|match step{0=>stores.document.close_owned_store_step(g),1=>stores.config.close_owned_store_step(g),2=>stores.draft.close_owned_store_step(g),_=>stores.interaction.close_owned_store_step(g)})?;Ok(())}));assert!(index<1048575);}}while !turn(&mut caller,&mut decoder,|cx|stores.close_step(cx)){}while !decoder.terminal_is_empty(){caller.turn(TURN,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}caller.retire(TURN);}
+
+fn release_owner(owner:&mut Option<Box<OriginalArtifactStoreSet<fixture::NativeWindowApp>>>,caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(RetainedCloneGrant{maximum_release_bytes:0,..TURN},decoder,|cx|cx.with_original_retirement(|cx|{let d=OriginalArtifactStoreSet::<fixture::NativeWindowApp>::boxed_release_demands();close_original_retained_step(cx,d,|_|{drop(owner.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(())})));assert!(result.is_ok());assert!(owner.is_some());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));turn(caller,decoder,|cx|cx.with_original_retirement(|cx|{let d=OriginalArtifactStoreSet::<fixture::NativeWindowApp>::boxed_release_demands();close_original_retained_step(cx,d,|_|{drop(owner.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(())}));}
+fn retire_decoder(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner){while !decoder.terminal_is_empty(){caller.turn(TURN,|cx|cx.with_original_retirement(|cx|{let d=decoder.retirement_demands(4096)?;close_original_retained_step(cx,d,|g|decoder.close_step(g))?;Ok(())})).unwrap();}}
+#[test]fn original_four_lane_cancelled_sources_and_foreign_callers_preserve_custody(){for phase in [2,6,7]{for lane in 0..4{let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let actor=store::ActorId("native-app-reader".into());let mut owner=None;assert!(turn(&mut caller,&mut decoder,|cx|OriginalArtifactStoreSet::<fixture::NativeWindowApp>::admit("native-window",&actor,cx,&mut owner)));let active=owner.as_mut().unwrap();for index in 0..1048576{if active.progress().0==lane&&active.progress().1.is_some_and(|stage|stage.0==phase){break}turn(&mut caller,&mut decoder,|cx|active.step(cx));assert!(index<1048575,"original cancellation target never reached: {:?}",active.progress());}let before=active.progress();let mut foreign=super_caller();let mut foreign_decoder=OriginalJobDecodeOwner::empty();let(failure,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||foreign.turn_with_decoder(TURN,&mut foreign_decoder,|cx|active.step(cx)));assert!(failure.is_err());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(active.progress(),before);retire_decoder(&mut foreign,&mut foreign_decoder);foreign.retire(TURN);caller.cancel().cancel_now();for index in 0..1048576{if turn(&mut caller,&mut decoder,|cx|cx.with_original_retirement(|cx|active.close_step(cx))){break}assert!(index<1048575,"original cancellation retained lane {lane}: {:?}",active.progress());}assert!(active.terminal_is_empty());release_owner(&mut owner,&mut caller,&mut decoder);retire_decoder(&mut caller,&mut decoder);caller.retire(TURN);}}}
+fn super_caller()->OriginalJobFixtureCaller{OriginalJobFixtureCaller::admit(OperationId(8822),Generation(63),RetainedCloneGrant{maximum_items:1<<30,maximum_copy_bytes:1<<30,maximum_capacity_bytes:1<<29,maximum_release_bytes:1<<29,maximum_depth:4096},default_now_us,u64::MAX,1<<30)}
+#[test]fn original_instance_birth_independent_denials_create_no_source(){for axis in 0..4{let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let actor=store::ActorId("native-app-reader".into());let mut owner=None;let mut grant=TURN;match axis{0=>grant.maximum_items=0,1=>grant.maximum_copy_bytes=0,2=>grant.maximum_capacity_bytes=0,_=>grant.maximum_depth=0};let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(grant,&mut decoder,|cx|OriginalArtifactStoreSet::<fixture::NativeWindowApp>::admit("native-window",&actor,cx,&mut owner)));assert!(!result.unwrap());assert!(owner.is_none());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(caller.receipt(),RetainedCloneProgress::default());retire_decoder(&mut caller,&mut decoder);caller.retire(TURN);}}
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📇️registry/🌱️original/🧪️tests/🦀️.rs"]mod original_registry_tests;
+
+#[path="catalog.rs"]mod tool_catalog;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🧭️owner-registry/🌱️registration/🧪️tests/🦀️.rs"]mod window_registration_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/🌱️genesis/🧪️tests/📦️handoff/🦀️.rs"]mod boxed_initializer_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️instance/🌱️initialization/🫧️ephemeral/🦀️.rs"]mod original_ephemeral;
+
+pub use semio_framework::{RegisteredActionBusSource,RegisteredActionBusAlias};
+#[path="../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/🏛️registered/🧪️tests/🦀️.rs"]
+mod registered_bus_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/♻️issuers/🧪️tests/🦀️.rs"]mod envelope_issuer_tests;
+
+#[test]fn original_genesis_initializer_header_fits_the_actual_mounted_copy_policy(){type Init=store::ArtifactStoreReplayInitializer<fixture::State,fixture::Mutation,semio_framework_plugin_window_config::WindowConfigInitializationOwners<fixture::Owner>>;let header=Init::awaiting_envelope_birth_demands();let envelope=semio_framework_plugin_ownership::original_store_genesis::OriginalStoreGenesis::<fixture::ScalarGenesis<false>>::genesis_envelope_demands().unwrap();assert!(header.copy_bytes<=32768,"initializer header={header:?}");assert!(envelope.copy_bytes<=32768,"genesis envelope={envelope:?}");}
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌱️initialization/🌱️genesis/🧪️tests/🎟️admission/🦀️.rs"]mod staged_genesis_tests;
+
+#[test]fn original_tool_run_owner_alone_fits_the_actual_candidate_copy_policy(){type Ledger=semio_framework_plugin_tool_run::ToolRunLedger<fixture::NativeWindowApp>;let bytes=std::mem::size_of::<Ledger>();assert!(4*bytes<=32768,"actual native candidate transfers its service owner twice and its assembled App twice: ToolRun alone is {bytes} bytes, minimum copy {}, layouts {:?}",4*bytes,Ledger::original_owner_layout());}
+
+#[path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/📦️box/🧪️tests/🦀️.rs"]mod original_box_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👷️job/📨️emission/🎟️capture/🧪️tests/🦀️.rs"]mod original_emission_capture_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/🕳️empty-lanes/genesis-tests.rs"]mod original_empty_genesis_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🎟️typed/🧪️tests/🦀️.rs"]mod original_typed_command_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/📨️emission/🛂️metadata/📑️copy/🧪️tests/🦀️.rs"]mod original_metadata_copy_tests;
+
+#[test]fn original_command_wire_admission_native_custody(){semio_framework_action_bus::original_command_wire_admission_law()}
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🎟️typed/📨️wire/🧪️tests/🦀️.rs"]mod original_command_wire_tests;
+
+#[path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/🎟️typed/🎟️proof/🧪️tests/🦀️.rs"]mod original_tool_qualification_tests;
+
+#[path="../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🌱️original/🧪️tests/🦀️.rs"]mod original_ui_value_conversion_tests;
+
+#[path="../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🌱️original/🔀️merge/🧪️tests/🦀️.rs"]mod original_ui_arguments_merge_tests;
+
+#[path="../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/🌱️original/📥️arguments/🧪️tests/🦀️.rs"]mod original_ui_arguments_tests;
+
+#[path="follow.rs"]mod original_native_follower_tests;

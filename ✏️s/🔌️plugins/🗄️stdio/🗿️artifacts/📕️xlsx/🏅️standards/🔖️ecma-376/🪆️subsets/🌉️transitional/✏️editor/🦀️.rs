@@ -166,9 +166,9 @@ impl ArtifactEditor for XlsxTransitionalEditor {
         })
     }
 
-    fn initial_snapshot() -> XlsxSnapshot {
+    fn reference_birth()->Option<fn()->XlsxSnapshot>{Some(||{
         XlsxSnapshot::default()
-    }
+    })}
 
     /// ✏️ Resolves the rendered worksheet/row/column identity and optimistic revision, then emits
     /// one `XlsxMutation::SetCell`. Stale addresses and revisions return a fault without mutation.

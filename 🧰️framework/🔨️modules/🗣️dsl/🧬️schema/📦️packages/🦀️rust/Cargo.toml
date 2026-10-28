@@ -35,6 +35,7 @@ semio-framework-pack-json = { path = "../../../../🎒️pack/🔤️json/📦�
 [dev-dependencies]
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 semio-framework-value-ordered = { path = "../../../../🌱️value/🗂️ordered/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-test-fixtures = { path = "../../../../🧪️test/🧲️fixture-reader/📦️packages/🦀️rust" }
 serde = { version = "1.0", features = ["derive"] }
 semio-framework-pack = { path = "../../../../🎒️pack/📦️packages/🦀️rust" }

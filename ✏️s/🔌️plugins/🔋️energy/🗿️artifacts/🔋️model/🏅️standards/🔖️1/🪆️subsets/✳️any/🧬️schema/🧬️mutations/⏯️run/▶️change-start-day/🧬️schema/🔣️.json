@@ -31,5 +31,39 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "run_period",
+    "field": "start_day",
+    "input": "new_start_day",
+    "labels": {
+      "en": "Change start day",
+      "de": "Starttag ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "run",
+      "kind": "change-run-start-day",
+      "record": "ChangedRunStartDay"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored start day is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The start day is unchanged."
+      },
+      "context": {
+        "level": "error",
+        "code": "mutation.target-mismatch",
+        "message": "The authored value does not form a valid calendar interval."
+      }
+    },
+    "calendarInterval": true
   }
 }

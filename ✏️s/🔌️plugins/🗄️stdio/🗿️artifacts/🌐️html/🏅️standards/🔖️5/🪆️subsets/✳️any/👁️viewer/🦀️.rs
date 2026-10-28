@@ -59,9 +59,9 @@ impl ArtifactViewer for HtmlViewer {
     const DIALECT: Dialect = HTML_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_HTML_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         HtmlSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

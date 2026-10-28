@@ -1,0 +1,458 @@
+{
+  "contract": "semio.energy.original-surface-cascade/v1",
+  "collection": "surfaces",
+  "existingRows": [
+    {
+      "id": 10,
+      "name": "host",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    {
+      "id": 11,
+      "name": "other",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    {
+      "id": 12,
+      "name": "partner",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": {
+        "Interzone": 11
+      },
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    {
+      "id": 20,
+      "name": "isolated",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    }
+  ],
+  "model": {
+    "zones": [
+      {
+        "id": 1,
+        "name": "zone",
+        "volume_m3": 100,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ],
+    "constructions": [
+      {
+        "id": 3,
+        "name": "wall",
+        "layer_material_ids": []
+      }
+    ],
+    "fenestrations": [
+      {
+        "id": 7,
+        "name": "aperture",
+        "surface_id": 10,
+        "u_value_w_m2k": 1.6,
+        "shgc": 0.5,
+        "vlt": 0.7,
+        "area_m2": 2,
+        "height_m": 1,
+        "sill_height_m": 0.5,
+        "frame_conductance_w_k": 0,
+        "divider_conductance_w_k": 0,
+        "overhang_depth_m": 0,
+        "overhang_offset_m": 0,
+        "fin_depth_m": 0,
+        "fin_offset_m": 0,
+        "glazing_construction_id": null,
+        "vertices_m": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ]
+      },
+      {
+        "id": 8,
+        "name": "empty",
+        "surface_id": 10,
+        "u_value_w_m2k": 1.6,
+        "shgc": 0.5,
+        "vlt": 0.7,
+        "area_m2": 2,
+        "height_m": 1,
+        "sill_height_m": 0.5,
+        "frame_conductance_w_k": 0,
+        "divider_conductance_w_k": 0,
+        "overhang_depth_m": 0,
+        "overhang_offset_m": 0,
+        "fin_depth_m": 0,
+        "fin_offset_m": 0,
+        "glazing_construction_id": null,
+        "vertices_m": []
+      },
+      {
+        "id": 9,
+        "name": "unaffected",
+        "surface_id": 11,
+        "u_value_w_m2k": 1.6,
+        "shgc": 0.5,
+        "vlt": 0.7,
+        "area_m2": 2,
+        "height_m": 1,
+        "sill_height_m": 0.5,
+        "frame_conductance_w_k": 0,
+        "divider_conductance_w_k": 0,
+        "overhang_depth_m": 0,
+        "overhang_offset_m": 0,
+        "fin_depth_m": 0,
+        "fin_offset_m": 0,
+        "glazing_construction_id": null,
+        "vertices_m": []
+      }
+    ],
+    "adjacency_pairs": [
+      {
+        "surface_a_id": 10,
+        "surface_b_id": 11
+      },
+      {
+        "surface_a_id": 11,
+        "surface_b_id": 12
+      }
+    ]
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 10
+      },
+      "outcome": "changed",
+      "after": [
+        11,
+        12,
+        20,
+        9,
+        11,
+        12
+      ],
+      "inverseCount": 5,
+      "inverseIds": [
+        10,
+        8,
+        7,
+        7,
+        10
+      ],
+      "inverseSteps": [
+        {
+          "Pair": {
+            "surfaceAId": 10,
+            "surfaceBId": 11,
+            "index": 0
+          }
+        },
+        {
+          "Fenestration": {
+            "id": 8,
+            "name": "empty",
+            "surfaceId": 10,
+            "uValueWM2k": 1.6,
+            "shgc": 0.5,
+            "vlt": 0.7,
+            "areaM2": 2,
+            "heightM": 1,
+            "sillHeightM": 0.5,
+            "frameConductanceWK": 0,
+            "dividerConductanceWK": 0,
+            "overhangDepthM": 0,
+            "overhangOffsetM": 0,
+            "finDepthM": 0,
+            "finOffsetM": 0,
+            "glazingConstructionId": null,
+            "index": 1
+          }
+        },
+        {
+          "Vertices": {
+            "id": 7,
+            "newVerticesM": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "Fenestration": {
+            "id": 7,
+            "name": "aperture",
+            "surfaceId": 10,
+            "uValueWM2k": 1.6,
+            "shgc": 0.5,
+            "vlt": 0.7,
+            "areaM2": 2,
+            "heightM": 1,
+            "sillHeightM": 0.5,
+            "frameConductanceWK": 0,
+            "dividerConductanceWK": 0,
+            "overhangDepthM": 0,
+            "overhangOffsetM": 0,
+            "finDepthM": 0,
+            "finOffsetM": 0,
+            "glazingConstructionId": null,
+            "index": 0
+          }
+        },
+        {
+          "Surface": {
+            "id": 10,
+            "name": "host",
+            "zoneId": 1,
+            "class": "ExteriorWall",
+            "verticesM": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                1
+              ]
+            ],
+            "constructionId": 3,
+            "sunExposed": true,
+            "windExposed": true,
+            "multiplier": 1,
+            "boundary": "OutdoorAir",
+            "interzoneSurfaceId": null,
+            "index": 0
+          }
+        }
+      ],
+      "info": "mutation.cascade"
+    },
+    {
+      "payload": {
+        "id": 20
+      },
+      "outcome": "changed",
+      "after": [
+        10,
+        11,
+        12,
+        7,
+        8,
+        9,
+        10,
+        11,
+        11,
+        12
+      ],
+      "inverseCount": 1,
+      "inverseSteps": [
+        {
+          "Surface": {
+            "id": 20,
+            "name": "isolated",
+            "zoneId": 1,
+            "class": "ExteriorWall",
+            "verticesM": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                1
+              ]
+            ],
+            "constructionId": 3,
+            "sunExposed": true,
+            "windExposed": true,
+            "multiplier": 1,
+            "boundary": "OutdoorAir",
+            "interzoneSurfaceId": null,
+            "index": 3
+          }
+        }
+      ]
+    },
+    {
+      "payload": {
+        "id": 11
+      },
+      "outcome": "referenced"
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000,
+    2000,
+    4000
+  ],
+  "maximumTurns": 50000,
+  "targetCases": [
+    {
+      "kind": "Pair",
+      "payload": {
+        "surfaceAId": 4294967295,
+        "surfaceBId": 7
+      },
+      "segments": [
+        "4294967295",
+        "7"
+      ]
+    },
+    {
+      "kind": "Delete",
+      "payload": {
+        "id": 7
+      },
+      "segments": [
+        "7"
+      ]
+    }
+  ]
+}

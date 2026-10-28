@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateGlazingMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "glazing_materials",
+    "field": "visible_transmittance",
+    "input": "new_visible_transmittance",
+    "key": "id",
+    "labels": {
+      "en": "Change glazing material: Visible transmittance",
+      "de": "Lichttransmissionsgrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "glazing-material",
+      "kind": "change-glazing-material-visible-transmittance",
+      "record": "ChangedGlazingMaterialVisibleTransmittance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Visible transmittance violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed glazing material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The glazing material already carries this visible transmittance value."
+      }
+    }
   }
 }

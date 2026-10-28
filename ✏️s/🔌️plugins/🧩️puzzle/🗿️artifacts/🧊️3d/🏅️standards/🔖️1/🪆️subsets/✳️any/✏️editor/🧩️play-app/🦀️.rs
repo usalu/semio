@@ -267,9 +267,9 @@ impl ArtifactEditor for Puzzle3dPlayApp {
     /// throwaway `Puzzle3dPlayApp` dropped on return: every rendering app syncs its own session before its
     /// first body (`with_puzzle3d_app_for`), so that work reached no one — while every `codec` call of a hub
     /// creating or validating a document paid for it in the interpreter.
-    fn initial_snapshot() -> Puzzle3dPlaySnapshot {
+    fn reference_birth()->Option<fn()->Puzzle3dPlaySnapshot>{Some(||{
         Puzzle3dPlaySnapshot::new(puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("authored initial snapshot admits"))
-    }
+    })}
 
     fn clipboard_media_type() -> Option<MediaType> {
         Some(MediaType { class: MediaClass::ThreeD, form: MediaForm::Design })

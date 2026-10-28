@@ -1,14 +1,13 @@
 //! 🎼️ Energy model mutation — `ChangeSetpointManagerSchedule`: Points one setpoint manager at a schedule the model defines, or clears the slot. `Option<T>` has no `dsl::DslField`, so the optional reference travels as a `present` flag beside the id and an absent slot has to carry zero.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🎼️ `change-setpoint-manager-schedule` payload. Points one setpoint manager at a schedule the model defines, or clears the slot. `Option<T>` has no `dsl::DslField`, so the optional reference travels as a `present` flag beside the id and an absent slot has to carry zero.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-setpoint-manager-schedule")]
 pub struct ChangeSetpointManagerSchedule {
@@ -22,39 +21,6 @@ pub fn change_setpoint_manager_schedule<Op: From<ChangeSetpointManagerSchedule>>
     ChangeSetpointManagerSchedule { id, new_schedule_present, new_schedule_id }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSetpointManagerSchedule
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSetpointManagerSchedule>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "setpoint-manager", kind: "change-setpoint-manager-schedule", record: "ChangedSetpointManagerSchedule" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change setpoint manager {} schedule to {:?}", self.id.0, self.new_schedule_present.then_some(self.new_schedule_id.0)), &format!("Zeitplan von Sollwertführung {} auf {:?} ändern", self.id.0, self.new_schedule_present.then_some(self.new_schedule_id.0)))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeSetpointManagerSchedule
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeSetpointManagerSchedule>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

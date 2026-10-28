@@ -29,7 +29,7 @@ impl<A: ArtifactApp> CommandHistory<A> {
     /// 📚️ Rebuilds the supersede ledger when the store's transitions changed.
     pub fn refresh_supersede_ledger(&mut self, stores: &mut InstanceStores<A>) {
         let envelope = stores.store.envelope();
-        self.supersedes.refresh(&envelope.transitions, |targets| {
+        self.supersedes.refresh(envelope.transitions.iter(), |targets| {
             let mut originals = HashMap::new();
             if targets.is_empty() {
                 return originals;

@@ -148,7 +148,8 @@ where
     pub initial: ManuallyDrop<Option<P>>,
     pub history: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_spr::HistoryLog>>>,
     pub fold_job: ManuallyDrop<Option<semio_framework_os_spr::HistoryFoldJob<'static, semio_framework_os_spr::history::RetainedHistoryFold>>>,
-    pub normalized_transitions: ManuallyDrop<Option<Vec<semio_framework_os_spr::MutationEnvelope>>>,
+    pub normalized_transitions: ManuallyDrop<Option<std::collections::VecDeque<semio_framework_os_spr::MutationEnvelope>>>,
+    pub transition_ledger:ManuallyDrop<Option<semio_framework_os_vcs::ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>>>,
     pub normalized_conflicts: ManuallyDrop<Option<Vec<semio_framework_os_spr::Conflict>>>,
     pub replay_ids: ManuallyDrop<Option<Vec<String>>>,
     pub replay_order: ManuallyDrop<Option<semio_framework_os_vcs::HistoryPageStack<String>>>,
@@ -157,7 +158,7 @@ where
     pub loaded_result: ManuallyDrop<Option<semio_framework_os_store_replay::EditReplayResult<P, M>>>,
     pub edit_lookup: ManuallyDrop<Option<std::collections::BTreeMap<String, usize>>>,
     pub mutation_lookup: ManuallyDrop<Option<std::collections::BTreeMap<semio_framework_os_spr::MutationId, (usize, usize)>>>,
-    pub target_source: ManuallyDrop<Option<std::sync::Arc<Vec<semio_framework_os_spr::MutationEnvelope>>>>,
+    pub target_source: ManuallyDrop<Option<std::sync::Arc<semio_framework_os_vcs::ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>>>>,
     pub target_decoder: ManuallyDrop<Option<semio_framework_os_spr::HistoryFoldJob<'static, semio_framework_os_spr::HistoryTransition>>>,
     pub pending_target: ManuallyDrop<Option<semio_framework_os_spr::HistoryTransition>>,
     pub target_address: ManuallyDrop<Option<Vec<String>>>,
@@ -255,6 +256,7 @@ where
             history: ManuallyDrop::new(Some(std::sync::Arc::new(history))),
             fold_job: ManuallyDrop::new(None),
             normalized_transitions: ManuallyDrop::new(None),
+            transition_ledger:ManuallyDrop::new(Some(semio_framework_os_vcs::ArtifactHistoryLedger::empty())),
             normalized_conflicts: ManuallyDrop::new(None),
             replay_ids: ManuallyDrop::new(None),
             replay_order: ManuallyDrop::new(Some(semio_framework_os_vcs::HistoryPageStack::new())),
@@ -353,9 +355,6 @@ where
         }
     }
 
-    pub(super) fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> semio_framework_os_store_read::ArtifactHistoryReadRetirement<P, M> {
-        semio_framework_os_store_read::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
-    }
 
     /// 🏪️ Refuses a foreign immutable target before consuming any retained hydration input.
     pub fn step_store(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentStoreHydrationStep<P, M> {
@@ -374,6 +373,15 @@ where
                 PersistedDocumentStoreHydrationStep::Rejected(self.diagnostic.unwrap())
             }
         }
+    }
+
+}
+
+impl<P,M> RetainedPersistedDocumentHydration<P,M>
+where P: ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static {
+    pub(super) fn loaded_replay_retirement(&self, owners: &DocumentStoreOwners<P, M>) -> semio_framework_os_store_read::ArtifactHistoryReadRetirement<P, M> {
+        semio_framework_os_store_read::ArtifactHistoryReadRetirement {derived:ManuallyDrop::new(None),derived_alias:ManuallyDrop::new(None), preview: ManuallyDrop::new(None), replay: ManuallyDrop::new(None), loaded_replay: ManuallyDrop::new(None), finished: ManuallyDrop::new(None), active: ManuallyDrop::new(None), plan_retirement: ManuallyDrop::new(None), draft_retirement: ManuallyDrop::new(None), registry_retirement: ManuallyDrop::new(None), snapshots: ManuallyDrop::new(Some(owners.initial_snapshot_retirement.clone())), mutations: ManuallyDrop::new(Some(owners.mutation_retirement.clone())), factory_retirement:std::array::from_fn(|_|None) }
     }
 
 }

@@ -1,0 +1,40 @@
+{
+  "issuers": [
+    "field-decoders",
+    "completed-records"
+  ],
+  "conditions": [
+    {
+      "strong": 2,
+      "weak": 0,
+      "live": 0,
+      "release": false
+    },
+    {
+      "strong": 1,
+      "weak": 1,
+      "live": 0,
+      "release": false
+    },
+    {
+      "strong": 1,
+      "weak": 0,
+      "live": 1,
+      "release": false
+    },
+    {
+      "strong": 1,
+      "weak": 0,
+      "live": 0,
+      "release": true
+    }
+  ],
+  "denied": [
+    "items",
+    "copy",
+    "release",
+    "depth"
+  ],
+  "sameOriginalPointerOnRefusal": true,
+  "releasedBytesEqualOriginalBacking": true
+}

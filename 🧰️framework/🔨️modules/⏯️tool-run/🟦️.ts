@@ -13,7 +13,7 @@ import{validatePayloadUpdate,type PayloadUpdate}from"./📨️payload/🌊️str
 //#region 🔖️Limits
 export const TOOL_RUN_STEP_RING_CAPACITY = 64;
 export const TOOL_RUN_STEP_ARGS_MAX = 4;
-export const TOOL_RUN_COUNTERS_MAX = 8;
+export const TOOL_RUN_COUNTERS_MAX = 9;
 export const TOOL_RUN_PROVISIONAL_OPS_MAX = 65_536;
 export const TOOL_RUN_MEMBER_OPS_MAX = 4_096;
 export const TOOL_RUN_TRACE_RESIDENT_RECORDS = 1_048_576;

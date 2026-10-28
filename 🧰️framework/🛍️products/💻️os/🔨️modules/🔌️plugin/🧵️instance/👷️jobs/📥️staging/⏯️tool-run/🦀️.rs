@@ -49,6 +49,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             provisional: &entry.provisional,
             instance_owner: self.instance_operation_owner.clone(),
             port: entry.port.clone(),
+            host: self.live_runtime_instance_id.map(semio_framework_plugin_reactor_tasks::tasks_extension_continuation::host_for_instance),
             trace_keys: entry.trace_keys.clone(),
             entity_marks: &entry.entity_marks,
             children: ChildContentView::clone(&child_composition.child_content_root),

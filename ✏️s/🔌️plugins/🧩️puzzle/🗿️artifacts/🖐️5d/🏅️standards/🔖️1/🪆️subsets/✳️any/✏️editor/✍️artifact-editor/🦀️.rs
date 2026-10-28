@@ -229,9 +229,9 @@ impl ArtifactEditor for Puzzle5dPlayApp {
     /// the 10-minute watchdog). None of it is needed to produce the boot document, and nothing is lost:
     /// each static is a `LazyLock`, forced only when its example is switched to. That matrix has since been
     /// deleted outright.
-    fn initial_snapshot() -> Puzzle5dPlaySnapshot {
+    fn reference_birth()->Option<fn()->Puzzle5dPlaySnapshot>{Some(||{
         Puzzle5dPlaySnapshot::new(puzzle5d_snapshot_from_document(&default_document()).expect("authored initial document admits"))
-    }
+    })}
 
     fn clipboard_media_type() -> Option<MediaType> {
         Some(MediaType { class: MediaClass::Kit, form: MediaForm::Design })

@@ -58,7 +58,7 @@ pub(super) fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc
             let ident = &field_local(ident);
             let to_value_expr: proc_macro2::TokenStream = match kind {
                 FieldKind::Scalar => quote! { ::semio_framework_dsl_record::DslField::to_value(#ident) },
-                FieldKind::Bytes64 => quote! { ::semio_framework_dsl_record::FieldValue::Bytes64(#ident.clone()) },
+                FieldKind::Bytes64 => quote! { ::semio_framework_dsl_record::FieldValue::Bytes64(::semio_framework_dsl_record::RecordBytes::try_from_slice(#ident).expect("declared Bytes64 field capacity")) },
                 FieldKind::OptionScalar(_) => quote! {
                     match #ident {
                         Some(v) => ::semio_framework_dsl_record::DslField::to_value(v),

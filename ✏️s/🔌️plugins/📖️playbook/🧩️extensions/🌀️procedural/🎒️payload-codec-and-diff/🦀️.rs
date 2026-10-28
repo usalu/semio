@@ -66,6 +66,8 @@ impl pack::snapshot::ArtifactPack for ModuleRenderPayload {
 }
 
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ModuleRenderPayload {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 

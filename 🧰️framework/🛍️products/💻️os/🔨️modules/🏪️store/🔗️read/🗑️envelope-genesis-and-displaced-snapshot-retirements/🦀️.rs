@@ -14,13 +14,13 @@ pub struct ArtifactEnvelopeMetadata {
     pub lanes: protocol::HistoryFoldIndex<String, HistoryLane>,
     pub viewer_checkpoint_id: Option<String>,
     pub conflicts: Vec<semio_framework_os_spr::Conflict>,
-    pub transitions: Vec<semio_framework_os_spr::MutationEnvelope>,
+    pub transitions: ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>,
     pub open_transaction: Option<OpenToolTransaction>,
 }
 
 pub struct ArtifactStoreEnvelopeRetirement<P, Mutation> {
     pub vcs: std::mem::ManuallyDrop<Option<ArtifactStoreVcsRetirement<P, Mutation>>>,
-    pub messages: std::mem::ManuallyDrop<Option<ArtifactEditMessageLedgerRetirement>>,
+    pub messages: std::mem::ManuallyDrop<Option<semio_framework_os_store_message_ledger::ArtifactEditMessageLedger>>,
     pub metadata: std::mem::ManuallyDrop<Option<ArtifactEnvelopeMetadata>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
 }
@@ -30,7 +30,7 @@ impl<P, Mutation> ArtifactStoreEnvelopeRetirement<P, Mutation> {
         let ArtifactEnvelopeOwners { schema, id, vcs, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, edit_messages, conflicts, transitions, history_shape: _, open_transaction } = envelope.into_owners();
         Self {
             vcs: std::mem::ManuallyDrop::new(Some(ArtifactStoreVcsRetirement::new(vcs, snapshots, mutations))),
-            messages: std::mem::ManuallyDrop::new(Some(ArtifactEditMessageLedgerRetirement::new(edit_messages))),
+            messages: std::mem::ManuallyDrop::new(Some(edit_messages)),
             metadata: std::mem::ManuallyDrop::new(Some(ArtifactEnvelopeMetadata { schema, id, backbone, active_alternative_id, cursor, dialect, migrated_from, owner, lanes, viewer_checkpoint_id, conflicts, transitions, open_transaction })),
             active: std::mem::ManuallyDrop::new(None),
         }
@@ -42,7 +42,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ArtifactStoreEnvelopeRe
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, body); }
         if self.vcs.is_some() { return retirement_owner_demands(&self.vcs, body); }
-        if self.messages.is_some() { return retirement_owner_demands(&self.messages, body); }
+        if self.messages.is_some() { return Ok(ArtifactEditMessageLedgerRetirement::boxed_birth_demands()); }
         artifact_retirement_owned_birth_demands(&self.metadata)
     }
 }
@@ -52,7 +52,7 @@ impl<P: Send + Sync + 'static, Mutation: Send + 'static> ErasedSnapshotRetiremen
         if self.ownership_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let step = if self.active.is_some() { artifact_retirement_box_close_step(&mut self.active, grant) }
             else if self.vcs.is_some() { retirement_owner_close(&mut self.vcs, grant) }
-            else if self.messages.is_some() { retirement_owner_close(&mut self.messages, grant) }
+            else if self.messages.is_some() { ArtifactEditMessageLedgerRetirement::admit_boxed(&mut self.messages, &mut self.active, grant).map(RetainedCloneStep::Progress) }
             else { artifact_retirement_admit_owned(&mut self.metadata, &mut self.active, grant) }?;
         Ok(if self.ownership_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
@@ -339,4 +339,12 @@ pub enum ArtifactStoreCursorDisposerPhase {
     Causal,
     Envelope,
     Complete,
+}
+
+#[cfg(test)]
+#[test]
+fn original_envelope_retirement_frames_fit_individual_native_pages() {
+    assert!(size_of::<ArtifactStoreEnvelopeRetirement<u64, u64>>() <= 4096);
+    let messages = ArtifactEditMessageLedgerRetirement::boxed_birth_demands();
+    assert!(messages.copy_bytes <= 4096 && messages.capacity_bytes <= 4096);
 }

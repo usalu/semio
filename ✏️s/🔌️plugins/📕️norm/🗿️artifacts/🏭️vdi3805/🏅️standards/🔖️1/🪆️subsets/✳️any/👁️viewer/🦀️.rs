@@ -63,9 +63,9 @@ impl ArtifactViewer for Vdi3805Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn initial_snapshot() -> Vdi3805Snapshot {
+    fn reference_birth()->Option<fn()->Vdi3805Snapshot>{Some(||{
         Vdi3805Snapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Vdi3805ViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not

@@ -1,0 +1,29 @@
+{
+  "quantum": 4096,
+  "maximumTurns": 100000,
+  "cases": [
+    {
+      "text": "α🌿\"\\\n",
+      "repeat": 1
+    },
+    {
+      "text": "λ🙂\n",
+      "repeat": 1300
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    3,
+    17,
+    67,
+    151
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

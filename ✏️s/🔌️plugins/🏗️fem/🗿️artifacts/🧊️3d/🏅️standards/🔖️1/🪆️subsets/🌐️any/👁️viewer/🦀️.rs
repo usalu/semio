@@ -93,11 +93,11 @@ impl ArtifactViewer for Fem3dViewer {
     /// 👁️ Real, non-empty default scene: the artifact's own shared boot document (the bundled `default`
     /// example DSL), the very same one `Fem3dPlayApp::initial_snapshot` boots — see
     /// `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
-    fn initial_snapshot() -> Fem3dSnapshot {
+    fn reference_birth()->Option<fn()->Fem3dSnapshot>{Some(||{
         let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
         eprintln!("[TRACE] fem3d viewer boot snapshot: nodes={} elements={} solids={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len());
         snapshot
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Fem3dViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

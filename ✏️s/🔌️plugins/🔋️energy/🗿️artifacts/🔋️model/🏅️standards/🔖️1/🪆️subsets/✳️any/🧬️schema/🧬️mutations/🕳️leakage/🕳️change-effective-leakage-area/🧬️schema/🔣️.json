@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "field": "effective_leakage_area_m2",
+    "input": "new_effective_leakage_area_m2",
+    "key": "id",
+    "labels": {
+      "en": "Change infiltration: Effective leakage area",
+      "de": "Effektive Leckagefläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "infiltration",
+      "kind": "change-infiltration-effective-leakage-area",
+      "record": "ChangedInfiltrationEffectiveLeakageArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Effective leakage area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The infiltration already carries this effective leakage area value."
+      }
+    }
   }
 }

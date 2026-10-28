@@ -179,11 +179,11 @@ impl ArtifactEditor for Fem3dPlayApp {
     /// first paint was a blank scene until a client dispatched `setActiveExample`. Mirrors the sibling
     /// `Fem3dViewer::initial_snapshot` (and block3d's `block3d_boot_snapshot`) so editor and viewer boot
     /// the same geometry. See `semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::fem3d_boot_snapshot`.
-    fn initial_snapshot() -> Fem3dSnapshot {
+    fn reference_birth()->Option<fn()->Fem3dSnapshot>{Some(||{
         let snapshot = semio_s_artifact_fem_3d_io::standards::v1::subsets::any::io::fem3d_boot_snapshot();
         eprintln!("[TRACE] fem3d editor boot snapshot: nodes={} elements={} solids={} materials={} loadCases={}", snapshot.nodes.len(), snapshot.elements.len(), snapshot.solids.len(), snapshot.materials.len(), snapshot.load_cases.len());
         snapshot
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(fem3d_io())

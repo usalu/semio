@@ -35,5 +35,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "key": "id",
+    "inverse": "CreateMaterial",
+    "restriction": {
+      "row": "StateConstruction",
+      "branch": "materials",
+      "collection": "constructions",
+      "field": "layer_material_ids",
+      "storage": "shared-array",
+      "kind": "references"
+    },
+    "labels": {
+      "en": "Delete Material",
+      "de": "Material löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "material",
+      "kind": "delete-material",
+      "record": "DeletedMaterial"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

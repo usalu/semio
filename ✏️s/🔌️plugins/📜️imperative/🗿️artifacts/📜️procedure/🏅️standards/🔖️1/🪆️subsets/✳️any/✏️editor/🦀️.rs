@@ -468,9 +468,9 @@ impl ArtifactEditor for ImperativePlayApp {
 })())
 }
 
-    fn initial_snapshot() -> ProcedureSnapshot {
+    fn reference_birth()->Option<fn()->ProcedureSnapshot>{Some(||{
         default_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(imperative_io())

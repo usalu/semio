@@ -114,8 +114,8 @@ pub type ConfigStore<C, ConfigMutation> = ArtifactStore<C, ConfigMutation>;
 /// 🗃️ The composer of one store: the six components of [`StoreLog`], [`StoreOwners`], [`StoreWire`], [`StoreCursor`], [`StoreLive`] and [`StoreReplay`], the use cases that need several of them and the delegates of the public surface.
 pub struct ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     pub log: StoreLog<P, Mutation>,
     pub owners: StoreOwners<P, Mutation>,
@@ -145,8 +145,8 @@ where
 //#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     /// 🧩️ Splits the composer into its component borrows.
     #[inline]
@@ -182,13 +182,16 @@ where
 /// 🎚️ Atomically adopts a retained config runtime after typed Pack and history validation.
 pub fn config_store_from_initialized_runtime_with_owners<P, Mutation>(mut envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, mut owners: DocumentStoreOwners<P, Mutation>) -> ConfigStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     let (current, applied_edit_ids, redo_edit_ids, cursor, local_actor_id, dag, edit_sequence, clock, initial_digest, revision_accumulator, supersessions, read_registry) = runtime.into_parts();
     let current_checkpoint_id = cursor.checkpoint_id.clone();
-    envelope.cursor = Some(cursor);
+    let previous_cursor=envelope.cursor.replace(cursor);
+    let mut displaced_retirements=ArtifactStoreDisplacedRetirements::new();
+    if let Some(previous)=previous_cursor{displaced_retirements.push_reserved(Box::new(semio_framework_os_store_read::ArtifactStoreCursorRetirement::new(previous)));}
     let content_revision = revision_accumulator.revision(current_checkpoint_id.as_deref());
+    assert!(read_registry.publish_authority(generation,content_revision),"initialized Store must publish its exact original snapshot authority before visibility");
     let factory_retirement_tickets = owners.take_factory_retirement_tickets();
     ArtifactStore {
         log: StoreLog {
@@ -211,7 +214,7 @@ where
             initial_snapshot_retirement_factory: std::mem::ManuallyDrop::new(owners.initial_snapshot_retirement.take()),
             mutation_retirement_factory: std::mem::ManuallyDrop::new(owners.mutation_retirement.take()),
             snapshot_read_leases: std::mem::ManuallyDrop::new(read_registry),
-            displaced_retirements: std::mem::ManuallyDrop::new(ArtifactStoreDisplacedRetirements::new()),
+            displaced_retirements: std::mem::ManuallyDrop::new(displaced_retirements),
             owned_disposer: std::mem::ManuallyDrop::new(owners.store_disposer.take()),
             owned_disposer_terminal: false,
             one_item_preparation_factory: std::mem::ManuallyDrop::new(owners.one_item_preparation.take()),
@@ -222,6 +225,7 @@ where
         wire: StoreWire {
             backbone: std::mem::ManuallyDrop::new(None),
             member_inbox: VecDeque::new(),
+                original_outbox: Default::default(),
             durable_group_root: std::mem::ManuallyDrop::new(None),
         },
         cursor: StoreCursor {

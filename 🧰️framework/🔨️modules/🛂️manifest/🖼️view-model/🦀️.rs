@@ -7,7 +7,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use serde::Deserialize;
 use serde::Serialize;
-use std::collections::HashMap;
+use semio_framework_value_ordered::OrderedMap;
 
 // #region 🛂️Manifest
 //#region 🔖️Manifest
@@ -18,7 +18,7 @@ use std::collections::HashMap;
 // mount instead). Kept additive: `ViewModel` is consumed outside this pass by 🛍️products/💻️os
 // (plugin/renderer modules) and ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue
 // added alongside, not replacing, Serialize/Deserialize.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewModel {
@@ -34,10 +34,10 @@ pub struct ViewModel {
     /// 🧰️ Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
     /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
     /// `active_tool_id`.
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub active_utility_by_window_id: std::collections::HashMap<String, String>,
-    /// ☎️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
+    #[serde(default, skip_serializing_if = "OrderedMap::is_empty")]
+    #[value(default, skip_serializing_if = "OrderedMap::is_empty")]
+    pub active_utility_by_window_id: OrderedMap<String>,
+    /// 🧰️ Per-call overlay: the host-owned active utility for the window targeted by this `render`/`handle_action`
     /// call (`window_id`). On batched `refresh-ui`, the plugin stamps this from
     /// `active_utility_by_window_id` per window entry — never from the focused window alone.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -87,10 +87,10 @@ pub struct ViewModel {
     /// ⏯️ The tool run trace cursor each window instance's renderer echoes, keyed by window instance id —
     /// host-owned like [`Self::active_utility_by_window_id`]. The guest answers the trace pages after it
     /// inside that window's scene `toolRunTrace` lane (`📋️tool-run-contract.md` §3.2).
-    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    #[value(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
-    pub tool_run_trace_cursor_by_window_id: std::collections::HashMap<String, ToolRunTraceCursor>,
-    /// 🌳️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
+    #[serde(default, skip_serializing_if = "OrderedMap::is_empty")]
+    #[value(default, skip_serializing_if = "OrderedMap::is_empty")]
+    pub tool_run_trace_cursor_by_window_id: OrderedMap<ToolRunTraceCursor>,
+    /// 🪟️ Rows the tallest visible panel body fits, the shared first-paint budget a guest spends in
     /// document order over containers the host has not yet seen. Absent means "the host has not
     /// measured a viewport yet" — the guest falls back to its own default, never to unbounded.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -119,7 +119,7 @@ pub struct ViewModel {
 /// 📬️ One tree container's host-known state: whether the user opened or closed it (`None` = the
 /// author's own default still stands) and the row window on screen, overscan included. `body_key`
 /// names the panel body the container lives in, `node_key` the container's **window path** within it.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TreeWindowRequest {
@@ -149,7 +149,7 @@ pub struct TreeWindowRequest {
 /// for a base, unsplit window), `window_kind_id` is the `AppDefinition.windowKinds` entry it renders.
 // 🚧️ UNBLOCKED: was gated on `ViewModel` above, itself gated on `ui_wgpu::wgpu::{Locale,
 // Terminology}` gaining `ToValue`/`FromValue` — both now converted (see `ViewModel`'s own comment).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ViewWindowInstance {
@@ -157,8 +157,8 @@ pub struct ViewWindowInstance {
     pub window_kind_id: String,
 }
 
-/// 👤️ The authenticated OS session identity projected into every guest call while available.
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
+/// 🪪️ The authenticated OS session identity projected into every guest call while available.
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::NativeReceive, semio_framework_value::RetainedClone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ViewSessionIdentity {
@@ -502,3 +502,7 @@ mod ui_refresh_section_tests;
 //#endregion 🔖️UiRefreshSection
 //#endregion 🔖️Manifest
 // #endregion 🛂️Manifest
+
+#[path="🪟️selection/🦀️.rs"]
+mod original_window_selection;
+pub use original_window_selection::ViewModelWindowSelection;

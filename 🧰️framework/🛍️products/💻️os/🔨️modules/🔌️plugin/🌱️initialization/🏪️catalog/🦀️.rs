@@ -13,8 +13,8 @@ pub enum ArtifactStoreConstructorPhase { Preparation, Close }
 
 #[doc(hidden)]
 pub struct OriginalCatalogConstructor<P,Mu>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
+where P:semio_framework_value::ToValue,
+Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  original:ManuallyDrop<Option<Result<store::os_store::document_store_owners::DocumentStoreOwners<P,Mu>,store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P,Mu>>>>,
  refusal:ManuallyDrop<Option<ValueError>>,
  refusal_close:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -25,6 +25,8 @@ where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Ar
 Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+protocol::ColdMutation<P>+OpBinary+OpText+Send+'static{
  #[doc(hidden)]
  pub fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}
+ /// 📥️ Observes a catalog already installed by the original native initializer without creating replacement factories.
+ pub fn acknowledge_installed(&mut self,store:&ArtifactStore<P,Mu>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if self.done{return Ok(Default::default())}if self.original.is_some()||self.refusal.is_some()||self.refusal_close.is_some()||!store.owned_disposer_installed(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native constructor receipt requires its installed original catalog and empty constructor source"))}let copy=std::mem::size_of::<bool>();if grant.maximum_items==0||grant.maximum_copy_bytes<copy||grant.maximum_depth==0{return Ok(Default::default())}self.done=true;Ok(RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})}
  fn refusal_demands(&self,body:usize)->Option<Result<RetirementDemand,ValueError>>{
   if let Some(owner)=self.refusal_close.as_ref(){return Some(store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body))}
   if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.refusal))}
@@ -89,7 +91,7 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutatio
 }
 
 impl<P,Mu> Drop for OriginalCatalogConstructor<P,Mu>
-where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,
-Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
+where P:semio_framework_value::ToValue,
+Mu:semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
  fn drop(&mut self){let empty=self.done&&self.original.is_none()&&self.refusal.is_none()&&self.refusal_close.is_none();assert!(std::thread::panicking()||empty,"original catalog cursor requires controlled source/error/ticket closure before shallow Drop");if empty{unsafe{ManuallyDrop::drop(&mut self.original);ManuallyDrop::drop(&mut self.refusal);ManuallyDrop::drop(&mut self.refusal_close)}}}
 }

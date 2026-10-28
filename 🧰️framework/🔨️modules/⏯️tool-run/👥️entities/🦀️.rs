@@ -14,7 +14,6 @@ pub struct ToolRunEntityEditGrant {pub retirement:RetainedCloneGrant,pub compari
 #[derive(Clone,Copy,Debug,Default,PartialEq,Eq)]
 pub struct ToolRunEntityEditProgress {pub retirement:RetainedCloneProgress,pub comparison:BoundedOrdProgress,pub moved_items:usize,pub moved_bytes:usize,pub retained_capacity_bytes:usize}
 impl ToolRunEntityEditProgress {pub fn fits(self,grant:ToolRunEntityEditGrant)->bool {self.retirement.fits(grant.retirement)&&self.comparison.fits(grant.comparison)&&self.moved_items<=grant.maximum_moved_items&&self.moved_bytes<=grant.maximum_moved_bytes&&self.retained_capacity_bytes<=grant.maximum_capacity_bytes}}
-#[derive(semio_framework_value::RetireOwned)]
 enum Editor<K:BoundedOrd+RetainedClone+Copy> {Append(RetainedOrderedMapInsertCursor<K,()>),Retract(RetainedOrderedMapRemoveCursor<K,()>)}
 impl<K:BoundedOrd+RetainedClone+Copy> Editor<K> {
  fn output_ready(&self)->bool{match self{Self::Append(owner)=>owner.output_ready()||owner.refused_workspace_ready(),Self::Retract(owner)=>owner.output_ready()}}
@@ -26,9 +25,18 @@ impl<K:BoundedOrd+RetainedClone+Copy> Editor<K> {
  fn advance(&mut self,grant:ToolRunEntityEditGrant)->Result<ToolRunEntityEditProgress,ValueError>{match self{Self::Append(owner)=>{let progress=match owner.advance(RetainedOrderedMapInsertGrant{retirement:grant.retirement,comparison:grant.comparison,maximum_moved_items:grant.maximum_moved_items,maximum_moved_bytes:grant.maximum_moved_bytes,maximum_capacity_bytes:grant.maximum_capacity_bytes})?{semio_framework_value::retained_clone::ordered_map::RetainedOrderedMapInsertStep::Progress(progress)|semio_framework_value::retained_clone::ordered_map::RetainedOrderedMapInsertStep::Complete{progress,..}=>progress};Ok(ToolRunEntityEditProgress{retirement:progress.retirement,comparison:progress.comparison,moved_items:progress.moved_items,moved_bytes:progress.moved_bytes,retained_capacity_bytes:progress.retained_capacity_bytes})},Self::Retract(owner)=>{let progress=owner.advance(RetainedOrderedMapRemoveGrant{retirement:grant.retirement,comparison:grant.comparison,maximum_moved_items:grant.maximum_moved_items,maximum_moved_bytes:grant.maximum_moved_bytes})?.progress();Ok(ToolRunEntityEditProgress{retirement:progress.retirement,comparison:progress.comparison,moved_items:progress.moved_items,moved_bytes:progress.moved_bytes,..Default::default()})}}}
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{match self{Self::Append(owner)=>Ok(owner.close_step(grant)?.progress()),Self::Retract(owner)=>Ok(owner.close_step(grant)?.progress())}}
 }
-#[derive(semio_framework_value::RetireOwned)]
 struct State<K:BoundedOrd+RetainedClone+Copy> {map:Option<RetainedOrderedMap<K,()>>,targets:Vec<K>,index:usize,kind:ToolRunEntityEditKind,editor:Option<Editor<K>>,phase:u8,capacity_bound:usize,cancelled:bool}
-/// ✏️ Owns genuine map leaves and target backing until a funded transfer or close.
+impl<K:BoundedOrd+RetainedClone+Copy> RetireOwned for State<K>{
+ fn retirement(self)->Box<dyn RetirementCursor>{let Self{map,targets,index,kind,editor,phase,capacity_bound,cancelled}=self;semio_framework_value::retirement::sequence(vec![semio_framework_value::retirement::deferred(map),semio_framework_value::retirement::deferred(targets),semio_framework_value::retirement::deferred(index),semio_framework_value::retirement::deferred(kind),semio_framework_value::retirement::deferred(editor),semio_framework_value::retirement::deferred(phase),semio_framework_value::retirement::deferred(capacity_bound),semio_framework_value::retirement::deferred(cancelled)])}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes_for(&self.map),semio_framework_value::retirement::deferred_birth_bytes_for(&self.targets),semio_framework_value::retirement::deferred_birth_bytes_for(&self.index),semio_framework_value::retirement::deferred_birth_bytes_for(&self.kind),semio_framework_value::retirement::deferred_birth_bytes_for(&self.editor),semio_framework_value::retirement::deferred_birth_bytes_for(&self.phase),semio_framework_value::retirement::deferred_birth_bytes_for(&self.capacity_bound),semio_framework_value::retirement::deferred_birth_bytes_for(&self.cancelled)])}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl<K:BoundedOrd+RetainedClone+Copy> RetireOwned for Editor<K>{
+ fn retirement(self)->Box<dyn RetirementCursor>{match self{Self::Append(owner)=>owner.retirement(),Self::Retract(owner)=>owner.retirement()}}
+ fn retirement_birth_bytes(&self)->Option<usize>{match self{Self::Append(owner)=>owner.retirement_birth_bytes(),Self::Retract(owner)=>owner.retirement_birth_bytes()}}
+ fn controlled_retirement_supported()->bool{true}
+}
+/// 👥️ Owns genuine map leaves and target backing until a funded transfer or close.
 pub struct ToolRunEntityEdit<K:BoundedOrd+RetainedClone+Copy=u64> {state:ManuallyDrop<State<K>>,transferred:bool}
 impl<K:BoundedOrd+RetainedClone+Copy> ToolRunEntityEdit<K> {
  pub fn capacity_bound_for(entries:usize,targets:usize)->Option<usize>{entries.checked_add(targets).and_then(|len|len.checked_add(RETAINED_ORDERED_MAP_PAGE_CAPACITY-1)).map(|len|len/RETAINED_ORDERED_MAP_PAGE_CAPACITY).and_then(|pages|pages.checked_mul(2)).and_then(|pages|pages.checked_add(1)).and_then(|pages|pages.checked_mul(size_of::<Vec<(K,())>>())).map(|bytes|bytes.max(RETAINED_ORDERED_MAP_PAGE_CAPACITY*size_of::<(K,())>()))}

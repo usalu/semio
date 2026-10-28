@@ -50,7 +50,7 @@ mod prefix_digests_replay_progress_and_edit_replay;
 pub use prefix_digests_replay_progress_and_edit_replay::{
     draft_supersessions, forward_prefix_digests, forward_prefix_genesis, forward_prefix_step,
     mirror_id_suffix, order_ledger_as, same_effective_inputs, shared_prefix_len,
-    superseded_positions, EditReplay, EditReplayResult, IndexedAppliedReplayEdits, PrefixSnapshot,
+    superseded_positions, EditReplay, EditReplayResult, IndexedAppliedReplayEdits, SelectedReplayEdits, PrefixSnapshot,
     ReplayConvergence, ReplayEdits, ReplayMode, ReplayProgress, ReplayStep, DRAFT_SUPERSESSION_ID,
     PREFIX_SNAPSHOT_RING_CAPACITY, PREFIX_SNAPSHOT_RING_FLOOR, REPROJECTION_OWNER_SLOTS,
 };
@@ -77,4 +77,7 @@ pub use semio_framework_os_store_ledger::lifted_replay::{EffectiveSupersessions,
 
 #[cfg(test)]
 #[global_allocator]
-static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+
+#[path="🧬️supersession/🦀️.rs"]
+pub mod native_supersession;

@@ -45,3 +45,15 @@ impl<M:RetireOwned+ArtifactCanonicalJsonTree+Send+Sync+'static> ErasedSnapshotRe
  fn next_release_byte_demand(&self)->Result<usize,ValueError>{Ok(nested(self.original.next_demand()?)?.release_bytes)}
  fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(nested(self.original.next_demand()?)?.depth)}
 }
+
+/// 📤️ Original precommit message custody returns the unchanged edit and its prepared causal bytes.
+pub type OriginalCausalMessageBytes=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
+
+/// 📤️ Actual original paged causal bytes stay with their retained edit issuer until handoff.
+pub trait ArtifactStoreBatchMessage<M>:ErasedSnapshotRetirement{
+ fn next_message_demand(&self,body:usize)->Result<RetirementDemand,ValueError>;
+ fn advance_message(&mut self,document:&str,schema:&str,observed:Option<&str>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>;
+ fn ready(&self)->bool;
+ fn take_edit_message(&mut self,grant:RetainedCloneGrant)->Result<Option<(Box<Edit<M>>,OriginalCausalMessageBytes,RetainedCloneProgress)>,ValueError>;
+ fn begin_close(&mut self);
+}

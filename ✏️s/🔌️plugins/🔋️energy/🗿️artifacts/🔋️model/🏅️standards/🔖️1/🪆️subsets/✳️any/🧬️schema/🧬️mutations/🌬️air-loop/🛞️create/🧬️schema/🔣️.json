@@ -170,5 +170,108 @@
         "de": "Die IDs der versorgten Zonen sind streng aufsteigend sortiert."
       }
     }
-  ]
+  ],
+  "x-semio-energy-row-birth": {
+    "row": "StateModelAirLoop",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "supply_node_id",
+        "input": "supply_node_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "return_node_id",
+        "input": "return_node_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "design_supply_air_flow_m3_s",
+        "input": "design_supply_air_flow_m3_s",
+        "storage": "fixed"
+      },
+      {
+        "field": "terminal_zone_ids",
+        "input": "terminal_zone_ids",
+        "storage": "sealed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateModelAirLoop",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "air_loops",
+    "key": "id",
+    "inverse": "DeleteAirLoop",
+    "labels": {
+      "en": "Create air loop",
+      "de": "Luftkreislauf erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "air-loop",
+      "kind": "create-air-loop",
+      "record": "CreatedAirLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "terminal_zone_ids",
+        "kind": "ascending-identifiers"
+      },
+      {
+        "input": "terminal_zone_ids",
+        "kind": "reference",
+        "storage": "array",
+        "collections": [
+          "Zones"
+        ],
+        "target": "row"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "before-rules",
+    "name": "name",
+    "nameValidation": "nonblank",
+    "unique": true
+  }
 }

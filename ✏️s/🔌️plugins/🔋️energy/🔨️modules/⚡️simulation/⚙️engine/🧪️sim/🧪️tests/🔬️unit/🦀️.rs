@@ -19,7 +19,7 @@ use crate::kernel::{SimulationConfig, SimulationEnvironment, TimestepWork};
 use crate::meters::{EndUse, FuelType};
 use crate::model::Model;
 use crate::results::Results;
-use crate::site::WeatherRecord;
+use crate::site::{WeatherRecord, design_day_hour};
 use semio_framework_job::{allocate_operation_id, default_now_us, CancelToken, Generation, InteractiveJob, InteractiveJobCloseStep, JobOutcomeBorrow, Operation, RetainedCloneGrant, RetainedCloneProgress, RevisionId, StepBudget, StepContext};
 use semio_framework_job_payload::{JobPayloadStream, RetainedJobPayload};
 use std::time::Instant;
@@ -400,35 +400,11 @@ fn p7c1_weather_owner_is_exactly_admitted_never_grows_and_retries_maximum_plus_o
     assert_eq!(rejected.dimension, EnergyNumericalDimension::WeatherRecords);
     assert_eq!(rejected.config.weather.as_ref().expect("weather owner").records.as_ptr(), pointer);
     let mut job = NativeEnergyJob::from_preborn(rejected.retry(EnergyNumericalBounds::default()).expect("weather owner retry"));
-    assert_eq!(job.weather.capacity(), census.weather_records);
-    assert_eq!(job.weather.len(), 0);
-    job.stage = EnergyJobStage::ResolveWeather;
-    for _ in 0..2 {
-
-        assert_eq!(fixture_step(&mut job,StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT),Probe::Original), Seen::Yield);
-    }
-    assert_eq!(job.weather.len(), 2);
-    assert_eq!(job.weather.capacity(), census.weather_records);
-    let before_records = [*job.weather.get_index(0).expect("weather zero"), *job.weather.get_index(1).expect("weather one")];
-    for index in logical_records..census.weather_records {
-        assert!(job.weather.insert_stable(index, site::design_day_hour(index as u32, -8.0)).is_ok());
-    }
-    assert!(job.weather.insert_stable(census.weather_records, site::design_day_hour(census.weather_records as u32, -8.0)).is_err());
-    assert_eq!(job.weather.len(), census.weather_records);
-    assert_eq!(job.weather.capacity(), census.weather_records);
-    assert_eq!(*job.weather.get_index(0).expect("weather zero"), before_records[0]);
-    assert_eq!(*job.weather.get_index(1).expect("weather one"), before_records[1]);
-    job.weather_cursor = 1;
-    let mut outcome = Seen::Yield;
-    for _ in 0..1024 {
-
-        outcome = fixture_step(&mut job,StepBudget::new(1, u64::MAX, ENERGY_BATCH_GRANT),Probe::Original);
-        if outcome == Seen::Fault {
-            break;
-        }
-    }
-    assert_eq!(outcome, Seen::Fault);
-    assert_eq!(job.weather_fault, Some(WeatherFault::SlotRejected));
+    assert_eq!(configuration(&job).weather.as_ref().unwrap().records.as_ptr(),pointer);
+    assert_eq!(configuration(&job).weather.as_ref().unwrap().records.capacity(),census.weather_records);
+    assert_eq!(job.weather_cursor,0);job.stage=EnergyJobStage::ResolveWeather;
+    for _ in 0..2{assert_eq!(fixture_step(&mut job,StepBudget::new(1,u64::MAX,ENERGY_BATCH_GRANT),Probe::Original),Seen::Yield);}
+    assert_eq!(job.weather_cursor,2);assert_eq!(original_weather_record(&job,0),site::design_day_hour(0,-10.0));assert_eq!(original_weather_record(&job,1),site::design_day_hour(1,-9.0));assert_eq!(configuration(&job).weather.as_ref().unwrap().records.as_ptr(),pointer);assert_eq!(configuration(&job).weather.as_ref().unwrap().records.capacity(),census.weather_records);
     close_owned_job(&mut job);
 }
 
@@ -444,7 +420,7 @@ fn p7c1_weather_reserve_only_capacity_is_independently_charged_to_items() {
     assert!(after.weather_records > before.weather_records);
     let weather_delta = after.weather_records - before.weather_records;
     assert_eq!(after.observed_items - before.observed_items, weather_delta);
-    assert_eq!(after.observed_bytes - before.observed_bytes, weather_delta * (size_of::<WeatherRecord>() + size_of::<Option<(usize, WeatherRecord)>>()));
+    assert_eq!(after.observed_bytes - before.observed_bytes, weather_delta * size_of::<WeatherRecord>());
     assert_eq!(after.pages, (after.observed_bytes + 16_383) / 16_384);
     let pointer = config.weather.as_ref().expect("weather").records.as_ptr();
     let mut maximum = EnergyNumericalBounds::default().0;
@@ -471,12 +447,12 @@ fn p7c1_one_fuel_chronology_is_identical_at_one_two_four_and_default_grants() {
 #[test]
 fn p7c1_close_releases_no_more_than_one_owner_or_character_per_grant(){
  let operation=Operation::new(allocate_operation_id(),RevisionId(1),Generation(1),1);let mut job=EnergyJob::new(operation,test_model_full_topology(),SimulationConfig::default()).expect("energy admission");let mut original=crate::testing::OriginalEnergyCaller::new(operation.operation,operation.generation);job.begin_close();
- for _ in 0..100_000{if job.terminal_is_empty(){original.finish();return}let demand=job.original_close_demands().unwrap();let grant=energy_self_funded(demand);if demand.release_bytes>4{let denied=RetainedCloneGrant{maximum_release_bytes:4,..grant};let before=job.original_close_demands().unwrap();let step=original.turn(denied,1,u64::MAX,|cx|job.close_step(cx)).expect("original subexact owner denial");assert_eq!(step.progress(),Default::default());assert_eq!(job.original_close_demands().unwrap(),before);}let step=original.turn(grant,1,u64::MAX,|cx|job.close_step(cx)).expect("same original exact numerical frontier");assert!(step.progress().copied_items<=1);assert!(step.progress().released_bytes<=grant.maximum_release_bytes);assert!(step.progress().fits(grant));}panic!("Energy exact close did not retire within its admitted bound")
+ for _ in 0..100_000{if job.terminal_is_empty(){original.finish();return}let demand=original_close_demands(&job).unwrap();let grant=energy_self_funded(demand);if demand.release_bytes>4{let denied=RetainedCloneGrant{maximum_release_bytes:4,..grant};let before=original_close_demands(&job).unwrap();let step=original.turn(denied,1,u64::MAX,|cx|job.close_step(cx)).expect("original subexact owner denial");assert_eq!(step.progress(),Default::default());assert_eq!(original_close_demands(&job).unwrap(),before);}let step=original.turn(grant,1,u64::MAX,|cx|job.close_step(cx)).expect("same original exact numerical frontier");assert!(step.progress().copied_items<=1);assert!(step.progress().released_bytes<=grant.maximum_release_bytes);assert!(step.progress().fits(grant));}panic!("Energy exact close did not retire within its admitted bound")
 }
 
 #[test]
 fn p7c1_direct_drop_requeues_exact_generation_and_resumes_partial_close(){
- let operation=Operation::new(allocate_operation_id(),RevisionId(33),Generation(7),101);let mut job=EnergyJob::new(operation,test_model_full_topology(),SimulationConfig::default()).expect("energy admission");let mut original=crate::testing::OriginalEnergyCaller::new(operation.operation,operation.generation);let retained_pointer=job.model.zones.as_ptr();job.begin_close();let grant=energy_self_funded(job.original_close_demands().unwrap());assert!(matches!(original.turn(grant,1,u64::MAX,|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Pending{..}));drop(job);
+ let operation=Operation::new(allocate_operation_id(),RevisionId(33),Generation(7),101);let mut job=EnergyJob::new(operation,test_model_full_topology(),SimulationConfig::default()).expect("energy admission");let mut original=crate::testing::OriginalEnergyCaller::new(operation.operation,operation.generation);let retained_pointer=job.model.zones.as_ptr();job.begin_close();let grant=energy_self_funded(original_close_demands(&job).unwrap());assert!(matches!(original.turn(grant,1,u64::MAX,|cx|job.close_step(cx)).unwrap(),InteractiveJobCloseStep::Pending{..}));drop(job);
  let mut recovered=EnergyJob::recover_abandoned(operation).expect("same generation abandonment authority");assert_eq!(recovered.model.zones.as_ptr(),retained_pointer);assert!(EnergyJob::recover_abandoned(Operation{generation:Generation(8),..operation}).is_none());original.close_job(&mut recovered);assert!(recovered.terminal_is_empty());original.finish();
 }
 
@@ -563,24 +539,24 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
     let operation = Operation::new(allocate_operation_id(), RevisionId(61), Generation(9), 241);
     let config = SimulationConfig { warmup_days: 1, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
     let mut job = NativeEnergyJob::from_preborn(EnergyJob::new(operation, test_model_full_topology(), config).expect("live nested gate admission"));
-    let validation_stage = job.validation.stage;
-    for stage in P7C1_VALIDATION_STAGES {
-        job.validation.stage = stage;
+    let validation_stage = validation_stage_index(&job);
+    for stage in 0..validation_stage_count() {
+        set_validation_stage_index(&mut job, stage);
         assert_gates(&mut job, operation);
     }
-    job.validation.stage = validation_stage;
-    let finalization_stage = job.finalization.stage;
-    for stage in P7C1_FINALIZATION_STAGES {
-        job.finalization.stage = stage;
+    set_validation_stage_index(&mut job, validation_stage);
+    let finalization_stage = finalization_stage_index(&job);
+    for stage in 0..finalization_stage_count() {
+        set_finalization_stage_index(&mut job, stage);
         assert_gates(&mut job, operation);
     }
-    job.finalization.stage = finalization_stage;
-    let result_stage = job.result_build.stage;
-    for stage in P7C1_RESULT_BUILD_STAGES {
-        job.result_build.stage = stage;
+    set_finalization_stage_index(&mut job, finalization_stage);
+    let result_stage = result_build_stage_index(&job);
+    for stage in 0..result_build_stage_count() {
+        set_result_build_stage_index(&mut job, stage);
         assert_gates(&mut job, operation);
     }
-    job.result_build.stage = result_stage;
+    set_result_build_stage_index(&mut job, result_stage);
     let initialize_backing_stage = job.initialize_backing_stage;
     for stage in 0..=2 {
         job.initialize_backing_stage = stage;
@@ -677,31 +653,31 @@ fn p7c1_live_nested_authorities_gate_cancel_deadline_and_stale_before_mutation()
                 schedule_gated = true;
             }
         }
-        if !warmup_gated && job.warmup_convergence.is_some() {
-            let original = job.warmup_convergence.as_ref().expect("warmup convergence").stage;
-            for stage in P7C1_WARMUP_CONVERGENCE_STAGES {
-                job.warmup_convergence.as_mut().expect("warmup convergence").stage = stage;
+        if !warmup_gated && has_warmup_convergence(&job) {
+            let original = warmup_convergence_stage_index(&job);
+            for stage in 0..warmup_convergence_stage_count() {
+                set_warmup_convergence_stage_index(&mut job, stage);
                 assert_gates(&mut job, operation);
             }
-            job.warmup_convergence.as_mut().expect("warmup convergence").stage = original;
+            set_warmup_convergence_stage_index(&mut job, original);
             warmup_gated = true;
         }
-        if !aggregate_zone_gated && job.aggregate_zone_work.is_some() {
-            let original = job.aggregate_zone_work.as_ref().expect("zone aggregate").stage;
-            for stage in P7C1_AGGREGATE_STAGES {
-                job.aggregate_zone_work.as_mut().expect("zone aggregate").stage = stage;
+        if !aggregate_zone_gated && has_aggregate_zone(&job) {
+            let original = aggregate_zone_stage_index(&job);
+            for stage in 0..aggregate_zone_stage_count() {
+                set_aggregate_zone_stage_index(&mut job, stage);
                 assert_gates(&mut job, operation);
             }
-            job.aggregate_zone_work.as_mut().expect("zone aggregate").stage = original;
+            set_aggregate_zone_stage_index(&mut job, original);
             aggregate_zone_gated = true;
         }
-        if !aggregate_facility_gated && job.aggregate_facility_work.is_some() {
-            let original = job.aggregate_facility_work.as_ref().expect("facility aggregate").stage;
-            for stage in P7C1_AGGREGATE_STAGES {
-                job.aggregate_facility_work.as_mut().expect("facility aggregate").stage = stage;
+        if !aggregate_facility_gated && has_aggregate_facility(&job) {
+            let original = aggregate_facility_stage_index(&job);
+            for stage in 0..aggregate_facility_stage_count() {
+                set_aggregate_facility_stage_index(&mut job, stage);
                 assert_gates(&mut job, operation);
             }
-            job.aggregate_facility_work.as_mut().expect("facility aggregate").stage = original;
+            set_aggregate_facility_stage_index(&mut job, original);
             aggregate_facility_gated = true;
         }
         if !sizing_gated && job.sizing_builder.is_some() {
@@ -762,8 +738,8 @@ fn warmup_never_contributes_to_the_per_surface_totals() {
 fn weather_job_original48_midnight_and_chronology_refusals_match_neutral_sources(){
  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../📍️site/📅️chronology/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  for case in fixture["cases"].as_array().unwrap(){let records:Vec<WeatherRecord>=serde_json::from_value(case["records"].clone()).unwrap();let policy:crate::site::WeatherCalendar=serde_json::from_value(case["calendar"].clone()).unwrap();let p:RunPeriod=serde_json::from_value(case["run"].clone()).unwrap();let original=records.clone();let config=SimulationConfig{run_period_year:p.year,run_period_start_month:p.start_month,run_period_start_day:p.start_day,run_period_end_month:p.end_month,run_period_end_day:p.end_day,warmup_days:0,weather:Some(crate::site::WeatherData{calendar:policy,location:"neutral original".into(),latitude_deg:52.37,longitude_deg:9.74,elevation_m:55.0,time_zone_hours:1.0,records}),..Default::default()};let mut job=NativeEnergyJob::from_preborn(Engine::job(test_model_single_zone(),config).unwrap());let operation=job.operation;job.stage=EnergyJobStage::ResolveWeather;let mut sequence=0;
- for _ in 0..original.len()+2{let mut receipt=RetainedCloneProgress::default();let _=fixture_step(&mut job,semio_framework_job::StepBudget::new(1,u64::MAX,ENERGY_BATCH_GRANT),Probe::Original);if job.weather_fault.is_some()||job.stage!=EnergyJobStage::ResolveWeather{break;}}assert_eq!(job.weather_fault.is_none(),case["runAdmitted"].as_bool().unwrap(),"{}",case["id"]);assert_eq!(job.config.weather.as_ref().unwrap().records,original);
- if job.weather_fault.is_none(){assert_eq!(job.stage,EnergyJobStage::Precompute);for query in case["queries"].as_array().unwrap(){if query["expected"].is_null(){continue;}let date=&query["date"];let selected=job.weather_index(crate::calendar::SimDate::new(date[0].as_u64().unwrap()as u16,date[1].as_u64().unwrap()as u8,date[2].as_u64().unwrap()as u8),query["hour"].as_u64().unwrap()as u8).unwrap();let actual=job.hour_weather(selected,query["policy"]=="RepeatDay").unwrap();for(i,row)in[actual.previous,actual.current,actual.next].iter().enumerate(){assert_eq!(*row,original[query["expected"][i].as_u64().unwrap()as usize]);}}}
+ for _ in 0..original.len()+2{let mut receipt=RetainedCloneProgress::default();let _=fixture_step(&mut job,semio_framework_job::StepBudget::new(1,u64::MAX,ENERGY_BATCH_GRANT),Probe::Original);if job.weather_fault.is_some()||job.stage!=EnergyJobStage::ResolveWeather{break;}}assert_eq!(job.weather_fault.is_none(),case["runAdmitted"].as_bool().unwrap(),"{}",case["id"]);assert_eq!(configuration(&job).weather.as_ref().unwrap().records,original);
+ if job.weather_fault.is_none(){assert_eq!(job.stage,EnergyJobStage::Precompute);for query in case["queries"].as_array().unwrap(){if query["expected"].is_null(){continue;}let date=&query["date"];let selected=weather_index(&job, crate::calendar::SimDate::new(date[0].as_u64().unwrap()as u16,date[1].as_u64().unwrap()as u8,date[2].as_u64().unwrap()as u8),query["hour"].as_u64().unwrap()as u8).unwrap();let actual=hour_weather(&job, selected,query["policy"]=="RepeatDay").unwrap();for(i,row)in[actual.previous,actual.current,actual.next].iter().enumerate(){assert_eq!(*row,original[query["expected"][i].as_u64().unwrap()as usize]);}}}
  close_owned_job(&mut job);}
  eprintln!("[DEBUG] Energy original retained weather10 sources midnight/leap/rollover/refusal posts preserved native source authority");
 }
@@ -771,7 +747,7 @@ fn weather_job_original48_midnight_and_chronology_refusals_match_neutral_sources
 /// 🪪️ Genuine complete input projections match Serde's independent fields and retain exact paid cursor ownership.
 #[test]
 fn input_identity_original_full_fields_match_serde_and_paid_cancellation_frontiers(){
- use semio_framework_os_kernel::os_store::{ArtifactCanonicalSourceIdentityCursor as Cursor,ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
+ use semio_framework_os_store_canonical_json::{ArtifactCanonicalSourceIdentityCursor as Cursor,ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
  let fixture:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../📍️site/📅️chronology/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();
  let records:Vec<WeatherRecord>=serde_json::from_value(fixture["cases"][0]["records"].clone()).unwrap();
  let mut model=test_model_single_zone();model.name="München 🪪️ authored model".into();
@@ -780,8 +756,8 @@ fn input_identity_original_full_fields_match_serde_and_paid_cancellation_frontie
  let(mut cursor,_)=Cursor::admit(2,energy_self_funded(Cursor::constructor_demand())).unwrap().unwrap();let mut actual=Vec::with_capacity(expected.len());
  for _ in 0..1_000_000{let source:Option<&dyn ArtifactCanonicalJson>=match cursor.source_index(){Some(0)=>Some(ArtifactCanonicalTreeSource::view(&model)),Some(1)=>Some(ArtifactCanonicalTreeSource::view(&config)),None=>None,_=>unreachable!()};let step=cursor.advance(source,energy_self_funded(cursor.next_demand())).unwrap();if let Some(byte)=step.byte{actual.push(byte);}if step.ready{break;}}
  assert!(cursor.is_ready());assert_eq!(actual,expected,"all original fields and authored UTF8 match third-party Serde JSON bytes");let expected_digest=*cursor.digest().unwrap();cursor.begin_close();cursor.close_step(energy_self_funded(cursor.next_demand())).unwrap();drop(cursor);
- for stop in [None,Some(0),Some(1),Some(17),Some(113),Some(1000)]{let mut job=NativeEnergyJob::from_preborn(Engine::job(model.clone(),config.clone()).unwrap());let pointers=(&job.model as*const Model as usize,&job.config as*const SimulationConfig as usize,job.config.weather.as_ref().unwrap().records.as_ptr());let mut completed=false;
- for turn in 0..1_000_000{if stop==Some(turn){break;}let demand=job.input_identity.next_demand();assert!(demand.copy_bytes<=4096&&demand.capacity_bytes<=4096);let denied=RetainedCloneGrant{maximum_items:0,..energy_self_funded(demand)};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let authority=job.authority.as_mut().unwrap();authority.input_identity.advance(&authority.model,&authority.config,denied).unwrap()});assert_eq!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=energy_self_funded(demand);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let authority=job.authority.as_mut().unwrap();authority.input_identity.advance(&authority.model,&authority.config,grant).unwrap()});assert!(step.fits(grant));assert_ne!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));assert_eq!(pointers,(&job.model as*const Model as usize,&job.config as*const SimulationConfig as usize,job.config.weather.as_ref().unwrap().records.as_ptr()));if let Some(digest)=job.input_identity.digest(){assert_eq!(*digest,expected_digest);assert_eq!(job.cursor().input_identity_bytes,expected.len());assert!(job.cursor().input_identity_ready);completed=true;break;}}
+ for stop in [None,Some(0),Some(1),Some(17),Some(113),Some(1000)]{let mut job=NativeEnergyJob::from_preborn(Engine::job(model.clone(),config.clone()).unwrap());let pointers=(&job.model as*const Model as usize,configuration(&job) as*const SimulationConfig as usize,configuration(&job).weather.as_ref().unwrap().records.as_ptr());let mut completed=false;
+ for turn in 0..1_000_000{if stop==Some(turn){break;}let demand=job.input_identity.next_demand();assert!(demand.copy_bytes<=4096&&demand.capacity_bytes<=4096);let denied=RetainedCloneGrant{maximum_items:0,..energy_self_funded(demand)};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||advance_input_identity(&mut job, denied).unwrap());assert_eq!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=energy_self_funded(demand);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||advance_input_identity(&mut job, grant).unwrap());assert!(step.fits(grant));assert_ne!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));assert_eq!(pointers,(&job.model as*const Model as usize,configuration(&job) as*const SimulationConfig as usize,configuration(&job).weather.as_ref().unwrap().records.as_ptr()));if let Some(digest)=job.input_identity.digest(){assert_eq!(*digest,expected_digest);assert_eq!(job.cursor().input_identity_bytes,expected.len());assert!(job.cursor().input_identity_ready);completed=true;break;}}
  assert_eq!(completed,stop.is_none());while !job.input_identity.terminal_is_empty(){let demand=job.input_identity.close_demand();assert!(demand.copy_bytes<=4096&&demand.release_bytes<=4096);let denied=RetainedCloneGrant{maximum_items:0,..energy_self_funded(demand)};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.input_identity.close_step(denied).unwrap());assert_eq!(step,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));let grant=energy_self_funded(demand);let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.input_identity.close_step(grant).unwrap());assert!(step.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.retained_capacity_bytes,step.released_bytes));}close_owned_job(&mut job);}
  eprintln!("[DEBUG] Energy full Model+Config original projections match Serde48 weather fields and6 paid cancellation/allocation/source-pointer prefixes");
 }
@@ -791,14 +767,44 @@ fn energy_precompute_close_delegates_original_factory_quotes_and_physical_receip
  let corpus:serde_json::Value=serde_json::from_str(semio_framework_test_fixtures::fixture_text!("../../../../../🧠️precompute/♻️retirement/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut observed_turns=0;
  for case in corpus["cases"].as_array().unwrap(){for cutoff in corpus["cutoffs"].as_array().unwrap(){
   let model=match case["model"].as_str().unwrap(){"empty"=>Model::default(),"single"=>test_model_single_zone(),"600"=>semio_s_plugin_energy_engine_bestest::model("600").unwrap(),_=>unreachable!()};let mut builder=PrecomputeBuilder::new(10,10);let limit=if case["complete"].as_bool().unwrap(){usize::MAX}else{cutoff.as_u64().unwrap() as usize};let mut steps=0;while !builder.is_complete()&&steps<limit{builder.step(&model);steps+=1;assert!(steps<100_000);}
-  let mut job=NativeEnergyJob::from_preborn(Engine::job(model,SimulationConfig::default()).unwrap());if case["complete"].as_bool().unwrap(){job.pre=Some(builder.finish());}else{job.precompute=Some(builder);}job.begin_close();
+  let mut job=NativeEnergyJob::from_preborn(Engine::job(model,SimulationConfig::default()).unwrap());if case["complete"].as_bool().unwrap(){install_precomputed_model(&mut job, builder.finish());}else{job.precompute=Some(builder);}job.begin_close();
   for _ in 0..100_000{if job.input_identity.terminal_is_empty(){break;}let demand=job.close_demands().unwrap();let step=job.close_on_original(energy_self_funded(demand));assert!(matches!(step,InteractiveJobCloseStep::Pending{..}|InteractiveJobCloseStep::Complete{..}));}assert!(job.input_identity.terminal_is_empty());
-  while job.precompute.is_some()||job.pre.is_some()||!job.precompute_close.is_empty(){
-   let demand=job.close_demands().unwrap();assert_eq!(job.precompute_close_demands(0).unwrap().unwrap(),demand);let full=energy_self_funded(demand);
+  while job.precompute.is_some()||has_precomputed_model(&job)||!job.precompute_close.is_empty(){
+   let demand=job.close_demands().unwrap();assert_eq!(precompute_close_demands(&job, 0).unwrap().unwrap(),demand);let full=energy_self_funded(demand);
    for axis in 0..5{let mut denied=full;match axis{0=>denied.maximum_items=0,1 if demand.copy_bytes>0=>denied.maximum_copy_bytes-=1,2 if demand.capacity_bytes>0=>denied.maximum_capacity_bytes-=1,3 if demand.release_bytes>0=>denied.maximum_release_bytes-=1,4 if demand.depth>0=>denied.maximum_depth-=1,_=>continue};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_on_original(denied));assert!(!heap.overflowed);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));match step{InteractiveJobCloseStep::Pending{progress}=>assert_eq!(progress,RetainedCloneProgress::default()),_=>panic!("denied original precompute frontier changed state")};assert_eq!(job.close_demands().unwrap(),demand);}
    let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||job.close_on_original(full));assert!(!heap.overflowed);let progress=match step{InteractiveJobCloseStep::Pending{progress}|InteractiveJobCloseStep::Complete{progress}=>progress,_=>panic!("quoted original precompute frontier refused")};assert!(progress.fits(full));assert!(heap.requested_bytes<=progress.retained_capacity_bytes);assert!(heap.released_bytes<=progress.released_bytes);observed_turns+=1;assert!(observed_turns<1_000_000);
   }
   close_owned_job(&mut job);assert!(job.terminal_is_empty());
  }}
  eprintln!("[DEBUG] Energy original precompute builders/models delegated {observed_turns} actual physical paid retirement turns");
+}
+
+#[global_allocator]
+static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[test]
+fn hourly_zone_power_series_integrate_to_meters_and_exclude_warmup() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("power-series.json")).unwrap();
+    for case in law["cases"].as_array().unwrap() {
+        let (model, mut config) = thermostatted_single_zone();
+        config.warmup_days = law["warmupDays"].as_u64().unwrap() as u32;
+        config.environment = if case["environment"] == "HeatingDesignDay" { SimulationEnvironment::HeatingDesignDay } else { SimulationEnvironment::CoolingDesignDay };
+        let names: Vec<_> = model.zones.iter().map(|zone| zone.name.clone()).collect();
+        let result = crate::testing::run_preborn(model, config).unwrap();
+        assert_eq!(result.time_series.series.len(), names.len() * law["seriesPerZone"].as_u64().unwrap() as usize);
+        for name in names {
+            for kind in ["Heating", "Cooling"] {
+                let series = result.time_series.get(&format!("Zone {kind} Power [{name}]")).expect("native hourly power series");
+                let meter = result.meters.meters.iter().find(|(_, meter)| meter.name == format!("{name} {kind}")).map(|(_, meter)| meter).expect("native zone meter");
+                assert_eq!(series.values.len(), law["hours"].as_u64().unwrap() as usize);
+                assert_eq!(series.timestamps_hours, (0..24).map(|hour| hour as f64).collect::<Vec<_>>());
+                assert_eq!(series.unit, semio_s_plugin_energy_engine_units::Unit::Watts);
+                assert!(series.values.iter().all(|value| value.is_finite() && *value >= 0.0));
+                let energy_j = series.values.iter().sum::<f64>() * law["wattsToJoules"].as_f64().unwrap();
+                assert!((energy_j - meter.energy_j).abs() <= 1e-9 * meter.energy_j.abs().max(1.0));
+                let oracle = result.meters.meters.iter().find(|(_, meter)| meter.name == format!("{name} {}", case["positive"].as_str().unwrap())).map(|(_, meter)| meter).unwrap();
+                assert!(oracle.energy_j > 0.0, "the design day must deliver real conditioning power");
+            }
+        }
+    }
 }

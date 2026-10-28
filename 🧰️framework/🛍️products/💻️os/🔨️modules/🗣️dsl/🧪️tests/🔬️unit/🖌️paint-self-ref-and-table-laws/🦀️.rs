@@ -68,6 +68,8 @@ impl pack::snapshot::ArtifactPack for PaintDocument {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for PaintDocument {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 //#endregion 🔖️ArtifactCodec
@@ -148,6 +150,8 @@ impl pack::snapshot::ArtifactPack for BrushDocument {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for BrushDocument {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 //#endregion 🔖️ArtifactCodec
@@ -313,6 +317,8 @@ impl pack::snapshot::ArtifactPack for SelfRefDocument {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for SelfRefDocument {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 //#endregion 🔖️ArtifactCodec
@@ -391,6 +397,8 @@ impl pack::snapshot::ArtifactPack for TableDocument {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TableDocument {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 //#endregion 🔖️ArtifactCodec

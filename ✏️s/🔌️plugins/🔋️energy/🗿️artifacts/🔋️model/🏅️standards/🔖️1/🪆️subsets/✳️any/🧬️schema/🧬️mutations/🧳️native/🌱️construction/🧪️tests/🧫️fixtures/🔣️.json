@@ -1,0 +1,51 @@
+{
+  "contract": "semio.energy.original-row-birth/v1",
+  "payload": {
+    "id": 17,
+    "name": "Verschattung Äther 🔋",
+    "vertices_m": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        1,
+        1,
+        0
+      ]
+    ],
+    "transmittance_schedule_id": null
+  },
+  "wide": {
+    "vertices": 1200,
+    "point": [
+      1,
+      2,
+      3
+    ]
+  },
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "rank": 7
+}

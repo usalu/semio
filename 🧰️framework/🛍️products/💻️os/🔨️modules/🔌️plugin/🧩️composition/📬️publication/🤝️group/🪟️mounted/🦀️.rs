@@ -24,3 +24,6 @@ pub(crate) fn fixture_json(relative: &str) -> serde_json::Value {
     let text = std::fs::read_to_string(&path).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display()));
     serde_json::from_str(&text).unwrap_or_else(|error| panic!("fixture {}: {error}", path.display()))
 }
+#[cfg(test)]
+#[global_allocator]
+static ORIGINAL_RECEIPT_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

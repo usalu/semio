@@ -52,6 +52,8 @@ impl pack::snapshot::ArtifactPack for Din18599Snapshot {
     
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Din18599Snapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
         Some(crate::sqlite::snapshot::sqlite_codec())
     }

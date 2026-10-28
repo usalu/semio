@@ -828,6 +828,7 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-s-artifact-stdio-idf = { path = "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf/📦️packages/🦀️rust" }
 semio-framework-value-original-slot = { path = "🧰️framework/🔨️modules/🌱️value/🧬️retained-clone/📦️original-slot/📦️packages/🦀️rust" }
 semio-framework-ui-contract-values = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🌱️values/📦️packages/🦀️rust" }
 semio-framework-ui-contract-actions = { path = "🧰️framework/🔨️modules/🖱️ui/🧬️contract/🎬️action/📦️packages/🦀️rust" }

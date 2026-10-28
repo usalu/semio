@@ -176,7 +176,7 @@ impl HistoryLogGen {
                 let author_count = rng.next_range(3).await as usize;
                 let mut authors = Vec::with_capacity(author_count);
                 for a in 0..author_count {
-                    authors.push(crate::TransitionAuthor { id: next_ident(&mut rng, "author", a, profile.adversarial).await, name: next_text(&mut rng, false).await, avatar: None });
+                    authors.push(crate::Author { id: next_ident(&mut rng, "author", a, profile.adversarial).await, name: next_text(&mut rng, false).await, avatar: None });
                 }
                 let checkpoint = crate::TransitionCheckpoint {
                     checkpoint_id: next_ident(&mut rng, "checkpoint", index, profile.adversarial).await,

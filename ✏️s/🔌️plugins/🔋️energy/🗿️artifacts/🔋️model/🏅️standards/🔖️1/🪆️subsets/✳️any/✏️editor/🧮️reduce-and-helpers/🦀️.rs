@@ -1,6 +1,7 @@
 //! 🧮️ The editor reducer, its run-period, ordering and lookup helpers and the camera emit.
 
 use super::*;
+use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText;
 
 /// 📅️ The run-period field leaves that carry `was` to `now`, ordered so every intermediate period is a calendar interval
 /// whenever such an order exists — a field leaf refuses a period whose bounds disagree (`mutation.target-mismatch`), so
@@ -218,6 +219,17 @@ pub(super) fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, 
             let target = model.glazing_materials.iter().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("glazing material", *material))?;
             set_glazing_material_property(target, property, value)?
         }
+        EnergyModelEditorCommand::SelectWeatherFile { value } => {
+            let target=semio_framework_artifact_reference::ArtifactRef::parse_uri(value).map_err(|_|Fault::from("Invalid EPW artifact address. / Ungültige EPW-Artefaktadresse."))?;
+            if target.dialect.artifact_kind!="s.stdio.epw"||target.dialect.standard!="energyplus"||target.dialect.subset!="*"{return Err(Fault::from("Select an EPW EnergyPlus artifact. / Ein EPW-EnergyPlus-Artefakt auswählen."));}
+            vec![crate::model_mutations::bind_weather_file(store::ArtifactLink{target,pin:store::LinkPin::Head,role:crate::model_mutations::WEATHER_LINK_ROLE.into()})]
+        }
+        EnergyModelEditorCommand::ClearWeatherFile => step_if(doc.snapshot.weather_link.is_some(),crate::model_mutations::unbind_weather_file),
+        EnergyModelEditorCommand::ApplyNativeMutation { .. } => return Err(Fault::from("app.command.original-admission-required")),
+        EnergyModelEditorCommand::SetHvacProperty { system, property, value } => set_hvac_property(model, *system, property, value)?,
+        EnergyModelEditorCommand::SetSpaceProperty { space, property, value } => set_space_property(model, *space, property, value)?,
+        EnergyModelEditorCommand::SetLoadProperty { load, property, value } => set_load_property(model, *load, property, value)?,
+        EnergyModelEditorCommand::SetShadingProperty { shading, property, value } => set_shading_property(model, *shading, property, value)?,
         EnergyModelEditorCommand::SetGasMaterialProperty { material, property, value } => {
             let target = model.gas_materials.iter().find(|entry| entry.id.0 == *material).ok_or_else(|| target_missing("gas material", *material))?;
             set_gas_material_property(target, property, value)?
@@ -226,7 +238,8 @@ pub(super) fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, 
             let target = model.zones.iter().find(|entry| entry.id.0 == *zone).ok_or_else(|| target_missing("zone", *zone))?;
             set_zone_property(target, property, value)?
         }
-        EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k } => {
+        EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, zone, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k } => {
+            if !model.zones.iter().any(|entry| entry.id.0 == *zone) { return Err(target_missing("zone", *zone)); }
             let schedules = &model.schedules;
             if !schedule_exists(schedules, *heating_schedule) {
                 return Err(target_missing("schedule", *heating_schedule));
@@ -237,6 +250,7 @@ pub(super) fn reduce(command: &EnergyModelEditorCommand, doc: &ArtifactView<'_, 
             let target = model.thermostats.iter().find(|entry| entry.id.0 == *thermostat).ok_or_else(|| target_missing("thermostat", *thermostat))?;
             let id = target.id;
             [
+                step_if(target.zone_id.0 != *zone, || crate::thermostat_mutations::change_thermostat_zone(id, EntityId(*zone))),
                 step_if(target.heating_setpoint_schedule_id != ScheduleId(*heating_schedule), || crate::thermostat_mutations::change_thermostat_heating_setpoint_schedule(id, ScheduleId(*heating_schedule))),
                 step_if(target.cooling_setpoint_schedule_id != ScheduleId(*cooling_schedule), || crate::thermostat_mutations::change_thermostat_cooling_setpoint_schedule(id, ScheduleId(*cooling_schedule))),
                 step_if(target.heating_throttle_range_k != *heating_throttle_range_k, || crate::thermostat_mutations::change_thermostat_heating_throttle_range(id, *heating_throttle_range_k)),
@@ -335,7 +349,7 @@ pub(super) fn camera_emit(command: &EnergyModelEditorCommand, view_state: Option
 
 /// 🗓️ A thermostat setpoint reference must resolve inside the model's own `ScheduleSet` — the five
 /// schedule families are addressed by one shared `ScheduleId` space, so any of them may own it.
-fn schedule_exists(schedules: &crate::schedule::ScheduleSet, id: u32) -> bool {
+pub(super) fn schedule_exists(schedules: &crate::schedule::ScheduleSet, id: u32) -> bool {
     let id = ScheduleId(id);
     schedules.constants.iter().any(|schedule| schedule.id == id)
         || schedules.daily.iter().any(|schedule| schedule.id == id)

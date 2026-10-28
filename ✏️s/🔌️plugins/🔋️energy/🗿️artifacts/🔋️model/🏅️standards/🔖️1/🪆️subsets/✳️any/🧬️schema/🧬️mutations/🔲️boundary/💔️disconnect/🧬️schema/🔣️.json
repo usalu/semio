@@ -59,5 +59,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "adjacency-row",
+    "adjacency": "disconnect",
+    "row": "StateAdjacencyPair",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "adjacency_pairs",
+    "field": "adjacency_pairs",
+    "input": "surface_a_id",
+    "key": "surface_a_id",
+    "partner": "surface_b_id",
+    "inverse": "ConnectSurfaces",
+    "labels": {
+      "en": "Disconnect surfaces",
+      "de": "Oberflächen trennen"
+    },
+    "semantics": {
+      "verb": "disconnect",
+      "entity": "surface-adjacency",
+      "kind": "disconnect",
+      "record": "DisconnectedSurfaces"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A surface cannot be adjacent to itself."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "An adjacency pair joins two existing original surfaces."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original surfaces are already adjacent in either orientation."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The adjacency pair or insertion rank does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original adjacency roster is unchanged."
+      }
+    }
   }
 }

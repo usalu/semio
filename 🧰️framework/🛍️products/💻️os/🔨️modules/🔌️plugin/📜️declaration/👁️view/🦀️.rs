@@ -89,7 +89,7 @@ pub use lane_views::{ConfigView, DraftView, InteractionView, PresencePeersView, 
 #[path = "🕳️empty-lanes/🦀️.rs"]
 mod empty_lanes;
 pub use empty_lanes::{
-    NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation,
+    NoConfig, NoConfigMutation, NoConfigGenesisOwner, NoDraft, NoDraftMutation, NoDraftGenesisOwner, NoPresence, NoPresenceMutation,
     NoStateDiff, NoTransient, NoTransientMutation,
 };
 

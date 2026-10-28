@@ -25,6 +25,8 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-value-persistent={path="../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"}
+semio-framework-value-native-owned.workspace = true
 semio-framework-actor = { path = "../../../../../../../🔨️modules/🎭️actor/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }

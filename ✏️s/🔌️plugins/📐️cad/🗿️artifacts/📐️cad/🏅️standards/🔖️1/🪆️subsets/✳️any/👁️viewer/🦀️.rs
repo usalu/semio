@@ -105,9 +105,9 @@ impl ArtifactViewer for CadViewer {
 })())
 }
 
-    fn initial_snapshot() -> CadSnapshot {
+    fn reference_birth()->Option<fn()->CadSnapshot>{Some(||{
         forest_play_scene()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `CadViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

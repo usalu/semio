@@ -51,7 +51,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
     /// 🧱 Runs `initial_snapshot` on its own frame so fixture sync cannot nest inside envelope construction.
     #[inline(never)]
     async fn isolate_artifact_app_initial_snapshot() -> A::Snapshot {
-        A::initial_snapshot().await
+        A::reference_birth().expect("reference construction requires its explicit initial source")()
     }
 
     pub async fn with_registry(app: A, registry: AppActionRegistry, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Self {
@@ -163,10 +163,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
         let mut this = Self {
             app,
             mounted_policy,
+            original_controller_close:None,
             constructor: ConstructorState::new(),
             stores: InstanceStores::new(store, config_store, draft_store, presence_store, window_config_store, window_transient_store, artifact_one_item_factory, config_one_item_factory, draft_one_item_factory, presence_one_item_factory, transient_one_item_factory, presence_local_root_retirement_factory, transient_local_root_retirement_factory, unsupported_publication_contracts, interaction_store),
             roster: PeerRoster::new(),
             ingress: ActionIngress::new(),
+            original_emission:Default::default(),original_typed_command:Default::default(),
             interaction: LocalInteraction::new(),
             history: CommandHistory::new(),
             host_events: HostEvents::new(),

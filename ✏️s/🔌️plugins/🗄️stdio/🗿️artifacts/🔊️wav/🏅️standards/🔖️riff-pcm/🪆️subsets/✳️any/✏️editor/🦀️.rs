@@ -477,9 +477,9 @@ impl ArtifactEditor for WavEditor {
         wav_editor_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         WavSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

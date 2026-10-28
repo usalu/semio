@@ -7,12 +7,6 @@ use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::sync::{Arc, Weak};
 
-fn paged_copy(retained_bytes: &mut usize, grant: RetainedCloneGrant) -> Option<RetainedCloneProgress> {
-    let copied_bytes = (*retained_bytes).min(grant.maximum_copy_bytes);
-    *retained_bytes -= copied_bytes;
-    (copied_bytes != 0).then_some(RetainedCloneProgress { copied_items: 1, copied_bytes, ..Default::default() })
-}
-
 fn depth_refusal(grant: RetainedCloneGrant, demand: RetirementDemand, scope: &'static str) -> Result<(), ValueError> {
     if grant.maximum_depth < demand.depth { Err(ValueError::literal(ValueRefusalKind::DepthLimit, scope)) } else { Ok(()) }
 }
@@ -322,27 +316,18 @@ where
     }
 }
 
-pub fn bounded_transient_preparation_factory<P, M>() -> Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<P, M>>
-where
-    P: Clone + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_os_kernel::ColdMutation<P> + protocol::OpBinary + Send + 'static,
-{
-    Arc::new(BoundedTransientPreparationFactory::<P, M>::default())
-}
+#[path="🧬️native/🦀️.rs"]
+mod native;
+pub use native::bounded_transient_preparation_factory;
 
 pub fn bounded_transient_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
-where
-    P: pack::snapshot::ArtifactDsl + Send + Sync + 'static,
-{
-    Arc::new(BoundedTransientRootRetirementFactory::<P>::default())
+where P: semio_framework_value::retirement::RetireOwned + Sync {
+    Arc::new(semio_framework_value_factory::SharedValueRetirementFactory::<P>::default())
 }
 
-pub fn bounded_transient_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<P, M>>>
-where
-    P: Clone + Default + pack::snapshot::ArtifactDsl + Send + Sync + 'static,
-    M: protocol::Mutation<P> + semio_framework_os_kernel::ColdMutation<P> + Send + 'static,
-{
-    Box::new(BoundedTransientStoreDisposer::<P, M>::default())
+pub fn bounded_transient_store_disposer<P,M>() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<P,M>>>
+where P: Default + semio_framework_value::retirement::RetireOwned + Sync, M: protocol::Mutation<P> + Send + 'static {
+    transient_store_disposer(Arc::new(semio_framework_value_factory::OwnedValueRetirementFactory::<P>::default()))
 }
 
 pub struct TransientStoreDisposer<P, M> {

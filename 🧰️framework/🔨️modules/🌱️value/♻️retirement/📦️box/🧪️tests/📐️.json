@@ -1,0 +1,58 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "fields",
+    "fieldBytes",
+    "birthCopyBytes",
+    "retirementCopyBytes",
+    "cancelAfter",
+    "nativePointerRetained",
+    "releaseOnlyAfterFields",
+    "denials"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semio.value.original-box-retirement.v1"
+    },
+    "fields": {
+      "const": 12
+    },
+    "fieldBytes": {
+      "const": 2048
+    },
+    "birthCopyBytes": {
+      "const": 32768
+    },
+    "retirementCopyBytes": {
+      "const": 4096
+    },
+    "cancelAfter": {
+      "const": [
+        0,
+        1,
+        2,
+        5,
+        17,
+        200
+      ]
+    },
+    "nativePointerRetained": {
+      "const": true
+    },
+    "releaseOnlyAfterFields": {
+      "const": true
+    },
+    "denials": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    }
+  }
+}

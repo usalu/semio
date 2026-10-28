@@ -81,6 +81,10 @@ pub mod original_toy_unit;
 pub mod original_toy_emission;
 
 #[doc(hidden)]
+#[path="📬️native-ledger/🦀️.rs"]
+pub mod original_readonly_preview;
+
+#[doc(hidden)]
 pub const TOOL_RUN_FIXTURE_JSON: &str = include_str!("../🧫️fixtures/⏯️tool-run/🔣️.json");
 
 #[doc(hidden)]
@@ -436,6 +440,7 @@ impl ArtifactApp for ToyRunApp {
     }
 
     fn build_tool_run_job(request: ToolRunJobRequest<'_, Self>) -> Result<Option<ToolRunJob>, Fault> {
+        if request.tool_id=="originalReadonlyPreview"{return Ok(Some(Box::new(original_readonly_preview::OriginalReadonlyPreview::new(request.identity))))}
         TOY_REQUEST_WINDOWS.with(|windows| windows.borrow_mut().push((request.tool_id.to_string(), request.window_id.map(str::to_string), request.window_config.is_some())));
         if request.tool_id == text(&fixture()["member"]["toolId"]) {
             return Ok(Some(Box::new(member::toy_member_job(request)?)));
@@ -450,9 +455,9 @@ impl ArtifactApp for ToyRunApp {
         Ok(Some(Box::new(toy_run_job(request))))
     }
 
-    async fn initial_snapshot() -> TestSnapshot {
+    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
         TestSnapshot::default()
-    }
+    })}
 
     async fn handle(
         command: &TestMutation,
@@ -619,6 +624,8 @@ pub async fn toy_manifest() -> App {
         })
         .await;
     tools.push(ToolRef::new(undeclared).await);
+    builder=builder.tool(ToolDefinition{run:Some(ToolRunDefinition{mutating:false,revalidate_job:None,counters:(0..9).map(|index|semio_framework_tool_run::ToolRunCounterDefinition{id:format!("actual{index}"),label:LocalizedLabel::native(format!("Actual {index}"),format!("Ist {index}"))}).collect(),..toy_definition(ToolRunRebasePolicy::Restart)}),..ToolDefinition::new("originalReadonlyPreview",LocalizedLabel::native("Original preview","Originalvorschau"),IconName::PaintBucket).await}).await;
+    tools.push(ToolRef::new("originalReadonlyPreview").await);
     let read_only = text(&fixture["readOnlyRun"]["toolId"]);
     builder = builder
         .tool(ToolDefinition {

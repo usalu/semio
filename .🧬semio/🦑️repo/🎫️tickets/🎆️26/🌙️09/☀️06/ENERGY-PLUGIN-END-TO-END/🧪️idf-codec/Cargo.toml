@@ -1,0 +1,13 @@
+[package]
+name = "energy-idf-codec-validation"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[dependencies]
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+
+[[bin]]
+name = "idf-codec"
+path = "🦀️.rs"

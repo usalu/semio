@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateSolarThermalConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "solar_thermal_systems",
+    "key": "id",
+    "inverse": "CreateSolarThermalSystem",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete Solar Thermal System",
+      "de": "Solarthermieanlage löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "solar-thermal-system",
+      "kind": "delete-solar-thermal-system",
+      "record": "DeletedSolarThermalSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed solar-thermal-system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

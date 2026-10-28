@@ -1,0 +1,24 @@
+{
+  "contract": "semio.value.original-box-retirement.v1",
+  "fields": 12,
+  "fieldBytes": 2048,
+  "birthCopyBytes": 32768,
+  "retirementCopyBytes": 4096,
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    5,
+    17,
+    200
+  ],
+  "nativePointerRetained": true,
+  "releaseOnlyAfterFields": true,
+  "denials": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ]
+}

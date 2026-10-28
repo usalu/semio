@@ -1,0 +1,40 @@
+{
+  "cases": [
+    {
+      "id": 503,
+      "field": "peoplePerArea",
+      "value": "0.2",
+      "kind": "change-people-gain-people-per-area"
+    },
+    {
+      "id": 504,
+      "field": "wattsPerArea",
+      "value": "8",
+      "kind": "change-lighting-gain-watts-per-area"
+    },
+    {
+      "id": 60,
+      "field": "wattsPerArea",
+      "value": "12",
+      "kind": "change-equipment-gain-watts-per-area"
+    },
+    {
+      "id": 61,
+      "field": "designFlowAch",
+      "value": "0.7",
+      "kind": "change-infiltration-design-flow-ach"
+    },
+    {
+      "id": 61,
+      "field": "constantTermCoefficient",
+      "value": "0.1",
+      "kind": "change-infiltration-constant-term-coefficient"
+    },
+    {
+      "id": 61,
+      "field": "method",
+      "value": "windAndStack",
+      "kind": "change-infiltration-method"
+    }
+  ]
+}

@@ -42,6 +42,7 @@ original-actor-context-testing = ["semio-framework-plugin-guest-contract/origina
 canvas-runtime-assets = ["dep:semio-framework-canvas-assets", "semio-framework-plugin-builder/canvas-runtime-assets"]
 
 [dependencies]
+semio-framework-tool-run-presentation = { workspace = true }
 semio-framework-plugin-instance-surface = { path = "../../🧵️instance/🛬️lifted/🌳️tree/📦️packages/🦀️rust" }
 semio-framework-ui-contract-validation = { path = "../../../../../../🔨️modules/🖱️ui/🧬️contract/🛡️limits/📦️packages/🦀️rust" }
 

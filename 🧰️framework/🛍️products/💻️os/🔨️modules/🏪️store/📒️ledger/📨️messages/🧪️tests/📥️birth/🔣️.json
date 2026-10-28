@@ -1,0 +1,42 @@
+{
+  "policy": {
+    "maximumItems": 1,
+    "maximumCopyBytes": 4096,
+    "maximumCapacityBytes": 4096,
+    "maximumReleaseBytes": 65536,
+    "maximumDepth": 64
+  },
+  "states": [
+    {
+      "event": "refuse-items",
+      "original": 1,
+      "cursor": 0
+    },
+    {
+      "event": "refuse-copy",
+      "original": 1,
+      "cursor": 0
+    },
+    {
+      "event": "refuse-capacity",
+      "original": 1,
+      "cursor": 0
+    },
+    {
+      "event": "refuse-depth",
+      "original": 1,
+      "cursor": 0
+    },
+    {
+      "event": "admit",
+      "original": 0,
+      "cursor": 1
+    },
+    {
+      "event": "close",
+      "original": 0,
+      "cursor": 0
+    }
+  ],
+  "maximumConcurrentChildFrames": 1
+}

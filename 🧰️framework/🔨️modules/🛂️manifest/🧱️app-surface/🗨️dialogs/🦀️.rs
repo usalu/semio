@@ -11,7 +11,7 @@ use super::*;
 /// args; empty `args` degenerates to a message/confirm dialog. Opened only via
 /// `Effect::OpenDialog`; the shell owns open/close as ephemeral chrome state, never the document.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct DialogDefinition {
@@ -50,7 +50,7 @@ pub const DIALOG_CHOICE_ARG: &str = "choice";
 /// dispatches, the staged args it `requires` (enabled once they resolve, and the only form args it
 /// sends), its visual `tone`, and whether it is `destructive` (danger styling, and an agent lane must
 /// ask before taking it).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct DialogChoice {

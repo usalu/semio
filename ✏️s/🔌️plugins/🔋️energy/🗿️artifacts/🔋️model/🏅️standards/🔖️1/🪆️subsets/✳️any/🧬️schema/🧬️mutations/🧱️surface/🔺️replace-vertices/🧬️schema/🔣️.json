@@ -62,5 +62,43 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "owned-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "vertices_m",
+    "input": "new_vertices_m",
+    "key": "id",
+    "validation": "finite-points",
+    "labels": {
+      "en": "Replace Surface Vertices",
+      "de": "Flächenpolygon ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "surface",
+      "kind": "replace-surface-vertices",
+      "record": "ReplacedSurfaceVertices"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored field has invalid length or nonfinite values."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The authored field is unchanged."
+      }
+    }
   }
 }

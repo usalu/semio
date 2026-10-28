@@ -5,7 +5,7 @@ use semio_framework_value::{paged::PagedBytes, RetainedCloneGrant, RetainedClone
 use semio_framework_value_persistent::list::PagedList;
 use std::{mem::{ManuallyDrop,MaybeUninit,size_of},ptr::addr_of_mut};
 
-pub struct ToolRunReceivedProgress{pub identity:ToolRunIdentity,pub sequence:u64,pub state:ToolRunState,pub stage:u16,pub completed:u64,pub total:Option<u64>,pub counters:PagedList<ToolRunCounter,8>,pub units_per_second:f32,pub conflicts:u32,pub steps:PagedList<ToolRunStep,64>}
+pub struct ToolRunReceivedProgress{pub identity:ToolRunIdentity,pub sequence:u64,pub state:ToolRunState,pub stage:u16,pub completed:u64,pub total:Option<u64>,pub counters:PagedList<ToolRunCounter,9>,pub units_per_second:f32,pub conflicts:u32,pub steps:PagedList<ToolRunStep,64>}
 pub struct ToolRunReceivedTracePage{pub identity:ToolRunIdentity,pub page:u32,pub ops:PagedList<ToolRunTraceOp,4096>}
 pub struct ToolRunReceivedTick{
  identity:ToolRunIdentity,sequence:u64,progress:Option<ToolRunReceivedProgress>,steps:PagedList<ToolRunStep,262144>,trace:PagedList<ToolRunReceivedTracePage,262144>,append_ops:PagedList<PagedBytes<262144>,262144>,append_entities:PagedList<u64,262144>,retract_to:Option<u32>,payload:Option<PagedBytes<262144>>,

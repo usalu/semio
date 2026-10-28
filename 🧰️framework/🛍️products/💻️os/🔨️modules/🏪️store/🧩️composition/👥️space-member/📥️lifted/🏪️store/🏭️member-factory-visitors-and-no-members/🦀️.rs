@@ -64,6 +64,21 @@ pub trait MemberVisit {
 pub enum NoMembers {}
 
 impl SpaceMember for NoMembers {
+    fn native_head_pack_source(&self)->Option<semio_framework_os_store_text_io::OriginalSnapshotPackView<'_>>{match *self{}}
+    fn native_pack_generation(&self)->u64{match *self{}}
+    fn native_checkpoint_id(&self)->Option<&str>{match *self{}}
+    fn native_checkpoint_probe_demands(&self,probe:&semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,ValueError>{match *self{}}
+    fn advance_native_checkpoint_probe(&self,probe:&mut semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{match *self{}}
+
+    fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand{match *self{}}
+    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match *self{}}
+    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{match *self{}}
+    fn take_member_native_vcs_result(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match *self{}}
+    fn ack_member_native_vcs_command(&self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match *self{}}
+    fn member_native_vcs_close_demands(&self,owner:&dyn MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{match *self{}}
+    fn close_member_native_vcs_command(&mut self,owner:&mut dyn MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match *self{}}
+
+    fn member_identity(&self)->Option<MemberIdentityRef<'_>>{match *self{}}
     fn local_actor_id(&self) -> &ActorId {
         match *self {}
     }
@@ -93,14 +108,18 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
-    fn owned_publication_birth_bytes(&self, _request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { match *self {} }
-    fn begin_one_item_owned_publication(&self, _request: &mut MemberStoreOwnedBatchRequest, _grant: ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn ErasedMemberStoreOneItemPublication>>, String> { match *self {} }
 
-    fn advance_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _body:usize, _grant: ArtifactStoreOneItemGrant, _receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, semio_framework_os_vcs::VcsError> {
+
+    fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { match *self {} }
+    fn admit_original_batch_receiving(&self, _: &mut Option<Vec<Vec<u8>>>, _: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, _: RetainedCloneGrant) -> Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::original_receiving::MemberOriginalBatchReceiving>, RetainedCloneProgress)>, ValueError> { match *self {} }
+    fn owned_publication_birth_bytes(&self, _request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { match *self {} }
+    fn begin_one_item_owned_publication(&self, _request: &mut MemberStoreOwnedBatchRequest, _grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String> { match *self {} }
+
+    fn advance_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, _grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String> {
         match *self {}
     }
 
-    fn prepare_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, _body:usize, _grant: ArtifactStoreOneItemGrant, _receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, semio_framework_os_vcs::VcsError> {
+    fn prepare_one_item_publication(&mut self, _publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, _grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, String> {
         match *self {}
     }
 
@@ -166,6 +185,8 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
+
+
     async fn current_checkpoint_id(&self) -> Option<String> {
         match *self {}
     }
@@ -173,6 +194,10 @@ impl SpaceMember for NoMembers {
     async fn current_alternative_id(&self) -> Option<String> {
         match *self {}
     }
+
+
+
+
 
     async fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
         match *self {}
@@ -182,9 +207,25 @@ impl SpaceMember for NoMembers {
         match *self {}
     }
 
+
+
+
+
     async fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         match *self {}
     }
+
+
+
+
+
+
+
+
+
+
+
+
 
     async fn tail_group_id(&self) -> Option<String> {
         match *self {}
@@ -197,6 +238,17 @@ impl SpaceMember for NoMembers {
     async fn redo_tail(&self) -> Option<(String, Option<String>)> {
         match *self {}
     }
+
+
+
+
+
+
+
+
+
+
+
 
 }
 

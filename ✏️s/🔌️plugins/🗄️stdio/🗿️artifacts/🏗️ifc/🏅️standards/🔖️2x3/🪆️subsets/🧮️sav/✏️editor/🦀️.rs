@@ -225,9 +225,9 @@ impl ArtifactEditor for Ifc2x3SavEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ifc2x3_sav_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> Ifc2x3Snapshot {
+    fn reference_birth()->Option<fn()->Ifc2x3Snapshot>{Some(||{
         <crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v2x3::subsets::sav::io::Ifc2x3SavBuilderConstruction::new()).expect("valid authored IFC2x3 sav initial owner")
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

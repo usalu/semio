@@ -71,7 +71,8 @@
         "precision": 1,
         "group": "capacity",
         "order": 30
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "maxChargeW": {
       "type": "number",
@@ -89,7 +90,8 @@
         "precision": 2,
         "group": "capacity",
         "order": 40
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "maxDischargeW": {
       "type": "number",
@@ -107,7 +109,8 @@
         "precision": 2,
         "group": "capacity",
         "order": 50
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "roundTripEfficiency": {
       "type": "number",
@@ -126,7 +129,83 @@
         "softMax": 1,
         "group": "efficiency",
         "order": 60
-      }
+      },
+      "exclusiveMinimum": 0,
+      "maximum": 1
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateBatteryAssignment",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "capacity_kwh",
+        "input": "capacity_kwh",
+        "storage": "fixed"
+      },
+      {
+        "field": "max_charge_w",
+        "input": "max_charge_w",
+        "storage": "fixed"
+      },
+      {
+        "field": "max_discharge_w",
+        "input": "max_discharge_w",
+        "storage": "fixed"
+      },
+      {
+        "field": "round_trip_efficiency",
+        "input": "round_trip_efficiency",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateBatteryAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "battery_storage",
+    "key": "id",
+    "inverse": "DeleteBattery",
+    "labels": {
+      "en": "Create battery",
+      "de": "Batterie erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "battery",
+      "kind": "create-battery",
+      "record": "CreatedBattery"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit"
   }
 }

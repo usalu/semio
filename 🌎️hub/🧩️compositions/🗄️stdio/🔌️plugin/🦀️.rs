@@ -3,7 +3,7 @@
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
 
-use semio_framework_plugin_reactor_app::__semio_dispatch_PluginApp;
+use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};
@@ -12,8 +12,8 @@ use semio_framework_plugin::PluginBuilder;
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
     pub enum StdioApps: PluginApp {
-        HtmlEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_html_mutations::editor::html::HtmlEditor>>),
-        HtmlViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_html_mutations::viewer::html::HtmlViewer>>),
+        HtmlEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_html::editor::html::HtmlEditor>>),
+        HtmlViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>>),
         MdEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_md::editor::md::MdEditor>>),
         MdViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_md::viewer::md::MdViewer>>),
         CsvEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>>),
@@ -40,8 +40,8 @@ pub fn plugin() -> Result<Plugin<StdioApps>, PluginAssemblyError> {
     let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: "stdio", package_id: semio_hub_stdio_catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;
     let catalog = semio_hub_stdio_catalog::artifact_catalog_contribution(plan.assemblies())?;
     builder = plan.apply(builder);
-    builder = builder.editor::<semio_s_artifact_stdio_html_mutations::editor::html::HtmlEditor>(semio_s_artifact_stdio_html_mutations::editor::html::create_html_editor());
-    builder = builder.viewer::<semio_s_artifact_stdio_html_mutations::viewer::html::HtmlViewer>(semio_s_artifact_stdio_html_mutations::viewer::html::create_html_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_html::editor::html::HtmlEditor>(semio_s_artifact_stdio_html::editor::html::create_html_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_html::viewer::html::HtmlViewer>(semio_s_artifact_stdio_html::viewer::html::create_html_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_md::editor::md::MdEditor>(semio_s_artifact_stdio_md::editor::md::create_md_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_md::viewer::md::MdViewer>(semio_s_artifact_stdio_md::viewer::md::create_md_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_csv::editor::csv::CsvEditor>(semio_s_artifact_stdio_csv::editor::csv::create_csv_editor());

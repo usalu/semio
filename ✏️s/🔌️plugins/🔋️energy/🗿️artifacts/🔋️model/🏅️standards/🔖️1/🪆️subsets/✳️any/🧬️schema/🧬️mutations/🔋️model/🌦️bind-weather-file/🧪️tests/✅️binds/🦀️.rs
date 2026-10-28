@@ -7,13 +7,13 @@
 
 use crate::fixtures::{self, snapshot, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 
 #[allow(unused_variables, unused_mut)]
 fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
     let model = crate::model::Model { name: "BESTEST 600".into(), ..crate::model::Model::default() };
-    (snapshot(model), super::bind_weather_file(semio_framework_artifact_reference::ArtifactRef { artifact_id: "hannover".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "epw".into() } }))
+    (snapshot(model), super::bind_weather_file(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "hannover".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "epw".into() } }, pin: store::LinkPin::Head, role: "weather".into() }))
 }
 
 fn case() -> Case {

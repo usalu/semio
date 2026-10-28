@@ -107,7 +107,7 @@ export function buildPluginHandle({ pluginId, manifest, packageId, componentSha2
     readAppDocumentIdentity: async (instanceId) => {
       requireActorId(instanceId);
       const identity = await requireChannel(instanceId).readDocumentIdentity();
-      return { appInstanceId: identity.app_instance_id, parentDocumentId: identity.parent_document_id };
+      return { appInstanceId: identity.app_instance_id, parentDocumentId: identity.parent_document_id, baseRevision: identity.base_revision.toString() };
     },
     captureExtensionCompletion,
     invoke,

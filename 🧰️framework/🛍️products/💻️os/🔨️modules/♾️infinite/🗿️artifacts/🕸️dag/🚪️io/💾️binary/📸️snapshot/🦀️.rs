@@ -20,6 +20,8 @@ impl pack::snapshot::ArtifactPack for DagSnapshot {
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for DagSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, crate::os_store::serialization::ArtifactCodec)> {
      Some((semio_framework_artifact_reference::Dialect { artifact_kind: "dag.host_snapshot", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, crate::os_store::bare_artifact_codec::<Self, DagMutation>(DAG_DOCUMENT_SCHEMA)))
  }

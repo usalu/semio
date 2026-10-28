@@ -1,5 +1,8 @@
 //! 🖼️ The history panel sections: row refusals of the mutation controls, the band, reprojection and editor sections, control rows, the input row builder and the panel limits.
 
+use semio_framework_plugin_interaction::{UiAssemblyResult,ui_assembly_error};
+use semio_framework_plugin_window_transient::{ui_label,ui_text};
+use semio_framework_plugin_window_kits_rich::tree_kit::{TreeWindows,tree_window_indexed_item,tree_window_indexed_section};
 use semio_framework::{ActionArgControl, ArgPresentation, ArgSchema, FaultFrom, IconName, reference_id_text};
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_interaction::{ui_assembly_error, UiAssemblyResult};

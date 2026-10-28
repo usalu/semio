@@ -35,5 +35,33 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "ground_temperature",
+    "field": "deep_c",
+    "input": "new_temperature_c",
+    "labels": {
+      "en": "Change deep c",
+      "de": "Tiefe Bodentemperatur ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ground",
+      "kind": "change-ground-deep",
+      "record": "ChangedGroundDeep"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored deep c is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The deep c is unchanged."
+      }
+    }
   }
 }

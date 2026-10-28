@@ -30,7 +30,7 @@ pub enum ToolRunRefoldTurn {
 /// 🎚️ The values a run's declared settings reads named when last observed: config pointers, then per declared
 /// window kind the `(window id, values)` of every partition it reads.
 #[doc(hidden)]
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunSettingsValues {
     pub config: Vec<Option<DslValue>>,
     pub window_config: Vec<(String, String, Vec<Option<DslValue>>)>,
@@ -57,6 +57,9 @@ pub struct ToolRunFinalize<A: ArtifactApp> {
 
 #[doc(hidden)]
 pub struct ToolRunEntry<A: ArtifactApp> {
+    pub retired_next:Option<Box<ToolRunEntry<A>>>,
+    pub native:crate::original_native_tick::OriginalToolRunNativeState,
+    pub operations:crate::original_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>,
     pub tool_id: String,
     pub actor: semio_framework_value::SharedUtf8,
     pub definition: ToolRunDefinition,
@@ -147,6 +150,7 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     pub fn begin_refold(&mut self, boundary: bool) {
+        self.operations.rebase();
         if let Some(running) = self.refold.replace(ToolRunRefold { running: None, cursor: 0, boundary }).and_then(|refold| refold.running) {
             self.displaced.push(Arc::new(running));
         }
@@ -186,7 +190,8 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
         self.entities = Arc::new(self.entity_marks.iter().map(|(_, entity)| *entity).collect());
     }
 
-    fn fold_one(snapshot: &A::Snapshot, op: &A::Mutation) -> Option<A::Snapshot> {
+    #[cfg(test)]
+    fn fold_one(snapshot: &A::Snapshot, op: &A::Mutation) -> Option<A::Snapshot> where A::Snapshot:Clone,A::Mutation:protocol::ColdMutation<A::Snapshot> {
         let outcome = op.diff(snapshot);
         if !outcome.is_applicable(protocol::MergePolicy::default()) {
             return None;
@@ -196,7 +201,8 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
 
     /// 🔁️ Folds provisional ops from `base` until the wall deadline; the overlay is replaced once every op is
     /// folded and the refold reached its boundary.
-    pub fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn {
+    #[cfg(test)]
+    pub fn refold_turn(&mut self, deadline_us: u64) -> ToolRunRefoldTurn where A::Snapshot:Clone,A::Mutation:protocol::ColdMutation<A::Snapshot> {
         let Some(mut refold) = self.refold.take() else { return ToolRunRefoldTurn::Swapped };
         while refold.cursor < self.provisional.len() {
             let source = refold.running.as_ref().unwrap_or(&self.base);
@@ -224,7 +230,8 @@ impl<A: ArtifactApp> ToolRunEntry<A> {
     }
 
     /// 🧬️ Applies one tick of the current identity: retract, append (O(k) fold), entities, steps, progress, trace.
-    pub fn apply_tick(&mut self, mut tick: ToolRunTick, discarded: &mut Vec<A::Mutation>) -> Result<ToolRunTickReceipt, Fault> {
+    #[cfg(test)]
+    pub fn apply_tick(&mut self, mut tick: ToolRunTick, discarded: &mut Vec<A::Mutation>) -> Result<ToolRunTickReceipt, Fault> where A::Snapshot:Clone,A::Mutation:protocol::ColdMutation<A::Snapshot> {
         let mut receipt = ToolRunTickReceipt::default();
         if tick.identity.id != self.identity.id || tick.identity.generation != self.identity.generation {
             receipt.stale = true;

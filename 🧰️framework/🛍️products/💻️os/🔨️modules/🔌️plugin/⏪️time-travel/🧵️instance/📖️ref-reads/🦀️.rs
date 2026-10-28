@@ -37,6 +37,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
     }
 
     pub fn time_travel_retirement_demands(&self, body: usize) -> Result<RetirementDemand,ValueError> {
+        if self.time_travel.owners().any(TimeTravelOwners::finalizing){if let Some(TimeTravelQueryOutput::CommitCloseDemand(demand))=self.time_travel_query(TimeTravelStoreQuery::CommitCloseDemand(body)){return demand}}
         if self.time_travel.document.discard_issuer_missing(){self.stores.store.owned_mutation_retirement_factory()?;return Ok(RetirementDemand{depth:1,..Default::default()});}
         let demand=self.time_travel.retirement_demands(body)?;if demand!=RetirementDemand::default(){return Ok(demand);}
         if let Some(demand)=self.member_subject_retirement_demands(body)?{return Ok(demand)}

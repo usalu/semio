@@ -181,3 +181,31 @@ fn retained_thermal_fault_refuses_physical_commit_and_restored_foreign_dimension
   println!("[DEBUG] retained Energy typed {} fault stopped before original physical commit",if foreign {"foreign dimension"}else{"singular"});
  }
 }
+
+#[test]
+fn unfunded_nonthermal_timestep_does_not_advance_and_funded_step_reports_progress() {
+    let model = crate::model::test_model_single_zone();
+    let pre = PrecomputedModel::build(&model, 60, 60);
+    let weather = default_weather(0);
+    let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+    let mut step = TimestepWork::new(&model, &pre, HourWeather { previous: weather, current: weather, next: weather }, SimDate::new(2026, 1, 1), 0.0);
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/timestep-grants.json")).unwrap();
+    let config = SimulationConfig::default();
+    for row in fixture["refused"].as_array().unwrap() {
+        let saved = serde_json::to_string(&step).unwrap();
+        let turn = step.step_funded(&model, &config, &pre, &mut state, RetainedCloneGrant {
+            maximum_items: row["items"].as_u64().unwrap() as usize,
+            maximum_copy_bytes: 512, maximum_capacity_bytes: 0, maximum_release_bytes: 0,
+            maximum_depth: row["depth"].as_u64().unwrap() as usize,
+        });
+        assert_eq!(turn.progress, RetainedCloneProgress::default());
+        assert!(turn.fault.is_none());
+        assert_eq!(serde_json::to_string(&step).unwrap(), saved);
+    }
+    let turn = step.step_funded(&model, &config, &pre, &mut state, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 512, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 });
+    assert_eq!(turn.progress.copied_items, fixture["funded_progress_items"].as_u64().unwrap() as usize);
+    assert!(turn.fault.is_none());
+    step.set_stage_for_gate(TimestepStage::Complete);
+    let turn = step.step_funded(&model, &config, &pre, &mut state, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 512, maximum_capacity_bytes: 0, maximum_release_bytes: 0, maximum_depth: 1 });
+    assert_eq!(turn.progress, RetainedCloneProgress::default());
+}

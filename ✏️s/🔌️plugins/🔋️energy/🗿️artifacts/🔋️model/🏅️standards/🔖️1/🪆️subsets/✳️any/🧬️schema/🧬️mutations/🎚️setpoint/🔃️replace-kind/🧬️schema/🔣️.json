@@ -193,5 +193,49 @@
         "de": "Beim Regelgesetz OutdoorAirReset liegt die obere Außentemperatur über der unteren."
       }
     }
-  ]
+  ],
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "setpoint-kind",
+    "row": "StateSetpointManager",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "setpoint_managers",
+    "field": "kind",
+    "input": "new_kind",
+    "limits": [
+      "new_low_outdoor_c",
+      "new_high_outdoor_c",
+      "new_low_setpoint_c",
+      "new_high_setpoint_c"
+    ],
+    "key": "id",
+    "labels": {
+      "en": "Replace setpoint control law",
+      "de": "Sollwertregelung ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "setpoint-manager",
+      "kind": "replace-kind",
+      "record": "ReplacedSetpointManagerKind"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Only a finite ordered outdoor reset carries nonzero limits."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed setpoint manager does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This setpoint manager already runs the control law."
+      }
+    }
+  }
 }

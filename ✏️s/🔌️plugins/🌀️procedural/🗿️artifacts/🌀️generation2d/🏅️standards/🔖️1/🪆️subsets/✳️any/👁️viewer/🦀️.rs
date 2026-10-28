@@ -79,9 +79,9 @@ impl ArtifactViewer for Generation2dViewer {
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
-    fn initial_snapshot() -> Generation2dSnapshot {
+    fn reference_birth()->Option<fn()->Generation2dSnapshot>{Some(||{
         semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Generation2dViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no

@@ -60,5 +60,42 @@
         }
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "field": "mounting",
+    "input": "new_mounting",
+    "key": "id",
+    "labels": {
+      "en": "Change pv system: Mounting",
+      "de": "Montage ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "pv-system",
+      "kind": "change-pv-system-mounting",
+      "record": "ChangedPvSystemMounting"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Mounting violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The pv system already carries this mounting value."
+      }
+    }
   }
 }

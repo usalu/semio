@@ -14,15 +14,16 @@ pub use shared::NativeSharedReceiver;
 #[path="📥️default/🦀️.rs"]
 mod defaults;
 pub use defaults::NativeDefault;
-#[cfg(test)]
-pub(crate) struct OriginalConstructionFixture;
-#[cfg(test)]
+#[cfg(any(test,feature="testkit"))]
+pub struct OriginalConstructionFixture;
+#[cfg(any(test,feature="testkit"))]
 impl super::NativeDecodeConstructionRecipient for OriginalConstructionFixture{
  fn grant(&mut self,_:RetirementDemand)->Result<RetainedCloneGrant,ValueError>{Ok(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:65536,maximum_depth:64})}
  fn accept(&mut self,g:RetainedCloneGrant,p:RetainedCloneProgress)->Result<(),ValueError>{assert!(p.fits(g));Ok(())}
 }
 
 #[path="🌳️value/🦀️.rs"]pub mod tree;
+#[path="🗂️map/🦀️.rs"]pub mod map;
 
 fn receiving_child_body_budget(body:usize,metadata:usize)->usize{body.saturating_sub(metadata)}
 
@@ -57,3 +58,7 @@ pub trait NativeReceiver<I:?Sized,T>:Send+'static{
 #[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
 #[cfg(test)]#[path="📋️list/🧪️tests/🦀️.rs"]mod list_tests;
 #[cfg(test)]#[path="../../✨️derive/🛬️receive/🔀️enum/🧪️tests/🦀️.rs"]mod payload_enum_tests;
+
+#[path="🔄️map/🦀️.rs"]
+pub mod mapped;
+pub use mapped::{NativeReceiveMap,NativeMappedReceiver};

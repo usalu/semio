@@ -26,3 +26,7 @@ semio-framework-value = { workspace = true }
 
 [features]
 testkit = []
+
+[dev-dependencies]
+semio-framework-job={workspace=true,features=["testkit"]}
+semio-framework-trace={workspace=true}

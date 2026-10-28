@@ -1,0 +1,19 @@
+[package]
+workspace = "../../../../../../../../.."
+name = "semio-s-artifact-energy-model-native-derive"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+[package.metadata.semio]
+role = "generator"
+[lints]
+workspace = true
+[lib]
+proc-macro = true
+path = "../../🦀️.rs"
+[dependencies]
+proc-macro2 = "1"
+quote = "1"
+syn = { version = "2", features = ["full"] }
+serde_json = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }

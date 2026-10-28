@@ -38,6 +38,9 @@ pub struct MediaTransfers<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> MediaTransfers<A> {
+    /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_exports,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.media_closures,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.snapshot_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_downloads,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.segmented_closures,64)?])}
+
     /// 💉️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new() -> Self {
         Self {
@@ -93,25 +96,31 @@ pub struct EnvelopeJobs<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory>
     /// action only ever decodes a whole file (`semio_framework::kernel::ImportStaging`).
     pub import_staging: semio_framework::kernel::ImportStaging,
     pub document_archive_loads: ArtifactFixedRegistry<ActiveDocumentArchiveLoad<A::Snapshot, A::Mutation>>,
-    pub envelope_field_decoders: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot, A::Mutation>>,
+    pub envelope_field_decoders: store::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot, A::Mutation>>,
     pub envelope_field_decoder_retirements: ArtifactFixedRegistry<store::os_store::owned_schema_decode::ArtifactEnvelopeReturnedFieldDecoder<A::Snapshot, A::Mutation>>,
-    pub envelope_completed_records: std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot, A::Mutation>>,
+    pub envelope_completed_records: store::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot, A::Mutation>>,
     pub envelope_completed_record_retirements: ArtifactFixedRegistry<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<A::Snapshot, A::Mutation>>>,
     pub document_snapshot_read_returns: SnapshotReadReturnPump,
 }
 
-impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> EnvelopeJobs<A, M> {
+    /// 📏️ Quotes the component frame and fixed registries while preserving the separately admitted decoder issuers.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_ingress,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_decode_jobs,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.store_replacement_jobs,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_field_decoder_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.envelope_completed_record_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.document_archive_loads,DOCUMENT_ARCHIVE_LOAD_SLOTS)?])}
+
     /// 🪸️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new() -> Self {
+    pub fn new() -> Self {Self::from_original(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry::new(),store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry::new())}
+
+    /// 🧷️ Retains the actual admitted decoder and completion issuers during native component construction.
+    pub fn from_original(field_decoders:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry<A::Snapshot,A::Mutation>>,completed_records:std::sync::Arc<store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry<A::Snapshot,A::Mutation>>)->Self{
         Self {
             envelope_ingress: ArtifactFixedRegistry::new(),
             envelope_decode_jobs: ArtifactFixedRegistry::new(),
             store_replacement_jobs: ArtifactFixedRegistry::new(),
             import_staging: semio_framework::kernel::ImportStaging::default(),
             document_archive_loads: ArtifactFixedRegistry::with_slots(DOCUMENT_ARCHIVE_LOAD_SLOTS),
-            envelope_field_decoders: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry::new(),
+            envelope_field_decoders: store::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner::from_original(field_decoders),
             envelope_field_decoder_retirements: ArtifactFixedRegistry::new(),
-            envelope_completed_records: store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordRegistry::new(),
+            envelope_completed_records: store::os_store::owned_schema_decode::ArtifactEnvelopeRegistryOwner::from_original(completed_records),
             envelope_completed_record_retirements: ArtifactFixedRegistry::new(),
             document_snapshot_read_returns: SnapshotReadReturnPump::new(),
         }

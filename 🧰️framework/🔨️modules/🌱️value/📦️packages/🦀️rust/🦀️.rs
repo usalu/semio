@@ -9,7 +9,7 @@ pub use semio_framework_io_base64::{base64_standard_encode,base64_standard_decod
 pub use semio_framework_value_derive::{CanonicalJsonTree, FromValue, NativeReceive, RetainedClone, RetainedEquality, RetireOwned, SnapshotProjection, ToValue};
 
 pub use semio_framework_value_retirement::retirement;
-pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetirementDemand,factory_ticket_demands,close_factory_ticket,close_factory_ticket_original,owned_retirement_birth_bytes,admit_owned_retirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement,artifact_retire_leaf,artifact_retirement_sequence,artifact_retire_struct};
+pub use semio_framework_value_retirement::{ErasedSnapshotRetirement,RetirementDemand,factory_ticket_demands,close_factory_ticket,close_factory_ticket_original,owned_retirement_birth_bytes,admit_owned_retirement,shared_retirement_birth_bytes,shared_retirement_allocation_bytes,admit_shared_retirement,artifact_retire_leaf,artifact_retirement_sequence,artifact_retire_struct,OriginalRetirementControl,RetirementSelection,select_retirement_cursor,select_factory_ticket,close_factory_ticket_controlled};
 #[path = "../../🧬️retained-clone/🦀️.rs"]
 pub mod retained_clone;
 pub use retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, RetainedOwnedProjection};

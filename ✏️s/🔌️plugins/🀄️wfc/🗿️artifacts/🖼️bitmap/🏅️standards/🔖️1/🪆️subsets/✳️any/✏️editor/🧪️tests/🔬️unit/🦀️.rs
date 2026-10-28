@@ -44,7 +44,7 @@ fn the_manifest_binds_both_windows_and_a_row_layout() {
 
 #[test]
 fn the_editor_boots_the_committed_example_rather_than_an_empty_default() {
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     assert_eq!(snapshot, crate::examples::rooms_16::snapshot());
     assert!(snapshot.input.indices().is_some());
 }
@@ -95,7 +95,7 @@ fn every_typed_command_dispatches_to_the_mutation_it_names() {
 /// example — every colour is painted and nothing is pinned — but a refusal must SAY so.
 #[test]
 fn every_dispatched_mutation_either_moves_the_boot_example_or_says_why_not() {
-    let base = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let base = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     for (command, kind) in commands() {
         let Some(mutation) = BitmapEditor::command_mutation(&command) else { continue };
         let outcome = <BitmapMutation as protocol::ColdMutation<BitmapSnapshot>>::diff(&mutation, &base);
@@ -166,7 +166,7 @@ fn the_solve_transient_prints_and_packs_its_own_envelope() {
 #[test]
 fn the_solve_command_publishes_a_real_collapse_on_the_transient_lane() {
     use crate::editor::bitmap::transient::BitmapTransientMutation;
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let BitmapTransientMutation::SetSolve(solve) = BitmapEditor::solve_transient(&snapshot).expect("the boot example's solve runs");
     assert!(!solve.contradiction, "the boot example must collapse");
     assert_eq!((solve.output_width, solve.output_height), (snapshot.output.width, snapshot.output.height));
@@ -247,7 +247,7 @@ fn the_manifest_declares_the_fill_tool_on_edit_mode() {
 #[test]
 fn solve_starts_the_fill_run_instead_of_writing_set_solve() {
     use semio_framework_plugin::{AppOperationContext, Effect, HistoryView};
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let history = HistoryView::empty();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "wfc-bitmap-fill".into(), operation_id: 1, generation: 0, canonical_base_revision: [0; 32], authoring_seed: "authoring-seed-test".into() };
     let config = NoConfig {};
@@ -263,7 +263,7 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
     use semio_framework_plugin::ToolRunView;
     use semio_framework_tool_run::{ToolRunId, ToolRunIdentity, ToolRunState};
 
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
     let finished_pixels = crate::inferences::solve_with_clock(&snapshot, semio_framework_job::logical_now_us).expect("oracle");
     let finished = BitmapTransient {
@@ -287,7 +287,7 @@ fn a_partial_fill_render_differs_from_empty_and_finished() {
 fn a_contradiction_transient_paints_a_distinct_overlay() {
     use crate::editor::bitmap::modes::edit::windows::output::{self, config::BitmapOutputWindowConfig};
     use crate::editor::bitmap::transient::BitmapTransient;
-    let snapshot = <BitmapEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <BitmapEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let empty = output::render_layers_fingerprint(&snapshot, &BitmapTransient::default(), &BitmapOutputWindowConfig::default(), None);
     let contradiction = BitmapTransient { output_pixels: None, contradiction: true, output_width: snapshot.output.width, output_height: snapshot.output.height };
     let layers = output::render_layers_fingerprint(&snapshot, &contradiction, &BitmapOutputWindowConfig::default(), None);

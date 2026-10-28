@@ -19,7 +19,7 @@ pub fn install_plugin_bundle_result<PA: PluginApp>(runtime: &PluginRuntime<PA>, 
     match bundle {
         Ok(bundle) => install_plugin_bundle(runtime, bundle),
         Err(error) => {
-            *runtime.plugin_assembly_error.borrow_mut() = Some(Fault::new(FaultOrigin::Plugin, FaultCode::new(error.code), error.message));
+            *runtime.plugin_assembly_error.borrow_mut() = Some(error.into_fault());
         }
     }
 }

@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Energy Row Birth Fields",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "row",
+    "fields",
+    "recreation"
+  ],
+  "properties": {
+    "row": {
+      "type": "string",
+      "pattern": "^State[A-Z][A-Za-z0-9]+$"
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "field",
+          "storage"
+        ],
+        "properties": {
+          "field": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "input": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "storage": {
+            "enum": [
+              "fixed",
+              "sealed",
+              "sealed-copy",
+              "optional-number",
+              "fixed-array",
+              "paired-bounds",
+              "empty-vector",
+              "surface-boundary",
+              "setpoint-kind",
+              "present-reference"
+            ]
+          },
+          "presence": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "length": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 24
+          },
+          "upper": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "item": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128
+          },
+          "partner": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_]*$"
+          },
+          "limits": {
+            "type": "array",
+            "minItems": 4,
+            "maxItems": 4,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_]*$"
+            }
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "storage": {
+                  "const": "optional-number"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "presence"
+              ],
+              "properties": {
+                "presence": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "storage": {
+                  "const": "fixed-array"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "length"
+              ],
+              "properties": {
+                "length": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "storage": {
+                  "const": "paired-bounds"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "upper"
+              ],
+              "properties": {
+                "upper": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "storage": {
+                  "const": "empty-vector"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "item"
+              ],
+              "properties": {
+                "item": true
+              }
+            },
+            "else": {
+              "type": "object",
+              "required": [
+                "input"
+              ],
+              "properties": {
+                "input": true
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "storage": {
+                  "const": "surface-boundary"
+                }
+              }
+            },
+            "then": {
+              "type": "object",
+              "required": [
+                "partner"
+              ],
+              "properties": {
+                "partner": true
+              }
+            }
+          }
+        ]
+      }
+    },
+    "recreation": {
+      "enum": [
+        "exact",
+        "separate-intents"
+      ]
+    }
+  }
+}

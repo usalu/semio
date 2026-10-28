@@ -114,3 +114,5 @@ pub struct StyleSpec {
 #[cfg(test)]
 #[path="🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+semio_framework_value::artifact_retire_leaf!(Tone);

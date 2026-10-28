@@ -26,7 +26,7 @@ impl ToolRunTick {
     pub fn encode(&self) -> Result<Vec<u8>, ToolRunCodecError> {
         validate_tick_payload(self.payload.as_deref(),self.payload_update)?;
         let mut record = RecordValue::default();
-        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)));
+        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)?));
         record.fields.insert(2, FieldValue::UInt(self.sequence));
         if let Some(progress) = &self.progress {
             record.fields.insert(3, FieldValue::Record(progress_record(progress)?));
@@ -35,19 +35,19 @@ impl ToolRunTick {
             record.fields.insert(4, FieldValue::List(self.steps.iter().map(|step| step_record(step).map(FieldValue::Record)).collect::<Result<_, _>>()?));
         }
         if !self.trace.is_empty() {
-            record.fields.insert(5, FieldValue::List(self.trace.iter().map(|page| page.encode().map(FieldValue::Bytes64)).collect::<Result<_, _>>()?));
+            record.fields.insert(5, FieldValue::List(self.trace.iter().map(|page| page.encode().and_then(|bytes|record_octets(&bytes))).collect::<Result<_, _>>()?));
         }
         if !self.append_ops.is_empty() {
-            record.fields.insert(6, FieldValue::List(self.append_ops.iter().map(|op| FieldValue::Bytes64(op.clone())).collect()));
+            record.fields.insert(6, FieldValue::List(self.append_ops.iter().map(|op|record_octets(op)).collect::<Result<_,_>>()?));
         }
         if !self.append_entities.is_empty() {
-            record.fields.insert(7, FieldValue::Bytes64(self.append_entities.iter().flat_map(|entity| entity.to_le_bytes()).collect()));
+            record.fields.insert(7, record_octets(&self.append_entities.iter().flat_map(|entity|entity.to_le_bytes()).collect::<Vec<_>>())?);
         }
         if let Some(retract_to) = self.retract_to {
             record.fields.insert(8, FieldValue::UInt(u64::from(retract_to)));
         }
         if let Some(payload) = &self.payload {
-            record.fields.insert(9, FieldValue::Bytes64(payload.clone()));
+            record.fields.insert(9, record_octets(payload)?);
         }
         if let Some(update)=self.payload_update{record.fields.insert(10,FieldValue::Record(payload_update_record(update)));}
         let bytes = encode_body(tick_spec(), &record)?;
@@ -57,8 +57,8 @@ impl ToolRunTick {
         Ok(bytes)
     }
 
-    pub fn decode(bytes: &[u8]) -> Result<Self, ToolRunCodecError> {
-        if bytes.len() > TOOL_RUN_TICK_BYTES_MAX {
+    pub fn decode<S:semio_framework_value::ByteReadSource+?Sized>(bytes:&S) -> Result<Self, ToolRunCodecError> {
+        if bytes.byte_len() > TOOL_RUN_TICK_BYTES_MAX {
             return Err(ToolRunCodecError::Limit("tick bytes"));
         }
         let mut record = decode_body(tick_spec(), bytes)?;
@@ -68,14 +68,14 @@ impl ToolRunTick {
             Some(_) => return Err(ToolRunCodecError::Malformed("progress")),
         };
         let steps = list(&record, 4)?.iter().map(|item| step_from_record(item_record(item)?)).collect::<Result<_, _>>()?;
-        let trace = list(&record, 5)?.iter().map(|item| ToolRunTracePage::decode(item_bytes(item)?)).collect::<Result<_, _>>()?;
-        let append_ops = list(&record, 6)?.iter().map(|item| item_bytes(item).map(<[u8]>::to_vec)).collect::<Result<_, _>>()?;
+        let trace = list(&record, 5)?.iter().map(|item| ToolRunTracePage::decode(&item_bytes(item)?)).collect::<Result<_, _>>()?;
+        let append_ops = list(&record, 6)?.iter().map(|item| item_bytes(item).map(|bytes|bytes.iter().collect::<Vec<_>>())).collect::<Result<_, _>>()?;
         let append_entities = u64_column(bytes_field(&record, 7)?, "appendEntities")?;
         let retract_to = optional_uint(&record, 8)?.map(|value| narrow(value, "retractTo")).transpose()?;
         let payload_update=match record.get(10){None|Some(FieldValue::Absent)=>None,Some(FieldValue::Record(update))=>Some(payload_update_from_record(update)?),Some(_)=>return Err(ToolRunCodecError::Malformed("payload update"))};
         let payload = match record.fields.remove(&9) {
             None | Some(FieldValue::Absent) => None,
-            Some(FieldValue::Bytes64(payload)) => Some(payload),
+            Some(FieldValue::Bytes64(payload)) => Some(payload.iter().collect::<Vec<_>>()),
             Some(_) => return Err(ToolRunCodecError::Malformed("payload")),
         };
         validate_tick_payload(payload.as_deref(),payload_update)?;

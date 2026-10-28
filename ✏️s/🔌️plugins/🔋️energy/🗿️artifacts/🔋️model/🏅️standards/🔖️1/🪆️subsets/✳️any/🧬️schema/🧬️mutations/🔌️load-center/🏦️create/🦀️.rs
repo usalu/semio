@@ -1,14 +1,14 @@
 //! 🏦️ Energy model mutation — `CreateElectricalLoadCenter`: Adds one electrical load centre — the node that sums on-site generation and storage against the building's electrical demand. `pvIds` and `batteryIds` are checked against the document; `generatorIds` is carried verbatim and NOT checked, because `Model` has no generator collection for it to reference (vocabulary §5.4), which is also why this group ships no `add-electrical-load-center-generator`.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🏦️ `create-electrical-load-center` payload. Adds one electrical load centre — the node that sums on-site generation and storage against the building's electrical demand. `pvIds` and `batteryIds` are checked against the document; `generatorIds` is carried verbatim and NOT checked, because `Model` has no generator collection for it to reference (vocabulary §5.4), which is also why this group ships no `add-electrical-load-center-generator`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeRowBirth, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
+#[energy_native_birth(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-electrical-load-center")]
 pub struct CreateElectricalLoadCenter {
@@ -23,41 +23,5 @@ pub struct CreateElectricalLoadCenter {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn create_electrical_load_center<Op: From<CreateElectricalLoadCenter>>(index: u32, id: crate::model::EntityId, name: String, generator_ids: Vec<crate::model::EntityId>, pv_ids: Vec<crate::model::EntityId>, battery_ids: Vec<crate::model::EntityId>) -> Op {
     CreateElectricalLoadCenter { index, id, name, generator_ids, pv_ids, battery_ids }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateElectricalLoadCenter
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateElectricalLoadCenter> + From<crate::DeleteElectricalLoadCenter>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "electrical-load-center", kind: "create-electrical-load-center", record: "CreatedElectricalLoadCenter" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Electrical Load Center {} at index {}", self.id.0, self.index), &format!("Stromverteiler {} an Index {} erstellen", self.id.0, self.index))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreateElectricalLoadCenter
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreateElectricalLoadCenter> + From<crate::DeleteElectricalLoadCenter>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

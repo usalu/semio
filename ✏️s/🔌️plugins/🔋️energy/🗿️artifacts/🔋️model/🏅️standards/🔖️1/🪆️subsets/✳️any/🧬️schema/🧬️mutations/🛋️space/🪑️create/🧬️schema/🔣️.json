@@ -113,5 +113,94 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateSpace",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "floor_area_m2",
+        "input": "floor_area_m2",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateSpace",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "spaces",
+    "key": "id",
+    "inverse": "DeleteSpace",
+    "labels": {
+      "en": "Create space \\",
+      "de": "Raum \\"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "space",
+      "kind": "create-space",
+      "record": "CreatedSpace"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "row"
+      }
+    ],
+    "defaultRank": "id-order",
+    "scalarOrder": "after-rules",
+    "name": "name",
+    "nameValidation": "nonblank",
+    "unique": false
   }
 }

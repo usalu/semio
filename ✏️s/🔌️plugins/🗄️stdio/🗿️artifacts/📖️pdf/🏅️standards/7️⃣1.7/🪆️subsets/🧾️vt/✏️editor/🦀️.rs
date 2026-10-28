@@ -149,9 +149,9 @@ impl ArtifactEditor for Pdf17VtEditor {
         })
     }
 
-    fn initial_snapshot() -> PdfSnapshot {
+    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
         <crate::standards::v1_7::subsets::vt::io::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<crate::standards::v1_7::subsets::vt::io::PdfVtBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::empty()).expect("authored blank VT owner must satisfy its profile")
-    }
+    })}
 
     /// ✏️ Replaces the addressed page's Unicode text projection while retaining encoded text,
     /// graphics, geometry, metadata, and every non-text content operator.

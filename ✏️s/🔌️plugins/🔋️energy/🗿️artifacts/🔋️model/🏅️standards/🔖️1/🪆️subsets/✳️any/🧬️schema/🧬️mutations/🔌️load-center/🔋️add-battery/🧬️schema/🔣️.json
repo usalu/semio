@@ -76,5 +76,63 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "membership-row",
+    "membership": "insert",
+    "row": "StateElectricalLoadCenter",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "electrical_load_centers",
+    "field": "battery_ids",
+    "input": "battery_id",
+    "key": "id",
+    "memberKind": "EntityId",
+    "indexMode": "required",
+    "duplicate": "no-op",
+    "rankBeforeDuplicate": true,
+    "positiveMember": false,
+    "inverse": "RemoveElectricalLoadCenterBattery",
+    "inverseMember": "battery_id",
+    "labels": {
+      "en": "Add Battery",
+      "de": "Batterie hinzufügen"
+    },
+    "semantics": {
+      "verb": "add",
+      "entity": "ElectricalLoadCenter",
+      "kind": "AddElectricalLoadCenterBattery",
+      "record": "AddElectricalLoadCenterBattery"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored member identity must be valid."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed row, membership or insertion rank does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced member does not exist in its authored collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original row already contains this member."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original row already contains this member."
+      }
+    },
+    "member": "battery_id",
+    "index": "index",
+    "memberReference": "Batteries"
   }
 }

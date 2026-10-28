@@ -14,6 +14,6 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 
 #[test]
 fn initial_snapshot_is_non_empty() {
-    let snapshot = <Fem2dViewer as ArtifactViewer>::initial_snapshot();
+    let snapshot = <Fem2dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")();
     assert!(!snapshot.nodes.is_empty(), "expected the bundled example fixture's nodes");
 }

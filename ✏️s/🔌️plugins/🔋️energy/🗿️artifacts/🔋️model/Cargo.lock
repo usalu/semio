@@ -1200,6 +1200,8 @@ dependencies = [
  "semio-framework-tool-run",
  "semio-framework-ui-locale",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-ordered",
  "serde",
 ]
 
@@ -1772,6 +1774,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-schema-state",
  "semio-framework-value",
+ "serde",
 ]
 
 [[package]]
@@ -1797,6 +1800,7 @@ dependencies = [
  "semio-framework-os-vcs",
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-paged-list",
  "serde",
  "web-sys",
 ]
@@ -1807,6 +1811,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -2074,6 +2079,7 @@ name = "semio-framework-os-store-engine"
 version = "0.1.0"
 dependencies = [
  "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-directory",
@@ -2272,9 +2278,11 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-pack",
+ "semio-framework-os-semio",
  "semio-framework-os-spr",
  "semio-framework-os-store-canonical-json",
  "semio-framework-os-store-durable-group-wire",
+ "semio-framework-os-store-engine-bundle",
  "semio-framework-os-store-engine-live",
  "semio-framework-os-store-envelope",
  "semio-framework-os-store-ledger",
@@ -2328,14 +2336,17 @@ dependencies = [
 name = "semio-framework-os-store-initialization-replay"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-job-publication",
  "semio-framework-os-spr",
+ "semio-framework-os-store-canonical-json",
  "semio-framework-os-store-engine",
  "semio-framework-os-store-engine-owners",
  "semio-framework-os-store-initialization-runtime",
  "semio-framework-os-store-ledger",
+ "semio-framework-os-store-operation-wire",
  "semio-framework-os-store-owned-schema-decode",
  "semio-framework-os-store-read",
  "semio-framework-os-store-replay",
@@ -2343,6 +2354,8 @@ dependencies = [
  "semio-framework-os-vcs",
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -2376,6 +2389,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os-pack",
  "semio-framework-os-spr",
+ "semio-framework-os-store-canonical-json",
  "semio-framework-os-store-command",
  "semio-framework-os-store-envelope",
  "semio-framework-os-store-message-ledger",
@@ -2511,6 +2525,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-framework-value-snapshot-read",
  "serde",
 ]
@@ -2520,6 +2535,8 @@ name = "semio-framework-os-store-operation-wire"
 version = "0.1.0"
 dependencies = [
  "semio-framework-dsl-record",
+ "semio-framework-hash",
+ "semio-framework-job",
  "semio-framework-os-pack",
  "semio-framework-os-spr",
  "semio-framework-os-store-canonical-json",
@@ -2527,6 +2544,7 @@ dependencies = [
  "semio-framework-os-store-one-item",
  "semio-framework-os-store-one-item-publication",
  "semio-framework-pack-json",
+ "semio-framework-replication-causal",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
@@ -2605,6 +2623,7 @@ dependencies = [
  "semio-framework-os-store-ledger",
  "semio-framework-os-store-message-ledger",
  "semio-framework-os-store-one-item",
+ "semio-framework-os-store-operation-wire",
  "semio-framework-os-store-projection",
  "semio-framework-os-store-replay",
  "semio-framework-os-store-replay-operation",
@@ -2778,6 +2797,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-schema-composition",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-snapshot-read",
 ]
 
@@ -3256,6 +3276,7 @@ dependencies = [
  "semio-framework-time-travel",
  "semio-framework-tool-machine",
  "semio-framework-tool-run",
+ "semio-framework-tool-run-presentation",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-contract-validation",
@@ -3294,6 +3315,7 @@ name = "semio-framework-plugin-actor-host"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-job",
  "semio-framework-job-worker",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
@@ -3377,6 +3399,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-os-store-operation-wire",
  "semio-framework-plugin-actor-host",
  "semio-framework-plugin-decl-app",
  "semio-framework-plugin-decl-emission",
@@ -3464,6 +3487,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-plugin-actor-host",
  "semio-framework-plugin-decl-emission",
  "semio-framework-plugin-decl-views",
  "semio-framework-plugin-interaction",
@@ -3478,6 +3502,7 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-tool-machine",
  "semio-framework-tool-run",
+ "semio-framework-tool-run-presentation",
  "semio-framework-ui-contract",
  "semio-framework-ui-layout",
  "semio-framework-ui-locale",
@@ -3495,6 +3520,7 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-job",
  "semio-framework-os-kernel",
  "semio-framework-plugin-actor-host",
  "semio-framework-plugin-decl-views",
@@ -3506,6 +3532,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -3526,6 +3553,7 @@ dependencies = [
  "semio-framework-plugin-decl-app",
  "semio-framework-plugin-decl-surface",
  "semio-framework-plugin-identity",
+ "semio-framework-plugin-job",
  "semio-framework-plugin-mounted-owner",
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-reactor-app",
@@ -3597,6 +3625,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-tool-machine",
  "semio-framework-tool-run",
+ "semio-framework-tool-run-presentation",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
@@ -3643,6 +3672,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "serde_json",
 ]
 
 [[package]]
@@ -3761,6 +3791,8 @@ dependencies = [
  "semio-framework-ui-runtime",
  "semio-framework-value",
  "semio-framework-value-native-owned",
+ "semio-framework-value-factory",
+ "semio-framework-value-snapshot-read",
 ]
 
 [[package]]
@@ -4016,6 +4048,7 @@ dependencies = [
  "semio-framework-ui-runtime",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-persistent",
 ]
 
 [[package]]
@@ -4196,6 +4229,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework",
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-os-command",
  "semio-framework-os-kernel",
@@ -4246,6 +4280,8 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "serde_json",
 ]
 
@@ -4280,15 +4316,21 @@ dependencies = [
  "semio-framework",
  "semio-framework-async",
  "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-job-worker",
  "semio-framework-job-worker-authority",
  "semio-framework-os-kernel",
+ "semio-framework-os-store-replay",
  "semio-framework-pack",
  "semio-framework-trace",
  "semio-framework-value",
  "semio-framework-value-native-owned",
  "semio-framework-value-ordered",
+ "semio-framework-value-factory",
+ "semio-framework-value-snapshot-projection",
+ "semio-framework-value-snapshot-read",
  "serde_json",
 ]
 
@@ -4329,6 +4371,7 @@ dependencies = [
  "semio-framework-ui-contract",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
 ]
 
 [[package]]
@@ -4373,6 +4416,7 @@ dependencies = [
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-peer",
  "semio-framework-plugin-window-config",
+ "semio-framework-plugin-window-kits",
  "semio-framework-plugin-window-transient",
  "semio-framework-tool-run",
  "semio-framework-trace",
@@ -4641,6 +4685,7 @@ dependencies = [
  "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-kits",
  "semio-framework-plugin-window-transient",
+ "semio-framework-replication",
  "semio-framework-trace",
  "semio-framework-ui-contract",
  "semio-framework-value",
@@ -4723,6 +4768,7 @@ dependencies = [
  "semio-framework-plugin-reactor-lifecycle",
  "semio-framework-plugin-runtime-instances",
  "semio-framework-plugin-testing-caller",
+ "semio-framework-plugin-window-config",
  "semio-framework-plugin-window-transient",
  "semio-framework-schema-registry",
  "semio-framework-trace",
@@ -4731,6 +4777,7 @@ dependencies = [
  "semio-framework-ui-runtime",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "serde",
  "serde_json",
 ]
@@ -4942,6 +4989,7 @@ dependencies = [
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-os-kernel",
+ "semio-framework-os-store-operation-wire",
  "semio-framework-plugin-decl-app",
  "semio-framework-plugin-decl-emission",
  "semio-framework-plugin-decl-views",
@@ -4956,12 +5004,15 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-tool-machine",
  "semio-framework-tool-run",
+ "semio-framework-tool-run-entities",
+ "semio-framework-tool-run-presentation",
  "semio-framework-tool-run-tick-wire",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-ui-scene",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "semio-framework-value-original-aliases",
  "semio-framework-value-retirement",
  "serde_json",
@@ -5010,10 +5061,14 @@ name = "semio-framework-plugin-window-config"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
+ "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-os-kernel",
+ "semio-framework-os-store-codec-registry",
+ "semio-framework-os-store-operation-wire",
+ "semio-framework-os-store-text-io",
  "semio-framework-plugin-ownership",
  "semio-framework-plugin-window-config-replace",
  "semio-framework-tool-run",
@@ -5051,6 +5106,7 @@ dependencies = [
  "semio-framework-ui-scene",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-persistent",
  "serde",
  "serde_json",
 ]
@@ -5209,6 +5265,7 @@ dependencies = [
  "semio-framework-replication-mutation",
  "semio-framework-replication-wire-core",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
 ]
 
@@ -5251,6 +5308,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-hash",
  "semio-framework-pack-error",
+ "semio-framework-pack-json",
  "semio-framework-replication-causal",
  "semio-framework-replication-crypto",
  "semio-framework-replication-edit",
@@ -5280,6 +5338,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-pack-json",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "serde",
 ]
 
@@ -5492,6 +5551,7 @@ dependencies = [
  "semio-framework-replication",
  "semio-framework-ui-locale",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
  "semio-framework-value-persistent",
  "semio-framework-value-shared-issuance",
  "serde",
@@ -5506,6 +5566,24 @@ dependencies = [
  "semio-framework-manifest-arg-schema",
  "semio-framework-tool-run",
  "semio-framework-ui-locale",
+]
+
+[[package]]
+name = "semio-framework-tool-run-entities"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-value",
+ "semio-framework-value-shared-issuance",
+]
+
+[[package]]
+name = "semio-framework-tool-run-presentation"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-tool-run",
+ "semio-framework-tool-run-entities",
+ "semio-framework-value",
+ "semio-framework-value-shared-issuance",
 ]
 
 [[package]]
@@ -5605,6 +5683,7 @@ version = "0.1.0"
 dependencies = [
  "semio-framework-ui-contract-components",
  "semio-framework-ui-contract-values",
+ "serde",
 ]
 
 [[package]]
@@ -5632,6 +5711,9 @@ dependencies = [
 [[package]]
 name = "semio-framework-ui-contract-text-edit"
 version = "0.1.0"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "semio-framework-ui-contract-validation"
@@ -5647,6 +5729,7 @@ dependencies = [
 name = "semio-framework-ui-contract-values"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-job",
  "semio-framework-ui-contract-budget",
  "semio-framework-ui-contract-identity",
  "semio-framework-ui-contract-text",
@@ -6041,6 +6124,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-ordered",
  "semio-framework-value-persistent",
  "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
@@ -6054,6 +6138,7 @@ dependencies = [
  "semio-framework-value-control-contract",
  "semio-framework-value-intrinsic",
  "semio-framework-value-native-decoding",
+ "semio-framework-value-retained-clone",
  "semio-framework-value-retirement",
  "serde",
 ]
@@ -6291,6 +6376,7 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
+ "semio-framework-plugin-ownership",
  "semio-framework-plugin-retained-command",
  "semio-framework-tool-run",
  "semio-framework-ui-locale",
@@ -6304,16 +6390,25 @@ dependencies = [
  "semio-s-artifact-energy-model-editor-results",
  "semio-s-artifact-energy-model-examples",
  "semio-s-artifact-energy-model-import",
+ "semio-s-artifact-energy-model-initialization",
  "semio-s-artifact-energy-model-mut-boundary",
  "semio-s-artifact-energy-model-mut-construction",
+ "semio-s-artifact-energy-model-mut-equipment-gain",
  "semio-s-artifact-energy-model-mut-fenestration",
  "semio-s-artifact-energy-model-mut-finish",
  "semio-s-artifact-energy-model-mut-glazing",
+ "semio-s-artifact-energy-model-mut-ideal-loads",
+ "semio-s-artifact-energy-model-mut-infiltration",
+ "semio-s-artifact-energy-model-mut-leakage",
+ "semio-s-artifact-energy-model-mut-lighting-gain",
  "semio-s-artifact-energy-model-mut-material",
  "semio-s-artifact-energy-model-mut-model",
+ "semio-s-artifact-energy-model-mut-people-gain",
  "semio-s-artifact-energy-model-mut-run",
+ "semio-s-artifact-energy-model-mut-shading",
  "semio-s-artifact-energy-model-mut-shading-device",
  "semio-s-artifact-energy-model-mut-site",
+ "semio-s-artifact-energy-model-mut-space",
  "semio-s-artifact-energy-model-mut-surface",
  "semio-s-artifact-energy-model-mut-thermostat",
  "semio-s-artifact-energy-model-mut-window-layer",
@@ -6323,6 +6418,7 @@ dependencies = [
  "semio-s-artifact-energy-model-session",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-artifact-stdio-semio",
+ "semio-s-plugin-energy-engine-air-exchange",
  "semio-s-plugin-energy-engine-calendar",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -6333,18 +6429,29 @@ dependencies = [
 name = "semio-s-artifact-energy-model-editor-commands"
 version = "0.1.0"
 dependencies = [
+ "semio-framework",
+ "semio-framework-action-bus",
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-job",
+ "semio-framework-manifest-mutation-inputs",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
- "semio-framework-plugin",
+ "semio-framework-plugin-command",
+ "semio-framework-plugin-decl-app",
+ "semio-framework-plugin-interaction",
+ "semio-framework-plugin-ownership",
+ "semio-framework-plugin-window-kits",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-energy-model-editor-config",
  "semio-s-artifact-fem-2d-editor-model-window",
+ "semio-s-artifact-energy-model-mutations",
+ "semio-s-artifact-energy-model-native-mutations",
+ "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
 
@@ -6362,9 +6469,15 @@ dependencies = [
  "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-schema-state",
+ "semio-framework-job",
+ "semio-framework-os-store-codec-registry",
+ "semio-framework-os-store-operation-wire",
+ "semio-framework-plugin-ownership",
+ "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "semio-s-artifact-energy-model-session",
  "semio-s-plugin-energy-engine-kernel",
  "serde",
@@ -6375,6 +6488,7 @@ dependencies = [
 name = "semio-s-artifact-energy-model-editor-edit"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-async-macros",
  "semio-framework-diagnostic",
@@ -6388,6 +6502,7 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-schema-state",
  "semio-framework-tool-run",
+ "semio-framework-tool-run-entities",
  "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
@@ -6433,6 +6548,7 @@ dependencies = [
  "semio-s-artifact-energy-model-editor-interaction",
  "semio-s-artifact-energy-model-examples",
  "semio-s-artifact-energy-model-snapshot",
+ "semio-s-plugin-energy-engine-air-exchange",
  "semio-s-plugin-energy-engine-bestest",
  "semio-s-plugin-energy-engine-geometry",
  "semio-s-plugin-energy-engine-material",
@@ -6533,6 +6649,22 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-artifact-energy-model-initialization"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-dsl-record",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-os-store-operation-wire",
+ "semio-framework-plugin-ownership",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-s-artifact-energy-model-mutations",
+ "semio-s-artifact-energy-model-snapshot",
+ "serde_json",
+]
+
+[[package]]
 name = "semio-s-artifact-energy-model-io"
 version = "0.1.0"
 dependencies = [
@@ -6559,8 +6691,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6576,8 +6712,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6593,8 +6733,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6610,8 +6754,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6627,8 +6775,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-schedule",
 ]
@@ -6644,8 +6796,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6661,8 +6817,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6678,8 +6838,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -6696,8 +6860,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -6714,8 +6882,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-geometry",
  "semio-s-plugin-energy-engine-model",
@@ -6732,8 +6904,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6749,8 +6925,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-schedule",
 ]
@@ -6766,8 +6946,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6783,8 +6967,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -6801,8 +6989,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6818,8 +7010,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-air-exchange",
  "semio-s-plugin-energy-engine-model",
@@ -6837,8 +7033,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6854,8 +7054,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -6872,8 +7076,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6889,8 +7097,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6904,13 +7116,20 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
+ "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
+ "serde_json",
 ]
 
 [[package]]
@@ -6924,8 +7143,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6941,8 +7164,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -6959,8 +7186,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -6976,8 +7207,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7010,8 +7245,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7028,8 +7267,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7045,7 +7288,11 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
 ]
 
@@ -7060,8 +7307,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7078,8 +7329,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7096,8 +7351,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7113,8 +7372,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7131,8 +7394,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
 ]
 
@@ -7147,8 +7414,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7164,8 +7435,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7181,8 +7456,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7198,8 +7477,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7215,10 +7498,14 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
  "semio-s-artifact-energy-model-mut-boundary",
  "semio-s-artifact-energy-model-mut-fenestration",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7234,8 +7521,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7252,8 +7543,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-schedule",
 ]
@@ -7269,8 +7564,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7287,8 +7586,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-schedule",
@@ -7305,6 +7608,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
  "semio-s-artifact-energy-model-snapshot",
@@ -7322,8 +7626,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7339,8 +7647,11 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7356,8 +7667,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-schedule",
 ]
@@ -7370,13 +7685,20 @@ dependencies = [
  "semio-framework-dsl-record-derive",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
+ "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
+ "serde_json",
 ]
 
 [[package]]
@@ -7390,8 +7712,12 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-diff-patch",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
 ]
@@ -7481,6 +7807,7 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
+ "semio-framework-value-native-owned",
  "semio-s-artifact-energy-model-diff",
  "semio-s-artifact-energy-model-mut-air-loop",
  "semio-s-artifact-energy-model-mut-battery",
@@ -7531,8 +7858,41 @@ dependencies = [
  "semio-s-artifact-energy-model-mut-year-schedule",
  "semio-s-artifact-energy-model-mut-zone",
  "semio-s-artifact-energy-model-mut-zone-equipment",
+ "semio-s-artifact-energy-model-native-derive",
+ "semio-s-artifact-energy-model-native-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-plugin-energy-engine-model",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-energy-model-native-derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "semio-framework-value-native-owned",
+ "serde_json",
+ "syn 2.0.119",
+]
+
+[[package]]
+name = "semio-s-artifact-energy-model-native-mutations"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-os-store-one-item-publication",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-edit",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
+ "semio-framework-value-snapshot-projection",
+ "semio-s-artifact-energy-model-diff",
+ "semio-s-artifact-energy-model-snapshot",
+ "semio-s-plugin-energy-engine-calendar",
+ "semio-s-plugin-energy-engine-model",
+ "semio-s-plugin-energy-engine-schedule",
  "serde_json",
 ]
 
@@ -7556,24 +7916,37 @@ dependencies = [
 name = "semio-s-artifact-energy-model-session"
 version = "0.1.0"
 dependencies = [
+ "csv",
+ "semio-framework",
+ "semio-framework-dsl-record",
+ "semio-framework-hash",
  "semio-framework-job",
  "semio-framework-job-payload",
  "semio-framework-job-publication",
  "semio-framework-math-rank",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin-actor-host",
+ "semio-framework-plugin-decl-views",
  "semio-framework-tool-run",
  "semio-framework-tool-run-tick-wire",
  "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",
+ "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-s-artifact-energy-model-examples",
  "semio-s-artifact-energy-model-snapshot",
+ "semio-s-artifact-stdio-epw",
  "semio-s-plugin-energy-engine-kernel",
+ "semio-s-plugin-energy-engine-meters",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-results",
  "semio-s-plugin-energy-engine-schedule",
  "semio-s-plugin-energy-engine-sim",
  "semio-s-plugin-energy-engine-sim-retirement",
  "semio-s-plugin-energy-engine-sim-wire",
+ "semio-s-plugin-energy-engine-site",
+ "semio-s-plugin-energy-epw",
  "serde_json",
 ]
 
@@ -7588,15 +7961,19 @@ dependencies = [
  "semio-framework-diagnostic",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
+ "semio-framework-manifest-media",
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
+ "semio-framework-pack-record-preflight",
  "semio-framework-plugin",
+ "semio-framework-plugin-window-kits-rich",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-trace",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -7608,6 +7985,7 @@ dependencies = [
  "semio-s-plugin-energy-engine-air-exchange",
  "semio-s-plugin-energy-engine-calendar",
  "semio-s-plugin-energy-engine-model",
+ "semio-s-plugin-energy-engine-scene",
  "semio-s-plugin-energy-engine-schedule",
  "serde_json",
 ]
@@ -7634,10 +8012,12 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-plugin-retained-command",
  "semio-framework-schema-state",
+ "semio-framework-plugin-ownership",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-energy-model-examples",
+ "semio-s-artifact-energy-model-initialization",
  "semio-s-artifact-energy-model-mutations",
  "semio-s-artifact-energy-model-snapshot",
  "semio-s-artifact-stdio-semio",
@@ -8935,7 +9315,6 @@ dependencies = [
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
  "semio-framework-ui-locale",
- "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
  "semio-s-artifact-stdio-semio-animation",
@@ -13785,6 +14164,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "semio-framework-value-snapshot-projection",
  "serde",
 ]
 
@@ -13921,6 +14301,7 @@ name = "semio-s-plugin-energy-engine-kernel"
 version = "0.1.0"
 dependencies = [
  "semio-framework-math-dense",
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-plugin-energy-engine-air-exchange",
@@ -13987,6 +14368,7 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-framework-value-native-owned",
+ "semio-framework-value-persistent",
  "semio-framework-value-snapshot-projection",
  "semio-s-plugin-energy-engine-air-exchange",
  "semio-s-plugin-energy-engine-calendar",
@@ -14071,7 +14453,9 @@ dependencies = [
 name = "semio-s-plugin-energy-engine-scene"
 version = "0.1.0"
 dependencies = [
- "semio-framework-plugin",
+ "semio-framework-plugin-window-kits",
+ "semio-framework-plugin-window-kits-rich",
+ "semio-framework-ui-declaration",
  "semio-s-plugin-energy-engine-geometry",
  "semio-s-plugin-energy-engine-model",
  "semio-s-plugin-energy-engine-precompute",
@@ -14155,6 +14539,7 @@ dependencies = [
 name = "semio-s-plugin-energy-engine-site"
 version = "0.1.0"
 dependencies = [
+ "semio-framework-pack-json",
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-plugin-energy-engine-calendar",

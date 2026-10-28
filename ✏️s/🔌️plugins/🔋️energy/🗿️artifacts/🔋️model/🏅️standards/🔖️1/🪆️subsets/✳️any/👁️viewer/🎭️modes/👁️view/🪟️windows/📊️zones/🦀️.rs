@@ -26,9 +26,9 @@ pub fn definition() -> WindowKindDefinition {
 /// `name`/`volumeM3`/`multiplier`/`conditioned`/`partOfTotalFloorArea` — no run-output row, no
 /// command-driven cell edits (a viewer declares none).
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    let model = crate::snapshot::energy_model(document);
+    let model = document.model.read();
     let columns = vec!["id".to_string(), "name".to_string(), "volumeM3".to_string(), "multiplier".to_string(), "conditioned".to_string(), "partOfTotalFloorArea".to_string()];
-    let rows = model.zones.iter().map(|zone| vec![zone.id.0.to_string(), zone.name.clone(), format!("{}", zone.volume_m3), zone.multiplier.to_string(), zone.conditioned.to_string(), zone.part_of_total_floor_area.to_string()]).collect();
+    let rows = model.zones.iter().map(|zone| vec![zone.id.0.to_string(), zone.name.get().clone(), format!("{}", zone.volume_m3), zone.multiplier.to_string(), zone.conditioned.to_string(), zone.part_of_total_floor_area.to_string()]).collect();
     TableWindowKit::render(&TableView { columns, rows })
 }
 //#endregion 🔖️Render

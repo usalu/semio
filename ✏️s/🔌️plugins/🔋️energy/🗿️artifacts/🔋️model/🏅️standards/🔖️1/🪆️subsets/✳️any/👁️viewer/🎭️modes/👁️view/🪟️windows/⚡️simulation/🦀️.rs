@@ -48,7 +48,7 @@ pub fn render(model: &crate::model::Model) -> BuiltNode {
     let roots = vec![
         TreeNodeView {
             id: "energy-viewer-result-status".into(),
-            label: "role=status · aria-live=polite · Simulations run in the editor and never change the document · Simulationen laufen im Editor und ändern das Dokument nie".into(),
+            label: "Simulations run in the editor and never change the document · Simulationen laufen im Editor und ändern das Dokument nie".into(),
             children: Vec::new(),
         },
         leaf("energy-viewer-run-period", format!("Run period / Simulationszeitraum: {:02}-{:02} → {:02}-{:02}", run_period.start_month, run_period.start_day, run_period.end_month, run_period.end_day)),

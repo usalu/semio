@@ -425,9 +425,9 @@ impl ArtifactEditor for JsonAnyEditor {
         json_any_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> JsonSnapshot {
+    fn reference_birth()->Option<fn()->JsonSnapshot>{Some(||{
         JsonSnapshot::default()
-    }
+    })}
 
     /// ✏️ An unparseable `node_id` is a documented no-op (`Emit::default()`), never a panic. The
     /// node value is parsed as one complete JSON value, preserving null, boolean, number, string,

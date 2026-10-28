@@ -60,9 +60,9 @@ impl ArtifactViewer for Gif87aViewer {
     const DIALECT: Dialect = GIF_87A_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_GIF_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v87a::subsets::any::schema::blank_gif_snapshot()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

@@ -114,7 +114,7 @@
           },
           "counters": {
             "type": "array",
-            "maxItems": 8,
+            "maxItems": 9,
             "items": {
               "type": "object",
               "additionalProperties": false,

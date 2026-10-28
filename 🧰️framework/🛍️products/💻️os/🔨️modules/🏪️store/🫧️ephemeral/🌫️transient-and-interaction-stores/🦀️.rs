@@ -18,14 +18,22 @@ pub struct TransientStore<P, Mutation> {
     pub(super) _mutation: PhantomData<fn() -> Mutation>,
 }
 
+impl<P,Mutation> TransientStore<P,Mutation>{
+    /// 📏️ Quotes only this original typed root and Store header; registry birth has its own native cursor.
+    pub fn original_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Self>()+size_of::<P>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<P>(),depth:2,..Default::default()}}
+
+    /// 🌱️ Moves the actual source and admitted registry into the native transient lane without a default or clone.
+    pub fn admit_original(current:&mut Option<P>,reads:&mut Option<SnapshotReadRegistryHandle>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{let d=Self::original_birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}if current.is_none()||reads.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native transient birth requires its original typed source and read registry"))}let value=Self{current:Some(Arc::new(current.take().unwrap())),reads:reads.take(),close_started:false,active_returned_read:None,generation:0,_mutation:PhantomData};Ok(Some((value,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})))}
+}
+
 // 🚫️async: E1 impl of external `Default` — signature fixed outside this repo.
-impl<P: Clone + Default, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Default for TransientStore<P, Mutation> {
+impl<P: Default, Mutation: super::Mutation<P>> Default for TransientStore<P, Mutation> {
     fn default() -> Self {
         Self::new(P::default())
     }
 }
 
-impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> TransientStore<P, Mutation> {
+impl<P, Mutation: super::Mutation<P>> TransientStore<P, Mutation> {
     /// 🚫️async: E1 pure constructor, consumed by `Default::default()` — see R9.
     pub fn new(current: P) -> Self {
         Self { current: Some(Arc::new(current)), reads: Some(SnapshotReadRegistryHandle::new()), close_started: false, active_returned_read: None, generation: 0, _mutation: PhantomData }
@@ -45,19 +53,19 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
     where
         P: Send + Sync + 'static,
     {
-        let owner = Arc::clone(self.current.as_ref().expect("live transient root remains"));
-        let lease = self.reads.as_ref().expect("live transient read registry remains").try_issue(owner.clone()).map_err(|_| "transient read registry is busy or exhausted".to_string())?;
-        Ok(SnapshotRead::new(owner, lease))
+        self.current_read_original().map_err(|error|error.to_string())
+    }
+
+    /// 🎟️ The existing transient registry lends its exact source and allocation-free native refusal.
+    pub fn current_read_original(&self)->Result<SnapshotRead<P>,ValueError> where P:Send+Sync+'static {
+        let owner=Arc::clone(self.current.as_ref().expect("live transient root remains"));
+        let lease=self.reads.as_ref().expect("live transient read registry remains").try_issue_original(owner.clone()).map_err(|(error,_original)|error.into_value_error())?;
+        Ok(SnapshotRead::new(owner,lease))
     }
 
     /// 🧰️ Captures the same tracked capability across a heterogeneous owner registry.
-    pub fn current_read_erased(&self) -> Result<ErasedSnapshotRead, String>
-    where
-        P: Send + Sync + 'static,
-    {
-        let owner = Arc::clone(self.current.as_ref().expect("live transient root remains"));
-        let lease = self.reads.as_ref().expect("live transient read registry remains").try_issue(owner.clone()).map_err(|_| "transient read registry is busy or exhausted".to_string())?;
-        Ok(ErasedSnapshotRead::new(owner, lease))
+    pub fn current_read_erased(&self) -> Result<ErasedSnapshotRead, String> where P:Send+Sync+'static {
+        self.current_read_original().map(SnapshotRead::into_erased).map_err(|error|error.to_string())
     }
 
     /// 🧹️ Advances one returned read through its exact owned-value retirement authority.
@@ -94,12 +102,12 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
     }
 
     pub fn returned_reads_terminal_is_empty(&self) -> bool {
-        self.active_returned_read.is_none() && self.reads.as_ref().is_none_or(|reads| (**reads).terminal_is_empty())
+        self.active_returned_read.is_none() && self.reads.as_ref().is_none_or(|reads| SnapshotReadLeaseRegistry::terminal_is_empty(reads))
     }
 
     /// 🔒️ A live tracked read, not yet returned, is the only owner that keeps the read registry from terminal-empty custody.
     pub fn live_read_holds_registry(&self) -> bool {
-        self.active_returned_read.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !(**reads).terminal_is_empty())
+        self.active_returned_read.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !SnapshotReadLeaseRegistry::terminal_is_empty(reads))
     }
 
     pub fn current_weak(&self) -> std::sync::Weak<P> {
@@ -111,7 +119,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
     }
 
     /// ✍️ Applies transient operations atomically, without history.
-    pub async fn apply(&mut self, mutations: &[Mutation]) -> protocol::MutationApplyResult<()> {
+    pub async fn apply(&mut self, mutations: &[Mutation]) -> protocol::MutationApplyResult<()> where P:Clone,Mutation:protocol::ColdMutation<P> {
         let mut candidate = self.current.as_ref().expect("live transient root remains").as_ref().clone();
         for mutation in mutations {
             candidate = apply_operation::<P, Mutation>(&candidate, mutation, 0).0?;
@@ -130,7 +138,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
         mutation: Mutation,
         factory: Option<&dyn ArtifactEphemeralOneItemPreparationFactory<P, Mutation>>,
         root_retirement_factory: Option<Arc<dyn SnapshotRetirementFactory<P>>>,
-    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>> {
+    ) -> Result<ArtifactEphemeralOneItemPublication<P, Mutation>, ArtifactEphemeralOneItemAdmissionRejected<Mutation>> where P:Send+Sync+'static {
         let reject = |reason: String, mutation: Mutation| ArtifactEphemeralOneItemAdmissionRejected { reason, mutation };
         if self.close_started || self.generation != expected_generation {
             return Err(reject("transient publication generation is stale".into(), mutation));
@@ -146,8 +154,8 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
             Ok(_) => return Err(reject("transient publication footprint exceeds its fixed item or byte capacity".into(), mutation)),
             Err(reason) => return Err(reject(reason, mutation)),
         };
-        let request =
-            ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::Transient(Arc::clone(self.current.as_ref().expect("live transient root remains")))), mutation };
+        let base=match self.current_read(){Ok(read)=>read,Err(reason)=>return Err(reject(reason,mutation))};
+        let request = ArtifactEphemeralOneItemPreparationRequest { operation, generation: semio_framework_job::Generation(expected_generation), base: ArtifactEphemeralBaseRead(ArtifactEphemeralBaseOwner::TransientRead(base)), mutation };
         let preparation = match factory.begin(request) {
             Ok(preparation) => preparation,
             Err(request) => return Err(reject("transient preparation factory rejected its exact owner bundle".into(), request.mutation)),
@@ -227,7 +235,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
         })
     }
 
-    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>
     where
         P: Send + Sync + 'static,
     {
@@ -278,6 +286,10 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
+                let demand=publication.commit_demand();
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                receiving.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(|error|error.to_string())?;
+                receiving.charge(demand.capacity_bytes).map_err(|error|error.to_string())?;
                 let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "transient publication lost its prepared root".to_string())?;
                 let generation_before = self.generation;
                 let previous = self.current.replace(prepared.next_root).expect("live transient publication root remains");
@@ -292,7 +304,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
                 *publication.receipt = Some(receipt);
                 publication.published = true;
                 publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
-                Ok(ArtifactStoreOneItemAdvance::Published(receipt, semio_framework_value::RetainedCloneProgress::default()))
+                Ok(ArtifactStoreOneItemAdvance::Published(receipt,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
             }
             ArtifactStoreOneItemPublicationPhase::Fault => Ok(ArtifactStoreOneItemAdvance::PreparationRefused),
             ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled transient publication control phase"),
@@ -309,7 +321,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Transie
     }
 
     /// 🎯️ Applies one retained local-only item against an exact live generation.
-    pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> {
+    pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)> where P:Clone,Mutation:protocol::ColdMutation<P> {
         if self.close_started || self.generation != expected_generation {
             return Err(("transient publication generation is stale".into(), mutation));
         }
@@ -392,7 +404,7 @@ impl<P> TransientStoreRetirement<P> {
     }
     pub fn terminal_is_empty(&self) -> bool { self.root.is_none() && self.reads.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.factory.is_none() && self.factory_close.is_none() }
     /// 🔒️ The retirement can only continue once the live tracked read that holds the registry is returned.
-    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !(**reads).terminal_is_empty()) }
+    pub fn awaits_live_read(&self) -> bool { self.root.is_none() && self.active_returned.is_none() && self.active_root.is_none() && self.reads.as_ref().is_some_and(|reads| !reads.has_returned() && !SnapshotReadLeaseRegistry::terminal_is_empty(reads)) }
 }
 
 impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
@@ -420,7 +432,7 @@ impl<P: Send + Sync + 'static> TransientStoreRetirement<P> {
         if let Some(root) = self.root.take() {
             return match ReturnedSnapshotReadRetirement::admit(root, self.factory.as_ref().expect("retained transient factory").clone(), child) { Ok((owner, receipt)) => { *self.active_root = Some(owner); if !receipt.fits(child) || receipt.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "transient constructor changed admitted receipt")); } Ok(RetainedCloneStep::Progress(receipt)) }, Err((error, root, alias)) => { *self.root = Some(root); drop(alias); Err(error) } };
         }
-        if let Some(reads) = self.reads.as_ref() { if !(**reads).terminal_is_empty() { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if let Some(reads) = self.reads.as_ref() { if !SnapshotReadLeaseRegistry::terminal_is_empty(reads) { return Ok(RetainedCloneStep::Progress(Default::default())); } return snapshot_registry_alias_close_step(&mut self.reads, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(factory) = self.factory.take() { let factory: Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factory_close = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..Default::default() })); }
         let factory = self.factory_close.as_mut().expect("retained transient factory ticket"); let step = factory.step(child)?; let step = semio_framework_value::retained_clone::admit_retained_clone_close(child, step, factory.terminal_is_empty(), "transient factory")?; if factory.terminal_is_empty() { self.factory_close = None; } Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(step.progress()) } else { RetainedCloneStep::Progress(step.progress()) })
     }
@@ -477,7 +489,7 @@ impl<S: Clone, Mutation: super::Mutation<S> + protocol::ColdMutation<S>> Interac
 
     /// ✍️ Applies hover updates atomically. The caller's `Mutation` impl is expected to route
     /// through the framework's `next_hover` pure fn before landing here.
-    pub async fn apply(&mut self, mutations: &[Mutation]) -> protocol::MutationApplyResult<()> {
+    pub async fn apply(&mut self, mutations: &[Mutation]) -> protocol::MutationApplyResult<()> where Mutation:protocol::ColdMutation<S> {
         let mut candidate = self.hover.clone();
         for mutation in mutations {
             candidate = apply_operation::<S, Mutation>(&candidate, mutation, 0).0?;

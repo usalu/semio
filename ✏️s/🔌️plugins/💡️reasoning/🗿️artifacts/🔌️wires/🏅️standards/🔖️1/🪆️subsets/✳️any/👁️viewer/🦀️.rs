@@ -80,9 +80,9 @@ impl ArtifactViewer for WiresViewer {
 
     /// 🔐️ The artifact's own document-store owner catalogue, identical to the sibling editor's: a viewer holds the same
     /// snapshot and must retire its owned values the same way, never through the framework's generic bounded owners.
-    fn initial_snapshot() -> WiresSnapshot {
+    fn reference_birth()->Option<fn()->WiresSnapshot>{Some(||{
         crate::empty_wires_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `WiresViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

@@ -245,7 +245,7 @@ where
         lanes,
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
-        transitions,
+        transitions:ArtifactHistoryLedger::try_from_preflighted(transitions).map_err(|_|TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history transition capacity exceeded".to_string(),TextSpan::at(1,1)))?,
         history_shape: semio_framework_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,

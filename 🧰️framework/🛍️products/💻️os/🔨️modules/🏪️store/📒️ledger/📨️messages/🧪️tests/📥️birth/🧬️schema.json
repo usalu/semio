@@ -1,0 +1,78 @@
+{
+  "type": "object",
+  "required": [
+    "policy",
+    "states",
+    "maximumConcurrentChildFrames"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "policy": {
+      "type": "object",
+      "required": [
+        "maximumItems",
+        "maximumCopyBytes",
+        "maximumCapacityBytes",
+        "maximumReleaseBytes",
+        "maximumDepth"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "maximumItems": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCopyBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumCapacityBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumReleaseBytes": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maximumDepth": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "maximumConcurrentChildFrames": {
+      "const": 1
+    },
+    "states": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "event",
+          "original",
+          "cursor"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "event": {
+            "type": "string"
+          },
+          "original": {
+            "enum": [
+              0,
+              1
+            ]
+          },
+          "cursor": {
+            "enum": [
+              0,
+              1
+            ]
+          }
+        }
+      }
+    }
+  }
+}

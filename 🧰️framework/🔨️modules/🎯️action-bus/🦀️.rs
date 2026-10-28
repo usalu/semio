@@ -28,7 +28,7 @@ use semio_framework_manifest_app_surface::AppDefinition;
 pub mod admission;
 pub use admission::{ToolJobAdmissionDemand,OriginalToolSourceBinding,OriginalToolJobIdentity,admit_original_tool_job,admit_original_tool_job_measured,admit_original_tool_job_controlled,admit_original_tool_construction,OriginalToolConstructionScope,admit_original_tool_construction_scoped};
 //#region 🧬️Contract
-#[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash,semio_framework_value::RetireOwned)]
 pub struct ToolFactoryKey {
     pub controller_id: String,
     pub tool_id: String,
@@ -77,6 +77,12 @@ pub struct ToolWireAdmission {
     pub contract: ToolExecutionContract,
 }
 
+impl semio_framework_value::retirement::RetireOwned for ToolWireAdmission{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;(self.key,self.schema_id).retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<ToolFactoryKey>(),semio_framework_value::retirement::deferred_birth_bytes::<String>()])}
+ fn controlled_retirement_supported()->bool{true}
+}
+
 pub const TOOL_WIRE_PAGE_BYTES: usize = 4_096;
 
 #[derive(Debug)]
@@ -117,9 +123,36 @@ pub struct RetainedToolWireInput {
     closing: bool,
 }
 
+impl semio_framework_value::retirement::RetireOwned for ToolWirePage{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;().retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;().retirement_birth_bytes()}
+ fn controlled_retirement_supported()->bool{true}
+ fn retirement_element_copy_bytes()->usize{size_of::<Self>()}
+}
+impl semio_framework_value::retirement::RetireOwned for RetainedToolWireInput{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;self.pages.retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;self.pages.retirement_birth_bytes()}
+ fn controlled_retirement_supported()->bool{true}
+}
+
 impl RetainedToolWireInput {
-    /// 📥️ Opens the empty page owner of one declared wire extent; refused when the extent exceeds its admitted maximum.
-    pub fn try_new(declared_bytes: usize, maximum_bytes: usize) -> Result<Self, ToolJobFactoryError> {
+    /// 📏️ Declares the original fixed page backing before the native command encoder writes any byte.
+    pub fn original_birth_demands(declared_bytes:usize,maximum_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand};
+        if declared_bytes>maximum_bytes{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool wire exceeds its declared contract"))}
+        let count=declared_bytes.checked_add(TOOL_WIRE_PAGE_BYTES-1).map(|bytes|bytes/TOOL_WIRE_PAGE_BYTES).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool wire page count overflow"))?;
+        let capacity=count.checked_mul(size_of::<ToolWirePage>()).ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"original tool wire page backing overflow"))?;
+        Ok(RetirementDemand{copy_bytes:2*size_of::<Self>(),capacity_bytes:capacity,depth:1,..Default::default()})
+    }
+    /// 🌱️ Creates only the actual owned wire backing under its original selected admission.
+    pub fn admit_original(declared_bytes:usize,maximum_bytes:usize,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneProgress};
+        let d=Self::original_birth_demands(declared_bytes,maximum_bytes)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}
+        let count=d.capacity_bytes/size_of::<ToolWirePage>();let mut pages=Vec::new();pages.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original tool wire page backing admission failed"))?;
+        Ok(Some((Self{pages,declared_bytes,admitted_bytes:0,maximum_bytes,sealed:false,closing:false},RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})))
+    }
+    fn try_new(declared_bytes: usize, maximum_bytes: usize) -> Result<Self, ToolJobFactoryError> {
         if declared_bytes > maximum_bytes {
             return Err(ToolJobFactoryError::new("declared tool wire extent exceeds its admitted contract"));
         }
@@ -175,23 +208,26 @@ impl RetainedToolWireInput {
         self.declared_bytes
     }
 
+    /// 🔒️ The original typed producer hands off only its complete immutable wire prefix.
+    pub fn original_is_sealed(&self)->bool{self.sealed&&!self.closing&&self.admitted_bytes==self.declared_bytes}
+
     pub fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
+    pub fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(if self.terminal_is_empty(){0}else{size_of::<(bool,usize,Vec<ToolWirePage>)>()})}
     pub fn next_close_capacity_byte_demand(&self,_copy:usize)->Result<usize,semio_framework_value::ValueError>{Ok(0)}
     pub fn next_close_release_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{self.pages.capacity().checked_mul(size_of::<ToolWirePage>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"wire page backing extent overflow"))}
-    pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(self.pages.capacity()!=0))}
+    pub fn next_close_depth_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(usize::from(!self.terminal_is_empty()))}
     pub fn close_step(&mut self,grant:semio_framework_job::RetainedCloneGrant)->Result<semio_framework_job::InteractiveJobCloseStep,semio_framework_value::ValueError>{
         use semio_framework_job::{InteractiveJobCloseStep,RetainedCloneProgress};
-        self.begin_close();
         if self.terminal_is_empty(){return Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress::default()})}
         let bytes=self.next_close_release_byte_demand()?;
-        if grant.maximum_items==0||bytes>grant.maximum_release_bytes{return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()})}
-        if self.pages.capacity()!=0&&grant.maximum_depth==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original wire input close exceeds caller depth"))}
+        let copied=self.next_close_copy_byte_demand()?;
+        if grant.maximum_items==0||copied>grant.maximum_copy_bytes||bytes>grant.maximum_release_bytes||grant.maximum_depth<self.next_close_depth_demand()?{return Ok(InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress::default()})}
+        self.begin_close();
         drop(std::mem::take(&mut self.pages));self.admitted_bytes=0;
-        Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:bytes}})
+        Ok(InteractiveJobCloseStep::Complete{progress:RetainedCloneProgress{copied_items:1,copied_bytes:copied,retained_capacity_bytes:0,released_bytes:bytes}})
     }
 
     pub fn terminal_is_empty(&self) -> bool {
@@ -683,3 +719,17 @@ mod wire_retirement_tests;
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🎯️ToolJobBus
+#[cfg(test)]
+#[path="🏛️registered/🧪️tests/🦀️.rs"]
+mod registered_source_tests;
+#[path="🏛️registered/🦀️.rs"]
+mod registered_source;
+pub use registered_source::{RegisteredActionBusSource,RegisteredActionBusAlias};
+
+#[cfg(any(test,feature="original-wire-testing"))]
+#[path="📨️wire/🌱️original/🧪️tests/🦀️.rs"]
+mod original_wire_tests;
+
+#[cfg(feature="original-wire-testing")]
+#[doc(hidden)]
+pub fn original_command_wire_admission_law(){original_wire_tests::original_command_wire_backing_is_admitted_before_pages_and_denied_close_preserves_the_same_owner()}

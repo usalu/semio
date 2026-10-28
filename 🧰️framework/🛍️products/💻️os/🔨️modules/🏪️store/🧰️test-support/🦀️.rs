@@ -169,8 +169,8 @@ where
 /// 🧪️ Dispatches one command under a fixture caller-owned identity authority and returns its original cumulative receipt to the caller.
 pub async fn dispatch_test_command<P, Mutation>(store: &mut ArtifactStore<P, Mutation>, command: ArtifactCommand<Mutation>) -> Result<CommandReceipt, VcsError>
 where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static,
+        P: Clone + FromValue + ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+        Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     const CEILING: usize = 201 * semio_framework_job_payload::JOB_PAYLOAD_PAGE_BYTES;
     let mut observer = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -187,8 +187,8 @@ where
 /// post-apply snapshot, and replay-materialization agrees with the live store snapshot.
 pub async fn assert_store_roundtrip<P, Mutation>(initial: P, operation: Mutation)
 where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
+        P: Clone + FromValue + ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + Send + Sync + 'static,
+        Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
 {
     let envelope = create_document_envelope("test/v1", "test", initial.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut store = plain_test_store(envelope).await;
@@ -524,6 +524,10 @@ impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneIte
         Err("plain test catalog prepares no retained gesture".into())
     }
 
+    fn begin_copy_byte_demand(&self, _mutation: &M, _lane: HistoryLane) -> Result<usize, ValueError> {
+        Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"))
+    }
+
     fn begin_demand(&self, _mutation: &M, _lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> {
         Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "plain test catalog prepares no retained gesture"))
     }
@@ -540,8 +544,8 @@ impl<P: Send + Sync + 'static, M: OpBinary + Sync + 'static> ArtifactStoreOneIte
 /// 🧪️ A store over `envelope` carrying [`plain_document_store_owners`].
 pub async fn plain_test_store<P, Mutation>(envelope: ArtifactEnvelope<P, Mutation>) -> ArtifactStore<P, Mutation>
 where
-        P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
+        P: Clone + FromValue + ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+        Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + Sync + ArtifactCanonicalJsonTree + 'static,
 {
     let mut store = ArtifactStore::new::<semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication>(envelope, ActorId(semio_framework_os_spr::LOCAL_ACTOR_ID.into())).await.expect("test fixture history is valid");
     install_unscheduled_catalog(&mut store, Ok(plain_document_store_owners())).expect("test store installs its funded plain catalog");
@@ -646,7 +650,7 @@ where
 ///
 /// `MutationEnvelope` is a runtime struct that is never itself re-serialized back into an
 /// `Edit` (unlike `encode_pack`/`decode_pack`, there is no `envelope_to_edit` inverse — vcs's OWN
-/// `edit_from_operation_envelope` recovers a *whole edit* from vcs's own, differently-shaped,
+/// `edit_from_operation_envelope_cold` recovers a *whole edit* from vcs's own, differently-shaped,
 /// per-edit `semio_framework_replication::MutationEnvelope`, not from this per-operation
 /// `protocol_causal` one), so a byte-level encode-then-decode law is not meaningful here.
 /// Instead this checks the two LAWS that actually matter for this bridge: (1) whatever
@@ -680,11 +684,11 @@ where
             }
             assert_eq!(envelope.timestamp, meta.timestamp, "explicit timestamp did not survive the envelope conversion");
         }
-        let recovered_forward = Mutation::decode_op(&envelope.diff.payload).unwrap_or_else(|error| panic!("envelope diff payload must decode back into an equal operation: {error}"));
+        let recovered_forward = Mutation::decode_op(&envelope.diff.payload.to_vec_owner()).unwrap_or_else(|error| panic!("envelope diff payload must decode back into an equal operation: {error}"));
         assert_eq!(&recovered_forward, &edit.forwards[index], "envelope diff payload did not decode back into an equal forward operation");
         match edit.inverse.get(index) {
             Some(backward) => {
-                let recovered_backward = Mutation::decode_op(&envelope.inverse.payload).unwrap_or_else(|error| panic!("envelope inverse payload must decode back into an equal operation: {error}"));
+                let recovered_backward = Mutation::decode_op(&envelope.inverse.payload.to_vec_owner()).unwrap_or_else(|error| panic!("envelope inverse payload must decode back into an equal operation: {error}"));
                 assert_eq!(&recovered_backward, backward, "envelope inverse payload did not decode back into an equal backward operation");
             }
             None => assert!(envelope.inverse.payload.is_empty(), "inverse payload must be empty when the edit has no corresponding inverse op"),
@@ -700,7 +704,7 @@ where
 pub async fn assert_live_equals_replay<P, Mutation>(store: &ArtifactStore<P, Mutation>)
 where
     P: Clone + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + PartialEq + std::fmt::Debug + ToValue + FromValue + Send + Sync + 'static,
-        Mutation: Clone + ToValue + FromValue + self::Mutation<P> + ColdMutation<P> + OpBinary + OpText + Send + 'static,
+        Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     let live = store.snapshot().expect("store snapshot");
     let replayed = materialize_document_snapshot(store.envelope(), store.applied_edit_ids()).await.expect("replay");
@@ -726,7 +730,7 @@ pub struct ExampleAsset<'a> {
 /// 🪆 Subset-facing surface the integrated harness needs. Implement on a thin adapter per subset.
 pub trait SubsetRoundtripSpec {
     type Snapshot: Clone + PartialEq + std::fmt::Debug + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ToValue + FromValue;
-    type Mutation: Clone + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + ColdMutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
+    type Mutation: Clone + semio_framework_os_spr::ColdMutation<Self::Snapshot> + PartialEq + std::fmt::Debug + ToValue + FromValue + Mutation<Self::Snapshot> + OpText + OpBinary + Send + Sync + ArtifactCanonicalJsonTree + 'static;
     type Inference: Clone + PartialEq + std::fmt::Debug + Default;
     async fn dialect() -> semio_framework_artifact_reference::ArtifactDialect;
     async fn fidelity() -> IoFidelityClass;

@@ -245,12 +245,14 @@ pub async fn encode_app_command(command: &AppCommand) -> Result<PagedCommand, se
             out.varint(*seq)?;
             out.varint(*operation)?;
         }
-        AppCommand::SubmitMediaExport { seq, port, expected_parent_document_id, expected_base_revision } => {
+        AppCommand::SubmitMediaExport { seq, port, expected_parent_document_id, expected_base_revision, checkpoint_id } => {
             out.byte(37)?;
             out.varint(*seq)?;
             out.string(port)?;
             out.string(expected_parent_document_id)?;
             out.varint(*expected_base_revision)?;
+            out.byte(u8::from(checkpoint_id.is_some()))?;
+            if let Some(id)=checkpoint_id{out.string(id)?;}
         }
         AppCommand::PollMediaExport { seq, handle } | AppCommand::CancelMediaExport { seq, handle } | AppCommand::TakeMediaExportChunk { seq, handle } => {
             let tag = match command {

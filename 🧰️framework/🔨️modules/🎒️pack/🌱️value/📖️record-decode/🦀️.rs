@@ -70,11 +70,11 @@ pub(super) trait MaterializationAdmission {
         let mut position=0;
         while position<bytes.len(){
             self.step()?;
-            let first=bytes[position];
+            let first=bytes.get(position).ok_or_else(||invalid())?;
             let length=match first{0..=127=>1,194..=223=>2,224..=239=>3,240..=244=>4,_=>return Err(invalid())};
             if position+length>bytes.len(){return Err(invalid())}
             let mut word=[0;4];
-            for(index,byte)in word[..length].iter_mut().enumerate(){*byte=bytes[position+index];}
+            for(index,byte)in word[..length].iter_mut().enumerate(){*byte=bytes.get(position+index).ok_or_else(||invalid())?;}
             std::str::from_utf8(&word[..length]).map_err(|_|invalid())?;
             position+=length;
         }
@@ -149,6 +149,10 @@ fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<S
     let offset = reader.position() as u64;
     ctx.materialization.copy_span_utf8(bytes,offset,"text")
 }
+
+fn append_record_octets(output:&mut semio_framework_dsl_record::RecordBytes,bytes:impl IntoIterator<Item=u8>,admission:&dyn MaterializationAdmission)->Result<(),PackRefusal>{let pages=output.retained_bytes_mut();for byte in bytes{admission.step()?;while !pages.has_reserved_slot(){let capacity=pages.next_allocation_bytes().map_err(ValueError::from)?;admission.charge(capacity as u64)?;pages.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;}pages.push_reserved(byte).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"decoded record octet lost its admitted backing"))?;}Ok(())}
+fn read_inline_record_bytes(reader:&mut ByteReader<'_>,ctx:&DecCtx<'_>)->Result<semio_framework_dsl_record::RecordBytes,PackRefusal>{let bytes=read_len_prefixed_bytes(reader,&ctx.limits)?;if bytes.len()as u64>ctx.limits.max_total_alloc{return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"decoded record octets exceed max_total_alloc"})}let mut output=semio_framework_dsl_record::RecordBytes::default();append_record_octets(&mut output,bytes.iter(),ctx.materialization)?;Ok(output)}
+fn read_chunked_record_bytes(reader:&mut ByteReader<'_>,ctx:&DecCtx<'_>)->Result<semio_framework_dsl_record::RecordBytes,PackRefusal>{let count=reader.read_varint_u64()?;ctx.check_items(count)?;let DecSource::File(file)=&ctx.source else{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"chunked record octets require their original catalog").into())};let mut output=semio_framework_dsl_record::RecordBytes::default();for _ in 0..count{ctx.materialization.step()?;let id=ChunkId(u32::try_from(reader.read_varint_u64()?).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"record chunk id exceeds u32"))?);let length=file.chunk_decoded_len(id)?;if length>ctx.limits.max_segment_len||(output.len()as u64).checked_add(length).filter(|total|*total<=ctx.limits.max_total_alloc).is_none(){return Err(PackRefusal::LimitExceeded{kind:ValueRefusalKind::OwnershipLimit,limit:"record chunk octets exceed declared limits"})}let piece=if ctx.materialization.controlled(){let mut piece=ctx.materialization.octet_buffer(usize::try_from(length).map_err(|_|ValueError::literal(ValueRefusalKind::OwnershipLimit,"record chunk length exceeds address space"))?)?;ctx.materialization.append_chunk(file,id,ctx.verification,&mut piece)?;piece}else{ctx.materialization.charge(length)?;::semio_framework_async::poll::resolve_ready(file.read_chunk(id,ctx.verification))?};if piece.len()as u64!=length{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"record chunk extent changed").into())}append_record_octets(&mut output,piece.into_iter(),ctx.materialization)?;}Ok(output)}
 
 fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackRefusal> {
     let bytes=read_len_prefixed_bytes(reader,&ctx.limits)?;
@@ -274,8 +278,8 @@ pub(super) fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, c
             Ok(FieldValue::Text(resolve_symref(ctx, idx)?))
         }
         TAG_STR_INLINE => Ok(FieldValue::Text(read_inline_string(reader, ctx)?)),
-        TAG_BYTES => Ok(FieldValue::Bytes64(read_inline_bytes(reader, ctx)?)),
-        TAG_BYTES_CHUNKED => Ok(FieldValue::Bytes64(read_chunked_bytes(reader, ctx)?)),
+        TAG_BYTES => Ok(FieldValue::Bytes64(read_inline_record_bytes(reader, ctx)?)),
+        TAG_BYTES_CHUNKED => Ok(FieldValue::Bytes64(read_chunked_record_bytes(reader, ctx)?)),
         TAG_ENUM => Ok(FieldValue::Enum(reader.read_varint_u64()? as u32)),
         TAG_TUPLE => decode_seq_body(reader, elem_shape_of(shape), true, ctx, depth),
         TAG_LIST => {

@@ -32,6 +32,8 @@ impl<P:Send+Sync+'static,M:Send+'static> ArtifactReplayRetirementFactory<P,M> fo
         Ok((owner,RetainedCloneProgress{copied_items:1,retained_capacity_bytes:bytes,..Default::default()}))
     }
 }
+/// 📏️ The defining shared factory quotes its exact original system allocation before any child issuer aliases move.
+pub fn registered_replay_retirement_factory_allocation_bytes<P,M>()->usize{std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<RegisteredReplayRetirement<P,M>>()).expect("original replay issuer layout").0.pad_to_align().size()}
 pub fn registered_replay_retirement_factory<P:Send+Sync+'static,M:Send+'static>(snapshots:Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,mutations:Arc<dyn ArtifactOwnedValueRetirementFactory<M>>)->Arc<dyn ArtifactReplayRetirementFactory<P,M>> {Arc::new(RegisteredReplayRetirement{snapshots,mutations})}
 
 /// 🧳️ Two pending native lanes preserve originals while each admitted child physically closes.

@@ -76,12 +76,11 @@ impl TimeTravelSession {
                 }
             },
             (S::Choosing, E::Choose { choice, .. }) => {
-                let inputs = self.inputs();
                 self.stage = S::Finalizing;
                 self.generation = self.generation.wrapping_add(1);
                 Ok(vec![match choice {
-                    TimeTravelChoice::Overwrite => TimeTravelEffect::CommitOverwrite { inputs },
-                    TimeTravelChoice::Alternative { name } => TimeTravelEffect::CommitAlternative { name, inputs },
+                    TimeTravelChoice::Overwrite => TimeTravelEffect::CommitOverwrite,
+                    TimeTravelChoice::Alternative { name } => TimeTravelEffect::CommitAlternative { name },
                 }])
             }
             (S::Choosing, E::Back { .. }) => {

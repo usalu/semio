@@ -69,9 +69,17 @@ impl ArtifactViewer for EpwViewer {
     const DIALECT: Dialect = EPW_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_EPW_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> EpwSnapshot {
-        crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot()
+    fn register_tool_job_factories(registry:&mut semio_framework_plugin::ArtifactToolFactoryRegistry<'_,semio_framework_plugin::ViewerApp<Self>>)->Result<(),Fault>{
+        let controller=registry.controller_id().to_string();registry.register(semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_framework_plugin::ViewerApp<Self>>::new(&controller))
     }
+
+    fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::ViewerApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
+        semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_framework_plugin::ViewerApp<Self>>::admit_original(request,body,cx)
+    }
+
+    fn reference_birth()->Option<fn()->EpwSnapshot>{Some(||{
+        crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot()
+    })}
 
     /// 👁️ Structurally read-only: the sole `EpwViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.

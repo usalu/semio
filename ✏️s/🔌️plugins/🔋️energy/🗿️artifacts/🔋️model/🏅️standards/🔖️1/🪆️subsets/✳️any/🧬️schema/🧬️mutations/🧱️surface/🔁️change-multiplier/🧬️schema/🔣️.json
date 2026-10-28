@@ -56,5 +56,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "multiplier",
+    "input": "new_multiplier",
+    "key": "id",
+    "labels": {
+      "en": "Change surface: Multiplier",
+      "de": "Multiplikator ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "surface",
+      "kind": "change-surface-multiplier",
+      "record": "ChangedSurfaceMultiplier"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Multiplier violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The surface already carries this multiplier value."
+      }
+    }
   }
 }

@@ -23,7 +23,27 @@ impl<T: RetireOwned> BatchRetirement for ControlledRetirement<T> {
 
 pub type BatchAdmission<T> = Result<(Box<dyn BatchRetirement>, RetainedCloneProgress), (ValueError, T)>;
 
-pub struct SourceRetirementIssuer<M: Send + 'static> {
+pub struct SourceRetirementIssuer<M> {
     pub birth_bytes: usize,
     pub begin: fn(std::collections::VecDeque<M>, RetainedCloneGrant) -> BatchAdmission<std::collections::VecDeque<M>>,
+}
+
+/// 🎟️ The concrete native vocabulary lends its exact vector and source retirement constructors.
+pub struct BatchRetirementIssuer<M> {
+    pub birth_bytes: usize,
+    pub begin: fn(Vec<M>, RetainedCloneGrant) -> BatchAdmission<Vec<M>>,
+    pub source: SourceRetirementIssuer<M>,
+}
+impl<M> Copy for SourceRetirementIssuer<M> {}
+impl<M> Clone for SourceRetirementIssuer<M> { fn clone(&self) -> Self { *self } }
+impl<M> Copy for BatchRetirementIssuer<M> {}
+impl<M> Clone for BatchRetirementIssuer<M> { fn clone(&self) -> Self { *self } }
+impl<M: RetireOwned> BatchRetirementIssuer<M> {
+    /// 🪪️ Captures only defining typed retirement authority; no factory is substituted later.
+    pub fn typed() -> Self {
+        fn admit<T: RetireOwned>(value: T, grant: RetainedCloneGrant) -> BatchAdmission<T> {
+            semio_framework_value::retirement::controlled::admit_typed_controlled_retirement(value, grant).map(|(owner,p)| (owner as Box<dyn BatchRetirement>,p))
+        }
+        Self { birth_bytes: std::mem::size_of::<ControlledRetirement<Vec<M>>>(), begin: admit::<Vec<M>>, source: SourceRetirementIssuer { birth_bytes: std::mem::size_of::<ControlledRetirement<std::collections::VecDeque<M>>>(), begin: admit::<std::collections::VecDeque<M>> } }
+    }
 }

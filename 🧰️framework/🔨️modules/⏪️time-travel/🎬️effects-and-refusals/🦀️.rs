@@ -14,10 +14,10 @@ pub enum TimeTravelEffect {
     CancelReplay,
     /// 🗳️ Open the finalize prompt (overwrite or new alternative).
     OpenFinalizePrompt,
-    /// ✍️ Commit an unscoped `Supersede` of `inputs`.
-    CommitOverwrite { inputs: Vec<SupersededInput> },
-    /// 🌿️ Commit a `Branch` named `name` plus a scoped `Supersede` of `inputs`.
-    CommitAlternative { name: String, inputs: Vec<SupersededInput> },
+    /// ✍️ Finalize the original completed replay with an unscoped `Supersede`.
+    CommitOverwrite,
+    /// 🌿️ Finalize the original completed replay on a `Branch` named `name`.
+    CommitAlternative { name: String },
     /// 🚪️ Leave time travel and render the committed head.
     Close,
 }
@@ -29,7 +29,7 @@ impl TimeTravelEffect {
             Self::StartReplay { .. } => TimeTravelEffectKind::StartReplay,
             Self::CancelReplay => TimeTravelEffectKind::CancelReplay,
             Self::OpenFinalizePrompt => TimeTravelEffectKind::OpenFinalizePrompt,
-            Self::CommitOverwrite { .. } => TimeTravelEffectKind::CommitOverwrite,
+            Self::CommitOverwrite => TimeTravelEffectKind::CommitOverwrite,
             Self::CommitAlternative { .. } => TimeTravelEffectKind::CommitAlternative,
             Self::Close => TimeTravelEffectKind::Close,
         }

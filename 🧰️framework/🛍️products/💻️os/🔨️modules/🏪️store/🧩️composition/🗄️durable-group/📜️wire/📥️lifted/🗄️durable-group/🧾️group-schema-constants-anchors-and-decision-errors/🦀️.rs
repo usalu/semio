@@ -147,8 +147,8 @@ impl std::error::Error for DurableOwnedGroupDecisionError {}
 macro_rules! value_field {
     ($kind:ty, $variant:ident) => {
         impl DslField for $kind {
-            fn projection_view(&self, path: &[usize]) -> Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, semio_framework_value::ValueError> { planning::DurableBorrowedValue::$variant(self).native_view(path) }
-            fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, semio_framework_value::ValueError> { planning::DurableBorrowedValue::$variant(self).native_key(path, index) }
+            fn projection_view(&self, path: &[usize]) -> Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>, semio_framework_value::ValueError> { DurableBorrowedValue::$variant(self).native_view(path) }
+            fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, semio_framework_value::ValueError> { DurableBorrowedValue::$variant(self).native_key(path, index) }
             fn shape() -> Shape {
                 Shape::Value
             }
@@ -167,3 +167,7 @@ macro_rules! value_field {
 
 value_field!(DurableOwnedGroupAnchorV1, Anchor);
 value_field!(DurableOwnedGroupMemberV1, Member);
+
+impl From<semio_framework_value::ValueError> for DurableOwnedGroupDecisionError {
+    fn from(error: semio_framework_value::ValueError) -> Self { Self::Retirement(error) }
+}

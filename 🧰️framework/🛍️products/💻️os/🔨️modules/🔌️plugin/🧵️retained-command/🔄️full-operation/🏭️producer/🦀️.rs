@@ -1,6 +1,7 @@
 /// 🏭️ Mounted tool production retains one original request or its actual preborn interactive job.
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  fn validate_original_producer_source(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+  if let Some(caller)=self.original_emission_caller.as_ref(){if !self.source_identity.matches(cx)||self.original_emission_decoder!=cx.native_receiving_identity(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original emission requires its exact mounted source and receiving recipient").into())}if !caller.terminal_is_empty(){caller.validate_context(cx)?;}}
   if self.producer_source.is_some_and(|binding|!binding.matches(cx)){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool producer requires the same source roots, clock and deadline").into())}Ok(())
  }
  fn original_reserved_producer_pending(&self)->bool{self.reserved_producer.is_some()&&!self.terminal_seen&&self.session.is_none()&&self.session_rejected.is_none()}
@@ -18,7 +19,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
  }
  fn drive_original_producer(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,semio_framework_job::OriginalTurnFailure>{
   let before=cx.retained_progress();let mut candidate=None;
-  let result=if self.producer_request.is_some(){A::build_tool_job(&mut self.producer_request,&mut candidate,cx)}else{semio_framework_plugin_job::reserved_jobs::admit_original_reserved_producer(&mut self.reserved_producer,&mut candidate,&self.operation,cx)};
+  let result=if self.producer_request.is_some(){A::build_tool_job(&mut self.producer_request,&mut candidate,cx)}else{ArtifactReservedToolJob::admit_mounted(&mut self.reserved_producer,&mut candidate,&self.operation,cx)};
   if let Some(job)=candidate{self.session_rejected=Some(semio_framework_plugin_ownership::reserved_job_session::RefusedWorkerSource::pending(job,(self.source_identity.operation(),self.source_identity.generation())));}
   if result.is_err(){self.user_cancel_requested=true;self.terminal_seen=true;}
   match result{

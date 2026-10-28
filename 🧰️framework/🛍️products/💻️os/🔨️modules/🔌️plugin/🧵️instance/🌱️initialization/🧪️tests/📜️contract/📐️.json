@@ -1,0 +1,81 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "instance",
+    "actor",
+    "lanes",
+    "deniedAxes",
+    "cancelLanes",
+    "cancelPhases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semio.plugin.native-instance.v1"
+    },
+    "instance": {
+      "type": "string",
+      "minLength": 1
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1
+    },
+    "lanes": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "shape"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "shape": {
+            "enum": [
+              "document",
+              "config"
+            ]
+          },
+          "zoom": {
+            "type": "number"
+          },
+          "maps": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "deniedAxes": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "release",
+        "depth"
+      ]
+    },
+    "cancelLanes": {
+      "const": [
+        0,
+        1,
+        2,
+        3
+      ]
+    },
+    "cancelPhases": {
+      "const": [
+        2,
+        6,
+        7
+      ]
+    }
+  }
+}

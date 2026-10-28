@@ -216,9 +216,9 @@ impl ArtifactEditor for NotePlayApp {
         Some(note_app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> NoteSnapshot {
+    fn reference_birth()->Option<fn()->NoteSnapshot>{Some(||{
         empty_note_snapshot()
-    }
+    })}
 
     /// 🏷️ Maps each `NoteCommand` variant back to the action id it was declared under in
     /// `create_note_app` — used by `VcsArtifactApp` for command-log labeling and the registry's

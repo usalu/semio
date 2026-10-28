@@ -16,6 +16,10 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 use std::mem::size_of;
 use semio_framework_value::ErasedSnapshotRetirement as _;
+use semio_framework_dsl_record::{DslField,Shape,FieldValue};
+#[path="../../📤️source/🦀️.rs"]
+mod borrowed_source;
+pub use borrowed_source::{DurableBorrowedValue,DurableBorrowedDecisionFields};
 
 #[path = "🧾️group-schema-constants-anchors-and-decision-errors/🦀️.rs"]
 mod group_schema_constants_anchors_and_decision_errors;

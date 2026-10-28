@@ -105,21 +105,21 @@ pub(crate) fn encode_body(spec: &RecordSpec, record: &RecordValue) -> Result<Vec
     encode_record_body(spec, record, &EncodeOptions::default()).map_err(|error| ToolRunCodecError::Pack(error.to_string()))
 }
 
-pub(crate) fn decode_body(spec: &RecordSpec, bytes: &[u8]) -> Result<RecordValue, ToolRunCodecError> {
+pub(crate) fn decode_body<S:semio_framework_value::ByteReadSource+?Sized>(spec: &RecordSpec, bytes: &S) -> Result<RecordValue, ToolRunCodecError> {
     decode_record_body_exact(bytes, spec, &DecodeOptions::default()).map_err(|error| ToolRunCodecError::Pack(error.to_string()))
 }
 
-pub(crate) fn identity_record(identity: &ToolRunIdentity) -> RecordValue {
+pub(crate) fn identity_record(identity: &ToolRunIdentity) -> Result<RecordValue,ToolRunCodecError> {
     let mut record = RecordValue::default();
     record.fields.insert(1, FieldValue::UInt(u64::from(identity.id.app_instance_id)));
     record.fields.insert(2, FieldValue::UInt(identity.id.run));
     record.fields.insert(3, FieldValue::UInt(u64::from(identity.generation)));
-    record.fields.insert(4, FieldValue::Bytes64(identity.base_revision.to_vec()));
-    record
+    record.fields.insert(4, record_octets(&identity.base_revision)?);
+    Ok(record)
 }
 
 fn identity_from_record(record: &RecordValue) -> Result<ToolRunIdentity, ToolRunCodecError> {
-    let base_revision = bytes_field(record, 4)?.try_into().map_err(|_| ToolRunCodecError::Malformed("baseRevision"))?;
+    let raw=bytes_field(record,4)?;if raw.len()!=32{return Err(ToolRunCodecError::Malformed("baseRevision"))}let base_revision=octet_word::<32>(raw,0,"baseRevision")?;
     Ok(ToolRunIdentity { id: ToolRunId { app_instance_id: narrow(uint(record, 1)?, "appInstanceId")?, run: uint(record, 2)? }, generation: narrow(uint(record, 3)?, "generation")?, base_revision })
 }
 
@@ -160,25 +160,15 @@ pub(crate) fn step_record(step: &ToolRunStep) -> Result<RecordValue, ToolRunCode
                 }
             }
         }
-        record.fields.insert(7, FieldValue::Bytes64(args));
+        record.fields.insert(7, record_octets(&args)?);
     }
     Ok(record)
 }
 
 pub(crate) fn step_from_record(record: &RecordValue) -> Result<ToolRunStep, ToolRunCodecError> {
     let raw_args = bytes_field(record, 7)?;
-    let (args, rest) = raw_args.as_chunks::<9>();
-    if !rest.is_empty() || args.len() > TOOL_RUN_STEP_ARGS_MAX {
-        return Err(ToolRunCodecError::Malformed("step args"));
-    }
-    let args = args
-        .iter()
-        .map(|[kind, value @ ..]| match kind {
-            0 => Ok(ToolRunStepArg::Unsigned(u64::from_le_bytes(*value))),
-            1 => Ok(ToolRunStepArg::Float(f64::from_le_bytes(*value))),
-            _ => Err(ToolRunCodecError::Malformed("step arg kind")),
-        })
-        .collect::<Result<_, _>>()?;
+    if raw_args.len()%9!=0||raw_args.len()/9>TOOL_RUN_STEP_ARGS_MAX{return Err(ToolRunCodecError::Malformed("step args"))}
+    let args=(0..raw_args.len()/9).map(|index|{let[kind,value @ ..]=octet_word::<9>(raw_args,index*9,"step args")?;match kind{0=>Ok(ToolRunStepArg::Unsigned(u64::from_le_bytes(value))),1=>Ok(ToolRunStepArg::Float(f64::from_le_bytes(value))),_=>Err(ToolRunCodecError::Malformed("step arg kind"))}}).collect::<Result<_,_>>()?;
     let repeat = narrow(uint(record, 6)?, "repeat")?;
     if repeat == 0 {
         return Err(ToolRunCodecError::Malformed("repeat"));
@@ -199,7 +189,7 @@ pub(crate) fn progress_record(progress: &ToolRunProgress) -> Result<RecordValue,
         return Err(ToolRunCodecError::Limit("counters"));
     }
     let mut record = RecordValue::default();
-    record.fields.insert(1, FieldValue::Record(identity_record(&progress.identity)));
+    record.fields.insert(1, FieldValue::Record(identity_record(&progress.identity)?));
     record.fields.insert(2, FieldValue::UInt(progress.sequence));
     record.fields.insert(3, FieldValue::UInt(u64::from(progress.state.ordinal())));
     record.fields.insert(4, FieldValue::UInt(u64::from(progress.stage)));
@@ -208,7 +198,7 @@ pub(crate) fn progress_record(progress: &ToolRunProgress) -> Result<RecordValue,
         record.fields.insert(6, FieldValue::UInt(total));
     }
     if !progress.counters.is_empty() {
-        record.fields.insert(7, FieldValue::Bytes64(progress.counters.iter().flat_map(|counter| counter.counter.to_le_bytes().into_iter().chain(counter.value.to_le_bytes())).collect()));
+        record.fields.insert(7, record_octets(&progress.counters.iter().flat_map(|counter|counter.counter.to_le_bytes().into_iter().chain(counter.value.to_le_bytes())).collect::<Vec<_>>())?);
     }
     record.fields.insert(8, FieldValue::Float(f64::from(progress.units_per_second)));
     record.fields.insert(9, FieldValue::UInt(u64::from(progress.conflicts)));
@@ -220,11 +210,8 @@ pub(crate) fn progress_record(progress: &ToolRunProgress) -> Result<RecordValue,
 
 pub(crate) fn progress_from_record(record: &RecordValue) -> Result<ToolRunProgress, ToolRunCodecError> {
     let raw_counters = bytes_field(record, 7)?;
-    let (counters, rest) = raw_counters.as_chunks::<10>();
-    if !rest.is_empty() || counters.len() > TOOL_RUN_COUNTERS_MAX {
-        return Err(ToolRunCodecError::Malformed("counters"));
-    }
-    let counters = counters.iter().map(|[c0, c1, value @ ..]| ToolRunCounter { counter: u16::from_le_bytes([*c0, *c1]), value: u64::from_le_bytes(*value) }).collect();
+    if raw_counters.len()%10!=0||raw_counters.len()/10>TOOL_RUN_COUNTERS_MAX{return Err(ToolRunCodecError::Malformed("counters"))}
+    let counters=(0..raw_counters.len()/10).map(|index|{let[c0,c1,value @ ..]=octet_word::<10>(raw_counters,index*10,"counter")?;Ok(ToolRunCounter{counter:u16::from_le_bytes([c0,c1]),value:u64::from_le_bytes(value)})}).collect::<Result<_,ToolRunCodecError>>()?;
     let steps = list(record, 10)?.iter().map(|item| step_from_record(item_record(item)?)).collect::<Result<Vec<_>, _>>()?;
     let units_per_second = match record.get(8) {
         Some(FieldValue::Float(value)) => *value as f32,
@@ -282,11 +269,11 @@ pub(crate) fn page_record(page: &ToolRunTracePage) -> Result<RecordValue, ToolRu
         }
     }
     let mut record = RecordValue::default();
-    record.fields.insert(1, FieldValue::Record(identity_record(&page.identity)));
+    record.fields.insert(1, FieldValue::Record(identity_record(&page.identity)?));
     record.fields.insert(2, FieldValue::UInt(u64::from(page.page)));
     for (id, column) in (3u16..).zip(columns) {
         if !column.is_empty() {
-            record.fields.insert(id, FieldValue::Bytes64(column));
+            record.fields.insert(id, record_octets(&column)?);
         }
     }
     Ok(record)
@@ -305,20 +292,20 @@ pub(crate) fn page_from_record(record: &RecordValue) -> Result<ToolRunTracePage,
     let shapes = u32_column(bytes_field(record, 9)?, "shapes")?;
     let entities = u64_column(bytes_field(record, 10)?, "entities")?;
     let floats = f32_column(bytes_field(record, 11)?)?;
-    let upserts = kinds.iter().filter(|kind| **kind == 0).count();
-    let keyed = kinds.iter().filter(|kind| **kind < 2).count();
-    let instances = subject_kinds.iter().filter(|kind| **kind == 0).count();
-    let placements = subject_kinds.iter().filter(|kind| **kind == 1).count();
-    let entity_subjects = subject_kinds.iter().filter(|kind| **kind == 2).count();
-    if kinds.iter().any(|kind| *kind > 2) || keys.len() != keyed || verdicts.len() != upserts || reasons.len() != 2 * upserts || subject_kinds.len() != upserts || instances + placements + entity_subjects != upserts || meshes.len() != instances || shapes.len() != placements || entities.len() != entity_subjects || floats.len() != 8 * instances + 3 * placements {
+    let upserts = kinds.iter().filter(|kind| *kind == 0).count();
+    let keyed = kinds.iter().filter(|kind| *kind < 2).count();
+    let instances = subject_kinds.iter().filter(|kind| *kind == 0).count();
+    let placements = subject_kinds.iter().filter(|kind| *kind == 1).count();
+    let entity_subjects = subject_kinds.iter().filter(|kind| *kind == 2).count();
+    if kinds.iter().any(|kind| kind > 2) || keys.len() != keyed || verdicts.len() != upserts || reasons.len() != 2 * upserts || subject_kinds.len() != upserts || instances + placements + entity_subjects != upserts || meshes.len() != instances || shapes.len() != placements || entities.len() != entity_subjects || floats.len() != 8 * instances + 3 * placements {
         return Err(ToolRunCodecError::Malformed("trace page columns"));
     }
     let (mut key_at, mut upsert_at, mut mesh_at, mut shape_at, mut entity_at, mut float_at) = (0, 0, 0, 0, 0, 0);
     let mut ops = Vec::with_capacity(kinds.len());
-    for kind in kinds {
+    for kind in kinds.iter() {
         match kind {
             0 => {
-                let subject = match subject_kinds[upsert_at] {
+                let subject = match subject_kinds.get(upsert_at).ok_or(ToolRunCodecError::Malformed("subject kind"))? {
                     0 => {
                         let f = &floats[float_at..float_at + 8];
                         float_at += 8;
@@ -336,8 +323,8 @@ pub(crate) fn page_from_record(record: &RecordValue) -> Result<ToolRunTracePage,
                         ToolRunTraceSubject::Entity { entity: entities[entity_at - 1] }
                     }
                 };
-                let verdict = ToolRunVerdict::from_ordinal(verdicts[upsert_at]).ok_or(ToolRunCodecError::Malformed("verdict"))?;
-                let reason = u16::from_le_bytes([reasons[2 * upsert_at], reasons[2 * upsert_at + 1]]);
+                let verdict = ToolRunVerdict::from_ordinal(verdicts.get(upsert_at).ok_or(ToolRunCodecError::Malformed("verdict"))?).ok_or(ToolRunCodecError::Malformed("verdict"))?;
+                let reason = u16::from_le_bytes([reasons.get(2*upsert_at).ok_or(ToolRunCodecError::Malformed("reason"))?, reasons.get(2*upsert_at+1).ok_or(ToolRunCodecError::Malformed("reason"))?]);
                 ops.push(ToolRunTraceOp::Upsert { key: keys[key_at], verdict, reason, subject });
                 upsert_at += 1;
                 key_at += 1;
@@ -371,10 +358,10 @@ pub(crate) fn boolean(record: &RecordValue, id: u16) -> Result<bool, ToolRunCode
     }
 }
 
-pub(crate) fn bytes_field(record: &RecordValue, id: u16) -> Result<&[u8], ToolRunCodecError> {
+pub(crate) fn bytes_field(record: &RecordValue, id: u16) -> Result<protocol::codec::ByteSpan<'_>, ToolRunCodecError> {
     match record.get(id) {
-        None | Some(FieldValue::Absent) => Ok(&[]),
-        Some(FieldValue::Bytes64(bytes)) => Ok(bytes),
+        None | Some(FieldValue::Absent) => Ok(protocol::codec::ByteSpan::from_slice(&[])),
+        Some(FieldValue::Bytes64(bytes)) => Ok(protocol::codec::ByteSpan::from_bytes(bytes)),
         Some(_) => Err(ToolRunCodecError::Malformed("bytes field")),
     }
 }
@@ -387,9 +374,9 @@ pub(crate) fn list(record: &RecordValue, id: u16) -> Result<&[FieldValue], ToolR
     }
 }
 
-pub(crate) fn item_bytes(item: &FieldValue) -> Result<&[u8], ToolRunCodecError> {
+pub(crate) fn item_bytes(item: &FieldValue) -> Result<protocol::codec::ByteSpan<'_>, ToolRunCodecError> {
     match item {
-        FieldValue::Bytes64(bytes) => Ok(bytes),
+        FieldValue::Bytes64(bytes) => Ok(protocol::codec::ByteSpan::from_bytes(bytes)),
         _ => Err(ToolRunCodecError::Malformed("bytes item")),
     }
 }
@@ -405,27 +392,9 @@ pub(crate) fn narrow<T: TryFrom<u64>>(value: u64, what: &'static str) -> Result<
     T::try_from(value).map_err(|_| ToolRunCodecError::Malformed(what))
 }
 
-pub(crate) fn u64_column(bytes: &[u8], what: &'static str) -> Result<Vec<u64>, ToolRunCodecError> {
-    let (chunks, rest) = bytes.as_chunks::<8>();
-    if !rest.is_empty() {
-        return Err(ToolRunCodecError::Malformed(what));
-    }
-    Ok(chunks.iter().map(|chunk| u64::from_le_bytes(*chunk)).collect())
-}
-
-fn u32_column(bytes: &[u8], what: &'static str) -> Result<Vec<u32>, ToolRunCodecError> {
-    let (chunks, rest) = bytes.as_chunks::<4>();
-    if !rest.is_empty() {
-        return Err(ToolRunCodecError::Malformed(what));
-    }
-    Ok(chunks.iter().map(|chunk| u32::from_le_bytes(*chunk)).collect())
-}
-
-fn f32_column(bytes: &[u8]) -> Result<Vec<f32>, ToolRunCodecError> {
-    let (chunks, rest) = bytes.as_chunks::<4>();
-    if !rest.is_empty() {
-        return Err(ToolRunCodecError::Malformed("floats"));
-    }
-    Ok(chunks.iter().map(|chunk| f32::from_le_bytes(*chunk)).collect())
-}
+pub(crate) fn record_octets(bytes:&[u8])->Result<FieldValue,ToolRunCodecError>{semio_framework_dsl_record::RecordBytes::try_from_slice(bytes).map(FieldValue::Bytes64).map_err(|error|ToolRunCodecError::Pack(error.to_string()))}
+fn octet_word<const N:usize>(bytes:protocol::codec::ByteSpan<'_>,offset:usize,what:&'static str)->Result<[u8;N],ToolRunCodecError>{let mut word=[0;N];for(index,byte)in word.iter_mut().enumerate(){*byte=bytes.get(offset+index).ok_or(ToolRunCodecError::Malformed(what))?;}Ok(word)}
+pub(crate) fn u64_column(bytes:protocol::codec::ByteSpan<'_>,what:&'static str)->Result<Vec<u64>,ToolRunCodecError>{if bytes.len()%8!=0{return Err(ToolRunCodecError::Malformed(what))}(0..bytes.len()/8).map(|index|octet_word::<8>(bytes,index*8,what).map(u64::from_le_bytes)).collect()}
+fn u32_column(bytes:protocol::codec::ByteSpan<'_>,what:&'static str)->Result<Vec<u32>,ToolRunCodecError>{if bytes.len()%4!=0{return Err(ToolRunCodecError::Malformed(what))}(0..bytes.len()/4).map(|index|octet_word::<4>(bytes,index*4,what).map(u32::from_le_bytes)).collect()}
+fn f32_column(bytes:protocol::codec::ByteSpan<'_>)->Result<Vec<f32>,ToolRunCodecError>{if bytes.len()%4!=0{return Err(ToolRunCodecError::Malformed("floats"))}(0..bytes.len()/4).map(|index|octet_word::<4>(bytes,index*4,"floats").map(f32::from_le_bytes)).collect()}
 //#endregion 🔖️Codec

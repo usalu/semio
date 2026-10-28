@@ -65,9 +65,9 @@ impl ArtifactViewer for Din18599Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn initial_snapshot() -> Din18599Snapshot {
+    fn reference_birth()->Option<fn()->Din18599Snapshot>{Some(||{
         Din18599Snapshot::default()
-    }
+    })}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_s_artifact_norm_din18599_model::din18599_child_restore_projection(snapshot)

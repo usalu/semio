@@ -20,6 +20,8 @@ name = "authoring_law"
 path = "../../🧪️tests/⚖️authoring-law/🦀️.rs"
 
 [dependencies]
+semio-s-artifact-energy-model-initialization = { workspace = true }
+semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework = { workspace = true }
@@ -48,6 +50,15 @@ semio-s-artifact-energy-model-mut-glazing = { workspace = true }
 semio-s-artifact-energy-model-mut-material = { workspace = true }
 semio-s-artifact-energy-model-mut-model = { workspace = true }
 semio-s-artifact-energy-model-mut-run = { workspace = true }
+semio-s-artifact-energy-model-mut-ideal-loads = { workspace = true }
+semio-s-artifact-energy-model-mut-space = { workspace = true }
+semio-s-artifact-energy-model-mut-people-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-lighting-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-equipment-gain = { workspace = true }
+semio-s-artifact-energy-model-mut-infiltration = { workspace = true }
+semio-s-artifact-energy-model-mut-leakage = { workspace = true }
+semio-s-plugin-energy-engine-air-exchange = { workspace = true }
+semio-s-artifact-energy-model-mut-shading = { workspace = true }
 semio-s-artifact-energy-model-mut-shading-device = { workspace = true }
 semio-s-artifact-energy-model-mut-site = { workspace = true }
 semio-s-artifact-energy-model-mut-surface = { workspace = true }

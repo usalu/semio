@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod add_space_list_member {
     #[path = "➡️add-member/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "➡️add-member/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "➡️add-member/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "➡️add-member/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod create_space_list {
     #[path = "📋️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📋️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📋️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📋️create/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod delete_space_list {
     #[path = "🗒️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🗒️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🗒️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🗒️delete/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod remove_space_list_member {
     #[path = "🪤️remove-member/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪤️remove-member/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪤️remove-member/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪤️remove-member/↩️inverse/🦀️.rs"]
@@ -62,6 +70,8 @@ pub mod rename_space_list {
     #[path = "🪶️rename/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪶️rename/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪶️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪶️rename/↩️inverse/🦀️.rs"]

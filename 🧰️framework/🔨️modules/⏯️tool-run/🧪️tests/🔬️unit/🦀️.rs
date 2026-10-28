@@ -418,7 +418,7 @@ fn definition_round_trips_through_serde_and_value_and_validates() {
     invalid.stages[2].id = "plan".into();
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::DuplicateStageId("plan".into())));
     let mut invalid = definition.clone();
-    invalid.counters = (0..9).map(|index| ToolRunCounterDefinition { id: format!("c{index}"), label: LocalizedLabel::native("C", "C") }).collect();
+    invalid.counters = (0..10).map(|index| ToolRunCounterDefinition { id: format!("c{index}"), label: LocalizedLabel::native("C", "C") }).collect();
     assert_eq!(invalid.validate(), Err(ToolRunDefinitionError::TooManyCounters));
     let mut invalid = definition.clone();
     invalid.settings.window_config.insert("main".into(), vec!["/grid/~2".into()]);

@@ -127,7 +127,7 @@ pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<Acceptanc
 /// its initial document and each of `examples` (a DSL body verbatim, a JSON body decoded as `A::Snapshot`). Cases on one
 /// document share its key, so they can follow each other downstream.
 pub async fn acceptance_example_cases<A: ArtifactApp>(root: &std::path::Path, examples: &[ExampleSource]) -> Vec<AcceptanceCase<A::Mutation>> {
-    let initial = A::initial_snapshot().await;
+    let initial = A::reference_birth().expect("explicit reference snapshot producer")();
     let mut documents = vec![("initial".to_string(), pack::snapshot::ArtifactDsl::print_dsl(&initial))];
     std::mem::forget(initial);
     for example in examples {

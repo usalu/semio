@@ -95,7 +95,7 @@ where
                 );
             }
             OpsHeaderLine::Commit { id: transition_id, actor, clock, after, checkpoint, parent, change, operations, description, saved, by, message, at, line } => {
-                let authors = by.into_iter().map(|author| semio_framework_os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
+                let authors = by.into_iter().map(|author| semio_framework_os_spr::Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
                 let checkpoint = semio_framework_os_spr::TransitionCheckpoint {
                     checkpoint_id: checkpoint,
                     parent_id: parent,
@@ -177,7 +177,7 @@ where
         return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ops text has no document header".to_string(), TextSpan::at(1, 1)));
     }
     for edit in &mut edits {
-        edit.inverse = inverse_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has no inverse record for edit {}", edit.id), TextSpan::at(1, 1)))?;
+        edit.inverse = inverse_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has no inverse record for edit {}", edit.id), TextSpan::at(1, 1)))?.into();
         let metadata = metadata_by_edit.remove(&edit.id).ok_or_else(|| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text has no metadata records for edit {}", edit.id), TextSpan::at(1, 1)))?;
         if metadata.len() != edit.forwards.len() || (0..edit.forwards.len() as u32).any(|index| !metadata.contains_key(&index)) {
             return Err(TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("ops text metadata does not exactly cover edit {}", edit.id), TextSpan::at(1, 1)));
@@ -217,7 +217,7 @@ where
         lanes: protocol::HistoryFoldIndex::new(),
         edit_messages: ArtifactEditMessageLedger::from_preflighted_entries(edit_messages),
         conflicts,
-        transitions,
+        transitions:ArtifactHistoryLedger::try_from_preflighted(transitions).map_err(|_|TextError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"ops transition capacity exceeded".to_string(),TextSpan::at(1,1)))?,
         history_shape: semio_framework_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,

@@ -277,9 +277,9 @@ impl ArtifactEditor for SemioMeshEditor {
         editing::snapshot_editing_command_id(command, |_| "set-vertex")
     }
 
-    fn initial_snapshot() -> SemioMeshSnapshot {
+    fn reference_birth()->Option<fn()->SemioMeshSnapshot>{Some(||{
         SemioMeshSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

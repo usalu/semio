@@ -42,38 +42,11 @@ impl ArtifactEditor for EnergyModelEditor {
 })())
 }
 
-    semio_framework_plugin::bounded_first_step_tool_proofs! {
-        owner: EditorApp<EnergyModelEditor>,
-        owner_file: "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
-        controller: "s.energy.model@1/*#editor",
-        artifact_schema: "energy.model",
-        factory: "EnergyModelCommandJobFactory",
-        factory_type: EnergyModelCommandJobFactory,
-        contract: ToolExecutionContract::bounded_first_step(65_536, 65_536, 1, 262_144, 7_500),
-        tools: [
-            "set-node",
-            "set-cell",
-            "create-zone",
-            "rename-zone",
-            "delete-zone",
-            "create-surface",
-            "delete-surface",
-            "assign-surface-construction",
-            "set-material-property",
-            "set-thermostat-setpoints",
-            "set-site",
-            "set-run-period",
-            "setActiveExample",
-            "set-simulation-settings",
-            "set-result-field",
-            "set-surface-property",
-            "set-fenestration-property",
-            "set-zone-property",
-            "set-glazing-material-property",
-            "set-gas-material-property",
-            "setCamera",
-            "set-construction-property"
-        ]
+    fn bounded_first_step_tool_proofs() -> Vec<semio_framework_plugin::tool_contract::ArtifactBoundedFirstStepProof> {
+        ENERGY_MODEL_RETAINED_TOOL_IDS.iter().map(|tool| semio_framework_plugin::tool_contract::ArtifactBoundedFirstStepProof::new::<EditorApp<EnergyModelEditor>>(
+            "✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+            "s.energy.model@1/*#editor", "EnergyModelCommandJobFactory", tool, "energy.model", energy_model_contract(),
+        ).with_factory_type::<EditorApp<EnergyModelEditor>, EnergyModelCommandJobFactory>()).collect()
     }
 
     /// 🎥️ The 3d window's own retained orbit pose — one bounded window-config store, keyed by window
@@ -87,6 +60,8 @@ impl ArtifactEditor for EnergyModelEditor {
         registry.register(EnergyModelCommandJobFactory::new(&controller))
     }
 
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{Some(&editor_commands::ENERGY_ORIGINAL_ACTION_FACTORY)}
+
     fn build_tool_job(request: &mut Option<ArtifactOwnedToolJobRequest<EditorApp<Self>>>, output: &mut Option<semio_framework::ErasedToolJob>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
         let original = request.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "original tool producer request is absent"))?;
         if !ENERGY_MODEL_RETAINED_TOOL_IDS.contains(&original.tool_id.as_str()) {
@@ -99,7 +74,7 @@ impl ArtifactEditor for EnergyModelEditor {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "the energy model bounded route exceeded its declared work extent").into());
         }
         let tool_id = original.command.action_id();
-                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EnergyModelEditorCommand::action_id, ENERGY_MODEL_RETAINED_RAW_BYTES, 1, false, |_request| BoundedArtifactCommandWork::new(tool_id, energy_model_reduce, energy_model_extent))
+                semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, EnergyModelEditorCommand::action_id, ENERGY_MODEL_RETAINED_RAW_BYTES, 1, false, |_request| EnergyModelCommandWork::new(tool_id))
     }
 
 
@@ -138,7 +113,7 @@ impl ArtifactEditor for EnergyModelEditor {
     }
 
     fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(std::sync::Arc::new(EnergyModelStorePreparationFactory))
+        Some(std::sync::Arc::new(EnergyModelStorePreparationFactory::default()))
     }
 
     fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
@@ -151,12 +126,18 @@ impl ArtifactEditor for EnergyModelEditor {
         if request.tool_id != tools::simulation::TOOL_ID || request.purpose != ToolRunJobPurpose::Run {
             return Ok(None);
         }
-        Ok(Some(Box::new(EnergySimulationRunJob::new(request.identity, request.snapshot, request.config.simulation_template()))))
+        let weather = if let Some(link) = request.snapshot.weather_link.as_ref() {
+            if link.target.dialect.artifact_kind != "s.stdio.epw" || link.target.dialect.standard != "energyplus" || link.target.dialect.subset != "*" {
+                return Err(Fault::from("The weather link must address a Stdio EPW EnergyPlus artifact. / Die Wetterverknüpfung muss auf ein Stdio-EPW-EnergyPlus-Artefakt verweisen."));
+            }
+            let host = request.host.as_ref().ok_or_else(||Fault::from("Weather artifact resolution is unavailable. / Das Wetterartefakt kann nicht aufgelöst werden."))?;
+            Some(host.resolve_link_retained(semio_framework_pack_json::to_json_string(link),request.port.request_waker())?)
+        } else { None };
+        let job=EnergySimulationRunJob::new(request.identity, request.snapshot, request.config.simulation_template());
+        Ok(Some(Box::new(match weather { Some(receiver)=>job.with_linked_weather(receiver,request.port),None=>job })))
     }
 
-    fn initial_snapshot() -> EnergyModelSnapshot {
-        EnergyModelSnapshot::default()
-    }
+
 
     fn command_id(command: &EnergyModelEditorCommand) -> &'static str {
         command.action_id()
@@ -224,20 +205,11 @@ fn render_body(
     let node = match body_key {
         structure::BODY_KEY => structure::render(doc.snapshot)?,
         zones::BODY_KEY => zones::render(doc.snapshot)?,
-        simulation::BODY_KEY => simulation::render(doc.tool_run(), cfg.snapshot, &doc.snapshot.model, view_state.locale),
+        simulation::BODY_KEY => simulation::render(doc.original_tool_run(), cfg.snapshot, &doc.snapshot.model, doc.snapshot.weather_link.as_ref(), view_state.locale),
         model_window::BODY_KEY => {
-            let energy = crate::editor_edit::tools::simulation::surface_energy_from_run(doc.tool_run());
-            let field = crate::editor_config::result_field(cfg.snapshot);
-            let painted = energy.as_ref().map(|map| crate::editor_results::surface_colors(map, field));
-            let caption = painted.as_ref().map(|(_, min, max)| crate::editor_results::legend_caption(field, *min, *max));
-            model_window::render_with_legend(
-                &crate::snapshot::energy_model(doc.snapshot),
-                interaction,
-                painted.as_ref().map(|(colors, _, _)| colors),
-                caption.as_deref(),
-                painted.as_ref().map(|(_, min, max)| (*min, *max)),
-                model_window::config::current(cfg),
-            )?
+            let energy=doc.original_tool_run().filter(|run|run.tool_id==crate::editor_edit::tools::simulation::TOOL_ID).and_then(|run|run.payload).and_then(crate::editor_results::indexed::IndexedEnergyResults::new);
+            model_window::render_indexed(&doc.snapshot.model.read(),interaction,energy.as_ref(),crate::editor_config::result_field(cfg.snapshot),view_state.locale,model_window::config::current(cfg))?
+
         }
         artifact_panel::BODY_KEY => artifact_panel::render(doc.snapshot, interaction, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, artifact_panel::BODY_KEY))?,
         inspection_panel::BODY_KEY => inspection_panel::render(doc.snapshot, interaction, cfg.snapshot, view_state.locale, &semio_framework_plugin::TreeWindows::for_body(view_state, inspection_panel::BODY_KEY))?,

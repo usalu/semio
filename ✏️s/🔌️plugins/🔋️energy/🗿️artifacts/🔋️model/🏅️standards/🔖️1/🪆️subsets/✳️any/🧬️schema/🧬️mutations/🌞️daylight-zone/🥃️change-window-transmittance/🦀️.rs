@@ -1,14 +1,13 @@
 //! 🥃️ Energy model mutation — `ChangeDaylightZoneWindowTransmittance`: Sets the visible transmittance the daylight control sees its window through, as a fraction.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🥃️ `change-daylight-zone-window-transmittance` payload. Sets the visible transmittance the daylight control sees its window through, as a fraction.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-daylight-zone-window-transmittance")]
 pub struct ChangeDaylightZoneWindowTransmittance {
@@ -19,41 +18,5 @@ pub struct ChangeDaylightZoneWindowTransmittance {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn change_daylight_zone_window_transmittance<Op: From<ChangeDaylightZoneWindowTransmittance>>(id: crate::model::EntityId, new_window_transmittance: f64) -> Op {
     ChangeDaylightZoneWindowTransmittance { id, new_window_transmittance }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeDaylightZoneWindowTransmittance
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeDaylightZoneWindowTransmittance>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "daylight-zone", kind: "change-daylight-zone-window-transmittance", record: "ChangedDaylightZoneWindowTransmittance" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change daylight zone {} window transmittance to {:?}", self.id.0, self.new_window_transmittance), &format!("Fenstertransmissionsgrad von Tageslichtzone {} auf {:?} ändern", self.id.0, self.new_window_transmittance))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeDaylightZoneWindowTransmittance
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeDaylightZoneWindowTransmittance>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

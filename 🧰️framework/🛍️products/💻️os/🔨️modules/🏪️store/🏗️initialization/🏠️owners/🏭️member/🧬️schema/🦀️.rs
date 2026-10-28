@@ -7,7 +7,7 @@ use semio_framework_value::retained_clone::{RetainedCloneBirthDemand,RetainedClo
 
 /// 📦️ Original stateless factory selection lives in the actual retained member body and owns no substitute source.
 pub trait MemberStoreProducer<P,M>:Copy+Send+Sync+'static
-where P:Clone+ToValue+FromValue,M:Clone+ToValue+FromValue+Mutation<P>,
+where P:ToValue,M:ToValue+FromValue+Mutation<P>,
 {
  type SnapshotOpen:MemberSnapshotOpenOperation<Snapshot=P>;
  fn member_store_owners_copy_byte_demand(&self)->Result<usize,ValueError>;

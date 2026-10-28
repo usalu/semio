@@ -35,6 +35,20 @@ impl ArtifactPreparedOperationOutput {
     pub fn byte_at(&self,index:usize)->Option<u8>{self.bytes.get(index).copied()}
     pub fn iter(&self)->impl ExactSizeIterator<Item=u8>+'_ {self.bytes.iter().copied()}
 
+    /// 📏️ Quotes the next original page birth or bounded octet copy before construction.
+    pub fn append_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        let depth=self.bytes.next_reserve_depth_demand().map_err(refusal)?.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"operation append depth overflow"))?;
+        if !self.bytes.has_reserved_slot(){return Ok(RetirementDemand{capacity_bytes:self.bytes.next_exact_capacity_allocation_bytes(self.maximum_payload_bytes).map_err(refusal)?.ok_or_else(||ValueError::literal(ValueRefusalKind::OwnershipLimit,"operation output exhausted"))?,depth,..Default::default()})}
+        Ok(RetirementDemand{copy_bytes:body.min(64).min(self.bytes.capacity()-self.bytes.len()),depth,..Default::default()})
+    }
+
+    /// 📬️ Quotes the exact existing contiguous handoff frontier independently of copy credit.
+    pub fn contiguous_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if self.contiguous.is_none(){return Ok(RetirementDemand{copy_bytes:size_of::<Vec<u8>>(),capacity_bytes:self.bytes.len(),depth:1,..Default::default()})}
+        if !self.contiguous_complete{let output=self.contiguous.as_ref().unwrap();return Ok(RetirementDemand{copy_bytes:if output.len()==self.bytes.len(){size_of::<bool>()}else{(self.bytes.len()-output.len()).min(64).min(body)},depth:1,..Default::default()})}
+        self.paged_demands()
+    }
+
     /// 🛂️ Admits one original page birth or at most sixty-four initialized octets.
     pub fn append(&mut self,source:&[u8],grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
         if self.closing||self.closed||self.contiguous.is_some(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"operation output is closing or transferring"));}

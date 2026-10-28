@@ -1,6 +1,6 @@
 //! 📝️ Native JSON transport for owned EnergyModel field edits.
 
-use crate::EnergyModelDiff;
+use crate::ReferenceEnergyModelDiff;
 
 /// 📖️ Authored grammar for the physical edit representation.
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");

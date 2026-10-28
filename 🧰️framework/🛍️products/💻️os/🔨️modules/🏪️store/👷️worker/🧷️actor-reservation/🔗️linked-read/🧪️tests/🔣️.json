@@ -1,0 +1,37 @@
+{
+  "spaceId": "space",
+  "documentId": "weather",
+  "dialect": {
+    "artifactKind": "s.stdio.epw",
+    "standard": "energyplus",
+    "subset": "*"
+  },
+  "bytes": [
+    1,
+    0,
+    255,
+    128
+  ],
+  "cases": [
+    "head",
+    "missing",
+    "dialect",
+    "checkpoint",
+    "retired"
+  ],
+  "snapshot": {
+    "bytes": [
+      97,
+      98,
+      99
+    ],
+    "hash": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",
+    "refusals": [
+      "hash",
+      "length",
+      "mediaType",
+      "cancelled",
+      "stale"
+    ]
+  }
+}

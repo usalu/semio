@@ -26,7 +26,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let completion = ArtifactToolCompletion::<A>::new();
         let request = ArtifactReservedToolJobRequest {
                 retained:self.mounted_policy.maintenance,
-            controller_id: self.tools.tool_job_controller_id.clone(),
+            controller_id: self.tools.tool_controller_id().to_string(),
             tool_id: action.to_string(),
             payload_schema_id: self.tools.qualified_tool_proof(&*self.stores, action)?.schema_id(),
             contract: self.tools.qualified_tool_proof(&*self.stores, action)?.contract(),
@@ -54,7 +54,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let completion = ArtifactToolCompletion::<A>::new();
         let request = ArtifactReservedToolJobRequest {
                 retained:self.mounted_policy.maintenance,
-            controller_id: self.tools.tool_job_controller_id.clone(),
+            controller_id: self.tools.tool_controller_id().to_string(),
             tool_id: action.to_string(),
             payload_schema_id: self.tools.qualified_tool_proof(&*self.stores, action)?.schema_id(),
             contract: self.tools.qualified_tool_proof(&*self.stores, action)?.contract(),

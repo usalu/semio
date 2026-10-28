@@ -38,7 +38,7 @@ pub type ToolRunJob = Box<dyn semio_framework_job::InteractiveJob + Send>;
 
 /// 🔑️ The trace key allocator every job of one run shares: keys handed out lie above every key the run's
 /// ticks have upserted and every key allocated before.
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
 pub struct ToolRunTraceKeys {
     next: Arc<std::sync::atomic::AtomicU64>,
 }
@@ -86,7 +86,15 @@ pub struct ToolRunJobPortState {
     waiting: std::sync::atomic::AtomicBool,
 }
 
+impl std::task::Wake for ToolRunJobPortState {
+    fn wake(self: Arc<Self>) { self.waiting.store(false, std::sync::atomic::Ordering::SeqCst); }
+    fn wake_by_ref(self: &Arc<Self>) { self.waiting.store(false, std::sync::atomic::Ordering::SeqCst); }
+}
+
 impl ToolRunJobPort {
+    /// ⏰️ Borrows the existing atomic port owner as a host-completion wake without another allocation.
+    pub fn request_waker(&self) -> std::task::Waker { std::task::Waker::from(self.inner.clone()) }
+
     /// 🎟️ Quotes the original lease capture before any caller slot is consumed.
     pub fn original_close_demands(&self)->Result<RetirementDemand,ValueError>{
         if Arc::weak_count(&self.inner)!=0{return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool port weak backing remains live"));}

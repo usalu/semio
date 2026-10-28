@@ -46,6 +46,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateModelAirLoop",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "air_loops",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename air loop",
+      "de": "Luftkreislauf umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "air-loop",
+      "kind": "rename-air-loop",
+      "record": "RenamedAirLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A air loop name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another air loop already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed air loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The air loop already has this name."
       }
     }
   }

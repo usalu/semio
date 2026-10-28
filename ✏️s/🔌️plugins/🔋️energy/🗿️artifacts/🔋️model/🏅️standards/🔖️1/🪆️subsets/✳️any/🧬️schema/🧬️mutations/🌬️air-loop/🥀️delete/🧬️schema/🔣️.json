@@ -33,5 +33,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateModelAirLoop",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "air_loops",
+    "key": "id",
+    "inverse": "CreateAirLoop",
+    "restriction": {
+      "row": "StateOutdoorAirSystem",
+      "branch": "systems",
+      "collection": "outdoor_air_systems",
+      "field": "air_loop_id",
+      "storage": "direct",
+      "kind": "references"
+    },
+    "labels": {
+      "en": "Delete air loop",
+      "de": "Luftkreislauf löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "air-loop",
+      "kind": "delete-air-loop",
+      "record": "DeletedAirLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed air-loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

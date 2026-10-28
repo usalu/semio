@@ -48,6 +48,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateGasMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "gas_materials",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": false,
+    "labels": {
+      "en": "Rename gas material",
+      "de": "Gasmaterial umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "gas-material",
+      "kind": "rename-gas-material",
+      "record": "RenamedGasMaterial"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A gas material name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another gas material already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed gas material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The gas material already has this name."
       }
     }
   }

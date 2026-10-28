@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteIdealLoadsSystem` — always computed from BASE, never by inverting the delta.
 
 use crate as vocabulary;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
@@ -10,6 +10,7 @@ where
     Op: From<super::DeleteIdealLoadsSystem> + From<crate::CreateIdealLoadsSystem>,
 {
     Ok((|| {
+    if base.model.faults.iter().any(|fault| fault.target_equipment_id == payload.id) { return Vec::new(); }
     match base.model.ideal_loads.iter().enumerate().find(|(_, item)| item.id == payload.id) {
         Some((index, item)) => vec![vocabulary::create_ideal_loads_system(
             item.id,

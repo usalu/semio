@@ -305,7 +305,7 @@ impl InteractionWrite {
 
 /// 🌱️ Explicit private member input retained until one composed group accepts or retires it.
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
 pub struct ChildEmitGenesis {
     #[serde(serialize_with = "serialize_child_genesis_reference")]
     pub reference: ArtifactRef,
@@ -357,7 +357,7 @@ impl ChildEmitGenesis {
 /// A refused operation leaves that prefix unchanged and retains its typed owner in preparation.
 /// `owner` is the owner-path text ([`MemberPath`]) of the member that owns the target; empty when the document itself does.
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, FromValue)]
-#[derive(semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::RetireOwned,semio_framework_value::NativeReceive)]
 pub struct ChildEmit {
     pub genesis: Option<ChildEmitGenesis>,
     pub owner: String,
@@ -694,12 +694,16 @@ impl<Mutation, ConfigMutation, DraftMutation> Emit<Mutation, ConfigMutation, Dra
 /// 🪪️ Per-invocation runtime metadata handed to the object-safe {@link PluginApp} — the local
 /// actor id, the instance id used to stamp operation handles, and optional host view context.
 /// Headless operations have no view; UI actions carry the addressed concrete window's projection.
-#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, Default, semio_framework_value::RetireOwned,semio_framework_value::RetainedClone)]
 pub struct ActionMeta {
     pub actor: semio_framework_value::SharedUtf8,
     pub instance_id: u32,
     pub view_state: Option<ViewModel>,
 }
+#[path="🛂️metadata/📑️copy/🦀️.rs"]
+pub mod original_metadata_copy;
+pub use original_metadata_copy::OriginalActionMetaCopy;
+
 
 /// 🔤️ Parses the raw action id crossing the WASM ABI (`ArtifactApp::handle_action`'s `action: &str`)
 /// into a closed, per-app enum — the seam where "stringly-typed at the edge" becomes exhaustively

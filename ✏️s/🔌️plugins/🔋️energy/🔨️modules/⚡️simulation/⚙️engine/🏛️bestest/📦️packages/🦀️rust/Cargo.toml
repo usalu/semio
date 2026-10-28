@@ -29,5 +29,8 @@ semio-s-plugin-energy-engine-sim = { workspace = true }
 semio-s-plugin-energy-engine-site = { workspace = true }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-output = { workspace = true }
+semio-s-plugin-energy-engine-units = { workspace = true }
 semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
 semio-s-plugin-energy-engine-precompute = { workspace = true }

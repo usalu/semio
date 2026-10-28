@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateZoneEquipmentAssignment",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "zone_equipment",
+    "field": "cooling_capacity_w",
+    "input": "new_cooling_capacity_w",
+    "key": "id",
+    "labels": {
+      "en": "Change zone equipment: Cooling capacity",
+      "de": "Kühlleistung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "zone-equipment",
+      "kind": "change-zone-equipment-cooling-capacity",
+      "record": "ChangedZoneEquipmentCoolingCapacity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Cooling capacity violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone equipment does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The zone equipment already carries this cooling capacity value."
+      }
+    }
   }
 }

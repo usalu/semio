@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "pageAlreadyGranted": true,
+      "staged": false
+    },
+    {
+      "pageAlreadyGranted": false,
+      "staged": true
+    }
+  ]
+}

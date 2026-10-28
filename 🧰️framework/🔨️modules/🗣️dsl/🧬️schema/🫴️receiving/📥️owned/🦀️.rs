@@ -7,8 +7,6 @@ use std::mem::ManuallyDrop;
 /// 🧩️ Every owned field supplies an allocation-free receiver constructor.
 pub trait DslOwnedReceivingField:RetireOwned+Sized{
  type Cursor:OwnedFieldReceiving<Self>+Default;
- const ORIGINAL_BYTE_VECTOR:bool=false;
- fn take_original_bytes(_: &mut Option<FieldValue>)->Option<Vec<Self>>{None}
 }
 /// 📑️ Generated records bind their original owned field slots incrementally.
 pub trait DslOwnedReceivingRecord:DslOwnedReceivingField{}
@@ -90,13 +88,13 @@ macro_rules! integer{($variant:ident;$($ty:ty),+)=>{$(impl OwnedScalar for $ty{f
 integer!(Int;i8,i16,i32,i64,isize);
 integer!(UInt;u16,u32,u64,usize);
 impl OwnedScalar for u8{fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>{let Some(FieldValue::UInt(value))=source.as_ref()else{return Err(invalid())};let output=Self::try_from(*value).map_err(|_|invalid())?;source.take();Ok(output)}}
-impl DslOwnedReceivingField for u8{type Cursor=ScalarReceiving<Self>;const ORIGINAL_BYTE_VECTOR:bool=true;fn take_original_bytes(source:&mut Option<FieldValue>)->Option<Vec<Self>>{if !matches!(source,Some(FieldValue::Bytes64(_))){return None}let Some(FieldValue::Bytes64(bytes))=source.take()else{unreachable!()};Some(bytes)}}
+impl DslOwnedReceivingField for u8{type Cursor=ScalarReceiving<Self>;}
 macro_rules! copied{($ty:ty,$variant:ident)=>{impl OwnedScalar for $ty{fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>{let Some(FieldValue::$variant(value))=source.as_ref()else{return Err(invalid())};let output=*value;source.take();Ok(output)}}impl DslOwnedReceivingField for $ty{type Cursor=ScalarReceiving<Self>;}};}
 copied!(bool,Bool);copied!(f64,Float);
 impl OwnedScalar for f32{fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>{let Some(FieldValue::Float(value))=source.as_ref()else{return Err(invalid())};let bits=value.to_bits();let output=if bits&0x7ff0000000000000==0x7ff0000000000000&&bits&0xfffffffffffff!=0{if bits&0x1fffffff!=0{return Err(invalid())}Self::from_bits(((bits>>32)as u32&0x80000000)|0x7f800000|((bits>>29)as u32&0x7fffff))}else{*value as Self};source.take();Ok(output)}}
 impl DslOwnedReceivingField for f32{type Cursor=ScalarReceiving<Self>;}
 macro_rules! moved{($ty:ty,$variant:ident)=>{impl OwnedScalar for $ty{fn take_source(source:&mut Option<FieldValue>)->Result<Self,ValueError>{if !matches!(source,Some(FieldValue::$variant(_))){return Err(invalid())}let Some(FieldValue::$variant(value))=source.take()else{unreachable!()};Ok(value)}}impl DslOwnedReceivingField for $ty{type Cursor=ScalarReceiving<Self>;}};}
-moved!(String,Text);moved!(semio_framework_value::DslValue,Value);moved!(crate::WireValue,Wire);moved!(crate::ExprValue,Expr);moved!(RecordValue,Record);
+moved!(crate::RecordBytes,Bytes64);moved!(String,Text);moved!(semio_framework_value::DslValue,Value);moved!(crate::WireValue,Wire);moved!(crate::ExprValue,Expr);moved!(RecordValue,Record);
 
 /// 🪆️ One paid cursor box bounds recursive receiving without an unbounded native stack owner.
 pub fn child_demand<C>()->RetirementDemand{RetirementDemand{capacity_bytes:size_of::<C>(),depth:2,..metadata::<FieldValue>()}}
@@ -111,7 +109,7 @@ impl<T:DslOwnedReceivingField> Default for VectorReceiving<T>{fn default()->Self
 impl<T:DslOwnedReceivingField> DslOwnedReceivingField for Vec<T>{type Cursor=VectorReceiving<T>;}
 impl<T:DslOwnedReceivingField> OwnedFieldReceiving<Vec<T>> for VectorReceiving<T>{
  fn demands(&self,source:&Option<FieldValue>,body:usize)->Result<RetirementDemand,ValueError>{
-  if !self.initialized{let value=source.as_ref().ok_or_else(invalid)?;if T::ORIGINAL_BYTE_VECTOR&&matches!(value,FieldValue::Bytes64(_)){return Ok(metadata::<FieldValue>())}let length=match value{FieldValue::List(values)|FieldValue::Tuple(values)=>values.len(),FieldValue::Bytes64(values)=>values.len(),_=>return Err(invalid())};return Ok(RetirementDemand{capacity_bytes:length.checked_mul(size_of::<T>()).ok_or_else(invariant)?,..metadata::<FieldValue>()})}
+  if !self.initialized{let value=source.as_ref().ok_or_else(invalid)?;let length=match value{FieldValue::List(values)|FieldValue::Tuple(values)=>values.len(),FieldValue::Bytes64(values)=>values.len(),_=>return Err(invalid())};return Ok(RetirementDemand{capacity_bytes:length.checked_mul(size_of::<T>()).ok_or_else(invariant)?,..metadata::<FieldValue>()})}
   if let Some(child)=self.child.as_ref(){if self.child_output.value.is_some(){return Ok(RetirementDemand{release_bytes:size_of::<T::Cursor>(),depth:2,..metadata::<T>()})}if child.is_ready(){return nested(metadata::<T>())}return child.demands(&self.current.value,body).and_then(nested)}
   if self.index<self.length{return Ok(child_demand::<T::Cursor>())}if !self.source.terminal_is_empty(){return self.source.close_demands(body)}Ok(metadata::<bool>())
  }
@@ -119,14 +117,13 @@ impl<T:DslOwnedReceivingField> OwnedFieldReceiving<Vec<T>> for VectorReceiving<T
   if self.closing{return Err(invariant())}if self.complete{return Ok(Default::default())}let demand=self.demands(source,body)?;if !funds(grant,demand){return Ok(Default::default())}
   if let Some(child)=self.child.as_mut(){if self.child_output.value.is_none()&&!child.is_ready(){return child.step(&mut self.current.value,native,body,child_grant(grant))}}native.checkpoint()?;
   if !self.initialized{
-   if T::ORIGINAL_BYTE_VECTOR&&matches!(source,Some(FieldValue::Bytes64(_))){*self.output.value=Some(T::take_original_bytes(source).ok_or_else(invariant)?);self.initialized=true;self.complete=true;return Ok(receipt(demand))}
    let length=match source.as_ref().unwrap(){FieldValue::List(values)|FieldValue::Tuple(values)=>values.len(),FieldValue::Bytes64(values)=>values.len(),_=>return Err(invalid())};native.charge(demand.capacity_bytes)?;let mut output=Vec::new();output.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original typed vector backing admission failed"))?;let actual=output.capacity().checked_mul(size_of::<T>()).ok_or_else(invariant)?;if actual!=demand.capacity_bytes{return Err(invariant())}*self.output.value=Some(output);*self.source.value=source.take();self.length=length;self.initialized=true;return Ok(receipt(demand))
   }
   if self.child.is_some(){
    if self.child_output.value.is_some(){if !self.child.as_ref().unwrap().terminal_is_empty(){return Err(invariant())}let output=self.output.value.as_mut().unwrap();if output.len()==output.capacity(){return Err(invariant())}output.push(self.child_output.value.take().unwrap());self.child.take();self.index+=1;return Ok(receipt(demand))}
    return self.child.as_mut().unwrap().take_into(&mut self.child_output.value,child_grant(grant))
   }
-  if self.index<self.length{let child=admit_child::<T::Cursor>(native)?;let value=match self.source.value.as_mut().unwrap(){FieldValue::List(values)|FieldValue::Tuple(values)=>std::mem::replace(&mut values[self.index],FieldValue::Absent),FieldValue::Bytes64(values)=>FieldValue::UInt(u64::from(values[self.index])),_=>return Err(invariant())};*self.current.value=Some(value);self.child=Some(child);return Ok(receipt(demand))}
+  if self.index<self.length{let child=admit_child::<T::Cursor>(native)?;let value=match self.source.value.as_mut().unwrap(){FieldValue::List(values)|FieldValue::Tuple(values)=>std::mem::replace(&mut values[self.index],FieldValue::Absent),FieldValue::Bytes64(values)=>FieldValue::UInt(u64::from(values.retained_bytes()[self.index])),_=>return Err(invariant())};*self.current.value=Some(value);self.child=Some(child);return Ok(receipt(demand))}
   if !self.source.terminal_is_empty(){return close_source(&mut self.source,native,grant)}self.complete=true;Ok(receipt(demand))
  }
  fn is_ready(&self)->bool{!self.closing&&self.complete&&self.output.value.is_some()}
@@ -192,3 +189,6 @@ impl<T:DslOwnedReceivingField,U:RetireOwned> OwnedFieldReceiving<U> for MappedRe
  fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{if self.terminal_is_empty(){return Ok(Default::default())}let demand=self.close_demands(grant.maximum_copy_bytes)?;if !funds(grant,demand){return Ok(Default::default())}self.closing=true;if let Some(child)=self.child.as_mut(){return if child.terminal_is_empty(){release_child(&mut self.child,grant)}else{child.close_step(child_grant(grant))}}if !self.current.terminal_is_empty(){return self.current.close_step(grant)}if !self.child_output.terminal_is_empty(){return self.child_output.close_step(grant)}self.output.close_step(grant)}
  fn terminal_is_empty(&self)->bool{self.child.is_none()&&self.current.terminal_is_empty()&&self.child_output.terminal_is_empty()&&self.output.terminal_is_empty()}
 }
+
+#[path="🌳️intrinsic/🦀️.rs"]mod intrinsic;
+pub use intrinsic::{NativeIntrinsicRecord,NativeIntrinsicReceiving};

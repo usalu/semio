@@ -162,7 +162,7 @@ async fn backbone_message_binary_round_trips_every_variant() {
     assert_eq!(BackboneMessage::decode_op(&genesis.encode_op().unwrap()).unwrap(), genesis);
 
     let envelope = sample_envelope_for_backbone_test().await;
-    let operations = BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&[envelope.clone(), envelope]) };
+    let operations = BackboneMessage::from_envelopes(&[envelope.clone(), envelope]);
     assert_eq!(BackboneMessage::decode_op(&operations.encode_op().unwrap()).unwrap(), operations);
 
     let ack = BackboneMessage::Ack { op_ids: vec!["op-1".to_string(), "op-2".to_string()] };

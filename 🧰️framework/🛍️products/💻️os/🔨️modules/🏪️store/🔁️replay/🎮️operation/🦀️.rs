@@ -17,11 +17,11 @@ pub struct OperationMessageSettlement {
     pub closing: bool,
 }
 impl OperationMessageSettlement {
-    pub fn new(outcome: semio_framework_os_spr::MutationReplayOutcome) -> Self { Self { drain: Some(semio_framework_os_spr::command::OperationMessageDrain::new(outcome)), pending: None, retiring: None, closing: false } }
-    pub fn step(&mut self, ledger: &mut semio_framework_os_spr::command::ReplayMessageAccumulator, grant: RetainedCloneGrant) -> Result<bool, ValueError> {
+    fn new(outcome: semio_framework_os_spr::MutationReplayOutcome) -> Self { Self { drain: Some(semio_framework_os_spr::command::OperationMessageDrain::new(outcome)), pending: None, retiring: None, closing: false } }
+    pub fn step(&mut self, ledger: &mut semio_framework_os_spr::command::ReplayMessageAccumulator, grant: RetainedCloneGrant) -> Result<(bool,RetainedCloneProgress), ValueError> {
         let drain = self.drain.as_mut().expect("operation retains its original row drain");
-        drain.step(ledger, grant)?;
-        Ok(drain.is_finished())
+        let progress=drain.step(ledger, grant)?;
+        Ok((drain.is_finished(),progress))
     }
     pub fn take(&mut self) -> semio_framework_os_spr::MutationReplayOutcome { let result = self.drain.as_mut().and_then(semio_framework_os_spr::command::OperationMessageDrain::take).expect("completed original operation drain"); self.drain = None; result }
     pub fn begin_close(&mut self) { self.closing = true; }
@@ -102,7 +102,7 @@ pub trait ArtifactReplayPreparation<P, M>: Send {
     fn next_close_capacity_byte_demand(&self, maximum_body_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_depth_demand(&self) -> Result<usize, ValueError>;
-    fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError>;
     fn terminal_is_empty(&self) -> bool;
 }
 
@@ -119,11 +119,12 @@ pub struct ArtifactReplayPreparationTask<P, M> {
     pub completed: ArtifactReplayPreparationProgress,
     pub cancelled: bool,
     pub ready: bool,
+    original_control: Option<(u64, Option<u64>)>,
 }
 
 impl<P, M> ArtifactReplayPreparationTask<P, M> {
     pub fn new(context: ArtifactReplayPreparationContext, cursor: Box<dyn ArtifactReplayPreparation<P, M>>) -> Self {
-        Self { context, cursor, completed: ArtifactReplayPreparationProgress::default(), cancelled: false, ready: false }
+        Self { context, cursor, completed: ArtifactReplayPreparationProgress::default(), cancelled: false, ready: false, original_control: None }
     }
 
     pub fn step(&mut self, generation: u64, revision: [u8; 32], body:usize, grant: ArtifactStoreOneItemGrant, control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>, deadline: &mut dyn FnMut() -> bool) -> Result<ArtifactReplayPreparationStep, ValueError> {
@@ -134,6 +135,9 @@ impl<P, M> ArtifactReplayPreparationTask<P, M> {
             return Ok(ArtifactReplayPreparationStep::Blocked);
         }
         if self.ready { return Ok(ArtifactReplayPreparationStep::Prepared(RetainedCloneProgress::default())); }
+        let identity=(control.ledger_identity(),control.retirement_recipient_identity());
+        if self.original_control.is_some_and(|original|original!=identity){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic preparation requires its original decoder and recipient"));}
+        self.original_control=Some(identity);
         let step = admit_replay_preparation_step(self.cursor.advance(body,grant,control)?, grant)?;
         let progress = step.progress();
         self.completed.items = self.completed.items.saturating_add(progress.copied_items);
@@ -142,6 +146,7 @@ impl<P, M> ArtifactReplayPreparationTask<P, M> {
         Ok(step)
     }
 
+    pub fn validate_retirement_control(&self,control:&dyn semio_framework_value::OriginalRetirementControl)->Result<(),ValueError>{if self.original_control.is_some_and(|original|original!=(control.ledger_identity(),control.retirement_recipient_identity())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic retirement requires its original decoder and recipient"));}Ok(())}
     pub fn progress(&self) -> ArtifactReplayPreparationProgress { self.completed }
     /// 🏁️ Keeps prepared owners in the exact producer until a separately granted task handoff.
     pub fn is_ready(&self)->bool{self.ready&&!self.cancelled}
@@ -159,7 +164,7 @@ impl<P, M> ArtifactReplayPreparationTask<P, M> {
         self.cursor.cancel();
     }
 
-    pub fn into_retirement(self) -> ArtifactReplayPreparationRetirement<P, M> { ArtifactReplayPreparationRetirement::new(self.cursor) }
+    pub fn into_retirement(self) -> ArtifactReplayPreparationRetirement<P, M> { ArtifactReplayPreparationRetirement { cursor: { let mut cursor=self.cursor;cursor.cancel();cursor.begin_close();Some(cursor) }, original_control:self.original_control } }
 }
 
 /// 🎟️ Validates the producer's actual consumption before any prepared owner is adopted.
@@ -177,23 +182,27 @@ pub fn admit_replay_preparation_step(step: ArtifactReplayPreparationStep, grant:
 /// ♻️ Exact cancellation handoff for an active domain semantic cursor.
 pub struct ArtifactReplayPreparationRetirement<P, M> {
     pub cursor: Option<Box<dyn ArtifactReplayPreparation<P, M>>>,
+    original_control: Option<(u64, Option<u64>)>,
 }
 
 impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
     pub fn new(mut cursor: Box<dyn ArtifactReplayPreparation<P, M>>) -> Self {
         cursor.cancel();
         cursor.begin_close();
-        Self { cursor: Some(cursor) }
+        Self { cursor: Some(cursor), original_control:None }
     }
 }
 
 impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
     pub fn next_demand(&self, body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{let Some(cursor)=self.cursor.as_ref()else{return Ok(Default::default())};if cursor.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{release_bytes:size_of_val(cursor.as_ref()),depth:1,..Default::default()});}let mut demand=cursor.close_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"operation preparation cleanup depth overflow"))?;Ok(demand)}
-    pub fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_step(&mut self, grant: RetainedCloneGrant, receiving: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         let Some(cursor) = self.cursor.as_ref() else { return Ok(RetainedCloneStep::Complete(empty)) };
         let demand=self.next_demand(grant.maximum_copy_bytes)?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(RetainedCloneStep::Progress(empty));}
+        let identity=(receiving.ledger_identity(),receiving.retirement_recipient_identity());
+        if self.original_control.is_some_and(|original|original!=identity){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"semantic retirement requires its original decoder and recipient"));}
+        self.original_control=Some(identity);
         if cursor.terminal_is_empty() {
             let bytes = size_of_val(cursor.as_ref());
             drop(self.cursor.take());
@@ -214,6 +223,182 @@ impl<P, M> ArtifactReplayPreparationRetirement<P, M> {
 impl<P, M> Drop for ArtifactReplayPreparationRetirement<P, M> {
     fn drop(&mut self) {
         assert!(self.cursor.is_none() || std::thread::panicking(), "history operation preparation retirement dropped before terminal-empty ownership");
+    }
+}
+
+impl<P, M> crate::ReplayOwnedState<P, M>
+where M: semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::OpBinary {
+    /// ♻️ Binds both installed cleanup authorities without imposing native bounds on cold replay construction.
+    pub fn with_retirement_factories(mut self, snapshots: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>, mutations: Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<M>>) -> Self
+    where P: Send + Sync + 'static, M: Send + 'static {
+        self.replay_retirement_factory = Some(semio_framework_os_spr::command::registered_replay_retirement_factory(snapshots, mutations));
+        self
+    }
+
+    /// 🎟️ Exposes the next exact allocation release separately from the ordinary body-byte grant.
+    pub fn replay_retirement_release_byte_demand(&self) -> Result<usize, ValueError> {
+        self.replay_retirement.as_ref().map_or(Ok(0), ReplayRetirement::next_release_byte_demand)
+    }
+
+    pub(super) fn begin_replay_snapshot_retirement(&mut self, owner: Arc<P>) {
+        if let Some(factory) = self.replay_retirement_factory.as_ref() {
+            self.replay_retirement.get_or_insert_with(|| ReplayRetirement::new(Arc::clone(factory))).stage_snapshot(owner);
+        } else { semio_framework_os_store_projection::retire_shared_projection::<P, M>(owner); }
+    }
+
+    pub(super) fn begin_replay_mutations_retirement(&mut self, owners: semio_framework_value_persistent::list::PagedList<M, {usize::MAX}>) {
+        if let Some(factory) = self.replay_retirement_factory.as_ref() {
+            self.replay_retirement.get_or_insert_with(|| ReplayRetirement::new(Arc::clone(factory))).stage_mutations(owners);
+        } else { semio_framework_os_store_command::retire_scratch_operations::<P, M>(owners); }
+    }
+
+    /// 🎮️ Selects the admitted domain producer for every prefix and suffix operation.
+    pub fn with_operation_preparation(mut self, factory: Arc<dyn ArtifactReplayPreparationFactory<P, M>>) -> Self {
+        self.operation_preparation_factory = Some(factory);
+        self
+    }
+
+    /// 🎟️ Quotes the actual installed producer before transferring original request custody.
+    pub fn original_preparation_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
+        if !self.original_preparation_ready() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "replay still retains its previous original preparation")); }
+        self.operation_preparation_factory.as_ref().map(|factory| factory.preparation_birth_demand()).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "native replay requires its installed semantic factory"))
+    }
+
+    /// 🚦️ A new semantic producer begins only after every preceding settlement and close frontier empties.
+    pub fn original_preparation_ready(&self) -> bool { self.operation_preparation.is_none() && self.prepared_operation.is_none() && self.operation_retirement.is_none() && self.operation_message_settlement.is_none() && self.replay_retirement.is_none() && self.prefix_message_retirement.is_none() }
+
+    /// 🧭️ Reports the replay mode required by the current original history operation.
+    pub fn original_preparation_mode(&self) -> ArtifactReplayPreparationMode { if self.cursor < self.prefix_until { ArtifactReplayPreparationMode::Prefix } else { ArtifactReplayPreparationMode::Report } }
+
+    /// 🧾️ Transfers the actual last native receipt exactly once.
+    pub fn take_native_receipt(&mut self) -> RetainedCloneProgress { std::mem::take(&mut self.native_receipt) }
+
+    /// 🌱️ Moves the original request into its admitted installed producer, retaining it on refusal.
+    pub fn admit_original_preparation(&mut self, request: &mut Option<ArtifactReplayPreparationRequest<P, M>>, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneProgress>, ValueError> {
+        let demand = self.original_preparation_birth_demand()?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(None); }
+        let original = request.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "native replay original request is absent"))?;
+        if original.context.generation != self.generation || original.context.base_revision != self.revision || original.context.operation_index as usize != self.operation || original.context.mode != self.original_preparation_mode() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "native replay original request changed its captured frontier")); }
+        let context = original.context;
+        match self.operation_preparation_factory.as_ref().unwrap().begin(request.take().unwrap(), grant) {
+            Ok((cursor, progress)) => {
+                self.operation_preparation = Some(ArtifactReplayPreparationTask::new(context, cursor));
+                if !progress.fits(grant) || progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "native replay producer changed its admitted original birth receipt").with_retained_progress(progress)); }
+                Ok(Some(progress))
+            }
+            Err((error, original)) => { *request = Some(original); Err(error) }
+        }
+    }
+
+    /// 📈️ Monotone semantic work survives each completed domain cursor's retirement.
+    pub fn operation_preparation_progress(&self) -> ArtifactReplayPreparationProgress {
+        let active = self.operation_preparation.as_ref().map_or(ArtifactReplayPreparationProgress::default(), ArtifactReplayPreparationTask::progress);
+        ArtifactReplayPreparationProgress { items: self.preparation_completed.items.saturating_add(active.items), bytes: self.preparation_completed.bytes.saturating_add(active.bytes) }
+    }
+
+    pub(super) fn step_prepared_operation(&mut self, edit: &semio_framework_os_spr::Edit<M>, prefix: bool, original:Option<RetainedCloneGrant>, control:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>, _deadline: &mut dyn FnMut() -> bool) -> Result<bool, semio_framework_os_vcs::VcsError> {
+        use crate::ReplayMode;
+use semio_framework_os_store_ledger::CursorRevisionAccumulator;
+        use semio_framework_os_vcs::VcsError;
+        let original=original.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires the caller's original operation grant")))?;
+        let grant=ArtifactStoreOneItemGrant{maximum_items:original.maximum_items,maximum_copy_bytes:original.maximum_copy_bytes,maximum_capacity_bytes:original.maximum_capacity_bytes,maximum_release_bytes:original.maximum_release_bytes,maximum_depth:original.maximum_depth};
+        if let Some(settlement)=self.operation_message_settlement.as_mut(){
+            if !settlement.drain.as_ref().unwrap().is_finished(){let d=settlement.drain.as_ref().unwrap().next_demand(&self.edit_messages).map_err(VcsError::InverseRefused)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(false)}let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original diagnostics require their original decoder")))?;control.admit_turn_capacity(original.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(d.capacity_bytes).map_err(VcsError::InverseRefused)?;let(_,p)=settlement.step(&mut self.edit_messages,original).map_err(VcsError::InverseRefused)?;self.native_receipt=p;return Ok(false);}
+            if self.outcomes.len()==self.outcomes.capacity(){let bytes=(self.outcomes.len()+1).checked_mul(size_of::<semio_framework_os_spr::MutationReplayOutcome>()).ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original Report outcome capacity overflow")))?;let old=self.outcomes.capacity()*size_of::<semio_framework_os_spr::MutationReplayOutcome>();let d=semio_framework_value::RetirementDemand{copy_bytes:old+size_of::<Vec<semio_framework_os_spr::MutationReplayOutcome>>(),capacity_bytes:bytes,release_bytes:old,depth:1};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(false)}let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Report outcomes require their decoder")))?;control.admit_turn_capacity(original.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(bytes).map_err(VcsError::InverseRefused)?;self.outcomes.try_reserve_exact(1).map_err(|_|VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original Report outcome allocation refused")))?;self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:bytes,released_bytes:old};return Ok(false);}
+            let copy=size_of::<semio_framework_os_spr::MutationReplayOutcome>()+size_of::<Option<OperationMessageSettlement>>();let d=semio_framework_value::RetirementDemand{copy_bytes:copy,depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(false)}let outcome=settlement.take();self.report_worst=self.report_worst.max(outcome.worst);self.outcomes.push(outcome);self.operation_message_settlement=None;self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};return Ok(true);
+        }
+        if let Some(retirement) = self.operation_retirement.as_mut() {
+            let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay retirement requires its original decoder")))?;
+            let step=control.with_retirement(original,|receiving|retirement.close_step(original,receiving)).map_err(VcsError::InverseRefused)?;
+            self.native_receipt=step.progress();
+            if retirement.terminal_is_empty() {
+                self.operation_retirement = None;
+            }
+            return Ok(false);
+        }
+        let index = self.operation;
+
+        if self.prepared_operation.is_none() {
+            if self.operation_preparation.is_none() {
+                return Ok(false);
+            }
+            let task = self.operation_preparation.as_mut().expect("active operation preparation");
+            if task.is_ready(){let copy=size_of::<ArtifactReplayPrepared<P,M>>()+size_of::<ArtifactReplayPreparationTask<P,M>>()+size_of::<ArtifactReplayPreparationRetirement<P,M>>();if original.maximum_copy_bytes<copy||original.maximum_depth==0||original.maximum_items==0{return Ok(false);}let work=task.progress();self.preparation_completed.items=self.preparation_completed.items.saturating_add(work.items);self.preparation_completed.bytes=self.preparation_completed.bytes.saturating_add(work.bytes);self.prepared_operation=Some(task.take_prepared().ok_or_else(||VcsError::ValidationFailed("prepared operation has no owners".into()))?);self.operation_retirement=Some(self.operation_preparation.take().unwrap().into_retirement());self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()};return Ok(false);}
+            let step = task.step(self.generation,self.revision,original.maximum_copy_bytes,grant,control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native replay requires its original construction decoder")))?, &mut || false).map_err(VcsError::InverseRefused)?;
+            self.native_receipt=step.progress();
+            return Ok(false);
+        }
+        let prepared = self.prepared_operation.as_mut().expect("settled operation owners");
+        if !prefix && prepared.next.is_some() && prepared.apply_refusal.is_none() && prepared.input_refusal.is_none() {
+            if let Ok(inverse) = prepared.inverse.as_mut() {
+                if !inverse.is_empty() {
+                    if !self.edit_inverse.has_reserved_slot(){let d=semio_framework_value::RetirementDemand{copy_bytes:self.edit_inverse.next_reserve_copy_byte_demand().map_err(|error|VcsError::InverseRefused(error.into()))?,capacity_bytes:self.edit_inverse.next_allocation_bytes().map_err(|error|VcsError::InverseRefused(error.into()))?,depth:self.edit_inverse.next_reserve_depth_demand().map_err(|error|VcsError::InverseRefused(error.into()))?,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(false)}let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original inverse backing requires its original decoder")))?;control.admit_turn_capacity(original.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(d.capacity_bytes).map_err(VcsError::InverseRefused)?;self.native_receipt=self.edit_inverse.reserve_one_funded(original).map_err(|error|VcsError::InverseRefused(error.refusal().into()))?;return Ok(false);}
+                    let d=semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<M>()+2*size_of::<usize>(),depth:inverse.next_pop_depth_demand().map_err(|error|VcsError::InverseRefused(error.into()))?.max(self.edit_inverse.next_push_depth_demand().map_err(|error|VcsError::InverseRefused(error.into()))?),..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(false)}let operation=inverse.pop().expect("prepared original inverse");if let Err(operation)=self.edit_inverse.push_reserved(operation){inverse.push_reserved(operation).unwrap_or_else(|_|panic!("unchanged original inverse slot"));return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original replay inverse lost admitted backing")))}self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()};return Ok(false);
+                }
+            }
+        }
+        if !prefix&&self.operation_identity.is_none(){let admitted=semio_framework_os_store_ledger::native_digest::with_operation_identity::<P,M,_>(edit,index,|id|{let d=semio_framework_value::RetirementDemand{copy_bytes:id.len()+edit.id.len()+size_of::<Option<(semio_framework_os_spr::MutationId,String)>>(),capacity_bytes:id.len()+edit.id.len(),depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(None)}let control=control.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original Report identity requires its decoding continuation"))?;control.admit_turn_capacity(original.maximum_capacity_bytes)?;control.charge(d.capacity_bytes)?;Ok(Some(((semio_framework_os_spr::MutationId(id.to_owned()),edit.id.clone()),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))) }).map_err(VcsError::InverseRefused)?;if let Some((identity,p))=admitted{self.operation_identity=Some(identity);self.native_receipt=p;}return Ok(false);}
+        let digest=CursorRevisionAccumulator::hash_record(b"edit-id",&[edit.id.as_bytes()]);let unit=(digest,index);
+        if edit.forwards[index].may_emit_foreign_steps()&&!self.unit_flags.contains_key(&unit){let capacity=self.unit_flags.next_insert_capacity_byte_demand(&unit,original.maximum_copy_bytes).map_err(VcsError::InverseRefused)?;let depth=self.unit_flags.next_insert_depth_demand(&unit).map_err(VcsError::InverseRefused)?;let d=semio_framework_value::RetirementDemand{capacity_bytes:capacity,depth,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,d){return Ok(false)}if capacity!=0{let control=control.ok_or_else(||VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original foreign presence requires its decoding continuation")))?;control.admit_turn_capacity(original.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(capacity).map_err(VcsError::InverseRefused)?;self.native_receipt=self.unit_flags.reserve_insert_step(&unit,original).map_err(|(error,_)|VcsError::InverseRefused(error))?;return Ok(false)}let(_,p)=self.unit_flags.insert_reserved(unit,prepared.foreign_steps,original).map_err(|(error,_,_)|VcsError::InverseRefused(error))?;self.native_receipt=p;return Ok(false);}
+        let final_copy=size_of::<ArtifactReplayPrepared<P,M>>()+size_of::<OperationMessageSettlement>()+size_of::<ReplayRetirement<P,M>>();let final_demand=semio_framework_value::RetirementDemand{copy_bytes:final_copy,depth:1,..Default::default()};if !semio_framework_value::retained_clone::retained_clone_grant_admits(original,final_demand){return Ok(false)}self.native_receipt=RetainedCloneProgress{copied_items:1,copied_bytes:final_copy,..Default::default()};
+        let (mutation_id,edit_id)=if prefix{(semio_framework_os_spr::MutationId(String::new()),String::new())}else{self.operation_identity.take().expect("admitted original Report identity")};
+        let mut prepared = self.prepared_operation.take().expect("settled operation owners");
+        let inverse = match std::mem::replace(&mut prepared.inverse, Ok(Default::default())) {
+            Ok(inverse) => inverse,
+            Err(cause) if prefix => { drop(cause); Default::default() },
+            Err(cause) if self.mode == ReplayMode::Report => {
+                prepared.messages.push(MutationMessage::fatal("mutation.inverse-refused", format!("the operation has no inverse on the replayed state: {cause}")).at([mutation_id.0.clone()]));
+                Default::default()
+            }
+            Err(cause) => {
+                if let Some(next) = prepared.next.take() { self.begin_replay_snapshot_retirement(next); }
+                self.prepared_operation = Some(prepared);
+                return Err(VcsError::InverseRefused(cause));
+            }
+        };
+        if let Some(cause) = prepared.apply_refusal.take() {
+            if !prefix && self.mode != ReplayMode::Report {
+                if let Some(next) = prepared.next.take() { self.begin_replay_snapshot_retirement(next); }
+                self.begin_replay_mutations_retirement(inverse);
+                self.prepared_operation = Some(prepared);
+                return Err(cause.into());
+            }
+            if let Some(next) = prepared.next.take() { self.begin_replay_snapshot_retirement(next); }
+            prepared.messages.push(MutationMessage::fatal(cause.code, cause.message).at(cause.target));
+        }
+        let invalid = prepared.input_refusal.is_some();
+        if let Some(reason) = prepared.input_refusal.take() {
+            if let Some(next) = prepared.next.take() { self.begin_replay_snapshot_retirement(next); }
+            let transition_id = self.supersessions.get(&mutation_id).map_or("", |entry| entry.transition_id.as_str());
+            prepared.messages.push(MutationMessage::fatal("mutation.invariant", format!("supersession {transition_id} of {} {reason}; the operation folds as a no-op", mutation_id.0)).at([mutation_id.0.clone()]));
+        }
+        match prepared.next.take() {
+            Some(next) => {
+                self.begin_replay_mutations_retirement(inverse);
+                let displaced = if !prefix && self.mode != ReplayMode::Report { self.candidate.replace(next) } else { self.state.replace(next) };
+                if let Some(displaced) = displaced { self.begin_replay_snapshot_retirement(displaced); }
+            }
+            None => self.begin_replay_mutations_retirement(inverse),
+        }
+        if prefix {
+            if !prepared.messages.is_empty() || prepared.messages.capacity() != 0 {
+                assert!(self.prefix_message_retirement.is_none(), "prefix diagnostic cleanup must close before another operation");
+                self.prefix_message_retirement = Some(semio_framework_os_spr::command::MutationMessageLedgerRetirement::new(String::new(), std::mem::take(&mut prepared.messages)));
+            }
+            return Ok(true);
+        }
+        let replacement=self.drafts.get(&mutation_id).or_else(||self.supersessions.get(&mutation_id).map(|row|&row.replacement));
+        let superseded=replacement.is_some();let withdrawn=!invalid&&replacement.is_some_and(|input|matches!(input,InputReplacement::Withdrawn));
+        self.operation_message_settlement = Some(OperationMessageSettlement::new(semio_framework_os_spr::MutationReplayOutcome {
+            mutation_id,
+            edit_id,
+            op_index: index as u32,
+            worst: None,
+            messages: prepared.messages,
+            superseded,
+            withdrawn,
+        }));
+        Ok(false)
     }
 }
 

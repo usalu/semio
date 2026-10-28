@@ -59,5 +59,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "Zones"
+    ],
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "field": "zone_id",
+    "input": "new_zone_id",
+    "key": "id",
+    "labels": {
+      "en": "Change ideal loads system: Zone",
+      "de": "Zone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ideal-loads-system",
+      "kind": "change-ideal-loads-system-zone",
+      "record": "ChangedIdealLoadsSystemZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Zone violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed ideal loads system does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The ideal loads system already carries this zone reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

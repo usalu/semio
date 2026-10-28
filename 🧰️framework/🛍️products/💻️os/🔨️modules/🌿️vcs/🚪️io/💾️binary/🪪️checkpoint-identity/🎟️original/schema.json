@@ -1,0 +1,50 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parent",
+    "pendingId",
+    "savedAt",
+    "timestamp",
+    "pattern",
+    "repeat",
+    "digest",
+    "changeIdentity",
+    "alternativeIdentity"
+  ],
+  "properties": {
+    "parent": {
+      "type": "string"
+    },
+    "pendingId": {
+      "type": "string"
+    },
+    "savedAt": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "pattern": {
+      "type": "string",
+      "minLength": 1
+    },
+    "repeat": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "changeIdentity": {
+      "type": "string",
+      "pattern": "^change-[a-f0-9]{16}$"
+    },
+    "alternativeIdentity": {
+      "type": "string",
+      "pattern": "^alternative-[a-f0-9]{16}$"
+    }
+  }
+}

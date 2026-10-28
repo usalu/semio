@@ -484,7 +484,7 @@
         },
         "counters": {
           "type": "array",
-          "maxItems": 8,
+          "maxItems": 9,
           "items": {
             "$ref": "#/$defs/ToolRunCounter"
           }
@@ -934,7 +934,7 @@
         },
         "counters": {
           "type": "array",
-          "maxItems": 8,
+          "maxItems": 9,
           "items": {
             "$ref": "#/$defs/ToolRunCounterDefinition"
           }

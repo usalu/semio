@@ -1,0 +1,48 @@
+[
+  {
+    "input": "﻿! header\r\nZoNe, Büro, ! north axis\r\n,0,0,0;\nVersion,25.2;",
+    "records": [
+      {
+        "kind": "ZoNe",
+        "fields": [
+          "Büro",
+          "",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      {
+        "kind": "Version",
+        "fields": [
+          "25.2"
+        ]
+      }
+    ]
+  },
+  {
+    "input": "! empty file\n",
+    "records": []
+  },
+  {
+    "input": "Schedule:Constant,Always On,,1;",
+    "records": [
+      {
+        "kind": "Schedule:Constant",
+        "fields": [
+          "Always On",
+          "",
+          "1"
+        ]
+      }
+    ]
+  },
+  {
+    "input": "Zone,A,",
+    "error": "missing its terminating semicolon"
+  },
+  {
+    "input": ";",
+    "error": "empty object type"
+  }
+]

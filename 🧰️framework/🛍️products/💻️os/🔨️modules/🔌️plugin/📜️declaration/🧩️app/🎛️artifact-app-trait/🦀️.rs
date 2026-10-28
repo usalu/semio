@@ -259,7 +259,7 @@ pub trait ArtifactApp: Default + Send + 'static {
         generation: semio_framework_job::Generation,
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(bounded_document_store_initialization_job::<_,_,AppDocumentStoreOwnerProducer<Self>>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     /// 🔐️ Revalidates domain-owned publication authority in the atomic replacement branch.
@@ -321,7 +321,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// keeps its existing full-mutation behavior untouched; `EditorApp<E>`/`ViewerApp<V>` override
     /// it from `E::ROLE`/`V::ROLE` (contract §2.1).
     const ROLE: AppRole = AppRole::Editor;
-    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPackMetadata + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `+ 'static` added to the
     /// three mutation lanes below — every real impl was ALREADY effectively 'static (a plain
     /// owned enum/struct crossing the wasm component boundary via `OpBinary`; none of the ~30
@@ -347,7 +347,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// 🫧️ Ephemeral LOCAL-ONLY UI state — use {@link NoTransient} when the app has none.
     /// The fourth and last state mechanism; see `NoTransient`'s doc for how it differs from a
     /// draft (which is ephemeral *artifact* content, not UI state).
-    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
+    type Transient: semio_framework_value::retirement::RetireOwned + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     /// 🫧️ Transient-lane operations applied to {@link store::TransientStore}.
     type TransientMutation: Clone + ::protocol::ColdMutation<Self::Transient> + ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
 
@@ -372,7 +372,7 @@ pub trait ArtifactApp: Default + Send + 'static {
     async fn config_schema() -> &'static str {
         "config.empty"
     }
-    async fn initial_snapshot() -> Self::Snapshot;
+    fn reference_birth() -> Option<crate::ReferenceArtifactAppBirth<Self::Snapshot>> { None }
     async fn initial_config() -> Self::Config {
         Self::Config::default()
     }
@@ -386,8 +386,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// `net` (design §13.2). The default is a single buffer — every delivery's leaves are the whole buffer, so the latest
     /// replaces the net; an app whose typing verb yields relative leaves (a text splice) composes them, and answers
     /// `Split` where the edit does not continue the run (a caret that jumped away).
-    fn typing_fold(_net: &[Self::Mutation], next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
-        semio_framework_tool_machine::TypingFold::Net(next.to_vec())
+    fn typing_fold(_net: &[Self::Mutation], _next: &[Self::Mutation]) -> semio_framework_tool_machine::TypingFold<Self::Mutation> {
+        semio_framework_tool_machine::TypingFold::Split
     }
     /// 🪧️ The label, in every shell locale, of the entity `id` (one of `kinds`, the reference's declared entity kinds)
     /// in `snapshot` — what a history-edit reference chip reads instead of the raw id. `None` shows the id as data.
@@ -444,6 +444,8 @@ pub trait ArtifactApp: Default + Send + 'static {
     /// the React/wgpu shells still speak (`{action,args}`) until every call site sends `OpBinary`
     /// bytes directly. Default rejects (same error as the pre-bridge `dispatch_action` arm); apps
     /// that the shells drive must override this so chrome actions reach `handle`.
+    /// 🏭️ The declared native producer owns original action arguments, command birth and exact operation wire.
+    fn original_action_command_producer()->Option<&'static dyn crate::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
     async fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
@@ -716,7 +718,8 @@ pub trait ArtifactApp: Default + Send + 'static {
             return Err(MediaError::NotImplemented);
         }
         let media_type = Self::io().await.map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-        let bytes = doc.snapshot.encode_pack();
+        let codec=<Self::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec().ok_or(MediaError::NotImplemented)?;
+        let bytes=(codec.encode)(doc.snapshot).map_err(|error|MediaError::Payload(port.to_string(),error.to_string()))?;
         Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
     /// 🧮️ Exports with the exact immutable transient snapshot captured for this request.
@@ -733,7 +736,7 @@ pub trait ArtifactApp: Default + Send + 'static {
             let codec = Self::natural_file_codec().await.ok_or(MediaError::NotImplemented)?;
             let bytes = natural_file_input_bytes(port, codec, media)?;
             let snapshot = Self::decode_natural_file(bytes).await?;
-            return Ok(document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA));
+            return document_reference_load_emit(&snapshot, Self::DOCUMENT_SCHEMA);
         }
         if port != "artifact:in" {
             return Err(MediaError::NotImplemented);
@@ -742,8 +745,9 @@ pub trait ArtifactApp: Default + Send + 'static {
             return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
         };
         let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let snapshot = <Self::Snapshot as ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        Ok(document_load_emit(&snapshot, Self::DOCUMENT_SCHEMA))
+        let codec=<Self::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec().ok_or(MediaError::NotImplemented)?;
+        let snapshot=(codec.decode)(&bytes).map_err(|error| MediaError::Payload(port.to_string(),error.to_string()))?;
+        document_reference_load_emit(&snapshot, Self::DOCUMENT_SCHEMA)
     }
     /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
     /// Default re-derives it from `export_media`; override when a fingerprint is derivable without
@@ -756,4 +760,13 @@ pub trait ArtifactApp: Default + Send + 'static {
             Err(error) => Err(error),
         }
     }
+}
+
+/// 🏭️ Uses the surface's actual owner catalog for every native replay initialization.
+struct AppDocumentStoreOwnerProducer<A>(std::marker::PhantomData<fn()->A>);
+impl<A:ArtifactApp> store::os_store::document_store_owners::DocumentStoreOwnerProducer<A::Snapshot,A::Mutation> for AppDocumentStoreOwnerProducer<A>{
+ fn source_demands()->Result<RetirementDemand,ValueError>{A::document_store_owners_source_demands()}
+ fn admit_sources(grant:RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<A::Snapshot,A::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<A::Snapshot,A::Mutation>>{
+  A::build_document_store_owners(grant).unwrap_or_else(||Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"surface did not supply its declared native document owner catalog"),owners:None,progress:Default::default()}))
+ }
 }

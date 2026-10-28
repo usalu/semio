@@ -398,10 +398,10 @@ impl TimestepBuilder {
 }
 
 /// 🧾️ The numerical consumer receives the funded original work receipt even on a typed fault.
-pub(crate) struct TimestepStep {pub(crate) progress:RetainedCloneProgress,pub(crate) fault:Option<DenseSolveFault>}
+pub struct TimestepStep {pub progress:RetainedCloneProgress,pub fault:Option<DenseSolveFault>}
 
 impl TimestepWork {
-    pub(crate) fn retained_wire_signature(&self) -> [u64; 32] {
+    pub fn retained_wire_signature(&self) -> [u64; 32] {
         let mut signature=[0;32];
         signature[..16].copy_from_slice(&[
             self.stage as u64,
@@ -512,8 +512,11 @@ impl TimestepWork {
         turn.fault.map_or(Ok(()),|fault|Err(Error::severe(format!("energy heat-balance {}",fault.name()))))
     }
 
-    pub(crate) fn step_funded(&mut self,model:&Model,config:&SimulationConfig,pre:&PrecomputedModel,state:&mut SimulationModel,grant:RetainedCloneGrant)->TimestepStep {
-        let demand=self.thermal_demand();
+    pub fn step_funded(&mut self,model:&Model,config:&SimulationConfig,pre:&PrecomputedModel,state:&mut SimulationModel,grant:RetainedCloneGrant)->TimestepStep {
+        if self.is_complete() { return TimestepStep { progress: Default::default(), fault: None }; }
+        let mut demand=self.thermal_demand();
+        demand.items=demand.items.max(1);
+        demand.depth=demand.depth.max(1);
         if grant.maximum_items<(demand.items as usize)||grant.maximum_copy_bytes<(demand.copy_bytes as usize)||grant.maximum_depth<(demand.depth as usize){return TimestepStep {progress:Default::default(),fault:None};}
         let budget=DenseSolveBudget {items:grant.maximum_items as u64,copy_bytes:grant.maximum_copy_bytes as u64,depth:grant.maximum_depth.min(u32::MAX as usize) as u32,capacity_bytes:grant.maximum_capacity_bytes as u64};
         match self.stage {
@@ -528,6 +531,7 @@ impl TimestepWork {
             TimestepStage::SecondaryWater=>self.step_water(model,config,state),
             TimestepStage::Complete=>{},
         }
+        TimestepStep {progress:RetainedCloneProgress {copied_items:1,copied_bytes:0,retained_capacity_bytes:0,released_bytes:0},fault:None}
     }
 }
 // #endregion 🔖️TimestepJob

@@ -1,10 +1,8 @@
 //! ⛓️ Staged slice of the `dispatch` band of the mounted artifact instance: its `instance-stores` members (WP6 step S0 of the instance family).
 //!
-//! 📨️ Dispatch of the mounted artifact instance: test snapshot helpers, command log, history view, patch and refresh, preview, `dispatch_emit` and transaction groups.
-use semio_framework_plugin_decl_emission::{ActionMeta, Emit};
-use semio_framework::kernel::{ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactVersion, Effect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, SchemaId, UiDirtyScope, UndoGroup, UndoPolicy};
-use semio_framework_plugin_command::{AlternativeFact, HistoryRowReads, history_alternative_views};
-use semio_framework_plugin_decl_views::history_view::{AlternativeView, CommandLogEntry, CommandView};
+//! 📨️ Borrowed snapshot and history reads of the mounted artifact instance.
+use semio_framework_plugin_command::{AlternativeFact,HistoryRowReads,history_alternative_views};
+use semio_framework_plugin_decl_views::history_view::{AlternativeView,CommandLogEntry,CommandView};
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
@@ -17,6 +15,8 @@ use crate::stores_components::{InstanceStores, LocalInteraction};
 use protocol::OpText;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
+#[cfg(test)]
+use store::ArtifactStore;
 
 impl<A: ArtifactApp> InstanceStores<A> {
     #[cfg(test)]
@@ -43,16 +43,6 @@ impl<A: ArtifactApp> InstanceStores<A> {
         self.config_store.snapshot().expect("materialize config snapshot")
     }
 
-    /// 🧪️ The `KernelMutation`/`UndoGroup` half of an `InvocationResult` as it stands NOW,
-    /// read from the store's own last edit. A migrated dispatch returns an admission receipt whose
-    /// `mutations` are empty by construction — the work is handed to a worker and the document only
-    /// advances at `settle_registered_typed_operation` — so a settling fixture rebuilds this half
-    /// afterwards through the very same `result_from_last_edit` the unmigrated route uses, instead of
-    /// every law reaching into the store by hand.
-    #[cfg(test)]
-    pub async fn test_result_from_last_edit(&self, verb: &str, meta: &ActionMeta, tail_offset: (usize, usize)) -> InvocationResult {
-        self.result_from_last_edit(verb, meta, Vec::new(), Vec::new(), UiDirtyScope::default(), tail_offset).await
-    }
 
     /// 🧪️ `(forwards, inverse)` lengths of the store's last edit — the `before` half of
     /// `dispatch_emit`'s own `tail_offset`, so a settling fixture can report only the operations ONE
@@ -69,11 +59,9 @@ impl<A: ArtifactApp> InstanceStores<A> {
         self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone())
     }
 
-    /// 📸️ Materializes and returns the current snapshot — the typed counterpart to
-    /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
-    /// need direct structural access to document state instead of a rendered node.
-    pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {
-        self.store.snapshot().map_err(|error| error.into_fault())
+    /// 📸️ Borrows the current persisted read root without copying its state.
+    pub fn snapshot_ref(&self) -> &A::Snapshot {
+        self.store.snapshot_ref()
     }
 
     /// 🧪️ Returns the fixed store revision that a host render or admitted command observes.

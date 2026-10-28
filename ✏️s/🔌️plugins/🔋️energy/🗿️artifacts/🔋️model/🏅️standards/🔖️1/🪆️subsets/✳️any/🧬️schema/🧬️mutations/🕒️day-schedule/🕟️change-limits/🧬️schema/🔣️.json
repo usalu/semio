@@ -118,5 +118,45 @@
         "de": "Sind beide Grenzen gesetzt, überschreitet die Untergrenze die Obergrenze nicht."
       }
     }
-  ]
+  ],
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "paired-bounds",
+    "row": "StateDailySchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "daily",
+    "field": "limits",
+    "input": "new_limits_min",
+    "upper": "new_limits_max",
+    "key": "id",
+    "labels": {
+      "en": "Change daily schedule limits",
+      "de": "Grenzen des Tageszeitplans ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "daily-schedule",
+      "kind": "change-limits",
+      "record": "ChangedDailyScheduleLimits"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Both finite schedule limits form an ordered interval, or both are absent."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed daily schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The daily schedule already carries these limits."
+      }
+    }
+  }
 }

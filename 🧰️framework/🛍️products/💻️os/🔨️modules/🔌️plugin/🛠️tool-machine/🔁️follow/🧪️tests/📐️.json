@@ -1,0 +1,77 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "bodyBytes",
+    "committed",
+    "operations",
+    "visibleBeforePublish",
+    "visibleAfterPublish",
+    "cancelCuts",
+    "accepted",
+    "typingRun"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.original-tool-overlay-fold.v1"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "committed": {
+      "type": "number"
+    },
+    "operations": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "visibleBeforePublish": {
+      "type": "number"
+    },
+    "visibleAfterPublish": {
+      "type": "number"
+    },
+    "cancelCuts": {
+      "type": "array",
+      "minItems": 5,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "accepted": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "boolean"
+      }
+    },
+    "typingRun": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start",
+        "end",
+        "restored"
+      ],
+      "properties": {
+        "start": {
+          "const": 1
+        },
+        "end": {
+          "const": 2
+        },
+        "restored": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

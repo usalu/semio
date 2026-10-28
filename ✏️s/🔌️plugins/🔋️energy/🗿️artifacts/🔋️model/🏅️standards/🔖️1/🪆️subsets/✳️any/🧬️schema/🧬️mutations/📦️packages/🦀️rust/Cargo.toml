@@ -16,6 +16,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-s-artifact-energy-model-native-derive = { workspace = true }
+semio-s-artifact-energy-model-native-mutations = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
@@ -84,3 +86,4 @@ semio-s-plugin-energy-engine-model = { path = "../../../../../../../../../../�
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 serde_json = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }

@@ -7,7 +7,7 @@
 
 use crate::fixtures::{self, snapshot, zone, Case};
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 
 #[allow(unused_variables, unused_mut)]
@@ -36,7 +36,7 @@ fn scenario() -> (EnergyModelSnapshot, EnergyModelMutation) {
         holiday_dates: vec![(2026, 12, 25)],
     });
     model.schedules.time_series.push(crate::schedule::TimeSeriesSchedule { id: crate::schedule::ScheduleId(40), values: vec![1.0, 0.5, 0.25], timestep_seconds: 3600 });
-    (snapshot(model), super::replace_daily_schedule_hourly_values(crate::schedule::ScheduleId(10), vec![22.0; 12]))
+    (snapshot(model), super::replace_daily_schedule_hourly_values(crate::schedule::ScheduleId(99), [22.0; 24]))
 }
 
 fn case() -> Case {

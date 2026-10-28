@@ -3,6 +3,8 @@ pub use semio_framework_value_control_contract::*;
 pub use semio_framework_value_clone_source::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneBorrowAuthority,RetainedCloneSource,RetainedCloneSourceTake,RetainedOwnedProjection};
 use crate::{ErasedSnapshotRetirement,retirement::RetireOwned};
 use std::mem::{size_of,ManuallyDrop};
+#[path="🔗️alias/🦀️.rs"]mod alias;
+pub use alias::{RetainedAlias,RetainedAliasCursor};
 #[path="../🌱️dynamic/🦀️.rs"]
 pub mod dynamic;
 #[path="../📋️paged-list/🦀️.rs"]

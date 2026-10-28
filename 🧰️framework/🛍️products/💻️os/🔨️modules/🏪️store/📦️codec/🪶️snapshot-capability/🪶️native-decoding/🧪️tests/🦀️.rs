@@ -138,6 +138,8 @@ impl ArtifactPack for DecodedBuffers {
     }
 }
 impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DecodedBuffers {
+    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+
 
 }
 

@@ -76,6 +76,12 @@
       "accepted": false
     }
   ],
+  "retirementCustody": {
+    "unfunded": "Progress",
+    "missingControl": "UnsupportedOwner",
+    "foreignControl": "OwnershipLimit",
+    "preservesProgress": true
+  },
   "independentAxes": {
     "capacityGrant": 65536,
     "copyGrant": 4096,

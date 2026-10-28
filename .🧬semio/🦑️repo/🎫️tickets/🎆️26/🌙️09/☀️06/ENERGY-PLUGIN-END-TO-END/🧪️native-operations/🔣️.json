@@ -1,0 +1,1 @@
+{"schema":"semio.test.original-tool-operations/v1","initial":1.25,"append":[2.5,4.75],"retractTo":1,"replacement":[8.0],"expected":[2.5,4.75,2.5,8.0],"cancelCuts":[0,1,2,7,31,127],"maximumTurns":262144}

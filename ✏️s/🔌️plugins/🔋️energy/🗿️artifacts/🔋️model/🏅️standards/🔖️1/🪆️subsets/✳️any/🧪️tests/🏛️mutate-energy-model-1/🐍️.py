@@ -137,12 +137,6 @@ def invert(kind, before, payload):
     if kind == "remove-output-variable":
         index, spec = next((position, spec) for position, spec in enumerate(before["model"]["output_variables"]) if spec["name"] == payload["name"] and spec["key"] == payload["key"])
         return [("add-output-variable", {"name": spec["name"], "key": spec["key"], "reportingFrequency": spec["reporting_frequency"], "index": index})]
-    if kind in ("bind-weather-file", "unbind-weather-file"):
-        existing = before.get("weatherLink")
-        return [("bind-weather-file", {"target": copy.deepcopy(existing["target"])})] if existing else [("unbind-weather-file", {})]
-    if kind in ("connect-referenced-model", "disconnect-referenced-model"):
-        existing = before.get("referencedModel")
-        return [("connect-referenced-model", {"target": copy.deepcopy(existing["target"])})] if existing else [("disconnect-referenced-model", {})]
     zone = _zone(before, payload["id"])
     if kind == "rename-zone":
         return [("rename-zone", {"id": payload["id"], "newName": zone["name"]})]

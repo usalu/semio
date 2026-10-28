@@ -11,8 +11,8 @@ impl NativeListSource for DslValue{type Row=Self;fn row_count(&self)->Result<usi
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum Phase{Bind,Count,Initialize,RowBirth,RowAdvance,RowTake,RowClose,RowSeal,RowAdopt,Build,Finish,FinalTake,Ready,Spent}
 /// 🌳️ One required child receiver and a fixed-height page builder retain every original partial owner.
-pub struct NativePersistentListReceiver<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync>{
- binding:Option<RetainedCloneBinding>,builder:ManuallyDrop<Option<Box<PersistentListBuilder<T>>>>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,sealed:ManuallyDrop<Option<SealedShared<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,retirement:RetainedCloneClose,count:usize,index:usize,phase:Phase,closing:bool,input:std::marker::PhantomData<fn(&I)>,
+pub struct NativePersistentListReceiver<I:NativeListSource,T:NativeReceive<I::Row>+Sync>{
+ binding:Option<RetainedCloneBinding>,builder:ManuallyDrop<Option<Box<PersistentListBuilder<T>>>>,child:ManuallyDrop<Option<Box<T::Receiver>>>,raw:ManuallyDrop<Option<T>>,sealed:ManuallyDrop<Option<SealedShared<T>>>,output:ManuallyDrop<Option<PersistentList<T>>>,retirement:RetainedCloneClose,count:usize,index:usize,phase:Phase,closing:bool,input:std::marker::PhantomData<fn()->I>,
 }
 fn fixed(copy_bytes:usize)->RetirementDemand{RetirementDemand{copy_bytes,depth:1,..Default::default()}}
 fn receipt(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
@@ -41,7 +41,7 @@ impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Pe
    Phase::RowBirth=>{let mut d=nested(T::receive_birth_demand(),size_of::<T::Receiver>()+size_of::<Option<Box<T::Receiver>>>()*2+m)?;d.capacity_bytes=d.capacity_bytes.checked_add(size_of::<T::Receiver>()).ok_or_else(phase_error)?;Ok(d)},
    Phase::RowAdvance=>nested(self.child()?.demands(self.row_source(original)?,receiving_child_body_budget(body,m))?,m),
    Phase::RowTake=>nested(self.child()?.take_demand()?,size_of::<Option<T>>()*2+m),
-   Phase::RowClose=>if self.child()?.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<T::Receiver>>>()*2+m,release_bytes:size_of::<T::Receiver>(),depth:1,..Default::default()})}else{nested(self.child()?.close_demands(body.saturating_sub(m))?,m)},
+   Phase::RowClose=>if self.child()?.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<T::Receiver>(),..fixed(size_of::<Option<Box<T::Receiver>>>()*2+m)})}else{nested(self.child()?.close_demands(body.saturating_sub(m))?,m)},
    Phase::RowSeal=>nested(crate::native_decoding::NativeOwnedDecodeControl::shared_birth_demand::<T>(),m),
    Phase::RowAdopt=>nested(self.builder()?.adopt_demand()?,size_of::<Option<SealedShared<T>>>()+m),
    Phase::Build=>nested(self.builder()?.demand()?,m),Phase::Finish=>nested(self.builder()?.finish_demand()?,m),
@@ -53,7 +53,7 @@ impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Pe
    Phase::Bind=>{let p=original.bind(&mut self.binding,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-m,..g})?.ok_or_else(phase_error)?;self.phase=Phase::Count;enlarge(p,m)?},
    Phase::Count=>{self.count=original.get().row_count().map_err(|e|e.with_retained_progress(receipt(d)))?;self.phase=Phase::Initialize;receipt(d)},
    Phase::Initialize=>{let extra=size_of::<Option<Box<PersistentListBuilder<T>>>>()*2+m;let builder=PersistentListBuilder::new(self.count,child_grant(g,extra))?.ok_or_else(phase_error)?;control.charge(d.capacity_bytes)?;*self.builder=Some(Box::new(builder));self.phase=if self.count==0{Phase::Finish}else{Phase::RowBirth};receipt(d)},
-   Phase::RowBirth=>{let capacity=size_of::<T::Receiver>();let extra=capacity+size_of::<Option<Box<T::Receiver>>>()*2+m;control.charge(d.capacity_bytes)?;let(child,mut p)=T::begin_receive(RetainedCloneGrant{maximum_capacity_bytes:g.maximum_capacity_bytes-capacity,..child_grant(g,extra)})?;*self.child=Some(Box::new(child));self.phase=Phase::RowAdvance;p.retained_capacity_bytes=p.retained_capacity_bytes.checked_add(capacity).ok_or_else(phase_error)?;enlarge(p,extra)?},
+   Phase::RowBirth=>{let extra=size_of::<T::Receiver>()+size_of::<Option<Box<T::Receiver>>>()*2+m;control.charge(d.capacity_bytes)?;let child=RetainedCloneGrant{maximum_capacity_bytes:g.maximum_capacity_bytes-size_of::<T::Receiver>(),..child_grant(g,extra)};let(child,p)=T::begin_receive(child)?;*self.child=Some(Box::new(child));self.phase=Phase::RowAdvance;let mut p=enlarge(p,extra)?;p.retained_capacity_bytes=p.retained_capacity_bytes.checked_add(size_of::<T::Receiver>()).ok_or_else(phase_error)?;p},
    Phase::RowAdvance=>{let source=self.row_source(original)?;let child=self.child.as_mut().ok_or_else(phase_error)?;let p=child.advance(source,control,receiving_child_body_budget(body,m),child_grant(g,m)).map_err(|e|retained_error(e,m))?.progress();if child.output_ready(){self.phase=Phase::RowTake;}enlarge(p,m)?},
    Phase::RowTake=>{let extra=size_of::<Option<T>>()*2+m;control.charge(d.capacity_bytes)?;let child=self.child.as_mut().ok_or_else(phase_error)?;let(row,p)=child.take(child_grant(g,extra))?.ok_or_else(phase_error)?;*self.raw=Some(row);child.begin_close();self.phase=Phase::RowClose;enlarge(p,extra)?},
    Phase::RowClose=>{let child=self.child.as_mut().ok_or_else(phase_error)?;if child.terminal_is_empty(){self.child.take();self.phase=Phase::RowSeal;receipt(d)}else{control.charge(d.capacity_bytes)?;let p=child.close_step(child_grant(g,m)).map_err(|e|retained_error(e,m))?.progress();enlarge(p,m)?}},
@@ -70,7 +70,7 @@ impl<I:NativeListSource+?Sized,T:NativeReceive<I::Row>+Sync> NativeReceiver<I,Pe
  fn begin_close(&mut self){self.closing=true;if let Some(child)=self.child.as_mut(){child.begin_close();}if let Some(builder)=self.builder.as_mut(){builder.begin_close();}}
  fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if !self.closing{return Err(phase_error());}let m=Self::metadata();let body=body.saturating_sub(m);
-  if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<T::Receiver>>>()*2+m,release_bytes:size_of::<T::Receiver>(),depth:1,..Default::default()})}else{nested(child.close_demands(body)?,m)};}
+  if let Some(child)=self.child.as_ref(){return if child.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<T::Receiver>(),..fixed(size_of::<Option<Box<T::Receiver>>>()*2+m)})}else{nested(child.close_demands(body)?,m)};}
   if let Some(builder)=self.builder.as_ref(){return if builder.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<PersistentListBuilder<T>>>>()*2+m,release_bytes:size_of::<PersistentListBuilder<T>>(),depth:1,..Default::default()})}else{nested(builder.close_demand(body)?,m)};}
   if !self.retirement.is_empty(){return nested(self.retirement.next_owner_demands::<T>(false,&None,body)?,m);}
   if self.raw.is_some(){return nested(self.retirement.next_owner_demands::<T>(true,&None,body)?,m);}

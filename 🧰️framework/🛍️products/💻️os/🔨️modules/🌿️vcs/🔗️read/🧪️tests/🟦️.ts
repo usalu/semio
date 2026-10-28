@@ -30,3 +30,11 @@ export function verifyCapturedSnapshotSourceOracle() {
  const validate=new Ajv({strict:true}).compile(snapshotSchema);if(!validate(snapshotCorpus))throw new Error(JSON.stringify(validate.errors));
  for(const law of snapshotCorpus.cases){const independent=jsonPatch.applyPatch({bytes:[] as number[]},[{op:'replace',path:'/bytes',value:Array.from(Buffer.from(law.bytes))}],true,false).newDocument;if(JSON.stringify(independent.bytes)!==JSON.stringify(law.expected))throw new Error(law.id+' independent captured byte output');}
 }
+
+import { test, expect } from "bun:test";
+import { Database } from "bun:sqlite";
+import links from "./🧫️fixtures/⏮️links.json";
+test("original history reverse links agree with independent SQLite order",()=>{
+ const db=new Database(":memory:");db.exec("CREATE TABLE original_history (ordinal INTEGER PRIMARY KEY, row TEXT)");for(let index=0;index<links.rows.length;index++)db.query("INSERT INTO original_history VALUES (?, ?)").run(index,JSON.stringify(links.rows[index]));
+ expect(db.query("SELECT ordinal FROM original_history ORDER BY ordinal DESC").all().map((row:any)=>row.ordinal)).toEqual(links.expected);db.query("DELETE FROM original_history WHERE ordinal = ?").run(1);expect(db.query("SELECT ordinal FROM original_history ORDER BY ordinal DESC").all().map((row:any)=>row.ordinal)).toEqual([2,0]);db.close();
+});

@@ -1,0 +1,33 @@
+{
+  "contract": "semio.value.original-empty-record/v1",
+  "cases": [
+    {
+      "input": {},
+      "accepted": true
+    },
+    {
+      "input": {
+        "unexpected": 1
+      },
+      "accepted": false
+    },
+    {
+      "input": [],
+      "accepted": false
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11
+  ]
+}

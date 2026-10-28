@@ -57,17 +57,24 @@ pub fn parse(content: &str) -> Result<WeatherData, Error> {
 /// `EpwSnapshot` (e.g. when the snapshot was obtained via `io_dispatch`/`io_compose_via`
 /// rather than from raw text).
 pub fn from_snapshot(snapshot: &EpwSnapshot) -> Result<WeatherData, Error> {
-    let latitude_deg = parse_epw_field(&snapshot.location.latitude, "LOCATION.latitude")?;
-    let longitude_deg = parse_epw_field(&snapshot.location.longitude, "LOCATION.longitude")?;
-    let time_zone_hours = parse_epw_field(&snapshot.location.time_zone, "LOCATION.timeZone")?;
-    let elevation_m = parse_epw_field(&snapshot.location.elevation, "LOCATION.elevation")?;
-    let location = snapshot.location.city.clone();
-
+    if snapshot.records.is_empty() { return Err(Error::fatal("EPW: no data records")); }
+    let metadata = weather_metadata(snapshot)?;
     let records = snapshot.records.iter().map(weather_record).collect::<Result<Vec<_>, Error>>()?;
-    if records.is_empty() {
-        return Err(Error::fatal("EPW: no data records"));
-    }
+    Ok(WeatherData { calendar: metadata.calendar, location: metadata.location.to_owned(), latitude_deg: metadata.latitude_deg, longitude_deg: metadata.longitude_deg, elevation_m: metadata.elevation_m, time_zone_hours: metadata.time_zone_hours, records })
+}
 
+/// 🧭️ Borrows declared EPW location and calendar independently of per-record numerical projection.
+pub struct WeatherMetadata<'a> {
+    pub calendar: crate::site::WeatherCalendar,
+    pub location: &'a str,
+    pub latitude_deg: f64,
+    pub longitude_deg: f64,
+    pub elevation_m: f64,
+    pub time_zone_hours: f64,
+}
+
+/// 🗓️ Validates the shared weather header without cloning or traversing its hourly records.
+pub fn weather_metadata(snapshot: &EpwSnapshot) -> Result<WeatherMetadata<'_>, Error> {
     if snapshot.data_periods.records_per_hour != 1 { return Err(Error::fatal("EPW: simulation weather requires one hourly source record.")); }
     let mut dated = None;
     for period in &snapshot.data_periods.periods {
@@ -76,7 +83,14 @@ pub fn from_snapshot(snapshot: &EpwSnapshot) -> Result<WeatherData, Error> {
         dated=Some(start);
     }
     let calendar=match dated{Some(true)=>crate::site::WeatherCalendar::ActualDates,Some(false)=>crate::site::WeatherCalendar::TypicalYear,None=>return Err(Error::fatal("EPW: DATA PERIODS has no authored calendar bounds."))};
-    Ok(WeatherData { calendar, location, latitude_deg, longitude_deg, elevation_m, time_zone_hours, records })
+    Ok(WeatherMetadata {
+        calendar,
+        location: &snapshot.location.city,
+        latitude_deg: parse_epw_field(&snapshot.location.latitude, "LOCATION.latitude")?,
+        longitude_deg: parse_epw_field(&snapshot.location.longitude, "LOCATION.longitude")?,
+        elevation_m: parse_epw_field(&snapshot.location.elevation, "LOCATION.elevation")?,
+        time_zone_hours: parse_epw_field(&snapshot.location.time_zone, "LOCATION.timeZone")?,
+    })
 }
 
 /// 🫴️ Parsing faults retain their diagnostic while admitted weather failures retain the complete original owner.

@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreOwners<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 📬️OneItemPublication
     /// 🔏 The gesture's declared row budget, not the budget minus its forwards. An item's
@@ -80,7 +80,7 @@ reserve_original!(&mut stage.unit_flags,publication.admitted_items,(usize,bool))
             4=>{if stage.folded==0{if let Some(verb)=publication.verb.as_deref(){let copy=verb.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.verb=Some(verb.to_owned());ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;}}stage.fold_phase=5;},
             5=>{if !original.inverse.is_empty(){let depth=original.inverse.next_pop_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?.max(target.inverse.next_push_depth_demand().map_err(|error|VcsError::ValidationFailed(error.reason.into()))?);let copy=size_of::<Mutation>();if grant.maximum_depth<depth||grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let item=original.inverse.pop().unwrap();target.inverse.push_reserved(item).unwrap_or_else(|_|panic!("original inverse admission lost its reserved slot"));ownership.copied_bytes=copy;}else{stage.fold_phase=6;}},
             6=>{let copy=size_of::<Mutation>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.forwards.push(original.forwards.pop().expect("original one-item forward"));ownership.copied_bytes=copy;stage.fold_phase=7;},
-            7=>{let copy=size_of::<MutationMeta>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let meta=&mut original.mutation_meta[0];target.mutation_meta.push(MutationMeta{mutation_id:None,dependencies:std::mem::take(&mut meta.dependencies),base_version:meta.base_version,author_id:meta.author_id.take(),timestamp:meta.timestamp,undo_policy:meta.undo_policy,payload_hash:meta.payload_hash.take(),semantic_kind:None,label:None,group_id:meta.group_id.take(),origin:std::mem::take(&mut meta.origin),transaction:None});ownership.copied_bytes=copy;stage.fold_phase=8;},
+            7=>{let copy=size_of::<MutationMeta>();if grant.maximum_copy_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let meta=&mut original.mutation_meta[0];if publication.original_origins.is_some()&&!meta.origin.is_owner(){return Err(VcsError::ValidationFailed("supplied original provenance cannot replace semantic provenance".into()))}let origin=match publication.original_origins.as_mut(){Some(rows)=>rows.pop_front().ok_or_else(||VcsError::ValidationFailed("original mutation provenance exhausted before the semantic source".into()))?,None=>std::mem::take(&mut meta.origin)};target.mutation_meta.push(MutationMeta{mutation_id:None,dependencies:std::mem::take(&mut meta.dependencies),base_version:meta.base_version,author_id:meta.author_id.take(),timestamp:meta.timestamp,undo_policy:meta.undo_policy,payload_hash:meta.payload_hash.take(),semantic_kind:None,label:None,group_id:meta.group_id.take(),origin,transaction:None});ownership.copied_bytes=copy;stage.fold_phase=8;},
             8=>{let position=target.forwards.len()-1;let primary=publication.admitted_items==1&&!publication.transaction_open;let copy=target.id.len()+if primary{0}else{1+position.checked_ilog10().unwrap_or(0)as usize+1};if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let mut id=String::with_capacity(copy);id.push_str(&target.id);if !primary{use std::fmt::Write;write!(id,"#{position}").unwrap();}target.mutation_meta.last_mut().unwrap().mutation_id=Some(MutationId(id));ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;stage.fold_phase=9;},
             9=>{let kind=target.forwards.last().unwrap().descriptor().semantic_kind;let copy=store_log.envelope.schema.len()+1+kind.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}let mut value=String::with_capacity(copy);value.push_str(&store_log.envelope.schema);value.push('#');value.push_str(kind);target.mutation_meta.last_mut().unwrap().semantic_kind=Some(SchemaId(value));ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;stage.fold_phase=10;},
             10=>{let source=target.forwards.last().unwrap().descriptor().display_name;let copy=source.len();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<copy{return Ok(ArtifactStoreOneItemAdvance::Blocked);}target.mutation_meta.last_mut().unwrap().label=Some(source.to_owned());ownership.copied_bytes=copy;ownership.retained_capacity_bytes=copy;stage.fold_phase=11;},
@@ -102,11 +102,25 @@ _=>{let copy=size_of::<ArtifactStoreOneItemCheckpoint>()+size_of::<Box<ArtifactS
             
             diagnostics: ArtifactStoreDiagnosticStage::default(),
             diagnostic_row: 0,
+            handoff_ids: Default::default(),
+            handoff_cursors: Default::default(),
 unit_flags: Vec::new(),
             folding: None,
             fold_phase: 0,
             digest_owner: None,
             digest_complete: false,
+            commit_metadata:None,
+            displaced_report:None,
+            message_owner: None,
+            message: None,
+            message_complete: false,
+            observed_position: None,
+            observed_source: None,
+            observed_complete: false,
+            seed_owner: None,
+            seed_pending: None,
+            seed_retiring: None,
+            seed_index: 0,
             edit: None,
             pending_edit: None,
             post: None,
@@ -415,7 +429,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 }
             };
             let (encoded_identity,payload_hash)=self.authored_operation_identity(store_log, &forwards[op_index],(candidate_clock.actor,candidate_clock.physical_ms,candidate_clock.logical),identity)?;
-            let authored_id = forwards[op_index].mutation_id();
+            let authored_id = forwards[op_index].mutation_id().cloned();
             let mutation_id = match authored_id {
                 Some(id) => id,
                 None => MutationId(encoded_identity),

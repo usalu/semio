@@ -1,0 +1,37 @@
+//! 🧪️ Original command bytes retain the exact typed Box across both passes, denied turns and cancellation.
+use super::*;
+use semio_framework_plugin_command::command_admission::original_typed_command::ArtifactOriginalCommandWire as Wire;
+use semio_framework_os_store_operation_wire::{ArtifactOperationText,ArtifactOperationTextNode,ArtifactPreparedOperationError,ArtifactPreparedOperationSource};
+use semio_framework_value::{ValueError,retained_clone::RetainedCloneClose};
+use std::mem::size_of;
+#[derive(semio_framework_value::RetireOwned)]
+#[value(boxed_original,send_only)]
+struct Command{text:String}
+impl ArtifactOperationText for Command{
+ fn operation_text_node(&self,path:&[usize])->Result<ArtifactOperationTextNode<'_>,ValueError>{assert!(path.is_empty());Ok(ArtifactOperationTextNode::Bytes(self.text.as_bytes()))}
+ fn operation_text_scalar(&self,_:&[usize],_:usize,_:&mut[u8])->Result<(usize,bool),ArtifactPreparedOperationError>{unreachable!()}
+}
+impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Command{fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,ValueError>{use semio_framework_dsl_record::native_encoding::FieldProjectionView as V;match path{[]=>Ok(V::Record(&[1])),[0]=>Ok(V::Text(&self.text)),_=>Err(semio_framework_dsl_record::native_encoding::projection_path_error())}}}
+fn pack_source(command:&Command)->ArtifactPreparedOperationSource<'_>{use semio_framework_dsl_record::{BorrowedRecordSpec as R,BorrowedFieldSpec as F,BorrowedShape as S,RecordLayout};const FIELDS:&[F]=&[F::new(1,"text",S::Text)];ArtifactPreparedOperationSource::Pack{tag:11,body:command,spec:R{keyword:None,layout:RecordLayout::Inline,fields:FIELDS}}}
+fn source(command:&Command)->ArtifactPreparedOperationSource<'_>{ArtifactPreparedOperationSource::Text{header:&[67,11],body:command}}
+const G:RetainedCloneGrant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:16<<20,maximum_release_bytes:16<<20,maximum_depth:4096};
+#[track_caller]
+fn event<T>(caller:&mut OriginalJobFixtureCaller,decoder:&mut OriginalJobDecodeOwner,g:RetainedCloneGrant,run:impl FnOnce(&mut StepContext<'_>)->Result<T,OriginalTurnFailure>)->T{let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn_with_decoder(g,decoder,run));let p=caller.receipt();assert_eq!((heap.requested_bytes,heap.released_bytes),(p.retained_capacity_bytes,p.released_bytes),"original command wire physical receipt: {p:?}, failure={:?}",result.as_ref().err());result.unwrap()}
+fn denied(d:RetirementDemand,axis:usize)->Option<RetainedCloneGrant>{let mut g=G;match axis{0=>g.maximum_items=0,1 if d.copy_bytes>0=>g.maximum_copy_bytes=d.copy_bytes-1,2 if d.capacity_bytes>0=>g.maximum_capacity_bytes=d.capacity_bytes-1,3 if d.release_bytes>0=>g.maximum_release_bytes=d.release_bytes-1,4 if d.depth>0=>g.maximum_depth=d.depth-1,_=>return None}Some(g)}
+#[test]
+fn original_command_wire_preserves_source_box_and_exact_page_custody(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🔣️.json")).unwrap();let count=law["textBytes"].as_u64().unwrap()as usize;
+ for pack in [false,true]{let source=if pack{pack_source}else{source};for cut in law["cancelAfter"].as_array().unwrap().iter().map(|cut|Some(cut.as_u64().unwrap()as usize)).chain([None]){
+  let mut caller=caller();let mut decoder=OriginalJobDecodeOwner::empty();let mut command=Some(Box::new(Command{text:(0..count).map(|index|char::from(b'a'+(index%26)as u8)).collect()}));let mut expected=if pack{let mut bytes=vec![1,11,0,1,1,7];let mut length=count;loop{let byte=(length&127)as u8;length>>=7;bytes.push(byte|if length==0{0}else{128});if length==0{break}}bytes}else{vec![67,11]};expected.extend_from_slice(command.as_ref().unwrap().text.as_bytes());let pointer=command.as_deref().unwrap()as*const Command;let text=command.as_ref().unwrap().text.as_ptr();let mut owner=None;
+  let d=Wire::<Command>::birth_demands();assert!(d.copy_bytes<=G.maximum_copy_bytes);
+  for axis in 0..5{let Some(g)=denied(d,axis)else{continue};assert!(!event(&mut caller,&mut decoder,g,|cx|Wire::admit(&mut command,source,1<<20,cx,&mut owner)));assert!(owner.is_none());assert_eq!(command.as_deref().unwrap()as*const Command,pointer);}
+  assert!(event(&mut caller,&mut decoder,G,|cx|Wire::admit(&mut command,source,1<<20,cx,&mut owner)));assert!(command.is_none());let active=owner.as_mut().unwrap();
+  let mut foreign=OriginalJobDecodeOwner::empty();event(&mut caller,&mut foreign,G,|cx|{assert!(active.advance(cx).is_err());Ok(())});assert!(foreign.terminal_is_empty());
+  for index in 0..262144{if cut==Some(index){caller.cancel().cancel_now();break}if active.ready(){break}assert_eq!(active.original_command().unwrap()as*const Command,pointer);let d=active.demands().unwrap();assert!(d.copy_bytes<=G.maximum_copy_bytes,"native command action exceeds mounted copy policy: {d:?}");for axis in 0..5{let Some(g)=denied(d,axis)else{continue};event(&mut caller,&mut decoder,g,|cx|active.advance(cx));assert_eq!(caller.receipt(),Default::default());assert_eq!(active.demands().unwrap(),d);}event(&mut caller,&mut decoder,G,|cx|active.advance(cx));assert!(index<262143);}
+  let mut wire=None;if cut.is_none(){assert!(active.ready());let d=active.take_demands().unwrap();for axis in 0..5{let Some(g)=denied(d,axis)else{continue};assert!(!event(&mut caller,&mut decoder,g,|cx|active.take_into(&mut command,&mut wire,cx)));assert!(command.is_none()&&wire.is_none());}assert!(event(&mut caller,&mut decoder,G,|cx|active.take_into(&mut command,&mut wire,cx)));assert_eq!(command.as_deref().unwrap()as*const Command,pointer);assert_eq!(command.as_ref().unwrap().text.as_ptr(),text);let output=wire.as_ref().unwrap();assert_eq!(output.page_count(),3);let mut offset=0;for index in 0..output.page_count(){for byte in output.page(index).unwrap(){assert_eq!(*byte,expected[offset]);offset+=1;}}assert_eq!(offset,expected.len());}
+  for index in 0..262144{if active.terminal_is_empty(){break}let d=active.close_demands().unwrap();for axis in 0..5{let Some(g)=denied(d,axis)else{continue};event(&mut caller,&mut decoder,g,|cx|cx.with_original_retirement(|cx|active.close_step(cx)));assert_eq!(caller.receipt(),Default::default());assert_eq!(active.close_demands().unwrap(),d);}event(&mut caller,&mut decoder,G,|cx|cx.with_original_retirement(|cx|active.close_step(cx)));assert!(index<262143,"original wire close stalled: {d:?}");}
+  event(&mut caller,&mut decoder,G,|cx|cx.with_original_retirement(|cx|{let d=Wire::<Command>::release_demands();close_original_retained_step(cx,d,|_|{drop(owner.take());Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(())}));
+  let mut close=RetainedCloneClose::default();for index in 0..262144{if close.is_empty()&&command.is_none()&&wire.is_none(){break}event(&mut caller,&mut decoder,G,|cx|cx.with_original_retirement(|cx|{let d=if !close.is_empty(){close.demands(32768)?}else if command.is_some(){close.next_owner_demands::<Box<Command>>(true,&None,32768)?}else{close.next_owner_demands::<semio_framework_action_bus::RetainedToolWireInput>(true,&None,32768)?};close_original_retained_step(cx,d,|g|{if !close.is_empty(){close.select(32768)?.step(g)}else if command.is_some(){Ok(close.begin_granted(&mut command,g)?.unwrap())}else{Ok(close.begin_granted(&mut wire,g)?.unwrap())}})?;Ok(())}));assert!(index<262143);}
+  retire_decoder(&mut caller,&mut decoder);caller.retire(G);
+ }
+}}

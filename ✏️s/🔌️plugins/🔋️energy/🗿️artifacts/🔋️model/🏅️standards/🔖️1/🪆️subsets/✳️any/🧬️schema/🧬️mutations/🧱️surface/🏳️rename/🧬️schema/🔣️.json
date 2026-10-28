@@ -48,6 +48,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename surface",
+      "de": "Fläche umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "surface",
+      "kind": "rename-surface",
+      "record": "RenamedSurface"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A surface name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another surface already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The surface already has this name."
       }
     }
   }

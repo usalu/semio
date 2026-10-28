@@ -1,33 +1,34 @@
 //! 🧾️ Original source scalars and reserved destinations advance only after their independent byte receipts are admitted.
 use super::*;
+use semio_framework_value::ByteReadSource;
 
-struct FoldByteRead<'a> { control:HistoryFoldControl,source:&'a [u8],position:&'a mut usize,copy:usize }
-impl Unpin for FoldByteRead<'_>{}
-impl Future for FoldByteRead<'_>{
+struct FoldByteRead<'a,S:ByteReadSource+?Sized> { control:HistoryFoldControl,source:&'a S,position:&'a mut usize,copy:usize }
+impl<S:ByteReadSource+?Sized> Unpin for FoldByteRead<'_,S>{}
+impl<S:ByteReadSource+?Sized> Future for FoldByteRead<'_,S>{
     type Output=Option<u8>;
     fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{
         let this=self.get_mut();let grant=this.control.original_grant();
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<this.copy{return Poll::Pending;}
-        let value=this.source.get(*this.position).copied();
+        let value=this.source.byte_at(*this.position);
         if value.is_some(){*this.position+=1;}
         this.control.accept_original_progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*size_of::<Self>()+usize::from(value.is_some()),..Default::default()});
         this.control.0.pending_original_copy.fetch_sub(this.copy,Ordering::Relaxed);this.copy=0;
         Poll::Ready(value)
     }
 }
-impl Drop for FoldByteRead<'_>{fn drop(&mut self){self.control.0.pending_original_copy.fetch_sub(self.copy,Ordering::Relaxed);}}
+impl<S:ByteReadSource+?Sized> Drop for FoldByteRead<'_,S>{fn drop(&mut self){self.control.0.pending_original_copy.fetch_sub(self.copy,Ordering::Relaxed);}}
 
 enum FoldByteDestination<'a>{Bytes(&'a mut Vec<u8>),Text(&'a mut String)}
-struct FoldByteCopy<'a>{control:HistoryFoldControl,source:&'a [u8],position:&'a mut usize,end:usize,target:FoldByteDestination<'a>,scalar:[u8;4],width:usize,needed:usize,copy:usize}
-impl Unpin for FoldByteCopy<'_>{}
-impl Future for FoldByteCopy<'_>{
+struct FoldByteCopy<'a,S:ByteReadSource+?Sized>{control:HistoryFoldControl,source:&'a S,position:&'a mut usize,end:usize,target:FoldByteDestination<'a>,scalar:[u8;4],width:usize,needed:usize,copy:usize}
+impl<S:ByteReadSource+?Sized> Unpin for FoldByteCopy<'_,S>{}
+impl<S:ByteReadSource+?Sized> Future for FoldByteCopy<'_,S>{
     type Output=Result<(),(usize,&'static str)>;
     fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{
         let this=self.get_mut();let grant=this.control.original_grant();
         if grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_copy_bytes<this.copy{return Poll::Pending;}
         let mut copied=2*size_of::<Self>();let mut failure=None;
         if *this.position<this.end{
-            let byte=this.source[*this.position];copied+=1;
+            let Some(byte)=this.source.byte_at(*this.position)else{return Poll::Ready(Err((*this.position,"truncated original byte source")))};copied+=1;
             match &mut this.target{
                 FoldByteDestination::Bytes(target)=>{target.push(byte);*this.position+=1;copied+=1;},
                 FoldByteDestination::Text(target)=>{
@@ -47,17 +48,17 @@ impl Future for FoldByteCopy<'_>{
         if let Some(result)=result{this.control.0.pending_original_copy.fetch_sub(this.copy,Ordering::Relaxed);this.copy=0;Poll::Ready(result)}else{Poll::Pending}
     }
 }
-impl Drop for FoldByteCopy<'_>{fn drop(&mut self){self.control.0.pending_original_copy.fetch_sub(self.copy,Ordering::Relaxed);}}
+impl<S:ByteReadSource+?Sized> Drop for FoldByteCopy<'_,S>{fn drop(&mut self){self.control.0.pending_original_copy.fetch_sub(self.copy,Ordering::Relaxed);}}
 
 impl HistoryFoldControl{
     /// 🔢️ Reads one original source byte per admitted scalar frontier without allocating a parser buffer.
-    pub async fn read_byte(&self,source:&[u8],position:&mut usize)->Result<u8,semio_framework_replication_error::ProtocolError>{
-        let copy=2*size_of::<FoldByteRead<'_>>()+1;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
+    pub async fn read_byte<S:ByteReadSource+?Sized>(&self,source:&S,position:&mut usize)->Result<u8,semio_framework_replication_error::ProtocolError>{
+        let copy=2*size_of::<FoldByteRead<'_,S>>()+1;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
         FoldByteRead{control:self.clone(),source,position:&mut *position,copy}.await.ok_or_else(||semio_framework_pack_error::PackRefusal::Truncated(*position as u64).into())
     }
 
     /// 📏️ Decodes the exact ten-byte u64 wire contract using the original scalar receiving frontier.
-    pub async fn read_varint(&self,source:&[u8],position:&mut usize)->Result<u64,semio_framework_replication_error::ProtocolError>{
+    pub async fn read_varint<S:ByteReadSource+?Sized>(&self,source:&S,position:&mut usize)->Result<u64,semio_framework_replication_error::ProtocolError>{
         let start=*position;let mut value=0;
         for index in 0..10{
             let byte=self.read_byte(source,position).await?;let payload=byte&127;
@@ -68,13 +69,13 @@ impl HistoryFoldControl{
     }
 
     /// 📝️ Copies the original UTF8 source into an already admitted text backing, preserving partial scalars on cancellation.
-    pub async fn copy_text_into(&self,target:&mut String,source:&[u8],position:&mut usize,end:usize)->Result<(),semio_framework_replication_error::ProtocolError>{
-        if end>source.len()||*position>end||target.capacity()-target.len()<end-*position{return Err(value_cause(ValueError::literal(ValueRefusalKind::InvalidValue,"history text destination was not reserved")));}
-        let copy=2*size_of::<FoldByteCopy<'_>>()+5;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
+    pub async fn copy_text_into<S:ByteReadSource+?Sized>(&self,target:&mut String,source:&S,position:&mut usize,end:usize)->Result<(),semio_framework_replication_error::ProtocolError>{
+        if end>source.byte_len()||*position>end||target.capacity()-target.len()<end-*position{return Err(value_cause(ValueError::literal(ValueRefusalKind::InvalidValue,"history text destination was not reserved")));}
+        let copy=2*size_of::<FoldByteCopy<'_,S>>()+5;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
         match (FoldByteCopy{control:self.clone(),source,position,end,target:FoldByteDestination::Text(target),scalar:[0;4],width:0,needed:0,copy}).await{
             Ok(())=>Ok(()),Err((offset,detail))=>{
                 let mut original=self.text(detail.len()).await?;let mut at=0;
-                let copy=2*size_of::<FoldByteCopy<'_>>()+5;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
+                let copy=2*size_of::<FoldByteCopy<'_,[u8]>>()+5;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
                 (FoldByteCopy{control:self.clone(),source:detail.as_bytes(),position:&mut at,end:detail.len(),target:FoldByteDestination::Text(&mut original),scalar:[0;4],width:0,needed:0,copy}).await.unwrap_or_else(|_|unreachable!("the refusal detail is valid static UTF8"));
                 Err(semio_framework_replication_error::ProtocolError::Malformed{what:"history transition",offset:offset as u64,detail:original.take()})
             }
@@ -82,9 +83,12 @@ impl HistoryFoldControl{
     }
 
     /// 📦️ Copies source bytes only into actual reserved original vector capacity.
-    pub async fn copy_bytes_into(&self,target:&mut Vec<u8>,source:&[u8],position:&mut usize,end:usize)->Result<(),semio_framework_replication_error::ProtocolError>{
-        if end>source.len()||*position>end||target.capacity()-target.len()<end-*position{return Err(value_cause(ValueError::literal(ValueRefusalKind::InvalidValue,"history byte destination was not reserved")));}
-        let copy=2*size_of::<FoldByteCopy<'_>>()+5;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
+    pub async fn copy_bytes_into<S:ByteReadSource+?Sized>(&self,target:&mut Vec<u8>,source:&S,position:&mut usize,end:usize)->Result<(),semio_framework_replication_error::ProtocolError>{
+        if end>source.byte_len()||*position>end||target.capacity()-target.len()<end-*position{return Err(value_cause(ValueError::literal(ValueRefusalKind::InvalidValue,"history byte destination was not reserved")));}
+        let copy=2*size_of::<FoldByteCopy<'_,S>>()+5;self.0.pending_original_copy.fetch_add(copy,Ordering::Relaxed);
         (FoldByteCopy{control:self.clone(),source,position,end,target:FoldByteDestination::Bytes(target),scalar:[0;4],width:0,needed:0,copy}).await.map_err(|_|unreachable!("binary copy has no UTF8 refusal"))
     }
 }
+
+#[path="📦️.rs"]
+mod payload_pages;

@@ -23,7 +23,7 @@ where
     //#region 🔖️Supersede
     /// ✏️ `Supersede`: supersedes typed inputs in every alternative or within one existing alternative
     /// ([`Self::author_supersession`]).
-    pub(super) async fn supersede_command(&mut self, scope: Option<String>, inputs: Vec<SupersedeInput<Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub(super) async fn supersede_command(&mut self, scope: Option<String>, inputs: Vec<SupersedeInput<Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let trunk = self.trunk_alternative_id();
         let scope = match scope {
             None => SupersedeScope::Document,
@@ -39,7 +39,7 @@ where
 
     /// 🌿️ `CreateAlternativeWithSupersede`: the pending-edit commit, a `Branch` at the head and the supersession scoped to
     /// the new alternative, authored as one batch ([`Self::author_supersession`]).
-    pub(super) async fn create_alternative_with_supersede(&mut self, name: String, inputs: Vec<SupersedeInput<Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub(super) async fn create_alternative_with_supersede(&mut self, name: String, inputs: Vec<SupersedeInput<Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let (inputs, target) = self.supersede_inputs(inputs)?;
         self.author_supersession(SupersedeScope::NewAlternative(name), inputs, target, None, identity).await
     }
@@ -52,6 +52,7 @@ where
     pub async fn commit_finished_replay(&mut self, finished: EditReplayResult<P, Mutation>, finalization: HistoryFinalization, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
         P: Sync,
+        Mutation: semio_framework_os_spr::ColdMutation<P>,
     {
         let mut slot = Some(finished);
         let outcome = self.commit_slotted_replay(&mut slot, finalization, identity).await;
@@ -65,7 +66,7 @@ where
     async fn commit_slotted_replay(&mut self, slot: &mut Option<EditReplayResult<P, Mutation>>, finalization: HistoryFinalization, identity: &mut EntityIdentityAuthority<'_>) -> Result<CommandReceipt, VcsError>
     where
         P: Sync,
-    {
+    Mutation: semio_framework_os_spr::ColdMutation<P>, {
         self.ensure_durable_group_idle()?;
         if let Some(open) = self.log.envelope.open_transaction.as_ref() {
             return Err(VcsError::TransactionOpen { transaction_id: open.transaction.id.clone() });
@@ -105,7 +106,7 @@ where
     /// dry run is a local step stepped across turns), refuses a report that blocks finalizing (`Error`/`Fatal`, the hub
     /// check-in strictness) with `Rejected { policy: Normal }` and every replay message, and installs everything atomically
     /// without replaying again.
-    async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn author_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: Option<EditReplayResult<P, Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let mut slot = replayed;
         let outcome = self.author_slotted_supersession(scope, inputs, target, &mut slot, identity).await;
         if let Some(unused) = slot {
@@ -115,7 +116,7 @@ where
     }
 
     /// ✍️ [`Self::author_supersession`] over a slot that keeps `replayed` with the caller until the resulting log takes it.
-    async fn author_slotted_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: &mut Option<EditReplayResult<P, Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    async fn author_slotted_supersession(&mut self, scope: SupersedeScope, inputs: Vec<protocol::SupersededInput>, target: Vec<String>, replayed: &mut Option<EditReplayResult<P, Mutation>>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let mut clock = self.log.clock;
         let mut envelopes = Vec::with_capacity(3);
         let saved_line = self.log.envelope.active_alternative_id.clone();
@@ -222,7 +223,7 @@ where
 
     /// ⏪️ Shared tail of every undo path: the applied edit at `position` must be this actor's
     /// own; it is withdrawn by a `Revert` transition and the projection follows the event log.
-    pub(super) async fn undo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
+    pub(super) async fn undo_lane_position(&mut self, position: usize) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let edit_id = self.log.applied_edit_ids[position].clone();
         if !self.edit_is_local(&edit_id) {
             return Err(VcsError::ForeignEdit(edit_id));
@@ -233,14 +234,14 @@ where
 
     /// ⏩️ Shared tail of every redo path: the redo entry at `position` is restored by a
     /// `Reinstate` transition, landing back at its own HLC position in the applied order.
-    pub(super) async fn redo_lane_position(&mut self, position: usize) -> Result<(), VcsError> {
+    pub(super) async fn redo_lane_position(&mut self, position: usize) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let edit_id = self.log.redo_edit_ids[position].clone();
         let mutation_ids = self.edit_mutation_ids(&edit_id)?;
         self.commit_transition(semio_framework_os_spr::HistoryTransition::Reinstate { mutation_ids: mutation_ids.clone() }, mutation_ids).await
     }
 
     /// 🚩️ Commits every applied-but-uncommitted edit as one change on a new checkpoint.
-    pub(super) async fn commit_pending_checkpoint(&mut self, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> {
+    pub(super) async fn commit_pending_checkpoint(&mut self, message: Option<String>, authors: Vec<Author>, identity: &mut EntityIdentityAuthority<'_>) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let (transition, dependencies, _) = self.pending_checkpoint_transition(message, authors, identity).await?;
         self.commit_transition(transition, dependencies).await
     }
@@ -274,7 +275,7 @@ where
     /// 🔗️ Attaches a backbone channel: ingests whatever events the other end already queued,
     /// then announces this replica's genesis and its complete event log. The other end folds the
     /// events it lacks and ignores the ones it holds — no snapshot ever crosses the channel.
-    pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
+    pub async fn attach_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         self.log.envelope.backbone = Some(backbone.descriptor().await);
         self.replace_backbone_retained(Some(backbone))?;
@@ -298,7 +299,7 @@ where
         Ok(reports)
     }
 
-    pub async fn attach_hot_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> {
+    pub async fn attach_hot_backbone(&mut self, backbone: Backbones) -> Result<(), VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         self.log.envelope.backbone = Some(backbone.descriptor().await);
         self.replace_backbone_retained(Some(backbone))?;
@@ -318,7 +319,7 @@ where
 
     /// 📡️ Drains inbound backbone messages into the edit timeline. Safe to call anytime;
     /// `dispatch` already calls this before every command.
-    pub async fn tick(&mut self) -> Result<bool, VcsError> {
+    pub async fn tick(&mut self) -> Result<bool, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         let pumped = self.pump().await?;
         let pending = self.replay.pending_reprojection.is_some();
@@ -326,7 +327,7 @@ where
         Ok(pumped || (pending && progress.is_none()))
     }
 
-    pub async fn tick_backbone_reports(&mut self) -> Result<Vec<semio_framework_os_spr::MergeReport>, VcsError> {
+    pub async fn tick_backbone_reports(&mut self) -> Result<Vec<semio_framework_os_spr::MergeReport>, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         self.pump_with_reports().await.map(|(_, reports)| reports)
     }
@@ -350,7 +351,7 @@ where
     }
 
     /// 📥️ Pumps every queued inbound message from the attached backbone into the timeline.
-    pub async fn pump(&mut self) -> Result<bool, VcsError> {
+    pub async fn pump(&mut self) -> Result<bool, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         self.pump_with_reports().await.map(|(changed, _)| changed)
     }
 

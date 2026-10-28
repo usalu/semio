@@ -29,7 +29,7 @@ impl ArtifactApp for PreparationApp {
     type Transient = NoTransient;
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
-    async fn initial_snapshot() -> Self::Snapshot { NoConfig::default() }
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{ NoConfig::default() })}
     async fn handle(_command: &Self::Command, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _interaction: &InteractionView<'_>, _view: Option<&ViewModel>, _draft: &DraftView<'_, Self::Draft>, _engines: &semio_framework_2d_compute::EngineHandles) -> ArtifactMutationOutcome<Self::Mutation, Self::ConfigMutation, Self::DraftMutation> {
         Ok(Emit::default())
     }

@@ -60,5 +60,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateSizingObject",
+    "branchType": "ModelOutputState",
+    "branch": "outputs",
+    "collection": "sizing_objects",
+    "field": "design_day_type",
+    "input": "new_design_day_type",
+    "key": "id",
+    "labels": {
+      "en": "Change sizing object: Design day type",
+      "de": "Auslegungstagtyp ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "sizing-object",
+      "kind": "change-sizing-object-design-day-type",
+      "record": "ChangedSizingObjectDesignDayType"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Design day type violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed sizing object does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The sizing object already carries this design day type value."
+      }
+    }
   }
 }

@@ -42,7 +42,7 @@ fn the_editor_declares_the_graph_and_the_preview_window() {
 
 #[test]
 fn the_editor_boots_on_a_real_document() {
-    assert_eq!(<Wfc3dEditor as ArtifactEditor>::initial_snapshot(), document());
+    assert_eq!(<Wfc3dEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")(), document());
     assert_eq!(<Wfc3dEditor as ArtifactEditor>::DIALECT, WFC3D_DIALECT);
 }
 

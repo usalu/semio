@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/original-document.json",
+  "title": "OriginalEnergyModelSnapshot",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "model",
+    "referencedModel",
+    "weatherLink"
+  ],
+  "properties": {
+    "schema": {
+      "const": "energy.model"
+    },
+    "model": {
+      "type": "object",
+      "minProperties": 44,
+      "maxProperties": 44
+    },
+    "referencedModel": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "weatherLink": {
+      "type": [
+        "object",
+        "null"
+      ]
+    }
+  }
+}

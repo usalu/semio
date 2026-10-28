@@ -22,6 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-plugin-actor-host = { path = "../../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

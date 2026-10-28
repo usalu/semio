@@ -59,5 +59,52 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "row": "StateAnnualSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "annual",
+    "field": "default_daily_schedule_id",
+    "input": "new_default_daily_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Annual schedule default daily schedule id",
+      "de": "Jahreszeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "annual-schedule",
+      "kind": "change-annual-schedule-default-daily-schedule",
+      "record": "ChangedAnnualScheduleDefaultDailySchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Annual schedule requires a valid default daily schedule id."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed annual schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "Annual schedule already has this default daily schedule id."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed daily schedule does not exist."
+      }
+    },
+    "references": [
+      "DailySchedules"
+    ],
+    "referenceTarget": "input"
   }
 }

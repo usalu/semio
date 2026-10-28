@@ -46,6 +46,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateSetpointManager",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "setpoint_managers",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename setpoint manager",
+      "de": "Sollwertregler umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "setpoint-manager",
+      "kind": "rename-setpoint-manager",
+      "record": "RenamedSetpointManager"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A setpoint manager name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another setpoint manager already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed setpoint manager does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The setpoint manager already has this name."
       }
     }
   }

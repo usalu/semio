@@ -222,7 +222,7 @@ export class AppChannelClient {
   }
 
   /** 🚀️ Admits media work against an exact document and revision; see {@link MediaCommands.submitMediaExport}. */
-  submitMediaExport(port: string, parentDocumentId: string, revision: bigint): Promise<AppFrameValue[]> {
+  submitMediaExport(port: string, parentDocumentId: string, revision: bigint, checkpointId: string | null = null): Promise<AppFrameValue[]> {
     return this.media.submitMediaExport(port, parentDocumentId, revision);
   }
 

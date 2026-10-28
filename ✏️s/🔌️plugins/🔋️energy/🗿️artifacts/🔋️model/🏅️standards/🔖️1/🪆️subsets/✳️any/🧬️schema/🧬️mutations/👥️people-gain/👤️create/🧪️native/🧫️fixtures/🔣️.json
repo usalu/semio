@@ -1,0 +1,192 @@
+{
+  "contract": "semio.energy.original-createpeoplegain/v1",
+  "collection": "people",
+  "existingRows": [
+    {
+      "id": 1,
+      "zone_id": 1,
+      "schedule_id": 1,
+      "activity_schedule_id": 1,
+      "people_per_area": 0.05,
+      "sensible_fraction": 0.6,
+      "latent_fraction": 0.4,
+      "radiant_fraction": 0.3
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "scheduleId": 1,
+        "activityScheduleId": 1,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 1
+      },
+      "outcome": "changed",
+      "after": [
+        1,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "scheduleId": 1,
+        "activityScheduleId": 1,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 0
+      },
+      "outcome": "changed",
+      "after": [
+        3,
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 1,
+        "zoneId": 1,
+        "scheduleId": 1,
+        "activityScheduleId": 1,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 1
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "scheduleId": 1,
+        "activityScheduleId": 1,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 99
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 99,
+        "scheduleId": 1,
+        "activityScheduleId": 1,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 1
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "scheduleId": 99,
+        "activityScheduleId": 1,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 1
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "scheduleId": 1,
+        "activityScheduleId": 99,
+        "peoplePerArea": 0.05,
+        "sensibleFraction": 0.6,
+        "latentFraction": 0.4,
+        "radiantFraction": 0.3,
+        "index": 1
+      },
+      "outcome": "reference",
+      "target": 99
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1.0
+        }
+      ],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    },
+    "zones": [
+      {
+        "id": 1,
+        "name": "A",
+        "volume_m3": 100,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ]
+  },
+  "recreate": {
+    "original": {
+      "id": 1,
+      "zone_id": 1,
+      "schedule_id": 1,
+      "activity_schedule_id": 1,
+      "people_per_area": 0.05,
+      "sensible_fraction": 0.6,
+      "latent_fraction": 0.4,
+      "radiant_fraction": 0.3
+    },
+    "rank": 7,
+    "payload": {
+      "id": 1,
+      "zoneId": 1,
+      "scheduleId": 1,
+      "activityScheduleId": 1,
+      "peoplePerArea": 0.05,
+      "sensibleFraction": 0.6,
+      "latentFraction": 0.4,
+      "radiantFraction": 0.3,
+      "index": 7
+    }
+  }
+}

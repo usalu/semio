@@ -57,5 +57,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "row": "StateFaultDefinition",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "faults",
+    "field": "start_schedule_id",
+    "input": "new_start_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Change fault: Onset schedule",
+      "de": "Startzeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fault",
+      "kind": "change-fault-start-schedule",
+      "record": "ChangedFaultStartSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Onset schedule violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fault does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced onset schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fault already carries this onset schedule reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

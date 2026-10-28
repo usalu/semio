@@ -1,0 +1,36 @@
+{
+  "windows": [
+    {
+      "id": "Ω-first",
+      "windowKindId": "left"
+    },
+    {
+      "id": "Ω-middle",
+      "windowKindId": "center"
+    },
+    {
+      "id": "Ω-final",
+      "windowKindId": "right"
+    }
+  ],
+  "cases": [
+    {
+      "target": "Ω-first",
+      "index": 0
+    },
+    {
+      "target": "Ω-final",
+      "index": 2
+    },
+    {
+      "target": "absent",
+      "index": null
+    }
+  ],
+  "bodyBytes": [
+    64,
+    128,
+    4096
+  ],
+  "maximumComparisonBytes": 64
+}

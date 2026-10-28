@@ -1,0 +1,1 @@
+{"contract":"semio.original-unsigned-diagnostic-target/v1","cases":[{"value":0,"target":"0"},{"value":1,"target":"1"},{"value":17,"target":"17"},{"value":4294967295,"target":"4294967295"}],"cancelAt":[0,1,2,3,4,5,8,16,32]}

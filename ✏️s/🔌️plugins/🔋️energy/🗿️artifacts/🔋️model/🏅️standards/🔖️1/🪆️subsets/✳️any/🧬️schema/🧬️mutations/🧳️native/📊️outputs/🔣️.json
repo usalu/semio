@@ -1,0 +1,124 @@
+{
+  "identity": [
+    "name",
+    "key"
+  ],
+  "cases": [
+    {
+      "id": "insert",
+      "insert": true,
+      "before": [],
+      "payload": {
+        "name": "Temperature",
+        "key": "*",
+        "reportingFrequency": "Hourly",
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        {
+          "name": "Temperature",
+          "key": "*",
+          "reporting_frequency": "Hourly"
+        }
+      ]
+    },
+    {
+      "id": "duplicate-frequency",
+      "insert": true,
+      "before": [
+        {
+          "name": "Temperature",
+          "key": "*",
+          "reporting_frequency": "Daily"
+        }
+      ],
+      "payload": {
+        "name": "Temperature",
+        "key": "*",
+        "reportingFrequency": "Hourly",
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "id": "blank",
+      "insert": true,
+      "before": [],
+      "payload": {
+        "name": "　 \t",
+        "key": "zone",
+        "reportingFrequency": "Hourly",
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "id": "rank",
+      "insert": true,
+      "before": [],
+      "payload": {
+        "name": "Temperature",
+        "key": "*",
+        "reportingFrequency": "Hourly",
+        "index": 1
+      },
+      "outcome": "missing"
+    },
+    {
+      "id": "remove",
+      "insert": false,
+      "before": [
+        {
+          "name": "Temperature",
+          "key": "*",
+          "reporting_frequency": "Daily"
+        },
+        {
+          "name": "Temperature",
+          "key": "zone",
+          "reporting_frequency": "Hourly"
+        }
+      ],
+      "payload": {
+        "name": "Temperature",
+        "key": "*"
+      },
+      "outcome": "changed",
+      "after": [
+        {
+          "name": "Temperature",
+          "key": "zone",
+          "reporting_frequency": "Hourly"
+        }
+      ],
+      "inverse": {
+        "name": "Temperature",
+        "key": "*",
+        "reportingFrequency": "Daily",
+        "index": 0
+      }
+    },
+    {
+      "id": "missing",
+      "insert": false,
+      "before": [],
+      "payload": {
+        "name": "Temperature",
+        "key": "*"
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelCuts": [
+    0,
+    1,
+    8,
+    32,
+    128,
+    512
+  ],
+  "wideRepeat": 8197,
+  "bodyBytes": 4096,
+  "capacityBytes": 16777216
+}

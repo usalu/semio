@@ -3,8 +3,6 @@
 type EnergyModelSnapshot {
   schema: String!
   model: JSON!
-  structure: JSON!
-  zones: JSON!
   referencedModel: JSON
   weatherLink: JSON
 }

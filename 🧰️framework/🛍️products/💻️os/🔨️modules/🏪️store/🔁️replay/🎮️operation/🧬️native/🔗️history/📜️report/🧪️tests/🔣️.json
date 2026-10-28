@@ -1,0 +1,15 @@
+{
+  "genesisZoom": 1.25,
+  "authoredZoom": 2.5,
+  "replacementZoom": 3.75,
+  "cancelCuts": [
+    0,
+    1,
+    8,
+    32,
+    64,
+    96,
+    128,
+    192
+  ]
+}

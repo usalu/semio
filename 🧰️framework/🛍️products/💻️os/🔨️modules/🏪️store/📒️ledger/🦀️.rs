@@ -318,6 +318,9 @@ impl CursorRevisionAccumulator {
         self.indexed_edits.insert(digest, (position, edit.forwards.len()));
     }
 
+    /// 📐️ Quotes the defining fixed hash frame and actual checkpoint bytes before a native cursor decision.
+    pub fn checkpoint_revision_demands(checkpoint_bytes:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let copy_bytes=checkpoint_bytes.checked_add(2*std::mem::size_of::<semio_framework_hash::Sha256>()+std::mem::size_of::<[&[u8];5]>()+2*std::mem::size_of::<[u8;32]>()+2*std::mem::size_of::<u64>()+64).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native checkpoint revision extent overflowed"))?;Ok(semio_framework_value::RetirementDemand{copy_bytes,depth:1,..Default::default()})}
+
     pub fn revision(&self, checkpoint_id: Option<&str>) -> [u8; 32] {
         let applied = self.applied.last().map_or(self.identity_digest, |record| record.prefix_digest);
         let redo = self.redo.last().map_or(self.identity_digest, |record| record.prefix_digest);
@@ -346,6 +349,11 @@ pub struct PendingCommandReport {
     /// order — announced outbound as one `BackboneMessage::Mutations` batch when the command ends.
     pub(crate) outbound: Vec<semio_framework_os_spr::MutationEnvelope>,
 }
+
+semio_framework_value::artifact_retire_struct!(PendingCommandReport{edit_ids,messages,worst,outbound});
+
+#[path="🏁️publication/📨️report/🦀️.rs"]
+pub mod original_replay_pending_report;
 
 impl PendingCommandReport {
     /// 📨️ Installs the diagnostic rows and worst level a prepared publication transferred, replacing nothing the command already authored.
@@ -526,7 +534,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 // `OpBinary`-encoded payloads — W5's frozen-contract signature). `hash_bytes`'s import above this
 // region stays needed elsewhere in this file (`replay_mutations`'s `payload_hash`, unaffected).
 
-/// 📦️ Recovers a single-op `Edit` from one causal wire envelope. `semio_framework_os_spr::causal::
+/// 🧊️ The explicit cold codec materializes contiguous operation input to recover a single-op `Edit` from one causal wire envelope. `semio_framework_os_spr::causal::
 /// MutationEnvelope` carries exactly one op per envelope (W5's binary reshape) — the receiving-
 /// side half of the per-op fan-out `semio_framework_os_spr::mutation_envelope_from_edit` performs when sending
 /// (see `flush_outbound`). `sequence_number`/`started_at` are placeholders `ingest_envelope`
@@ -535,9 +543,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 /// MutationEnvelope` carries no undo_policy at all (only the local `Edit`/`MutationMeta` shape
 /// does), and a remote edit is always foreign, so this field is never consulted for it anyway
 /// (`edit_is_local` gates undo eligibility on authorship, not `undo_policy`).
-pub async fn edit_from_operation_envelope<Mutation: OpBinary>(envelope: &semio_framework_os_spr::MutationEnvelope) -> Result<Edit<Mutation>, VcsError> {
-    let forward = Mutation::decode_op(&envelope.diff.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-    let inverse = if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![Mutation::decode_op(&envelope.inverse.payload).map_err(|error| VcsError::Deserialize(error.to_string()))?] };
+pub async fn edit_from_operation_envelope_cold<Mutation: OpBinary>(envelope: &semio_framework_os_spr::MutationEnvelope) -> Result<Edit<Mutation>, VcsError> {
+    let forward = Mutation::decode_op(&envelope.diff.payload.to_vec_owner()).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+    let inverse = if envelope.inverse.payload.is_empty() { Vec::new() } else { vec![Mutation::decode_op(&envelope.inverse.payload.to_vec_owner()).map_err(|error| VcsError::Deserialize(error.to_string()))?] };
     Ok(Edit {
         id: envelope.mutation_id.0.clone(),
         actor: Some(envelope.actor.0.clone()),
@@ -655,7 +663,7 @@ pub fn envelope_viewer_head<P, Mutation>(envelope: &ArtifactEnvelopeOwners<P, Mu
 /// 🧮️ [`fold_envelope_history`] over the bare event log: `edits`, `transitions` and the
 /// `conflicts` whose quarantine withholds edits — for document shapes that hold the log without a
 /// full envelope.
-pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &[semio_framework_os_spr::MutationEnvelope], conflicts: &[semio_framework_os_spr::Conflict], head: &semio_framework_os_spr::ViewerHead) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
+pub fn fold_event_log<P, Mutation>(document_id: &str, edits: &[&Edit<Mutation>], transitions: &(impl semio_framework_os_spr::HistoryTransitionEvents+?Sized), conflicts: &[semio_framework_os_spr::Conflict], head: &semio_framework_os_spr::ViewerHead) -> Result<semio_framework_os_spr::HistoryFold, VcsError>
 where
     Mutation: self::Mutation<P>,
 {
@@ -699,6 +707,16 @@ pub fn edit_timestamp<Mutation>(edit: &Edit<Mutation>) -> HybridLogicalTimestamp
     edit.mutation_meta.first().map_or(HybridLogicalTimestamp { actor: 0, physical_ms: 0, logical: 0 }, |meta| meta.timestamp)
 }
 
+#[path="🔏️digest/🦀️.rs"]
+pub mod native_digest;
 #[cfg(test)]
 #[global_allocator]
-static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+static REQUESTED_ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+
+#[path="🏁️publication/↩️inverse/🦀️.rs"]
+pub mod native_replay_inverses;
+
+#[path="🏁️publication/📚️metadata/🦀️.rs"]
+pub mod original_replay_metadata;
+#[path="🏁️publication/✏️supersession/🦀️.rs"]
+pub mod original_replay_supersessions;

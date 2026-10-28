@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod add_electrical_load_center_pv {
     #[path = "☄️add-pv/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "☄️add-pv/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "☄️add-pv/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "☄️add-pv/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod remove_electrical_load_center_pv {
     #[path = "🌘️remove-pv/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌘️remove-pv/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌘️remove-pv/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌘️remove-pv/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod create_electrical_load_center {
     #[path = "🏦️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🏦️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🏦️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🏦️create/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod add_electrical_load_center_battery {
     #[path = "🔋️add-battery/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔋️add-battery/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔋️add-battery/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔋️add-battery/↩️inverse/🦀️.rs"]
@@ -62,6 +70,8 @@ pub mod delete_electrical_load_center {
     #[path = "🔻️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔻️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔻️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔻️delete/↩️inverse/🦀️.rs"]
@@ -73,6 +83,8 @@ pub mod rename_electrical_load_center {
     #[path = "🖊️rename/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🖊️rename/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🖊️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🖊️rename/↩️inverse/🦀️.rs"]
@@ -84,6 +96,8 @@ pub mod remove_electrical_load_center_battery {
     #[path = "🪝️remove-battery/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪝️remove-battery/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪝️remove-battery/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪝️remove-battery/↩️inverse/🦀️.rs"]

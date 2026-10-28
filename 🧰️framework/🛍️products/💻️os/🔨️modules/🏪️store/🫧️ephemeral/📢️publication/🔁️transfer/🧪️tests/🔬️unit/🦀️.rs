@@ -37,8 +37,8 @@ fn close(preparation: &mut dyn ArtifactEphemeralOneItemPreparation<String, Strin
 
 #[test]
 fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
-    let mut callback = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
-    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);
+    let mut accepted=|_|true;
+    let mut receiving=semio_framework_value::NativeDecodeControl::new(1<<20,&mut accepted);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let payload = fixture["payload"]["text"].as_str().unwrap().repeat(fixture["payload"]["repeat"].as_u64().unwrap() as usize);
     let retirement: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<String>::default());
@@ -52,10 +52,10 @@ fn ephemeral_transfer_preparation_preserves_handed_off_and_aliased_owners() {
         };
         let mut preparation = factory.begin(request).unwrap_or_else(|_| panic!("admitted string transfer"));
         let grant = ArtifactStoreOneItemGrant { maximum_copy_bytes: 64, maximum_capacity_bytes: 256, ..physical_grant() };
-        assert!(matches!(preparation.advance(grant, &mut control).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)));
+        assert!(matches!(preparation.advance(grant,&mut receiving).unwrap(), ArtifactStoreOneItemPreparationStep::Prepared(..)));
         let retained = if hand_off { preparation.take_prepared().unwrap().next_root } else { preparation.prepared().unwrap().next_root.clone() };
         if hand_off {
-            assert!(matches!(preparation.advance(grant, &mut control).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
+            assert!(matches!(preparation.advance(grant,&mut receiving).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));
         }
         close(preparation.as_mut());
         assert_eq!(serde_json::to_value(retained.as_ref()).unwrap(), serde_json::to_value(&payload).unwrap());
@@ -95,8 +95,8 @@ fn ephemeral_transfer_preparation_returns_rejected_mutation_ownership_intact() {
 
 #[test]
 fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() {
-    let mut callback = |_: semio_framework_value_native_owned::native_decoding::NativeDecodeProgress| true;
-    let mut control = semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);
+    let mut accepted=|_|true;
+    let mut receiving=semio_framework_value::NativeDecodeControl::new(1<<20,&mut accepted);
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let state: Arc<dyn ArtifactOwnedValueRetirementFactory<String>> = Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<String>::default());
     let factory = ArtifactEphemeralTransferPreparationFactory::new(footprint, transfer, state.clone(), state.clone());
@@ -117,7 +117,7 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
             preparation.cancel();
         }
         let grant = ArtifactStoreOneItemGrant { maximum_items: row["items"].as_u64().unwrap() as usize, maximum_copy_bytes: row["copyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: row["capacityBytes"].as_u64().unwrap() as usize, ..physical_grant() };
-        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| preparation.advance(grant, &mut control).unwrap());
+        let (step, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| preparation.advance(grant,&mut receiving).unwrap());
         let progress = step.ownership_progress();
         assert!(progress.fits(grant.retained_grant()));
         assert_eq!((allocated, released), (progress.retained_capacity_bytes, progress.released_bytes));
@@ -130,7 +130,7 @@ fn ephemeral_transfer_preparation_obeys_neutral_grants_and_bounded_retirement() 
             let metadata = &fixture["transferMetadata"][usize::BITS.to_string()];
             assert_eq!(progress.copied_bytes, metadata["copyBytes"].as_u64().unwrap() as usize);
             assert_eq!(progress.retained_capacity_bytes, metadata["arcBytes"].as_u64().unwrap() as usize);
-            preparation.advance(grant, &mut control).unwrap();
+            preparation.advance(grant,&mut receiving).unwrap();
             assert_eq!(TRANSFERS.load(Ordering::Relaxed), 1);
         }
         preparation.cancel();

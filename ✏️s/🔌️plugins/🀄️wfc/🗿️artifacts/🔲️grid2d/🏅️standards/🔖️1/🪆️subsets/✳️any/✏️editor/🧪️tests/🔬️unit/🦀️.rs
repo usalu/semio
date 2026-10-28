@@ -152,7 +152,7 @@ fn the_command_channel_round_trips_through_its_binary_op_form() {
 
 #[test]
 fn the_boot_document_is_the_first_bundled_example() {
-    assert_eq!(<Grid2dEditor as ArtifactEditor>::initial_snapshot(), crate::examples::grid2d::pipes::document());
+    assert_eq!(<Grid2dEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::grid2d::pipes::document());
 }
 
 /// 🗃️ The navbar switcher's verb resolves every bundled id and refuses anything else, so a picker

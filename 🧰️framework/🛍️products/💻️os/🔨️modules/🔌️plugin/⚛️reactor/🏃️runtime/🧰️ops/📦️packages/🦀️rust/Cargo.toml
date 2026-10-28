@@ -23,9 +23,11 @@ path = "../../🦀️.rs"
 
 [features]
 artifact-app-testing = []
-original-actor-context-testing = []
+original-actor-context-testing = ["semio-framework-job/testkit","semio-framework-plugin-plugin-program/original-surface-testing"]
 
 [dependencies]
+semio-framework-value-native-owned = { path = "../../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-plugin-window-config = { path = "../../../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-framework-plugin-abi = { path = "../../../../../🚪️io/📦️packages/🦀️rust" }
 semio-framework-plugin-actor-host = { path = "../../../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../../../♻️cancellation/📦️packages/🦀️rust" }

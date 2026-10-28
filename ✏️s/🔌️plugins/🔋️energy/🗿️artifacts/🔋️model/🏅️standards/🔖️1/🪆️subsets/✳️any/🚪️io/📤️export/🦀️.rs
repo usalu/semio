@@ -19,3 +19,6 @@ pub mod json;
 pub mod txt;
 #[path = "🧵️serializers/🗿️artifacts/🎒️zip/🔖️2.0/✳️any/🦀️.rs"]
 pub mod zip;
+
+#[path = "⚡️idf/🦀️.rs"]
+pub mod idf;

@@ -165,7 +165,8 @@
         "precision": 2,
         "group": "infiltration",
         "order": 60
-      }
+      },
+      "minimum": 0
     },
     "flowPerExteriorAreaM3SM2": {
       "type": "number",
@@ -183,7 +184,8 @@
         "precision": 2,
         "group": "infiltration",
         "order": 70
-      }
+      },
+      "minimum": 0
     },
     "effectiveLeakageAreaM2": {
       "type": "number",
@@ -201,7 +203,8 @@
         "precision": 0,
         "group": "infiltration",
         "order": 80
-      }
+      },
+      "minimum": 0
     },
     "dischargeCoefficient": {
       "type": "number",
@@ -220,7 +223,8 @@
         "precision": 2,
         "group": "infiltration",
         "order": 90
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "stackHeightM": {
       "type": "number",
@@ -240,7 +244,8 @@
         "precision": 2,
         "group": "infiltration",
         "order": 100
-      }
+      },
+      "minimum": 0
     },
     "constantTermCoefficient": {
       "type": "number",
@@ -255,7 +260,8 @@
         "precision": 4,
         "group": "infiltration",
         "order": 110
-      }
+      },
+      "minimum": 0
     },
     "temperatureTermCoefficient": {
       "type": "number",
@@ -271,7 +277,8 @@
         "precision": 4,
         "group": "infiltration",
         "order": 120
-      }
+      },
+      "minimum": 0
     },
     "velocityTermCoefficient": {
       "type": "number",
@@ -287,7 +294,8 @@
         "precision": 4,
         "group": "infiltration",
         "order": 130
-      }
+      },
+      "minimum": 0
     },
     "velocitySquaredTermCoefficient": {
       "type": "number",
@@ -303,7 +311,152 @@
         "precision": 4,
         "group": "infiltration",
         "order": 140
-      }
+      },
+      "minimum": 0
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateInfiltration",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "schedule_id",
+        "input": "schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "method",
+        "input": "method",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "design_flow_ach",
+        "input": "design_flow_ach",
+        "storage": "fixed"
+      },
+      {
+        "field": "flow_per_exterior_area_m3_s_m2",
+        "input": "flow_per_exterior_area_m3_s_m2",
+        "storage": "fixed"
+      },
+      {
+        "field": "effective_leakage_area_m2",
+        "input": "effective_leakage_area_m2",
+        "storage": "fixed"
+      },
+      {
+        "field": "discharge_coefficient",
+        "input": "discharge_coefficient",
+        "storage": "fixed"
+      },
+      {
+        "field": "stack_height_m",
+        "input": "stack_height_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "constant_term_coefficient",
+        "input": "constant_term_coefficient",
+        "storage": "fixed"
+      },
+      {
+        "field": "temperature_term_coefficient",
+        "input": "temperature_term_coefficient",
+        "storage": "fixed"
+      },
+      {
+        "field": "velocity_term_coefficient",
+        "input": "velocity_term_coefficient",
+        "storage": "fixed"
+      },
+      {
+        "field": "velocity_squared_term_coefficient",
+        "input": "velocity_squared_term_coefficient",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "key": "id",
+    "inverse": "DeleteInfiltration",
+    "labels": {
+      "en": "Create Infiltration at index",
+      "de": "Infiltration an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "infiltration",
+      "kind": "create-infiltration",
+      "record": "CreatedInfiltration"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

@@ -69,9 +69,9 @@ impl ArtifactViewer for DeflateViewer {
     const DIALECT: Dialect = DEFLATE_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_DEFLATE_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DeflateSnapshot {
+    fn reference_birth()->Option<fn()->DeflateSnapshot>{Some(||{
         DeflateSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `DeflateViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.

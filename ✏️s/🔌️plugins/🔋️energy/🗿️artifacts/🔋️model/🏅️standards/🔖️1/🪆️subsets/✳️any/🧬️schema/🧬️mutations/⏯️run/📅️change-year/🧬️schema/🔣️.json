@@ -33,5 +33,39 @@
         "order": 50
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "run_period",
+    "field": "year",
+    "input": "new_year",
+    "labels": {
+      "en": "Change year",
+      "de": "Jahr ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "run",
+      "kind": "change-run-year",
+      "record": "ChangedRunYear"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored year is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The year is unchanged."
+      },
+      "context": {
+        "level": "error",
+        "code": "mutation.target-mismatch",
+        "message": "The authored value does not form a valid calendar interval."
+      }
+    },
+    "calendarInterval": true
   }
 }

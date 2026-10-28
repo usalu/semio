@@ -365,11 +365,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         native_identity: store::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest { plugin_id: plugin_id.to_string(), package_hash: compiled.package_hash, schema: artifact_schema.to_string() },
         snapshot_sqlite: Some(store::os_store::serialization::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import,export_file:None,import_file:None }),
         pack_schema_hash,
+        reference:Some(store::os_store::serialization::ArtifactCodecReference{
         compile_dsl: guest_compile_dsl,
         print_mirror: guest_print_mirror,
         edit_text_from_envelope: guest_edit_text_from_envelope,
         apply_ops_binary: guest_apply_ops_binary,
         replay_envelopes: guest_replay_envelopes,
+        }),
     };
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| GatewayError::new(GatewayErrorCode::Internal, error.to_string()))?;
     let binding=semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::Guest,plugin_id,Some(dialect.artifact_kind.clone()),Vec::new(),Some(dialect.clone()),None,&codec);

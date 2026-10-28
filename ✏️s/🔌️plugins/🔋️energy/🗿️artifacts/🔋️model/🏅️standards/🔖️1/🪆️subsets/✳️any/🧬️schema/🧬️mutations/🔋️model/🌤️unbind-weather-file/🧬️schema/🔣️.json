@@ -11,5 +11,39 @@
     "mutation": {
       "const": "unbindWeatherFile"
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "root-link",
+    "field": "weather_link",
+    "intent": "detach",
+    "attach": "BindWeatherFile",
+    "detach": "UnbindWeatherFile",
+    "labels": {
+      "en": "Unbind weather file",
+      "de": "Wetterdatei lösen"
+    },
+    "semantics": {
+      "verb": "unbind",
+      "entity": "weather-file",
+      "kind": "unbind-weather-file",
+      "record": "UnboundWeatherFile"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The complete original artifact link must retain valid target, pin and role identities."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This original link slot already carries the requested target, pin and role."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original link slot is empty."
+      }
+    }
   }
 }

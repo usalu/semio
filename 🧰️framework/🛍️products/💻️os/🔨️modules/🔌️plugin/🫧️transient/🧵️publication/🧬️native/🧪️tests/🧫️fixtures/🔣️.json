@@ -1,0 +1,1 @@
+{"schema":"plugin.ephemeral-native-custody.v1","source":true,"cancelBeforeStages":[0,1,2,3],"deniedAxes":["items","copyBytes","capacityBytes","depth"],"missingControl":"OwnershipLimit","foreignControl":"OwnershipLimit","terminal":true}

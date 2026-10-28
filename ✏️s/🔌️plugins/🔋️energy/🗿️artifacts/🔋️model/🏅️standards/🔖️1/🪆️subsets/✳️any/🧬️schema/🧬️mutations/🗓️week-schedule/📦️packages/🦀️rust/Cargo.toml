@@ -27,3 +27,4 @@ semio-s-artifact-energy-model-diff = { workspace = true }
 semio-s-artifact-energy-model-diff-patch = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
+semio-framework-value-native-owned = { workspace = true }

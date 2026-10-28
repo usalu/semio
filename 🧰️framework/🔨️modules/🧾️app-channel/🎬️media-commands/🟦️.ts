@@ -27,8 +27,8 @@ export class MediaCommands {
   }
 
   /** 🚀️ Admits media work only against the caller's exact document and revision. */
-  async submitMediaExport(port: string, parentDocumentId: string, revision: bigint): Promise<AppFrameValue[]> {
-    return this.ledger.send({ SubmitMediaExport: { seq: BigInt(this.ledger.nextSeq()), port, expected_parent_document_id: parentDocumentId, expected_base_revision: revision } });
+  async submitMediaExport(port: string, parentDocumentId: string, revision: bigint, checkpointId: string | null = null): Promise<AppFrameValue[]> {
+    return this.ledger.send({ SubmitMediaExport: { seq: BigInt(this.ledger.nextSeq()), port, expected_parent_document_id: parentDocumentId, expected_base_revision: revision, checkpoint_id:checkpointId } });
   }
 
   /** ⏱️ Advances one bounded media-export slice. */

@@ -8,16 +8,16 @@ fn fault(message:&'static str)->ValueError {ValueError::literal(ValueRefusalKind
 use semio_framework_value_original_slot::{RetainedOriginalReadOwner,RetainedOriginalRead,RetainedOriginalReadReturn};
 
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
-pub struct ArtifactHistoryReadKey {authority:usize,issuance:u64,key:ArtifactHistoryKey}
+pub struct ArtifactHistoryReadKey {authority:usize,issuance:u64,pub(super) key:ArtifactHistoryKey}
 
 impl<T> ArtifactHistoryLedger<T> {
  /// 🗝️ Captures this exact ledger backing, slot generation and visible group decision.
  pub fn retained_read_key_at(&self,position:usize)->Option<ArtifactHistoryReadKey>{self.retained_read_key(self.key_at(position)?)}
  /// 🪪️ Binds an existing revision index's original slot without scanning or recreating history.
- pub fn retained_read_key(&self,key:ArtifactHistoryKey)->Option<ArtifactHistoryReadKey>{self.get_key(key)?;Some(ArtifactHistoryReadKey{authority:self.authority(),issuance:self.read_issuance,key})}
+ pub fn retained_read_key(&self,key:ArtifactHistoryKey)->Option<ArtifactHistoryReadKey>{self.get_key(key)?;if self.slot(key.index).replacement.is_some(){return None}Some(ArtifactHistoryReadKey{authority:self.authority(),issuance:self.read_issuance,key})}
  /// 🧷️ Borrows the exact already-captured issuer when another original reader owns this same slot.
  pub fn retained_read_issuer(&self,key:ArtifactHistoryReadKey)->Result<Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>,ValueError>{Ok(self.original_read_slot(key)?.read.as_ref().map(|read|read.factory()))}
- fn original_read_slot(&self,key:ArtifactHistoryReadKey)->Result<&super::ArtifactHistorySlot<T>,ValueError>{if key.authority!=self.authority()||key.issuance!=self.read_issuance{return Err(fault("history read belongs to another original ledger"));}self.get_key(key.key).ok_or_else(||fault("history read slot generation or visibility changed"))?;Ok(self.slot(key.key.index))}
+ fn original_read_slot(&self,key:ArtifactHistoryReadKey)->Result<&super::ArtifactHistorySlot<T>,ValueError>{if key.authority!=self.authority()||key.issuance!=self.read_issuance{return Err(fault("history read belongs to another original ledger"));}self.get_key(key.key).ok_or_else(||fault("history read slot generation or visibility changed"))?;let slot=self.slot(key.key.index);if slot.replacement.is_some(){return Err(fault("history read requires its original replacement to settle"))}Ok(slot)}
  /// 🧮️ Queries the original frame or current source birth without taking its value.
  pub fn retained_read_demands(&self,key:ArtifactHistoryReadKey)->Result<RetirementDemand,ValueError> where T:Send+Sync+'static {let slot=self.original_read_slot(key)?;slot.read.as_ref().map_or(Ok(RetainedOriginalRead::<T>::initial_demands()),|read|read.birth_demands())}
  /// 🎟️ Moves the actual slot value and installed issuer into two independently granted read births.
@@ -36,8 +36,8 @@ impl<T> ArtifactHistoryLedger<T> {
  }
  /// 🧷️ Borrows a genuine root lease; callers project their recorded forward operation by field and index.
  pub fn retained_read(&self,key:ArtifactHistoryReadKey)->Result<RetainedCloneRef<'_,T>,ValueError>{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.borrow()}
- /// 🪪️ Retains a genuine owning alias of the exact root lease so a recorded forward operation can be projected from it later.
- pub fn retain_read(&self,key:ArtifactHistoryReadKey,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError> where T:Sync{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.retain_original(grant)}
+ /// 📽️ Retains the genuine slot source after validating its original ledger key.
+ pub fn retain_read(&self,key:ArtifactHistoryReadKey,grant:RetainedCloneGrant)->Result<(semio_framework_value::retained_clone::RetainedOwnedProjection<T>,RetainedCloneProgress),ValueError>where T:Sync{self.original_read_slot(key)?.read.as_ref().ok_or_else(||fault("history read requires granted original source birth"))?.retain_original(grant)}
  /// 🧭️ Observes the next original leased slot in constant time for Store cancellation.
  pub fn next_retained_read_key(&self)->Option<ArtifactHistoryReadKey>{let index=self.read_head?;Some(ArtifactHistoryReadKey{authority:self.authority(),issuance:self.read_issuance,key:ArtifactHistoryKey{index,generation:self.slot(index).generation}})}
  /// 🚪️ Queries exact source return through the caller's unchanged body allowance.

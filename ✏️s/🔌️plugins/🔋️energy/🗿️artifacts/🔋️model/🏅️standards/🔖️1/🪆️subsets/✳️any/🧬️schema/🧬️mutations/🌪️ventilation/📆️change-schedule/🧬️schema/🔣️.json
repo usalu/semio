@@ -57,5 +57,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "row": "StateMechanicalVentilation",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "mechanical_ventilations",
+    "field": "schedule_id",
+    "input": "new_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Change mechanical ventilation: Schedule",
+      "de": "Zeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "mechanical-ventilation",
+      "kind": "change-mechanical-ventilation-schedule",
+      "record": "ChangedMechanicalVentilationSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Schedule violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed mechanical ventilation does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The mechanical ventilation already carries this schedule reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

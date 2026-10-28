@@ -1,6 +1,6 @@
 //! 🧪️ Original source, actual allocator receipts and complete tail disposal exercise the concrete Energy owners.
 use super::*;
-use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,close_original_retained_step};
+use semio_framework_job::{OriginalJobFixtureCaller,OriginalJobDecodeOwner,OperationId,close_original_retained_step};
 use semio_framework_value::retained_clone::RetainedCloneStep;
 fn stock()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1_000_000,maximum_copy_bytes:64<<20,maximum_capacity_bytes:64<<20,maximum_release_bytes:64<<20,maximum_depth:128}}
 fn clock()->Option<u64>{Some(1)}

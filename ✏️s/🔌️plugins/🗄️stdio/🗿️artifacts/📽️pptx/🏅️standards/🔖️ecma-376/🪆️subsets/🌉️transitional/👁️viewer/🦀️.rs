@@ -69,9 +69,9 @@ impl ArtifactViewer for PptxTransitionalViewer {
     const DIALECT: Dialect = PPTX_TRANSITIONAL_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PPTX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PptxSnapshot {
+    fn reference_birth()->Option<fn()->PptxSnapshot>{Some(||{
         semio_s_artifact_stdio_pptx_base_model::standards::v_ecma_376::subsets::base::schema::blank_pptx_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `PptxTransitionalViewCommand::Noop` variant never
     /// carries a config change, so this always returns the empty `ViewEmit`.

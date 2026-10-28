@@ -115,7 +115,7 @@ impl BorrowedProjectedPackCursor {
     pub fn chunk_count(&self)->usize{self.chunks.len()}
     pub fn chunk_len(&self,index:usize)->Result<usize,ValueError>{self.chunks.get(index).map(|chunk|chunk.length).ok_or_else(||invalid("Pack chunk ordinal lost original source"))}
     pub fn chunk_depth(&self,index:usize)->Result<usize,ValueError>{Ok(self.chunks.get(index).ok_or_else(||invalid("Pack chunk ordinal lost original source"))?.depth.max(self.chunks.next_pop_depth_demand().map_err(page_error)?)+1)}
-    pub fn chunk_byte(&self,source:&dyn FieldProjectionSource,index:usize,offset:usize)->Result<u8,ValueError>{let chunk=self.chunks.get(index).ok_or_else(||invalid("Pack chunk ordinal lost original source"))?;if offset>=chunk.length{return Err(invalid("Pack chunk byte exceeds original range"));}match source.projection_view(&chunk.path[..chunk.depth])?{V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>bytes.get(chunk.offset+offset).copied().ok_or_else(||invalid("Pack chunk byte disappeared")),_=>Err(invalid("Pack chunk original shape changed"))}}
+    pub fn chunk_byte(&self,source:&dyn FieldProjectionSource,index:usize,offset:usize)->Result<u8,ValueError>{let chunk=self.chunks.get(index).ok_or_else(||invalid("Pack chunk ordinal lost original source"))?;if offset>=chunk.length{return Err(invalid("Pack chunk byte exceeds original range"));}match source.projection_view(&chunk.path[..chunk.depth])?{V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>bytes.get(chunk.offset+offset).copied().ok_or_else(||invalid("Pack chunk byte disappeared")),V::BytesSource(bytes)|V::IntrinsicBytesSource(bytes)=>bytes.byte_at(chunk.offset+offset).ok_or_else(||invalid("Pack chunk byte disappeared")),_=>Err(invalid("Pack chunk original shape changed"))}}
     pub fn section(&self)->BorrowedPackSection { match self.phase {Phase::SymbolsCount|Phase::Symbols|Phase::SymbolBytes|Phase::Reset=>BorrowedPackSection::Symbols,Phase::Body|Phase::Expression|Phase::ChunkReserve=>BorrowedPackSection::Body,Phase::Complete if !self.is_complete()=>BorrowedPackSection::Body,Phase::Complete=>BorrowedPackSection::Complete,Phase::Closing=>BorrowedPackSection::Closing,Phase::Closed=>BorrowedPackSection::Closed,_=>BorrowedPackSection::Discovery} }
     pub fn symbol_count(&self)->Option<usize>{(!matches!(self.section(),BorrowedPackSection::Discovery|BorrowedPackSection::Closing|BorrowedPackSection::Closed)).then_some(self.selected)}
     pub fn field_count(&self)->Option<usize>{self.is_complete().then_some(if self.intrinsic_field.is_some(){1}else{self.frames[0].count})}
@@ -216,7 +216,7 @@ impl BorrowedProjectedPackCursor {
     fn declare(&mut self, view: &V<'_>) -> Result<(), ValueError> {
         if matches!(view,V::Absent){return Ok(());}
         if self.intrinsic_field.is_some() || self.frames[self.depth].intrinsic {
-            return if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)) { Ok(()) } else { Err(invalid("intrinsic Pack source changed its declared value authority")) };
+            return if matches!(view,V::IntrinsicNull|V::IntrinsicBool(_)|V::IntrinsicNumber(_)|V::IntrinsicText(_)|V::IntrinsicTextSource(_)|V::IntrinsicBytes(_)|V::IntrinsicBytesSource(_)|V::IntrinsicArray(_)|V::IntrinsicObject(_)) { Ok(()) } else { Err(invalid("intrinsic Pack source changed its declared value authority")) };
         }
         let frame = self.frames[self.depth];
         if let V::Record(ids) = view {
@@ -233,7 +233,7 @@ impl BorrowedProjectedPackCursor {
             (Some(B::Expr),V::Expr(_))|
             (_, V::Absent) | (Some(B::Bool), V::Bool(_)) | (Some(B::Int), V::Int(_)) |
             (Some(B::UInt | B::Count), V::UInt(_)) | (Some(B::Float | B::Quantity(_) | B::Angle(_)), V::Float(_)) |
-            (Some(B::Text | B::Ref(_)|B::Embed(_)|B::EmbedFrom(_)), V::Text(_) | V::TextSource(_)) | (Some(B::Bytes64), V::Bytes(_)) | (Some(B::Enum(_)), V::Enum(_)) |
+            (Some(B::Text | B::Ref(_)|B::Embed(_)|B::EmbedFrom(_)), V::Text(_) | V::TextSource(_)) | (Some(B::Bytes64), V::Bytes(_) | V::BytesSource(_)) | (Some(B::Enum(_)), V::Enum(_)) |
             (Some(B::Map(_)),V::Map(_))|(Some(B::Statements(_)),V::Statements(_))|(Some(B::Wire),V::Wire(_))|
             (Some(B::Block(_)), V::Block) | (Some(B::List(_)), V::List(_)) | (Some(B::Tuple(_, _) | B::Coord(_) | B::Dim(_) | B::Dir | B::Range), V::Tuple(_)));
         if valid {if let V::Tuple(length)=view{let expected=match frame.shape{Some(B::Tuple(_,arity))=>arity,Some(B::Coord(width)|B::Dim(width))=>Some(usize::from(width)),Some(B::Dir)=>Some(3),Some(B::Range)=>Some(2),_=>None};if expected.is_some_and(|expected|expected!=*length){return Err(invalid("Pack tuple source changed declared arity"));}}Ok(())} else { Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner, "borrowed Pack requires its exact literal Record/scalar/sequence shape authority")) }
@@ -252,7 +252,7 @@ impl BorrowedProjectedPackCursor {
                 V::Map(length)|V::Statements(length)=>{self.frames[self.depth].phase=30;self.frames[self.depth].length=length;},
                 V::Wire(_)=>{self.frames[self.depth].phase=1;self.frames[self.depth].length=9;},
                 V::Expr(_)=>self.pop(),
-                V::Absent | V::Bool(_) | V::Int(_) | V::UInt(_) | V::Float(_) | V::Enum(_) | V::Bytes(_) | V::IntrinsicNull | V::IntrinsicBool(_) | V::IntrinsicNumber(_) | V::IntrinsicBytes(_) => self.pop(),
+                V::Absent | V::Bool(_) | V::Int(_) | V::UInt(_) | V::Float(_) | V::Enum(_) | V::Bytes(_) | V::BytesSource(_) | V::IntrinsicNull | V::IntrinsicBool(_) | V::IntrinsicNumber(_) | V::IntrinsicBytes(_) | V::IntrinsicBytesSource(_) => self.pop(),
                 _ => return Err(invalid("borrowed Pack cursor has no declared projection authority for this shape")),
             }
         } else if frame.phase==30 {
@@ -375,6 +375,7 @@ impl BorrowedProjectedPackCursor {
                 V::Expr(_)=>{self.expression.restart();self.expression.set_maximum_depth(self.maximum_source_depth.saturating_sub(self.depth));self.expression_state=Default::default();self.phase=Phase::Expression;},
                 V::Text(_) | V::IntrinsicText(_) | V::TextSource(_) | V::IntrinsicTextSource(_) => { self.frames[self.depth].phase = 7; self.compare_offset = 0; self.compare_left = None; }
                 V::Bytes(bytes) | V::IntrinsicBytes(bytes) => {if self.chunking&&bytes.len()>=262144{self.queue_number(Some(TAG_BYTES_CHUNKED),bytes.len().div_ceil(1048576)as u64);self.frames[self.depth].phase=60;self.frames[self.depth].length=bytes.len();self.frames[self.depth].offset=0;}else{self.queue_number(Some(TAG_BYTES), bytes.len() as u64); self.frames[self.depth].phase = 8;} }
+                V::BytesSource(bytes) | V::IntrinsicBytesSource(bytes) => {let length=bytes.byte_len();if self.chunking&&length>=262144{self.queue_number(Some(TAG_BYTES_CHUNKED),length.div_ceil(1048576)as u64);self.frames[self.depth].phase=60;self.frames[self.depth].length=length;self.frames[self.depth].offset=0;}else{self.queue_number(Some(TAG_BYTES),length as u64);self.frames[self.depth].phase=8;}}
                 V::Bool(value) | V::IntrinsicBool(value) => { self.queue(&[if value { TAG_TRUE } else { TAG_FALSE }]); self.pop(); }
                 V::IntrinsicNull => { self.queue(&[TAG_NULL]);self.pop(); }
                 V::Absent => { self.queue(&[TAG_ABSENT]); self.pop(); }
@@ -429,10 +430,11 @@ impl BorrowedProjectedPackCursor {
                 }
             }
             8 => {
-                let (length,byte)=match view{V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>(bytes.len(),bytes.get(frame.offset).copied()),view=>{let text=text_view(view)?;(text.len(),text.byte_at(frame.offset))}};
-                let count=output.len().min(maximum).min(1).min(length-frame.offset);
+                let length=match &view{V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>bytes.len(),V::BytesSource(bytes)|V::IntrinsicBytesSource(bytes)=>bytes.byte_len(),V::Text(text)|V::IntrinsicText(text)=>text.len(),V::TextSource(text)|V::IntrinsicTextSource(text)=>text.len(),_=>return Err(invalid("Pack original payload shape changed"))};
+                let count=output.len().min(maximum).min(length-frame.offset);
                 if count==0&&frame.offset<length{return Ok(Default::default());}
-                if count!=0{output[0]=byte.ok_or_else(||invalid("Pack original payload byte disappeared"))?;}self.frames[self.depth].offset+=count;progress.copied_bytes=count;
+                let copied=match view{V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>{output[..count].copy_from_slice(&bytes[frame.offset..frame.offset+count]);count},V::BytesSource(bytes)|V::IntrinsicBytesSource(bytes)=>bytes.read_bytes(frame.offset,&mut output[..count]),view=>{let text=text_view(view)?;let mut copied=0;while copied<count{output[copied]=text.byte_at(frame.offset+copied).ok_or_else(||invalid("Pack original payload byte disappeared"))?;copied+=1;}copied}};
+                if copied!=count{return Err(invalid("Pack original payload byte disappeared"))}self.frames[self.depth].offset+=count;progress.copied_bytes=count;
                 if self.frames[self.depth].offset == length { self.pop(); }
                 return Ok(BorrowedProjectedPackProgress { progress: *progress, written_bytes: count, complete: self.is_complete() });
             }
@@ -594,9 +596,20 @@ impl Drop for BorrowedProjectedPackCursor {
 #[derive(semio_framework_value::RetireOwned)]
 struct PhysicalBorrowedPack{expression:RetainedExpressionCursor,symbols:PagedList<Symbol,SYMBOL_LIMIT>,frames:PagedList<Frame,64>,chunks:PagedList<ChunkLocator,{isize::MAX as usize}>}
 
+struct OriginalProjectedPackRetirement(std::mem::ManuallyDrop<BorrowedProjectedPackCursor>);
+impl semio_framework_value::retirement::RetirementCursor for OriginalProjectedPackRetirement{
+    fn next_demand(&self,_:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{self.0.retirement_demands()}
+    fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{use semio_framework_value::retirement::RetirementStep as S;match self.0.close(grant){Err(failure)=>S::Failure(failure.reason),Ok(step) if step.complete&&step.progress==Default::default()=>S::Complete,Ok(step)=>S::Progress(step.progress)}}
+    fn terminal_is_empty(&self)->bool{self.0.terminal_is_empty()}
+    fn next_work_byte_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.copy_bytes)}
+    fn next_close_byte_demand(&self)->Option<usize>{self.0.next_close_byte_demand().ok()}
+    fn next_depth_demand(&self)->Result<usize,ValueError>{Ok(self.0.retirement_demands()?.depth)}
+    fn terminal_release_bytes(&self)->Option<usize>{self.terminal_is_empty().then_some(size_of::<Self>())}
+}
+impl Drop for OriginalProjectedPackRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.0.terminal_is_empty(),"original Pack retirement must close every symbol, frame, chunk and expression owner");if self.0.terminal_is_empty(){unsafe{std::mem::ManuallyDrop::drop(&mut self.0);}}}}
 impl semio_framework_value::retirement::RetireOwned for BorrowedProjectedPackCursor{
-    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{let owner=std::mem::ManuallyDrop::new(self);let physical=unsafe{PhysicalBorrowedPack{expression:std::ptr::read(&owner.expression),symbols:std::ptr::read(&owner.symbols),frames:std::ptr::read(&owner.frames),chunks:std::ptr::read(&owner.chunks)}};semio_framework_value::retirement::RetireOwned::retirement(physical)}
-    fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.expression),deferred_birth_bytes_for(&self.symbols),deferred_birth_bytes_for(&self.frames),deferred_birth_bytes_for(&self.chunks)])}
+    fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(OriginalProjectedPackRetirement(std::mem::ManuallyDrop::new(self)))}
+    fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalProjectedPackRetirement>())}
     fn controlled_retirement_supported()->bool{true}
 }
 

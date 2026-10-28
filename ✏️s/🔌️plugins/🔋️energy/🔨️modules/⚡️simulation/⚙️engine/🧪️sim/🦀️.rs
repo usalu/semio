@@ -52,6 +52,10 @@ pub use semio_framework_job::Operation;
 #[path="🧪️testing/🦀️.rs"]
 pub mod testing;
 
+#[path="🎟️admission/🦀️.rs"]
+mod admission;
+pub use admission::EnergyJobAdmission;
+
 #[path = "🧱️state/🦀️.rs"]
 mod state;
 pub use self::state::*;
@@ -70,6 +74,42 @@ pub use self::engine::*;
 #[cfg(any(test, feature = "testkit"))]
 pub mod testkit {
     pub use super::{close::*, engine::*, packets::*, pipeline::*, run::*, state::*};
+    pub use super::retirement::energy_self_funded;
+    pub fn finalization_stage_index(job: &super::EnergyJob) -> usize { super::P7C1_FINALIZATION_STAGES.iter().position(|stage| *stage == job.finalization.stage).unwrap() }
+    pub fn finalization_stage_count() -> usize { super::P7C1_FINALIZATION_STAGES.len() }
+    pub fn set_finalization_stage_index(job: &mut super::EnergyJob, index: usize) { job.finalization.stage = super::P7C1_FINALIZATION_STAGES[index]; }
+    pub fn result_build_stage_index(job: &super::EnergyJob) -> usize { super::P7C1_RESULT_BUILD_STAGES.iter().position(|stage| *stage == job.result_build.stage).unwrap() }
+    pub fn result_build_stage_count() -> usize { super::P7C1_RESULT_BUILD_STAGES.len() }
+    pub fn set_result_build_stage_index(job: &mut super::EnergyJob, index: usize) { job.result_build.stage = super::P7C1_RESULT_BUILD_STAGES[index]; }
+    pub fn warmup_convergence_stage_index(job: &super::EnergyJob) -> usize { super::P7C1_WARMUP_CONVERGENCE_STAGES.iter().position(|stage| *stage == job.warmup_convergence.as_ref().unwrap().stage).unwrap() }
+    pub fn warmup_convergence_stage_count() -> usize { super::P7C1_WARMUP_CONVERGENCE_STAGES.len() }
+    pub fn set_warmup_convergence_stage_index(job: &mut super::EnergyJob, index: usize) { job.warmup_convergence.as_mut().unwrap().stage = super::P7C1_WARMUP_CONVERGENCE_STAGES[index]; }
+    pub fn has_warmup_convergence(job: &super::EnergyJob) -> bool { job.warmup_convergence.is_some() }
+    pub fn aggregate_zone_stage_index(job: &super::EnergyJob) -> usize { super::P7C1_AGGREGATE_STAGES.iter().position(|stage| *stage == job.aggregate_zone_work.as_ref().unwrap().stage).unwrap() }
+    pub fn aggregate_zone_stage_count() -> usize { super::P7C1_AGGREGATE_STAGES.len() }
+    pub fn set_aggregate_zone_stage_index(job: &mut super::EnergyJob, index: usize) { job.aggregate_zone_work.as_mut().unwrap().stage = super::P7C1_AGGREGATE_STAGES[index]; }
+    pub fn has_aggregate_zone(job: &super::EnergyJob) -> bool { job.aggregate_zone_work.is_some() }
+    pub fn aggregate_facility_stage_index(job: &super::EnergyJob) -> usize { super::P7C1_AGGREGATE_STAGES.iter().position(|stage| *stage == job.aggregate_facility_work.as_ref().unwrap().stage).unwrap() }
+    pub fn aggregate_facility_stage_count() -> usize { super::P7C1_AGGREGATE_STAGES.len() }
+    pub fn set_aggregate_facility_stage_index(job: &mut super::EnergyJob, index: usize) { job.aggregate_facility_work.as_mut().unwrap().stage = super::P7C1_AGGREGATE_STAGES[index]; }
+    pub fn has_aggregate_facility(job: &super::EnergyJob) -> bool { job.aggregate_facility_work.is_some() }
+
+    pub fn configuration(job: &super::EnergyJob) -> &super::SimulationConfig { &job.config }
+    pub fn validation_stage_index(job: &super::EnergyJob) -> usize { super::P7C1_VALIDATION_STAGES.iter().position(|stage| *stage == job.validation.stage).unwrap() }
+    pub fn validation_stage_count() -> usize { super::P7C1_VALIDATION_STAGES.len() }
+    pub fn set_validation_stage_index(job: &mut super::EnergyJob, index: usize) { job.validation.stage = super::P7C1_VALIDATION_STAGES[index]; }
+    pub fn install_precomputed_model(job: &mut super::EnergyJob, model: super::PrecomputedModel) { job.pre = Some(model); }
+    pub fn has_precomputed_model(job: &super::EnergyJob) -> bool { job.pre.is_some() }
+    pub fn original_close_demands(job: &super::EnergyJob) -> Result<super::RetirementDemand, super::ValueError> { job.original_close_demands() }
+    pub fn precompute_close_demands(job: &super::EnergyJob, body: usize) -> Option<Result<super::RetirementDemand, super::ValueError>> { job.precompute_close_demands(body) }
+    pub fn original_weather_record(job:&super::EnergyJob,index:usize)->super::WeatherRecord{job.weather_record(index)}
+    pub fn weather_index(job: &super::EnergyJob, date: super::calendar::SimDate, hour: u8) -> Option<usize> { job.weather_index(date, hour) }
+    pub fn hour_weather(job: &super::EnergyJob, index: usize, repeat_day: bool) -> Option<super::HourWeather> { job.hour_weather(index, repeat_day) }
+    pub fn advance_input_identity(job: &mut super::EnergyJob, grant: super::RetainedCloneGrant) -> Result<super::RetainedCloneProgress, super::ValueError> {
+        let authority = job.authority.as_mut().unwrap();
+        authority.input_identity.advance(&authority.model, &authority.config, grant)
+    }
+
 }
 
 #[cfg(test)]

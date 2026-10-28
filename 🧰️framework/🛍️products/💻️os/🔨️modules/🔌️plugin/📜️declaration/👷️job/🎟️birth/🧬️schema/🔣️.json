@@ -27,7 +27,8 @@
     "ports": {
       "const": [
         "typed-body",
-        "admitted-box"
+        "admitted-box",
+        "mounted-job"
       ]
     },
     "retainsOriginalOnDenial": {
@@ -153,6 +154,66 @@
         },
         {
           "port": "admitted-box",
+          "items": 1,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 1,
+          "admitted": true,
+          "source": false
+        },
+        {
+          "port": "mounted-job",
+          "items": 0,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 1,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "mounted-job",
+          "items": 1,
+          "copyDelta": -1,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 1,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "mounted-job",
+          "items": 1,
+          "copyDelta": 0,
+          "capacityDelta": -1,
+          "depth": 1,
+          "fuel": 1,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "mounted-job",
+          "items": 1,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 0,
+          "fuel": 1,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "mounted-job",
+          "items": 1,
+          "copyDelta": 0,
+          "capacityDelta": 0,
+          "depth": 1,
+          "fuel": 0,
+          "admitted": false,
+          "source": true
+        },
+        {
+          "port": "mounted-job",
           "items": 1,
           "copyDelta": 0,
           "capacityDelta": 0,

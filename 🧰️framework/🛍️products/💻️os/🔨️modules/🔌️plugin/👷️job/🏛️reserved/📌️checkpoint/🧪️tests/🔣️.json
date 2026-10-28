@@ -1,0 +1,1 @@
+{"message":"native authored α日 checkpoint","repeat":2049,"authors":[{"id":"author-1","name":"Original Author","avatar":"native:avatar"}],"cuts":[0,1,3,8,32,100],"expected":{"changed":true,"pins":0,"kind":"CommitCheckpoint"},"copyBody":4096}

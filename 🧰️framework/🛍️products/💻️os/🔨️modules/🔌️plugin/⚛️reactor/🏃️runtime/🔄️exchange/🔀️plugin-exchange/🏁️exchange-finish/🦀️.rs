@@ -39,7 +39,7 @@ pub(super) async fn finish_exchange<PA: PluginApp>(
     .await?;
     if let Some(operation) = flags.started_typed_operation {
         let mut pumps = 0;
-        while pumps < TYPED_OPERATION_REPLY_LEFTOVER_PUMPS && typed_leftover.as_ref().is_none_or(|leftover| leftover.operation != operation) && typed_output.typed_operation_pages == 0 && !typed_output.ownership_receipt_pending() {
+        while pumps < TYPED_OPERATION_REPLY_LEFTOVER_PUMPS && typed_leftover.as_ref().is_none_or(|leftover| leftover.operation != operation) && typed_output.typed_operation_pages==0 && !typed_output.ownership_receipt_pending() {
             let (more, leftover) = with_instances_original_mut(runtime, |list| {
                 let mut instance = find_instance(list, instance_id)?;
                 if !instance.app.has_runnable_typed_operations() {

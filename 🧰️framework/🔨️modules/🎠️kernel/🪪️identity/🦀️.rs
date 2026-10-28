@@ -108,6 +108,7 @@ pub use ::replication::{ActorId, ArtifactId, ArtifactVersion, MutationId, Schema
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(transparent)]
 #[value(transparent)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InvocationId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
@@ -152,7 +153,7 @@ pub use ::replication::HybridLogicalTimestamp;
 //#endregion 🔖️HybridLogicalTimestamp
 //#region 🔖️Capability
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum Rights {
@@ -162,7 +163,7 @@ pub enum Rights {
     Open,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum ArtifactKind {
@@ -175,7 +176,7 @@ pub enum ArtifactKind {
     Engine,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum Scope {
@@ -185,7 +186,7 @@ pub enum Scope {
     Global,
 }
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct CapabilityRequirement {
@@ -294,6 +295,7 @@ pub struct AppEvent {
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct InverseMutation {
     pub target_mutation: MutationId,
     pub inverse_diff: ArtifactDiff,
@@ -305,6 +307,7 @@ pub struct InverseMutation {
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct KernelMutation {
     pub id: MutationId,
     pub document: ArtifactHandle,
@@ -325,6 +328,7 @@ pub struct KernelMutation {
 /// primitives" — grouping). Additive only: nothing in this wave constructs one yet.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct EditRef {
     pub document: ArtifactHandle,
     pub edit_id: String,
@@ -332,6 +336,7 @@ pub struct EditRef {
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue)]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct UndoGroup {
     pub invocation_id: InvocationId,
     pub mutations: Vec<MutationId>,

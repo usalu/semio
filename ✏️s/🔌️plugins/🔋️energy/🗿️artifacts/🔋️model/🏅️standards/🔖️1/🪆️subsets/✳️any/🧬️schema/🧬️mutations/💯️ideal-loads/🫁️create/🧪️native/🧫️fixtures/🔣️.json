@@ -1,0 +1,273 @@
+{
+  "contract": "semio.energy.original-create-ideal-loads/v1",
+  "collection": "ideal_loads",
+  "existingRows": [
+    {
+      "id": 100,
+      "zone_id": 1,
+      "max_heating_supply_air_temp_c": 50,
+      "min_cooling_supply_air_temp_c": 13,
+      "max_heating_capacity_w": null,
+      "max_cooling_capacity_w": 1000,
+      "outdoor_air_per_person_m3_s": 0,
+      "outdoor_air_per_area_m3_s_m2": 0
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        100,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": 0
+      },
+      "outcome": "changed",
+      "after": [
+        3,
+        100
+      ]
+    },
+    {
+      "payload": {
+        "id": 100,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": 99
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 99,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 3,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 3,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": true,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 0,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 201,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": -101,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": -1,
+        "outdoorAirPerAreaM3SM2": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "maxHeatingSupplyAirTempC": 50,
+        "minCoolingSupplyAirTempC": 13,
+        "maxHeatingCapacityPresent": false,
+        "maxHeatingCapacityW": 0,
+        "maxCoolingCapacityPresent": true,
+        "maxCoolingCapacityW": 2500,
+        "outdoorAirPerPersonM3S": 0,
+        "outdoorAirPerAreaM3SM2": -1,
+        "index": null
+      },
+      "outcome": "invalid"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "recreate": {
+    "original": {
+      "id": 100,
+      "zone_id": 1,
+      "max_heating_supply_air_temp_c": 50,
+      "min_cooling_supply_air_temp_c": 13,
+      "max_heating_capacity_w": null,
+      "max_cooling_capacity_w": 1000,
+      "outdoor_air_per_person_m3_s": 0,
+      "outdoor_air_per_area_m3_s_m2": 0
+    },
+    "rank": 7,
+    "payload": {
+      "id": 100,
+      "zoneId": 1,
+      "maxHeatingSupplyAirTempC": 50,
+      "minCoolingSupplyAirTempC": 13,
+      "maxHeatingCapacityPresent": false,
+      "maxHeatingCapacityW": 0,
+      "maxCoolingCapacityPresent": true,
+      "maxCoolingCapacityW": 1000,
+      "outdoorAirPerPersonM3S": 0,
+      "outdoorAirPerAreaM3SM2": 0,
+      "index": 7
+    }
+  },
+  "model": {
+    "zones": [
+      {
+        "id": 1,
+        "name": "Original zone",
+        "volume_m3": 100,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ]
+  }
+}

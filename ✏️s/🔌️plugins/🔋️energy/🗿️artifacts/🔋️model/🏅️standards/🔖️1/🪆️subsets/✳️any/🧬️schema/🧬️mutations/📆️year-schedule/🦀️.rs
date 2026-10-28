@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_annual_schedule_holiday_daily_schedule {
     #[path = "🎄️change-holiday-daily-schedule/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🎄️change-holiday-daily-schedule/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🎄️change-holiday-daily-schedule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🎄️change-holiday-daily-schedule/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod add_annual_schedule_holiday {
     #[path = "🎉️add-holiday/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🎉️add-holiday/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🎉️add-holiday/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🎉️add-holiday/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod remove_annual_schedule_holiday {
     #[path = "🎊️remove-holiday/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🎊️remove-holiday/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🎊️remove-holiday/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🎊️remove-holiday/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod change_annual_schedule_default_daily_schedule {
     #[path = "🎌️change-default-daily-schedule/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🎌️change-default-daily-schedule/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🎌️change-default-daily-schedule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🎌️change-default-daily-schedule/↩️inverse/🦀️.rs"]
@@ -62,6 +70,8 @@ pub mod delete_annual_schedule {
     #[path = "📕️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📕️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📕️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📕️delete/↩️inverse/🦀️.rs"]
@@ -73,6 +83,8 @@ pub mod insert_annual_schedule_rule {
     #[path = "📗️insert-rule/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📗️insert-rule/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📗️insert-rule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📗️insert-rule/↩️inverse/🦀️.rs"]
@@ -84,6 +96,8 @@ pub mod remove_annual_schedule_rule {
     #[path = "📙️remove-rule/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📙️remove-rule/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📙️remove-rule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📙️remove-rule/↩️inverse/🦀️.rs"]
@@ -95,6 +109,8 @@ pub mod create_annual_schedule {
     #[path = "📚️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📚️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📚️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📚️create/↩️inverse/🦀️.rs"]
@@ -106,6 +122,8 @@ pub mod reorder_annual_schedule_rules {
     #[path = "🗂️reorder-rules/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🗂️reorder-rules/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🗂️reorder-rules/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🗂️reorder-rules/↩️inverse/🦀️.rs"]

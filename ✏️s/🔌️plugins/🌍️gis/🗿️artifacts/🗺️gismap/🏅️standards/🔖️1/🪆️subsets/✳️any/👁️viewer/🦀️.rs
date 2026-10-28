@@ -212,9 +212,9 @@ impl ArtifactViewer for GisMapViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn initial_snapshot() -> GisMapSnapshot {
+    fn reference_birth()->Option<fn()->GisMapSnapshot>{Some(||{
         default_document()
-    }
+    })}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))

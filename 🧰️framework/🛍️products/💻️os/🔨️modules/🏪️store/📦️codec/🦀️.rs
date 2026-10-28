@@ -112,11 +112,11 @@ pub fn same_document_codec(left: &ArtifactCodec, right: &ArtifactCodec) -> bool 
             _ => false,
         }
         && left.pack_schema_hash == right.pack_schema_hash
-        && std::ptr::fn_addr_eq(left.compile_dsl, right.compile_dsl)
-        && std::ptr::fn_addr_eq(left.print_mirror, right.print_mirror)
-        && std::ptr::fn_addr_eq(left.edit_text_from_envelope, right.edit_text_from_envelope)
-        && std::ptr::fn_addr_eq(left.apply_ops_binary, right.apply_ops_binary)
-        && std::ptr::fn_addr_eq(left.replay_envelopes, right.replay_envelopes)
+        && match(left.reference.as_ref(),right.reference.as_ref()){
+            (None,None)=>true,
+            (Some(left),Some(right))=>std::ptr::fn_addr_eq(left.compile_dsl,right.compile_dsl)&&std::ptr::fn_addr_eq(left.print_mirror,right.print_mirror)&&std::ptr::fn_addr_eq(left.edit_text_from_envelope,right.edit_text_from_envelope)&&std::ptr::fn_addr_eq(left.apply_ops_binary,right.apply_ops_binary)&&std::ptr::fn_addr_eq(left.replay_envelopes,right.replay_envelopes),
+            _=>false,
+        }
 }
 
 pub fn validate_document_codecs(registry: &BTreeMap<String, ArtifactCodec>, codecs: &[ArtifactCodec]) -> Result<(), DocumentCodecRegistryError> {
@@ -238,7 +238,7 @@ impl DocumentKindCodec {
     /// 📥️ The pair's text mirror; an `Err` means the pair is not a document of this kind.
     pub async fn print_mirror(&self, pack: &[u8], spr: &[u8]) -> Result<ArtifactTextFiles, VcsError> {
         match self {
-            Self::Linked(codec) => (codec.print_mirror)(pack, spr).await,
+            Self::Linked(codec) => (codec.reference()?.print_mirror)(pack, spr).await,
             Self::Component(codec) => codec.print_mirror(pack, spr).await,
         }
     }

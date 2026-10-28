@@ -19,8 +19,8 @@ use super::*;
 /// 📜️ The event-sourced history of one store: the envelope and its causal DAG, the applied and redo edit-id stacks, the checkpoint, actor, clock and merge policy.
 pub struct StoreLog<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     pub envelope: std::mem::ManuallyDrop<ArtifactEnvelope<P, Mutation>>,
     pub envelope_detached: bool,
@@ -58,8 +58,8 @@ where
 /// ♻️ The retirement discipline of one store: the installed retirement factories, the snapshot-read leases, the displaced-owner buffer and the owned disposer every value swap pays into.
 pub struct StoreOwners<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     /// ♻️ Exact domain-owned bounded disposer for immutable snapshot roots transferred out
     /// of this store. Composition retirement fails closed until the owner installs it.
@@ -79,8 +79,8 @@ where
 /// 📡️ The transport of one store: the attached backbone, the member inbox and the durable-group root.
 pub struct StoreWire<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     pub backbone: std::mem::ManuallyDrop<Option<Backbones>>,
     /// 📨️ Transient handoff from whichever `dispatch_inner` arm actually produced messages
@@ -93,14 +93,15 @@ where
     /// ordinary `dispatch` can never silently drop a child's remote edit, drained by
     /// {@link take_member_inbound}, and retired with the transport when the store closes.
     pub member_inbox: VecDeque<BackboneMessage>,
+    pub original_outbox: semio_framework_os_store_backbone::original_outbox::OriginalBackboneOutbox,
     pub durable_group_root: std::mem::ManuallyDrop<Option<semio_framework_os_store_durable_group_wire::lifted_durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>>>,
 }
 
 /// 🧭️ The revision mirror of one store: the content revision, its accumulator and mirror dirt, the generation and the last projection cause.
 pub struct StoreCursor<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     pub generation: u64,
     pub last_projection_cause: Option<ArtifactProjectionCause>,
@@ -146,8 +147,8 @@ impl semio_framework_os_store_one_item_publication::StoreMintWitness for StoreMi
 
 impl<P, Mutation> StoreLog<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     /// 🪙️ The mint witness of this live log: what the engine presents to [`ArtifactStoreOneItemLiveAuthority::mint_for_store`].
     #[inline]

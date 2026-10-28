@@ -118,7 +118,7 @@ impl InstanceExtension for ToolRunExtension {
         }
         let (registry, locale) = (&ctx.tools.registry, view_state.locale);
         let ready_tool = [view_state.active_utility_id.as_deref(), view_state.active_tool_id.as_deref()].into_iter().flatten().find(|tool_id| registry.tool_run(tool_id).is_some());
-        Some(ctx.tool_runs.panel(&registry.controller_id, locale, ready_tool, |tool_id| registry.tool_run(tool_id).map(|(label, _)| label.resolve(Terminology::Native, locale).to_string())))
+        Some(ctx.tool_runs.panel(registry.controller_id(), locale, ready_tool, |tool_id| registry.tool_run(tool_id).map(|(label, _)| label.resolve(Terminology::Native, locale).to_string())))
     }
 
     fn after_app_render<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension>(ctx: &mut ExtensionCtx<'_, A, M, X>, body_key: &str, view_state: &ViewModel) -> Result<(), Fault> {

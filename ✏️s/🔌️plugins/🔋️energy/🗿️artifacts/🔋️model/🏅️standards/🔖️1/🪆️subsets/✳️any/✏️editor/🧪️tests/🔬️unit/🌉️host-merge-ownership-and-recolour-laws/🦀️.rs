@@ -58,6 +58,7 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
         ("heatingSchedule", thermostat.heating_setpoint_schedule_id.0.to_string()),
         ("heatingThrottleRangeK", thermostat.heating_throttle_range_k.to_string()),
         ("thermostat", thermostat.id.0.to_string()),
+        ("zone", thermostat.zone_id.0.to_string()),
     ];
     let borrowed: Vec<(&str, &str)> = authored.iter().map(|(key, value)| (*key, value.as_str())).collect();
     let command = <EnergyModelEditor as ArtifactEditor>::command_from_action(SET_THERMOSTAT_SETPOINTS_ACTION_ID, Some((host_merged(&borrowed, "4.5")).clone()), None).expect("the thermostat payload resolves");
@@ -65,6 +66,7 @@ async fn a_thermostat_control_writes_the_number_the_host_merged_not_the_bridges_
         command,
         EnergyModelEditorCommand::SetThermostatSetpoints {
             thermostat: thermostat.id.0,
+            zone: thermostat.zone_id.0,
             heating_schedule: thermostat.heating_setpoint_schedule_id.0,
             cooling_schedule: thermostat.cooling_setpoint_schedule_id.0,
             heating_throttle_range_k: 4.5,

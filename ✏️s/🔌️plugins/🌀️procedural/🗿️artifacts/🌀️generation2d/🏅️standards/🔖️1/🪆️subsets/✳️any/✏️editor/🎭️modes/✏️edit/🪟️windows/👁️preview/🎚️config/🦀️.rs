@@ -11,6 +11,8 @@ impl Default for Generation2dEditPreviewWindowConfig {
 
 
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Generation2dEditPreviewWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 

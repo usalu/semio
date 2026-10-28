@@ -1,0 +1,256 @@
+{
+  "contract": "semio.energy.original-create-setpoint/v1",
+  "collection": "setpoint_managers",
+  "existingRows": [
+    {
+      "id": 100,
+      "name": "existing",
+      "kind": {
+        "OutdoorAirReset": {
+          "low_outdoor_c": -15,
+          "high_outdoor_c": 25,
+          "low_setpoint_c": 19,
+          "high_setpoint_c": 11
+        }
+      },
+      "schedule_id": 1
+    }
+  ],
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1
+        }
+      ],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        100,
+        7
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "OutdoorAirReset",
+        "lowOutdoorC": -10,
+        "highOutdoorC": 20,
+        "lowSetpointC": 16,
+        "highSetpointC": 12,
+        "schedulePresent": true,
+        "scheduleId": 1,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        100,
+        7
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": 0
+      },
+      "outcome": "changed",
+      "after": [
+        7,
+        100
+      ]
+    },
+    {
+      "payload": {
+        "id": 100,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "existing",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "　\t",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 1,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "OutdoorAirReset",
+        "lowOutdoorC": 20,
+        "highOutdoorC": 20,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 1,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": true,
+        "scheduleId": 99,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new setpoint",
+        "kind": "Scheduled",
+        "lowOutdoorC": 0,
+        "highOutdoorC": 0,
+        "lowSetpointC": 0,
+        "highSetpointC": 0,
+        "schedulePresent": false,
+        "scheduleId": 0,
+        "index": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "recreate": {
+    "original": {
+      "id": 100,
+      "name": "existing",
+      "kind": {
+        "OutdoorAirReset": {
+          "low_outdoor_c": -15,
+          "high_outdoor_c": 25,
+          "low_setpoint_c": 19,
+          "high_setpoint_c": 11
+        }
+      },
+      "schedule_id": 1
+    },
+    "rank": 4,
+    "payload": {
+      "id": 100,
+      "name": "existing",
+      "kind": "OutdoorAirReset",
+      "lowOutdoorC": -15,
+      "highOutdoorC": 25,
+      "lowSetpointC": 19,
+      "highSetpointC": 11,
+      "schedulePresent": true,
+      "scheduleId": 1,
+      "index": 4
+    }
+  }
+}

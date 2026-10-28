@@ -1,0 +1,27 @@
+//! 🪟️ Aperture deletion reconstructs its genuine creation payload and original polygon as separately owned inverse pieces.
+use super::*;
+pub(super)fn compile(r:&Value,plan:&Ident,s:&Path,c:&Path)->syn::Result<InversePlan>{
+ if text(r,"row")?!="StateFenestration"||text(r,"inverse")?!="CreateFenestration"||r["restriction"]!="none"{return Err(error("native aperture inverse differs from its original field ownership"));}
+ let bundle=format_ident!("{}Bundle",plan);let spec=format_ident!("{}Recreation",plan);let item=format_ident!("{}Item",plan);let name=format_ident!("{}Name",plan);let vertices=format_ident!("{}Vertices",plan);let copied=["u_value_w_m2k","shgc","vlt","area_m2","height_m","sill_height_m","frame_conductance_w_k","divider_conductance_w_k","overhang_depth_m","overhang_offset_m","fin_depth_m","fin_offset_m"].iter().map(|n|syn::parse_str::<Ident>(n)).collect::<syn::Result<Vec<_>>>()?;
+ let source=quote!{
+ #[doc(hidden)]#[derive(::semio_framework_value::RetireOwned)]pub struct #bundle{create:Option<crate::CreateFenestration>,vertices:Option<Vec<[f64;3]>>}
+ #[doc(hidden)]#[derive(::semio_framework_value::RetireOwned)]pub enum #item{Create(crate::CreateFenestration),Vertices(crate::ReplaceFenestrationVertices)}
+ #[doc(hidden)]pub struct #name;
+ impl ::semio_s_artifact_energy_model_native_mutations::construction::RowFieldSource for #name{type Payload=#s::state::StateFenestration;type Value=String;fn field(p: ::semio_framework_value::RetainedCloneRef<'_,Self::Payload>)->::semio_framework_value::RetainedCloneRef<'_,String>{p.project(0,|p|p.name.get())}}
+ #[doc(hidden)]pub struct #vertices;
+ impl ::semio_s_artifact_energy_model_native_mutations::construction::RowFieldSource for #vertices{type Payload=#s::state::StateFenestration;type Value=Vec<[f64;3]>;fn field(p: ::semio_framework_value::RetainedCloneRef<'_,Self::Payload>)->::semio_framework_value::RetainedCloneRef<'_,Self::Value>{p.project(1,|p|p.vertices_m.get())}}
+ #[doc(hidden)]pub struct #spec;
+ impl ::semio_s_artifact_energy_model_native_mutations::construction::RowBirthSpec for #spec{
+ type Payload=#s::state::StateFenestration;type Context=usize;type Row=#bundle;type Fields=::semio_s_artifact_energy_model_native_mutations::construction::RowFieldsPair<Self::Payload,::semio_s_artifact_energy_model_native_mutations::construction::OwnedRowField<#name>,::semio_s_artifact_energy_model_native_mutations::construction::OwnedRowField<#vertices>>;
+ fn validate_context(rank:usize)->Result<(),::semio_framework_value::ValueError>{u32::try_from(rank).map(|_|()).map_err(|_|::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::OwnershipLimit,"an original aperture rank exceeds its inverse field"))}
+ fn finish(p: ::semio_framework_value::RetainedCloneRef<'_,Self::Payload>,(name,vertices):<Self::Fields as ::semio_s_artifact_energy_model_native_mutations::construction::RowFieldsPreparation<Self::Payload>>::Fields,rank:usize)->Self::Row{#bundle{create:Some(crate::CreateFenestration{id:p.get().id,name,surface_id:p.get().surface_id,#(#copied:p.get().#copied,)*glazing_construction_id:*p.get().glazing_construction_id.get(),index:Some(u32::try_from(rank).expect("admitted original aperture rank"))}),vertices:Some(vertices)}}
+ }
+ impl ::semio_s_artifact_energy_model_native_mutations::deletion::MultiDeletePath for #plan{
+ type InverseItem=#item;
+ fn inverse_count(row:&Self::Row)->Result<usize,::semio_framework_value::ValueError>{Ok(1+usize::from(!row.vertices_m.get().is_empty()))}
+ fn inverse_item_demand(b:&Self::Inverse,ordinal:usize,_:usize)->Result<::semio_framework_value::RetirementDemand,::semio_framework_value::ValueError>{if b.create.is_none()||ordinal>1||ordinal==1&&b.vertices.is_some(){return Err(::semio_framework_value::ValueError::literal(::semio_framework_value::ValueRefusalKind::InvariantViolated,"an original aperture inverse lost its selected piece"));}Ok(::semio_framework_value::RetirementDemand{copy_bytes:2*::std::mem::size_of::<#item>()+2*::std::mem::size_of::<Option<crate::CreateFenestration>>()+2*::std::mem::size_of::<Option<Vec<[f64;3]>>>()+2*::std::mem::size_of::<usize>()+2*::std::mem::size_of::<u32>(),depth:1,..Default::default()})}
+ fn take_inverse_item(b:&mut Self::Inverse,ordinal:usize,body:usize,g: ::semio_framework_value::RetainedCloneGrant)->Result<Option<(#item,::semio_framework_value::RetainedCloneProgress)>,::semio_framework_value::ValueError>{let d=<Self as ::semio_s_artifact_energy_model_native_mutations::deletion::MultiDeletePath>::inverse_item_demand(b,ordinal,body)?;if !#c::mutation::retained::retained_mutation_demand_fits(d,g){return Ok(None);}let item=if ordinal==0&&b.vertices.as_ref().is_some_and(|v|!v.is_empty()){#item::Vertices(crate::ReplaceFenestrationVertices{id:b.create.as_ref().expect("admitted original aperture creation").id,new_vertices_m:b.vertices.take().expect("admitted original aperture polygon")})}else{#item::Create(b.create.take().expect("admitted original aperture creation"))};Ok(Some((item,::semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})))}
+ }
+ };
+ Ok(InversePlan{bundle:quote!(#bundle),recreate:quote!(#spec),item:quote!(#item),core:quote!(::semio_s_artifact_energy_model_native_mutations::deletion::MultiDeleteRowPreparation<Self>),bounds:quote!(From<crate::CreateFenestration>+From<crate::ReplaceFenestrationVertices>),map:quote!(match value{#item::Create(p)=>p.into(),#item::Vertices(p)=>p.into()}),source})
+}

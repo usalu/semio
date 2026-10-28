@@ -67,7 +67,8 @@ pub trait RetainedCloneEditCursor<P: RetainedClone, M>: Send {
 /// 🪪 Admits and creates the domain cursor while the Store retains publication authority.
 pub trait RetainedCloneEdit<P: RetainedClone, M>: semio_framework_value::FactoryRetirement + Send + Sync + 'static {
     type Cursor: RetainedCloneEditCursor<P, M>;
-    fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String>;
+    /// 🧊️ Refuses with authored static prose so a denied native operation creates no text owner.
+    fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str>;
     fn begin_demand(&self) -> RetainedCloneBirthDemand;
     fn snapshot_cursor_birth_demand(&self) -> RetainedCloneBirthDemand;
     fn begin(&self, grant: RetainedCloneGrant) -> Result<(Self::Cursor, RetainedCloneProgress), ValueError>;
@@ -102,7 +103,7 @@ where
 {
     fn begin_batch_digest(&self, edit:&mut Option<Box<Edit<M>>>, grant:RetainedCloneGrant)->Result<Option<(Box<dyn ArtifactStoreBatchDigest<M>>,RetainedCloneProgress)>,ValueError>{admit_artifact_batch_digest(edit,grant)}
     fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
-        self.edit.preflight(mutation, lane)
+        self.edit.preflight(mutation, lane).map_err(str::to_owned)
     }
 
     fn begin_demand(&self, _mutation: &M, _lane: HistoryLane) -> Result<RetainedCloneBirthDemand, ValueError> {
@@ -517,10 +518,12 @@ where
     }
 
     fn prepared(&self) -> Option<&ArtifactStoreOneItemPrepared<P, M>> {
+        if self.phase!=RetainedClonePreparationPhase::Prepared{return None}
         self.sealer.as_ref().and_then(ArtifactStoreOneItemSealer::prepared)
     }
 
     fn take_prepared(&mut self) -> Option<ArtifactStoreOneItemPrepared<P, M>> {
+        if self.phase!=RetainedClonePreparationPhase::Prepared{return None}
         self.sealer.as_mut().and_then(ArtifactStoreOneItemSealer::take_prepared)
     }
 

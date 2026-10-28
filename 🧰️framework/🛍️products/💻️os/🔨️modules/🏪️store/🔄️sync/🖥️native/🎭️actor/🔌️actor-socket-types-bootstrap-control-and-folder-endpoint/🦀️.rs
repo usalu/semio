@@ -132,7 +132,7 @@ impl FolderEndpoint {
                     None => match storage.read(document_id, extension).await.map_err(|error| error.to_string())? {
                         Some(files) => {
                             let codec = semio_framework_os_store_codec_registry::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
-                            let (pack, _) = (codec.compile_dsl)(&files.dsl, &files.ops).await.map_err(|error| error.to_string())?;
+                            let (pack, _) = (codec.reference().map_err(|error|error.to_string())?.compile_dsl)(&files.dsl, &files.ops).await.map_err(|error| error.to_string())?;
                             Some((pack.pack, pack.spr))
                         }
                         None => None,

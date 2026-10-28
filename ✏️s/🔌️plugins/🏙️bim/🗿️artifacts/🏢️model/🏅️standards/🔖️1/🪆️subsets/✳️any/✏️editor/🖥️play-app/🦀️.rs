@@ -190,9 +190,9 @@ impl ArtifactEditor for BimModelApp {
         Some(app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> ModelSnapshot {
+    fn reference_birth()->Option<fn()->ModelSnapshot>{Some(||{
         semio_s_artifact_bim_model_snapshot::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(bim_io())

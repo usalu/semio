@@ -1,0 +1,1 @@
+{"cases":[{"source":"operation-a","suffix":null,"expected":"operation-a"},{"source":"edit-ö","suffix":12,"expected":"edit-ö#12"},{"source":"","suffix":0,"expected":"#0"}],"widths":[0,8197]}

@@ -266,7 +266,7 @@ export interface WgpuPluginHandle extends MediaTransportPort {
   readonly componentSha256: string;
   readonly createApp: (appId: string) => Promise<number>;
   readonly destroyApp: (instanceId: number) => Promise<void>;
-  readonly readAppDocumentIdentity: (instanceId: number) => Promise<{ readonly appInstanceId: number; readonly parentDocumentId: string | null }>;
+  readonly readAppDocumentIdentity: (instanceId: number) => Promise<{ readonly appInstanceId: number; readonly parentDocumentId: string | null; readonly baseRevision: string }>;
   /** 🎯️ `dispatch` (`PluginDispatchHintV1`, kernel) is the input ledger's causal `order` for this one
    * call, threaded into {@link serializeWgpuActorCall} — see its `## order` section; absent ⇒ arrival order. */
   readonly handleAction: (instanceId: number, invocation: unknown, viewState: unknown, dispatch?: PluginDispatchHintV1) => Promise<InvocationResponse>;

@@ -35,5 +35,187 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateZone",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "zones",
+    "key": "id",
+    "inverse": "CreateZone",
+    "restriction": {
+      "kind": "all",
+      "sources": [
+        {
+          "kind": "references",
+          "row": "StateSpace",
+          "branch": "geometry",
+          "collection": "spaces",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateSurface",
+          "branch": "geometry",
+          "collection": "surfaces",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StatePeopleGain",
+          "branch": "loads",
+          "collection": "people",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateLightingGain",
+          "branch": "loads",
+          "collection": "lighting",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateEquipmentGain",
+          "branch": "loads",
+          "collection": "equipment",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateThermostat",
+          "branch": "controls",
+          "collection": "thermostats",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateHumidistat",
+          "branch": "controls",
+          "collection": "humidistats",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateIdealLoadsSystem",
+          "branch": "controls",
+          "collection": "ideal_loads",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateZoneEquipmentAssignment",
+          "branch": "controls",
+          "collection": "zone_equipment",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateInfiltration",
+          "branch": "loads",
+          "collection": "infiltrations",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateMechanicalVentilation",
+          "branch": "loads",
+          "collection": "mechanical_ventilations",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateSizingObject",
+          "branch": "outputs",
+          "collection": "sizing_objects",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateDaylightZoneConfig",
+          "branch": "loads",
+          "collection": "daylight_zones",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateRoomAirModelAssignment",
+          "branch": "loads",
+          "collection": "room_air_models",
+          "field": "zone_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateThermalEnclosure",
+          "branch": "geometry",
+          "collection": "thermal_enclosures",
+          "field": "zone_ids",
+          "storage": "shared-array"
+        },
+        {
+          "kind": "references",
+          "row": "StateModelAirLoop",
+          "branch": "systems",
+          "collection": "air_loops",
+          "field": "terminal_zone_ids",
+          "storage": "shared-array"
+        },
+        {
+          "kind": "root",
+          "branch": "systems",
+          "owner": "airflow_network",
+          "field": "zone_node_ids",
+          "storage": "optional-shared-tuples",
+          "tupleIndex": 0
+        }
+      ]
+    },
+    "labels": {
+      "en": "Delete zone",
+      "de": "Zone löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "zone",
+      "kind": "delete-zone",
+      "record": "DeletedZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

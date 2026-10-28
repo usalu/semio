@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "field": "stack_height_m",
+    "input": "new_stack_height_m",
+    "key": "id",
+    "labels": {
+      "en": "Change infiltration: Stack height",
+      "de": "Kaminhöhe ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "infiltration",
+      "kind": "change-infiltration-stack-height",
+      "record": "ChangedInfiltrationStackHeight"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Stack height violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The infiltration already carries this stack height value."
+      }
+    }
   }
 }

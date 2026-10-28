@@ -328,6 +328,9 @@
         "!**/🗑️generated/**"
       ],
       "owners": []
+    },
+    "mutationSourceAuthority": {
+      "workspaceRoot": ".."
     }
   },
   "patchedDependencies": {

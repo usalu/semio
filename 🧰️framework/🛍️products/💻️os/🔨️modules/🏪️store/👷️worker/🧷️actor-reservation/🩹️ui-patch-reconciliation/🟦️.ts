@@ -71,6 +71,7 @@ export class ReservationUiPatches {
     child: DocumentBrowserActorChild,
     assertCurrent: () => void,
     publication: BrowserActorActionPublication | null = null,
+    receiveReply?: (payload: Uint8Array) => boolean,
   ): Promise<Readonly<{ moreWork: boolean; mutations: number }>> {
     const lifetime = this.session.lifetime;
     if (lifetime === null) throw new Error("document browser actor: missing patch lifetime");
@@ -81,7 +82,7 @@ export class ReservationUiPatches {
     const acknowledgements: BrowserActorChildValue[] = [];
     try {
       for (let patchCount = 0; patchCount < 8; patchCount += 1) {
-        const routed = await this.hub.effects.routeTurnEffects(value, publication ?? "ordinary");
+        const routed = await this.hub.effects.routeTurnEffects(value, publication ?? "ordinary", receiveReply);
         mutations += routed.mutations;
         jobs.push(...routed.jobs);
         acknowledgements.push(...routed.acknowledgements);
@@ -151,6 +152,7 @@ export class ReservationUiPatches {
     child: DocumentBrowserActorChild,
     assertCurrent: () => void,
     publication: BrowserActorActionPublication | null = null,
+    receiveReply?: (payload: Uint8Array) => boolean,
   ): Promise<number> {
     let value: BrowserActorChildValue | null = initial,
       mutations = 0;
@@ -158,7 +160,7 @@ export class ReservationUiPatches {
       for (let turn = 0; turn < DOCUMENT_BROWSER_ACTOR_RENDER_TURN_LIMIT; turn += 1) {
         const owned = value;
         value = null;
-        const settled = await this.reconcileUiPatches(owned, child, assertCurrent, publication);
+        const settled = await this.reconcileUiPatches(owned, child, assertCurrent, publication, receiveReply);
         mutations += settled.mutations;
         if (mutations > BROWSER_ACTOR_ACTION_MUTATION_MAXIMUM) throw new Error("document browser actor: mutation effect limit");
         if (!settled.moreWork) {

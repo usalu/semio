@@ -4,7 +4,7 @@ use semio_framework_os_spr::{Edit, Mutation};
 /// 🪪️ For a SINGLE-op edit only, overrides its sole `mutation_meta[0].mutation_id` with the edit's
 /// own real `id` — preserving a SINGLE global edit-id domain across the wire for the dominant case
 /// (one atomic user action, one forward op). `replay_mutations` always pre-fills
-/// `mutation_meta[i].mutation_id` (`mutation.mutation_id().unwrap_or_else(mint_mutation_id` of the
+/// `mutation_meta[i].mutation_id` (`mutation.mutation_id().cloned().unwrap_or_else(mint_mutation_id` of the
 /// raw op bytes), so by the time an `Edit` exists it is never absent — a plain `is_none()` guard
 /// would never fire. `mutation_id()` has exactly one implementor repo-wide (the
 /// `crate::os_spr::Mutation<P>` trait's own `None` default — confirmed zero overrides), so op 0
@@ -12,7 +12,7 @@ use semio_framework_os_spr::{Edit, Mutation};
 /// nothing with `edit.id` (`mint_edit_id`'s replica+sequence+full-fingerprint hash) by construction of
 /// the two different formulas — not merely "sometimes absent". For a single-op edit, op 0 IS the
 /// edit's entire wire identity (`crate::os_spr::mutation_ids_for_edit`'s only entry for it), so
-/// overriding it to the edit's real id means `edit_from_operation_envelope` reconstructs an EXACT
+/// overriding it to the edit's real id means `edit_from_operation_envelope_cold` reconstructs an EXACT
 /// id match on every receiving store, instead of a content-hash id that never existed locally and
 /// cannot resolve a history transition naming it. MUST NOT extend to a genuine multi-op edit
 /// (`forwards.len() > 1`): `ingest_remote` reconstructs one local single-forward `Edit` per WIRE op,

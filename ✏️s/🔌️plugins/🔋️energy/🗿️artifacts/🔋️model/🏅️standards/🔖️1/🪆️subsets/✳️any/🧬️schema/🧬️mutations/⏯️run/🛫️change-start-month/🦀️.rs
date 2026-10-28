@@ -1,14 +1,13 @@
 //! 🛫️ Energy model mutation — `ChangeRunStartMonth`: Sets the month the simulation run period starts in; the period must stay a calendar interval of its year.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🛫️ `change-run-start-month` payload. Sets the month the simulation run period starts in; the period must stay a calendar interval of its year.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-run-start-month")]
 pub struct ChangeRunStartMonth {
@@ -18,36 +17,5 @@ pub struct ChangeRunStartMonth {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn change_run_start_month<Op: From<ChangeRunStartMonth>>(new_start_month: u8) -> Op {
     ChangeRunStartMonth { new_start_month }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeRunStartMonth
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeRunStartMonth>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "run", kind: "change-run-start-month", record: "ChangedRunStartMonth" };
-
-
-
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change run period start month to {}", self.new_start_month), &format!("Startmonat des Simulationszeitraums auf {} ändern", self.new_start_month))
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeRunStartMonth
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeRunStartMonth>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

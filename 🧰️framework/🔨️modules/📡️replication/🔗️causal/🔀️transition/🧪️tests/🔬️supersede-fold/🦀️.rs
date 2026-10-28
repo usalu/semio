@@ -1,6 +1,6 @@
 //! 🧪️ Supersede fold laws through the public API of the history crate only.
 
-use semio_framework_replication_history::{EffectiveSupersession, FoldEdit, HistoryFoldIndex, HistoryTransition, InputReplacement, SupersededInput, TransitionAuthor, TransitionCheckpoint, TransitionPin, TransitionSupersede, ViewerHead, fold_history, fold_history_for, history_transition_envelope, trunk_alternative_id};
+use semio_framework_replication_history::{EffectiveSupersession, FoldEdit, HistoryFoldIndex, HistoryTransition, InputReplacement, SupersededInput, Author, TransitionCheckpoint, TransitionPin, TransitionSupersede, ViewerHead, fold_history, fold_history_for, history_transition_envelope, trunk_alternative_id};
 use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId};
 
 fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
@@ -17,7 +17,7 @@ fn fixture_transition(json: &serde_json::Value) -> HistoryTransition {
             mutation_ids: ids("mutationIds"),
             description: optional("description"),
             saved_at: text("savedAt"),
-            authors: json["authors"].as_array().expect("fixture authors").iter().map(|author| TransitionAuthor { id: author["id"].as_str().expect("author id").into(), name: author["name"].as_str().expect("author name").into(), avatar: author["avatar"].as_str().map(str::to_string) }).collect(),
+            authors: json["authors"].as_array().expect("fixture authors").iter().map(|author| Author { id: author["id"].as_str().expect("author id").into(), name: author["name"].as_str().expect("author name").into(), avatar: author["avatar"].as_str().map(str::to_string) }).collect(),
             message: optional("message"),
             timestamp: text("timestamp"),
             line_id: optional("lineId"),

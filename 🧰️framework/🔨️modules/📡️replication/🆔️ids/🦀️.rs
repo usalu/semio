@@ -11,12 +11,15 @@
 /// so blind-removing here breaks `cargo check -p semio-framework`. Drop once those consumers move.
 #[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct MutationId(pub String);
+impl std::borrow::Borrow<str> for MutationId{fn borrow(&self)->&str{&self.0}}
 
 /// 🧑️ A stable identifier for one collaborating actor.
 /// 🌱️ Same reason as `MutationId` above — real `🎠️kernel` consumer.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct ActorId(pub semio_framework_value::SharedUtf8);
 
 /// 🌱️ Explicit actor for standalone genesis and named local test contexts.
@@ -26,16 +29,19 @@ pub const LOCAL_ACTOR_ID: &str = "local";
 /// 🌱️ Same reason as `MutationId` above — real `🎠️kernel` consumer.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct ArtifactId(pub String);
 
 /// 🔢️ A monotone document version counter.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct ArtifactVersion(pub u64);
 
 /// 🧬️ A stable identifier for one document/operation schema.
 /// 🌱️ Same reason as `MutationId` above — real `🎠️kernel`/`🛂️manifest` consumers.
 #[derive(Clone, Debug, PartialEq, Eq, Hash, serde::Serialize, serde::Deserialize)]
 #[serde(transparent)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct SchemaId(pub String);
 
 /// 🌿️ A schema's version number.
@@ -43,7 +49,7 @@ pub struct SchemaId(pub String);
 pub struct SchemaVersion(pub u32);
 
 /// #⃣ A blake3 content hash over an operation/snapshot payload.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash,semio_framework_value::RetainedClone)]
 pub struct PayloadHash(pub [u8; 32]);
 
 /// 🌉️ Hand-written, not derived — same DAG reason as `HybridLogicalTimestamp` above (this crate
@@ -149,6 +155,7 @@ impl semio_framework_value::FromValue for PayloadHash {
 /// ⏰️ A hybrid logical clock tick: physical time plus a logical tiebreak plus the
 /// originating actor (the third tiebreak — see the module note on the ordering fix above).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct HybridLogicalTimestamp {
     pub actor: u64,
     pub physical_ms: u64,
@@ -279,3 +286,6 @@ mod owned_retirement {
      fn controlled_retirement_supported()->bool{<[u8;32]>::controlled_retirement_supported()}
     }
 }
+
+#[path="🛬️receiving/🦀️.rs"]
+mod receiving;

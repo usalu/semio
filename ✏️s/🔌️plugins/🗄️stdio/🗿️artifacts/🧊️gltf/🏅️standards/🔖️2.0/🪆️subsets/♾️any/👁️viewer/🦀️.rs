@@ -71,9 +71,9 @@ impl ArtifactViewer for GltfAnyViewer {
     const DIALECT: Dialect = GLTF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GLTF_ANY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> GltfSnapshot {
+    fn reference_birth()->Option<fn()->GltfSnapshot>{Some(||{
         GltfSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

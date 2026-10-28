@@ -22,7 +22,11 @@ workspace = true
 name = "semio_framework_value_native_owned"
 path = "🦀️.rs"
 
+[features]
+testkit = []
+
 [dependencies]
+semio-framework-value-ordered = { path = "../../../../🗂️ordered/📦️packages/🦀️rust" }
 semio-framework-value-control-contract = { path = "../../../../🎟️control/🧬️contract/📦️packages/🦀️rust" }
 semio-framework-value-intrinsic = { path = "../../../../🌳️intrinsic/📦️packages/🦀️rust" }
 semio-framework-value-native-decoding = { path = "../../../📦️packages/🦀️rust" }

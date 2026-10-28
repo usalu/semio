@@ -1,0 +1,47 @@
+{
+  "contract": "semio.energy.original-delete-ideal-loads/v1",
+  "collection": "ideal_loads",
+  "existingRows": [
+    {
+      "id": 100,
+      "zone_id": 1,
+      "max_heating_supply_air_temp_c": 50,
+      "min_cooling_supply_air_temp_c": 13,
+      "max_heating_capacity_w": null,
+      "max_cooling_capacity_w": 1000,
+      "outdoor_air_per_person_m3_s": 0,
+      "outdoor_air_per_area_m3_s_m2": 0
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 100
+      },
+      "outcome": "changed",
+      "after": []
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

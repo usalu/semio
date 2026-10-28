@@ -220,9 +220,9 @@ impl ArtifactEditor for DwgAc1024Editor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); dwg_ac1024_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> DwgSnapshot {
+    fn reference_birth()->Option<fn()->DwgSnapshot>{Some(||{
         DwgSnapshot { version: "AC1024".into(), ..DwgSnapshot::default() }
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

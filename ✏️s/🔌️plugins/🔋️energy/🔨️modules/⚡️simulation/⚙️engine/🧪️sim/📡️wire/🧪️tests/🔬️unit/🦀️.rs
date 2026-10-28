@@ -67,7 +67,9 @@ fn adversarial_timestep_work_unit_stays_below_watchdog() {
     let mut state = SimulationKernel::initialize(&model, &pre, &weather);
     let mut work = TimestepWork::new(&model, &pre, HourWeather { previous: weather, current: weather, next: weather }, date, 12.0);
     let start = Instant::now();
-    work.step(&model, &SimulationConfig::default(), &pre, &mut state);
+    let turn = work.step_funded(&model, &SimulationConfig::default(), &pre, &mut state, RetainedCloneGrant { maximum_items: 64, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 2 << 20, maximum_depth: 128 });
+    assert!(turn.fault.is_none());
+    assert!(turn.progress.copied_items > 0, "the watchdog must cover actual numerical work");
     assert!(start.elapsed() < std::time::Duration::from_millis(8), "one adversarial energy work unit exceeded watchdog: {:?}", start.elapsed());
 }
 

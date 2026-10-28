@@ -252,9 +252,9 @@ impl ArtifactEditor for TiffAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); tiff_any_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

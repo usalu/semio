@@ -111,7 +111,7 @@ pub mod app {
     pub use super::child_emit_preparation::{ChildEmitPreparation,ChildEmitPreparationStep,OwnedChildEmit};
     pub use semio_framework_plugin_ownership::transient_publication::{bounded_transient_preparation_factory, bounded_transient_root_retirement_factory, bounded_transient_store_disposer, transient_store_disposer};
     pub use super::window_config::{
-        bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
+        WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth, bounded_window_config_preparation_factory, bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth, bounded_window_config_store_owners, RejectedWindowConfigEmission, WindowConfigAuthorityIdentity, WindowConfigBorrow, WindowConfigMutation, WindowConfigOwner, WindowConfigOwnerRegistry, WindowConfigPack,
         WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep, WindowConfigApplyCursor, WindowConfigApplyEdit, WindowConfigApplyMutation, WindowConfigReplaceCursor, WindowConfigReplaceEdit, WindowConfigReplaceMutation, WindowConfigSnapshot,
     };
     pub use super::window_transient::{TransientView, WindowTransientMutation, WindowTransientOwner, WindowTransientOwnerBundle, WindowTransientOwnerRegistry, WindowTransientSnapshot};
@@ -260,9 +260,9 @@ pub use app::{
     bounded_transient_preparation_factory,
     bounded_transient_root_retirement_factory,
     bounded_transient_store_disposer,
-    bounded_window_config_preparation_source_birth,
+    WindowConfigNativePairReceiving,window_config_native_pair_demands,admit_window_config_native_pair,bounded_window_config_preparation_source_birth,
     bounded_window_config_preparation_factory,
-    bounded_window_config_store_disposer,
+    bounded_window_config_store_disposer,bounded_window_config_store_disposer_birth,
     bounded_window_config_store_owners,
     built_text_node,
     built_text_to_component_tree,
@@ -478,6 +478,7 @@ pub use app::{
     TwoDSvgExportResult,
     UiAssemblyResult,
     VcsArtifactApp,
+    OriginalVcsApp,
     ViewEmit,
     Viewer,
     ViewerApp,
@@ -789,3 +790,8 @@ macro_rules! subset {
 #[path = "🧪️tests/🔬️subset-macro/🦀️.rs"]
 mod subset_macro_tests;
 
+
+#[path="🎞️media/📤️snapshot/🦀️.rs"]
+pub mod native_snapshot_export;
+
+pub use semio_framework_tool_run_presentation::ToolRunView as OriginalToolRunView;

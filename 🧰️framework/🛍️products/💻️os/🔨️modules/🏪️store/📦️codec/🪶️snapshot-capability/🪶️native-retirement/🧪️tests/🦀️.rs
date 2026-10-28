@@ -39,6 +39,8 @@ impl ArtifactPack for RetainedSnapshot {
     fn decode_pack_with(bytes: &[u8], _: &PackDecodeOptions) -> Result<Self, PackError> { Ok(Self { value: i64::from_le_bytes(bytes.try_into().map_err(|_| PackError::from(ValueError::new(ValueRefusalKind::InvalidValue, "expected integer word")))?), retired: false }) }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RetainedSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 

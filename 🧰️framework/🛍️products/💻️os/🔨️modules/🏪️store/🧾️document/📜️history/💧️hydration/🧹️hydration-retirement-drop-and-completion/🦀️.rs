@@ -4,8 +4,8 @@ use super::*;
 
 impl<P, M> RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static + semio_framework_os_spr::ColdMutation<P>,
+    P: ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty_unbounded() { return Ok(Default::default()); }
@@ -18,6 +18,7 @@ where
         if self.fold_job.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.fold_job, body); }
         original!(normalized_conflicts);
         original!(normalized_transitions);
+        original!(transition_ledger);
         if self.target_decoder.is_some() { return semio_framework_os_store_read::retirement_owner_demands(&self.target_decoder, body); }
         original!(pending_target);
         original!(target_address);
@@ -51,8 +52,8 @@ where
 
 impl<P, M> ErasedSnapshotRetirement for RetainedPersistedDocumentHydration<P, M>
 where
-    P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
-    M: Clone + ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static + semio_framework_os_spr::ColdMutation<P>,
+    P: ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    M: ToValue + FromValue + Mutation<P> + OpBinary + OpText + Send + 'static,
 {
         fn next_demand(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.close_demands(body)}
 
@@ -77,6 +78,7 @@ fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.close_dem
         }
         original!(normalized_conflicts);
         original!(normalized_transitions);
+        original!(transition_ledger);
         if self.target_decoder.is_some() { return semio_framework_os_store_read::retirement_owner_close(&mut self.target_decoder, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         original!(pending_target);
         original!(target_address);
@@ -201,6 +203,7 @@ where
         if self.replay_ids.is_some() { return Some("replay_ids"); }
         if self.replay_order.is_some() { return Some("replay_order"); }
         if self.normalized_transitions.is_some() { return Some("normalized_transitions"); }
+        if self.transition_ledger.is_some(){return Some("transition_ledger");}
         if self.normalized_conflicts.is_some() { return Some("normalized_conflicts"); }
         if self.fold.is_some() { return Some("fold"); }
         if self.expected.is_some() { return Some("expected"); }

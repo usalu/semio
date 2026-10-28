@@ -257,9 +257,9 @@ impl ArtifactEditor for Mp4Editor {
         mp4_editor_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         Mp4Snapshot::default()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(semio_s_artifact_stdio_contract::media_export::playback_app_io::<crate::standards::isobmff::subsets::any::io::playback::Mp4PlaybackExport>())

@@ -68,25 +68,10 @@ impl std::fmt::Display for Base64Error {
 
 impl std::error::Error for Base64Error {}
 
-fn append_encoded_bytes(bytes: &[u8], alphabet: &[u8; 64], padded: bool, encoded: &mut String) {
-    for chunk in bytes.chunks(3) {
-        let first = chunk[0];
-        let second = chunk.get(1).copied().unwrap_or(0);
-        let third = chunk.get(2).copied().unwrap_or(0);
-        encoded.push(alphabet[(first >> 2) as usize] as char);
-        encoded.push(alphabet[(((first & 0x03) << 4) | (second >> 4)) as usize] as char);
-        if chunk.len() >= 2 {
-            encoded.push(alphabet[(((second & 0x0f) << 2) | (third >> 6)) as usize] as char);
-        } else if padded {
-            encoded.push('=');
-        }
-        if chunk.len() == 3 {
-            encoded.push(alphabet[(third & 0x3f) as usize] as char);
-        } else if padded {
-            encoded.push('=');
-        }
-    }
-}
+/// 🧩️ Encodes one borrowed fragment of at most three octets without output allocation.
+pub fn base64_standard_word(bytes:&[u8])->[u8;4]{encoded_word(bytes,BASE64_STANDARD_ALPHABET)}
+fn encoded_word(bytes:&[u8],alphabet:&[u8;64])->[u8;4]{assert!(!bytes.is_empty()&&bytes.len()<=3,"base64 fragment width");let a=bytes[0];let b=bytes.get(1).copied().unwrap_or(0);let c=bytes.get(2).copied().unwrap_or(0);[alphabet[(a>>2)as usize],alphabet[((a&3)<<4|b>>4)as usize],if bytes.len()>1{alphabet[((b&15)<<2|c>>6)as usize]}else{b'='},if bytes.len()>2{alphabet[(c&63)as usize]}else{b'='}]}
+fn append_encoded_bytes(bytes:&[u8],alphabet:&[u8;64],padded:bool,encoded:&mut String){for part in bytes.chunks(3){let word=encoded_word(part,alphabet);let count=if padded{4}else{part.len()+1};for byte in &word[..count]{encoded.push(*byte as char);}}}
 
 fn encode_bytes(bytes: &[u8], alphabet: &[u8; 64], padded: bool) -> String {
     let mut encoded = String::with_capacity(bytes.len().div_ceil(3) * 4);

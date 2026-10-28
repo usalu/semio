@@ -35,5 +35,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateRoomAirModelAssignment",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "room_air_models",
+    "key": "zone_id",
+    "inverse": "CreateRoomAirModelAssignment",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete room air model assignment",
+      "de": "Raumluftmodellzuordnung löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "room-air-model-assignment",
+      "kind": "delete-room-air-model-assignment",
+      "record": "DeletedRoomAirModelAssignment"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed room-air-model-assignment does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

@@ -196,6 +196,7 @@ macro_rules! snapshot_details_editor_support {
         preparation: $preparation:literal
         $(, document_store_owners: $document_store_owners:path)?
         $(, bounded_native: $bounded_native:tt)?
+        $(, native_snapshot_pack: $native_snapshot_pack:tt)?
         $(, native: {
             factory_name: $native_factory_name:literal,
             factory_type: $native_factory_type:ty,
@@ -238,8 +239,20 @@ macro_rules! snapshot_details_editor_support {
                 let controller = registry.controller_id().to_string();
                 registry.register(<$native_factory_type>::new(&controller))?;
             )?
+            $(
+                let _ = stringify!($native_snapshot_pack);
+                let controller = registry.controller_id().to_string();
+                registry.register(semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportFactory::<semio_framework_plugin::EditorApp<Self>>::new(&controller))?;
+            )?
             $crate::register_snapshot_edit_tool_factory::<Self>(registry)
         }
+
+        $(
+            fn build_media_export_job(request:&mut Option<semio_framework_plugin::ArtifactMediaExportJobRequest<semio_framework_plugin::EditorApp<Self>>>,body:&mut Option<Box<dyn semio_framework_plugin::ArtifactReservedJob+Send>>,cx:&mut semio_framework_plugin::__job::StepContext<'_>)->Result<bool,semio_framework_plugin::__job::OriginalTurnFailure>{
+                let _=stringify!($native_snapshot_pack);
+                semio_framework_plugin::native_snapshot_export::NativeSnapshotPackExportJob::<semio_framework_plugin::EditorApp<Self>>::admit_original(request,body,cx)
+            }
+        )?
 
         fn build_tool_job(
             request: &mut Option<semio_framework_plugin::ArtifactOwnedToolJobRequest<semio_framework_plugin::EditorApp<Self>>>,

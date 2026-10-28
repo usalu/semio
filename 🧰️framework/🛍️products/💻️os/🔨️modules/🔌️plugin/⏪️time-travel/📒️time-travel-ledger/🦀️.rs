@@ -13,6 +13,7 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
     pub pending_command: Option<semio_framework_time_travel::TimeTravelCommandCustody>,
     pub discard_cursor: Option<Box<semio_framework_time_travel::TimeTravelDiscardCursor>>,
     pub command_retirements: semio_framework_value_retirement_queue::RetirementQueue,
+    pub finalize_outcome:Option<TimeTravelCommit>,pub authoring_finalization:bool,
     pub command_receipt: Option<(RetainedCloneGrant,RetainedCloneProgress)>,
     pub(super) session_retirement: Option<ControlledRetirement<TimeTravelSession>>,
     pub(super) session_retired: bool,
@@ -39,9 +40,11 @@ pub struct TimeTravelLedger<A: ArtifactApp> {
 /// ✍️ The undo or redo of a finalize being authored resumably: the Report replay of its inputs over the applied history,
 /// stepped per reactor turn, and how it finalizes (unscoped, or within the history edit's own line).
 #[doc(hidden)]
-pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>+::protocol::ColdMutation<P>+Send+'static> {
-    pub replay: store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>,
-    pub finalization: store::HistoryFinalization,
+pub struct SupersedeAuthoring<P, Mu: ::protocol::Mutation<P>+Send+'static> {
+    pub replay: Option<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>,
+    pub result:Option<store::os_store::replay::EditReplayResult<P,Mu>>,pub ready:bool,pub failure:Option<vcs::VcsError>,pub retirement:semio_framework_value::retained_clone::RetainedCloneClose,
+    pub finalization: Option<store::HistoryFinalization>,
+    pub closing:bool,
 }
 
 /// 🧮️ Where authoring the undo or redo of a finalize stands.
@@ -61,6 +64,7 @@ impl<A: ArtifactApp> Default for TimeTravelLedger<A> {
             pending_command: None,
             discard_cursor: None,
             command_retirements: Default::default(),
+            finalize_outcome:None,authoring_finalization:false,
             command_receipt: None,
             session_retirement: None,
             session_retired: false,
@@ -204,6 +208,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     /// 🏃️ Whether a driver turn has work: a live replay, an undo or redo of a finalize being authored, retirement, an owed
     /// UI scope or an owed history patch.
     pub fn has_pending_work(&self) -> bool {
+        if self.finalize_outcome.is_some(){return true}
         let replaying = self.session.stage == TimeTravelStage::Replaying && self.owners().any(TimeTravelOwners::replaying);
         self.member.as_ref().is_some_and(|_|self.closing||self.session.stage==TimeTravelStage::Inactive) || self.review_children_pending() || self.command_receipt.is_some() || self.pending_command.is_some() || self.discard_cursor.is_some() || !self.command_retirements.terminal_is_empty() || replaying || self.authoring.is_some() || self.owners().any(TimeTravelOwners::has_pending_work) || self.is_ui_dirty() || self.patch_due || self.patch.is_some()
     }
@@ -293,14 +298,17 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
         if self.retiring.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.retiring.capacity()*size_of::<Box<dyn TimeTravelOwners>>(),depth:1,..Default::default()});}
         Ok(Default::default())
     }
-    pub fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault> {
+    pub fn requires_original_control(&self)->bool{self.document.requires_original_control()||self.member.as_ref().and_then(|member|member.owners.as_ref()).is_some_and(|owners|owners.requires_original_control())||self.retiring.iter().any(|owners|owners.requires_original_control())}
+    pub fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(grant,None)}
+    pub fn retire_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>{self.retire_step_with_control(grant,Some(control))}
+    fn retire_step_with_control(&mut self,grant:RetainedCloneGrant,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<Option<RetainedCloneStep>,Fault>{
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if let Some(step)=self.pending_command_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
         if let Some(step)=self.session_retirement_step(grant).map_err(ValueError::into_fault)?{return Ok(Some(step));}
-        if let Some(step)=self.document.retire_step(grant)?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
-        if let Some(owners)=self.member.as_mut().and_then(|member|member.owners.as_mut()){if let Some(step)=owners.retire_step(grant)?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}}
+        if let Some(step)=match control.as_mut(){Some(control)=>self.document.retire_step_controlled(grant,*control),None=>self.document.retire_step(grant)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
+        if let Some(owners)=self.member.as_mut().and_then(|member|member.owners.as_mut()){if let Some(step)=match control.as_mut(){Some(control)=>owners.retire_step_controlled(grant,*control),None=>owners.retire_step(grant)}?{return Ok(Some(RetainedCloneStep::Progress(step.progress())));}}
         if let Some(owners)=self.retiring.last_mut(){
-            if !owners.terminal_is_empty(){return owners.retire_step(grant).map(|step|step.map(|step|RetainedCloneStep::Progress(step.progress())));}
+            if !owners.terminal_is_empty(){return match control.as_mut(){Some(control)=>owners.retire_step_controlled(grant,*control),None=>owners.retire_step(grant)}.map(|step|step.map(|step|RetainedCloneStep::Progress(step.progress())));}
             let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
             if grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
             drop(self.retiring.pop());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()})));
@@ -314,7 +322,7 @@ impl<A: ArtifactApp> TimeTravelLedger<A> {
     pub fn begin_close(&mut self) { self.closing = true; }
 
     pub fn terminal_is_empty(&self) -> bool {
-        (!self.closing||self.session_retired) && self.command_receipt.is_none() && self.pending_command.is_none() && self.discard_cursor.is_none() && self.command_retirements.terminal_is_empty() && self.session_retirement.is_none() && !self.is_active() && self.session.accepted.capacity()==0 && self.session.pending.is_none() && self.session.report.is_none() && self.session.fault.is_none() && self.editor.is_none() && self.member.is_none() && self.authoring.is_none() && self.patch.is_none() && self.reprojection_fault.is_none() && self.deferred_history_row.is_none() && self.retiring.capacity()==0 && self.owners().all(TimeTravelOwners::terminal_is_empty)
+        self.finalize_outcome.is_none()&&(!self.closing||self.session_retired) && self.command_receipt.is_none() && self.pending_command.is_none() && self.discard_cursor.is_none() && self.command_retirements.terminal_is_empty() && self.session_retirement.is_none() && !self.is_active() && self.session.accepted.capacity()==0 && self.session.pending.is_none() && self.session.report.is_none() && self.session.fault.is_none() && self.editor.is_none() && self.member.is_none() && self.authoring.is_none() && self.patch.is_none() && self.reprojection_fault.is_none() && self.deferred_history_row.is_none() && self.retiring.capacity()==0 && self.owners().all(TimeTravelOwners::terminal_is_empty)
     }
 
     /// 👉️ The first mutation, in replay order, whose outcome blocks finalizing (`MergePolicy::Normal`, the floor

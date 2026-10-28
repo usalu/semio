@@ -1,0 +1,21 @@
+{
+  "magic": "ESF2",
+  "bounds": [
+    0,
+    412.3
+  ],
+  "band": 7,
+  "repaints": 40,
+  "locales": [
+    "en",
+    "de"
+  ],
+  "captions": [
+    "Conduction loss",
+    "Wärmeleitungsverlust"
+  ],
+  "upperLabels": [
+    "412.3 kWh",
+    "412,3 kWh"
+  ]
+}

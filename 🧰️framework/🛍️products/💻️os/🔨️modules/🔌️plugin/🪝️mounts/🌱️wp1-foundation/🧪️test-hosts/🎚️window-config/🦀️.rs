@@ -1,9 +1,4 @@
 //! 🎚️ Test host of `window_config`: the laws that name the facade test fixtures run in the facade test build.
-use semio_framework_plugin_window_config::retained::RetainedStatePhase;
-use semio_framework_plugin_window_config::retained::RetainedWindowConfigStateDecode;
-use semio_framework_plugin_window_config::retained::RetainedWindowConfigTypedState;
-use semio_framework_plugin_window_config::retained::ValueFrame;
-use semio_framework_plugin_window_config::retained::controlled_demands;
 use semio_framework_plugin_window_config::retained::ErasedWindowConfigPackLoad;
 use semio_framework_plugin_window_config::WindowConfigOwner;
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;

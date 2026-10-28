@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "field": "design_flow_ach",
+    "input": "new_design_flow_ach",
+    "key": "id",
+    "labels": {
+      "en": "Change infiltration: Design air change rate",
+      "de": "Bemessungsluftwechsel ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "infiltration",
+      "kind": "change-infiltration-design-flow-ach",
+      "record": "ChangedInfiltrationDesignFlowAch"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Design air change rate violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The infiltration already carries this design air change rate value."
+      }
+    }
   }
 }

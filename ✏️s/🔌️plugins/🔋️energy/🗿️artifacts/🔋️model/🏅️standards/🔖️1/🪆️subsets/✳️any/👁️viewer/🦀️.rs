@@ -182,9 +182,7 @@ impl ArtifactViewer for EnergyModelViewer {
 })())
 }
 
-    fn initial_snapshot() -> EnergyModelSnapshot {
-        EnergyModelSnapshot::default()
-    }
+
 
     /// 🛂️ A viewer declares every nontrivial store owner explicitly (the trait defaults fail closed);
     /// the document store is the bounded pair the editor also uses, and every other lane is `No*`.
@@ -290,7 +288,7 @@ impl ArtifactViewer for EnergyModelViewer {
             structure::BODY_KEY => structure::render(doc.snapshot)?,
             zones::BODY_KEY => zones::render(doc.snapshot)?,
             simulation::BODY_KEY => simulation::render(&doc.snapshot.model),
-            model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model, model_window::config::current(cfg))?,
+            model_window::BODY_KEY => model_window::render_with_camera(&doc.snapshot.model.read(), model_window::config::current(cfg))?,
             _ => {
                 semio_framework_plugin::built_text_node(Label::data(format!("Unknown body: {body_key}"))).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("energy.model.viewer.render", "the unknown-body label could not be assembled"))?
             }
@@ -348,3 +346,10 @@ pub mod presence;
     }
 }
 //#endregion 🧩️Facets
+
+#[path="../🌱️initialization/🦀️.rs"]
+pub mod original_initial_source;
+
+#[path="🌱️initialization/🦀️.rs"]
+mod original_initialization;
+pub use original_initialization::EnergyModelViewerNativeRegistration;

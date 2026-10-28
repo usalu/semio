@@ -96,5 +96,81 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateRoomAirModelAssignment",
+    "fields": [
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "model",
+        "input": "model",
+        "storage": "sealed-copy"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateRoomAirModelAssignment",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "room_air_models",
+    "key": "zone_id",
+    "inverse": "DeleteRoomAirModelAssignment",
+    "labels": {
+      "en": "Create room air model assignment",
+      "de": "Raumluftmodellzuordnung erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "room-air-model-assignment",
+      "kind": "create-room-air-model-assignment",
+      "record": "CreatedRoomAirModelAssignment"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

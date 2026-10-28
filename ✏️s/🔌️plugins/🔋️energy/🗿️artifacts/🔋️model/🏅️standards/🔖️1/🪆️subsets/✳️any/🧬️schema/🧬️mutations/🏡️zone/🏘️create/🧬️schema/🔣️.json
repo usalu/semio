@@ -142,5 +142,87 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateZone",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "volume_m3",
+        "input": "volume_m3",
+        "storage": "fixed"
+      },
+      {
+        "field": "multiplier",
+        "input": "multiplier",
+        "storage": "fixed"
+      },
+      {
+        "field": "conditioned",
+        "input": "conditioned",
+        "storage": "fixed"
+      },
+      {
+        "field": "part_of_total_floor_area",
+        "input": "part_of_total_floor_area",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateZone",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "zones",
+    "key": "id",
+    "name": "name",
+    "inverse": "DeleteZone",
+    "unique": true,
+    "labels": {
+      "en": "Create zone",
+      "de": "Zone erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "zone",
+      "kind": "create-zone",
+      "record": "CreatedZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A zone needs a nonblank name, a positive finite volume and at least one instance."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "A zone with this identity or name already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the zone collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The zone creation makes no change."
+      }
+    },
+    "validationBeforeRank": true,
+    "defaultRank": "id-order",
+    "nameValidation": "nonblank"
   }
 }

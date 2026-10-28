@@ -4,27 +4,7 @@
 
 use super::*;
 
-// 🎞️ `Serialize`/`Deserialize` DROPPED OUTRIGHT (ticket
-// `26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS`'s
-// `📓️history-decoder-serde.md`): `🏪️store/🦀️.rs`'s `ArtifactRepositoryHistoryEntryAuthority<T>`
-// — the compiler-found blocker `📓️os-kernel-serde-final.md` left open — turned out, on direct
-// read, to buffer each history entry's raw source bytes into a fixed-capacity slice as tokens
-// stream in and call `serde_json::from_slice` exactly ONCE, at the terminal token, over the
-// complete buffered slice. That is a bounded whole-value decode, not a token-driven
-// `serde::Deserializer` walk (the docstring this replaces claimed otherwise, incorrectly) — so its
-// bound converts cleanly to `T: FromValue`, decoding via
-// `crate::os_pack::json::from_json_str::<T>` over the same buffered bytes. `Checkpoint`'s own
-// former `#[derive(Serialize, Deserialize)]` (needed transitively for `authors: Vec<Author>`) goes
-// with it; no production or test consumer anywhere in the repo ever called `serde_json` on
-// `Author` directly, so its derive drops outright rather than going `cfg_attr(test, …)`.
-#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[value(rename_all = "camelCase")]
-pub struct Author {
-    pub id: String,
-    pub name: String,
-    #[value(skip_serializing_if = "Option::is_none")]
-    pub avatar: Option<String>,
-}
+pub use protocol::Author;
 
 // 🎞️ `MutationMeta` lives in `protocol_command`; `Edit<Mutation>` (imported above) is this
 // crate's own field type for `ArtifactVcs.edits` below.

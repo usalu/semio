@@ -101,6 +101,16 @@ impl MemberStoreOwnedBatch {
         let owner = TypedBatch { values: ManuallyDrop::new(Some(values)), retirement: ManuallyDrop::new(None), birth_bytes: size_of::<ControlledRetirement<Vec<M>>>(), retire: admit_batch_retirement::<Vec<M>>, retire_source: admit_batch_retirement::<std::collections::VecDeque<M>>, source_birth_bytes: size_of::<ControlledRetirement<std::collections::VecDeque<M>>>(), closing: false };
         Ok((Self { owner: Some(Box::new(owner)), owner_bytes }, progress))
     }
+    /// 🪪️ Admits a decoded native vocabulary using the exact issuer installed with its receiver.
+    pub fn admit_with_issuer<M: Send + 'static>(values: &mut Option<Vec<M>>, issuer: semio_framework_os_store_one_item_publication::lifted_member_owned_batch::BatchRetirementIssuer<M>, grant: RetainedCloneGrant) -> Result<Option<(Self, RetainedCloneProgress)>, ValueError> {
+        let owner_bytes = size_of::<TypedBatch<M>>();
+        let progress = RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: owner_bytes, ..Default::default() };
+        if values.is_none() || !progress.fits(grant) || grant.maximum_depth == 0 { return Ok(None); }
+        let owner = TypedBatch { values: ManuallyDrop::new(values.take()), retirement: ManuallyDrop::new(None), birth_bytes: issuer.birth_bytes, retire: issuer.begin, retire_source: issuer.source.begin, source_birth_bytes: issuer.source.birth_bytes, closing: false };
+        Ok(Some((Self { owner: Some(Box::new(owner)), owner_bytes }, progress)))
+    }
+    /// 📐️ Prices only the concrete native batch shell before its original vector transfers.
+    pub fn issuer_scaffold_byte_demand<M: Send + 'static>() -> usize { size_of::<TypedBatch<M>>() }
     /// 🔎️ Borrows the original typed source without cloning or removing any owner.
     pub fn mutations<M: Send + 'static>(&self) -> Option<&[M]> { self.owner.as_ref()?.as_any().downcast_ref::<TypedBatch<M>>()?.values.as_deref() }
     pub fn source_retirement_issuer<M: Send + 'static>(&self) -> Option<SourceRetirementIssuer<M>> {
@@ -158,3 +168,7 @@ pub struct MemberStoreOwnedBatchRequest {
 #[cfg(test)]
 #[path = "🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path="../🧳️receiving/🦀️.rs"]
+pub mod original_receiving;
+pub use original_receiving::{MemberOriginalBatchReceiving,OriginalMemberBatchReceiving};

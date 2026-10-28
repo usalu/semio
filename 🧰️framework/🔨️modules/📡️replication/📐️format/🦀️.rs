@@ -816,3 +816,6 @@ pub async fn recover<S: PackSource>(source: &S, limits: &ProtocolLimits, mode: R
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
 //#endregion 🧪️Tests
+
+#[path="🛫️encode/🫳️borrowed/🦀️.rs"]
+pub mod original_encoding;

@@ -57,6 +57,14 @@ pub fn document_load_emit<S: ArtifactPack + ::semio_framework_os_kernel::os_stor
     Emit { effects: vec![Effect::LoadDocument { pack, spr }], ui_scope: UiDirtyScope::Full, ..Emit::default() }
 }
 
+/// 🎞️ Reference imports require an explicitly declared typed snapshot codec.
+pub fn document_reference_load_emit<S:store::os_store::serialization::ArtifactStoreSnapshot,Mutation,ConfigMutation,DraftMutation>(snapshot:&S,schema:&str)->Result<Emit<Mutation,ConfigMutation,DraftMutation>,MediaError>{
+ let codec=S::reference_snapshot_codec().ok_or(MediaError::NotImplemented)?;
+ let pack=(codec.encode)(snapshot).map_err(|error|MediaError::Payload("artifact:in".into(),error.to_string()))?;
+ let spr=::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("",schema));
+ Ok(Emit{effects:vec![Effect::LoadDocument{pack,spr}],ui_scope:UiDirtyScope::Full,..Emit::default()})
+}
+
 pub fn natural_file_input_bytes<'a>(port: &str, codec: NaturalFileCodec, media: &'a Media) -> Result<&'a [u8], MediaError> {
     let MediaPayload::Intrinsic { schema, value: DslValue::Bytes(bytes) } = &media.payload else {
         return Err(MediaError::Payload(port.to_string(), "natural file importer requires intrinsic owned bytes".into()));

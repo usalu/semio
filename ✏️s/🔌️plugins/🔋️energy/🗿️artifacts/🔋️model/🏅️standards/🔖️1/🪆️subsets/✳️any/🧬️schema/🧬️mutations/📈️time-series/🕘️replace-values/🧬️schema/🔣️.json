@@ -56,5 +56,44 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "owned-row",
+    "row": "StateTimeSeriesSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "collection": "time_series",
+    "field": "values",
+    "input": "new_values",
+    "key": "id",
+    "validation": "finite-numbers",
+    "labels": {
+      "en": "Replace Time Series Schedule Values",
+      "de": "Zeitreihenwerte ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "time-series-schedule",
+      "kind": "replace-time-series-schedule-values",
+      "record": "ReplacedTimeSeriesScheduleValues"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored field has invalid length or nonfinite values."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed time-series-schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The authored field is unchanged."
+      }
+    },
+    "nested": "schedules"
   }
 }

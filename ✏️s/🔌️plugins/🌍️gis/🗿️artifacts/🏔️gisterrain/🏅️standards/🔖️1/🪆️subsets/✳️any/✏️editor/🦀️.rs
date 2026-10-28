@@ -470,9 +470,9 @@ impl ArtifactEditor for Gis3dPlayApp {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, Gis3dCommand::command_id, GIS3D_RETAINED_RAW_BYTES, GIS3D_RETAINED_WORK_ITEMS, false, |request| BoundedArtifactCommandWork::new(tool_id, gis3d_retained_reduce, gis3d_retained_extent))
     }
 
-    fn initial_snapshot() -> GisTerrainSnapshot {
+    fn reference_birth()->Option<fn()->GisTerrainSnapshot>{Some(||{
         default_terrain_document()
-    }
+    })}
 
     /// 🔌️ `map:in`/`scene:out` (WORKFLOWS-END-TO-END-TYPED-PORTS Wave 2 port recipe) plus the implicit
     /// document ports.

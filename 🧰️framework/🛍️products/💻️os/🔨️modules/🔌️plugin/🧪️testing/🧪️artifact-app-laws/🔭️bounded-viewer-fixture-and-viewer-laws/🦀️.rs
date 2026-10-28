@@ -130,9 +130,9 @@ fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store:
         V::config_schema()
     }
 
-    fn initial_snapshot() -> Self::Snapshot {
-        V::initial_snapshot()
-    }
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
+        V::reference_birth().expect("explicit reference snapshot producer")()
+    })}
 
     fn initial_config() -> Self::Config {
         V::initial_config()

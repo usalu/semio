@@ -119,7 +119,7 @@ where
     let (forward, backward) = changed_entries(path, &semio_framework_value::ToValue::to_value(base), &semio_framework_value::ToValue::to_value(&post));
     let schema = protocol::SchemaId(DB_PATHMAP_SCHEMA.to_string());
     Ok(protocol::MutationEnvelope {
-        mutation_id: op.mutation_id().unwrap_or(default_mutation_id),
+        mutation_id: op.mutation_id().cloned().unwrap_or(default_mutation_id),
         document_id: document,
         actor: op.author_id().unwrap_or(default_actor),
         dependencies: op.dependencies(),

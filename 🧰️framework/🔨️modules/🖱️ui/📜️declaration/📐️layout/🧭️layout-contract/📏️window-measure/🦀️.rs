@@ -4,7 +4,7 @@ use super::*;
 
 // #region layout
 //#region 🔖️WindowMeasure
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct MeasureSelectItem {
@@ -13,7 +13,7 @@ pub struct MeasureSelectItem {
     pub label: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WindowMeasure {

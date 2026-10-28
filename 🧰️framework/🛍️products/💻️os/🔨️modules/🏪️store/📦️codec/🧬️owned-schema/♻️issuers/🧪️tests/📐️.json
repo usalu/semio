@@ -1,0 +1,66 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "issuers",
+    "conditions",
+    "denied",
+    "sameOriginalPointerOnRefusal",
+    "releasedBytesEqualOriginalBacking"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "issuers": {
+      "const": [
+        "field-decoders",
+        "completed-records"
+      ]
+    },
+    "conditions": {
+      "type": "array",
+      "minItems": 4,
+      "maxItems": 4,
+      "items": {
+        "type": "object",
+        "required": [
+          "strong",
+          "weak",
+          "live",
+          "release"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "strong": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "weak": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "live": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "release": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "release",
+        "depth"
+      ]
+    },
+    "sameOriginalPointerOnRefusal": {
+      "const": true
+    },
+    "releasedBytesEqualOriginalBacking": {
+      "const": true
+    }
+  }
+}

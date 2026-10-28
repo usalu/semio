@@ -6,14 +6,14 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "target"
+    "link"
   ],
   "properties": {
     "mutation": {
       "const": "bindWeatherFile"
     },
-    "target": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef",
+    "link": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json",
       "x-semio-ui": {
         "role": "value",
         "label": {
@@ -21,12 +21,47 @@
           "de": "Wetterdatei"
         },
         "description": {
-          "en": "Owned target artifact identity and dialect.",
-          "de": "Eigene Zielartefakt-Identität und Dialekt."
+          "en": "Complete target identity, history pin and relationship role.",
+          "de": "Vollständige Zielidentität, Geschichtsfixierung und Beziehungsrolle."
         },
         "group": "source",
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "root-link",
+    "field": "weather_link",
+    "intent": "attach",
+    "attach": "BindWeatherFile",
+    "detach": "UnbindWeatherFile",
+    "labels": {
+      "en": "Bind weather file",
+      "de": "Wetterdatei binden"
+    },
+    "semantics": {
+      "verb": "bind",
+      "entity": "weather-file",
+      "kind": "bind-weather-file",
+      "record": "BoundWeatherFile"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The complete original artifact link must retain valid target, pin and role identities."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This original link slot already carries the requested target, pin and role."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original link slot is empty."
+      }
+    },
+    "input": "link"
   }
 }

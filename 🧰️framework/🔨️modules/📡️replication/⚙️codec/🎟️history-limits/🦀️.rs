@@ -1,7 +1,7 @@
 //! 📚️ Required original history receiving bounds belong below every product and typed consumer.
 use serde::{Serialize,Deserialize};
 use semio_framework_value::{ValueError,ValueRefusalKind};
-#[derive(Clone,Copy,Debug,PartialEq,Eq,Serialize,Deserialize,semio_framework_value::ToValue,semio_framework_value::FromValue)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq,Serialize,Deserialize,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]
 #[serde(rename_all="camelCase",deny_unknown_fields)]
 #[value(rename_all="camelCase",deny_unknown_fields)]
 pub struct HistoryReadLimits{

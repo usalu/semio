@@ -42,6 +42,9 @@ pub struct ChildMemberRegistry<M> {
 }
 
 impl<M> ChildMemberRegistry<M> {
+    /// 📏️ Quotes the actual fixed child-member slot body before an original native component birth.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let bytes=CHILD_CONTENT_SLOTS.checked_mul(std::mem::size_of::<std::mem::MaybeUninit<ChildMemberEntry<M>>>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original child-member backing extent overflow"))?;Ok(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:bytes,depth:1,..Default::default()})}
+
     pub fn new() -> Self {
         let mut slots = Vec::new();
         let allocation_admitted = slots.try_reserve_exact(CHILD_CONTENT_SLOTS).is_ok();

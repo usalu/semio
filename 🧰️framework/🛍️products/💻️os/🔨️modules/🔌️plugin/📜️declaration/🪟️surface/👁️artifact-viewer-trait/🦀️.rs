@@ -1,6 +1,7 @@
 //! 👁️ Artifact viewer trait: the read-only surface contract `ArtifactViewer` with its snapshot, view and viewer hooks. See [`super`].
 
 use super::*;
+use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
 use semio_framework_2d_compute::EngineHandles;
 
 /// 👁️ Authoring trait for a read-only surface (contract §2.2) — the mutation-incapable twin of
@@ -35,7 +36,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         generation: semio_framework_job::Generation,
         actor: ActorId,
     ) -> ArtifactInitializationAdmission<Self::Snapshot, Self::Mutation> {
-        Ok(bounded_document_store_initialization_job::<_,_,::semio_framework_os_kernel::os_store::document_store_owners::BoundedDocumentStoreOwnerProducer>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
+        Ok(bounded_document_store_initialization_job::<_,_,ViewerDocumentStoreOwnerProducer<Self>>(envelope, Self::DOCUMENT_SCHEMA, operation, generation, actor))
     }
 
     /// 🔐️ Framework-owned owner catalogs, paired with this trait's default disposers below — the
@@ -89,16 +90,16 @@ pub trait ArtifactViewer: Default + Send + 'static {
         Ok((|| None)())
     }
     const DOCUMENT_SCHEMA: &'static str;
-    type Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
+    type Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactPackMetadata + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + 'static;
     /// 📜️ Decode-only — never constructed by `handle`, but the store's op log must still decode
     /// past edits made by an `ArtifactEditor` sharing this dialect, and labels them in every locale like it.
     type Mutation: Clone + ::protocol::ColdMutation<Self::Snapshot> + protocol::SemanticMutation<Self::Snapshot> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Config: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + store::ConfigRecord + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
     type ConfigMutation: Clone + ::protocol::ColdMutation<Self::Config> + ::protocol::Mutation<Self::Config> + store::ArtifactCanonicalJsonTree + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::replication::OpBinaryReceiving + 'static;
     type Presence: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + store::ArtifactPresenceSnapshot + 'static;
-    type PresenceMutation: Clone + ::protocol::ColdMutation<Self::Presence> + ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
-    type Transient: Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
-    type TransientMutation: Clone + ::protocol::ColdMutation<Self::Transient> + ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type PresenceMutation: ::protocol::Mutation<Self::Presence> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
+    type Transient: semio_framework_value::retirement::RetireOwned + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static;
+    type TransientMutation: ::protocol::Mutation<Self::Transient> + PartialEq + semio_framework_value::retirement::RetireOwned + Send + ::protocol::OpText + ::protocol::OpBinary + 'static;
     type Command: ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static;
 
     fn mounted_job_maintenance_demands(_instance_id: u32, _body: usize) -> Result<RetirementDemand, ValueError> {
@@ -249,7 +250,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
     fn fault_notices() -> &'static [(&'static str, LocalizedLabel)] {
         &[]
     }
-    fn initial_snapshot() -> Self::Snapshot;
+    fn reference_birth() -> Option<semio_framework_plugin_decl_app::ReferenceArtifactAppBirth<Self::Snapshot>> { None }
     fn initial_config() -> Self::Config {
         Self::Config::default()
     }
@@ -267,6 +268,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
     fn command_id(_command: &Self::Command) -> &'static str {
         "typed-command"
     }
+    /// 🏭️ The declared native producer owns original action arguments, command birth and exact operation wire.
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{None}
     fn command_from_action(action: &str, _args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         Err(Fault::new(
@@ -302,7 +305,7 @@ pub trait ArtifactViewer: Default + Send + 'static {
         })();
         rendered.map(Some).map_err(Into::into)
         }
-    fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &crate::ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
+    fn pending_effects(_owner: &ArtifactInstanceOperationOwnerHandle, _doc: &ArtifactPendingView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view: Option<&ViewModel>) -> Vec<Effect> {
         Vec::new()
     }
     fn window_engagements(_doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> HashMap<String, WindowEngagement> {
@@ -367,7 +370,8 @@ pub trait ArtifactViewer: Default + Send + 'static {
             return Err(MediaError::NotImplemented);
         }
         let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-        let bytes = doc.snapshot.encode_pack();
+        let codec=<Self::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec().ok_or(MediaError::NotImplemented)?;
+        let bytes=(codec.encode)(doc.snapshot).map_err(|error|MediaError::Payload(port.to_string(),error.to_string()))?;
         Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
     fn export_media_with_request_context(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, Self::Snapshot>, transient: &TransientView<'_, Self::Transient>) -> Result<Media, MediaError> {
@@ -381,4 +385,13 @@ pub trait ArtifactViewer: Default + Send + 'static {
             Err(error) => Err(error),
         }
     }
+}
+
+/// 🏭️ Uses the surface's actual owner catalog for every native replay initialization.
+struct ViewerDocumentStoreOwnerProducer<A>(std::marker::PhantomData<fn()->A>);
+impl<A:ArtifactViewer> store::os_store::document_store_owners::DocumentStoreOwnerProducer<A::Snapshot,A::Mutation> for ViewerDocumentStoreOwnerProducer<A>{
+ fn source_demands()->Result<RetirementDemand,ValueError>{A::document_store_owners_source_demands()}
+ fn admit_sources(grant:RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<A::Snapshot,A::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<A::Snapshot,A::Mutation>>{
+  A::build_document_store_owners(grant).unwrap_or_else(||Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error:ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"surface did not supply its declared native document owner catalog"),owners:None,progress:Default::default()}))
+ }
 }

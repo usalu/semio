@@ -1,0 +1,15 @@
+//! 📦️ Native causal payload pages reserve and receive one original octet through independent physical grants.
+use super::*;
+type Pages=semio_framework_value_persistent::list::PagedList<u8,{isize::MAX as usize}>;
+struct FoldPagedByte<'a>{control:HistoryFoldControl,target:&'a mut Pages,byte:u8,demand:RetirementDemand}
+impl Unpin for FoldPagedByte<'_>{}
+impl FoldPagedByte<'_>{
+ fn quote(&self)->Result<RetirementDemand,ValueError>{let copy=2*size_of::<Self>()+1;Ok(if self.target.has_reserved_slot(){RetirementDemand{copy_bytes:copy,depth:self.target.next_push_depth_demand().map_err(ValueError::from)?,..Default::default()}}else{RetirementDemand{copy_bytes:copy+self.target.next_reserve_copy_byte_demand().map_err(ValueError::from)?,capacity_bytes:self.target.next_allocation_bytes().map_err(ValueError::from)?,depth:self.target.next_reserve_depth_demand().map_err(ValueError::from)?,..Default::default()}})}
+ fn register(&mut self,d:RetirementDemand){self.control.0.pending_construction_capacity.fetch_sub(self.demand.capacity_bytes,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_sub(self.demand.copy_bytes,Ordering::Relaxed);self.control.0.pending_original_depth.fetch_sub(self.demand.depth,Ordering::Relaxed);self.demand=d;self.control.0.pending_construction_capacity.fetch_add(d.capacity_bytes,Ordering::Relaxed);self.control.0.pending_original_copy.fetch_add(d.copy_bytes,Ordering::Relaxed);self.control.0.pending_original_depth.fetch_add(d.depth,Ordering::Relaxed);}
+}
+impl Future for FoldPagedByte<'_>{type Output=Result<(),semio_framework_replication_error::ProtocolError>;fn poll(self:Pin<&mut Self>,_:&mut Context<'_>)->Poll<Self::Output>{let this=self.get_mut();let g=this.control.original_grant();if !semio_framework_value::retained_clone::retained_clone_grant_admits(g,this.demand){return Poll::Pending}let mut p=RetainedCloneProgress{copied_items:1,copied_bytes:this.demand.copy_bytes,..Default::default()};if this.target.has_reserved_slot(){this.target.push_reserved(this.byte).map_err(|_|value_cause(ValueError::literal(ValueRefusalKind::InvariantViolated,"original payload byte lost its reserved page")))?;this.control.accept_original_progress(p);this.register(Default::default());Poll::Ready(Ok(()))}else{let step=this.target.reserve_one(g.maximum_capacity_bytes).map_err(|error|value_cause(ValueError::from(error.refusal())))?;p.retained_capacity_bytes=step.allocated_bytes;this.control.accept_original_progress(p);let d=this.quote().map_err(value_cause)?;this.register(d);Poll::Pending}}}
+impl Drop for FoldPagedByte<'_>{fn drop(&mut self){self.register(Default::default());}}
+impl HistoryFoldControl{
+ /// 🧱️ A byte retains its original value until both its exact destination backing and the subsequent placement are funded.
+ pub async fn push_paged_byte(&self,target:&mut Pages,byte:u8)->Result<(),semio_framework_replication_error::ProtocolError>{let mut step=FoldPagedByte{control:self.clone(),target,byte,demand:Default::default()};let d=step.quote().map_err(value_cause)?;step.register(d);step.await}
+}

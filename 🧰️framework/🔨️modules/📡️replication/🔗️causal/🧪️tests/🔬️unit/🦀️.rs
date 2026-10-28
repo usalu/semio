@@ -139,8 +139,8 @@ fn sample_envelope(id: &str, deps: Vec<&str>) -> MutationEnvelope {
         dependencies: deps.into_iter().map(|dep| semio_framework_replication_ids::MutationId(dep.into())).collect(),
         observed: None,
         target: Vec::new(),
-        diff: ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("diff.v1".into()), payload: id.as_bytes().to_vec() },
-        inverse: InverseMutation { schema: semio_framework_replication_ids::SchemaId("diff.v1".into()), payload: Vec::new() },
+        diff: ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("diff.v1".into()), payload: CausalPayload::try_from_slice(id.as_bytes()).unwrap() },
+        inverse: InverseMutation { schema: semio_framework_replication_ids::SchemaId("diff.v1".into()), payload: Default::default() },
         timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 0),
         transaction: None, verb: None, line: None,
     }
@@ -494,8 +494,8 @@ fn mutation_envelope_from_edit_derives_one_envelope_per_forward_op_using_explici
     assert_eq!(envelopes[0].document_id, document_id);
     assert_eq!(envelopes[0].timestamp, semio_framework_replication_ids::HybridLogicalTimestamp::new(1, 1000));
     assert_eq!(envelopes[0].diff.schema, schema);
-    assert_eq!(envelopes[0].diff.payload, semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
-    assert_eq!(envelopes[0].inverse.payload, semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
+    assert_eq!(envelopes[0].diff.payload.iter().collect::<Vec<_>>(), semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: 1 }).unwrap());
+    assert_eq!(envelopes[0].inverse.payload.iter().collect::<Vec<_>>(), semio_framework_replication_codec::OpBinary::encode_op(&CausalAddOp { delta: -1 }).unwrap());
 
     assert_eq!(envelopes[1].mutation_id, semio_framework_replication_ids::MutationId("op-b".into()));
     assert_eq!(envelopes[1].actor, semio_framework_replication_ids::ActorId("actor-fallback".into()));
@@ -524,7 +524,7 @@ fn mutation_envelope_from_edit_falls_back_to_op_trait_and_structural_defaults_wi
     assert_eq!(envelopes[0].actor, semio_framework_replication_ids::ActorId("unknown".into()));
     assert!(envelopes[0].dependencies.is_empty());
     assert_eq!(envelopes[0].timestamp, semio_framework_replication_ids::HybridLogicalTimestamp::new(0, 0));
-    assert_eq!(envelopes[0].inverse.payload, Vec::<u8>::new(), "inverse vec shorter than forwards -> empty inverse payload");
+    assert_eq!(envelopes[0].inverse.payload.iter().collect::<Vec<_>>(), Vec::<u8>::new(), "inverse vec shorter than forwards -> empty inverse payload");
 }
 
 #[test]
@@ -600,8 +600,8 @@ fn envelope_binary_round_trips_with_empty_dependencies_and_payloads() {
         dependencies: Vec::new(),
         observed: None,
         target: Vec::new(),
-        diff: ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("s".into()), payload: Vec::new() },
-        inverse: InverseMutation { schema: semio_framework_replication_ids::SchemaId("s".into()), payload: Vec::new() },
+        diff: ArtifactDiff { schema: semio_framework_replication_ids::SchemaId("s".into()), payload: Default::default() },
+        inverse: InverseMutation { schema: semio_framework_replication_ids::SchemaId("s".into()), payload: Default::default() },
         timestamp: semio_framework_replication_ids::HybridLogicalTimestamp::new(0, 0),
         transaction: None, verb: None, line: None,
     };
@@ -740,4 +740,11 @@ fn causal_empty_shell_has_no_physical_birth_or_terminal_release() {
     assert_eq!((requested, released), (0, 0));
     let (_, requested, released) = semio_framework_trace_memory_testing::observe_backing(|| drop(empty));
     assert_eq!((requested, released), (0, 0));
+}
+
+#[test]
+fn causal_original_backing_birth_and_every_cancelled_prefix_match_physical_receipts(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../../📦️slots/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let(reference,reference_bytes)=semio_framework_trace_memory_testing::observe(MutationDag::new);drop(reference);
+ for cutoff in [0,1,2,65,130,260,usize::MAX]{let mut dag=MutationDag::empty();let mut born=0;let mut turns=0;while dag.backing_admission_demands().capacity_bytes!=0&&turns<cutoff{let d=dag.backing_admission_demands();assert!(d.capacity_bytes<=law["admissionBytes"].as_u64().unwrap()as usize);let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};for axis in 0..3{let mut denied=grant;match axis{0=>denied.maximum_items=0,1=>denied.maximum_capacity_bytes-=1,_=>denied.maximum_depth=0};let(progress,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.admit_backing_step(denied));assert_eq!(progress,Default::default());assert_eq!((requested,released),(0,0));assert_eq!(dag.backing_admission_demands(),d);}let(progress,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.admit_backing_step(grant));assert_eq!(requested,d.capacity_bytes);assert_eq!(requested,progress.retained_capacity_bytes);assert_eq!(released,0);born+=requested;turns+=1;}
+ if cutoff==usize::MAX{assert_eq!(born,reference_bytes);}let mut freed=0;while !dag.backing_is_empty(){let d=dag.next_backing_release_byte_demand();let(step,requested,released)=semio_framework_trace_memory_testing::observe_backing(||dag.close_backing_step(1,d));assert_eq!(requested,0);assert_eq!(released,d);assert_eq!(step.1,d);freed+=released;}assert_eq!(born,freed);}
 }

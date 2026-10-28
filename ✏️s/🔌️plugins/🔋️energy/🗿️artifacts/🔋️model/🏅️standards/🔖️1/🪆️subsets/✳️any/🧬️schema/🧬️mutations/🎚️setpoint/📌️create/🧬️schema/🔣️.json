@@ -291,5 +291,121 @@
         "de": "Beim Regelgesetz OutdoorAirReset liegt die obere Außentemperatur über der unteren."
       }
     }
-  ]
+  ],
+  "x-semio-energy-row-birth": {
+    "row": "StateSetpointManager",
+    "recreation": "exact",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "kind",
+        "input": "kind",
+        "limits": [
+          "low_outdoor_c",
+          "high_outdoor_c",
+          "low_setpoint_c",
+          "high_setpoint_c"
+        ],
+        "storage": "setpoint-kind"
+      },
+      {
+        "field": "schedule_id",
+        "input": "schedule_id",
+        "presence": "schedule_present",
+        "storage": "present-reference"
+      }
+    ]
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateSetpointManager",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "setpoint_managers",
+    "key": "id",
+    "inverse": "DeleteSetpointManager",
+    "labels": {
+      "en": "Create setpoint manager",
+      "de": "Sollwertmanager erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "setpoint-manager",
+      "kind": "create",
+      "record": "CreatedSetpointManager"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A named setpoint manager carries its valid typed control law and optional schedule."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original setpoint manager identifier or name already exists."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The optional schedule must exist in the original model."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed setpoint manager or insertion rank does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original setpoint manager roster is unchanged."
+      }
+    },
+    "name": "name",
+    "unique": true,
+    "nameValidation": "nonblank",
+    "validationBeforeRank": true,
+    "defaultRank": "append",
+    "scalarOrder": "before-rules",
+    "rules": [
+      {
+        "input": "kind",
+        "limits": [
+          "low_outdoor_c",
+          "high_outdoor_c",
+          "low_setpoint_c",
+          "high_setpoint_c"
+        ],
+        "kind": "setpoint-kind"
+      },
+      {
+        "input": "schedule_id",
+        "presence": "schedule_present",
+        "kind": "present-reference"
+      },
+      {
+        "input": "schedule_id",
+        "presence": "schedule_present",
+        "kind": "reference",
+        "storage": "present",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ]
+  }
 }

@@ -63,9 +63,9 @@ impl ArtifactViewer for Din4108Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn initial_snapshot() -> Din4108Snapshot {
+    fn reference_birth()->Option<fn()->Din4108Snapshot>{Some(||{
         Din4108Snapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Din4108ViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not

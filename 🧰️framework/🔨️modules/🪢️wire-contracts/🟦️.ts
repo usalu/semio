@@ -84,11 +84,11 @@ export type DocumentArchiveLoadStatus = { readonly operation: number; readonly s
 export type MediaExportHandle = { readonly app_instance_id: number; readonly parent_document_id: string; readonly operation_id: bigint; readonly base_revision: bigint; readonly generation: bigint };
 export type MediaExportState = "running" | "complete" | "cancelled" | "failed";
 export type MediaExportStatus = { readonly handle: MediaExportHandle; readonly state: MediaExportState; readonly applied_progress: bigint; readonly checkpoint_available: boolean; readonly mime_type: string; readonly total_bytes: bigint; readonly detail: string };
-export type AppDocumentIdentity = { readonly app_instance_id: number; readonly parent_document_id: string | null };
+export type AppDocumentIdentity = { readonly app_instance_id: number; readonly parent_document_id: string | null; readonly base_revision: bigint };
 
 export type AppCommandValue =
   | { readonly ReadDocumentIdentity: { readonly seq: bigint } }
-  | { readonly SubmitMediaExport: { readonly seq: bigint; readonly port: string; readonly expected_parent_document_id: string; readonly expected_base_revision: bigint } }
+  | { readonly SubmitMediaExport: { readonly seq: bigint; readonly port: string; readonly expected_parent_document_id: string; readonly expected_base_revision: bigint; readonly checkpoint_id: string | null } }
   | { readonly PollMediaExport: { readonly seq: bigint; readonly handle: MediaExportHandle } }
   | { readonly CancelMediaExport: { readonly seq: bigint; readonly handle: MediaExportHandle } }
   | { readonly TakeMediaExportChunk: { readonly seq: bigint; readonly handle: MediaExportHandle } }

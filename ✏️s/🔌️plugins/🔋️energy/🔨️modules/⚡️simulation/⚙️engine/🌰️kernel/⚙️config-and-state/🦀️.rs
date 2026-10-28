@@ -4,7 +4,8 @@ use super::*;
 
 // #region 🔖️Config
 /// ⚙️ Simulation environment type.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub enum SimulationEnvironment {
     WeatherRunPeriod,
     HeatingDesignDay,
@@ -13,7 +14,8 @@ pub enum SimulationEnvironment {
 }
 
 /// ⚙️ Convergence tolerances.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[canonical_json(owner = semio_framework_pack_json)]
 pub struct ConvergenceTolerances {
     pub temperature_k: f64,
     pub humidity_ratio: f64,

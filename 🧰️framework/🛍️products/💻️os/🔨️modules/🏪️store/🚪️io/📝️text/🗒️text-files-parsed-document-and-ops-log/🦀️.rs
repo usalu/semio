@@ -250,7 +250,7 @@ where
     fill_supersession_targets::<P, Mutation>(envelope)?;
     for (edit_id, inverse) in result.take_rebased_undo_rows() {
         match envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-            Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse)),
+            Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut *edit.inverse, inverse)),
             None => retire_scratch_operations::<P, Mutation>(inverse),
         }
     }

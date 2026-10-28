@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-os-store-operation-wire = { path="../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
 semio-framework-plugin-actor-host = { path = "../../../🌐host/📦️packages/🦀️rust" }
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }

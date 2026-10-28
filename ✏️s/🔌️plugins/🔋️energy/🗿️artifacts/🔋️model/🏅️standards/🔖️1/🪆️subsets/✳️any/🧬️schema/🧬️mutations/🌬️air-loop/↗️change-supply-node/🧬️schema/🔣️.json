@@ -54,5 +54,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateModelAirLoop",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "air_loops",
+    "field": "supply_node_id",
+    "input": "new_supply_node_id",
+    "key": "id",
+    "labels": {
+      "en": "Change air loop: Supply air node",
+      "de": "Zuluftknoten ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "air-loop",
+      "kind": "change-air-loop-supply-node",
+      "record": "ChangedAirLoopSupplyNode"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Supply air node violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed air loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The air loop already carries this supply air node value."
+      }
+    }
   }
 }

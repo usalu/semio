@@ -51,5 +51,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "field": "area_m2",
+    "input": "new_area_m2",
+    "key": "id",
+    "labels": {
+      "en": "Change pv system: Aperture area",
+      "de": "Aperturfläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "pv-system",
+      "kind": "change-pv-system-area",
+      "record": "ChangedPvSystemArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Aperture area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The pv system already carries this aperture area value."
+      }
+    }
   }
 }

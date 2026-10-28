@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "u_value_w_m2k",
+    "input": "new_u_value_w_m2k",
+    "key": "id",
+    "labels": {
+      "en": "Change fenestration: U-value",
+      "de": "U-Wert ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fenestration",
+      "kind": "change-fenestration-u-value",
+      "record": "ChangedFenestrationUValue"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "U-value violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fenestration already carries this u-value value."
+      }
+    }
   }
 }

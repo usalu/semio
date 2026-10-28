@@ -1,7 +1,5 @@
 //! ♻️ Completion cells and the typed retirement of tool completions (lifted from the WP1 completion tree; WP2 wires it into decl-app).
-use semio_framework_plugin_window_transient::window_transient::EphemeralParts;
 use crate::ArtifactApp;
-use crate::completion_fault::ArtifactCompletionFault;
 use crate::tool_contract::ArtifactToolCompletion;
 use crate::tool_contract::ArtifactToolCompletionValue;
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
@@ -61,24 +59,6 @@ impl<A:ArtifactApp> RetireOwned for ArtifactToolCompletion<A>{
     fn controlled_retirement_supported()->bool{true}
 }
 
-/// 📦️ The typed shape of a completion payload: the retirement of every lane derives from its members, so an app can never forget the facet.
-#[derive(semio_framework_value::RetireOwned)]
-enum CompletionPayload<M,C,D,P,T>{
-    Emit(Result<semio_framework_plugin_decl_emission::Emit<M,C,D>,ArtifactCompletionFault>,EphemeralParts<P,T>),
-    Download(Result<semio_framework_plugin_decl_views::media_contract::ArtifactDownloadOutput,ArtifactCompletionFault>,EphemeralParts<P,T>),
-}
-type PayloadOf<A>=CompletionPayload<<A as ArtifactApp>::Mutation,<A as ArtifactApp>::ConfigMutation,<A as ArtifactApp>::DraftMutation,<A as ArtifactApp>::PresenceMutation,<A as ArtifactApp>::TransientMutation>;
-impl<A:ArtifactApp> From<ArtifactToolCompletionValue<A>> for PayloadOf<A>{
-    fn from(value:ArtifactToolCompletionValue<A>)->Self{
-        let parts=|ephemeral:crate::app_emission::EphemeralEmit<A>|EphemeralParts{presence:ephemeral.presence,transient:ephemeral.transient,window_transient:ephemeral.window_transient};
-        match value{ArtifactToolCompletionValue::Emit(outcome,ephemeral)=>Self::Emit(outcome,parts(ephemeral)),ArtifactToolCompletionValue::Download(outcome,ephemeral)=>Self::Download(outcome,parts(ephemeral))}
-    }
-}
-impl<A:ArtifactApp> RetireOwned for ArtifactToolCompletionValue<A>{
-    fn retirement(self)->Box<dyn RetirementCursor>{PayloadOf::<A>::from(self).retirement()}
-    fn retirement_birth_bytes(&self)->Option<usize>{Some(0)}
-    fn controlled_retirement_supported()->bool{PayloadOf::<A>::controlled_retirement_supported()}
-}
 /// 📬️ Exact frame of the derived completion cleanup constructor.
 pub fn derived_completion_birth_bytes<A:ArtifactApp>(_value:&ArtifactToolCompletionValue<A>)->Option<usize>{Some(size_of::<semio_framework_value::retirement::controlled::ControlledRetirement<ArtifactToolCompletionValue<A>>>())}
 /// 🎟️ Admits the original completion payload through its derived typed retirement, retaining it on every unfunded route.

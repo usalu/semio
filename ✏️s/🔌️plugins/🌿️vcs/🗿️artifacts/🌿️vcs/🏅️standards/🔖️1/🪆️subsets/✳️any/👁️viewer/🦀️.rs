@@ -65,9 +65,9 @@ impl ArtifactViewer for VcsViewer {
     const DIALECT: Dialect = VCS_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = VCS_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> VcsSnapshot {
+    fn reference_birth()->Option<fn()->VcsSnapshot>{Some(||{
         crate::standards::v1::subsets::any::schema::empty_vcs_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `VcsViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

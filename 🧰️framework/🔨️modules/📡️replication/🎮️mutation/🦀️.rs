@@ -41,7 +41,7 @@ pub trait Mutation<P>: Sized + Sync + semio_framework_value::ToValue + semio_fra
     {
     }
 
-    fn mutation_id(&self) -> Option<semio_framework_replication_ids::MutationId> {
+    fn mutation_id(&self) -> Option<&semio_framework_replication_ids::MutationId> {
         None
     }
     fn dependencies(&self) -> Vec<semio_framework_replication_ids::MutationId> {

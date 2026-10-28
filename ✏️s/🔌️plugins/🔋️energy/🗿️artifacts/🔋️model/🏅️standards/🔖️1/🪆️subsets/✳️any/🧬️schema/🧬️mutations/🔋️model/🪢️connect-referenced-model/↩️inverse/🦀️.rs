@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ConnectReferencedModel` — always computed from BASE, never by inverting the delta.
 
 use crate as vocabulary;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
@@ -10,12 +10,11 @@ where
     Op: From<super::ConnectReferencedModel> + From<crate::DisconnectReferencedModel>,
 {
     Ok((|| {
-    if payload.target.artifact_id.is_empty() || payload.target.dialect.artifact_kind.is_empty() || payload.target.dialect.standard.is_empty() || payload.target.dialect.subset.is_empty() { return Vec::new(); }
-    let target = payload.target.clone();
-    let link = store::ArtifactLink { target, pin: store::LinkPin::Head, role: vocabulary::REFERENCED_MODEL_LINK_ROLE.to_string() };
+    if !::semio_s_artifact_energy_model_native_mutations::root::valid_link(&payload.link) { return Vec::new(); }
+    let link = payload.link.clone();
     match &base.referenced_model {
         Some(existing) if existing == &link => Vec::new(),
-        Some(existing) => vec![vocabulary::connect_referenced_model(existing.target.clone())],
+        Some(existing) => vec![vocabulary::connect_referenced_model(existing.clone())],
         None => vec![vocabulary::disconnect_referenced_model()],
     }
 

@@ -216,7 +216,7 @@ async fn every_document_verb_round_trips_through_the_granular_vocabulary() {
     let insulated = applied(&snapshot, &EnergyModelEditorCommand::SetMaterialProperty { material: 1, property: "conductivityWMK".into(), value: "0.04".into() });
     assert!((insulated.materials[0].conductivity_w_m_k - 0.04).abs() < 1e-12);
 
-    let retuned = applied(&snapshot, &EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: 1, heating_schedule: 2, cooling_schedule: 1, heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.5 });
+    let retuned = applied(&snapshot, &EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: 1, zone: 1, heating_schedule: 2, cooling_schedule: 1, heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.5 });
     assert_eq!(retuned.thermostats[0].heating_setpoint_schedule_id, ScheduleId(2));
     assert!((retuned.thermostats[0].cooling_throttle_range_k - 1.5).abs() < 1e-12);
 

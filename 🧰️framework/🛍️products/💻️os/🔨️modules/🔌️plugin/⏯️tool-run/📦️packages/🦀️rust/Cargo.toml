@@ -25,6 +25,10 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-value-native-owned = { workspace = true }
+semio-framework-os-store-operation-wire = { path = "../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+semio-framework-tool-run-presentation = { workspace = true }
+semio-framework-tool-run-entities = { workspace = true }
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-framework-plugin-window-transient = { path = "../../../🪟️window/📦️packages/🦀️rust" }

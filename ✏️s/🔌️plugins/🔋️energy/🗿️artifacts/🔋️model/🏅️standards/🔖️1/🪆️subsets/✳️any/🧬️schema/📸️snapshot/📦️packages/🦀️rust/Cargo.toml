@@ -16,6 +16,12 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-manifest-media = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🎞️media/📦️packages/🦀️rust" }
+semio-framework-plugin-window-kits-rich = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-scene = { workspace = true }
+semio-framework-schema-state = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-value-derive = { workspace = true }
+semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-composition-admission = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📥️admission/📦️packages/🦀️rust" }
 pack = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
@@ -24,7 +30,6 @@ semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-schema-composition = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
 semio-framework-schema-registry = { workspace = true }
@@ -46,6 +51,14 @@ semio-framework-async = { path = "../../../../../../../../../../../../../🧰️
 semio-framework-replication = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-async-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+
+[dev-dependencies.semio-framework-pack-record-preflight]
+path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/📦️packages/🦀️rust"
+
+[dev-dependencies.semio-framework-value-native-owned]
+workspace = true
+features = ["testkit"]

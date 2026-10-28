@@ -29,7 +29,6 @@ pub use semio_framework_os_store_engine_live::lifted_document_materialize::{stam
 
 // config_spec_* removed — ConfigSpec is UI (framework-core); avoids kernel↔core cycle
 pub fn create_document_envelope<P, Mutation>(schema: &str, id: &str, initial_snapshot: P, backbone: Option<ArtifactBackboneRef>, producer:&impl ArtifactGenesisProducer<P>) -> ArtifactEnvelope<P, Mutation>
-where P: Clone,
 {
     create_document_envelope_from_genesis(schema, id, AdmittedArtifactGenesis::born(initial_snapshot,producer).expect("artifact genesis birth encodes once"), backbone)
 }
@@ -55,7 +54,7 @@ pub fn create_document_envelope_from_genesis_owners<P, Mutation>(schema: String,
         lanes: protocol::HistoryFoldIndex::new(),
         edit_messages: ArtifactEditMessageLedger::new(),
         conflicts: Vec::new(),
-        transitions: Vec::new(),
+        transitions: semio_framework_os_vcs::ArtifactHistoryLedger::empty(),
         history_shape: semio_framework_os_spr::HistoryShape::Document,
         open_transaction: None,
         viewer_checkpoint_id: None,
@@ -70,7 +69,7 @@ pub fn empty_document_envelope_from_genesis_owners<P, Mutation>(schema: String, 
         backbone, active_alternative_id: None,
         cursor: Some(ArtifactCursor::from_owners(ArtifactCursorOwners { applied_edit_ids: semio_framework_os_vcs::HistoryPageStack::empty(), redo_edit_ids: semio_framework_os_vcs::HistoryPageStack::empty(), checkpoint_id: None })),
         dialect: None, migrated_from: None, owner: None, lanes: protocol::HistoryFoldIndex::new(),
-        edit_messages: ArtifactEditMessageLedger::empty(), conflicts: Vec::new(), transitions: Vec::new(), history_shape: semio_framework_os_spr::HistoryShape::Document, open_transaction: None, viewer_checkpoint_id: None,
+        edit_messages: ArtifactEditMessageLedger::empty(), conflicts: Vec::new(), transitions: semio_framework_os_vcs::ArtifactHistoryLedger::empty(), history_shape: semio_framework_os_spr::HistoryShape::Document, open_transaction: None, viewer_checkpoint_id: None,
     })
 }
 

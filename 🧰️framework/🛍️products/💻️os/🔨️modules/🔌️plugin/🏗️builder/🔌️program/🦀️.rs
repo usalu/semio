@@ -32,6 +32,7 @@ use std::collections::{HashMap, HashSet};
 use semio_framework::ArtifactKindSpec;
 use semio_framework_plugin_reactor_app::NoPluginApp;
 use semio_framework_plugin_app_builder::App;
+use semio_framework_plugin_decl_registry::plugin_program::AppFactory;
 use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_decl_registry::FlowExtensionDescriptor;
@@ -88,6 +89,7 @@ pub struct Plugin<PA: PluginApp = NoPluginApp> {
 }
 
 impl<PA: PluginApp> Plugin<PA> {
+    pub fn commit_original_producers(&mut self){for factory in self.apps.values_mut(){factory.definition.commit_producer();if let Some(registration)=factory.registration.as_mut(){registration.commit_producer();}}}
     pub fn new(plugin_id: impl Into<String>, label: impl Into<String>, version: impl Into<String>) -> Self {
         Self {
             manifest: PluginManifest {
@@ -258,7 +260,7 @@ impl<PA: PluginApp> Plugin<PA> {
     pub fn register_app_factory(mut self, mut app: App, factory: AppFactory<PA>) -> Self {
         let mut factory = factory;
         join_framework_shared_action_dispositions(&mut app.definition);
-        join_framework_shared_action_dispositions(&mut factory.definition);
+        if let Some(definition)=factory.definition.reference_mut(){join_framework_shared_action_dispositions(definition)}
         let dialect = app.definition.dialect.clone();
         let media_type = app.definition.io.artifact_media_type;
         self.manifest.apps.push(app.definition);
@@ -275,8 +277,28 @@ impl<PA: PluginApp> Plugin<PA> {
     }
 
     pub fn create_app(&self, app_id: &str, actor: ActorId, mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<PA> {
-        self.apps.get(app_id).map(|factory| (factory.create)(&factory.definition, actor, mounted_policy, identity))
+        self.apps.get(app_id).and_then(|factory|factory.create.map(|create|create(&factory.definition,actor,mounted_policy,identity)))
     }
+
+    /// 🌱️ Admits the exact registered native construction owner under the actual retained opening caller.
+    /// ♻️ Program teardown waits for mounted definition readers before retiring the original declaration graph.
+    pub fn close_original_definitions(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let Some(factory)=self.apps.values_mut().find(|factory|factory.registration.is_some()||!factory.definition.terminal_is_empty())else{return Ok(true)};
+        if let Some(registration)=factory.registration.as_mut(){if !registration.terminal_is_empty(){cx.with_original_retirement(|cx|registration.close_step(cx))?;return Ok(false)}let d=registration.boxed_release_demands();cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{factory.registration=None;Ok(semio_framework_value::RetainedCloneStep::Progress(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}))?;return Ok(false)}
+        let demand=factory.definition.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+        cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,demand,|grant|factory.definition.close_step(grant)))?;
+        Ok(false)
+    }
+    /// 🕳️ Every native definition source was returned and retired before program disposal.
+    pub fn original_definitions_terminal_is_empty(&self)->bool{self.apps.values().all(|factory|factory.registration.is_none()&&factory.definition.terminal_is_empty())}
+
+    pub fn admit_original_app(&self,app_id:&str,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_framework_plugin_reactor_app::OriginalPluginAppConstruction<PA>>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let factory=self.apps.get(app_id).and_then(|factory|factory.original_factory).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"registered app has no original native construction capability"))?;(factory.begin)(cx,output)}
+
+    /// ▶️ Borrows the same immutable registered definition while the original construction retains every partial owner.
+    pub fn advance_original_app(&self,app_id:&str,actor:&str,instance_id:u32,policy:semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,construction:&mut dyn semio_framework_plugin_reactor_app::OriginalPluginAppConstruction<PA>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<PA>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let factory=self.apps.get(app_id).filter(|factory|factory.original_factory.is_some()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original construction lost its registered native declaration"))?;construction.advance(semio_framework_plugin_reactor_app::OriginalPluginAppSource{definition:&factory.definition,definition_source:factory.definition.original_source().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native declaration lost its original registered source"))?,registration:factory.registration.as_ref().ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native declaration lost its original registration source"))?.as_ref(),actor,instance_id,policy},cx,output)}
+
+    /// 👁️ Native opening checks the declared capability without constructing any app.
+    pub fn has_original_app_factory(&self,app_id:&str)->bool{self.apps.get(app_id).is_some_and(|factory|factory.original_factory.is_some())}
 
     /// 🪪️ The document schema the registered app opens — its type's own `DOCUMENT_SCHEMA`, recorded
     /// at registration, so nothing has to be constructed to learn it.

@@ -88,7 +88,7 @@ where
     /// ⏭️ Advances the deferred reprojection by one turn — until `deadline_us` on the budget's clock when the runtime names
     /// its turn deadline, else one [`ReplayTurnBudget`] — and adopts it once its replay finished, announcing a local step's
     /// transitions. Answers its progress while it still waits, `None` once nothing waits.
-    pub async fn step_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, deadline_us: Option<u64>) -> Result<Option<ReplayProgress>, VcsError> {
+    pub async fn step_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, deadline_us: Option<u64>) -> Result<Option<ReplayProgress>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         match self.advance_reprojection(store_log, store_owners, store_wire, store_cursor, store_live, deadline_us).await? {
             Some(ReprojectionAdvance::Pending(progress)) => Ok(Some(progress)),
             Some(ReprojectionAdvance::Adopted(_)) => {
@@ -104,7 +104,7 @@ where
     /// joins it to the waiting change (with any remote transitions already waiting), advances the clock past its
     /// transitions, steps one budget and adopts everything once the replay finished — here or in a later turn. Answers the
     /// step back when it is adopted synchronously instead: local replays are not deferred, or a plain step needs no replay.
-    pub async fn defer_local_step(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, step: PendingLocalStep, clock: HybridLogicalTimestamp) -> Result<Option<PendingLocalStep>, VcsError> {
+    pub async fn defer_local_step(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, step: PendingLocalStep, clock: HybridLogicalTimestamp) -> Result<Option<PendingLocalStep>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if self.local_replay_budget.is_none() {
             return Ok(Some(step));
         }
@@ -137,7 +137,7 @@ where
     /// replay when the history it started from changed, steps it, and adopts the change with the finished replay; a change
     /// that needs no replay is adopted at once. A refused adoption drops the change — a refused local step only, its remote
     /// transitions wait again — and answers the refusal.
-    pub(super) async fn advance_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, deadline_us: Option<u64>) -> Result<Option<ReprojectionAdvance>, VcsError> {
+    pub(super) async fn advance_reprojection(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, deadline_us: Option<u64>) -> Result<Option<ReprojectionAdvance>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let Some(mut pending) = self.pending_reprojection.take() else {
             return Ok(None);
         };
@@ -239,8 +239,8 @@ where
         let replayed = match projected {
             Ok(replayed) => replayed,
             Err(error) => {
-                let waiting: Vec<semio_framework_os_spr::MutationEnvelope> = store_log.envelope.transitions.extract_if(.., |known| remote.contains(&known.mutation_id)).collect();
-                store_log.envelope.transitions.retain(|known| !authored.contains(&known.mutation_id));
+                let waiting: Vec<semio_framework_os_spr::MutationEnvelope> = store_log.envelope.transitions.extract_if(|known| remote.contains(&known.mutation_id)).expect("exclusive deferred replay retains original transition owners");
+                drop(store_log.envelope.transitions.extract_if(|known|authored.contains(&known.mutation_id)).expect("exclusive author rollback retains original transition owners"));
                 (store_log.envelope.active_alternative_id, store_log.envelope.viewer_checkpoint_id) = saved;
                 self.refuse_local_step(store_owners, PendingReprojection { transitions: waiting, local: Some(PendingLocalStep { envelopes, head, finalizing }), replay: None });
                 return Err(error);

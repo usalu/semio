@@ -200,9 +200,9 @@ impl ArtifactEditor for CadPlayApp {
         Some(semio_s_artifact_cad_cad_config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> CadSnapshot {
+    fn reference_birth()->Option<fn()->CadSnapshot>{Some(||{
         forest_play_scene()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(cad_io())

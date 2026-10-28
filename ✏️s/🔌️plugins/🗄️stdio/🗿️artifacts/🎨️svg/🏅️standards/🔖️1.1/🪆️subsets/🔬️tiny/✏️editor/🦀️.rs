@@ -207,9 +207,9 @@ impl ArtifactEditor for SvgTinyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); svg_tiny_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         SvgSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

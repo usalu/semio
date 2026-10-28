@@ -1,0 +1,37 @@
+//! ✅️ Named creation keeps the original Unicode and collection uniqueness rules before fixed scalar checks.
+use super::*;
+use crate::text::{TextRowPath,TextValidation};
+/// 🏷️ Authored create rules borrow their actual name and identity fields.
+pub trait NamedCreationRule:TextRowPath{type Payload:Send+Sync+'static;fn name(p:RetainedCloneRef<'_,Self::Payload>)->RetainedCloneRef<'_,String>;fn key(p:RetainedCloneRef<'_,Self::Payload>)->RetainedCloneRef<'_,u32>;fn valid(p:&Self::Payload)->bool;}
+/// 🧳️ The existing bounded text policy retains every source until original cancellation completes.
+pub struct NamedRowCreationValidation<S:NamedCreationRule>{text:TextValidation<S>,input:Option<RetainedCloneBinding>,original:Option<RetainedCloneBinding>,phase:u8,result:Option<Option<RowOutcome>>,closing:bool}
+impl<S:NamedCreationRule> NamedRowCreationValidation<S>{pub fn new()->Self{Self{text:TextValidation::new(),input:None,original:None,phase:0,result:None,closing:false}}}
+impl<S:NamedCreationRule> RowCreationValidation<S::Payload> for NamedRowCreationValidation<S>{
+ fn demand(&self,p:RetainedCloneRef<'_,S::Payload>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.result.is_some(){return Err(invalid());}p.check_binding(&self.input)?;o.check_binding(&self.original)?;match self.phase{0=>nested(scalar(p.binding_copy_bytes()),1),1=>nested(scalar(o.binding_copy_bytes()),1),2=>{let extra=2*size_of::<Option<RowOutcome>>()+1;nested(self.text.demand_original(S::name(p),S::key(p),o,b.saturating_sub(extra))?,extra)},3=>Ok(scalar(2*size_of::<S::Payload>()+2*size_of::<Option<RowOutcome>>()+1)),_=>Err(invalid())}}
+ fn advance(&mut self,payload:RetainedCloneRef<'_,S::Payload>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,b:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(payload,o,b)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let p=match self.phase{0=>{let p=add(payload.bind(&mut self.input,child(g,1))?.ok_or_else(invalid)?,1)?;self.phase=1;p},1=>{let p=add(o.bind(&mut self.original,child(g,1))?.ok_or_else(invalid)?,1)?;self.phase=2;p},2=>{let extra=2*size_of::<Option<RowOutcome>>()+1;let s=self.text.advance_original(S::name(payload),S::key(payload),o,b.saturating_sub(extra),child(g,extra)).map_err(|e|tag(e,extra))?;if let Some(result)=self.text.result(){if result.is_some(){self.result=Some(result);}else{self.phase=3;}}add(s.progress(),extra)?},3=>{self.result=Some((!S::valid(payload.get())).then_some(RowOutcome::Invalid));receipt(d)},_=>return Err(invalid())};Ok(if self.result.is_some(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ fn result(&self)->Option<Option<RowOutcome>>{self.result}
+ fn begin_close(&mut self){self.closing=true;self.text.begin_close();}
+}
+impl<S:NamedCreationRule> CursorClose for NamedRowCreationValidation<S>{
+ fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}if !self.text.terminal_is_empty(){return self.text.close_demand(b);}RetainedCloneBinding::close_demand(if self.input.is_some(){&self.input}else{&self.original},b)}
+ fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(g.maximum_copy_bytes)?;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()));}if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}if !self.text.terminal_is_empty(){return self.text.close_step(g).map(|s|RetainedCloneStep::Progress(s.progress()));}let s=RetainedCloneBinding::close_one(if self.input.is_some(){&mut self.input}else{&mut self.original},g)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})}
+ fn terminal_is_empty(&self)->bool{self.closing&&self.text.terminal_is_empty()&&self.input.is_none()&&self.original.is_none()}
+}
+
+impl<S:NamedCreationRule> Drop for NamedRowCreationValidation<S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original create validation retains authored name, fields or document binding");}}
+
+/// 🔢️ Fixed creation rules inspect only the authored bounded scalar payload.
+pub trait FixedCreationRule:Send+Sync+'static{type Payload:Send+Sync+'static;fn valid(p:&Self::Payload)->bool;}
+/// 🧳️ Even fixed checks bind their actual payload and document before the semantic decision.
+pub struct FixedRowCreationValidation<S:FixedCreationRule>{input:Option<RetainedCloneBinding>,original:Option<RetainedCloneBinding>,phase:u8,result:Option<Option<RowOutcome>>,closing:bool,marker:std::marker::PhantomData<fn()->S>}
+impl<S:FixedCreationRule> FixedRowCreationValidation<S>{pub fn new()->Self{Self{input:None,original:None,phase:0,result:None,closing:false,marker:Default::default()}}}
+impl<S:FixedCreationRule> RowCreationValidation<S::Payload> for FixedRowCreationValidation<S>{
+ fn demand(&self,p:RetainedCloneRef<'_,S::Payload>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,_:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.result.is_some(){return Err(invalid());}p.check_binding(&self.input)?;o.check_binding(&self.original)?;match self.phase{0=>nested(scalar(p.binding_copy_bytes()),1),1=>nested(scalar(o.binding_copy_bytes()),1),2=>Ok(scalar(2*size_of::<S::Payload>()+2*size_of::<Option<RowOutcome>>()+1)),_=>Err(invalid())}}
+ fn advance(&mut self,payload:RetainedCloneRef<'_,S::Payload>,o:RetainedCloneRef<'_,EnergyModelSnapshot>,body:usize,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.demand(payload,o,body)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let p=match self.phase{0=>{let p=add(payload.bind(&mut self.input,child(g,1))?.ok_or_else(invalid)?,1)?;self.phase=1;p},1=>{let p=add(o.bind(&mut self.original,child(g,1))?.ok_or_else(invalid)?,1)?;self.phase=2;p},2=>{self.result=Some((!S::valid(payload.get())).then_some(RowOutcome::Invalid));receipt(d)},_=>return Err(invalid())};Ok(if self.result.is_some(){RetainedCloneStep::Complete(p)}else{RetainedCloneStep::Progress(p)})}
+ fn result(&self)->Option<Option<RowOutcome>>{self.result}
+ fn begin_close(&mut self){self.closing=true;}
+}
+impl<S:FixedCreationRule> CursorClose for FixedRowCreationValidation<S>{fn close_demand(&self,b:usize)->Result<RetirementDemand,ValueError>{if !self.closing{return Err(invalid());}RetainedCloneBinding::close_demand(if self.input.is_some(){&self.input}else{&self.original},b)}fn close_step(&mut self,g:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.close_demand(g.maximum_copy_bytes)?;if !retained_mutation_demand_fits(d,g){return Ok(RetainedCloneStep::Progress(Default::default()));}let s=RetainedCloneBinding::close_one(if self.input.is_some(){&mut self.input}else{&mut self.original},g)?;Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(s.progress())}else{RetainedCloneStep::Progress(s.progress())})}fn terminal_is_empty(&self)->bool{self.closing&&self.input.is_none()&&self.original.is_none()}}
+impl<S:FixedCreationRule> Drop for FixedRowCreationValidation<S>{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_is_empty(),"original fixed creation retains actual source bindings");}}
+
+#[path="🧭️rules/🦀️.rs"]mod rules;pub use rules::{CreationRule,CreationRuleSource,RuleRowCreationValidation};

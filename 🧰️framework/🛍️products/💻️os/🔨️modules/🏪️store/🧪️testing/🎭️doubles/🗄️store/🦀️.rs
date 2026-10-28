@@ -155,6 +155,19 @@ where
     P: Clone + ToValue + FromValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_schema_composition::ArtifactCompositionFields + Send + Sync + 'static,
     Mutation: Clone + ToValue + FromValue + semio_framework_os_spr::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
 {
+    fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand{SpaceMember::member_native_vcs_capture_demands(&self.0)}
+    fn admit_member_native_vcs_command(&self,request:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::admit_member_native_vcs_command(&self.0,request,cx,output)}
+    fn advance_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{SpaceMember::advance_member_native_vcs_command(&mut self.0,owner,cx)}
+    fn take_member_native_vcs_result(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<semio_framework_os_store_engine::lifted_store::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::take_member_native_vcs_result(&self.0,owner,cx,output)}
+    fn ack_member_native_vcs_command(&self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::ack_member_native_vcs_command(&self.0,owner,cx)}
+    fn member_native_vcs_close_demands(&self,owner:&dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{SpaceMember::member_native_vcs_close_demands(&self.0,owner,body)}
+    fn close_member_native_vcs_command(&mut self,owner:&mut dyn semio_framework_os_store_space_member::lifted_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{SpaceMember::close_member_native_vcs_command(&mut self.0,owner,cx)}
+    fn native_head_pack_source(&self)->Option<semio_framework_os_store_text_io::OriginalSnapshotPackView<'_>>{SpaceMember::native_head_pack_source(&self.0)}
+    fn native_pack_generation(&self)->u64{SpaceMember::native_pack_generation(&self.0)}
+    fn native_checkpoint_id(&self)->Option<&str>{SpaceMember::native_checkpoint_id(&self.0)}
+    fn native_checkpoint_probe_demands(&self,probe:&semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,ValueError>{SpaceMember::native_checkpoint_probe_demands(&self.0,probe)}
+    fn advance_native_checkpoint_probe(&self,probe:&mut semio_framework_os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{SpaceMember::advance_native_checkpoint_probe(&self.0,probe,grant)}
+    fn member_identity(&self)->Option<semio_framework_os_store_space_member::lifted_store::MemberIdentityRef<'_>>{SpaceMember::member_identity(&self.0)}
     fn local_actor_id(&self) -> &ActorId {
         SpaceMember::local_actor_id(&self.0)
     }
@@ -178,8 +191,10 @@ where
         SpaceMember::one_item_wire_publication_supported(&self.0)
     }
 
+    fn original_batch_receiving_demands(&self) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { SpaceMember::original_batch_receiving_demands(&self.0) }
+    fn admit_original_batch_receiving(&self,wires:&mut Option<Vec<Vec<u8>>>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_os_store_one_item_batch::member_owned_batch::MemberOriginalBatchReceiving>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{SpaceMember::admit_original_batch_receiving(&self.0,wires,control,grant)}
     fn owned_publication_birth_bytes(&self, request: &MemberStoreOwnedBatchRequest) -> Result<usize, String> { SpaceMember::owned_publication_birth_bytes(&self.0, request) }
-    fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn ErasedMemberStoreOneItemPublication>>, String> {
+    fn begin_one_item_owned_publication(&self, request: &mut MemberStoreOwnedBatchRequest, grant: ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn ErasedMemberStoreOneItemPublication>, semio_framework_value::RetainedCloneProgress)>, String> {
         SpaceMember::begin_one_item_owned_publication(&self.0, request, grant)
     }
     fn advance_one_item_publication(&mut self, publication: &mut dyn ErasedMemberStoreOneItemPublication, body:usize, grant: ArtifactStoreOneItemGrant, receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, semio_framework_os_vcs::VcsError> {

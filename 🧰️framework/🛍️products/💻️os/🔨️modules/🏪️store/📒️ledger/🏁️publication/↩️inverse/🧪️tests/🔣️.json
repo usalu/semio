@@ -1,0 +1,1 @@
+{"edits":[{"id":"edit-a","original":3,"candidate":7},{"id":"edit-b","original":5,"candidate":11}],"cancelPrefixes":[0,1,2],"deniedAxes":["items","copy","capacity","depth"],"maximumTurns":32768}

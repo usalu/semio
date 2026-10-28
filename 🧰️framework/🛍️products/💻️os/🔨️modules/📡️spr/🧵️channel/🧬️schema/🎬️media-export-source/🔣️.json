@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Native Media Export Checkpoint Selection",
+  "type": [
+    "string",
+    "null"
+  ],
+  "minLength": 1,
+  "maxLength": 512,
+  "description": "Null selects the current immutable source. A checkpoint identity selects exactly its ordered changes and edits without moving the live cursor."
+}

@@ -138,7 +138,7 @@ pub async fn spr_events(spr: &[u8], document_id: &str, schema: &str, actor_ident
 /// 📦️ Rebuilds real {@link MutationEnvelope}s (one per forward op, genuine `OpBinary`
 /// payloads straight from the edit's own binary `OpPayload`s — no codec, no JSON) from one
 /// `HistoryEdit` decoded off the spr bytes, so an appended external edit can flow through the
-/// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). A binary-less op payload
+/// store's causal DAG (`ingest_remote` → `edit_from_operation_envelope_cold`). A binary-less op payload
 /// is a hard error — `.spr` is binary-only since B1, so every real op has one.
 pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryEdit, document_id: &str, schema: &str, actor_identity_grant: semio_framework_value::RetainedCloneGrant) -> Result<Vec<MutationEnvelope>, String> {
     if !actor_identity_batch_admits(edit.ops.len(),actor_identity_grant){return Err("original history identity batch exceeds caller lease authority".into());}
@@ -176,7 +176,7 @@ pub async fn envelopes_from_history_edit(edit: &semio_framework_os_spr::HistoryE
 /// 📦️ The inverse of {@link envelopes_from_history_edit}: one `MutationEnvelope` -> one
 /// `HistoryEdit` with a real binary `OpPayload` and populated meta (`op_id` == the envelope's own
 /// id, so a later `op_ids_of` re-read agrees) — the byte-level twin of
-/// `crate::os_store::ledger::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
+/// `crate::os_store::ledger::edit_from_operation_envelope_cold`, for appending a locally-flushed envelope to the spr log.
 ///
 /// 🎞️ `crate::os_spr::causal::MutationEnvelope` (this fn's input) carries no group_id —
 /// same precedent as its already-absent `semantic_kind`/`label`/`undo_policy`, see

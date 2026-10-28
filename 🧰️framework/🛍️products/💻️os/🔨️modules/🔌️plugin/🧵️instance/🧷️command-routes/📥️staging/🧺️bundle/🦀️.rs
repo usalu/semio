@@ -33,6 +33,8 @@ pub struct CommandCtx<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFact
     pub stores: &'ctx mut InstanceStores<A>,
     pub roster: &'ctx mut PeerRoster<A>,
     pub ingress: &'ctx mut ActionIngress,
+    pub original_emission:&'ctx mut semio_framework_plugin_job::original_emission::OriginalEmissionSource<A>,
+    pub original_typed_command:&'ctx mut semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
     pub interaction: &'ctx mut LocalInteraction<A>,
     pub history: &'ctx mut CommandHistory<A>,
     pub host_events: &'ctx mut HostEvents,

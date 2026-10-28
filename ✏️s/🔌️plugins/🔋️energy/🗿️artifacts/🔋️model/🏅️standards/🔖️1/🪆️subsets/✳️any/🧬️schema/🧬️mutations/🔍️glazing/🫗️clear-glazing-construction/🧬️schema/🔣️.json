@@ -35,5 +35,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "glazing-construction",
+    "assignment": "clear",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "glazing_construction_id",
+    "key": "id",
+    "references": [
+      "Constructions"
+    ],
+    "referenceTarget": "key",
+    "inverseBind": "BindFenestrationGlazingConstruction",
+    "inverseClear": "ClearFenestrationGlazingConstruction",
+    "labels": {
+      "en": "Change glazing construction",
+      "de": "Verglasungsaufbau ändern"
+    },
+    "semantics": {
+      "verb": "clear",
+      "entity": "glazing-construction",
+      "kind": "clear-glazing-construction",
+      "record": "ChangedGlazingConstruction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The glazing construction assignment is invalid."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The fenestration or its glazing assignment does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced construction does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fenestration already has this glazing construction."
+      }
+    }
   }
 }

@@ -1,0 +1,27 @@
+# Mounted Window Command Continuation
+
+The active goal is the energy artifact. The original goal's IFC wording is superseded by the user's correction. This report records prerequisite work in the actual mounted energy SDK route; it is not a claim that the full energy goal is complete.
+
+`WindowConfigCommandLoad` now retains the original decoded command's framed bytes, source binding, native typed loader, cancellation closure, and original failure objects across existing plugin-exchange retries. The mounted PluginApp method forwards the actual StepContext to its registered Window owner. The old asynchronous load arm no longer decodes/copies the complete frame and enters a cold load loop. Completion dispatch requires empty original entry owners after native closure.
+
+The state closes private registry preparation before handing any primary failure to decoded-command retirement. Compound closure failures retain both original errors. Source binding includes actual payload authority, operation, generation, clock and deadline. Foreign callers cannot advance the retained operation.
+
+The framed source uses canonical unsigned LEB128 and lends exact Pack and SPR slices from the original Vec. The language-neutral source fixture covers zero, one, 127, 128 and 16384 Pack bytes, exact pointer offsets, truncated input, overlong headers and u64 overflow. The independent Protocol Buffers 7.36.2 test oracle passed all five valid and nine refused vectors. The native Window library check passed with the command continuation source. The focused native framing test passed. The full mounted exchange compile is being run; full mounted command success/cancellation validation remains outstanding.
+
+The wider compile exposed missing defining dependencies and unnecessary Clone requirements at native declaration boundaries. These are being corrected at their owners rather than restored on native snapshots. The default typing fold now splits absent an explicitly authored composition algebra; it does not fabricate cloned native operations. Existing authored writer composition remains explicit.
+
+The native codec descriptor registers authored schema, extension, identity and hash without Snapshot Clone or invoking whole-value codecs. The previous cold function table is an explicit optional reference capability. A NoClone registration test passed, with serialization deliberately panicking if registration invokes it. Native headless emit/replay remains a separate integration requirement.
+
+Current evidence must not be expanded into a claim of full browser editing, import/export, save/reload, weather simulation or headless parity until the real mounted routes pass.
+
+Native mounted command cancellation and five-axis admission denial tests passed before the final registered-Store close check. The native loader now uses closure admission for cancellation cleanup; ordinary construction admission correctly stops new work on a cancelled caller. The command retains its source fence through the final paid closure event. Native command success reaches the expected installed state; final registered closure is still being verified independently.
+
+Defining borrowed projection for OriginalReceivingPrimary now lives beside the FieldProjectionSource trait, avoiding an orphan implementation after the actual error type moved to the native construction owner. It preserves every original primary/quote/allocation cause and receipt field. Its corpus-based test is pending compilation; the existing model test harness needed its canonical self alias repaired to avoid mixing its unit-test model types with a second facade-linked model instance.
+
+The complete DSL model library now passes 20/20 tests, including the new cause projection and original typed receiving/closure tests. The test harness now identifies its own model instance and uses the native owner's explicit test-only construction recipient. `DslOwnedReceiving` exposes the existing moving-source code generator independently of borrowed receiving, allowing opaque dynamic fields to retain original custody without an unavailable borrowed whole-value conversion. Existing language-neutral receiving fixtures and serde oracle validate this path.
+
+Mounted Window command tests now pass 3/3: original framed pointer preservation and two-edit replay to zoom 2.75 through installation and complete registered Store closure; actual original-token cancellation at seven cutoffs; and all five grant-axis admission checks with exact heap receipts. A fourth release-frontier denial test is being run. Nonempty history required retaining and closing its original factory authority, and the returned-read registry now queries its defining logical-empty state rather than its distinct custody-empty state.
+
+## Mounted Reserved Producer Admission
+
+The defining reserved producer now quotes and admits its mounted Box through the original Job construction issuer, retaining both original source and destination on denied admission. Actual declaration-app native test passes typed-body, admitted-box, and mounted-job ports, all positive birth currencies and fuel denial, original metadata binding, exact allocator/receipt parity, and complete decoder/producer/parent physical return. The schema and language-neutral fixture cover all three ports; independent Ajv plus SQLite oracle passes 18 cases (48 assertions). The native unit target now installs its actual heap witness and supplies the original decoder issuer.

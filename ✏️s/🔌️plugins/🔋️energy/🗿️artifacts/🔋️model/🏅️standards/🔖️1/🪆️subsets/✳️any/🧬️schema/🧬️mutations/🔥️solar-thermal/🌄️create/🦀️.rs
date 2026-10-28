@@ -1,14 +1,14 @@
 //! 🌄️ Energy model mutation — `CreateSolarThermalSystem`: Adds one solar thermal collector loop: aperture, conversion efficiency, the buffer it charges, and the plane the incident-solar model integrates over.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🌄️ `create-solar-thermal-system` payload. Adds one solar thermal collector loop: aperture, conversion efficiency, the buffer it charges, and the plane the incident-solar model integrates over.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeRowBirth, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native_birth(schema="🧬️schema/🔣️.json")]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-solar-thermal-system")]
 pub struct CreateSolarThermalSystem {
@@ -25,40 +25,6 @@ pub struct CreateSolarThermalSystem {
 pub fn create_solar_thermal_system<Op: From<CreateSolarThermalSystem>>(index: u32, id: crate::model::EntityId, collector_area_m2: f64, efficiency: f64, storage_volume_m3: f64, tilt_deg: f64, azimuth_deg: f64) -> Op {
     CreateSolarThermalSystem { index, id, collector_area_m2, efficiency, storage_volume_m3, tilt_deg, azimuth_deg }.into()
 }
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateSolarThermalSystem
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateSolarThermalSystem> + From<crate::DeleteSolarThermalSystem>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "solar-thermal-system", kind: "create-solar-thermal-system", record: "CreatedSolarThermalSystem" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Solar Thermal System {} at index {}", self.id.0, self.index), &format!("Solarthermieanlage {} an Index {} erstellen", self.id.0, self.index))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreateSolarThermalSystem
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreateSolarThermalSystem> + From<crate::DeleteSolarThermalSystem>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod original_creation_tests;

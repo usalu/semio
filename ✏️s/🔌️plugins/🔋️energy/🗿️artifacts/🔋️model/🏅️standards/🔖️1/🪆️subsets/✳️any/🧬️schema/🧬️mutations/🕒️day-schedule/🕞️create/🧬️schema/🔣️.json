@@ -185,5 +185,101 @@
         "de": "Sind beide Grenzen gesetzt, überschreitet die Untergrenze die Obergrenze nicht."
       }
     }
-  ]
+  ],
+  "x-semio-energy-row-birth": {
+    "row": "StateDailySchedule",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "hourly_values",
+        "input": "hourly_values",
+        "storage": "fixed-array",
+        "length": 24
+      },
+      {
+        "field": "interpolation",
+        "input": "interpolation",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "limits",
+        "input": "limits_min",
+        "storage": "paired-bounds",
+        "upper": "limits_max"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateDailySchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "daily",
+    "key": "id",
+    "inverse": "DeleteDailySchedule",
+    "labels": {
+      "en": "Create daily schedule",
+      "de": "Tageszeitplan erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "schedule",
+      "kind": "create-daily-schedule",
+      "record": "CreatedDailySchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The schedule requires finite values and a positive timestep."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "A schedule with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The insertion rank is past the end of this schedule collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The schedule creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced daily schedule does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit",
+    "identityCollections": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "rules": [
+      {
+        "input": "hourly_values",
+        "kind": "finite-values"
+      },
+      {
+        "input": "limits_min",
+        "partner": "limits_max",
+        "kind": "paired-bounds"
+      }
+    ],
+    "scalarOrder": "before-rules"
+  }
 }

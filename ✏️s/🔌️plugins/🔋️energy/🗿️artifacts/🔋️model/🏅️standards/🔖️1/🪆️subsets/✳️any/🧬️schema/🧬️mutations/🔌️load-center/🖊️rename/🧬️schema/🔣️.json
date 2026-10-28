@@ -46,6 +46,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateElectricalLoadCenter",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "electrical_load_centers",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename electrical load center",
+      "de": "Elektrische Lastzentrale umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "electrical-load-center",
+      "kind": "rename-electrical-load-center",
+      "record": "RenamedElectricalLoadCenter"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A electrical load center name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another electrical load center already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed electrical load center does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The electrical load center already has this name."
       }
     }
   }

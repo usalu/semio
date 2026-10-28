@@ -28,14 +28,15 @@ pub(super) struct ArtifactHistorySlot<T> {
     pub(super) next: Option<u32>,
     free_next: Option<u32>,
     value: Option<T>,
+    replacement: Option<Box<semio_framework_value::RetainedPublicationRoot<T>>>,
     read: Option<Box<dyn semio_framework_value_original_slot::RetainedOriginalReadOwner<T>>>,
     read_previous:Option<u32>,
     read_next:Option<u32>,
 }
 
 impl<T> ArtifactHistorySlot<T> {
-    fn get(&self)->Option<&T>{self.value.as_ref().or_else(||self.read.as_ref().map(|read|read.get()))}
-    fn is_occupied(&self)->bool{self.value.is_some()||self.read.is_some()}
+    fn get(&self)->Option<&T>{self.replacement.as_deref().map(|root|&**root).or_else(||self.value.as_ref()).or_else(||self.read.as_ref().map(|read|read.get()))}
+    fn is_occupied(&self)->bool{self.value.is_some()||self.read.is_some()||self.replacement.is_some()}
 }
 
 pub(super) struct ArtifactHistorySlotPage<T> {
@@ -54,12 +55,14 @@ impl<T> ArtifactHistoryPageChunk<T> {
     }
 }
 
+fn artifact_history_page_slots<T>()->usize{(ARTIFACT_HISTORY_RELEASE_PAGE_BYTES/4/size_of::<ArtifactHistorySlot<T>>().max(1)).clamp(1,ARTIFACT_HISTORY_PAGE_SLOTS)}
+
 fn artifact_history_slot_page<T>() -> Box<[std::mem::MaybeUninit<ArtifactHistorySlot<T>>]> {
-    let bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS);
+    let bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(artifact_history_page_slots::<T>());
     assert!(bytes <= ARTIFACT_HISTORY_CONTIGUOUS_CEILING, "one history ledger page must stay under the 64 KiB contiguous ceiling");
     let mut slots = Vec::new();
-    slots.try_reserve_exact(ARTIFACT_HISTORY_PAGE_SLOTS).expect("history ledger page allocation");
-    slots.resize_with(ARTIFACT_HISTORY_PAGE_SLOTS, std::mem::MaybeUninit::uninit);
+    slots.try_reserve_exact(artifact_history_page_slots::<T>()).expect("history ledger page allocation");
+    slots.resize_with(artifact_history_page_slots::<T>(), std::mem::MaybeUninit::uninit);
     slots.into_boxed_slice()
 }
 
@@ -89,6 +92,8 @@ pub struct ArtifactHistoryLedger<T> {
     page_count: u32,
     read_issuance:u64,
     read_count:usize,
+    replacement_count:usize,
+    replacement_decision:Option<usize>,
     read_head:Option<u32>,
     initialized: u32,
     pub(super) head: Option<u32>,
@@ -118,13 +123,16 @@ impl<T> Default for ArtifactHistoryLedger<T> {
 }
 
 impl<T> ArtifactHistoryLedger<T> {
+    /// 📐️ Computes actual fixed page cardinality from the typed slot footprint and native physical page policy.
+    pub fn page_slot_count()->usize{artifact_history_page_slots::<T>()}
+
     /// 🪹️ Creates an inline ledger frame without native slot or directory backing.
-    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, read_count:0, read_head:None, read_issuance:NEXT_HISTORY_READ_ISSUANCE.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).expect("original history read issuance exhausted"), initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
+    pub fn empty() -> Self { Self { pages: std::mem::ManuallyDrop::new(None), page_count: 0, read_count:0, replacement_count:0, replacement_decision:None, read_head:None, read_issuance:NEXT_HISTORY_READ_ISSUANCE.try_update(std::sync::atomic::Ordering::Relaxed,std::sync::atomic::Ordering::Relaxed,|value|value.checked_add(1)).expect("original history read issuance exhausted"), initialized: 0, head: None, tail: None, free_head: None, reservation: None, group: None, len: 0, seek: std::sync::atomic::AtomicU64::new(ARTIFACT_HISTORY_NO_SEEK) } }
 
     /// 🧮 Quotes the exact slot backing, original page and directory before birth.
     pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.page_count != 0 { return Ok(Default::default()); }
-        let capacity_bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+        let capacity_bytes = size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().checked_mul(artifact_history_page_slots::<T>())
             .and_then(|bytes| bytes.checked_add(size_of::<ArtifactHistorySlotPage<T>>()))
             .and_then(|bytes| bytes.checked_add(size_of::<ArtifactHistoryPageChunk<T>>()))
             .ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "history ledger original page extent overflowed"))?;
@@ -181,12 +189,12 @@ impl<T> ArtifactHistoryLedger<T> {
 
     fn slot(&self, index: u32) -> &ArtifactHistorySlot<T> {
         let index = index as usize;
-        unsafe { self.slot_page(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].assume_init_ref() }
+        unsafe { self.slot_page(index / artifact_history_page_slots::<T>()).slots[index % artifact_history_page_slots::<T>()].assume_init_ref() }
     }
 
     fn slot_mut(&mut self, index: u32) -> &mut ArtifactHistorySlot<T> {
         let index = index as usize;
-        unsafe { self.slot_page_mut(index / ARTIFACT_HISTORY_PAGE_SLOTS).slots[index % ARTIFACT_HISTORY_PAGE_SLOTS].assume_init_mut() }
+        unsafe { self.slot_page_mut(index / artifact_history_page_slots::<T>()).slots[index % artifact_history_page_slots::<T>()].assume_init_mut() }
     }
 
     fn authority(&self) -> usize {
@@ -194,19 +202,24 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     fn allocated_slots(&self) -> usize {
-        self.page_count as usize * ARTIFACT_HISTORY_PAGE_SLOTS
+        self.page_count as usize * artifact_history_page_slots::<T>()
     }
 
     /// 🎟️ Reports backing required by the next unoccupied history reservation.
     pub fn next_reservation_allocation_bytes(&self) -> usize {
         if self.reservation.is_some() || self.free_head.is_some() || (self.initialized as usize) < self.allocated_slots() { return 0; }
-        size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(ARTIFACT_HISTORY_PAGE_SLOTS)
+        size_of::<std::mem::MaybeUninit<ArtifactHistorySlot<T>>>().saturating_mul(artifact_history_page_slots::<T>())
             .saturating_add(size_of::<ArtifactHistorySlotPage<T>>())
             .saturating_add(if self.page_count as usize % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<ArtifactHistoryPageChunk<T>>() } else { 0 })
     }
 
+    /// 📏️ Prices exactly one original row header and the native backing needed by its real next slot.
+    pub fn owned_row_admission_demands(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<T>()*2+size_of::<ArtifactHistoryReservation>()*2,capacity_bytes:self.next_reservation_allocation_bytes(),depth:1,..Default::default()}}
+    /// 📥️ Moves one original deque row into this ledger without cloning payloads or reallocating its source backing.
+    pub fn admit_deque_front(&mut self,source:&mut std::collections::VecDeque<T>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if self.group.is_some()||self.reservation.is_some(){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"native row admission requires its exact unreserved original ledger"))}if source.is_empty(){return Ok(Default::default())}let d=self.owned_row_admission_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}let row=source.pop_front().unwrap();if let Err(row)=self.try_push(row){source.push_front(row);return Err(ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"native original row admission exhausted its ledger"))}Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
+
     pub fn reserve_one(&mut self) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
-        if self.group.is_some() {
+        if self.group.is_some() || self.replacement_count!=0 {
             return Err(ArtifactHistoryReservationFault::GroupUnavailable);
         }
         self.reserve_slot()
@@ -271,7 +284,7 @@ impl<T> ArtifactHistoryLedger<T> {
             slot.value = Some(value);
         } else if index == self.initialized && (index as usize) < self.allocated_slots() {
             let offset = index as usize;
-            self.slot_page_mut(offset / ARTIFACT_HISTORY_PAGE_SLOTS).slots[offset % ARTIFACT_HISTORY_PAGE_SLOTS].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value), read: None, read_previous:None, read_next:None });
+            self.slot_page_mut(offset / artifact_history_page_slots::<T>()).slots[offset % artifact_history_page_slots::<T>()].write(ArtifactHistorySlot { generation, visibility: None, previous, next: None, free_next: None, value: Some(value), replacement:None, read: None, read_previous:None, read_next:None });
             self.initialized += 1;
         } else {
             return Err((reservation, value));
@@ -288,6 +301,11 @@ impl<T> ArtifactHistoryLedger<T> {
         if self.group.is_none() { self.group = Some(ArtifactHistoryGroupSuffix { visibility: std::sync::Arc::clone(visibility), head: None, tail: None, len: 0 }); }
         Ok(())
     }
+
+    /// 📏️ Prices the next exact native reservation, its typed backing and shared original decision header.
+    pub fn group_reservation_demands(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<ArtifactHistoryReservation>()*2+size_of::<ArtifactHistoryGroupSuffix>(),capacity_bytes:self.next_reservation_allocation_bytes(),depth:1,..Default::default()}}
+    /// 🎟️ Stages one real reservation only after every independent original currency is admitted.
+    pub fn reserve_group_controlled(&mut self,visibility:&std::sync::Arc<ArtifactGroupVisibility>,slot:&mut Option<ArtifactHistoryReservation>,grant:semio_framework_value::RetainedCloneGrant)->Result<semio_framework_value::RetainedCloneProgress,ValueError>{if slot.is_some()||!visibility.pending()||self.group.as_ref().is_some_and(|group|!std::sync::Arc::ptr_eq(&group.visibility,visibility)){return Err(ValueError::literal(protocol::value::ValueRefusalKind::InvariantViolated,"original group reservation changed its source or recipient"))}let d=self.group_reservation_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(Default::default())}*slot=Some(self.reserve_group_one(visibility).map_err(|_|ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original group history reservation refused"))?);Ok(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})}
 
     pub fn reserve_group_one(&mut self, visibility: &std::sync::Arc<ArtifactGroupVisibility>) -> Result<ArtifactHistoryReservation, ArtifactHistoryReservationFault> {
         if !visibility.pending() || self.group.as_ref().is_some_and(|group| !std::sync::Arc::ptr_eq(&group.visibility, visibility)) {
@@ -387,6 +405,9 @@ impl<T> ArtifactHistoryLedger<T> {
         self.insert_reserved(reservation, value).map_err(|(_, value)| value)
     }
 
+    /// 📎️ Inserts before an exact generation key without moving any existing payload or changing its identity.
+    pub fn try_insert_before(&mut self,next:ArtifactHistoryKey,value:T)->Result<ArtifactHistoryKey,T>{if self.group.is_some()||self.get_key(next).is_none(){return Err(value)}let previous=self.slot(next.index).previous;let reservation=match self.reserve_one(){Ok(reservation)=>reservation,Err(_)=>return Err(value)};let key=match self.insert_owned_slot(reservation,value,previous){Ok(key)=>key,Err((reservation,value))=>{self.cancel_reservation(reservation).ok();return Err(value)}};self.slot_mut(key.index).next=Some(next.index);self.slot_mut(next.index).previous=Some(key.index);if previous.is_none(){self.head=Some(key.index)}self.len+=1;self.forget_seek();Ok(key)}
+
     pub fn try_from_preflighted(values: Vec<T>) -> Result<Self, Vec<T>> {
         let mut ledger = Self::new();
         let mut pending = values.into_iter();
@@ -405,8 +426,11 @@ impl<T> ArtifactHistoryLedger<T> {
         Ok(ledger)
     }
 
+    /// 🪃️ Quotes one exact original unlink before a publisher changes any companion roots.
+    pub fn removal_demands(&self,key:ArtifactHistoryKey)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.reservation.is_some()||self.group.is_some()||self.replacement_count!=0||key.index>=self.initialized{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its settled original generation"))}let slot=self.slot(key.index);if slot.generation!=key.generation||slot.value.is_none()||slot.read.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history removal requires its unborrowed original row"))}Ok(semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<T>()+12*size_of::<usize>(),depth:1,..Default::default()})}
+
     pub fn remove_key(&mut self, key: ArtifactHistoryKey) -> Result<T, ArtifactHistoryKey> {
-        if self.reservation.is_some() || self.group.is_some() {
+        if self.reservation.is_some() || self.group.is_some() || self.replacement_count!=0 {
             return Err(key);
         }
         if key.index >= self.initialized {
@@ -479,7 +503,7 @@ impl<T> ArtifactHistoryLedger<T> {
     }
 
     pub fn last_mut(&mut self) -> Option<&mut T> {
-        if self.group.is_some() {
+        if self.group.is_some() || self.replacement_count!=0 {
             return None;
         }
         let index = self.tail?;
@@ -500,6 +524,23 @@ impl<T> ArtifactHistoryLedger<T> {
         slot.get()
     }
 
+    /// 🔚️ Borrows the visible tail generation without walking positional history.
+    pub fn last_key(&self)->Option<ArtifactHistoryKey>{let index=self.visible_bounds().1?;Some(ArtifactHistoryKey{index,generation:self.slot(index).generation})}
+
+    /// ⏮️ Borrows one preceding visible link from the unchanged original slot generation.
+    pub fn previous_key(&self,key:ArtifactHistoryKey)->Option<ArtifactHistoryKey>{self.get_key(key)?;let index=self.slot(key.index).previous?;let previous=ArtifactHistoryKey{index,generation:self.slot(index).generation};self.get_key(previous)?;Some(previous)}
+
+    /// 🪪️ Identifies the genuine original ledger independently of moves of its containing Store.
+    pub fn retained_issuance(&self) -> u64 { self.read_issuance }
+
+    /// 🗝️ Mutably borrows one exact original generation only after every loan and staged history group has returned.
+    pub fn get_key_mut(&mut self, key: ArtifactHistoryKey) -> Option<&mut T> {
+        if self.group.is_some() || self.replacement_count!=0 || key.index >= self.initialized { return None; }
+        let slot = self.slot_mut(key.index);
+        if slot.generation != key.generation || slot.visibility.as_ref().is_some_and(|visibility| !visibility.committed()) || slot.read.is_some() { return None; }
+        slot.value.as_mut()
+    }
+
     /// 🧭️ Captures the exact generation of the visible entry at `position`.
     pub fn key_at(&self, position: usize) -> Option<ArtifactHistoryKey> {
         let index = self.seek_slot(position)?;
@@ -508,6 +549,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
     pub fn get_mut(&mut self, position: usize) -> Option<&mut T> {
         assert!(self.group.is_none(), "mutable history access requires its staged group to be adopted or aborted");
+        if self.replacement_count!=0{return None}
         let index = self.seek_slot(position)?;
         self.slot_mut(index).value.as_mut()
     }
@@ -595,7 +637,7 @@ impl<T> ArtifactHistoryLedger<T> {
 
     /// 🪑️ How many more entries the ledger admits one reservation at a time — the preflight of an atomic batch of inserts.
     pub fn vacancies(&self) -> usize {
-        if self.group.is_some() || self.reservation.is_some() {
+        if self.group.is_some() || self.reservation.is_some() || self.replacement_count!=0 {
             return 0;
         }
         let mut vacancies = 0;
@@ -609,12 +651,12 @@ impl<T> ArtifactHistoryLedger<T> {
             free = slot.free_next;
         }
         let unused = self.allocated_slots().saturating_sub(self.initialized as usize);
-        let next_page = if unused == 0 && self.page_count < u32::MAX { ARTIFACT_HISTORY_PAGE_SLOTS } else { 0 };
+        let next_page = if unused == 0 && self.page_count < u32::MAX { artifact_history_page_slots::<T>() } else { 0 };
         vacancies + unused + next_page
     }
 
     pub fn has_capacity(&self) -> bool {
-        self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || (self.initialized as usize) < self.allocated_slots() || self.page_count < u32::MAX)
+        self.replacement_count==0 && self.group.is_none() && self.reservation.is_none() && (self.free_head.is_some_and(|index| self.slot(index).generation != u32::MAX) || (self.initialized as usize) < self.allocated_slots() || self.page_count < u32::MAX)
     }
 
     pub fn is_empty(&self) -> bool {
@@ -628,12 +670,13 @@ impl<T> ArtifactHistoryLedger<T> {
 
     pub fn iter_mut(&mut self) -> ArtifactHistoryIterMut<'_, T> {
         assert!(self.group.is_none(), "mutable history iteration requires its staged group to be adopted or aborted");
+        assert!(self.replacement_count==0,"mutable history iteration requires every original replacement to settle");
         assert!(self.read_count==0, "mutable history iteration requires every original retained read to return");
         ArtifactHistoryIterMut { ledger: self, front: self.head, back: self.tail, remaining: self.len, marker: std::marker::PhantomData }
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.read_count == 0 && self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
+        self.replacement_count == 0 && self.read_count == 0 && self.len == 0 && self.head.is_none() && self.tail.is_none() && self.reservation.is_none() && self.group.is_none()
     }
 
     /// 🪹️ Observes the original native backing after logical entry ownership has left.
@@ -887,3 +930,19 @@ impl<T: PartialEq> PartialEq for ArtifactHistoryLedger<T> {
 }
 
 impl<T: Eq> Eq for ArtifactHistoryLedger<T> {}
+
+#[path="♻️retirement/🦀️.rs"]
+mod intrinsic_retirement;
+
+impl protocol::HistoryTransitionEvents for ArtifactHistoryLedger<protocol::MutationEnvelope>{fn event_count(&self)->usize{self.len()}fn event_at(&self,index:usize)->Option<&protocol::MutationEnvelope>{self.get(index)}}
+
+#[path="⏪️selection/🦀️.rs"]
+mod edit_selection;
+pub use edit_selection::OriginalHistoryEditSelection;
+
+#[cfg(test)]
+#[path="replacements-tests.rs"]
+mod replacements_tests;
+
+#[path="replacements.rs"]
+mod replacements;

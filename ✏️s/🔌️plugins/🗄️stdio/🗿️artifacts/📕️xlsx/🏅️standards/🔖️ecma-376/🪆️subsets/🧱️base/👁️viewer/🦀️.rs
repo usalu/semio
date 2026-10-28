@@ -92,9 +92,9 @@ impl ArtifactViewer for XlsxViewer {
     const DIALECT: Dialect = XLSX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XLSX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> XlsxSnapshot {
+    fn reference_birth()->Option<fn()->XlsxSnapshot>{Some(||{
         XlsxSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

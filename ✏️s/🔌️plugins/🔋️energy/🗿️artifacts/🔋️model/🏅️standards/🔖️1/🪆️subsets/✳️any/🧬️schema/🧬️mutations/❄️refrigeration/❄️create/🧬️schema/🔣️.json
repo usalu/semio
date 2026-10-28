@@ -58,7 +58,7 @@
     },
     "caseCount": {
       "type": "integer",
-      "minimum": 0,
+      "minimum": 1,
       "x-semio-ui": {
         "widget": "stepper",
         "role": "value",
@@ -88,7 +88,8 @@
         "precision": 2,
         "group": "capacity",
         "order": 40
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "defrostScheduleId": {
       "type": "integer",
@@ -113,5 +114,95 @@
         "order": 50
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateRefrigerationConfig",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "case_count",
+        "input": "case_count",
+        "storage": "fixed"
+      },
+      {
+        "field": "design_load_w",
+        "input": "design_load_w",
+        "storage": "fixed"
+      },
+      {
+        "field": "defrost_schedule_id",
+        "input": "defrost_schedule_id",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateRefrigerationConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "refrigeration_systems",
+    "key": "id",
+    "inverse": "DeleteRefrigerationSystem",
+    "labels": {
+      "en": "Create Refrigeration System at index",
+      "de": "Kälteanlage an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "refrigeration-system",
+      "kind": "create-refrigeration-system",
+      "record": "CreatedRefrigerationSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "defrost_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

@@ -38,10 +38,10 @@ pub type ArtifactStoreEditRetirementState = semio_framework_value::retirement::c
 
 impl<Mutation> ArtifactStoreEditRetirement<Mutation> {
     pub fn new(edit: Edit<Mutation>) -> Result<Self, Edit<Mutation>> {
-        if !edit.forwards.is_empty() || !edit.inverse.is_empty() { return Err(edit); }
+        if !edit.forwards.is_empty() || !edit.inverse.is_empty() || edit.inverse.has_staged_root() { return Err(edit); }
         let Edit { id, actor, line, forwards, inverse, mutation_meta, verb, sequence_number: _, started_at, finished_at } = edit;
         let state=ArtifactStoreEditRetirementState::new((id,actor,(line,mutation_meta),(verb,started_at,finished_at))).unwrap_or_else(|_|unreachable!("original edit metadata declares controlled retirement"));
-        Ok(Self { forwards:std::mem::ManuallyDrop::new(Some(forwards)),inverse:std::mem::ManuallyDrop::new(Some(inverse)),state:std::mem::ManuallyDrop::new(Some(state)) })
+        Ok(Self { forwards:std::mem::ManuallyDrop::new(Some(forwards)),inverse:std::mem::ManuallyDrop::new(Some(inverse.into_original().ok().expect("settled original inverse"))),state:std::mem::ManuallyDrop::new(Some(state)) })
     }
     pub fn demands(&self,copy:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
         use semio_framework_value::RetirementDemand;

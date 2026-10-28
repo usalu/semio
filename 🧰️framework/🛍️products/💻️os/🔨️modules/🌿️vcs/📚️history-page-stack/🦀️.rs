@@ -8,9 +8,9 @@ use super::*;
 pub const ARTIFACT_HISTORY_PAGE_SLOTS: usize = 64;
 /// 📏️ The largest physical release one history catalog close step performs: a directory chunk or one value page.
 pub const ARTIFACT_HISTORY_RELEASE_PAGE_BYTES: usize = 4096;
-/// 📄 Directory pages addressed by one chunk. The chunk's pointer array, count and link fill exactly one release page,
+/// 📄 Directory pages addressed by one chunk. Its header and backing share one quarter of the native release page,
 /// and the chunk is never reallocated.
-pub const ARTIFACT_HISTORY_DIRECTORY_PAGES: usize = (ARTIFACT_HISTORY_RELEASE_PAGE_BYTES - 2 * size_of::<usize>()) / size_of::<usize>();
+pub const ARTIFACT_HISTORY_DIRECTORY_PAGES: usize = (ARTIFACT_HISTORY_RELEASE_PAGE_BYTES / 4 - 2 * size_of::<usize>()) / size_of::<usize>();
 /// 📄 Page size of every artifact history ledger. The name is the page, not a session ceiling.
 pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = ARTIFACT_HISTORY_PAGE_SLOTS;
 pub(super) const ARTIFACT_HISTORY_CONTIGUOUS_CEILING: usize = 64 * 1024;

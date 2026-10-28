@@ -1,0 +1,23 @@
+{
+  "earlier": [
+    {
+      "index": 2,
+      "value": 20.0
+    },
+    {
+      "index": 0,
+      "value": 10.0
+    }
+  ],
+  "later": [
+    {
+      "index": 0,
+      "value": 30.0
+    }
+  ],
+  "expected": [
+    30.0,
+    0.0,
+    20.0
+  ]
+}

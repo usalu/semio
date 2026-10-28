@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️EventSourcedHistory
     /// 📥️ Records admitted remote transitions in the log and materializes the projection they fold to — adopting `replayed`
@@ -32,15 +32,15 @@ where
             Some(result) => self.reproject_replayed(store_log, store_owners, store_cursor, result),
             None => self.reproject(store_log, store_owners, store_cursor).await,
         };
-        projected.inspect_err(|_| store_log.envelope.transitions.retain(|known| !admitted.contains(&known.mutation_id)))
+        projected.inspect_err(|_|{drop(store_log.envelope.transitions.extract_if(|known| admitted.contains(&known.mutation_id)).expect("exclusive transition rollback retains its original slots"));})
     }
 
     /// 📎️ Records `envelope` in the transition log at its `(hlc, id)` position.
     pub fn insert_transition(&mut self, store_log: &mut StoreLog<P, Mutation>, envelope: semio_framework_os_spr::MutationEnvelope) {
         self.fold_frontier = None;
         let key = envelope.timestamp.cmp_key();
-        let position = store_log.envelope.transitions.partition_point(|known| (known.timestamp.cmp_key(), known.mutation_id.0.as_str()) < (key, envelope.mutation_id.0.as_str()));
-        store_log.envelope.transitions.insert(position, envelope);
+        let next=store_log.envelope.transitions.iter().position(|known|(known.timestamp.cmp_key(),known.mutation_id.0.as_str())>=(key,envelope.mutation_id.0.as_str())).and_then(|position|store_log.envelope.transitions.key_at(position));
+        if let Some(next)=next{store_log.envelope.transitions.try_insert_before(next,envelope).expect("exclusive transition insertion retains its original ordered slot");}else{store_log.envelope.transitions.try_push(envelope).expect("exclusive transition append retains its original ordered slot");}
     }
 
     /// ♻️ Re-derives every history position from the event log (`crate::os_spr::fold_history`)
@@ -48,7 +48,7 @@ where
     /// ingest converge through: the document is always the fold of its events, never a merge.
     /// Transactional: the projection is computed and every capacity its adoption needs is checked before the first fact
     /// is adopted. Answers the messages of every edit a replay re-evaluated.
-    pub async fn reproject(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    pub async fn reproject(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         self.reproject_now(store_log, store_owners, store_cursor)
     }
 

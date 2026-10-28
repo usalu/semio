@@ -16,6 +16,17 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-persistent = { workspace = true }
+semio-framework-dsl-record = { workspace = true }
+semio-framework = { path = "../../../../../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
+semio-framework-plugin-actor-host = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐host/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-views = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/👁️view/📦️packages/🦀️rust" }
+semio-framework-os-kernel = { path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-hash = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🔏️hash/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-epw = { path = "../../../../../../../../../../🗄️stdio/🗿️artifacts/🌦️epw/📦️packages/🦀️rust" }
+semio-s-plugin-energy-epw = { path = "../../../../../../../../../🧩️extensions/🌦️epw/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-site = { path = "../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/📍️site/📦️packages/🦀️rust" }
 semio-framework-math-rank = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧮️math/📶️rank/📦️packages/🦀️rust" }
 
 semio-framework-job-publication = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📬️outcome/📤️publication/📦️packages/🦀️rust" }
@@ -28,6 +39,7 @@ semio-framework-value = { workspace = true }
 semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-s-plugin-energy-engine-kernel = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
+semio-s-plugin-energy-engine-meters = { workspace = true }
 semio-s-plugin-energy-engine-results = { workspace = true }
 semio-s-plugin-energy-engine-schedule = { workspace = true }
 semio-s-plugin-energy-engine-sim = { workspace = true }
@@ -35,6 +47,7 @@ semio-s-plugin-energy-engine-sim-retirement = { workspace = true }
 semio-s-plugin-energy-engine-sim-wire = { workspace = true }
 
 [dev-dependencies]
+csv = "1"
 semio-s-plugin-energy-engine-sim = { workspace = true, features = ["testing"] }
 semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }

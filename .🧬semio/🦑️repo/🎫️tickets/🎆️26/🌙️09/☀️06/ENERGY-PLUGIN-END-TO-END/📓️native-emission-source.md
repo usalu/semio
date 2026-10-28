@@ -1,0 +1,9 @@
+# Native Emission Producer Source
+
+The defining first-party Job owner OriginalEmissionSource retains its actual producer input independently of ToolOperations. It admits the original caller/decoder binding, holds a genuine caller loan, copies the source verb in bounded 64-byte UTF-8 chunks, and moves the original metadata into the emitted input under a funded constructor. Its fixed admitted fragment policy governs all later typed retirement. Closing validates the exact original caller and decoder while the actual caller-loan close method validates retirement, including already-started loan return.
+
+The source-homed native law passed a 49,182-byte Unicode verb and wide metadata, success plus six cancellation prefixes, zero-effect admission denial, every positive close currency denied at q−1, exact original view/map backing preservation, real capture handoff, and full source/capture/metadata/decoder/caller physical closure with per-turn allocator equality. SQLite independently reconstructs all 781 UTF-8 chunks and JSON Schema validates the corpus.
+
+VcsArtifactApp and CommandCtx now own and borrow this producer beside Tools; native construction, close quotes/steps, and terminal gates include it. Utility empty emission routes preserve the source across Pending and call the real mounted emission consumer. The source body clears only after actual input capture and original producer loan return.
+
+The typed command source has an equivalent independent root slot owned by the lifecycle agent. The old whole-buffer emission path and receipt reconstruction are being removed by the integration agent; ordinary config, catalogue, typing and task-resume caller conversion remains pending. The actual whole instance check still stops at the two old Store receipt vector fields, so this report does not claim mounted route completion.

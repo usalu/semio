@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-value-paged-list = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/📦️packages/🦀️rust" }
 semio-framework-os-dsl = { path = "../../../../🗣️dsl/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }

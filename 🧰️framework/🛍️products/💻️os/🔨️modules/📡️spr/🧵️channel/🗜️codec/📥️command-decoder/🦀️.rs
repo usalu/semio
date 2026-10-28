@@ -106,6 +106,7 @@ pub async fn decode_app_command(bytes: &[u8]) -> Result<AppCommand, protocol::Pr
             port: protocol::read_str(bytes, &mut pos)?,
             expected_parent_document_id: protocol::read_str(bytes, &mut pos)?,
             expected_base_revision: protocol::read_varint_u64(bytes, &mut pos)?,
+            checkpoint_id: read_export_checkpoint(bytes,&mut pos)?,
         },
         38..=40 => {
             let seq = protocol::read_varint_u64(bytes, &mut pos)?;
@@ -138,3 +139,5 @@ pub fn presence_command_sequence(bytes: &[u8]) -> Result<Option<u64>, protocol::
     Ok(Some(protocol::read_varint_u64(bytes, &mut pos)?))
 }
 //#endregion 🔖️Codec
+
+fn read_export_checkpoint(bytes:&[u8],pos:&mut usize)->Result<Option<String>,protocol::ProtocolError>{let tag=*bytes.get(*pos).ok_or_else(||malformed("media export checkpoint",*pos as u64,"truncated selector"))?;*pos+=1;match tag{0=>Ok(None),1=>{let id=protocol::read_str(bytes,pos)?;if id.is_empty()||id.chars().count()>512{return Err(malformed("media export checkpoint",*pos as u64,"checkpoint identity exceeds its bound"))}Ok(Some(id))},_=>Err(malformed("media export checkpoint",*pos as u64,"selector must be zero or one"))}}

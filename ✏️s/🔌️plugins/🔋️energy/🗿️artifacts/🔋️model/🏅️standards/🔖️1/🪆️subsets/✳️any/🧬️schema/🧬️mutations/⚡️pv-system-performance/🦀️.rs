@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_pv_system_inverter_efficiency {
     #[path = "../☀️pv-system/♌️change-inverter-efficiency/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "../☀️pv-system/♌️change-inverter-efficiency/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "../☀️pv-system/♌️change-inverter-efficiency/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "../☀️pv-system/♌️change-inverter-efficiency/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod change_pv_system_dc_capacity {
     #[path = "../☀️pv-system/⚛️change-dc-capacity/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "../☀️pv-system/⚛️change-dc-capacity/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "../☀️pv-system/⚛️change-dc-capacity/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "../☀️pv-system/⚛️change-dc-capacity/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod change_pv_system_module_efficiency {
     #[path = "../☀️pv-system/🎖️change-module-efficiency/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "../☀️pv-system/🎖️change-module-efficiency/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "../☀️pv-system/🎖️change-module-efficiency/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "../☀️pv-system/🎖️change-module-efficiency/↩️inverse/🦀️.rs"]
@@ -55,6 +61,8 @@ pub mod change_pv_system_temperature_coefficient {
     #[path = "../☀️pv-system/🌡️change-temperature/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "../☀️pv-system/🌡️change-temperature/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "../☀️pv-system/🌡️change-temperature/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "../☀️pv-system/🌡️change-temperature/↩️inverse/🦀️.rs"]
@@ -67,6 +75,8 @@ pub mod change_pv_system_faiman_heat_loss_constant {
     #[path = "../☀️pv-system/🧊️change-heat-loss/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "../☀️pv-system/🧊️change-heat-loss/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "../☀️pv-system/🧊️change-heat-loss/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "../☀️pv-system/🧊️change-heat-loss/↩️inverse/🦀️.rs"]
@@ -79,6 +89,8 @@ pub mod change_pv_system_faiman_heat_loss_wind {
     #[path = "../☀️pv-system/💨️change-wind-loss/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "../☀️pv-system/💨️change-wind-loss/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "../☀️pv-system/💨️change-wind-loss/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "../☀️pv-system/💨️change-wind-loss/↩️inverse/🦀️.rs"]

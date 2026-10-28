@@ -65,6 +65,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             }
             HISTORY_EDIT_FINALIZE_ACTION_ID => TimeTravelEvent::RequestFinalize { generation },
             HISTORY_EDIT_COMMIT_ACTION_ID => {
+                if !cx.retained_work_can_enter(TimeTravelStoreState::<A::Snapshot,A::Mutation>::commit_request_demands()){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
                 let choice = match time_travel_arg_text(args, DIALOG_CHOICE_ARG) {
                     Some(HISTORY_EDIT_CHOICE_OVERWRITE) => TimeTravelChoice::Overwrite,
                     _ => match time_travel_arg_text(args, HISTORY_EDIT_ARG_NAME).filter(|name| !name.trim().is_empty()) {
@@ -84,19 +85,19 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             HISTORY_EDIT_RERUN_ACTION_ID => TimeTravelEvent::Rerun { generation },
             _ => return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("timeTravel.unknown-action"), format!("'{action}' is not a history-edit verb"))),
         };
-        self.apply_time_travel_event(event, Some(meta), effects, identity).await
+        self.apply_time_travel_event(event, Some(meta), effects, identity,Some(cx)).await
     }
 
     /// ⚖️ Applies one event to the session and performs its effects; a refusal changes nothing. Every window body is
     /// re-published only when the event or its effects swapped the document a window shows (the committed document, the
     /// draft preview, the replayed head); any other edge — the finalize prompt opening or closing, an accepted draft
     /// starting its replay, a replay run again — re-publishes the history body and the chips alone.
-    async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelActionOutcome, Fault> {
+    async fn reduce_unprepared_time_travel_event(&mut self, event: TimeTravelEvent, meta: Option<&ActionMeta>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelActionOutcome, Fault> {
         let shown = self.shared().time_travel_shown_identity();
         match self.time_travel.session.apply(event) {
             Ok(session_effects) => {
                 self.note_time_travel_changed(false, true);
-                self.perform_time_travel_effects(session_effects, meta, effects, identity).await?;
+                self.perform_time_travel_effects(session_effects, meta, effects, identity,receiving).await?;
                 self.time_travel.document_dirty |= shown != self.shared().time_travel_shown_identity();
                 Ok(TimeTravelActionOutcome::Applied(self.time_travel.session.stage))
             }
@@ -107,18 +108,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
     }
 
-    pub(super) async fn apply_time_travel_event(&mut self,event:TimeTravelEvent,meta:Option<&ActionMeta>,effects:&mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->Result<TimeTravelActionOutcome,Fault>{
+    pub(super) async fn apply_time_travel_event(&mut self,event:TimeTravelEvent,meta:Option<&ActionMeta>,effects:&mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:Option<&mut semio_framework_job::StepContext<'_>>)->Result<TimeTravelActionOutcome,Fault>{
         if self.time_travel.owners().any(TimeTravelOwners::command_pending)||self.time_travel.command_receipt.is_some()||self.time_travel.pending_command.is_some()||self.time_travel.discard_cursor.is_some()||!self.time_travel.command_retirements.terminal_is_empty(){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
         if let TimeTravelEvent::Discard{generation}=&event{
             if *generation!=self.time_travel.session.generation{return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Session(TimeTravelRefusal::Stale)))}
             if self.time_travel.session.stage!=TimeTravelStage::Editing||self.time_travel.session.pending.is_none(){return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Session(TimeTravelRefusal::Illegal)))}
         }
         if matches!(event,TimeTravelEvent::Discard{..}){let grant=self.mounted_policy.maintenance;let mut original=Some(event);let receipt=self.time_travel.stage_time_travel_command(&mut original,grant).map_err(ValueError::into_fault)?;if let Some(receipt)=receipt{assert!(receipt.fits(grant));self.time_travel.command_receipt=Some((grant,receipt));self.time_travel.ui_dirty=true;return Ok(TimeTravelActionOutcome::Pending)}return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy))}
-        self.reduce_unprepared_time_travel_event(event,meta,effects, identity).await
+        self.reduce_unprepared_time_travel_event(event,meta,effects, identity,receiving).await
     }
 
     /// 🛠️ Performs the session's effects in order; a commit's own `Finalized`/`FinalizeFaulted` effects follow it.
-    pub(super) async fn perform_time_travel_effects(&mut self, effects: Vec<TimeTravelEffect>, meta: Option<&ActionMeta>, kernel: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
+    pub(super) async fn perform_time_travel_effects(&mut self, effects: Vec<TimeTravelEffect>, meta: Option<&ActionMeta>, kernel: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,mut receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<(), Fault> {
         let mut queue: VecDeque<TimeTravelEffect> = effects.into();
         while let Some(effect) = queue.pop_front() {
             match effect {
@@ -133,8 +134,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                         .map(|view| DslValue::object([(HISTORY_EDIT_ARG_NAME.to_string(), DslValue::String(TimeTravelLabel::AlternativeNameDefault.localized(LocalizedLabel::native).resolve(Terminology::Native, view.locale).to_string()))]));
                     kernel.push(Effect::OpenDialog { req: TIME_TRAVEL_FINALIZE_REQUEST, dialog_id: HISTORY_EDIT_FINALIZE_DIALOG_ID.to_string(), args });
                 }
-                TimeTravelEffect::CommitOverwrite { .. } => queue.extend(self.commit_time_travel(store::HistoryFinalization::Overwrite, meta, identity).await?),
-                TimeTravelEffect::CommitAlternative { name, .. } => queue.extend(self.commit_time_travel(store::HistoryFinalization::Alternative { name }, meta, identity).await?),
+                TimeTravelEffect::CommitOverwrite => {let cx=receiving.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native finalize effect requires its original caller").into_fault())?;queue.extend(self.commit_time_travel(store::HistoryFinalization::Overwrite,meta,cx).await?);},
+                TimeTravelEffect::CommitAlternative { name } => {let cx=receiving.as_deref_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native finalize effect requires its original caller").into_fault())?;queue.extend(self.commit_time_travel(store::HistoryFinalization::Alternative{name},meta,cx).await?);},
                 TimeTravelEffect::Close => self.time_travel.document_dirty = true,
             }
         }

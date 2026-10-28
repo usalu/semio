@@ -16,6 +16,8 @@ use semio_framework_plugin_retained_command::reserved_route_capacity_lift::FRAME
 use std::future::Future;
 use std::collections::HashSet;
 use semio_framework_plugin_decl_views::history_view::{HistoryCommandFilter, InverseAction, ShellHistoryReplay};
+
+enum FrameworkHistoryRouteOutcome{Complete(InvocationResult),Pins{changed:bool}}
 use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use store::{MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
@@ -119,14 +121,14 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🪜️ Runs ONE bounded unit of the commit at the head of the queue. Commits are strictly FIFO,
     /// and the head waits while a finished outcome is still untaken, so at most one outcome is ever
     /// owed to the host. A finished commit leaves its result in `reserved_commit_outcome`.
-    pub async fn step_framework_reserved_commit(&mut self) -> Result<(), Fault> {
+    pub async fn step_framework_reserved_commit(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
         if self.pending.reserved_commit_outcome.is_some() {
             return Ok(());
         }
         let Some(mut commit) = self.pending.reserved_commits.pop_front() else {
             return Ok(());
         };
-        match self.run_framework_reserved_commit_unit(&mut commit).await {
+        match self.run_framework_reserved_commit_unit(&mut commit,cx).await {
             Ok(Some(result)) => {
                 let result = self.as_render().finish_recorded(commit.log_generation_before, &commit.action, result).await;
                 let _ = self.tools.typed_completion_outbox.push(TypedOperationCompletionWitness { operation: commit.permit.operation.operation.0, ui_scope: result.ui_scope.clone() });
@@ -137,23 +139,23 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 commit.applied = commit.applied.saturating_add(1);
                 self.pending.reserved_commits.push_front(commit);
             }
-            Err(fault) => {
-                commit.permit.finish();
-                self.pending.reserved_commit_outcome = Some(Err(fault));
+            Err(failure) => {
+                self.pending.reserved_commits.push_front(commit);
+                return Err(failure);
             }
         }
         Ok(())
     }
 
-    async fn run_framework_reserved_commit_unit(&mut self, commit: &mut FrameworkReservedCommit) -> Result<Option<InvocationResult>, Fault> {
+    async fn run_framework_reserved_commit_unit(&mut self, commit: &mut FrameworkReservedCommit<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
         let receipt = commit.permit.identity.take().ok_or_else(|| plugin_sdk_fault("reserved commit lost its authoring receipt"))?;
         let token = commit.permit.lease.token.clone();
         let publication = commit.permit.lease.publication_claim.clone();
         let mut progress = commit.permit.identity_progress;
         let mut observer = |next: semio_framework_value::native_encoding::NativeEncodeProgress| { progress = next; !token.is_cancelled_now() && !publication.is_cancelled() };
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume(receipt, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
-        let result = match self.run_framework_reserved_commit_unit_admitted(commit, &mut identity).await {
-            Ok(output) => self.child_composition.follow_derivable_children(&mut *self.stores, &mut identity).await.map(|_| output),
+        let result = match self.run_framework_reserved_commit_unit_admitted(commit, &mut identity,cx).await {
+            Ok(output) => self.child_composition.follow_derivable_children(&mut *self.stores, &mut identity).await.map(|_| output).map_err(Into::into),
             Err(fault) => Err(fault),
         };
         commit.permit.identity = Some(identity.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?);
@@ -162,9 +164,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         result
     }
 
-    async fn run_framework_reserved_commit_unit_admitted(&mut self, commit: &mut FrameworkReservedCommit, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Option<InvocationResult>, Fault> {
-        if commit.permit.is_cancelled().await {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{}' was cancelled between commit units", commit.action)));
+    async fn run_framework_reserved_commit_unit_admitted(&mut self, commit: &mut FrameworkReservedCommit<A::Snapshot,A::Mutation>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<InvocationResult>, semio_framework_job::OriginalTurnFailure> {
+        if commit.permit.is_cancelled().await{
+            match &mut commit.stage{FrameworkReservedCommitStage::Revert{closing,..}|FrameworkReservedCommitStage::Repin{closing,..}=>*closing=true,_=>return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("interactive-job.cancelled"),format!("framework route '{}' was cancelled between commit units",commit.action)).into())}
         }
         if matches!(commit.stage, FrameworkReservedCommitStage::Validate) {
             self.stores.validate_framework_reserved_commit(X::reserved_action_refusal(&*self.time_travel, &*self.tool_runs, &commit.action), &commit.action, &commit.permit).await?;
@@ -182,7 +184,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             };
         }
         match std::mem::replace(&mut commit.stage, FrameworkReservedCommitStage::Validate) {
-            FrameworkReservedCommitStage::Validate => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-stage"), format!("framework route '{}' re-entered its validation unit", commit.action))),
+            FrameworkReservedCommitStage::Validate => Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-commit-stage"), format!("framework route '{}' re-entered its validation unit", commit.action)).into()),
             FrameworkReservedCommitStage::CheckpointChildren { message, authors, keys, next, mut pins } => {
                 if let Some(key) = keys.get(next) {
                     if let Some(pin) = self.child_composition.checkpoint_child_unit(&message, &authors, key.borrowed(), identity).await? {
@@ -192,7 +194,6 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 commit.stage = if next + 1 < keys.len() {
                     FrameworkReservedCommitStage::CheckpointChildren { message, authors, keys, next: next + 1, pins }
                 } else {
-                    pins.sort_by(|left, right| left.child_ref.artifact_id.cmp(&right.child_ref.artifact_id));
                     FrameworkReservedCommitStage::Route { pins }
                 };
                 Ok(None)
@@ -200,7 +201,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             FrameworkReservedCommitStage::Route { pins } => {
                 let action = commit.action.clone();
                 if HISTORY_ACTION_IDS.contains(&action.as_str()) {
-                    let result = self.commit_framework_history_route(&action, commit.args.as_ref(), &commit.meta, &commit.permit, pins, identity).await?;
+                    let outcome=self.commit_framework_history_route(&action,commit.args.as_ref(),&commit.meta,&commit.permit,!pins.is_empty(),identity).await;
+                    let result=match outcome{Ok(FrameworkHistoryRouteOutcome::Complete(result))=>result,Ok(FrameworkHistoryRouteOutcome::Pins{changed})=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),changed,closing:!changed};return Ok(None)},Err(error)=>{commit.stage=FrameworkReservedCommitStage::Repin{pins:Some(pins),publication:None,retirement:Default::default(),changed:false,closing:true};return Err(error.into())}};
                     if action == "checkoutCheckpoint" && result.ui_scope != UiDirtyScope::None {
                         let pins = self.child_composition.checkout_cascade_pins(&mut *self.stores)?;
                         if !pins.is_empty() {
@@ -214,12 +216,12 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                     match self.begin_framework_revert_route(commit.args.as_ref(), &commit.meta, identity).await? {
                         Ok(result) => Ok(Some(result)),
                         Err(edit_id) => {
-                            commit.stage = FrameworkReservedCommitStage::Revert { edit_id };
+                            commit.stage = FrameworkReservedCommitStage::Revert { edit_id,command:None,result:None,closing:false };
                             Ok(None)
                         }
                     }
                 } else {
-                    self.commit_framework_shared_host_route(&action, commit.args.as_ref(), &commit.meta, &commit.permit, identity).await.map(Some)
+                    self.commit_framework_shared_host_route(&action, commit.args.as_ref(), &commit.meta, &commit.permit, identity).await.map(Some).map_err(Into::into)
                 }
             }
             FrameworkReservedCommitStage::CheckoutChildren { pins, next, result } => {
@@ -228,15 +230,26 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 commit.stage = FrameworkReservedCommitStage::CheckoutChildren { pins, next: next + 1, result };
                 Ok(None)
             }
-            FrameworkReservedCommitStage::Revert { edit_id } => {
-                if self.stores.framework_revert_unit(&edit_id, identity).await? {
-                    commit.total = commit.total.saturating_add(1);
-                    commit.stage = FrameworkReservedCommitStage::Revert { edit_id };
-                    return Ok(None);
+            FrameworkReservedCommitStage::Revert { edit_id,mut command,mut result,mut closing } => {
+                let outcome=self.stores.framework_revert_unit(&edit_id,&mut command,&mut result,&mut closing,cx);
+                commit.stage=FrameworkReservedCommitStage::Revert{edit_id,command,result,closing};
+                match outcome?{
+                    None=>Ok(None),
+                    Some(true)=>{commit.total=commit.total.saturating_add(1);Ok(None)},
+                    Some(false)=>{
+                        self.history.cache=None;
+                        self.tools.record_command(&mut *self.history,REVERT_TO_COMMAND_ACTION_ID,ActionKind::History,None,None,Vec::new(),None);
+                        Ok(Some(ToolOperations::<A>::empty_result(REVERT_TO_COMMAND_ACTION_ID,&commit.meta,Vec::new(),vec![history_changed_event().await],UiDirtyScope::Full).await))
+                    }
                 }
-                self.history.cache = None;
-                self.tools.record_command(&mut *self.history, REVERT_TO_COMMAND_ACTION_ID, ActionKind::History, None, None, Vec::new(), None);
-                Ok(Some(ToolOperations::<A>::empty_result(REVERT_TO_COMMAND_ACTION_ID, &commit.meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await))
+            }
+            FrameworkReservedCommitStage::Repin{mut pins,mut publication,mut retirement,changed,mut closing}=>{
+                let outcome=self.stores.checkpoint_composition_pins_unit(&mut pins,&mut publication,&mut retirement,&mut closing,changed,4096,cx);
+                commit.stage=FrameworkReservedCommitStage::Repin{pins,publication,retirement,changed,closing};
+                if !outcome?{return Ok(None)}
+                self.history.cache=None;
+                if changed{self.tools.record_command(&mut *self.history,&commit.action,ActionKind::History,None,None,Vec::new(),None);}
+                Ok(Some(ToolOperations::<A>::empty_result(&commit.action,&commit.meta,Vec::new(),if changed{vec![history_changed_event().await]}else{Vec::new()},if changed{UiDirtyScope::Full}else{UiDirtyScope::None}).await))
             }
         }
     }
@@ -288,17 +301,17 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(Some(ToolOperations::<A>::empty_result(action, meta, vec![Effect::ReplayShellCommand { action_id: inverse.action_id, args: inverse.args }], vec![history_changed_event().await], UiDirtyScope::Full).await))
     }
 
-    async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, pins: Vec<vcs::CompositionPin>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<InvocationResult, Fault> {
+    async fn commit_framework_history_route(&mut self, action: &str, args: Option<&DslValue>, meta: &ActionMeta, permit: &FrameworkReservedCommitPermit, defer_receipt:bool, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<FrameworkHistoryRouteOutcome, Fault> {
         semio_framework_plugin_reactor_app::debug_runtime_line(format_args!("[TRACE] history route action={action}"));
         if permit.lease.is_cancelled().await {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.cancelled"), format!("framework route '{action}' was cancelled at commit")));
         }
         if action == "undo" || action == "redo" {
             if let Some(result) = self.as_time_travel().dispatch_supersede_history_action(action, meta, identity).await? {
-                return Ok(result);
+                return Ok(FrameworkHistoryRouteOutcome::Complete(result));
             }
             if let Some(result) = self.dispatch_chrome_history_action(action, meta).await? {
-                return Ok(result);
+                return Ok(FrameworkHistoryRouteOutcome::Complete(result));
             }
             let parent_group_id = if action == "undo" { self.stores.store.tail_group_id().await } else { self.stores.store.redo_tail().await.and_then(|(_, group_id)| group_id) };
             let group_id = match parent_group_id {
@@ -308,24 +321,24 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             if let Some(group_id) = group_id {
                 let grouped = self.as_dispatch().dispatch_group_history_action(action, &group_id, meta, identity).await?;
                 if grouped.ui_scope != UiDirtyScope::None {
-                    return Ok(grouped);
+                    return Ok(FrameworkHistoryRouteOutcome::Complete(grouped));
                 }
             }
         }
         let command = history_command::<A>(action, args).await.ok_or_else(|| format!("history action {action} missing required argument"))?;
         match self.stores.store.dispatch(command, identity).await {
             Ok(_) => {
-                self.stores.stamp_checkpoint_composition_pins(pins).await?;
+                if defer_receipt{return Ok(FrameworkHistoryRouteOutcome::Pins{changed:true})}
                 self.history.cache = None;
                 if self.stores.store.local_step_pending() {
                     self.as_time_travel().defer_history_step_row(action);
                 } else {
                     self.tools.record_command(&mut *self.history, action, ActionKind::History, None, None, Vec::new(), None);
                 }
-                Ok(ToolOperations::<A>::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await)
+                Ok(FrameworkHistoryRouteOutcome::Complete(ToolOperations::<A>::empty_result(action, meta, Vec::new(), vec![history_changed_event().await], UiDirtyScope::Full).await))
             }
-            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::NothingToRedo) | Err(vcs::VcsError::ForeignEdit(_)) => Ok(ToolOperations::<A>::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
-            Err(vcs::VcsError::ValidationFailed(ref message)) if message.as_str() == vcs::os_store::document_materialize::EMPTY_CHECKPOINT_MESSAGE => Ok(ToolOperations::<A>::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await),
+            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::NothingToRedo) | Err(vcs::VcsError::ForeignEdit(_)) => if defer_receipt{Ok(FrameworkHistoryRouteOutcome::Pins{changed:false})}else{Ok(FrameworkHistoryRouteOutcome::Complete(ToolOperations::<A>::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await))},
+            Err(vcs::VcsError::ValidationFailed(ref message)) if message.as_str() == vcs::os_store::document_materialize::EMPTY_CHECKPOINT_MESSAGE => if defer_receipt{Ok(FrameworkHistoryRouteOutcome::Pins{changed:false})}else{Ok(FrameworkHistoryRouteOutcome::Complete(ToolOperations::<A>::empty_result(action, meta, Vec::new(), Vec::new(), UiDirtyScope::None).await))},
             Err(error) => Err(error.into_fault()),
         }
     }

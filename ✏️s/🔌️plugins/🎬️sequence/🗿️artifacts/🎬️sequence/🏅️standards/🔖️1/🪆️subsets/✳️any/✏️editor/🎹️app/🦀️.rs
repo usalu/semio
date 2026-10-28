@@ -247,9 +247,9 @@ impl ArtifactEditor for SequencePlayApp {
         } })
     }
 
-    fn initial_snapshot() -> SequenceSnapshot {
+    fn reference_birth()->Option<fn()->SequenceSnapshot>{Some(||{
         crate::snapshot::schema::default_persisted_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(sequence_io())

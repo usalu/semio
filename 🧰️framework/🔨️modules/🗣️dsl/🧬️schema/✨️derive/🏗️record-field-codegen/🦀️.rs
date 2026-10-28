@@ -137,10 +137,10 @@ pub(super) fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>,
             ),
             FieldKind::Bytes64 => (
                 quote! { ::semio_framework_dsl_record::Shape::Bytes64 },
-                quote! { ::semio_framework_dsl_record::FieldValue::Bytes64(self.#ident.clone()) },
+                quote! { ::semio_framework_dsl_record::FieldValue::Bytes64(::semio_framework_dsl_record::RecordBytes::try_from_slice(&self.#ident).expect("declared Bytes64 field capacity")) },
                 quote! {
                     match value {
-                        ::semio_framework_dsl_record::FieldValue::Bytes64(bytes) => bytes.clone(),
+                        ::semio_framework_dsl_record::FieldValue::Bytes64(bytes) => bytes.iter().collect(),
                         other => return Err(::semio_framework_dsl_record::TextError::new(::semio_framework_value::ValueRefusalKind::InvalidValue,format!("expected Bytes64, found {other:?}"),::semio_framework_dsl_record::TextSpan::at(1,1))),
                     }
                 },

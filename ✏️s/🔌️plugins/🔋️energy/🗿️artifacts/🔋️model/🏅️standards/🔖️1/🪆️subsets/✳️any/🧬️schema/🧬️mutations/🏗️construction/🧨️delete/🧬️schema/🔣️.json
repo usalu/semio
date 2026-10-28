@@ -35,5 +35,67 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateConstruction",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "constructions",
+    "key": "id",
+    "inverse": "CreateConstruction",
+    "restriction": {
+      "kind": "all",
+      "sources": [
+        {
+          "row": "StateSurface",
+          "branch": "geometry",
+          "collection": "surfaces",
+          "field": "construction_id",
+          "storage": "direct",
+          "kind": "references"
+        },
+        {
+          "kind": "references",
+          "row": "StateFenestration",
+          "branch": "geometry",
+          "collection": "fenestrations",
+          "field": "glazing_construction_id",
+          "storage": "shared-optional"
+        }
+      ]
+    },
+    "labels": {
+      "en": "Delete Construction",
+      "de": "Konstruktion löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "construction",
+      "kind": "delete-construction",
+      "record": "DeletedConstruction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed construction does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

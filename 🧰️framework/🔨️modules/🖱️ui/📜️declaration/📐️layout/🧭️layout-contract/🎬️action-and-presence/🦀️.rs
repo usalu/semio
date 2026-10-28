@@ -6,7 +6,7 @@ use super::*;
 //#region 🔖️Action
 /// 🎬️ One action a control fires; the default (an empty action name) is the unbound marker `fired_action` answers `None`
 /// for.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ActionDescriptor {
@@ -17,7 +17,7 @@ pub struct ActionDescriptor {
     pub args: Option<DslValue>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct StyleSpec {
@@ -38,7 +38,7 @@ pub struct StyleSpec {
 /// `status` and to the `hover`/`selected` flags. `Hidden` short-circuits everything else: a hidden
 /// element is not rendered at all (no layout, no paint, no events) — renderers/reconcile must check
 /// this before doing anything with the rest of an element's `UiPresence`.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum UiState {
@@ -51,8 +51,8 @@ pub enum UiState {
     Hidden,
 }
 
-/// 🚥️ The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+/// 🧭️ The activity lifecycle of a UI element, orthogonal to [`UiState`] and composable with it.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum UiStatus {
@@ -79,7 +79,7 @@ pub(super) fn is_default<T: Default + PartialEq>(value: &T) -> bool {
 /// itself (no display name is carried this far down the stack — see `PeerPresence`'s own doc
 /// comment in the plugin crate); a renderer that has the full roster may substitute a friendlier
 /// name, but every renderer must always carry SOME text alongside color (never color alone).
-#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct UiPeerMark {
@@ -105,7 +105,7 @@ pub struct UiPeerMark {
 /// SESSION-COLORS-AND-UNIVERSAL-ARTIFACT-CREATION C7.6) make `UiPresence` `Clone`-only — no
 /// longer `Copy` — since `peers: Vec<UiPeerMark>` owns heap data; `UiNode::presence()`/
 /// `UiControlNode::presence()` therefore return `&UiPresence`, not a by-value copy.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", default)]
 #[value(rename_all = "camelCase", default)]
 pub struct UiPresence {

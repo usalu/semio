@@ -133,9 +133,9 @@ impl ArtifactEditor for WriterPlayApp {
         Some(Box::new(semio_framework_plugin::ArtifactDocumentStoreDisposer::<Self::Snapshot, Self::Mutation>::new()))
     }
 
-    fn initial_snapshot() -> WriterSnapshot {
+    fn reference_birth()->Option<fn()->WriterSnapshot>{Some(||{
         crate::schema::empty_writer_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(writer_io())

@@ -35,9 +35,9 @@ impl ArtifactEditor for SchemaStampEditorFixture {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
 
-    fn initial_snapshot() -> NoConfig {
+    fn reference_birth()->Option<fn()->NoConfig>{Some(||{
         NoConfig::default()
-    }
+    })}
 
     fn examples() -> Vec<ExampleSource> {
         vec![ExampleSource::new("stamp-column", LocalizedLabel::native("Stamp Column", "Stempelstütze"), "{\"kind\":\"stamp\"}", "file")]
@@ -76,9 +76,9 @@ impl ArtifactViewer for SchemaStampViewerFixture {
     type TransientMutation = NoTransientMutation;
     type Command = NoConfigMutation;
 
-    fn initial_snapshot() -> NoConfig {
+    fn reference_birth()->Option<fn()->NoConfig>{Some(||{
         NoConfig::default()
-    }
+    })}
 
     fn handle(
         _command: &NoConfigMutation,

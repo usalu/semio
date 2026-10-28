@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateZone",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "zones",
+    "field": "volume_m3",
+    "input": "new_volume_m3",
+    "key": "id",
+    "labels": {
+      "en": "Change zone volume",
+      "de": "Zonenvolumen ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "zone",
+      "kind": "change-zone-volume",
+      "record": "ChangedZoneVolume"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A zone volume must be positive and finite."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The zone already has this volume."
+      }
+    }
   }
 }

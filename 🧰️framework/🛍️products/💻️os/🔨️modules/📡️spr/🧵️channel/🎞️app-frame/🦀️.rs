@@ -236,3 +236,6 @@ pub enum AppFrame {
     ChildHeads { in_reply_to: u64, entries: Vec<ChildHeadPackEntry> },
 }
 //#endregion 🔖️AppFrame
+
+#[path="🌱️emit/🦀️.rs"]mod original_emit;
+pub use original_emit::{AppEmitFrameView,AppEmitFrameWireCursor,AppEmitFrameWireProgress};

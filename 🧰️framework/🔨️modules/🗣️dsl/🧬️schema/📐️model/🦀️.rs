@@ -1,4 +1,6 @@
 //! 📐️ Authored Record value, shape, field projection and typed receiving ownership.
+#[cfg(test)]
+extern crate self as semio_framework_dsl_record;
 pub use semio_framework_diagnostic::{Limits,TextError,TextSpan};
 pub use semio_framework_value::{NativeEncodeControl, ValueError, ValueRefusalKind};
 pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
@@ -23,6 +25,9 @@ pub use borrowed_schema::{BorrowedShape,BorrowedFieldSpec,BorrowedRecordSpec};
 #[path="../🫳️borrowed/🏭️authored/🦀️.rs"]
 mod authored_borrowed_schema;
 pub use authored_borrowed_schema::{BorrowedRecordSpecProducer,BorrowedDslField,BorrowedDslRecord,BorrowedDslVariants,borrowed_field_shape,borrowed_record,borrowed_unit};
+
+/// 📦️ Canonical record octets retain separately admitted backing pages.
+pub type RecordBytes=semio_framework_value::paged::PagedBytes<{isize::MAX as usize}>;
 
 //#region 🔖️Shape
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -380,7 +385,7 @@ pub enum FieldValue {
     UInt(u64),
     Float(f64),
     Text(String),
-    Bytes64(Vec<u8>),
+    Bytes64(RecordBytes),
     Enum(u32),
     Tuple(Vec<FieldValue>),
     List(Vec<FieldValue>),

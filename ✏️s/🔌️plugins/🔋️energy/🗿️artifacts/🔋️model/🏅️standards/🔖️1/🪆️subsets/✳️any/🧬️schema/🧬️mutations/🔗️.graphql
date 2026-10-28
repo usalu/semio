@@ -1,3 +1,4 @@
+# import ArtifactLink from "🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/🔗️.graphql"
 # 🧬️ EnergyModel mutation schema — one type per handcrafted semantic mutation kind.
 
 type RenameModel {
@@ -83,7 +84,7 @@ type RemoveOutputVariable {
 }
 
 type BindWeatherFile {
-  target: ArtifactRef!
+  link: ArtifactLink!
 }
 
 type UnbindWeatherFile {
@@ -91,7 +92,7 @@ type UnbindWeatherFile {
 }
 
 type ConnectReferencedModel {
-  target: ArtifactRef!
+  link: ArtifactLink!
 }
 
 type DisconnectReferencedModel {

@@ -9,75 +9,36 @@
   },
   "cases": [
     {
-      "name": "one-original-camera",
-      "before": [
-        0,
-        0,
-        0
-      ],
+      "name": "one-original-window",
+      "before": 1.25,
       "leaves": [
-        [
-          4,
-          2,
-          1
-        ]
+        4.0
       ],
-      "expected": [
-        4,
-        2,
-        1
-      ]
+      "expected": 4.0
     },
     {
-      "name": "ordered-original-cameras",
-      "before": [
-        0,
-        0,
-        0
-      ],
+      "name": "ordered-original-windows",
+      "before": 1.25,
       "leaves": [
-        [
-          4,
-          2,
-          1
-        ],
-        [
-          9,
-          8,
-          7
-        ]
+        4.0,
+        9.0
       ],
-      "expected": [
-        9,
-        8,
-        7
-      ]
+      "expected": 9.0
     },
     {
       "name": "same-native-value",
-      "before": [
-        0,
-        0,
-        0
-      ],
+      "before": 1.25,
       "leaves": [
-        [
-          3,
-          2,
-          1
-        ]
+        1.25
       ],
-      "expected": [
-        3,
-        2,
-        1
-      ]
+      "expected": 1.25
     }
   ],
   "cancelPrefixes": [
     0,
     1,
     2,
+    3,
     8,
     16
   ]

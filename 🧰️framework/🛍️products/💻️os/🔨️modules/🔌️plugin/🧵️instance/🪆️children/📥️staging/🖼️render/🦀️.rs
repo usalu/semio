@@ -31,8 +31,8 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     where
         A::Snapshot: store::ArtifactRefs,
     {
-        let snapshot = stores.store.snapshot().map_err(|error| error.into_fault())?;
-        let parent_id = stores.store.envelope().id.clone();
-        self.composition.graph_mut().await.sync_member(&parent_id, &snapshot).await.map_err(|error| plugin_sdk_fault(error.to_string()))
+        let snapshot = stores.store.snapshot_ref();
+        let parent_id = stores.store.envelope().id.as_str();
+        self.composition.graph_mut().await.sync_member(parent_id, snapshot).await.map_err(|error| plugin_sdk_fault(error.to_string()))
     }
 }

@@ -1,0 +1,1 @@
+{"operation":3701,"generation":31,"cases":["600","900"],"cancelAt":[0,1,2,7,31,127,511],"maximumCopyBytes":4096,"maximumTurns":100000,"requirements":["original-row-source","exact-physical-receipts","deny-every-positive-axis","independent-serde-equality","partial-owned-close"]}

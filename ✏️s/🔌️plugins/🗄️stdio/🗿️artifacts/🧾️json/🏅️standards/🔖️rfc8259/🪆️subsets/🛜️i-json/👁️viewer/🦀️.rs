@@ -66,9 +66,9 @@ impl ArtifactViewer for JsonIJsonViewer {
     const DIALECT: Dialect = JSON_I_JSON_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JSON_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> JsonSnapshot {
+    fn reference_birth()->Option<fn()->JsonSnapshot>{Some(||{
         JsonSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

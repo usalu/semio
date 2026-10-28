@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateHumidistat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "humidistats",
+    "key": "id",
+    "inverse": "CreateHumidistat",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete humidistat",
+      "de": "Feuchteregler löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "humidistat",
+      "kind": "delete-humidistat",
+      "record": "DeletedHumidistat"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed humidistat does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

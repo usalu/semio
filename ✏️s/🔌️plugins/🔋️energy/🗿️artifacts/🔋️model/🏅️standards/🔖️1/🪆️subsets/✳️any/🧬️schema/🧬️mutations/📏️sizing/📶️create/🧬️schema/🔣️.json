@@ -139,5 +139,91 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateSizingObject",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "sizing_type",
+        "input": "sizing_type",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "design_day_type",
+        "input": "design_day_type",
+        "storage": "sealed-copy"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateSizingObject",
+    "branchType": "ModelOutputState",
+    "branch": "outputs",
+    "collection": "sizing_objects",
+    "key": "id",
+    "inverse": "DeleteSizingObject",
+    "labels": {
+      "en": "Create sizing object",
+      "de": "Auslegungsobjekt erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "sizing-object",
+      "kind": "create-sizing-object",
+      "record": "CreatedSizingObject"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

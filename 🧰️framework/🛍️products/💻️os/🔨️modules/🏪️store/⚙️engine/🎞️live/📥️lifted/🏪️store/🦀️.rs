@@ -34,7 +34,7 @@ use semio_framework_os_store_initialization_runtime::lifted_document_materialize
 use crate::lifted_document_materialize::stamp_primary_operation_identity;
 use semio_framework_os_store_text_io::text_format::{common_address, mutation_ids};
 use semio_framework_os_store_command::retire_operations;
-use semio_framework_os_store_ledger::{edit_from_operation_envelope, fold_envelope_history, fold_event_log};
+use semio_framework_os_store_ledger::{edit_from_operation_envelope_cold, fold_envelope_history, fold_event_log};
 use semio_framework_os_store_ledger::{ARTIFACT_EDIT_MESSAGE_ID_BYTES, ArtifactStoreHistoryCommitReservation, ArtifactStorePendingReportRetirement, CursorRevisionAccumulator, PendingCommandReport, StackMirrorDirt, edit_timestamp, envelope_viewer_head, retire_scratch_edits, retire_scratch_operations, retire_supersede_inputs, stamp_edit_semantics};
 #[cfg(test)]
 use semio_framework_os_store_ledger::hot_path_census;
@@ -108,3 +108,6 @@ where
         store.replay.pending_report.install_prepared_messages(messages,worst);Ok(receipt)
     
 }
+#[path = "../../../../📥️ingress/📚️original/🦀️.rs"]
+mod original_ingress;
+use original_ingress::OriginalReplayEdits;

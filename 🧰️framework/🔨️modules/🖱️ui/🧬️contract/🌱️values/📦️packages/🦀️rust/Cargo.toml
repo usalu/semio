@@ -21,6 +21,7 @@ default = []
 testkit = []
 
 [dependencies]
+semio-framework-job = { path="../../../../../🧵️job/📦️packages/🦀️rust" }
 semio-framework-ui-contract-budget = { path = "../../../📏️budget/📦️packages/🦀️rust" }
 semio-framework-ui-contract-text = { path = "../../../🔤️text/📦️packages/🦀️rust" }
 semio-framework-ui-contract-identity = { path = "../../../🆔️identity/📦️packages/🦀️rust" }

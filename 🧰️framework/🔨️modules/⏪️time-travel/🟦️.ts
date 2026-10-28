@@ -219,8 +219,8 @@ export type TimeTravelEffect =
   | { readonly type: "showPreview"; readonly target: string; readonly replacement: InputReplacement }
   | { readonly type: "startReplay"; readonly drafts: readonly SupersededInput[]; readonly from: string }
   | { readonly type: "cancelReplay" | "openFinalizePrompt" | "close" }
-  | { readonly type: "commitOverwrite"; readonly inputs: readonly SupersededInput[] }
-  | { readonly type: "commitAlternative"; readonly name: string; readonly inputs: readonly SupersededInput[] };
+  | { readonly type: "commitOverwrite" }
+  | { readonly type: "commitAlternative"; readonly name: string };
 
 export const TIME_TRAVEL_EFFECT_KINDS = ["showPreview", "startReplay", "cancelReplay", "openFinalizePrompt", "commitOverwrite", "commitAlternative", "close"] as const;
 export type TimeTravelEffectKind = (typeof TIME_TRAVEL_EFFECT_KINDS)[number];
@@ -414,8 +414,7 @@ export function applyTimeTravel(session: TimeTravelSession, event: TimeTravelEve
     }
     case "choose": {
       if (stage !== "choosing") return refuse("timeTravel.illegal");
-      const inputs = timeTravelInputs(session);
-      const effect: TimeTravelEffect = event.choice.kind === "overwrite" ? { type: "commitOverwrite", inputs } : { type: "commitAlternative", name: event.choice.name, inputs };
+      const effect: TimeTravelEffect = event.choice.kind === "overwrite" ? { type: "commitOverwrite" } : { type: "commitAlternative", name: event.choice.name };
       return admit({ session: { ...session, stage: "finalizing", generation: bump(session.generation) }, effects: [effect] });
     }
     case "back":
@@ -515,9 +514,9 @@ export function timeTravelEffectToJson(effect: TimeTravelEffect): Json {
     case "startReplay":
       return { type: effect.type, drafts: effect.drafts.map(inputToJson), from: effect.from };
     case "commitOverwrite":
-      return { type: effect.type, inputs: effect.inputs.map(inputToJson) };
+      return { type: effect.type };
     case "commitAlternative":
-      return { type: effect.type, name: effect.name, inputs: effect.inputs.map(inputToJson) };
+      return { type: effect.type, name: effect.name };
     default:
       return { type: effect.type };
   }

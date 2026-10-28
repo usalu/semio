@@ -1,0 +1,70 @@
+{
+  "contract": "semio.energy.original-deleteconstruction/v1-referenced",
+  "collection": "constructions",
+  "existingRows": [
+    {
+      "id": 1,
+      "name": "Original layers",
+      "layer_material_ids": []
+    },
+    {
+      "id": 4,
+      "name": "Original layers",
+      "layer_material_ids": []
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 1
+      },
+      "outcome": "referenced"
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "model": {
+    "fenestrations": [
+      {
+        "id": 7,
+        "name": "window",
+        "surface_id": 1,
+        "u_value_w_m2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "area_m2": 2.0,
+        "height_m": 1.0,
+        "sill_height_m": 0.5,
+        "frame_conductance_w_k": 0.0,
+        "divider_conductance_w_k": 0.0,
+        "overhang_depth_m": 0.0,
+        "overhang_offset_m": 0.0,
+        "fin_depth_m": 0.0,
+        "fin_offset_m": 0.0,
+        "glazing_construction_id": 1,
+        "vertices_m": []
+      }
+    ]
+  }
+}

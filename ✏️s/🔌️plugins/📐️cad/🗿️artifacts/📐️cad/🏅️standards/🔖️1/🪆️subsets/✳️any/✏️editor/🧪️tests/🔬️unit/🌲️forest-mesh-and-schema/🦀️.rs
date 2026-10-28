@@ -160,7 +160,7 @@ async fn quad_panes_each_populate_distinct_objects() {
 
 #[semio_framework_async_macros::async_test]
 async fn initial_snapshot_is_cut_concrete_forest_not_placeholder_box() {
-    let scene = CadPlayApp::initial_snapshot();
+    let scene = CadPlayApp::reference_birth().expect("explicit reference snapshot producer")();
     assert_eq!(scene.id, CAD_EXAMPLE_FOREST_LEFT);
     assert_eq!(scene.nodes.first().map(|node| node.label.as_str()), Some("Concrete Forest Left"), "must not be the placeholder 'Model' node");
     let working = forest_working_scene();

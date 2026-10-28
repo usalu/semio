@@ -1,0 +1,6 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv/dist/2020";
+import law from "../../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🎟️delegation/🔣️.json";
+import schema from "../../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/🧪️tests/🎟️delegation/📐️.json";
+test("typed owner delegation agrees with an independent SQLite retained owner",()=>{expect(new Ajv().compile(schema)(law)).toBe(true);const db=new Database(":memory:");try{db.exec("CREATE TABLE owner(id INTEGER PRIMARY KEY,value INTEGER,payload_closed INTEGER);INSERT INTO owner VALUES(1,0,0)");db.query("UPDATE owner SET value=?").run(law.initial);db.query("UPDATE owner SET value=value+?").run(law.delta);expect(db.query("SELECT value FROM owner").get()).toEqual({value:law.total});db.exec("UPDATE owner SET payload_closed=1");for(const expected of law.closeWithReleaseDenied){expect(Boolean((db.query("SELECT COUNT(*)=0 AS closed FROM owner").get()as {closed:number}).closed)).toBe(expected);}db.exec("DELETE FROM owner WHERE payload_closed=1");expect(Boolean((db.query("SELECT COUNT(*)=0 AS closed FROM owner").get()as {closed:number}).closed)).toBe(law.closeWithReleaseAdmitted);}finally{db.close()}});

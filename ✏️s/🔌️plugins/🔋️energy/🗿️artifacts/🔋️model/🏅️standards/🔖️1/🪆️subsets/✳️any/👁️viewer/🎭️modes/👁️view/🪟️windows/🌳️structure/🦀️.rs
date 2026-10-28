@@ -28,7 +28,7 @@ pub fn definition() -> WindowKindDefinition {
 /// `crate::energy_structure_tree` (artifact root, never the editor surface) — grouped so no node
 /// exceeds the kit's 32-sibling ceiling.
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&crate::snapshot::energy_model(document)))
+    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&document.model.read()))
 }
 //#endregion 🔖️Render
 

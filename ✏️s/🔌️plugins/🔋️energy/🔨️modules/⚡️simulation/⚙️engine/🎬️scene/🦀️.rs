@@ -25,7 +25,9 @@ extern crate semio_s_plugin_energy_engine_precompute as precompute;
 #[cfg(test)]
 extern crate semio_s_plugin_energy_engine_bestest as bestest;
 
-use crate::model::{EntityId, Fenestration, Model, Surface, SurfaceClass};
+use crate::model::{EntityId, Fenestration, Surface, SurfaceClass};
+#[path="👁️read/🦀️.rs"]pub mod read;
+pub use read::{EnergySceneModel,EnergySceneSurface,EnergySceneWindow,EnergySceneShading,EnergySceneZone};
 use serde_json::{json, Value};
 use std::collections::HashMap;
 
@@ -91,11 +93,13 @@ pub fn energy_scene_target_id(id: EntityId) -> String {
 //#region 🔖️Style
 /// 🎨️ Everything one render knows about paint: which entities are picked, which are pointed at, and
 /// an optional per-surface result colour that REPLACES the class swatch (lane D's results overlay).
-#[derive(Clone, Copy, Debug, Default)]
+pub trait EnergySceneColors{fn color(&self,id:u32)->Option<[f64;3]>;}
+impl EnergySceneColors for HashMap<u32,[f64;3]>{fn color(&self,id:u32)->Option<[f64;3]>{self.get(&id).copied()}}
+#[derive(Clone, Copy, Default)]
 pub struct EnergySceneStyle<'a> {
     pub selected_ids: &'a [String],
     pub hovered_ids: &'a [String],
-    pub overlay: Option<&'a HashMap<u32, [f64; 3]>>,
+    pub overlay: Option<&'a dyn EnergySceneColors>,
 }
 
 impl EnergySceneStyle<'_> {
@@ -109,7 +113,7 @@ impl EnergySceneStyle<'_> {
 
     /// 🎨️ Base colour after the optional results overlay. Interaction paint is host-owned.
     fn paint(&self, entity: EntityId, _target_id: &str, base: [f64; 3]) -> [f64; 3] {
-        self.overlay.and_then(|map| map.get(&entity.0).copied()).unwrap_or(base)
+        self.overlay.and_then(|source|source.color(entity.0)).unwrap_or(base)
     }
 }
 
@@ -160,23 +164,22 @@ fn normalized(a: [f64; 3]) -> Option<[f64; 3]> {
 /// solar model shades can never drift apart.
 pub fn fenestration_polygon(host: &Surface, window: &Fenestration, index: usize, count: usize) -> Option<Vec<[f64; 3]>> {
     let polygon = crate::precompute::fenestration_polygon_in_bay(host, window, index, count);
-    lift_off_host(host, polygon)
+    lift_off_host(&host.vertices_m, polygon)
 }
 
 /// 🪟️ The rendered polygon of `window` inside `model` — finds the host surface and the window's bay
 /// among its siblings the way the engine does.
-pub fn model_fenestration_polygon(model: &Model, window: &Fenestration) -> Option<Vec<[f64; 3]>> {
-    let host = model.surfaces.iter().find(|surface| surface.id == window.surface_id)?;
-    lift_off_host(host, crate::precompute::model_fenestration_polygon(model, window))
+pub fn model_fenestration_polygon<'a>(model:&impl EnergySceneModel,window:impl Into<EnergySceneWindow<'a>>)->Option<Vec<[f64;3]>>{
+ let window=window.into();let host=model.surfaces().find(|surface|surface.id==window.surface_id)?;let mut count=0;let mut index=0;for sibling in model.fenestrations().filter(|sibling|sibling.surface_id==window.surface_id){if sibling.id==window.id{index=count;}count+=1;}let polygon=crate::precompute::place_aperture(host.vertices_m,window.vertices_m,window.area_m2,window.height_m,window.sill_height_m,index,count.max(1));lift_off_host(host.vertices_m,polygon)
 }
 
 /// 🪟️ Pushes a coplanar polygon off its host plane along the host's outward normal. `None` for a
 /// degenerate polygon or a degenerate host.
-fn lift_off_host(host: &Surface, polygon: Vec<[f64; 3]>) -> Option<Vec<[f64; 3]>> {
+fn lift_off_host(host: &[[f64;3]], polygon: Vec<[f64; 3]>) -> Option<Vec<[f64; 3]>> {
     if polygon.len() < 3 {
         return None;
     }
-    let normal = normalized(crate::geometry::polygon_normal(&host.vertices_m))?;
+    let normal = normalized(crate::geometry::polygon_normal(host))?;
     let lift = [normal[0] * ENERGY_SCENE_WINDOW_OFFSET_M, normal[1] * ENERGY_SCENE_WINDOW_OFFSET_M, normal[2] * ENERGY_SCENE_WINDOW_OFFSET_M];
     Some(polygon.into_iter().map(|corner| [corner[0] + lift[0], corner[1] + lift[1], corner[2] + lift[2]]).collect())
 }
@@ -260,9 +263,9 @@ fn zone_instance(target_id: &str, mesh_id: &str, label: &str, selected: bool, ho
 /// 📦️ Every corner of every surface that belongs to `zone`, in model order. Empty for a zone with no
 /// member surface (which therefore draws no volume) and for one whose corner count exceeds
 /// [`ENERGY_SCENE_ZONE_HULL_MAXIMUM_POINTS`].
-pub fn zone_hull_points(model: &Model, zone: EntityId) -> Vec<[f64; 3]> {
+pub fn zone_hull_points(model: &impl EnergySceneModel, zone: EntityId) -> Vec<[f64; 3]> {
     let mut points: Vec<[f64; 3]> = Vec::new();
-    for surface in model.surfaces.iter().filter(|surface| surface.zone_id == zone) {
+    for surface in model.surfaces().filter(|surface| surface.zone_id == zone) {
         if points.len() + surface.vertices_m.len() > ENERGY_SCENE_ZONE_HULL_MAXIMUM_POINTS {
             return Vec::new();
         }
@@ -421,11 +424,11 @@ fn face_sees(points: &[[f64; 3]], face: [usize; 3], point: [f64; 3]) -> f64 {
 /// that encloses a volume. Total and deterministic — a degenerate entity (fewer than three vertices,
 /// a zero-area window, a zone with no surfaces or only coplanar ones) contributes nothing rather than
 /// faulting.
-pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> (String, String) {
+pub fn energy_model_scene_parts(model: &impl EnergySceneModel, style: &EnergySceneStyle<'_>) -> (String, String) {
     let mut meshes: Vec<Value> = Vec::new();
     let mut instances: Vec<Value> = Vec::new();
 
-    for surface in &model.surfaces {
+    for surface in model.surfaces() {
         let target_id = energy_scene_target_id(surface.id);
         let color = style.paint(surface.id, &target_id, surface_class_color(surface.class));
         let mesh_id = format!("{ENERGY_SCENE_SURFACE_MESH_PREFIX}{}", surface.id.0);
@@ -434,7 +437,7 @@ pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> 
         instances.push(instance(&target_id, &mesh_id, &surface.name, ENERGY_SCENE_OBJECT_KIND_SURFACE, style.is_selected(&target_id), style.is_hovered(&target_id)));
     }
 
-    for window in &model.fenestrations {
+    for window in model.fenestrations() {
         let Some(polygon) = model_fenestration_polygon(model, window) else { continue };
         let target_id = energy_scene_target_id(window.id);
         let color = style.paint(window.id, &target_id, ENERGY_SCENE_FENESTRATION_COLOR);
@@ -444,7 +447,7 @@ pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> 
         instances.push(instance(&target_id, &mesh_id, &window.name, ENERGY_SCENE_OBJECT_KIND_FENESTRATION, style.is_selected(&target_id), style.is_hovered(&target_id)));
     }
 
-    for shading in &model.shading_surfaces {
+    for shading in model.shading_surfaces() {
         let target_id = energy_scene_target_id(shading.id);
         let color = style.paint(shading.id, &target_id, ENERGY_SCENE_SHADING_COLOR);
         let mesh_id = format!("{ENERGY_SCENE_SHADING_MESH_PREFIX}{}", shading.id.0);
@@ -453,7 +456,7 @@ pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> 
         instances.push(instance(&target_id, &mesh_id, &shading.name, ENERGY_SCENE_OBJECT_KIND_SHADING, style.is_selected(&target_id), style.is_hovered(&target_id)));
     }
 
-    for zone in &model.zones {
+    for zone in model.zones() {
         let Some(triangles) = convex_hull_triangles(&zone_hull_points(model, zone.id)) else { continue };
         let target_id = energy_scene_target_id(zone.id);
         let color = style.paint(zone.id, &target_id, ENERGY_SCENE_ZONE_COLOR);
@@ -467,7 +470,7 @@ pub fn energy_model_scene_parts(model: &Model, style: &EnergySceneStyle<'_>) -> 
 }
 
 /// 📦️ Axis-aligned bounds over every rendered polygon, `None` for a model with no geometry at all.
-pub fn energy_model_bounds(model: &Model) -> Option<([f64; 3], [f64; 3])> {
+pub fn energy_model_bounds(model: &impl EnergySceneModel) -> Option<([f64; 3], [f64; 3])> {
     let mut min = [f64::INFINITY; 3];
     let mut max = [f64::NEG_INFINITY; 3];
     let mut seen = false;
@@ -480,10 +483,10 @@ pub fn energy_model_bounds(model: &Model) -> Option<([f64; 3], [f64; 3])> {
             }
         }
     };
-    for surface in &model.surfaces {
+    for surface in model.surfaces() {
         expand(&surface.vertices_m);
     }
-    for shading in &model.shading_surfaces {
+    for shading in model.shading_surfaces() {
         expand(&shading.vertices_m);
     }
     if seen {
@@ -496,19 +499,19 @@ pub fn energy_model_bounds(model: &Model) -> Option<([f64; 3], [f64; 3])> {
 /// 🎥️ Fit revision: the camera auto-frames exactly ONCE per distinct geometry, never taking back a
 /// camera the user has moved. Hashed over the model name plus every rendered entity id and vertex —
 /// the same "frame once per document delivery" rule cad/generation3d state.
-pub fn energy_model_fit_revision(model: &Model) -> u32 {
+pub fn energy_model_fit_revision(model: &impl EnergySceneModel) -> u32 {
     use std::hash::{Hash, Hasher};
     let mut hasher = std::collections::hash_map::DefaultHasher::new();
-    model.name.hash(&mut hasher);
-    for zone in &model.zones {
+    model.name().hash(&mut hasher);
+    for zone in model.zones() {
         zone.id.0.hash(&mut hasher);
     }
-    for surface in &model.surfaces {
+    for surface in model.surfaces() {
         surface.id.0.hash(&mut hasher);
         surface.zone_id.0.hash(&mut hasher);
         hash_vertices(&surface.vertices_m, &mut hasher);
     }
-    for window in &model.fenestrations {
+    for window in model.fenestrations() {
         window.id.0.hash(&mut hasher);
         window.surface_id.0.hash(&mut hasher);
         for scalar in [window.area_m2, window.height_m, window.sill_height_m] {
@@ -516,7 +519,7 @@ pub fn energy_model_fit_revision(model: &Model) -> u32 {
         }
         hash_vertices(&window.vertices_m, &mut hasher);
     }
-    for shading in &model.shading_surfaces {
+    for shading in model.shading_surfaces() {
         shading.id.0.hash(&mut hasher);
         hash_vertices(&shading.vertices_m, &mut hasher);
     }
@@ -534,7 +537,7 @@ fn hash_vertices<H: std::hash::Hasher>(vertices: &[[f64; 3]], hasher: &mut H) {
 
 /// 📐️ Longest bounding-box edge, used to place the default camera at a sane distance for models
 /// whose scale varies wildly between examples. `1.0` for a model with no geometry.
-pub fn energy_model_extent(model: &Model) -> f64 {
+pub fn energy_model_extent(model: &impl EnergySceneModel) -> f64 {
     let Some((min, max)) = energy_model_bounds(model) else { return 1.0 };
     let span = [max[0] - min[0], max[1] - min[1], max[2] - min[2]];
     span.iter().fold(0.0_f64, |longest, value| longest.max(*value)).max(1.0)
@@ -542,31 +545,31 @@ pub fn energy_model_extent(model: &Model) -> f64 {
 
 /// 🎥️ A three-quarter view from the south-west and above, framed on the model's own centre — `fit`
 /// re-frames it anyway, this is only what a host without fit support would show.
-pub fn energy_model_camera_json(model: &Model) -> String {
+pub fn energy_model_camera_json(model: &impl EnergySceneModel) -> String {
     let (centre, distance) = match energy_model_bounds(model) {
         Some((min, max)) => ([(min[0] + max[0]) / 2.0, (min[1] + max[1]) / 2.0, (min[2] + max[2]) / 2.0], energy_model_extent(model) * 1.8),
         None => ([0.0, 0.0, 0.0], 8.0),
     };
-    semio_framework_plugin::world3d_camera_json([centre[0] + distance, centre[1] - distance, centre[2] + distance * 0.7], centre, 45.0)
+    semio_framework_ui_declaration::ui::world3d_camera_json([centre[0] + distance, centre[1] - distance, centre[2] + distance * 0.7], centre, 45.0)
 }
 
 /// 🎬️ The whole `World3dScene` for one model. `domain_id` is `Some` only for a surface that actually
 /// declares the interaction domain (the editor); the read-only viewer passes `None` and the react
 /// host leaves the window on the OS's own world board with no plugin-owned picking.
-pub fn energy_model_scene(model: &Model, style: &EnergySceneStyle<'_>, domain: Option<(&str, &str)>) -> semio_framework_plugin::World3dScene {
+pub fn energy_model_scene(model: &impl EnergySceneModel, style: &EnergySceneStyle<'_>, domain: Option<(&str, &str)>) -> semio_framework_plugin_window_kits_rich::world3d_host::World3dScene {
     let (meshes_json, instances_json) = energy_model_scene_parts(model, style);
-    let mut scene = semio_framework_plugin::world3d_scene(
+    let mut scene = semio_framework_plugin_window_kits::world3d_sun::world3d_scene(
         energy_model_camera_json(model),
         meshes_json,
         instances_json,
-        semio_framework_plugin::world3d_selection_json("rectangle", style.selected_ids, style.hovered_ids.first().map(String::as_str)),
-        &semio_framework_plugin::WorldSunConfig::default(),
+        semio_framework_plugin_window_kits_rich::world3d_host::world3d_selection_json("rectangle", style.selected_ids, style.hovered_ids.first().map(String::as_str)),
+        &semio_framework_plugin_window_kits::world3d_sun::WorldSunConfig::default(),
     );
     if let Some((domain_id, granularity_id)) = domain {
         scene.domain_id = Some(domain_id.to_string());
         scene.domain_granularity_id = Some(granularity_id.to_string());
     }
-    scene.fit_json = Some(semio_framework_plugin::world3d_fit_json(energy_model_fit_revision(model), ENERGY_SCENE_FIT_PADDING, None));
+    scene.fit_json = Some(semio_framework_ui_declaration::ui::world3d_fit_json(energy_model_fit_revision(model), ENERGY_SCENE_FIT_PADDING, None));
     scene
 }
 //#endregion 🔖️Scene

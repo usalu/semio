@@ -348,7 +348,7 @@ impl GisMapStoreInitializationAuthority {
                 }
             }
             1 if index < entry.forwards.len() => {
-                let id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| entry.forwards[index].mutation_id()).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
+                let id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| entry.forwards[index].mutation_id().cloned()).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
                 if let Err(error) = runtime.seed_edit_operation(&entry.id, id) {
                     self.fault = Some(error.into_bytes());
                     self.phase = GisMapStoreInitializationPhase::RetireFault;

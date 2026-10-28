@@ -1,0 +1,115 @@
+{
+  "contract": "semio.energy.original-optional-reference/v1",
+  "collection": "schedules.annual",
+  "field": "holiday_daily_schedule_id",
+  "original": {
+    "id": 7,
+    "rules": [],
+    "default_daily_schedule_id": 2,
+    "holiday_daily_schedule_id": 2,
+    "holiday_dates": []
+  },
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1
+        }
+      ],
+      "daily": [
+        {
+          "id": 2,
+          "hourly_values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "interpolation": "Continuous",
+          "limits": null
+        }
+      ],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newHolidayDailyScheduleId": 2
+      },
+      "outcome": "no-op",
+      "after": 2
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newHolidayDailyScheduleId": null
+      },
+      "outcome": "changed",
+      "after": null
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newHolidayDailyScheduleId": 99
+      },
+      "outcome": "invalid-reference",
+      "after": 99
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newHolidayDailyScheduleId": 1
+      },
+      "outcome": "invalid-reference"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newHolidayDailyScheduleId": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "branch": "outputs"
+}

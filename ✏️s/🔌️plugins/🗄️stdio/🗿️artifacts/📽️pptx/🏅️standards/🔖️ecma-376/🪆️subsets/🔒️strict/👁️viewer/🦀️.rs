@@ -69,9 +69,9 @@ impl ArtifactViewer for PptxStrictViewer {
     const DIALECT: Dialect = PPTX_STRICT_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PPTX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PptxSnapshot {
+    fn reference_birth()->Option<fn()->PptxSnapshot>{Some(||{
         semio_s_artifact_stdio_pptx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::blank_strict_pptx_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `PptxStrictViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit`.

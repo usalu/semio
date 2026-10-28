@@ -26,6 +26,7 @@ name = "window_config_apply_edit"
 path = "../../🧬️preparation/✏️apply/🧪️tests/🦀️.rs"
 
 [dependencies]
+semio-framework-os-store-text-io={path="../../../../../🏪️store/🚪️io/📦️packages/🦀️rust"}
 semio-framework = { path = "../../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework-hash = { path = "../../../../../../../../🔨️modules/🔏️hash/📦️packages/🦀️rust", package = "semio-framework-hash" }
@@ -38,6 +39,11 @@ semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️
 semio-framework-value-retirement-queue = { path = "../../../../../../../../🔨️modules/🌱️value/♻️retirement/📋️queue/📦️packages/🦀️rust" }
 semio-framework-value-persistent = { path = "../../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
+semio-framework-diagnostic = { path = "../../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+
+semio-framework-os-store-codec-registry = { path = "../../../../../🏪️store/📦️codec/📦️packages/🦀️rust" }
+semio-framework-os-store-operation-wire = { path = "../../../../../🏪️store/🧵️operation-wire/📦️packages/🦀️rust" }
+
 
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -48,3 +54,7 @@ semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/
 semio-framework-trace = { workspace = true }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+semio-framework-dsl-record-derive = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+blake3 = { version = "1.8", features = ["pure"] }

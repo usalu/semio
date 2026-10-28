@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StatePlantLoopConfig",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "plant_loops",
+    "key": "id",
+    "inverse": "CreatePlantLoop",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete plant loop",
+      "de": "Anlagenkreislauf löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "plant-loop",
+      "kind": "delete-plant-loop",
+      "record": "DeletedPlantLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed plant-loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

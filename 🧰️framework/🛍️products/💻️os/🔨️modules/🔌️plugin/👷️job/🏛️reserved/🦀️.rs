@@ -571,7 +571,7 @@ pub fn register_framework_reserved_factories<A: ArtifactApp>(registry: &mut Arti
 }
 
 #[doc(hidden)]
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 pub struct QualifiedBoundedFirstStepProof {
     pub row: ArtifactBoundedFirstStepProof,
     pub owner: ToolOwnerWitness,
@@ -602,14 +602,66 @@ impl QualifiedBoundedFirstStepProof {
 }
 
 #[doc(hidden)]
-#[derive(Clone)]
 pub enum QualifiedToolProof {
     Bounded(QualifiedBoundedFirstStepProof),
-    FrameworkOwned(ArtifactToolRegistration),
-    AppOwned(ArtifactToolRegistration),
+    FrameworkOwned(crate::original_declared_tools::DeclaredToolRegistrationAlias),
+    AppOwned(crate::original_declared_tools::DeclaredToolRegistrationAlias),
+}
+
+impl semio_framework_value::retirement::RetireOwned for QualifiedToolProof{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;match self{Self::Bounded(_)=>().retirement(),Self::FrameworkOwned(row)|Self::AppOwned(row)=>row.retirement()}}
+ fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::RetireOwned;match self{Self::Bounded(_)=>().retirement_birth_bytes(),Self::FrameworkOwned(row)|Self::AppOwned(row)=>row.retirement_birth_bytes()}}
+ fn controlled_retirement_supported()->bool{true}
 }
 
 impl QualifiedToolProof {
+    pub fn key(&self) -> semio_framework::ToolFactoryKey {
+        match self {
+            Self::Bounded(proof) => proof.key(),
+            Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.key.clone(),
+        }
+    }
+
+    pub fn publication_lanes(&self) -> &'static [ArtifactToolPublicationLane] {
+        match self {
+            Self::Bounded(_) => &[],
+            Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.publication_lanes,
+        }
+    }
+
+    pub fn schema_id(&self) -> String {
+        match self {
+            Self::Bounded(proof) => proof.schema_id(),
+            Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.schema_id.clone(),
+        }
+    }
+
+    pub fn contract(&self) -> semio_framework::ToolExecutionContract {
+        match self {
+            Self::Bounded(proof) => proof.contract(),
+            Self::FrameworkOwned(registration) | Self::AppOwned(registration) => registration.contract,
+        }
+    }
+
+    pub fn admits<A: ArtifactApp>(&self, admission: &semio_framework::ToolWireAdmission) -> bool {
+        match self {
+            Self::Bounded(proof) => proof.admits::<A>(admission),
+            Self::FrameworkOwned(registration) | Self::AppOwned(registration) => {
+                registration.owner == ToolOwnerWitness::of::<A>()
+                    && admission.key == registration.key
+                    && admission.schema_id == registration.schema_id
+                    && admission.contract == registration.contract
+                    && admission.factory_type_id == registration.factory_type_id
+                    && admission.factory_type_name == registration.factory_type_name
+            }
+        }
+    }
+}
+
+/// 👁️ Read-only qualification borrows the original row without creating an admitted owner or copying registration strings.
+#[derive(Clone,Copy)]
+pub enum QualifiedToolView<'a>{Bounded(&'a QualifiedBoundedFirstStepProof),FrameworkOwned(&'a ArtifactToolRegistration),AppOwned(&'a ArtifactToolRegistration)}
+impl QualifiedToolView<'_> {
     pub fn key(&self) -> semio_framework::ToolFactoryKey {
         match self {
             Self::Bounded(proof) => proof.key(),
@@ -669,7 +721,7 @@ include!("../../🧪️tests/🔬️app-artifact-fixed-registry/🦀️.rs");
 
 impl FrameworkReservedCommitPermit {
     pub fn new(operation: semio_framework_job::Operation, lease: ToolCancellationLease, maximum_identity_bytes: usize) -> Result<Self, Fault> {
-        let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| !lease.token.is_cancelled_now() && !lease.publication_claim.is_cancelled();
+        let mut observer = |_: semio_framework_value::native_encoding::NativeEncodeProgress| !lease.cancel_token().is_cancelled_now() && !lease.publication_claim().is_cancelled();
         let control = semio_framework_value::NativeEncodeControl::new(maximum_identity_bytes, &mut observer);
         let identity = control.pause().map_err(|error| plugin_sdk_fault(error.to_string()))?;
         Ok(Self { operation, lease, producer_fault: None, identity: Some(identity), identity_progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } })
@@ -711,25 +763,26 @@ pub struct PendingFrameworkReserved {
 /// having to finish inside the turn that saw its `JobCompleted`. Every unit re-reads the
 /// operation's cancellation lease, and `applied`/`total` is its progress.
 #[doc(hidden)]
-pub struct FrameworkReservedCommit {
+pub struct FrameworkReservedCommit<P,M:store::Mutation<P>+Sync> {
     pub action: String,
     pub args: Option<DslValue>,
     pub meta: ActionMeta,
     pub permit: FrameworkReservedCommitPermit,
     pub log_generation_before: u64,
-    pub stage: FrameworkReservedCommitStage,
+    pub stage: FrameworkReservedCommitStage<P,M>,
     pub applied: u64,
     pub total: u64,
 }
 
 /// 🪜️ The next unit a [`FrameworkReservedCommit`] runs.
 #[doc(hidden)]
-pub enum FrameworkReservedCommitStage {
+pub enum FrameworkReservedCommitStage<P,M:store::Mutation<P>+Sync> {
     Validate,
     CheckpointChildren { message: String, authors: Vec<vcs::Author>, keys: Vec<MemberKey>, next: usize, pins: Vec<vcs::CompositionPin> },
     Route { pins: Vec<vcs::CompositionPin> },
     CheckoutChildren { pins: Vec<vcs::CompositionPin>, next: usize, result: InvocationResult },
-    Revert { edit_id: String },
+    Revert { edit_id: String, command:Option<store::os_store::ArtifactNativeVcsCommand<P,M>>, result:Option<store::os_store::ArtifactNativeVcsResult>, closing:bool },
+    Repin { pins:Option<Vec<vcs::CompositionPin>>, publication:Option<Box<store::os_store::original_replay_publication::repin::OriginalRepinPublication<M>>>, retirement:semio_framework_value::retained_clone::RetainedCloneClose, changed:bool, closing:bool },
 }
 
 /// 📊️ Progress of the framework-reserved commit at the head of an app's commit queue: `applied` of
@@ -873,7 +926,7 @@ pub(crate) fn validate_tool_job_rows<A: ArtifactApp>(
                 && registration.key.controller_id == runtime_controller_id
                 && registration.key.tool_id == row.tool_id
                 && registration.contract == row.contract
-                && bus.admit_exact_wire(runtime_controller_id, row.tool_id, &registration.schema_id, &[]).is_ok_and(|admission| QualifiedToolProof::AppOwned(registration.clone()).admits::<A>(&admission))
+                && bus.admit_exact_wire(runtime_controller_id, row.tool_id, &registration.schema_id, &[]).is_ok_and(|admission| QualifiedToolView::AppOwned(registration).admits::<A>(&admission))
         });
         let authoritative = row.owner == owner && row.controller_id == runtime_controller_id && row.artifact_schema == artifact_schema && (generic || exact_registered) && !row.owner_file.is_empty() && expected.contains(row.tool_id) && unique;
         if !authoritative {
@@ -926,3 +979,10 @@ pub fn admit_original_reserved_producer(source: &mut Option<ArtifactReservedTool
 
 #[path="⚙️worker/🦀️.rs"]
 pub mod configuration_worker;
+
+semio_framework_value::artifact_retire_leaf!(QualifiedBoundedFirstStepProof);
+
+#[path="🪆️child-vcs/🦀️.rs"]pub mod child_vcs;
+
+#[path="📌️checkpoint/🦀️.rs"]
+pub mod original_checkpoint;

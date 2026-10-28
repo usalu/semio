@@ -1,0 +1,81 @@
+{
+  "schema": "energy.model",
+  "name": "",
+  "version": "",
+  "site": {
+    "latitude_deg": 0,
+    "longitude_deg": 0,
+    "elevation_m": 0,
+    "time_zone_hours": 0,
+    "north_axis_deg": 0
+  },
+  "ground_temperature": {
+    "building_surface_c": [
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18
+    ],
+    "shallow_c": [
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18,
+      18
+    ],
+    "deep_c": 18
+  },
+  "run_period": {
+    "start_month": 1,
+    "start_day": 1,
+    "end_month": 12,
+    "end_day": 31,
+    "year": 2026
+  },
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23
+  ],
+  "bodyPolicy": {
+    "unfunded": 8192,
+    "admitted": 4096,
+    "foreign": 2048
+  }
+}

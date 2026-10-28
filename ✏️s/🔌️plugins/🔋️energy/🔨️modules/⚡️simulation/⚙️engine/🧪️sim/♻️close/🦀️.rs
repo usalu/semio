@@ -5,7 +5,6 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 pub(super) struct EnergyAuthorityRetirement{
  model:Model,
  config:SimulationConfig,
- weather:FixedTable<usize,WeatherRecord>,
  validation:[FixedTable<model::EntityId,()>;4],
  previous_temperatures:Vec<f64>,
  previous_loads:Vec<f64>,
@@ -25,7 +24,6 @@ impl EnergyAuthorityRetirement{
   Self{
    model:std::mem::take(&mut authority.model),
    config:std::mem::take(&mut authority.config),
-   weather:std::mem::take(&mut authority.weather),
    validation:[std::mem::take(&mut authority.validation.zone_ids),std::mem::take(&mut authority.validation.material_ids),std::mem::take(&mut authority.validation.construction_ids),std::mem::take(&mut authority.validation.surface_ids)],
    previous_temperatures:std::mem::take(&mut authority.previous_temperatures),
    previous_loads:std::mem::take(&mut authority.previous_loads),

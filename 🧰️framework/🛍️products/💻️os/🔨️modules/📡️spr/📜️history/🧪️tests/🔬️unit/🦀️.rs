@@ -23,7 +23,7 @@ fn commit(checkpoint_id: &str, parent_id: Option<&str>, change_id: &str, mutatio
         mutation_ids: mutation_ids.iter().map(|id| protocol::MutationId(id.to_string())).collect(),
         description: None,
         saved_at: "2024-01-15T10:31:00Z".to_string(),
-        authors: vec![protocol::TransitionAuthor { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }],
+        authors: vec![protocol::Author { id: "u1".to_string(), name: "Ueli Saluz".to_string(), avatar: None }],
         message: Some("first checkpoint".to_string()),
         timestamp: "2024-01-15T10:32:00Z".to_string(),
         line_id: None,

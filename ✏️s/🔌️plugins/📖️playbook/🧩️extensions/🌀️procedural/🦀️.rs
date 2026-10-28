@@ -343,9 +343,9 @@ impl ArtifactApp for ModuleApp {
         semio_framework_plugin::retained_command::producer::admit_retained_tool_producer(request, output, cx, module_retained_command_id, MODULE_RETAINED_RAW_BYTES, MODULE_RETAINED_WORK_ITEMS, false, |request| ModuleGeometryCommandWork { tool_id, instance_owner: request.instance_operation_owner.clone(), consumed: false })
     }
 
-    async fn initial_snapshot() -> ModuleRenderPayload {
+    fn reference_birth()->Option<fn()->ModuleRenderPayload>{Some(||{
         default_payload()
-    }
+    })}
 
     /// 🏷️ Maps each `Command` variant back to the action id it was declared under in
     /// `create_module_app` — command-log labeling and the registry's kind-discipline check.

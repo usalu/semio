@@ -85,33 +85,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
 
     pub fn tool_run_retire_step(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,semio_framework_job::OriginalTurnFailure>{
         let grant=cx.retained_grant();if cx.should_yield(){return Ok(Some(RetainedCloneStep::Progress(Default::default())))}
-        for entry in [false,true]{
-            let step=if entry{self.tool_run_entry_close_step(grant)}else{self.tool_run_member_retire_step(grant)}.map_err(|fault|semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))?;
-            if let Some(step)=step{cx.consume_fuel(step.progress().copied_items as u64);cx.consume_retained(step.progress())?;return Ok(Some(step))}
-        }
+        let step=self.tool_run_member_retire_step(grant).map_err(|fault|semio_framework_job::OriginalTurnFailure::debit_original(fault,cx))?;
+        if let Some(step)=step{cx.consume_fuel(step.progress().copied_items as u64);cx.consume_retained(step.progress())?;return Ok(Some(step))}
         self.tool_runs.retire_step(&mut self.stores.store,cx)
-    }
-
-    /// 🚪️ Closes the newest live entry of a closing ledger one funded unit at a time; its job, member and provisional owners move to the ledger's retiring lists.
-    fn tool_run_entry_close_step(&mut self,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,Fault>{
-        let Some(demand)=self.shared().tool_run_entry_close_demand(grant.maximum_copy_bytes).map_err(FaultFrom::into_fault)?else{return Ok(None)};
-        if self.tool_runs.has_original_receipt()||grant.maximum_items==0||!tool_grant_funds(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-        let entry=self.tool_runs.entries.last_mut().expect("a quoted close unit has its entry");
-        if let Some(finalize)=entry.finalize.as_mut(){
-            if let Some(publication)=finalize.publication.as_mut(){
-                if publication.terminal_is_empty(){drop(finalize.publication.take());return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})));}
-                publication.begin_close();
-                let child=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-                let step=publication.close_step(child).map_err(FaultFrom::into_fault)?;
-                let step=admit_retained_clone_close(child,step,publication.terminal_is_empty(),"tool entry final publication").map_err(FaultFrom::into_fault)?;
-                return Ok(Some(RetainedCloneStep::Progress(step.progress())));
-            }
-            if !finalize.ingress.terminal_is_empty(){return finalize.ingress.close_step(grant).map(|step|Some(RetainedCloneStep::Progress(step.progress()))).map_err(FaultFrom::into_fault);}
-        }
-        let entry=self.tool_runs.entries.pop().expect("a quoted close unit has its entry");
-        self.tool_runs.selected=None;
-        self.tool_runs.retire_entry(*entry);
-        Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()})))
     }
 
     /// 🎟️ Forwards the original full grant and retains every unsupported cleanup frontier in place.

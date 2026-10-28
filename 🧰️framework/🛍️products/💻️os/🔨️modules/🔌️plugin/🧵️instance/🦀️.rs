@@ -165,6 +165,7 @@ use semio_framework_plugin_reactor_jobs::reserved::drive_framework_reserved_regi
 pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory = NoMembers> {
     pub app: A,
     pub mounted_policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1,
+    pub original_controller_close:Option<original_instance_admission::OriginalControllerClose<A>>,
     /// 📂️ Store-constructor state: the receipts, units and lane of the four original catalogue constructors.
     pub constructor: ConstructorState<A>,
     /// 📒️ The stores of the instance: document, config, draft, presence, transient, interaction and window owner registries with their one-item publication factories.
@@ -173,6 +174,8 @@ pub struct VcsArtifactApp<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactor
     pub roster: PeerRoster<A>,
     /// 🪙️ Action ingress: the parser slots that retain unused original arguments and faults until their paid close.
     pub ingress: ActionIngress,
+    pub original_emission:semio_framework_plugin_job::original_emission::OriginalEmissionSource<A>,
+    pub original_typed_command:semio_framework_plugin_command::command_admission::original_typed_command::OriginalTypedCommandSource<A>,
     /// 🗜️ Local interaction: the framework-owned live query, topology authority, hover and snapshot read returns.
     pub interaction: LocalInteraction<A>,
     /// ⛓️ Command history: the session command log, the cached history view, backfill marks and the supersede ledger.
@@ -313,6 +316,9 @@ mod app_maintenance_ladder;
 #[path = "🔌️plugin-app-impl/🦀️.rs"]
 #[doc(hidden)]
 pub mod plugin_app_impl;
+#[path="🔌️plugin-app-impl/📦️original/🦀️.rs"]
+mod original_app_owner;
+pub use original_app_owner::OriginalVcsApp;
 
 
 
@@ -367,3 +373,13 @@ pub use semio_framework_plugin_instance_ladders::ladder_bundle::{LadderCtx, Ladd
 pub use semio_framework_plugin_instance_render::render_history_view::history_command;
 //#endregion 📥️StagedInstanceMounts
 
+
+#[path="🌱️initialization/🏪️stores/🦀️.rs"]
+pub mod original_instance_stores;
+
+#[path="🌱️initialization/🧺️sources/🦀️.rs"]
+pub mod original_instance_admission;
+
+#[path="🌱️initialization/🫧️ephemeral/🦀️.rs"]
+pub mod original_instance_ephemeral;
+pub use original_instance_ephemeral::{OriginalEmptyEphemeralSource,OriginalEmptyEphemeralStores};

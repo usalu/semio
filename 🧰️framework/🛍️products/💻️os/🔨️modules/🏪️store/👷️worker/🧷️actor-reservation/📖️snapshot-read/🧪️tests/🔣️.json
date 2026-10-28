@@ -1,0 +1,27 @@
+{
+  "documentId": "weather",
+  "instance": 0,
+  "revision": "9",
+  "operation": "41",
+  "generation": "3",
+  "chunks": [
+    [
+      0,
+      255,
+      7
+    ],
+    [
+      128,
+      64
+    ]
+  ],
+  "expectedHex": "00ff078040",
+  "refusals": [
+    "foreignHandle",
+    "oversized",
+    "truncated",
+    "cancelled",
+    "wrongMediaType",
+    "stalled"
+  ]
+}

@@ -33,7 +33,12 @@ pub use semio_framework_os_pack::PackError;
 pub use semio_framework_os_spr::{OpBinary, OpText, ProtocolError};
 
 /// 🏪️ Explicit OS application capabilities authored independently of snapshot encoding.
-pub trait ArtifactStoreSnapshot: pack::snapshot::ArtifactPack {
+pub trait ArtifactStoreSnapshot {
+    /// 📤️ Borrows the owner's actual native Pack fields and immutable authored declaration.
+    fn native_pack_source(&self) -> Option<OriginalSnapshotPackView<'_>> { None }
+    /// 🧊️ A snapshot explicitly opts into unbounded reference codecs independently of native receiving.
+    fn reference_snapshot_codec() -> Option<ArtifactReferenceSnapshotCodec<Self>> where Self:Sized { None }
+
     /// 📣️ The actual native factory may declare one exact zero-touch registry coordinate.
     fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, ArtifactCodec)> { None }
 
@@ -42,6 +47,31 @@ pub trait ArtifactStoreSnapshot: pack::snapshot::ArtifactPack {
         None
     }
 
+}
+
+#[path="💾️binary/📸️export/🦀️.rs"]
+mod original_snapshot_pack_export;
+pub use original_snapshot_pack_export::{OriginalSnapshotPackView,OriginalSnapshotPackExport};
+
+/// 🧊️ Typed reference operations remain separate from original retained receiving and publication.
+pub struct ArtifactReferenceSnapshotCodec<P> {
+    pub encode:fn(&P)->Result<Vec<u8>,PackError>,
+    pub decode:fn(&[u8])->Result<P,PackError>,
+    pub print_dsl:Option<fn(&P)->String>,
+}
+/// 🏭️ Only an owner with genuine reference Pack and DSL implementations can declare this port.
+pub fn reference_snapshot_codec<P:pack::snapshot::ArtifactPack+pack::snapshot::ArtifactDsl>()->ArtifactReferenceSnapshotCodec<P>{
+    ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:Some(|snapshot|snapshot.print_dsl())}
+}
+
+/// 🧮️ Binary-only reference owners declare Pack without manufacturing a DSL printer.
+pub fn binary_reference_snapshot_codec<P:pack::snapshot::ArtifactPack>()->ArtifactReferenceSnapshotCodec<P>{
+ ArtifactReferenceSnapshotCodec{encode:|snapshot|snapshot.encode_pack_with(&PackEncodeOptions::default()),decode:|bytes|P::decode_pack_with(bytes,&PackDecodeOptions::default()),print_dsl:None}
+}
+
+impl<P> semio_framework_os_vcs::io::binary::genesis::ArtifactGenesisProducer<P> for ArtifactReferenceSnapshotCodec<P>{
+ fn encode_genesis_pack(&self,snapshot:&P)->Result<Vec<u8>,ValueError>{(self.encode)(snapshot).map_err(|error|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
+ fn decode_genesis_pack(&self,bytes:&[u8])->Result<P,ValueError>{(self.decode)(bytes).map_err(|error|ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,error.to_string()))}
 }
 
 use pack::snapshot::{ArtifactDsl,ArtifactPack};
@@ -158,6 +188,13 @@ pub struct ArtifactCodec {
     /// hash always skips validation (schema-agnostic client). Durable pinning belongs in the db
     /// catalog once it grows a column for it; this in-memory pin is this wave's scope.
     pub pack_schema_hash: [u8; 32],
+    /// 🧊️ Explicit whole-value reference operations are separate from original retained application jobs.
+    pub reference: Option<ArtifactCodecReference>,
+}
+
+/// 🧊️ Whole-value operations exist only for a vocabulary that explicitly supplies its cold capabilities.
+#[derive(Clone)]
+pub struct ArtifactCodecReference {
     /// 📤️ `(dsl text, ops text) -> (pack files, dsl mirror text)` — the hand-authored/
     /// imported fallback path: compiles text straight to binary pack+spr (no JSON envelope
     /// currency anywhere in between). Returns the re-printed canonical dsl mirror alongside the
@@ -184,6 +221,11 @@ pub struct ArtifactCodec {
     /// replica gate, see [`replay_envelopes_onto_pair`].
     /// 🚫️async: E4 fn-pointer erasure-table thunk (R1(ii)) — see `compile_dsl`'s tag above.
     pub replay_envelopes: for<'a> fn(&'a [u8], &'a [u8], &'a [u8]) -> ArtifactCodecApplyFuture<'a>,
+}
+
+impl ArtifactCodec {
+    /// 🧊️ Requires the declared reference capability; mounted native jobs retain their own original caller.
+    pub fn reference(&self)->Result<&ArtifactCodecReference,VcsError>{self.reference.as_ref().ok_or_else(||VcsError::ValidationFailed("artifact codec requires an original retained application job".into()))}
 }
 
 #[path="💾️binary/📸️snapshot/🦀️.rs"]

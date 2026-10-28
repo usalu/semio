@@ -33,5 +33,57 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateSetpointManager",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "setpoint_managers",
+    "key": "id",
+    "inverse": "CreateSetpointManager",
+    "labels": {
+      "en": "Delete setpoint manager",
+      "de": "Sollwertmanager löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "setpoint-manager",
+      "kind": "delete",
+      "record": "DeletedSetpointManager"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A named setpoint manager carries its valid typed control law and optional schedule."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original setpoint manager identifier or name already exists."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The optional schedule must exist in the original model."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed setpoint manager or insertion rank does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original setpoint manager roster is unchanged."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "A live original source references this setpoint manager."
+      }
+    },
+    "restriction": "none"
   }
 }

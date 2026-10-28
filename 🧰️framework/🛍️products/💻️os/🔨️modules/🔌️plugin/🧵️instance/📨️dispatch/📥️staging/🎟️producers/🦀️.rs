@@ -29,7 +29,7 @@ use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 use pack::snapshot::ArtifactPack;
 use crate::dispatch_bundle::DispatchCtx;
 use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
-use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolProof};
+use semio_framework_plugin_job::reserved_jobs::{FrameworkReservedCommitPermit, QualifiedToolView};
 use std::future::Future;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework::kernel::{InvocationResult, UiDirtyScope};
@@ -48,7 +48,7 @@ use semio_framework_os_kernel as store;
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
     pub async fn admit_framework_reserved_spawn(&mut self, verb: &str, raw: &[u8], decoded_items: usize, meta: &ActionMeta,cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<FrameworkReservedCommitPermit>, semio_framework_job::OriginalTurnFailure> {
         let proof = self.tools.qualified_tool_proof(&*self.stores, verb)?;
-        if !matches!(proof, QualifiedToolProof::FrameworkOwned(_) | QualifiedToolProof::AppOwned(_)) {
+        if !matches!(proof, QualifiedToolView::FrameworkOwned(_) | QualifiedToolView::AppOwned(_)) {
             return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("interactive-job.reserved-proof"), format!("framework route '{verb}' did not resolve its route-specific factory")).into());
         }
         let key = proof.key();
@@ -132,7 +132,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🎟️ Seals one genuine publication slot and keyed lease before a reserved producer receives source owners.
     pub fn admit_reserved_emit_producer(&mut self,verb:&str,meta:&ActionMeta,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<FrameworkReservedCommitPermit>,semio_framework_job::OriginalTurnFailure>{
         let proof=self.tools.qualified_tool_proof(&*self.stores, verb)?;
-        if !matches!(proof,QualifiedToolProof::FrameworkOwned(_)|QualifiedToolProof::AppOwned(_)){return Err(plugin_sdk_fault("reserved producer lacks its exact registered publication proof").into())}
+        if !matches!(proof,QualifiedToolView::FrameworkOwned(_)|QualifiedToolView::AppOwned(_)){return Err(plugin_sdk_fault("reserved producer lacks its exact registered publication proof").into())}
         let Some((operation,lease))=self.admit_original_tool_lease(verb,meta,true,cx)?else{return Ok(None)};
         FrameworkReservedCommitPermit::new(operation,lease,proof.contract().max_output_bytes).map(Some).map_err(Into::into)
     }
@@ -234,18 +234,18 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let reservation=self.tools.typed_operation_reservations[operation_id as usize % ARTIFACT_LIVE_OUTPUT_SLOTS];
         if !self.tools.tool_operations.can_insert(operation_id)||reservation.is_some_and(|owner|owner!=operation_id){return Err(plugin_sdk_fault("original emission lost its exact pre-admitted publication slot"));}
         let mounted=MountedTypedCommandFullOperation::<A>{
-            verb:verb.into(),meta:meta.clone(),operation,source_identity:semio_framework_job::OriginalSourceBinding::borrow(cx),canonical_revision:revision,artifact_generation:generation.0,
+            verb:verb.into(),meta:meta.clone(),operation,source_identity:semio_framework_job::OriginalSourceBinding::borrow(cx),original_emission_caller:None,original_emission_decoder:None,original_emission_body:None,canonical_revision:revision,artifact_generation:generation.0,
             config_generation:self.stores.config_store.generation_now(),draft_generation:self.stores.draft_store.generation_now(),presence_generation:0,transient_generation:0,
             window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:None,
             session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer,completion,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:lease,identity,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},terminal_seen:true,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,original_retirement_receipt:None,
-            publication,publication_ownership_progress:None,actor_capture:None,worker_resume_pending:false,pending_artifact_publication:None,pending_child_publication:None,
+            publication,publication_ownership_progress:None,actor_capture:None,worker_resume_pending:false,pending_artifact_publication:None,pending_stream_abort:None,stream_abort_completed:false,pending_child_publication:None,
             owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,
             captured_child_content:Some(std::sync::Arc::new(ChildContentView::clone(&*self.child_composition.child_content_root))),captured_child_content_generation:self.child_composition.child_content_generation,
             result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_attempt:0,
             ui_pending:true,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,
             command_logged:false,interaction_revalidated:false,retained_close_fault: None,retained_close_fault_retirement:None,retained_close_fault_refusal:None, terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing,
         };
-        self.tools.tool_operations.insert_admitted(operation_id,mounted);
+        self.tools.tool_operations.insert_admitted(operation_id,Box::new(mounted));
         self.tools.release_reserved_emit_slot(operation_id);
         let capture:Result<_,Fault>=async{
             if self.tools.live_runtime_instance_id!=Some(meta.instance_id){return Err(plugin_sdk_fault("original emission does not belong to its mounted live app instance"));}

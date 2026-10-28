@@ -336,9 +336,9 @@ impl ArtifactEditor for MdEditor {
         md_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         MdSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

@@ -198,3 +198,9 @@ impl semio_framework_value::retirement::RetireOwned for RetainedWireFieldDecode{
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path="📦️bytes/🦀️.rs"]
+mod paged_bytes;
+pub use paged_bytes::RetainedWireBytesDecode;
+
+impl<const N:usize> RetainedWireByteSource for semio_framework_value::paged::PagedBytes<N>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.retained_bytes().contiguous_at(0).map_or(self as*const Self as usize,|page|page.as_ptr()as usize),extent:self.len(),authority:None}}fn byte_at(&self,index:usize)->Option<u8>{self.retained_bytes().get(index).copied()}}

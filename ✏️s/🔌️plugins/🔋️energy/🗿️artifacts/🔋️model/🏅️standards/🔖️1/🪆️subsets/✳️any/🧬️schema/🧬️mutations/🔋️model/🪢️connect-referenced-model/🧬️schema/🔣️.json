@@ -6,14 +6,14 @@
   "additionalProperties": false,
   "required": [
     "mutation",
-    "target"
+    "link"
   ],
   "properties": {
     "mutation": {
       "const": "connectReferencedModel"
     },
-    "target": {
-      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference.json#/$defs/ArtifactRef",
+    "link": {
+      "$ref": "https://json.schemas.assets.semio-tech.com/framework/schema/artifact-reference/link/schema.json",
       "x-semio-ui": {
         "role": "value",
         "label": {
@@ -21,12 +21,47 @@
           "de": "Referenziertes Modell"
         },
         "description": {
-          "en": "Owned target artifact identity and dialect.",
-          "de": "Eigene Zielartefakt-Identität und Dialekt."
+          "en": "Complete target identity, history pin and relationship role.",
+          "de": "Vollständige Zielidentität, Geschichtsfixierung und Beziehungsrolle."
         },
         "group": "source",
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "root-link",
+    "field": "referenced_model",
+    "intent": "attach",
+    "attach": "ConnectReferencedModel",
+    "detach": "DisconnectReferencedModel",
+    "labels": {
+      "en": "Connect referenced model",
+      "de": "Referenziertes Modell verbinden"
+    },
+    "semantics": {
+      "verb": "connect",
+      "entity": "referenced-model",
+      "kind": "connect-referenced-model",
+      "record": "ConnectedReferencedModel"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The complete original artifact link must retain valid target, pin and role identities."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This original link slot already carries the requested target, pin and role."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original link slot is empty."
+      }
+    },
+    "input": "link"
   }
 }

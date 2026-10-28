@@ -53,6 +53,8 @@ macro_rules! expansion_owner {
             fn decode_pack_with(bytes: &[u8], _: &PackDecodeOptions) -> Result<Self, PackError> { Ok(Self { output_bytes: bytes.len() }) }
         }
 impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for $owner {
+    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+
 
 }
         impl ArtifactSqliteSnapshotHost for $owner {

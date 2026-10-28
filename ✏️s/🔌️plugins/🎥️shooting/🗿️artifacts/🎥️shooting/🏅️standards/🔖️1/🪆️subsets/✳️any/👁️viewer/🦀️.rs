@@ -62,9 +62,9 @@ impl ArtifactViewer for ShootingViewer {
     const DIALECT: Dialect = SHOOTING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SHOOTING_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> ShootingSnapshot {
+    fn reference_birth()->Option<fn()->ShootingSnapshot>{Some(||{
         crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `ShootingViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

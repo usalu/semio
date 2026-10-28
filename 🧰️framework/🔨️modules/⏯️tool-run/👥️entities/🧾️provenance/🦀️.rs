@@ -21,10 +21,10 @@ impl ToolRunEntityProvenance {
  pub fn revision(&self)->u64{self.revision}
  pub fn identity(&self)->usize{self.root.identity()}
 }
-#[derive(semio_framework_value::RetireOwned)]
 struct State {original:Option<ToolRunEntityProvenance>,source:Option<RetainedCloneSource<ProvenanceMap,ToolRunEntityProvenance>>,append:Vec<u64>,keys:Option<Vec<u128>>,targets:Option<Vec<u64>>,marks:Option<ProvenanceMap>,entities:Option<EntityMap>,marks_edit:Option<ToolRunEntityEdit<u128>>,entities_edit:Option<ToolRunEntityEdit>,marks_close:Option<ControlledRetirement<ToolRunEntityEdit<u128>>>,entities_close:Option<ControlledRetirement<ToolRunEntityEdit>>,retract:Option<u32>,end:u32,index:usize,phase:u8,next_revision:Option<u64>,key_count:Option<usize>,cancelled:bool}
+semio_framework_value::artifact_retire_struct!(State{original,source,append,keys,targets,marks,entities,marks_edit,entities_edit,marks_close,entities_close,retract,end,index,phase,next_revision,key_count,cancelled});
 pub struct ToolRunEntityProvenanceEdit {state:ManuallyDrop<State>,transferred:bool}
-fn control_demands<T:RetireOwned>(child:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if child.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}let copy=child.next_copy_byte_demand()?;Ok(RetirementDemand{copy_bytes:copy,capacity_bytes:child.next_capacity_byte_demand(body.max(copy))?,release_bytes:child.next_release_byte_demand()?,depth:child.next_depth_demand()?})}
+fn control_demands<T:RetireOwned>(child:&ControlledRetirement<T>,body:usize)->Result<RetirementDemand,ValueError>{if child.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}child.selected_demand(body)}
 impl ToolRunEntityProvenanceEdit {
  pub fn new(original:ToolRunEntityProvenance,retract:Option<u32>,end:u32,append:Vec<u64>)->Self{let key_count=original.marks().len().checked_add(append.len());let next_revision=original.revision.checked_add(1);Self{state:ManuallyDrop::new(State{original:Some(original),source:None,append,keys:None,targets:None,marks:None,entities:None,marks_edit:None,entities_edit:None,marks_close:None,entities_close:None,retract,end,index:0,phase:0,next_revision,key_count,cancelled:false}),transferred:false}}
  pub fn complete(&self)->bool{self.state.phase==12&&!self.state.cancelled}

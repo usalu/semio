@@ -15,3 +15,6 @@ pub mod lifted_document_materialize;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod unit_tests;
+
+#[path="📣️metadata/🦀️.rs"]
+pub mod original_commit_metadata;

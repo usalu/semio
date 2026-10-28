@@ -58,12 +58,15 @@ pub struct PendingReserved<A: ArtifactApp> {
     pub pending_render_compound:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalClosureFailure>>,
     pub pending_render_retirement: std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_plugin_ownership::sdk_fault::OriginalRenderFailure>>>,
     pub pending_reserved: ArtifactFixedRegistry<PendingFrameworkReserved>,
-    pub reserved_commits: std::collections::VecDeque<FrameworkReservedCommit>,
+    pub reserved_commits: std::collections::VecDeque<FrameworkReservedCommit<A::Snapshot,A::Mutation>>,
     pub reserved_commit_outcome: Option<Result<InvocationResult, Fault>>,
     pub pending_document_window_admission:std::mem::ManuallyDrop<Option<DocumentWindowResetAdmission>>,
 }
 
 impl<A: ArtifactApp> PendingReserved<A> {
+    /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.pending_reserved,64)?,semio_framework_plugin_ownership::bounded_ownership::original_deque_backing::<Self,_>(|owner|&owner.reserved_commits,64)?])}
+
     /// 🛟️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new(dispatch_report: protocol::DispatchReport) -> Self {
         Self {
@@ -132,9 +135,10 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub typed_completion_outbox: ArtifactFixedQueue<TypedOperationCompletionWitness>,
     /// 🧩️ See [`ComposedGestureResult`] — one entry per composed gesture this actor published.
     pub typed_composed_outbox: ArtifactFixedQueue<ComposedGestureResult>,
+    pub declared_tools:ManuallyDrop<Option<DeclaredToolCatalogAlias>>,
     pub registry: AppActionRegistry,
     pub tool_job_controller_id: String,
-    pub tool_jobs: semio_framework::ActionBus,
+    pub tool_jobs: ToolActionBus,
     pub agent_lane_preview:Option<semio_framework_plugin_job::AgentLanePreview<A>>,
     pub bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>,
     pub bounded_tool_contracts: Vec<ArtifactToolPublicContract>,
@@ -143,7 +147,9 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub instance_operation_owner: ArtifactInstanceOperationOwnerHandle,
     pub tool_cancellations: semio_framework_plugin_operation::ToolCancellationIssuer,
     pub live_runtime_instance_id: Option<u32>,
-    pub tool_operations: ArtifactFixedRegistry<MountedTypedCommandFullOperation<A>>,
+    pub tool_operations: ArtifactFixedRegistry<Box<MountedTypedCommandFullOperation<A>>>,
+    pub original_emission_admission:std::mem::ManuallyDrop<Option<Box<semio_framework_plugin_retained_command::typed_operation::original_emission::OriginalEmissionAdmission<A>>>>,
+    pub original_emission_receipt:Option<semio_framework_plugin_job::original_emission::OriginalEmissionReceipt>,
     #[cfg(test)]
     pub test_tool_clock: Option<fn() -> Option<u64>>,
     pub typed_operation_reservations: [Option<u64>; ARTIFACT_LIVE_OUTPUT_SLOTS],
@@ -155,9 +161,32 @@ pub struct ToolOperations<A: ArtifactApp> {
     pub latest_wins_turn: bool,
 }
 
+/// 🧾️ Original tool registration resources remain retained until the fixed runtime queues are admitted.
+pub struct OriginalToolOperationsSources{pub registry:AppActionRegistry,pub declared:DeclaredToolCatalogAlias,pub bus:semio_framework::RegisteredActionBusAlias,pub owner:ArtifactInstanceOperationOwnerHandle}
+
 impl<A: ArtifactApp> ToolOperations<A> {
+    /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.tool_operations,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.latest_wins_commands,64)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_effect_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_event_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_ui_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_completion_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.typed_composed_outbox,TYPED_OPERATION_HOST_OUTBOX_SLOTS)?,semio_framework_plugin_ownership::bounded_ownership::original_queue_backing::<Self,_>(|owner|&owner.latest_wins_order,64)?])}
+
+    /// 🌱️ Moves original tool registrations into their actual fixed-queue runtime under the same mounted caller.
+    pub fn admit_original(sources:&mut Option<OriginalToolOperationsSources>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Self>)->Result<bool,semio_framework_job::OriginalTurnFailure>{if sources.is_none()||output.is_some(){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original tool runtime birth requires retained registrations and an empty destination").into())}let mut d=Self::birth_demands()?;d.copy_bytes=d.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;semio_framework_job::admit_original_construction(cx,output,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:d.depth},|_|{let source=sources.take().unwrap();Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;Ok(output.is_some())}
+
+    /// 📏️ The composite source preserves both original input and actual fixed runtime headers.
+    pub fn original_birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{let mut demand=Self::birth_demands()?;demand.copy_bytes=demand.copy_bytes.checked_add(2*std::mem::size_of::<OriginalToolOperationsSources>()).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool source extent overflow"))?;Ok(demand)}
+    /// 🧱️ An enclosing original construction can admit the same runtime without another transient owner.
+    pub fn build_original(source:OriginalToolOperationsSources,grant:semio_framework_value::RetainedCloneGrant)->Result<(Self,semio_framework_value::RetainedCloneProgress),(semio_framework_value::ValueError,OriginalToolOperationsSources)>{let demand=match Self::original_birth_demands(){Ok(demand)=>demand,Err(error)=>return Err((error,source))};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original tool runtime source is not funded"),source))}Ok((Self::from_original(source),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))}
+
+    fn from_original(source:OriginalToolOperationsSources)->Self{let mut value=Self::new_with_bus(source.registry,String::new(),ToolActionBus::Original(source.bus),BTreeMap::new(),Vec::new(),BTreeMap::new(),BTreeMap::new(),source.owner);*value.declared_tools=Some(source.declared);value}
+    pub fn tool_controller_id(&self)->&str{self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).map_or(self.tool_job_controller_id.as_str(),|catalog|catalog.controller_id.as_str())}
+    pub fn app_registrations(&self)->impl Iterator<Item=(&String,&ArtifactToolRegistration)>{self.app_tool_registrations.iter().chain(self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).into_iter().flat_map(|catalog|catalog.app.iter().map(|(key,row)|(key,row))))}
+    pub fn framework_registrations(&self)->impl Iterator<Item=(&String,&ArtifactToolRegistration)>{self.framework_tool_registrations.iter().chain(self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).into_iter().flat_map(|catalog|catalog.framework.iter().map(|(key,row)|(key,row))))}
+    pub fn app_registration(&self,id:&str)->Option<&ArtifactToolRegistration>{self.app_registrations().find_map(|(key,row)|(key==id).then_some(row))}
+    pub fn framework_registration(&self,id:&str)->Option<&ArtifactToolRegistration>{self.framework_registrations().find_map(|(key,row)|(key==id).then_some(row))}
+    pub fn bounded_proof(&self,id:&str)->Option<&QualifiedBoundedFirstStepProof>{self.bounded_tool_proofs.get(id).or_else(||self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).and_then(|catalog|catalog.bounded(id)))}
+    pub fn bounded_contracts(&self)->impl Iterator<Item=&ArtifactToolPublicContract>{self.bounded_tool_contracts.iter().chain(self.declared_tools.as_ref().and_then(DeclaredToolCatalogAlias::catalog).into_iter().flat_map(|catalog|catalog.bounded_contracts.iter()))}
     /// 🔭️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
+    pub fn new(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: semio_framework::ActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {Self::new_with_bus(registry,tool_job_controller_id,ToolActionBus::Reference(tool_jobs),bounded_tool_proofs,bounded_tool_contracts,framework_tool_registrations,app_tool_registrations,instance_operation_owner)}
+    fn new_with_bus(registry: AppActionRegistry, tool_job_controller_id: String, tool_jobs: ToolActionBus, bounded_tool_proofs: BTreeMap<String, QualifiedBoundedFirstStepProof>, bounded_tool_contracts: Vec<ArtifactToolPublicContract>, framework_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, app_tool_registrations: BTreeMap<String, ArtifactToolRegistration>, instance_operation_owner: ArtifactInstanceOperationOwnerHandle) -> Self {
         Self {
             pending_tool_lease_admission: ManuallyDrop::new(None),
             typed_effect_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
@@ -168,6 +197,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             typed_inline_interaction_leftover: None,
             typed_completion_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
             typed_composed_outbox: ArtifactFixedQueue::new(TYPED_OPERATION_HOST_OUTBOX_SLOTS),
+            declared_tools:ManuallyDrop::new(None),
             registry,
             tool_job_controller_id,
             tool_jobs,
@@ -180,6 +210,7 @@ impl<A: ArtifactApp> ToolOperations<A> {
             tool_cancellations: semio_framework_plugin_operation::ToolCancellationIssuer::empty(),
             live_runtime_instance_id: None,
             tool_operations: ArtifactFixedRegistry::new(),
+            original_emission_admission:std::mem::ManuallyDrop::new(None),original_emission_receipt:None,
             #[cfg(test)]
             test_tool_clock: None,
             typed_operation_reservations: [None; ARTIFACT_LIVE_OUTPUT_SLOTS],
@@ -204,4 +235,17 @@ impl<A: ArtifactApp> ToolOperations<A> {
         }
         None
     }
+}
+
+#[path="🏛️declarations/🦀️.rs"]
+mod declared_tools;
+pub use declared_tools::*;
+
+/// 🧷️ Native job dispatch borrows the committed registry alias until its paid return; reference construction retains its explicit bus.
+pub enum ToolActionBus{Reference(semio_framework::ActionBus),Original(semio_framework::RegisteredActionBusAlias)}
+impl std::ops::Deref for ToolActionBus{type Target=semio_framework::ActionBus;fn deref(&self)->&Self::Target{match self{Self::Reference(bus)=>bus,Self::Original(bus)=>bus.bus()}}}
+impl ToolActionBus{
+ pub fn original_terminal_is_empty(&self)->bool{match self{Self::Reference(_)=>true,Self::Original(bus)=>bus.terminal_is_empty()}}
+ pub fn original_close_demands(&self)->semio_framework_value::RetirementDemand{match self{Self::Reference(_)=>Default::default(),Self::Original(bus)=>bus.close_demands()}}
+ pub fn original_close_step(&mut self,grant:semio_framework_value::RetainedCloneGrant)->semio_framework_value::RetainedCloneStep{match self{Self::Reference(_)=>semio_framework_value::RetainedCloneStep::Complete(Default::default()),Self::Original(bus)=>bus.close_step(grant)}}
 }

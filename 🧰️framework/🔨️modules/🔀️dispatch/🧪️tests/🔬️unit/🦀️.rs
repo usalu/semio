@@ -438,3 +438,11 @@ fn end_to_end_forty_plus_methods_does_not_blow_up() {
 }
 
 //#endregion
+
+#[test]
+fn typed_delegation_rejects_implicit_owned_target_transfer(){let input=quote!{trait Owned{fn take(self)->u32;}};let error=expand_dyn_enum_attribute(quote!{delegate},input).unwrap_err();assert!(error.to_string().contains("ownership stays"));}
+#[test]
+fn typed_delegation_emits_original_contract_and_explicit_target_ports(){let input=quote!{pub trait Counter:Send{fn read(&self)->&u32;fn bump(&mut self,by:u32);}};let expanded=expand_dyn_enum_attribute(quote!{delegate},input).unwrap();parses_as_items(&expanded);let text=expanded.to_string();for expected in ["trait CounterDelegate","type Target : Counter","delegate_ref","delegate_mut","__SemioDelegate"]{assert!(text.contains(expected),"missing {expected}");}}
+
+#[test]
+fn typed_delegation_rejects_changing_borrowed_target_into_owner_self(){let input=quote!{trait Identity{fn same(&self)->&Self;}};let error=expand_dyn_enum_attribute(quote!{delegate},input).unwrap_err();assert!(error.to_string().contains("Self-valued"));}

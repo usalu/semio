@@ -39,11 +39,11 @@ macro_rules! retained_row_patch{
    use $crate::value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneRef,RetainedCloneBinding,RetainedCloneClose,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
    /// 🧳️ Original sparse inverse fields and source aliases remain typed until complete settlement.
    pub struct Fields{
-    $($field:RetainedFieldPreparation<$field_ty>,)+
+    $($field:Option<Box<RetainedFieldPreparation<$field_ty>>>,)+
     source:RetainedPatchSource,result:std::mem::ManuallyDrop<Option<$patch>>,retirement:RetainedCloneClose,phase:usize,payload:Option<RetainedCloneBinding>,row:Option<RetainedCloneBinding>,closing:bool,
    }
    impl RetainedRowPatchFields<$row,$patch> for Fields{
-    fn new(source:RetainedPatchSource)->Self{Self{source,$($field:Default::default(),)+result:std::mem::ManuallyDrop::new(Some(Default::default())),retirement:Default::default(),phase:0,payload:None,row:None,closing:false}}
+    fn new(source:RetainedPatchSource)->Self{Self{source,$($field:None,)+result:std::mem::ManuallyDrop::new(Some(Default::default())),retirement:Default::default(),phase:0,payload:None,row:None,closing:false}}
     fn demand(&self,patch:RetainedCloneRef<'_,$patch>,row:RetainedCloneRef<'_,$row>,body:usize)->Result<RetirementDemand,ValueError>{
      if self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse already closing"));}
      if self.payload.is_none(){return Ok(RetirementDemand{copy_bytes:patch.binding_copy_bytes(),depth:1,..Default::default()});}
@@ -51,8 +51,9 @@ macro_rules! retained_row_patch{
      let mut index=0;
      $(if self.phase==index{
       if patch.get().$field.is_none(){return Ok(RetirementDemand{copy_bytes:std::mem::size_of::<usize>(),depth:1,..Default::default()});}
-      if self.$field.value().is_some(){let mut demand=self.$field.exchange_demand()?;demand.copy_bytes=demand.copy_bytes.checked_add(std::mem::size_of::<Option<$field_ty>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"sparse inverse header extent overflow"))?;return Ok(demand);}
-      let source=if self.source==RetainedPatchSource::Authored{patch.project(index,|patch|patch.$field.as_ref().expect("authored schema field"))}else{row.project(index,|row|&row.$field)};return self.$field.demand(source,body);
+      let Some(field)=self.$field.as_ref()else{return Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<RetainedFieldPreparation<$field_ty>>()+2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),capacity_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),depth:1,..Default::default()});};
+      if field.value().is_some(){let mut demand=field.exchange_demand()?;demand.copy_bytes=demand.copy_bytes.checked_add(std::mem::size_of::<Option<$field_ty>>()).ok_or_else(||ValueError::literal(ValueRefusalKind::WorkLimit,"sparse inverse header extent overflow"))?;return Ok(demand);}
+      let source=if self.source==RetainedPatchSource::Authored{patch.project(index,|patch|patch.$field.as_ref().expect("authored schema field"))}else{row.project(index,|row|&row.$field)};return field.demand(source,body);
      }index+=1;)+
      let _=index;Ok(RetirementDemand{copy_bytes:std::mem::size_of::<$patch>()*2,depth:1,..Default::default()})
     }
@@ -64,12 +65,14 @@ macro_rules! retained_row_patch{
      let mut index=0;
      $(if self.phase==index{
       if patch.get().$field.is_none(){self.phase+=1;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
-      if self.$field.value().is_some(){
+      if self.$field.is_none(){self.$field=Some(Box::new(RetainedFieldPreparation::default()));return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}));}
+      let field=self.$field.as_mut().expect("funded sparse field owner");
+      if field.value().is_some(){
        let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-std::mem::size_of::<Option<$field_ty>>(),..grant};
-       let(value,mut progress)=self.$field.take(child)?;self.result.as_mut().expect("untransferred sparse inverse").$field=value;
+       let(value,mut progress)=field.take(child)?;self.result.as_mut().expect("untransferred sparse inverse").$field=value;
        progress.copied_bytes+=std::mem::size_of::<Option<$field_ty>>();self.phase+=1;return Ok(RetainedCloneStep::Progress(progress));
       }
-      let source=if self.source==RetainedPatchSource::Authored{patch.project(index,|patch|patch.$field.as_ref().expect("authored schema field"))}else{row.project(index,|row|&row.$field)};let step=self.$field.advance(source,body,grant)?;return Ok(RetainedCloneStep::Progress(step.progress()));
+      let source=if self.source==RetainedPatchSource::Authored{patch.project(index,|patch|patch.$field.as_ref().expect("authored schema field"))}else{row.project(index,|row|&row.$field)};let step=field.advance(source,body,grant)?;return Ok(RetainedCloneStep::Progress(step.progress()));
      }index+=1;)+
      let _=index;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
     }
@@ -80,9 +83,9 @@ macro_rules! retained_row_patch{
      let value=self.result.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse ownership already transferred"))?;
      Ok((Some(value),RetainedCloneProgress{copied_items:1,copied_bytes:copy_bytes,..Default::default()}))
     }
-    fn begin_close(&mut self){self.closing=true;$(self.$field.begin_close();)+}
+    fn begin_close(&mut self){self.closing=true;$(if let Some(field)=self.$field.as_mut(){field.begin_close();})+}
     fn close_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
-     $(if !self.$field.terminal_is_empty(){return self.$field.close_demand(body);})+
+     $(if let Some(field)=self.$field.as_ref(){return if field.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),release_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),depth:1,..Default::default()})}else{field.close_demand(body)};})+
      if !self.retirement.is_empty(){return self.retirement.next_owner_demands::<$patch>(false,&None,body);}
      if self.result.is_some(){return Ok(self.retirement.next_owner_demands::<$patch>(true,&None,body)?);}
      let binding=if self.row.is_some(){&self.row}else{&self.payload};
@@ -91,13 +94,13 @@ macro_rules! retained_row_patch{
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
      if !self.closing{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"sparse inverse closure not started"));}
      if !retained_mutation_demand_fits(self.close_demand(grant.maximum_copy_bytes)?,grant){return Ok(RetainedCloneStep::Progress(Default::default()));}
-     $(if !self.$field.terminal_is_empty(){return self.$field.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));})+
+     $(if let Some(field)=self.$field.as_mut(){if field.terminal_is_empty(){drop(self.$field.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:2*std::mem::size_of::<Option<Box<RetainedFieldPreparation<$field_ty>>>>(),released_bytes:std::mem::size_of::<RetainedFieldPreparation<$field_ty>>(),..Default::default()}));}return field.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));})+
      if !self.retirement.is_empty(){return self.retirement.step_granted(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
      if let Some(step)=self.retirement.begin_granted(&mut self.result,grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
      let step=RetainedCloneBinding::close_one(if self.row.is_some(){&mut self.row}else{&mut self.payload},grant)?;
      Ok(if self.terminal_is_empty(){RetainedCloneStep::Complete(step.progress())}else{RetainedCloneStep::Progress(step.progress())})
     }
-    fn terminal_is_empty(&self)->bool{self.result.is_none()&&self.retirement.is_empty()&&self.payload.is_none()&&self.row.is_none()$(&&self.$field.terminal_is_empty())+}
+    fn terminal_is_empty(&self)->bool{self.result.is_none()&&self.retirement.is_empty()&&self.payload.is_none()&&self.row.is_none()$(&&self.$field.is_none())+}
    }
    impl Drop for Fields{fn drop(&mut self){let empty=self.terminal_is_empty();assert!(std::thread::panicking()||empty,"sparse inverse requires original field and source closure");if empty{unsafe{std::mem::ManuallyDrop::drop(&mut self.result);}}}}
   }

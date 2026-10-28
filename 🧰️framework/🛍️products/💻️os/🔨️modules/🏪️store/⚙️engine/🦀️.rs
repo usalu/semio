@@ -6,6 +6,11 @@
 pub mod initial_child_identity;
 #[path = "📥️lifted/🏪️store/🦀️.rs"]
 pub mod lifted_store;
+#[path="🌿️branch/🦀️.rs"]
+pub mod original_history_branch;
+pub use original_history_branch::transitions as original_history_transitions;
+#[path="../🕰️history/🏁️replay/📚️metadata/🦀️.rs"]
+pub mod original_replay_metadata;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod unit_tests;
@@ -14,3 +19,5 @@ mod unit_tests;
 #[cfg(test)]
 #[global_allocator]
 static ENGINE_LIBRARY_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+#[path="../🕰️history/🏁️replay/🦀️.rs"]
+pub mod original_replay_publication;

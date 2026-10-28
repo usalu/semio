@@ -5,3 +5,5 @@ mod icon_name;
 pub use icon_name::IconName;
 #[path = "🧾️value/🦀️.rs"]
 mod value;
+
+semio_framework_value::artifact_retire_leaf!(IconName);

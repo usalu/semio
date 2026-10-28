@@ -1,0 +1,51 @@
+//! 🌿️ Native branch facts adopt the original pending vector and author canonical metadata field by field.
+use super::*;
+use crate::{Alternative,Checkpoint};
+use semio_framework_value::{RetainedCloneStep,retained_clone::RetainedCloneClose};
+use std::mem::ManuallyDrop;
+/// 🏛️ Actual canonical graph rows remain private until their original publisher commits them.
+pub struct OriginalBranchFacts{pub checkpoint:Option<(Change,Checkpoint)>,pub alternative:Alternative}
+semio_framework_value::artifact_retire_struct!(OriginalBranchFacts{checkpoint,alternative});
+/// 🪴️ Every string source remains borrowed from the original branch author or actual parent checkpoint.
+pub struct OriginalBranchFactInput<'a>{pub generation:u64,pub parent:Option<&'a Checkpoint>,pub change_id:&'a str,pub checkpoint_id:&'a str,pub alternative_id:&'a str,pub name:&'a str,pub saved_at:&'a str,pub timestamp:&'a str,pub create_checkpoint:bool}
+impl OriginalBranchFactInput<'_>{fn identity(&self)->(u64,[usize;15]){(self.generation,[self.parent.map_or(0,|p|p as*const _ as usize),self.change_id.as_ptr()as usize,self.change_id.len(),self.checkpoint_id.as_ptr()as usize,self.checkpoint_id.len(),self.alternative_id.as_ptr()as usize,self.alternative_id.len(),self.name.as_ptr()as usize,self.name.len(),self.saved_at.as_ptr()as usize,self.saved_at.len(),self.timestamp.as_ptr()as usize,self.timestamp.len(),usize::from(self.create_checkpoint),self.parent.map_or(0,|p|p.change_ids.len())])}fn checkpoint_changes(&self)->usize{self.parent.map_or(0,|p|p.change_ids.len())+1}fn source(&self,index:usize)->Option<&str>{let tail=if self.create_checkpoint{let changes=self.checkpoint_changes();match index{0=>return Some(self.change_id),1=>return Some(self.saved_at),2=>return Some(self.checkpoint_id),3=>return self.parent.map(|p|p.id.as_str()),4=>return Some(self.timestamp),i if i<5+changes=>return Some(if i==4+changes{self.change_id}else{&self.parent.unwrap().change_ids[i-5]}),_=>{}}index-(5+changes)}else{index};match tail{0=>Some(self.alternative_id),1=>Some(self.name),2=>Some(self.checkpoint_id),_=>None}}fn fields(&self)->usize{if self.create_checkpoint{5+self.checkpoint_changes()+3}else{3}}}
+/// 🧳️ Cancellation retains every partly born canonical field beside its original source binding.
+pub struct OriginalBranchFactBirth{facts:ManuallyDrop<Option<OriginalBranchFacts>>,unused:ManuallyDrop<Option<Vec<String>>>,retirement:RetainedCloneClose,source:Option<(u64,[usize;15])>,phase:u8,field:usize,offset:Option<usize>,closing:bool}
+impl Default for OriginalBranchFactBirth{fn default()->Self{Self{facts:ManuallyDrop::new(None),unused:ManuallyDrop::new(None),retirement:Default::default(),source:None,phase:0,field:0,offset:None,closing:false}}}
+fn permits(g:RetainedCloneGrant,d:RetirementDemand)->bool{semio_framework_value::retained_clone::retained_clone_grant_admits(g,d)}
+fn paid(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
+impl OriginalBranchFactBirth{
+ fn target(&mut self,input:&OriginalBranchFactInput<'_>)->Result<&mut String,ValueError>{let facts=self.facts.as_mut().ok_or_else(invalid)?;let tail=if input.create_checkpoint{let(change,checkpoint)=facts.checkpoint.as_mut().ok_or_else(invalid)?;let changes=input.checkpoint_changes();match self.field{0=>return Ok(&mut change.id),1=>return Ok(&mut change.saved_at),2=>return Ok(&mut checkpoint.id),3=>return checkpoint.parent_id.as_mut().ok_or_else(invalid),4=>return Ok(&mut checkpoint.timestamp),i if i<5+changes=>return checkpoint.change_ids.get_mut(i-5).ok_or_else(invalid),_=>{}}self.field-(5+changes)}else{self.field};match tail{0=>Ok(&mut facts.alternative.id),1=>Ok(&mut facts.alternative.name),2=>facts.alternative.checkpoint_ids.get_mut(0).ok_or_else(invalid),_=>Err(invalid())}}
+ /// 📐️ Quotes the exact next canonical field or original unused-vector retirement event.
+ pub fn demands(&self,input:&OriginalBranchFactInput<'_>)->Result<RetirementDemand,ValueError>{
+  if self.phase==6{if !self.retirement.is_empty(){return self.retirement.demands(4096)}if self.unused.is_some(){return self.retirement.next_owner_demands::<Vec<String>>(true,&None,4096)}}
+  let mut d=RetirementDemand{copy_bytes:128,depth:1,..Default::default()};match self.phase{0=>d.copy_bytes+=size_of::<OriginalBranchFacts>()+size_of::<Vec<String>>(),1 if input.create_checkpoint=>d.capacity_bytes=input.checkpoint_changes().checked_mul(size_of::<String>()).ok_or_else(invalid)?,3=>d.capacity_bytes=size_of::<String>(),5 if self.field<input.fields()&&self.offset.is_none()=>d.capacity_bytes=input.source(self.field).map_or(0,str::len),5=>d.copy_bytes+=64,_=>{}}Ok(d)
+ }
+ /// 📥️ The original pending vector moves once; all remaining field births are separately admitted.
+ pub fn advance(&mut self,input:&OriginalBranchFactInput<'_>,pending:&mut Option<Vec<String>>,grant:RetainedCloneGrant,mut admit:impl FnMut(usize)->Result<(),ValueError>)->Result<RetainedCloneProgress,ValueError>{
+  if self.closing{return Err(invalid())}let source=input.identity();if self.source.is_some_and(|original|original!=source){return Err(invalid())}if self.ready(){return Ok(Default::default())}let d=self.demands(input)?;
+  if !permits(grant,d){return Ok(Default::default())}admit(d.capacity_bytes)?;if self.source.is_none(){self.source=Some(source);}
+  match self.phase{
+   0=>{let original=pending.take().ok_or_else(invalid)?;let checkpoint=if input.create_checkpoint{Some((Change{id:String::new(),edit_ids:original,description:None,saved_at:String::new()},Checkpoint{id:String::new(),change_ids:Vec::new(),parent_id:input.parent.map(|_|String::new()),authors:Vec::new(),message:None,timestamp:String::new(),composition_pins:Vec::new()}))}else{if !original.is_empty(){*pending=Some(original);return Err(invalid())}*self.unused=Some(original);None};*self.facts=Some(OriginalBranchFacts{checkpoint,alternative:Alternative{id:String::new(),name:String::new(),checkpoint_ids:Vec::new()}});self.phase=1;},
+   1=>{if let Some((_,checkpoint))=self.facts.as_mut().unwrap().checkpoint.as_mut(){checkpoint.change_ids.try_reserve_exact(input.checkpoint_changes()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"branch checkpoint header reservation failed"))?;}self.phase=2;},
+   2=>{if let Some((_,checkpoint))=self.facts.as_mut().unwrap().checkpoint.as_mut(){if checkpoint.change_ids.len()<input.checkpoint_changes(){checkpoint.change_ids.push(String::new());}else{self.phase=3;}}else{self.phase=3;}},
+   3=>{self.facts.as_mut().unwrap().alternative.checkpoint_ids.try_reserve_exact(1).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"branch alternative header reservation failed"))?;self.phase=4;},
+   4=>{self.facts.as_mut().unwrap().alternative.checkpoint_ids.push(String::new());self.phase=5;},
+   5 if self.field==input.fields()=>self.phase=6,
+   5=>{if let Some(original)=input.source(self.field){if let Some(offset)=self.offset{let mut end=(offset+64).min(original.len());while !original.is_char_boundary(end){end-=1;}self.target(input)?.push_str(&original[offset..end]);if end==original.len(){self.offset=None;self.field+=1;}else{self.offset=Some(end);}}else{self.target(input)?.try_reserve_exact(original.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"branch metadata field reservation failed"))?;self.offset=Some(0);}}else{self.field+=1;}},
+   6=>{if !self.retirement.is_empty(){return self.retirement.select(4096)?.step(grant).map(|step|step.progress())}if self.unused.is_some(){return self.retirement.begin_granted(&mut self.unused,grant).map(|step|step.map_or(Default::default(),|step|step.progress()))}self.phase=7;},
+   _=>return Err(invalid()),
+  }Ok(paid(d))
+ }
+ /// 🏁️ Both canonical facts and every unused original reservation are settled before exposure.
+ pub fn ready(&self)->bool{self.phase==7&&!self.closing}
+ pub fn prepared(&self)->Option<&OriginalBranchFacts>{self.ready().then(||self.facts.as_ref().unwrap())}
+ /// 🤝️ The actual canonical rows transfer without another String or Vec allocation.
+ pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(OriginalBranchFacts,RetainedCloneProgress)>,ValueError>{if !self.ready(){return Err(invalid())}let d=RetirementDemand{copy_bytes:size_of::<OriginalBranchFacts>()+128,depth:1,..Default::default()};if !permits(grant,d){return Ok(None)}self.source=None;self.phase=8;Ok(Some((self.facts.take().ok_or_else(invalid)?,paid(d))))}
+ /// 📏️ Typed partial field disposal is quoted from its actual retained frame.
+ pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.unused.is_some(){return self.retirement.next_owner_demands::<Vec<String>>(true,&None,body)}if self.facts.is_some(){return self.retirement.next_owner_demands::<OriginalBranchFacts>(true,&None,body)}Ok(RetirementDemand{copy_bytes:128,depth:1,..Default::default()})}
+ /// ♻️ Every original partial canonical fact returns through defining native retirement.
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.closing=true;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demands(grant.maximum_copy_bytes)?;if !permits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){return self.retirement.select(grant.maximum_copy_bytes)?.step(grant)}if self.unused.is_some(){return Ok(self.retirement.begin_granted(&mut self.unused,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}if self.facts.is_some(){return Ok(self.retirement.begin_granted(&mut self.facts,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}self.source=None;Ok(RetainedCloneStep::Progress(paid(d)))}
+ pub fn terminal_is_empty(&self)->bool{self.facts.is_none()&&self.unused.is_none()&&self.retirement.is_empty()&&self.source.is_none()}
+}
+impl Drop for OriginalBranchFactBirth{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original branch facts require complete paid handoff or cancellation");if self.terminal_is_empty(){unsafe{ManuallyDrop::drop(&mut self.facts);ManuallyDrop::drop(&mut self.unused);}}}}

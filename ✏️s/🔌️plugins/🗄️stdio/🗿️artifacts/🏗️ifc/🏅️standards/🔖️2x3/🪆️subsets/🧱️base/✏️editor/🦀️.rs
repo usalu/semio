@@ -223,9 +223,9 @@ impl ArtifactEditor for Ifc2x3AnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ifc2x3_any_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> Ifc2x3Snapshot {
+    fn reference_birth()->Option<fn()->Ifc2x3Snapshot>{Some(||{
         Ifc2x3Snapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

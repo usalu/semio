@@ -9,8 +9,10 @@ use super::*;
 pub struct NoStateDiff {}
 
 /// 🧮️ Default `ArtifactApp::Config` for apps with no config artifact yet.
-#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetireOwned, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue)]
+#[derive(Clone, Debug, PartialEq, Default, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, ::semio_framework_value_derive::ToValue, ::semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, store::DslArtifact)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
+#[artifact(id="framework.empty")]
+#[dsl(layout="lines")]
 pub struct NoConfig {}
 
 impl semio_framework_schema_composition::ArtifactCompositionFields for NoConfig {
@@ -21,6 +23,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for NoConfig 
 
 impl pack::snapshot::ArtifactDsl for NoConfig {
     const EXTENSION: &'static str = "nocfg";
+    fn envelope_id()->&'static str{Self::__DSL_ENVELOPE_ID}
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
             return Ok(Self::default());
@@ -32,48 +35,24 @@ impl pack::snapshot::ArtifactDsl for NoConfig {
     }
 }
 
-impl semio_framework_dsl_record::DslField for NoConfig {
-    fn shape() -> semio_framework_dsl_record::Shape {
-        fn spec() -> semio_framework_dsl_record::RecordSpec {
-            semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, Vec::new())
-        }
-        semio_framework_dsl_record::Shape::Record(semio_framework_dsl_record::RecordSpecProducer {
-            ordinary: spec,
-            decoding: |control| {
-                control.checkpoint()?;
-                Ok(semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, control.allocate_vec(0)?))
-            },
-            encoding: |control| {
-                control.checkpoint()?;
-                Ok(semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Lines, control.allocate_vec(0)?))
-            },
-        })
-    }
-    fn to_value(&self) -> semio_framework_dsl_record::FieldValue {
-        semio_framework_dsl_record::FieldValue::Record(semio_framework_dsl_record::RecordValue::default())
-    }
-    fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
-        match value {
-            semio_framework_dsl_record::FieldValue::Record(record) if record.fields.is_empty() => Ok(Self::default()),
-            _ => Err("no config state requires an empty record".into()),
-        }
-    }
-}
-
 impl ArtifactPack for NoConfig {
-    fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        Ok(Vec::new())
-    }
-    fn decode_pack_with(bytes: &[u8], _options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        if bytes.is_empty() {
-            Ok(Self::default())
-        } else {
-            Err(store::PackError::from(ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "empty state must not contain bytes")))
-        }
-    }
+ fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{let body=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;let envelope=store::semio_format::SemioEnvelope::from_envelope_id(Self::__DSL_ENVELOPE_ID,store::semio_format::Component::Pack,1).map_err(|e|store::PackError::from(e.into_value_error()))?;Ok(store::semio_format::wrap_binary(&envelope,&body))}
+ fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,body)=store::semio_format::unwrap_binary(bytes).map_err(|e|store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(Self::__DSL_ENVELOPE_ID,store::semio_format::Component::Pack,1){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"empty lane Pack envelope differs").into())}let(record,_)=store::pack_rt::decode_document(&body,&Self::__dsl_spec(),options)?;Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)}
+ fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
+ fn record_spec_producer()->Option<store::RecordSpecProducer>{Some(Self::__artifact_record_spec_producer())}
+ fn borrowed_record_spec_producer()->Option<store::BorrowedRecordSpecProducer>{Some(Self::__artifact_borrowed_record_spec_producer())}
 }
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for NoConfig{
+ type Receiving=store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+ fn original_pack_birth_demand()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self::Receiving>(),depth:1,..Default::default()}}
+ fn admit_original_pack(source:&[u8],limits:protocol::PackLimits,native:&semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>,ValueError>{Self::Receiving::admit(source,Self::__DSL_ENVELOPE_ID,limits,native,grant)}
+}
+#[path="genesis.rs"]mod genesis;
+pub use genesis::{NoConfigGenesisOwner,NoDraftGenesisOwner};
 
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 
@@ -223,6 +202,8 @@ impl ArtifactPack for NoPresence {
 }
 
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoPresence {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 
@@ -337,6 +318,8 @@ impl ArtifactPack for NoTransient {
 }
 
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for NoTransient {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 

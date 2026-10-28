@@ -1,14 +1,14 @@
 //! 🛏️ Energy model mutation — `CreateRoomAirModelAssignment`: Overrides the room air model of one zone. This collection carries no id of its own — `zone_id` IS the key (vocabulary §5.5), so it is a keyed map and a second override for one zone is a duplicate.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🛏️ `create-room-air-model-assignment` payload. Overrides the room air model of one zone. This collection carries no id of its own — `zone_id` IS the key (vocabulary §5.5), so it is a keyed map and a second override for one zone is a duplicate.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeRowBirth, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
+#[energy_native_birth(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-room-air-model-assignment")]
 pub struct CreateRoomAirModelAssignment {
@@ -20,41 +20,5 @@ pub struct CreateRoomAirModelAssignment {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn create_room_air_model_assignment<Op: From<CreateRoomAirModelAssignment>>(zone_id: crate::model::EntityId, model: crate::model::RoomAirModelType, index: Option<u32>) -> Op {
     CreateRoomAirModelAssignment { zone_id, model, index }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateRoomAirModelAssignment
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateRoomAirModelAssignment> + From<crate::DeleteRoomAirModelAssignment>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "room-air-model-assignment", kind: "create-room-air-model-assignment", record: "CreatedRoomAirModelAssignment" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create room air model assignment {}", self.zone_id.0), &format!("Raumluftmodellzuordnung {} erstellen", self.zone_id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.zone_id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreateRoomAirModelAssignment
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreateRoomAirModelAssignment> + From<crate::DeleteRoomAirModelAssignment>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

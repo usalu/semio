@@ -168,9 +168,9 @@ impl ArtifactEditor for XlsxStrictEditor {
         })
     }
 
-    fn initial_snapshot() -> XlsxSnapshot {
+    fn reference_birth()->Option<fn()->XlsxSnapshot>{Some(||{
         <crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(crate::standards::v_ecma_376::subsets::strict::io::XlsxStrictBuilderConstruction::new(semio_s_artifact_stdio_xlsx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::XlsxWorkbook::default())).expect("valid authored strict XLSX initial owner")
-    }
+    })}
 
     /// ✏️ Resolves the rendered worksheet/row/column identity and optimistic revision, then emits
     /// one `XlsxMutation::SetCell`. Stale addresses and revisions return a fault without mutation.

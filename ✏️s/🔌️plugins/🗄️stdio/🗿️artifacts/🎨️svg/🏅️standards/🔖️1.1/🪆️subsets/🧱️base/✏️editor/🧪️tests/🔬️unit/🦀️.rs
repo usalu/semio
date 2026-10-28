@@ -95,13 +95,13 @@ fn natural_file_route_round_trips_svg_with_an_independent_xml_oracle_and_fresh_s
     let codec = <SvgAnyEditor as ArtifactEditor>::natural_file_codec().expect("SVG natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.svg@1.1", ".svg", "image/svg+xml", false));
     let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🎨️native-third-party-shape.svg");
-    let current = <SvgAnyEditor as ArtifactEditor>::initial_snapshot();
+    let current = <SvgAnyEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let imported = <SvgAnyEditor as ArtifactEditor>::decode_natural_file(source).expect("SVG natural import");
     let exported = <SvgAnyEditor as ArtifactEditor>::encode_natural_file(&imported).expect("SVG natural export");
     let independent = semio_s_artifact_stdio_svg_test_oracle::standards::v1_1::subsets::base::oracle_round_trip(&exported).expect("quick-xml reopens SVG export");
     let independent = SvgSnapshot::import_utf8(&independent).expect("independent SVG output reopens");
     assert_eq!(independent.doc.root, imported.doc.root);
-    assert_eq!(current, <SvgAnyEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
+    assert_eq!(current, <SvgAnyEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")(), "opening does not replace the selected owner before publication");
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio", crate::editor::svg_any::SvgAnyEditor, || semio_framework_plugin::App { definition: crate::editor::svg_any::create_svg_any_editor(), examples: Vec::new() }, "../../🏅️standards/🔖️1.1/🪆️subsets/🧱️base");

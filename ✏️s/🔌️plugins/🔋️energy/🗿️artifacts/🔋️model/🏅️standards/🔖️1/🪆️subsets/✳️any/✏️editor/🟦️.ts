@@ -24,10 +24,8 @@ export interface EnergyModelConfig {
   readonly resultField: "conductionLoss" | "conductionGain" | "solarTransmitted" | "solarAbsorbed";
 }
 
-/** 🧵️ Every retained tool id of this editor, in `ENERGY_MODEL_RETAINED_TOOL_IDS` order. The Rust
- * surface asserts set equality between this roster, the typed command schema's `TOOL_JOB_IDS`, the
- * `Migrated` classification list, the factory's publication contracts and its proof rows. */
-export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
+/** 🧵️ Authored convenience tools. The complete native action catalog derives from Rust mutation descriptors. */
+export const ENERGY_MODEL_AUTHORED_TOOL_IDS = [
   "set-node",
   "set-cell",
   "create-zone",
@@ -47,6 +45,10 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
   "set-fenestration-property",
   "set-zone-property",
   "set-glazing-material-property",
+  "set-load-property",
+  "set-shading-property",
+  "set-hvac-property",
+  "set-space-property",
   "set-gas-material-property",
   "setCamera",
   "set-construction-property",
@@ -56,7 +58,7 @@ export const ENERGY_MODEL_RETAINED_TOOL_IDS = [
  * is NOT one of them — a whole-document swap has no mutation representative in this artifact's
  * vocabulary, so it emits a `LoadDocument` effect (the host's `ArtifactStore::reset` route, outside
  * undo history) and declares the `HostOnly` publication lane; `set-simulation-settings` publishes to the config lane. */
-export const ENERGY_MODEL_DOCUMENT_TOOL_IDS = ENERGY_MODEL_RETAINED_TOOL_IDS.filter(
+export const ENERGY_MODEL_AUTHORED_DOCUMENT_TOOL_IDS = ENERGY_MODEL_AUTHORED_TOOL_IDS.filter(
   (id) => id !== "setActiveExample" && id !== "set-simulation-settings" && id !== "set-result-field" && id !== "setCamera",
 );
 

@@ -198,3 +198,53 @@ fn original_completed_result_preserves_refused_donor_and_redispatch_occupancy(){
  let registry=RequestRegistry::new();let future=registry.for_instance(71).request(|req|Effect::CancelJob{job:req.0});let id=registry.pending_ids()[0];let partial=b"source-page".to_vec();registry.append_chunk(id,&partial,false,1024);assert_eq!(registry.pending_instance(id),Some(71));let original=registry.take_pending_partial(id).unwrap();assert_eq!(original,partial);let mut result=Some(Ok(b"source-result".to_vec()));let pointer=result.as_ref().unwrap().as_ref().unwrap().as_ptr();assert!(!registry.resolve_original(RequestId(u64::MAX),&mut result));assert_eq!(result.as_ref().unwrap().as_ref().unwrap().as_ptr(),pointer);assert!(registry.resolve_original(id,&mut result));assert!(result.is_none());drop(future);
  let req=registry.for_instance(72).request_continuation("receive".into(),"{}".into(),|req|Effect::CancelJob{job:req.0}).unwrap();let continuation=registry.take_continuation(req).unwrap();assert_eq!(registry.instance_of(req),Some(72));assert!(registry.take_continuation(req).is_none());registry.release_completed(req);assert_eq!(registry.instance_of(req),None);drop(continuation);
 }
+
+#[global_allocator]
+static HOST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
+
+#[test]
+fn retained_request_is_send_preserves_original_body_and_requires_funded_close() {
+    use semio_framework_job::{OriginalJobFixtureCaller, OperationId, Generation, RetainedCloneGrant, RetainedCloneProgress};
+    fn is_send<T: Send>() {}
+    is_send::<SharedRequestReceiver>();
+    let law: serde_json::Value = serde_json::from_str(include_str!("retained.json")).unwrap();
+    let registry = RequestRegistry::new();
+    let grant=RetainedCloneGrant { maximum_items: 100000, maximum_copy_bytes: 1<<20, maximum_capacity_bytes: 1<<20, maximum_release_bytes: 1<<20, maximum_depth: 128 };
+    let mut caller=OriginalJobFixtureCaller::admit(OperationId(773), Generation(1), grant, semio_framework_job::logical_now_us, u64::MAX, 100000);
+    let mut receiver=registry.for_instance(law["instance"].as_u64().unwrap() as u32).request_retained(futures_test_waker().clone(), |req| Effect::LinkResolve { req, link: "weather-head".into() }).unwrap();
+    let effects=registry.drain();
+    assert!(matches!(&effects[0],Effect::LinkResolve{req,link} if req.0==1 && link=="weather-head"));
+    assert_eq!(registry.pending_instance(RequestId(1)), Some(73));
+    assert!(receiver.is_pending());
+    let mut body=Some(Ok(law["body"].as_str().unwrap().as_bytes().to_vec()));
+    let pointer=body.as_ref().unwrap().as_ref().unwrap().as_ptr();
+    assert!(!registry.resolve_original(RequestId(2),&mut body));
+    assert_eq!(body.as_ref().unwrap().as_ref().unwrap().as_ptr(),pointer);
+    assert!(registry.resolve_original(RequestId(1),&mut body));
+    assert!(body.is_none());
+    registry.release_completed(RequestId(1));
+    let zero=RetainedCloneGrant { maximum_items:0, maximum_copy_bytes:0, maximum_capacity_bytes:0, maximum_release_bytes:0, maximum_depth:0 };
+    let (none,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(zero,|cx|receiver.take_original(cx)).unwrap());
+    assert!(none.is_none());
+    assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
+    let mut result=caller.turn(grant,|cx|receiver.take_original(cx)).unwrap().unwrap().unwrap();
+    assert_eq!(result.as_ptr(),pointer);
+    assert_eq!(result,law["body"].as_str().unwrap().as_bytes());
+    result.clear();
+    drop(result);
+    for _ in 0..law["maximumCloseTurns"].as_u64().unwrap() {
+        if receiver.terminal_is_empty(){break;}
+        let before=caller.cumulative_receipt();
+        let ((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||caller.turn(grant,|cx|{
+            let demand=receiver.close_demands(cx.retained_grant().maximum_copy_bytes)?;
+            semio_framework_job::close_original_retained_step(cx,demand,|loan|receiver.close_step(loan))?;
+            Ok(())
+        }).unwrap());
+        let after=caller.cumulative_receipt();
+        assert_eq!((heap.requested_bytes,heap.released_bytes),(after.retained_capacity_bytes-before.retained_capacity_bytes,after.released_bytes-before.released_bytes));
+    }
+    assert!(receiver.terminal_is_empty());
+    assert_eq!(receiver.close_step(zero).unwrap().progress(),RetainedCloneProgress::default());
+    drop(receiver);
+    caller.retire(grant);
+}

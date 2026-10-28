@@ -57,5 +57,43 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateTimeSeriesSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "time_series",
+    "field": "timestep_seconds",
+    "input": "new_timestep_seconds",
+    "key": "id",
+    "labels": {
+      "en": "Time series schedule timestep seconds",
+      "de": "Zeitreihenzeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "time-series-schedule",
+      "kind": "change-time-series-schedule-timestep",
+      "record": "ChangedTimeSeriesScheduleTimestep"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Time series schedule requires a valid timestep seconds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed time series schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "Time series schedule already has this timestep seconds."
+      }
+    }
   }
 }

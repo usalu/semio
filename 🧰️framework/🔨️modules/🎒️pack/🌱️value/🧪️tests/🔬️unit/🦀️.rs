@@ -86,7 +86,7 @@ fn full_record() -> RecordValue {
     fields.insert(3, FieldValue::UInt(9_999_999_999));
     fields.insert(4, FieldValue::Float(3.5));
     fields.insert(5, FieldValue::Text("hello café".to_string()));
-    fields.insert(6, FieldValue::Bytes64(vec![1, 2, 3, 4, 5]));
+    fields.insert(6, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&vec![1, 2, 3, 4, 5]).unwrap()));
     fields.insert(7, FieldValue::Enum(1));
     fields.insert(8, FieldValue::Tuple(vec![FieldValue::Int(1), FieldValue::Int(2), FieldValue::Int(3)]));
     fields.insert(9, FieldValue::List(vec![FieldValue::Text("x".to_string()), FieldValue::Text("y".to_string())]));
@@ -181,7 +181,7 @@ fn round_trips_scalar_edge_cases() {
     fields.insert(6, FieldValue::Text("héllo wörld 🔖️ 日本語".to_string()));
     fields.insert(7, FieldValue::List(vec![]));
     fields.insert(8, FieldValue::Map(vec![]));
-    fields.insert(9, FieldValue::Bytes64(vec![]));
+    fields.insert(9, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&vec![]).unwrap()));
     let record = RecordValue { fields };
 
     let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
@@ -199,7 +199,7 @@ fn round_trips_scalar_edge_cases() {
     assert_eq!(decoded.get(6), Some(&FieldValue::Text("héllo wörld 🔖️ 日本語".to_string())));
     assert_eq!(decoded.get(7), Some(&FieldValue::List(vec![])));
     assert_eq!(decoded.get(8), Some(&FieldValue::Map(vec![])));
-    assert_eq!(decoded.get(9), Some(&FieldValue::Bytes64(vec![])));
+    assert_eq!(decoded.get(9), Some(&FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&vec![]).unwrap())));
 }
 
 #[test]
@@ -410,7 +410,7 @@ fn large_bytes_field_is_chunked_and_round_trips() {
     let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
     let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
     let mut fields = RecordValue::default().fields;
-    fields.insert(1, FieldValue::Bytes64(payload.clone()));
+    fields.insert(1, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload.clone()).unwrap()));
     let record = RecordValue { fields };
 
     let mut options = EncodeOptions::default();
@@ -418,7 +418,7 @@ fn large_bytes_field_is_chunked_and_round_trips() {
     options.chunk_size = 64 * 1024;
     let bytes = encode_document(&spec, &record, &options).expect("encode");
     let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
-    assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(payload)));
+    assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload).unwrap())));
 }
 
 #[test]
@@ -461,14 +461,14 @@ fn record_body_keeps_oversized_bytes_inline_instead_of_chunking() {
     let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "blob", Shape::Bytes64)]);
     let payload: Vec<u8> = (0..600_000u32).map(|i| (i % 256) as u8).collect();
     let mut fields = RecordValue::default().fields;
-    fields.insert(1, FieldValue::Bytes64(payload.clone()));
+    fields.insert(1, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload.clone()).unwrap()));
     let record = RecordValue { fields };
 
     let mut options = EncodeOptions::default();
     options.chunk_threshold = 1024;
     let bytes = encode_record_body(&spec, &record, &options).expect("encode");
     let (decoded, _) = decode_record_body(&bytes, &spec, &DecodeOptions::default()).expect("decode");
-    assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(payload)));
+    assert_eq!(decoded.get(1), Some(&FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload).unwrap())));
 }
 
 #[test]

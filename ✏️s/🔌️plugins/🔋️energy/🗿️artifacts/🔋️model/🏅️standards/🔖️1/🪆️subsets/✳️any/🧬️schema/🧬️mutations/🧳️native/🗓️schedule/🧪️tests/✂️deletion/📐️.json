@@ -1,0 +1,124 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "bodyBytes",
+    "cancelAt",
+    "maximumTurns",
+    "rows",
+    "kinds",
+    "references",
+    "wideRuleCount",
+    "wideSourceAdmission"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.energy.original-schedule-deletion.v1"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "rows": {
+      "type": "object",
+      "required": [
+        "constants",
+        "daily",
+        "weekly",
+        "annual",
+        "time_series"
+      ],
+      "additionalProperties": {
+        "type": "array",
+        "minItems": 3,
+        "items": {
+          "type": "object"
+        }
+      }
+    },
+    "kinds": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "items": {
+        "type": "object",
+        "required": [
+          "kind",
+          "collection",
+          "target",
+          "inverse"
+        ],
+        "properties": {
+          "kind": {
+            "enum": [
+              "Constant",
+              "Daily",
+              "Weekly",
+              "Annual",
+              "TimeSeries"
+            ]
+          },
+          "collection": {
+            "enum": [
+              "constants",
+              "daily",
+              "weekly",
+              "annual",
+              "time_series"
+            ]
+          },
+          "target": {
+            "type": "integer"
+          },
+          "inverse": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "references": {
+      "type": "array",
+      "minItems": 20,
+      "maxItems": 20,
+      "items": {
+        "type": "object",
+        "required": [
+          "source",
+          "row"
+        ],
+        "properties": {
+          "source": {
+            "type": "object"
+          },
+          "row": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "wideRuleCount": {
+      "const": 1200
+    },
+    "wideSourceAdmission": {
+      "const": "original-retained-turns"
+    }
+  }
+}

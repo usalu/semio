@@ -174,6 +174,7 @@ edition = "2021"
 rust-version = "1.95"
 
 [workspace.dependencies]
+semio-s-artifact-stdio-idf = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/⚡️idf/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-2d-viewer = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/👁️viewer/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-2d-model = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-procedural-2d-editor = { path = "../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🌀️generation2d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }

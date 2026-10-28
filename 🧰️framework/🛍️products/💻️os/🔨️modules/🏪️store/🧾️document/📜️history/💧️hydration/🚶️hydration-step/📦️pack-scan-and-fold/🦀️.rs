@@ -80,7 +80,7 @@ where
             Ok(semio_framework_os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
                 *self.replay_ids = Some(replay_order);
                 *self.fold = Some(fold);
-                *self.normalized_transitions = Some(transitions);
+                *self.normalized_transitions = Some(transitions.into());
                 *self.normalized_conflicts = Some(conflicts);
                 if !progress.fits(fold_grant) || !self.fold_job.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(MemberOpenDiagnostic::Replay); }
                 if let Err(diagnostic) = semio_framework_os_store_member_open::record_member_step(cx, progress) { return self.reject(diagnostic); }
@@ -107,6 +107,7 @@ where
 
     /// 🌱 Binds the genesis snapshot.
     pub(super) fn step_bind_genesis(&mut self, cx: &mut StepContext<'_>, grant: RetainedCloneGrant) -> PersistedDocumentHydrationStep<P, M> {
+        if let Some(rows)=self.normalized_transitions.as_mut(){if !rows.is_empty(){let p=match self.transition_ledger.as_mut().unwrap().admit_deque_front(rows,grant){Ok(p)=>p,Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)};if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,p){return self.reject(d)}return PersistedDocumentHydrationStep::Pending(self.progress())}match semio_framework_os_store_read::artifact_retirement_admit_owned(&mut self.normalized_transitions,&mut self.active,grant){Ok(step)=>{if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,step.progress()){return self.reject(d)}},Err(_)=>return self.reject(MemberOpenDiagnostic::Initialization)}return PersistedDocumentHydrationStep::Pending(self.progress())}
         if !self.initialization_catalog.as_ref().is_some_and(semio_framework_os_store_initialization_runtime::lifted_store::ArtifactStoreInitializationOwnerCatalog::admission_is_complete) { return self.reject(MemberOpenDiagnostic::Initialization); }
         let child = match hydration_child_grant(grant, cx.fuel_remaining()) { Ok(child) => child, Err(diagnostic) => return self.reject(diagnostic) };
         let birth = match semio_framework_os_vcs::io::binary::genesis::AdmittedArtifactGenesis::<P>::verified_pack_birth_demand() { Ok(birth) => birth, Err(_) => return self.reject(MemberOpenDiagnostic::Capacity) };
@@ -128,7 +129,7 @@ where
         envelope.active_alternative_id = fold.alternative.take();
         envelope.viewer_checkpoint_id = history.viewer_checkpoint.take();
         envelope.cursor.as_mut().expect("new document retains its original cursor pages").checkpoint_id = fold.checkpoint.take();
-        envelope.transitions = self.normalized_transitions.take().expect("normalized transition owners remain retained");
+        envelope.transitions = self.transition_ledger.take().expect("native transition ledger remains retained");
         let supersessions = std::mem::take(&mut fold.supersessions);
         envelope.conflicts = self.normalized_conflicts.take().expect("normalized conflict owners remain retained");
         let current = envelope.vcs.genesis.facts().share_snapshot();

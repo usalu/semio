@@ -582,9 +582,9 @@ impl ArtifactEditor for CsvEditor {
         csv_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> CsvSnapshot {
+    fn reference_birth()->Option<fn()->CsvSnapshot>{Some(||{
         CsvSnapshot::default()
-    }
+    })}
 
     /// ✏️ Maps the rendered grid's `row` back to `CsvSnapshot.records`' real index — `+1` when
     /// `has_header` (row 0 in the grid is `records[1]`), unchanged otherwise. Out-of-range is a

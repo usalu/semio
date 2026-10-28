@@ -132,9 +132,9 @@ impl ArtifactEditor for Puzzle2dPlayApp {
     /// when it is actually switched to: warming them here parsed the Concrete Forest and Nakagin documents on
     /// every construction of this app — every mount, and every `codec` call of a hub creating or validating a
     /// document, where the interpreter paid for two documents the snapshot never reads.
-    fn initial_snapshot() -> Puzzle2dPlaySnapshot {
+    fn reference_birth()->Option<fn()->Puzzle2dPlaySnapshot>{Some(||{
         Puzzle2dPlaySnapshot::new(crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot())
-    }
+    })}
 
     /// 🏷️ Maps each `Puzzle2dCommand` variant back to the action id it was declared under.
     fn command_id(command: &Puzzle2dCommand) -> &'static str {

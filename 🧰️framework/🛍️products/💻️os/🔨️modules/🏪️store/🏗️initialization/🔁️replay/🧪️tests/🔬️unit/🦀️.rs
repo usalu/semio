@@ -125,7 +125,7 @@ impl ReplayOriginal{
 fn turn(init:&mut Initializer,original:&mut ReplayOriginal,grant:RetainedCloneGrant) -> (Outcome, RetainedCloneProgress, bool) {
     let accounted = accounted_turn(init);
     let quote = init.runtime.as_ref().and_then(|runtime| runtime.close_active.as_ref()).map(|active| (active.next_demand(1 << 20), active.terminal_is_empty()));
-    let shape = (init.envelope.is_some(), init.owners.is_some(), init.envelope_retirement.is_some(), init.runtime.is_some(), init.catalog.is_some(), init.actor.is_some(), init.actor_close.is_some(), init.active.is_some(), init.staged.is_some(), init.index_open, init.factory.is_some(), init.candidate.is_some());
+    let shape = (init.envelope.is_some(), init.owners.is_some(), init.envelope_retirement.is_some(), init.runtime.is_some(), init.catalog.is_some(), init.actor.is_some(), init.actor_close.is_some(), init.active.is_some(), init.index_open, init.factory.is_some(), init.candidate.is_some());
     let before = (shape, init.phase, init.runtime.as_ref().is_some_and(|runtime| runtime.close_active.is_some()));
     let (outcome,heap)=original.turn(grant,|cx|Ok(semio_framework_trace::observe_heap_allocations_on_this_thread(||{
         match ArtifactStoreInitializationAuthority::step(init,cx).expect("a replay original turn never errs"){

@@ -1,12 +1,11 @@
 //! 🩻️ Energy model mutation — `ChangeGlazingMaterialInfraredEmissivity`: Sets both long-wave emissivities of one glazing pane in one step — front and back are one optical facet of the same sheet, and a coating that changes one almost always changes the other.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🩻️ `change-glazing-material-infrared-emissivity` payload. Sets both long-wave emissivities of one glazing pane in one step — front and back are one optical facet of the same sheet, and a coating that changes one almost always changes the other.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -22,39 +21,6 @@ pub fn change_glazing_material_infrared_emissivity<Op: From<ChangeGlazingMateria
     ChangeGlazingMaterialInfraredEmissivity { id, new_infrared_emissivity_front, new_infrared_emissivity_back }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeGlazingMaterialInfraredEmissivity
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGlazingMaterialInfraredEmissivity>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "glazing-material", kind: "change-glazing-material-infrared-emissivity", record: "ChangedGlazingMaterialInfraredEmissivity" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Glazing Material Infrared Emissivity of glazing material {}", self.id.0), &format!("Infrarot-Emissionsgrad von Verglasungsmaterial {} ändern", self.id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeGlazingMaterialInfraredEmissivity
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeGlazingMaterialInfraredEmissivity>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

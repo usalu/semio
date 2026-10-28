@@ -223,9 +223,9 @@ impl ArtifactEditor for StepCc6Editor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); step_cc6_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> StepSnapshot {
+    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
         <semio_s_artifact_stdio_step_cc6::standards::v_ap214::subsets::cc6::io::StepCc6BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc6::standards::v_ap214::subsets::cc6::io::StepCc6BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc6 initial owner")
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

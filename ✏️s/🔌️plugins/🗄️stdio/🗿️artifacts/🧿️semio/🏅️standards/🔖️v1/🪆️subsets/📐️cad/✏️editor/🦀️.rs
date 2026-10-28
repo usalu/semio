@@ -219,9 +219,9 @@ impl ArtifactEditor for SemioCadEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_cad_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> SemioCadSnapshot {
+    fn reference_birth()->Option<fn()->SemioCadSnapshot>{Some(||{
         SemioCadSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

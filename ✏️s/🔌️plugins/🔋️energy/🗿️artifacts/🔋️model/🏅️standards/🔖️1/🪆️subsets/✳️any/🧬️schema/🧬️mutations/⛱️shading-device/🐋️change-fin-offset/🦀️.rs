@@ -1,14 +1,13 @@
 //! 🐋️ Energy model mutation — `ChangeFenestrationFinOffset`: Sets how far beside the window jambs the two vertical projections stand, in metres.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🐋️ `change-fenestration-fin-offset` payload. Sets how far beside the window jambs the two vertical projections stand, in metres.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-fenestration-fin-offset")]
 pub struct ChangeFenestrationFinOffset {
@@ -19,41 +18,5 @@ pub struct ChangeFenestrationFinOffset {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn change_fenestration_fin_offset<Op: From<ChangeFenestrationFinOffset>>(id: crate::model::EntityId, new_fin_offset_m: f64) -> Op {
     ChangeFenestrationFinOffset { id, new_fin_offset_m }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationFinOffset
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeFenestrationFinOffset>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "fenestration", kind: "change-fenestration-fin-offset", record: "ChangedFenestrationFinOffset" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change fenestration {} fin offset to {} m", self.id.0, self.new_fin_offset_m), &format!("Seitenblendenabstand von Fenster {} auf {} m ändern", self.id.0, self.new_fin_offset_m))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeFenestrationFinOffset
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeFenestrationFinOffset>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

@@ -1,0 +1,178 @@
+{
+  "contract": "semio.energy.original-create-zone/v1",
+  "existing": {
+    "id": 1,
+    "name": "Existing"
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 3,
+        "name": "Office",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        1,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "id": 0,
+        "name": "Office",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        0,
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Office",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": 0
+      },
+      "outcome": "changed",
+      "after": [
+        3,
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 1,
+        "name": "Office",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Existing",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "  \t",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Office",
+        "volumeM3": 0,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Office",
+        "volumeM3": 42,
+        "multiplier": 0,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Office",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": 99
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": " ",
+        "volumeM3": 42,
+        "multiplier": 1,
+        "conditioned": true,
+        "partOfTotalFloorArea": true,
+        "index": 99
+      },
+      "outcome": "invalid"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "recreate": {
+    "original": {
+      "id": 1,
+      "name": "Existing",
+      "volume_m3": 60,
+      "multiplier": 1,
+      "conditioned": true,
+      "part_of_total_floor_area": true
+    },
+    "rank": 7,
+    "payload": {
+      "id": 1,
+      "name": "Existing",
+      "volumeM3": 60,
+      "multiplier": 1,
+      "conditioned": true,
+      "partOfTotalFloorArea": true,
+      "index": 7
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "historyShape": "Document",
+  "maximumHeaderCopyBytes": 32768,
+  "phases": [
+    "InitialPack",
+    "AwaitEnvelope",
+    "AdmittedEnvelope",
+    "PublishedStore"
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    2
+  ],
+  "visibleBeforePublication": false,
+  "denied": [
+    "items",
+    "copy",
+    "capacity",
+    "depth"
+  ],
+  "originalActorRetained": true
+}

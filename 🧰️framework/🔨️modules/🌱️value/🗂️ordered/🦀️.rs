@@ -95,6 +95,11 @@ pub struct OrderedMap<V> { root: ManuallyDrop<Root<V>> }
 
 impl<V> Default for OrderedMap<V> { fn default() -> Self { Self { root: ManuallyDrop::new(None) } } }
 impl<V> Clone for OrderedMap<V> { fn clone(&self) -> Self { Self { root: self.root.clone() } } }
+impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedAlias for OrderedMap<V>{
+    fn alias_demand(&self)->crate::RetirementDemand{crate::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self>(),depth:1,..Default::default()}}
+    fn admit_alias(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),crate::ValueError>{let d=semio_framework_value_retained_clone::RetainedAlias::alias_demand(self);if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Err(crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original ordered alias requires its complete header quote"))}Ok((self.clone(),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+}
+impl<V:crate::retirement::RetireOwned+Sync> semio_framework_value_retained_clone::RetainedClone for OrderedMap<V>{type Cursor=semio_framework_value_retained_clone::RetainedAliasCursor<Self>;fn retained_clone_cursor()->Self::Cursor{Default::default()}}
 impl<V> Drop for OrderedMap<V> {
     fn drop(&mut self) { if !std::thread::panicking() { assert!(self.root.is_none(), "ordered-map root must be explicitly retired before drop"); } }
 }
@@ -605,23 +610,14 @@ fn release_cold<T>(mut value:SharedOwner<T>)->Option<T>{value.release_step(Retai
 mod typed_retirement;
 
 //#region 🔀️Serde
-/// 🧪️ `#[cfg(test)]`-only (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01,
-/// tenth-seam pass). The three production sites that previously required this — `Dictionary`'s
-/// `#[serde(transparent)]` derive over `pairs: OrderedMap<Value>`, `Value`'s derive (has a
-/// `Dictionary` variant), `Neuron`'s derive (holds a `Value` via `Dictionary`) — all moved to
-/// `ToValue`/`FromValue` in `💻️os/🧠️neural/⚙️engine/🦀️.rs`, including their own fan-out
-/// (`FieldSpec`, `Schema`, `ChannelSpec`, `OperatorInfo`, `Tree`). See
-/// `📓️orderedmap-tenth-seam.md` for the compiler-enumerated consumer list. The `Deserialize`
-/// sibling below stays test-only, unchanged — nothing in production deserializes an `OrderedMap`.
-#[cfg(test)]
+/// 🔀️ Serializes the first-party ordered object through the explicitly reexported codec interface.
 impl<V: serde::Serialize> serde::Serialize for OrderedMap<V> {
     fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeMap;
         let mut map = serializer.serialize_map(Some(self.len()))?; for (key, value) in self.iter() { map.serialize_entry(key, value)?; } map.end()
     }
 }
-/// 🔌️ `#[cfg(test)]`-only — see `Serialize` above for why.
-#[cfg(test)]
+/// 🛬️ Deserializes an ordered object at explicit synchronous codec boundaries.
 impl<'de, V: serde::Deserialize<'de>> serde::Deserialize<'de> for OrderedMap<V> {
     fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         struct Visitor<V>(std::marker::PhantomData<V>);

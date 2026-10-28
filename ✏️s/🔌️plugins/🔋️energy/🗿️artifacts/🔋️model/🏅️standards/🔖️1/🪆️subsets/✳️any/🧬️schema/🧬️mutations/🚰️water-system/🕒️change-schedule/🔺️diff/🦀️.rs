@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `ChangeWaterSystemSchedule` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, WaterSystemConfigPatch};
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch, WaterSystemConfigPatch};
 use crate::diff_patch::{Rows};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeWaterSystemSchedule, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

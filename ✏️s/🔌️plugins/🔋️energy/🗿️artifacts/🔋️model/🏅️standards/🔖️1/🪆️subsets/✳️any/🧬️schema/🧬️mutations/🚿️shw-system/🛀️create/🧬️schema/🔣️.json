@@ -73,7 +73,8 @@
         "precision": 2,
         "group": "capacity",
         "order": 30
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "storageVolumeM3": {
       "type": "number",
@@ -91,7 +92,8 @@
         "precision": 0,
         "group": "capacity",
         "order": 40
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "setpointC": {
       "type": "number",
@@ -107,7 +109,9 @@
         "precision": 1,
         "group": "control",
         "order": 50
-      }
+      },
+      "minimum": 0,
+      "maximum": 100
     },
     "scheduleId": {
       "type": "integer",
@@ -132,5 +136,100 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateShwSystemConfig",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "heater_capacity_w",
+        "input": "heater_capacity_w",
+        "storage": "fixed"
+      },
+      {
+        "field": "storage_volume_m3",
+        "input": "storage_volume_m3",
+        "storage": "fixed"
+      },
+      {
+        "field": "setpoint_c",
+        "input": "setpoint_c",
+        "storage": "fixed"
+      },
+      {
+        "field": "schedule_id",
+        "input": "schedule_id",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateShwSystemConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "shw_systems",
+    "key": "id",
+    "inverse": "DeleteShwSystem",
+    "labels": {
+      "en": "Create Shw System at index",
+      "de": "Trinkwarmwasseranlage an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "service-hot-water-system",
+      "kind": "create-shw-system",
+      "record": "CreatedShwSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

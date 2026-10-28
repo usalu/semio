@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Tool Registration Qualification",
+  "type": "object",
+  "required": [
+    "phase",
+    "bodyBytes",
+    "ordinal",
+    "offset"
+  ],
+  "properties": {
+    "phase": {
+      "enum": [
+        "searching",
+        "adopting",
+        "ready",
+        "closing",
+        "closed"
+      ]
+    },
+    "bodyBytes": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "ordinal": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "offset": {
+      "type": "integer",
+      "minimum": 0
+    }
+  },
+  "comparisonBytes": 64,
+  "roles": [
+    "app",
+    "framework"
+  ],
+  "cancelAfter": [
+    0,
+    1,
+    3,
+    11,
+    50
+  ],
+  "frameworkTools": [
+    "undo",
+    "redo",
+    "commitCheckpoint",
+    "createAlternative",
+    "switchAlternative",
+    "checkoutCheckpoint",
+    "revertToCommand",
+    "copy",
+    "cut",
+    "paste",
+    "import-media",
+    "noteShellCommand",
+    "setHistoryCommandFilter",
+    "recordTutorial",
+    "clearSelection",
+    "interactionHover",
+    "interactionSelect",
+    "selectAll",
+    "setInteractionGranularity",
+    "setSelectionMode",
+    "configuration-binary"
+  ],
+  "targetOrdinal": 3,
+  "targetId": "configuration-binary"
+}

@@ -1,0 +1,91 @@
+{
+  "contract": "semio.energy.original-layer-permutation/v1",
+  "collection": "constructions",
+  "existingRows": [
+    {
+      "id": 7,
+      "name": "Original construction",
+      "layer_material_ids": [
+        1,
+        3,
+        1
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newLayerMaterialIds": [
+          1,
+          1,
+          3
+        ]
+      },
+      "outcome": "changed",
+      "after": [
+        7
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLayerMaterialIds": [
+          1,
+          3,
+          1
+        ]
+      },
+      "outcome": "no-op",
+      "after": [
+        7
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLayerMaterialIds": [
+          1,
+          3,
+          3
+        ]
+      },
+      "outcome": "invalid-context",
+      "code": "mutation.target-mismatch"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLayerMaterialIds": [
+          1,
+          3
+        ]
+      },
+      "outcome": "invalid-context",
+      "code": "mutation.target-mismatch"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newLayerMaterialIds": []
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

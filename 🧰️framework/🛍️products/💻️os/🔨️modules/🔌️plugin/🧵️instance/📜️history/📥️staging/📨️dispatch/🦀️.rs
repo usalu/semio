@@ -104,17 +104,26 @@ impl<A: ArtifactApp> CommandHistory<A> {
         (std::sync::Arc::clone(snapshot), std::sync::Arc::clone(config), std::sync::Arc::clone(history))
     }
 
-    /// 🎗️ The store half of a migrated emission that closes a streamed tool transaction without new operations (design
-    /// §15): an abort reverts the transaction's open edit and retires its history row, a commit with no last operations
-    /// closes the edit (its announcement leaves with the run's next flush). Either is consumed without suspending, so the
-    /// one-page publication continues with the emission's other lanes; a closing commit with operations and every stream
-    /// are left to the batched route. A commit carrying composed-child emissions keeps its ref: the child group stamps it
-    /// on every member op (design §12), so a child-only tool transaction is still one transaction row.
-    pub fn close_streamed_transaction_unit(&mut self, stores: &mut InstanceStores<A>, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>) -> Result<(), Fault> {
-        let Some(transaction) = emit.transaction.as_ref() else { return Ok(()) };
+    /// 🪃️ Empty streamed aborts retain their original transaction and replay source until zero-trace publication and paid closure complete.
+    pub fn close_streamed_transaction_unit(&mut self, stores: &mut InstanceStores<A>, emit: &mut Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, pending:&mut Option<Box<store::original_replay_publication::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>, completed:&mut bool, cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
+        if *completed{return Ok(true)}
+        let Some(transaction) = emit.transaction.as_ref() else { return Ok(true) };
         let abort = emit.transaction_phase == TransactionPhase::Abort;
-        if !abort && (emit.transaction_phase == TransactionPhase::Stream || !emit.artifact_mutations.is_empty()) {
-            return Ok(());
+        if !abort && (emit.transaction_phase == TransactionPhase::Stream || !emit.artifact_mutations.is_empty()) {return Ok(true)}
+        if abort{
+            if let Some(owner)=pending.as_mut(){
+                if owner.published(){
+                    if !owner.terminal_is_empty(){cx.with_original_retirement(|cx|owner.close_step(&mut stores.store,cx))?;return Ok(false)}
+                    let mut d=store::original_replay_publication::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();d.copy_bytes+=1;
+                    cx.with_original_retirement(|cx|semio_framework_job::close_original_retained_step(cx,d,|_|{*pending=None;*completed=true;Ok(semio_framework_value::RetainedCloneStep::Complete(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}))?;
+                    return Ok(*completed)
+                }
+                if owner.prepared(){owner.publish(&mut stores.store,cx)?;}else{owner.advance(&mut stores.store,&transaction.id,cx)?;}
+                return Ok(false)
+            }
+            if stores.store.open_transaction().is_none(){let mut admitted=None;semio_framework_job::admit_original_construction(cx,&mut admitted,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:1,capacity_bytes:0,release_bytes:0,depth:1},|_|{*completed=true;Ok(((),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()}))})?;return Ok(*completed)}
+            store::original_replay_publication::abort::OriginalStreamAbort::admit(&stores.store,&transaction.id,cx,pending)?;
+            return Ok(false)
         }
         let open = stores.store.open_transaction().is_some_and(|open| open.transaction.id == transaction.id);
         let transaction_id = transaction.id.clone();
@@ -123,14 +132,9 @@ impl<A: ArtifactApp> CommandHistory<A> {
             emit.transaction_phase = TransactionPhase::Commit;
         }
         if !open {
-            return Ok(());
+            return Ok(true);
         }
-        if abort {
-            stores.store.abort_open_transaction(&transaction_id).map_err(|error| error.into_fault())?;
-            self.retire_displaced_document_rows();
-        } else {
-            stores.store.commit_open_transaction(&transaction_id).map_err(|error| error.into_fault())?;
-        }
-        Ok(())
+        stores.store.commit_open_transaction(&transaction_id).map_err(|error| error.into_fault())?;
+        Ok(true)
     }
 }

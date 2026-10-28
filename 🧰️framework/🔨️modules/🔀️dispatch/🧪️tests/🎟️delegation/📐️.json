@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "initial",
+    "delta",
+    "total",
+    "closeWithReleaseDenied",
+    "closeWithReleaseAdmitted"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semio.dispatch.typed-delegation.v1"
+    },
+    "initial": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "delta": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "total": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "closeWithReleaseDenied": {
+      "const": [
+        false,
+        false
+      ]
+    },
+    "closeWithReleaseAdmitted": {
+      "const": true
+    }
+  }
+}

@@ -103,9 +103,9 @@ impl ArtifactEditor for ShootingPlayApp {
         Some(crate::editor::shooting::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> ShootingSnapshot {
+    fn reference_birth()->Option<fn()->ShootingSnapshot>{Some(||{
         crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(shooting_io())

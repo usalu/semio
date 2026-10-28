@@ -1,0 +1,33 @@
+{
+  "window": "camera-left",
+  "actor": "saved-window-reader",
+  "initialZoom": 1.25,
+  "zooms": [
+    3.5,
+    2.75
+  ],
+  "sources": [
+    "pair",
+    "framed"
+  ],
+  "maximumTurns": 200000,
+  "cancelAt": [
+    0,
+    1,
+    7,
+    63,
+    255,
+    511
+  ],
+  "requirements": [
+    "original-native-pack-spr",
+    "serde-json-operation-oracle",
+    "two-operation-replay",
+    "no-initial-state-fallback",
+    "private-candidate",
+    "exact-physical-receipts",
+    "funded-cancel",
+    "original-cursor-page-transfer"
+  ],
+  "maximumHeaderCopyBytes": 32768
+}

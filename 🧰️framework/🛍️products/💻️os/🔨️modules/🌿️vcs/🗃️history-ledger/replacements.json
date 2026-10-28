@@ -1,0 +1,1 @@
+{"cases":[{"id":"publish","before":[1,2,3],"replacements":[[0,10],[2,30]],"commit":true,"after":[10,2,30],"displaced":[1,3]},{"id":"cancel","before":[1,2,3],"replacements":[[0,10],[2,30]],"commit":false,"after":[1,2,3],"displaced":[10,30]}]}

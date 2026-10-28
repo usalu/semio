@@ -19,8 +19,12 @@ impl<T:Send+Sync+'static> OriginalHistorySource<T>{
  pub fn advance<M:Sync>(&mut self,ledger:&mut ArtifactHistoryLedger<T>,output:&mut Option<RetainedOwnedProjection<M>>,projection:usize,project:impl FnOnce(&T)->&M,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if output.is_some(){return Err(invalid("history projection output already occupied"));}let d=self.demands(ledger)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()));}let key=self.key.unwrap();if !self.ready{let step=ledger.advance_retained_read(key,self.issuer.as_ref().ok_or_else(||invalid("original history issuer absent"))?,grant)?;self.ready=matches!(step,RetainedCloneStep::Complete(_));return Ok(RetainedCloneStep::Progress(step.progress()));}if self.root.is_none(){let(root,p)=ledger.retain_read(key,grant)?;*self.root=Some(root);return Ok(RetainedCloneStep::Progress(p));}let(root,p)=self.root.as_ref().unwrap().project(projection,project,grant)?;*output=Some(root);Ok(RetainedCloneStep::Complete(p))
  }
- /// 🛑️ Stops original reads before producer cancellation returns its projection aliases.
- pub fn begin_close(&mut self){self.closing=true;}
+ /// 👁️ Borrows only the authenticated original ledger root already retained by this source.
+ pub fn borrow_original(&self)->Result<semio_framework_value::RetainedCloneRef<'_,T>,ValueError>{if self.closing{return Err(invalid("closing original history source cannot lend metadata"))}self.root.as_ref().ok_or_else(||invalid("original history root has not completed its actual read birth"))?.borrow()}
+ /// 📏️ Quotes the original root read independently of optional child projections.
+ pub fn root_demands(&self,ledger:&ArtifactHistoryLedger<T>)->Result<RetirementDemand,ValueError>{if self.closing{return Err(invalid("closing history source cannot retain its original root"))}if self.root.is_some(){return Ok(Default::default())}let key=self.key.ok_or_else(||invalid("original history key absent"))?;if self.ready{ledger.retained_read(key)?;Ok(RetainedOwnedProjection::<T>::constructor_demand())}else{ledger.retained_read_demands(key)}}
+ /// 🪪️ Retains the genuine ledger root for borrowed metadata codecs without creating a child alias.
+ pub fn advance_root(&mut self,ledger:&mut ArtifactHistoryLedger<T>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{let d=self.root_demands(ledger)?;if self.root.is_some(){return Ok(RetainedCloneStep::Complete(Default::default()))}if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}let key=self.key.unwrap();if !self.ready{let step=ledger.advance_retained_read(key,self.issuer.as_ref().ok_or_else(||invalid("original history issuer absent"))?,grant)?;self.ready=matches!(step,RetainedCloneStep::Complete(_));return Ok(RetainedCloneStep::Progress(step.progress()))}let(root,p)=ledger.retain_read(key,grant)?;*self.root=Some(root);Ok(RetainedCloneStep::Complete(p))}
  /// 📏️ Quotes the exact original return and independently controlled issuer aliases.
  pub fn close_demands(&self,ledger:&ArtifactHistoryLedger<T>,body:usize)->Result<RetirementDemand,ValueError>{if let Some(root)=self.root.as_ref(){return if root.terminal_is_empty(){Ok(header::<Option<RetainedOwnedProjection<T>>>())}else{root.close_demand(body)};}if let Some(key)=self.key{return ledger.retained_read_return_demands(key,body);}if self.returned.is_some()||self.issuer.is_some(){return Ok(header::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>());}if let Some(factory)=self.closing_factory.iter().find_map(Option::as_ref){return factory.demands(body);}Ok(Default::default())}
  /// ↩️ Restores the same slot before closing the aliases of its exact captured issuer.
@@ -34,6 +38,9 @@ impl<T:Send+Sync+'static> OriginalHistorySource<T>{
  }
 }
 impl<T:Sync> OriginalHistorySource<T>{
+ /// 🛑️ Stops original reads before producer cancellation returns its projection aliases.
+ pub fn begin_close(&mut self){self.closing=true;}
+
  /// 🫙️ Confirms original slot restoration and physical closure of every source issuer alias.
  pub fn terminal_is_empty(&self)->bool{self.closing&&self.root.is_none()&&self.key.is_none()&&self.issuer.is_none()&&self.returned.is_none()&&self.closing_factory.iter().all(Option::is_none)}
 }

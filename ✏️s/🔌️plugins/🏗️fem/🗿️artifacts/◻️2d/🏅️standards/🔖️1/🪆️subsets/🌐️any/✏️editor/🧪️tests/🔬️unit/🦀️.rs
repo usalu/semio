@@ -350,7 +350,7 @@ async fn fem2d_io_declares_geometry_in_and_results_out_ports() {
 /// must have something to paint at first frame.
 #[semio_framework_async_macros::async_test]
 async fn the_editor_boots_on_the_bundled_example_document() {
-    let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
+    let boot = <Fem2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     assert!(!boot.nodes.is_empty(), "expected the bundled example fixture's nodes");
     assert!(!boot.elements.is_empty(), "expected the bundled example fixture's elements");
     assert_ne!(boot, semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
@@ -564,7 +564,7 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][0]["value"])).expect("admitted shared camera");
-    let boot = <Fem2dPlayApp as ArtifactEditor>::initial_snapshot();
+    let boot = <Fem2dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let node = boot.nodes.first().expect("bundled structural node");
     let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
     let window_kind = model_window::WINDOW_KIND_ID;

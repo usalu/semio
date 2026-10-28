@@ -16,7 +16,7 @@ use semio_framework_os_store_space_schema::ArtifactCursor;
 
 use semio_framework_os_store_ephemeral::*;
 use semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations;
-use semio_framework_os_store_text_io::{ArtifactCodec, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
+use semio_framework_os_store_text_io::{ArtifactCodec, ArtifactCodecReference, ArtifactNativeSnapshotIdentity, ArtifactPackFiles, ArtifactSqliteSnapshotHost};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_os_store_text_io::ArtifactCodecApplyFuture;
 #[cfg(target_arch = "wasm32")]
@@ -30,7 +30,7 @@ mod codec_owners;
 pub use codec_owners::{ArtifactCodecOwnerSource,BoundedArtifactCodecOwners,codec_document_owners};
 use semio_framework_os_store_text_io::text_format::{ArtifactTextFiles, ParsedDocumentText, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines};
 use semio_framework_os_store_text_io::text_format::project_envelope_history;
-use semio_framework_os_store_ledger::edit_from_operation_envelope;
+use semio_framework_os_store_ledger::edit_from_operation_envelope_cold;
 use semio_framework_os_store_canonical_json::ArtifactCanonicalJsonTree;
 use semio_framework_os_store_one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 use semio_framework_os_store_initialization_runtime::native_publication_producer::ArtifactSnapshotPublication;
@@ -46,12 +46,19 @@ use semio_framework_os_store_engine::lifted_store::ArtifactStore;
 //#region 🔖️CodecRegistry
 //#region 🗃️BoundedArtifactStoreOwners
 
+/// 🧬️ Registers native identity and authored binary metadata without inventing whole-value semantic capabilities.
+pub fn native_artifact_codec<P>(schema:impl Into<String>)->ArtifactCodec
+where P:pack::snapshot::ArtifactPackMetadata+ArtifactStoreSnapshot+'static,
+{
+    ArtifactCodec{schema:schema.into(),extension:P::EXTENSION,native_identity:ArtifactNativeSnapshotIdentity::typed::<P>(),snapshot_sqlite:P::sqlite_snapshot_codec(),pack_schema_hash:P::native_pack_schema_hash(),reference:None}
+}
+
 /// 🪶️ Constructs a document kind's codec with a required, actual relational snapshot implementation, over
 /// [`bare_artifact_codec`]. One call per document kind registers it (`register_document_codec_for_app`).
 pub fn artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ArtifactSqliteSnapshotHost + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<P>,
+    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
 {
     let mut codec = bare_artifact_codec::<P, Mutation>(schema);
     codec.snapshot_sqlite = Some(P::sqlite_codec());
@@ -68,9 +75,9 @@ where
 pub fn bare_artifact_codec<P, Mutation>(schema: impl Into<String>) -> ArtifactCodec
 where
     P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
-    Mutation: self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<P>,
+    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + self::Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
 {
-    bare_artifact_codec_with_owners::<P,Mutation,BoundedArtifactCodecOwners>(schema)
+    bare_artifact_codec_with_owners::<P, Mutation, BoundedArtifactCodecOwners>(schema)
 }
 
 /// 🧬️ Selects one original publication/replay owner source for every native reduction store.
@@ -139,8 +146,8 @@ where
     /// store, THEN propagate — the guest twin does the same (ticket 26/09/18 TC3e/TC5).
     fn apply_ops_binary_impl<'a, 'b, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], ops_vec: &'a [u8], identity: &'a mut EntityIdentityAuthority<'b>) -> ArtifactCodecApplyFuture<'a>
     where
-        P: ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync + Clone + FromValue,
-        Mutation: ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + Clone + semio_framework_os_spr::ColdMutation<P>,
+        P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
@@ -198,8 +205,8 @@ where
 
     fn replay_envelopes_impl<'a, P, Mutation, Source>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> ArtifactCodecApplyFuture<'a>
     where
-        P: ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync + Clone + FromValue,
-        Mutation: Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree + semio_framework_os_spr::ColdMutation<P>,
+        P: Clone + FromValue + ToValue + ArtifactDsl + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + semio_framework_value::retirement::RetireOwned + Sync,
+        Mutation: semio_framework_os_spr::ColdMutation<P> + Clone + ToValue + FromValue + OpText + OpBinary + self::Mutation<P> + semio_framework_value::retirement::RetireOwned + Sync + ArtifactCanonicalJsonTree,
         Source: ArtifactCodecOwnerSource<P,Mutation>+Send+Sync+'static,
         {
         Box::pin(async move {
@@ -210,10 +217,10 @@ where
 
     fn edit_text_from_envelope_impl<'a, P, Mutation>(envelope: &'a semio_framework_os_spr::MutationEnvelope) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<String, VcsError>> + 'a>>
     where
-        Mutation: OpText + OpBinary,
+        Mutation: semio_framework_os_spr::ColdMutation<P> + OpText + OpBinary,
     {
         Box::pin(async move {
-            let edit = edit_from_operation_envelope::<Mutation>(envelope).await?;
+            let edit = edit_from_operation_envelope_cold::<Mutation>(envelope).await?;
             print_edit_lines(&edit).await
         })
     }
@@ -227,11 +234,13 @@ where
             Some(spec) => pack::record::schema_hash(&spec),
             None => [0u8; 32],
         },
+        reference:Some(ArtifactCodecReference{
         compile_dsl: compile_dsl_impl::<P, Mutation>,
         print_mirror: print_mirror_impl::<P, Mutation>,
         edit_text_from_envelope: edit_text_from_envelope_impl::<P, Mutation>,
-        apply_ops_binary: apply_ops_binary_impl::<P, Mutation,Source>,
-        replay_envelopes: replay_envelopes_impl::<P, Mutation,Source>,
+        apply_ops_binary: apply_ops_binary_impl::<P, Mutation>,
+        replay_envelopes: replay_envelopes_impl::<P, Mutation>,
+        }),
     }
 }
 
@@ -301,8 +310,8 @@ where
 /// See `🌎️hub/🗿️artifact-authority/📌️check-in` and `db::artifact_ledger_tail`.
 pub async fn replay_envelopes_onto_pair<P, Mutation>(pack: &[u8], spr: &[u8], envelopes: &[u8], owners: impl FnOnce() -> Result<DocumentStoreOwners<P, Mutation>, ValueError>) -> Result<ArtifactPackFiles, VcsError>
 where
-    P: ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static + Clone + FromValue,
-    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static + Clone + semio_framework_os_spr::ColdMutation<P>,
+    P: Clone + FromValue + ToValue + ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Send + Sync + 'static,
+    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if pack.is_empty() || spr.is_empty() {
         return Err(VcsError::Deserialize("replay-envelopes has no pack+spr baseline".into()));
@@ -363,3 +372,7 @@ where
 //#endregion 🔖️Backbone
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
+
+#[cfg(test)]
+#[path="../../🧪️native-registration/🦀️.rs"]
+mod native_registration_tests;

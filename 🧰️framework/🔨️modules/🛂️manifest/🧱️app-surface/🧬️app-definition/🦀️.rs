@@ -6,7 +6,7 @@ use super::*;
 //#region 🔖️Manifest
 //#region 🔖️Surface
 /// 🎯️ A surface addressed across plugin boundaries.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct AppRef {
     pub plugin_id: String,
@@ -31,7 +31,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 }
 //#endregion 🔖️Surface
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AppDefinition {

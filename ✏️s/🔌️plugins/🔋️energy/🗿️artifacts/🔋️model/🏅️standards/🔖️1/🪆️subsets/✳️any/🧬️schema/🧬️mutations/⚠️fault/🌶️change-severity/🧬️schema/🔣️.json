@@ -59,5 +59,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateFaultDefinition",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "faults",
+    "field": "severity",
+    "input": "new_severity",
+    "key": "id",
+    "labels": {
+      "en": "Change fault: Severity",
+      "de": "Schweregrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fault",
+      "kind": "change-fault-severity",
+      "record": "ChangedFaultSeverity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Severity violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fault does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fault already carries this severity value."
+      }
+    }
   }
 }

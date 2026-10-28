@@ -24,7 +24,7 @@ pub(crate) use allocation_testing::observe_retirement_allocations;
 
 #[path="../../🎟️tickets/🦀️.rs"]
 mod tickets;
-pub use tickets::{factory_ticket_demands,close_factory_ticket,close_factory_ticket_original};
+pub use tickets::{factory_ticket_demands,close_factory_ticket,close_factory_ticket_original,RetirementSelection,select_retirement_cursor,select_factory_ticket,close_factory_ticket_controlled};
 
 #[cfg(test)]
 pub use semio_framework_value_factory::{FactoryPayloadRetirement,FactoryRetirement,FactoryAuthority,FactoryChildTickets,FactoryChildSlot,FactoryRetirementTicket,FactoryRetirementAdmissionError,factory_arc_birth_bytes,factory_retirement_frame_bytes,factory_constructor_birth_bytes};

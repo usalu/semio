@@ -48,6 +48,8 @@ impl pack::snapshot::ArtifactPack for EnergyModelViewerWindowConfig {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EnergyModelViewerWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 
@@ -82,6 +84,14 @@ impl semio_framework_plugin::WindowConfigOwner for EnergyModelViewerWindowConfig
     type Edit = semio_framework_plugin::WindowConfigApplyEdit<EnergyModelViewerWindowConfig, EnergyModelViewerWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
 
+    fn initial_state_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand{copy_bytes:2*std::mem::size_of::<Self::State>(),depth:1,..Default::default()})}
+    fn initial_state(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::State,semio_framework_value::RetainedCloneProgress),semio_framework_value::ValueError>{let d=Self::initial_state_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original Energy window pose birth is not funded"))}Ok((Self::State::default(),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
+    fn initial_state_pack_source(state:&Self::State)->Result<(&dyn semio_framework_dsl_record::native_encoding::FieldProjectionSource,semio_framework_dsl_record::BorrowedRecordSpec),semio_framework_value::ValueError>{Ok((state,<Self::State as semio_framework_dsl_record::BorrowedDslRecord>::RECORD))}
+
+    fn native_pair_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_plugin::window_config_native_pair_demands::<Self::State>())}
+    fn admit_native_pair(pack:&[u8],spr:&[u8],pack_limits:protocol::PackLimits,history_limits:store::os_store::codec_registry::native_snapshot::OriginalArtifactHistoryReadLimits,native:&mut semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant,output:&mut Option<Box<dyn semio_framework_plugin::WindowConfigNativePairReceiving<Self::State>>>)->Result<semio_framework_value::RetainedCloneProgress,store::os_store::codec_registry::native_snapshot::OriginalArtifactPairFailure>{semio_framework_plugin::admit_window_config_native_pair::<Self::State>(pack,spr,pack_limits,history_limits,native,grant,output)}
+    fn native_operation_wire()->store::os_store::ArtifactOperationWire<Self::Mutation>{store::os_store::ArtifactOperationWire::canonical().with_original_receiving()}
+
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> {
         std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new())
     }
@@ -91,6 +101,7 @@ impl semio_framework_plugin::WindowConfigOwner for EnergyModelViewerWindowConfig
     fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         semio_framework_plugin::bounded_window_config_preparation_factory::<Self>()
     }
+    fn store_disposer_birth()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin::bounded_window_config_store_disposer_birth::<Self>()}
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
         semio_framework_plugin::bounded_window_config_store_disposer::<Self>()
     }
@@ -123,3 +134,9 @@ mod tests;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+impl store::os_store::codec_registry::native_snapshot::OriginalArtifactPackReceiving for EnergyModelWindowConfig{
+    type Receiving=store::os_store::codec_registry::native_snapshot::OriginalSnapshotRecordReceiving<Self>;
+    fn original_pack_birth_demand()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self::Receiving>(),depth:1,..Default::default()}}
+    fn admit_original_pack(source:&[u8],limits:protocol::PackLimits,native:&semio_framework_value::NativeDecodeControl<'_>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(Self::Receiving,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{Self::Receiving::admit(source,<Self as pack::snapshot::ArtifactDsl>::envelope_id(),limits,native,grant)}
+}

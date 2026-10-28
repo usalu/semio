@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import math
 
-from mutate_energy_model_1_mutation_vocabulary import applied, head_link, no_op, rejected, unchanged
+from mutate_energy_model_1_mutation_vocabulary import applied, no_op, rejected, unchanged
 
 
 # region 🔖️Fixtures
@@ -302,12 +302,30 @@ def owned_target(target):
     return copy.deepcopy(target)
 
 
+def owned_link(link):
+    """🔗️ Validates and preserves the complete authored target, pin and role."""
+    if not isinstance(link, dict) or set(link) != {"target", "pin", "role"} or owned_target(link["target"]) is None or not isinstance(link["role"], str) or not link["role"]:
+        return None
+    pin = link["pin"]
+    if not isinstance(pin, dict):
+        return None
+    if pin.get("kind") == "head":
+        valid = set(pin) == {"kind"}
+    elif pin.get("kind") == "checkpoint":
+        valid = set(pin) == {"kind", "id"} and isinstance(pin["id"], str) and bool(pin["id"])
+    elif pin.get("kind") == "snapshot":
+        blob = pin.get("blob")
+        valid = set(pin) == {"kind", "blob"} and isinstance(blob, dict) and set(blob) == {"hash", "size", "mediaType"} and isinstance(blob["hash"], str) and bool(blob["hash"]) and type(blob["size"]) is int and 0 <= blob["size"] < 2**64 and isinstance(blob["mediaType"], str) and bool(blob["mediaType"])
+    else:
+        valid = False
+    return copy.deepcopy(link) if valid else None
+
+
 def bind_weather_file(before, payload):
-    """🌦️ `bind-weather-file{target}` — taxonomy.md's `bind` verb attaching a parameterization."""
-    target = owned_target(payload["target"])
-    if target is None:
-        return unchanged(before), rejected("mutation.invariant", [payload["target"].get("artifactId", "") if isinstance(payload["target"], dict) else ""])
-    link = head_link(target, "weather")
+    """🌦️ Attaches the complete original weather link intent."""
+    link = owned_link(payload["link"])
+    if link is None:
+        return unchanged(before), rejected("mutation.invariant", ["link"])
     if before.get("weatherLink") == link:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -326,11 +344,10 @@ def unbind_weather_file(before, payload):
 
 
 def connect_referenced_model(before, payload):
-    """🪢️ `connect-referenced-model{target}` — taxonomy.md's `connect` verb on a relationship."""
-    target = owned_target(payload["target"])
-    if target is None:
-        return unchanged(before), rejected("mutation.invariant", [payload["target"].get("artifactId", "") if isinstance(payload["target"], dict) else ""])
-    link = head_link(target, "model")
+    """🪢️ Connects the complete original referenced-model link intent."""
+    link = owned_link(payload["link"])
+    if link is None:
+        return unchanged(before), rejected("mutation.invariant", ["link"])
     if before.get("referencedModel") == link:
         return unchanged(before), no_op()
     after = copy.deepcopy(before)
@@ -346,6 +363,20 @@ def disconnect_referenced_model(before, payload):
     after = copy.deepcopy(before)
     after["referencedModel"] = None
     return after, applied()
+
+
+def _invert_weather_link(before, payload):
+    """↩️ Restores the complete previous weather pin and role, or clears the previously empty slot."""
+    del payload
+    existing = before.get("weatherLink")
+    return [("bind-weather-file", {"link": copy.deepcopy(existing)})] if existing else [("unbind-weather-file", {})]
+
+
+def _invert_referenced_model(before, payload):
+    """↩️ Restores the complete previous referenced-model pin and role."""
+    del payload
+    existing = before.get("referencedModel")
+    return [("connect-referenced-model", {"link": copy.deepcopy(existing)})] if existing else [("disconnect-referenced-model", {})]
 
 
 def _zone(before, entity_id):
@@ -911,6 +942,10 @@ VOCABULARY = {
 
 #: ↩️ Catalog id -> the undo steps that kind owes, for every kind whose spec row states its own.
 EXTRA_INVERT = {
+    "bind-weather-file": _invert_weather_link,
+    "unbind-weather-file": _invert_weather_link,
+    "connect-referenced-model": _invert_referenced_model,
+    "disconnect-referenced-model": _invert_referenced_model,
     "create-zone": _invert_create_zone,
     "delete-zone": _invert_delete_zone,
     "create-space": _invert_create_space,

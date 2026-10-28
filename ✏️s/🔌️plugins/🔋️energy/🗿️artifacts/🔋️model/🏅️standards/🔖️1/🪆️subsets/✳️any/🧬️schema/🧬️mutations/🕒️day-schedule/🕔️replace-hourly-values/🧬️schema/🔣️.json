@@ -57,5 +57,43 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "fixed-row",
+    "row": "StateDailySchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "daily",
+    "field": "hourly_values",
+    "input": "new_hourly_values",
+    "key": "id",
+    "labels": {
+      "en": "Replace hourly schedule values",
+      "de": "Stundenwerte des Zeitplans ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "daily-schedule",
+      "kind": "replace-hourly-values",
+      "record": "ReplacedDailyScheduleHourlyValues"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Every hourly schedule value must be finite."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed daily schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The daily schedule already holds these hourly values."
+      }
+    }
   }
 }

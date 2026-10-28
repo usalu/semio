@@ -26,3 +26,15 @@ fn send_only_owners_derive_exclusive_retirement_and_plain_owners_keep_shared_ori
  assert!(<SharedPlain as RetireOwned>::shared_original_birth_bytes(&SharedPlain{value:1}).is_some());
  assert!(<ExclusiveCell as RetireOwned>::retirement_birth_bytes(&ExclusiveCell{close:None}).is_some());
 }
+
+trait Definition:Send+Sync+'static{type Value:RetireOwned+Sync;}
+struct OriginalDefinition;
+impl Definition for OriginalDefinition{type Value=String;}
+#[derive(semio_framework_value_derive::RetireOwned)]
+struct ActualFields<D:Definition>{value:D::Value}
+#[derive(semio_framework_value_derive::RetireOwned)]
+enum Completion<D:Definition>{Value(ActualFields<D>)}
+#[test]
+fn composite_retirement_requires_the_real_field_port_without_retiring_its_definition_parameter(){
+ let source=Completion::<OriginalDefinition>::Value(ActualFields{value:"original field".into()});let birth=source.retirement_birth_bytes().unwrap();assert!(birth>0);let mut retirement=semio_framework_value::retirement::controlled::ControlledRetirement::new(source).ok().unwrap();let grant=semio_framework_value::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1<<20,maximum_release_bytes:1<<20,maximum_depth:4096};for index in 0..1000{if retirement.terminal_is_empty(){return}let selection=retirement.select(4096).unwrap();selection.step(grant).unwrap();assert!(index<999)}
+}

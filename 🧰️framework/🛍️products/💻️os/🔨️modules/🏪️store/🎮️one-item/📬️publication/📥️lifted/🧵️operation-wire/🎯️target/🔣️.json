@@ -1,0 +1,15 @@
+{
+  "cases": [
+    {
+      "segments": [],
+      "whole": true
+    },
+    {
+      "segments": [
+        "zones",
+        "α🌿"
+      ],
+      "whole": false
+    }
+  ]
+}

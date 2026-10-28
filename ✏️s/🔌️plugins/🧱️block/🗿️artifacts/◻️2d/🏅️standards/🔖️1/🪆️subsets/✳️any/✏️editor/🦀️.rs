@@ -463,9 +463,9 @@ impl ArtifactEditor for Block2dPlayApp {
     /// 📄️ Boots on the bundled `hexagonal-cut-concrete-forest-left` example document (the same DSL
     /// `setActiveExample` parses), so every window renders real content instead of the all-`Default`
     /// empty node kind — see `crate::standards::v1::subsets::any::io::text::snapshot::default_block2d_snapshot`.
-    fn initial_snapshot() -> Block2dSnapshot {
+    fn reference_birth()->Option<fn()->Block2dSnapshot>{Some(||{
         semio_s_artifact_block_2d_io::text::snapshot::default_block2d_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(block2d_io())

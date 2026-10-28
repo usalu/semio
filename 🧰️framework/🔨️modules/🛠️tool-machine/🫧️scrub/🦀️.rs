@@ -247,7 +247,7 @@ impl<M: Clone + 'static> Scrub<M> {
 
     /// 📨️ Runs one input on `clock`: a host abort drops the open transaction with zero trace; a tick or release of
     /// another press first host-aborts the open one (`captureLost`).
-    pub fn send(&mut self, input: ScrubInput<M>, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> {
+    pub fn send(&mut self, input: ScrubInput<M>, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> where M:Clone {
         let event = match input {
             ScrubInput::Abort { reason } => return Ok(self.runner.abort(reason)),
             ScrubInput::Tick { gesture, leaves } => ScrubEvent::Tick { gesture, leaves },
@@ -275,37 +275,44 @@ impl<M: Clone + 'static> Scrub<M> {
 /// [`Self::provisional`] on the committed document for every render.
 #[derive(Debug, PartialEq)]
 pub struct ScrubLedger<M> {
-    windows: std::collections::BTreeMap<semio_framework_value::SharedUtf8, RetainedOriginalSlot<ScrubState<M>>>,
+    pub(super) source_revision:u64,
+    pub(super) live_windows:usize,
+    pub(super) windows: std::collections::BTreeMap<semio_framework_value::SharedUtf8, RetainedOriginalSlot<ScrubState<M>>>,
     #[cfg(feature = "testkit")] #[doc(hidden)] pub closed: std::collections::BTreeMap<String, String>,
     #[cfg(not(feature = "testkit"))] pub(crate) closed: std::collections::BTreeMap<String, String>,
 }
 
 impl<M> Default for ScrubLedger<M> {
     fn default() -> Self {
-        Self { windows: std::collections::BTreeMap::new(), closed: std::collections::BTreeMap::new() }
+        Self { source_revision:0,live_windows:0, windows: std::collections::BTreeMap::new(), closed: std::collections::BTreeMap::new() }
     }
 }
 
-impl<M: Clone + 'static> ScrubLedger<M> {
+impl<M: 'static> ScrubLedger<M> {
+    /// 🪪️ Identifies the original provisional source across a multi-turn complete-prefix refold.
+    pub fn source_revision(&self)->u64{self.source_revision}
+    fn update_live_windows(&mut self,window:&str,was_open:bool){let open=self.open(window).is_some();if open&&!was_open{self.live_windows+=1;}else if was_open&&!open{self.live_windows-=1;}}
+    fn change_source_revision(&mut self){self.source_revision=self.source_revision.checked_add(1).expect("original tool source revision exhausted");}
+
     /// 🛋️ Whether no window holds an open scrub.
     pub fn is_empty(&self) -> bool {
-        self.windows.is_empty()
+        self.live_windows==0
     }
 
     /// 🔎️ The open scrub of `window`.
     pub fn open(&self, window: &str) -> Option<&ScrubState<M>> {
-        self.windows.get(window).map(RetainedOriginalSlot::get)
+        self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::get)
     }
 
     /// 🪟️ The windows holding an open scrub, in window id order.
     pub fn windows(&self) -> impl Iterator<Item = &str> {
-        self.windows.keys().map(semio_framework_value::SharedUtf8::as_str)
+        self.windows.iter().filter(|(_,slot)|!slot.is_empty()).map(|(key,_)|key.as_str())
     }
 
     /// 👁️ Every open scrub's provisional leaves, window by window in window id order — the overlay a render applies
     /// on the committed document; never history.
     pub fn provisional(&self) -> impl Iterator<Item = &M> {
-        self.windows.values().flat_map(|state| state.get().entries.iter().map(|(_, leaf)| leaf))
+        self.windows.values().filter(|state|!state.is_empty()).flat_map(|state| state.get().entries.iter().map(|(_, leaf)| leaf))
     }
 
     /// 📮️ Runs one input of `window`'s press. A tick or release of the press the window last closed is a silent no-op;
@@ -313,7 +320,7 @@ impl<M: Clone + 'static> ScrubLedger<M> {
     /// `baseMoved`, zero trace), so the input opens a fresh transaction on the current revision — the leaves are
     /// absolute. The release closes the press. A refused input leaves the ledger exactly as it was: the press stays open,
     /// so a retry or a host abort decides.
-    pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, base_revision: &str, input: &mut Option<ScrubInput<M>>, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> {
+    pub fn send(&mut self, window: &str, tool: &str, actor: &ActorId, base_revision: &str, input: &mut Option<ScrubInput<M>>, clock: HybridLogicalTimestamp) -> Result<ToolStep<M>, ToolRefusal> where M:Clone {
         if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return Err(ToolRefusal::Unclosed);}
         let (gesture, release) = match input.as_ref().ok_or(ToolRefusal::Closed)? {
             ScrubInput::Abort { reason } => return Ok(self.abort(window, None, *reason)),
@@ -323,7 +330,8 @@ impl<M: Clone + 'static> ScrubLedger<M> {
         if self.closed.get(window) == Some(&gesture) {
             return Ok(ToolStep::Idle);
         }
-        let previous = self.windows.remove(window).map(|slot|slot.try_into_original().unwrap_or_else(|_|unreachable!("original scrub write fence")));
+        let was_open=self.open(window).is_some();
+        let previous = self.windows.remove(window).filter(|slot|!slot.is_empty()).map(|slot|slot.try_into_original().unwrap_or_else(|_|unreachable!("original scrub write fence")));
         let mut scrub = match previous.clone().filter(|state| state.tool == tool && state.base_revision == base_revision).map(Scrub::resume) {
             Some(Ok(scrub)) => scrub,
             _ => Scrub::start(tool, actor.clone(), base_revision),
@@ -341,6 +349,8 @@ impl<M: Clone + 'static> ScrubLedger<M> {
         if let Some(state) = scrub.persist() {
             self.windows.insert(window.to_string().into(), RetainedOriginalSlot::new(state));
         }
+        self.update_live_windows(window,was_open);
+        self.change_source_revision();
         step
     }
 
@@ -351,8 +361,9 @@ impl<M: Clone + 'static> ScrubLedger<M> {
             self.closed.insert(window.to_string(), gesture.to_string());
         }
         if self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read){return ToolStep::Idle;}
-        match self.windows.remove(window).map(|slot|slot.try_into_original().unwrap_or_else(|_|unreachable!("original scrub write fence"))) {
+        match self.windows.remove(window).filter(|slot|!slot.is_empty()).map(|slot|slot.try_into_original().unwrap_or_else(|_|unreachable!("original scrub write fence"))) {
             Some(state) if gesture.is_none_or(|gesture| gesture == state.gesture) => {
+                self.live_windows-=1;self.change_source_revision();
                 self.closed.insert(window.to_string(), state.gesture);
                 ToolStep::Aborted(state.transaction, reason)
             }
@@ -382,19 +393,21 @@ impl<M: Clone + 'static> ScrubLedger<M> {
 
 
 #[cfg(feature = "testkit")]
-impl<M:Clone> ScrubLedger<M>{pub fn reference_fork(&self)->Self{assert!(self.windows.values().all(|slot|!slot.has_read()));Self{windows:self.windows.iter().map(|(key,slot)|(key.clone(),RetainedOriginalSlot::new(slot.get().clone()))).collect(),closed:self.closed.clone()}}}
+impl<M:Clone> ScrubLedger<M>{pub fn reference_fork(&self)->Self{assert!(self.windows.values().all(|slot|!slot.has_read()));Self{source_revision:self.source_revision,live_windows:self.live_windows,windows:self.windows.iter().map(|(key,slot)|(key.clone(),RetainedOriginalSlot::new(slot.get().clone()))).collect(),closed:self.closed.clone()}}}
 
 
-impl<M:Clone+Send+Sync+'static> ScrubLedger<M>{
- /// ⏭️ Locates the next original resident address without scanning preceding press slots.
+impl<M:Send+Sync+'static> ScrubLedger<M>{
+ /// 🔎️ Locates the next original resident address without scanning preceding press slots.
  pub fn next_retained_window(&self,after:Option<&str>)->Option<(&semio_framework_value::SharedUtf8,RetainedOriginalSlotKey)>{let next=match after{Some(after)=>self.windows.range::<str,_>((std::ops::Bound::Excluded(after),std::ops::Bound::Unbounded)).next(),None=>self.windows.iter().next()};next.map(|(key,slot)|(key,slot.key()))}
 
  /// 🔗️ Captures the exact original authored state slot without cloning its entries.
- pub fn retained_read_key(&self,window:&str)->Option<RetainedOriginalSlotKey>{self.windows.get(window).map(RetainedOriginalSlot::key)}
+ pub fn retained_read_key(&self,window:&str)->Option<RetainedOriginalSlotKey>{self.windows.get(window).filter(|slot|!slot.is_empty()).map(RetainedOriginalSlot::key)}
  pub fn retained_read_pending(&self,window:&str)->bool{self.windows.get(window).is_some_and(RetainedOriginalSlot::has_read)}
  pub fn retained_read_demands(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.demands(key)}
  pub fn advance_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<ScrubState<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.windows.get_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.advance_read(key,factory,grant)}
  pub fn retained_read(&self,window:&str,key:RetainedOriginalSlotKey)->Result<semio_framework_value::retained_clone::RetainedCloneRef<'_,ScrubState<M>>,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.borrow(key)}
+ /// 🎟️ Retains the actual current scrub source under its exact original slot key.
+ pub fn retain_original_read(&self,window:&str,key:RetainedOriginalSlotKey,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(semio_framework_value::retained_clone::RetainedOwnedProjection<ScrubState<M>>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original scrub source window absent"))?.retain_read(key,grant)}
  pub fn retained_read_return_demands(&self,window:&str,key:RetainedOriginalSlotKey,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{self.windows.get(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.return_demands(key,body)}
  pub fn return_retained_read(&mut self,window:&str,key:RetainedOriginalSlotKey,factory:&mut Option<std::sync::Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<ScrubState<M>>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{self.windows.get_mut(window).ok_or_else(||semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original gesture source window absent"))?.return_read(key,factory,grant)}
 }

@@ -12,7 +12,7 @@ impl<A: ArtifactApp> ArtifactToolCompletion<A> {
     pub fn install_authoring_identity(&self, receipt: semio_framework_value::native_encoding::NativeEncodeContinuation, lease: &ToolCancellationLease) -> Result<(), Fault> {
         let mut owner = self.inner.try_lock_authoring().map_err(|_| plugin_sdk_fault("original app-owned effect authority is busy or poisoned"))?;
         if owner.is_some() { return Err(plugin_sdk_fault("original app-owned effect authority was already installed")); }
-        *owner = Some(OriginalAuthoringEffect { receipt: Some(receipt), token: lease.token.clone(), publication: lease.publication_claim.clone(), progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } });
+        *owner = Some(OriginalAuthoringEffect { receipt: Some(receipt), token: lease.cancel_token().clone(), publication: lease.publication_claim().clone(), progress: semio_framework_value::native_encoding::NativeEncodeProgress { completed: 0, total: 0, owned_bytes: 0 } });
         Ok(())
     }
 
@@ -119,6 +119,7 @@ pub struct ArtifactOwnedToolJobContext<A: ArtifactApp> {
     refused_source_reads: [Option<store::os_store::snapshot_read::ErasedSnapshotRead>; 2],
     identity_digest: u64,
     tool_run: Option<ToolRunView>,
+    original_tool_run:Option<semio_framework_tool_run_presentation::ToolRunCapturedView>,
     provisional: Vec<DslValue>,
     provisional_generation: u64,
     gesture: GestureCapture<A::Mutation>,
@@ -190,7 +191,7 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
             transient_source_fault: None,
             refused_source_reads: [None, None],
             identity_digest,
-            tool_run: None,
+            tool_run: None,original_tool_run:None,
             presence_local: None,
             presence_peers: None,
             presence_peer_factory: None,
@@ -202,9 +203,9 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
 
     /// 🧳️ Transfers every original captured field into its genuine known or unresolved owner group.
     pub(crate) fn into_retirement_parts(self)->crate::owned_context::ContextRetirementParts<A>{
-        let Self{presence_local,presence_peers,presence_peer_factory,app_instance_id:_,view_state,canonical_base_revision:_,draft_generation:_,transient_generation:_,children,draft,transient,window_config,window_transient,source_capture_started:_,draft_source_fault,transient_source_fault,refused_source_reads,identity_digest:_,tool_run,provisional,provisional_generation:_,gesture}=self;
+        let Self{presence_local,presence_peers,presence_peer_factory,app_instance_id:_,view_state,canonical_base_revision:_,draft_generation:_,transient_generation:_,children,draft,transient,window_config,window_transient,source_capture_started:_,draft_source_fault,transient_source_fault,refused_source_reads,identity_digest:_,tool_run,original_tool_run,provisional,provisional_generation:_,gesture}=self;
         let (tool_run,tool_run_sources)=tool_run.map(|view|{let ToolRunView{tool_id,identity,state,provisional_entities,progress,payload}=view;(crate::owned_context::ContextToolRunMetadata{tool_id,identity,state,progress},crate::owned_context::ContextToolRunSources{entities:provisional_entities,payload})}).unzip();
-        crate::owned_context::ContextRetirementParts{metadata:crate::owned_context::ContextOwnedFields{view_state,tool_run,draft,transient,presence:presence_local.map(store::os_store::snapshot_read::SnapshotRead::into_erased),window_config,window_transient,provisional,gesture,refused_reads:refused_source_reads,transient_source_fault,draft_source_fault},residual:crate::owned_context::ContextOriginalResidual{children,peers:presence_peers,peer_factory:presence_peer_factory,tool_run:tool_run_sources}}
+        crate::owned_context::ContextRetirementParts{metadata:crate::owned_context::ContextOwnedFields{view_state,tool_run,original_tool_run,draft,transient,presence:presence_local.map(store::os_store::snapshot_read::SnapshotRead::into_erased),window_config,window_transient,provisional,gesture,refused_reads:refused_source_reads,transient_source_fault,draft_source_fault},residual:crate::owned_context::ContextOriginalResidual{children,peers:presence_peers,peer_factory:presence_peer_factory,tool_run:tool_run_sources}}
     }
     /// 🔗️ Captures the exact draft and transient source issuers while preserving every refusal.
     pub fn with_source_issuers(mut self,draft:&store::DraftStore<A::Draft,A::DraftMutation>,transient:&store::TransientStore<A::Transient,A::TransientMutation>)->Self {
@@ -245,6 +246,11 @@ impl<A: ArtifactApp> ArtifactOwnedToolJobContext<A> {
     pub fn tool_run(&self) -> Option<&ToolRunView> {
         self.tool_run.as_ref()
     }
+
+    /// 📸️ Retains a paid immutable original presentation for this command's lifetime.
+    pub fn with_original_tool_run(mut self,view:Option<semio_framework_tool_run_presentation::ToolRunCapturedView>)->Self{self.original_tool_run=view;self}
+    /// 🪟️ Borrows the same captured original pages and progress without a result copy.
+    pub fn original_tool_run(&self)->Option<semio_framework_tool_run_presentation::ToolRunView<'_>>{self.original_tool_run.as_ref().map(|view|view.borrowed_view())}
 
     /// 🪞️ Binds the instance's open continuous-tool transactions as of command admission: every open press's and
     /// run's provisional leaves in value form (overlay fold order) and the overlay generation. Ephemeral local state,

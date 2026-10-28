@@ -75,6 +75,8 @@ impl pack::snapshot::ArtifactPack for TransferSnapshot {
  fn decode_pack_with(bytes:&[u8],_:&store::PackDecodeOptions)->Result<Self,store::PackError>{std::str::from_utf8(bytes).map(|text|Self(text.to_owned())).map_err(|error|store::PackError::from(ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())))}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TransferSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 impl store::os_store::serialization::ArtifactSqliteSnapshotHost for TransferSnapshot {

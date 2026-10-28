@@ -11,10 +11,10 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     drop(envelope.into_owners());
     let text_files = text_files.expect("print document text");
 
-    let (pack_files, dsl_mirror) = (codec.compile_dsl)(&text_files.dsl, &text_files.ops).await.expect("codec compile_dsl");
+    let (pack_files, dsl_mirror) = (codec.reference().expect("authored cold codec reference").compile_dsl)(&text_files.dsl, &text_files.ops).await.expect("codec compile_dsl");
     assert_eq!(dsl_mirror, DemoSnapshot { n: Some(4) }.print_dsl(), "dsl mirror matches the initial snapshot's print_dsl");
 
-    let mirrored = (codec.print_mirror)(&pack_files.pack, &pack_files.spr).await.expect("codec print_mirror");
+    let mirrored = (codec.reference().expect("authored cold codec reference").print_mirror)(&pack_files.pack, &pack_files.spr).await.expect("codec print_mirror");
     assert_eq!(mirrored.dsl, dsl_mirror, "print_mirror's dsl text agrees with compile_dsl's own mirror, no JSON round trip");
 
     let document_id = ArtifactId("demo".to_string());
@@ -33,7 +33,7 @@ async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
     };
     let mut op_envelopes = semio_framework_os_spr::mutation_envelope_from_edit::<DemoSnapshot, DemoMutation>(&edit, &document_id, &schema).expect("op envelopes");
     let op_envelope = op_envelopes.pop().expect("exactly one op envelope for a single-op edit");
-    let edit_text = (codec.edit_text_from_envelope)(&op_envelope).await.expect("codec edit_text_from_envelope");
+    let edit_text = (codec.reference().expect("authored cold codec reference").edit_text_from_envelope)(&op_envelope).await.expect("codec edit_text_from_envelope");
     let lines: Vec<&str> = edit_text.lines().collect();
     assert_eq!(lines.len(), 4, "one complete append unit: edit header, forward op, inverse record, one metadata record: {edit_text:?}");
     assert!(lines[0].starts_with("edit "), "edit header first: {edit_text:?}");
@@ -58,7 +58,7 @@ async fn apply_ops_under_fixture_identity(codec: &ArtifactCodec, pack: &[u8], sp
         true
     };
     let mut identity:semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_> = semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::<semio_framework_os_vcs::io::binary::entity_identity::control::Observer<'_>>::new(CEILING, &mut observer).expect("declared fixture identity authority");
-    let result = (codec.apply_ops_binary)(pack, spr, ops, &mut identity).await;
+    let result = (codec.reference().expect("authored cold codec reference").apply_ops_binary)(pack, spr, ops, &mut identity).await;
     drop(identity.pause().expect("original cumulative fixture identity receipt"));
     result
 }
@@ -95,7 +95,7 @@ async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its
     assert_eq!(history.edits.len(), 1, "one op in the batch must land exactly one edit, got {}", history.edits.len());
     let passed = apply_ops_under_fixture_identity(&codec, &applied.0, &applied.1, &semio_framework_os_spr::encode_ops_vec(&[])).await.expect("an empty batch passes a populated pair through");
     assert!(!passed.0.is_empty() && !passed.1.is_empty(), "an empty batch over a populated pair returns that pair");
-    let mirror = (codec.print_mirror)(&applied.0, &applied.1).await.expect("a populated pair mirrors");
+    let mirror = (codec.reference().expect("authored cold codec reference").print_mirror)(&applied.0, &applied.1).await.expect("a populated pair mirrors");
     assert!(mirror.ops.contains("set-n"), "the mirror prints the pair's edit: {}", mirror.ops);
 }
 
@@ -129,7 +129,7 @@ async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledg
     }
     let replica_pair = print_document_pack(replica.envelope()).await.expect("replica pair");
 
-    let replayed = (codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &semio_framework_os_spr::encode_envelopes(&events)).await.expect("the whole ledger folds");
+    let replayed = (codec.reference().expect("authored cold codec reference").replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &semio_framework_os_spr::encode_envelopes(&events)).await.expect("the whole ledger folds");
     assert_eq!((replayed.0.as_slice(), replayed.1.as_slice()), (replica_pair.pack.as_slice(), replica_pair.spr.as_slice()), "the fold prints the remote replica's exact pair");
     assert_eq!(replayed.0, author_pair.pack, "the fold keeps the author's snapshot container");
     let history = semio_framework_os_spr::decode_history(&replayed.1, &semio_framework_os_spr::DecodeOptions::default()).await.expect("replayed history");
@@ -137,14 +137,14 @@ async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledg
     assert_eq!(history.transitions.len(), 2, "the undo and the checkpoint transitions both fold");
     assert_eq!(replica.snapshot().expect("replica snapshot"), author.snapshot().expect("author snapshot"), "the fold converges on the author's content");
 
-    let prefix = (codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &semio_framework_os_spr::encode_envelopes(&prefix_events)).await.expect("a ledger prefix folds");
-    let resumed = (codec.replay_envelopes)(&prefix.0, &prefix.1, &semio_framework_os_spr::encode_envelopes(&events[prefix_events.len()..])).await.expect("the tail folds onto the prefix pair");
+    let prefix = (codec.reference().expect("authored cold codec reference").replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &semio_framework_os_spr::encode_envelopes(&prefix_events)).await.expect("a ledger prefix folds");
+    let resumed = (codec.reference().expect("authored cold codec reference").replay_envelopes)(&prefix.0, &prefix.1, &semio_framework_os_spr::encode_envelopes(&events[prefix_events.len()..])).await.expect("the tail folds onto the prefix pair");
     assert_eq!((resumed.0.as_slice(), resumed.1.as_slice()), (replica_pair.pack.as_slice(), replica_pair.spr.as_slice()), "prefix pair + tail equals the whole fold");
 
-    assert!((codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &[0xff, 0x01, 0x02]).await.is_err(), "a corrupt stream is refused");
+    assert!((codec.reference().expect("authored cold codec reference").replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &[0xff, 0x01, 0x02]).await.is_err(), "a corrupt stream is refused");
     let missing_dependency = semio_framework_os_spr::encode_envelopes(&events[prefix_events.len()..]);
-    assert!((codec.replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &missing_dependency).await.is_err(), "transitions naming edits the pair never held are refused");
-    assert!((codec.replay_envelopes)(&[], &[], &semio_framework_os_spr::encode_envelopes(&events)).await.is_err(), "no baseline is refused");
+    assert!((codec.reference().expect("authored cold codec reference").replay_envelopes)(&genesis_pair.pack, &genesis_pair.spr, &missing_dependency).await.is_err(), "transitions naming edits the pair never held are refused");
+    assert!((codec.reference().expect("authored cold codec reference").replay_envelopes)(&[], &[], &semio_framework_os_spr::encode_envelopes(&events)).await.is_err(), "no baseline is refused");
     close_test_store(&mut replica);
     close_test_store(&mut author);
 }

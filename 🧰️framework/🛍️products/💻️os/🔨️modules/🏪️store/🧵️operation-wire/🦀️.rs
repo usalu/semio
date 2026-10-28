@@ -13,7 +13,10 @@ pub use text::{ArtifactOperationImage, ArtifactOperationText, ArtifactOperationT
 #[path = "📦️output/🦀️.rs"]
 mod output;
 pub use output::{ArtifactPreparedOperationOutput,ArtifactPreparedOperations,ArtifactPreparedOperationsOwner};
-pub use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
+#[path="🧳️replacement/🦀️.rs"]
+mod replacement;
+pub use replacement::OriginalReplacementReceiving;
+pub use semio_framework_os_store_one_item_publication::lifted_prepared_operation_wire::{ArtifactOperationTargets, ArtifactOriginalOperationReceiving, ArtifactCanonicalTreeSource, ArtifactOperationWire, ArtifactPreparedOperationError, ArtifactPreparedOperationSource, BatchDigestAdmission};
 
 /// 📏️ One admitted operation-wire turn, independent of allocation and release axes.
 #[derive(Default, Debug, PartialEq, Eq)]
@@ -32,6 +35,8 @@ fn text_failure(error:ArtifactPreparedOperationError,header_bytes:usize)->Artifa
     ArtifactPreparedOperationError{written_bytes:header_bytes.checked_add(error.written_bytes).expect("original text prefix is bounded by supplied output"),reason:error.reason.with_retained_progress(progress)}
 }
 
+enum ArtifactCodecFrontier{Json(ArtifactCanonicalJsonCursor),Text(ArtifactOperationTextCursor),Pack(BorrowedProjectedPackCursor)}
+
 /// 🧭️ Inline traversal reborrows the exact prepared operation on every bounded copy turn.
 #[derive(Default)]
 pub struct ArtifactPreparedOperationCursor {
@@ -46,13 +51,29 @@ pub struct ArtifactPreparedOperationCursor {
     pub text: ArtifactOperationTextCursor,
     pub pack: BorrowedProjectedPackCursor,
     pack_started: bool,
+    codec:Option<ArtifactCodecFrontier>,
     pub closed: bool,
 }
 
 impl ArtifactPreparedOperationCursor {
+    fn json(&self)->&ArtifactCanonicalJsonCursor{match self.codec.as_ref(){Some(ArtifactCodecFrontier::Json(cursor))=>cursor,_=>unreachable!("original JSON codec frontier is installed")}}
+    fn json_mut(&mut self)->&mut ArtifactCanonicalJsonCursor{match self.codec.as_mut(){Some(ArtifactCodecFrontier::Json(cursor))=>cursor,_=>unreachable!("original JSON codec frontier is installed")}}
+    fn text(&self)->&ArtifactOperationTextCursor{match self.codec.as_ref(){Some(ArtifactCodecFrontier::Text(cursor))=>cursor,_=>unreachable!("original text codec frontier is installed")}}
+    fn text_mut(&mut self)->&mut ArtifactOperationTextCursor{match self.codec.as_mut(){Some(ArtifactCodecFrontier::Text(cursor))=>cursor,_=>unreachable!("original text codec frontier is installed")}}
+    fn pack(&self)->&BorrowedProjectedPackCursor{match self.codec.as_ref(){Some(ArtifactCodecFrontier::Pack(cursor))=>cursor,_=>unreachable!("original Pack codec frontier is installed")}}
+    fn pack_mut(&mut self)->&mut BorrowedProjectedPackCursor{match self.codec.as_mut(){Some(ArtifactCodecFrontier::Pack(cursor))=>cursor,_=>unreachable!("original Pack codec frontier is installed")}}
+    /// 🌱️ Quotes the one selected native codec, instead of constructing three unrelated traversal stacks.
+    pub fn codec_birth_copy_bytes(&self)->usize{if self.codec.is_none(){size_of::<Option<ArtifactCodecFrontier>>()}else{0}}
+    fn admit_codec(&mut self,source:ArtifactPreparedOperationSource<'_>,grant:RetainedCloneGrant)->Result<Option<ArtifactPreparedOperationProgress>,ArtifactPreparedOperationError>{
+        let expected=match source{ArtifactPreparedOperationSource::Pack{..}=>2,ArtifactPreparedOperationSource::Text{..}=>1,_=>0};
+        if let Some(codec)=&self.codec{let actual=match codec{ArtifactCodecFrontier::Pack(_)=>2,ArtifactCodecFrontier::Text(_)=>1,_=>0};if actual!=expected{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"original codec kind changed").into())}return Ok(None)}
+        let copied_bytes=self.codec_birth_copy_bytes();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Ok(Some(Default::default()))}
+        self.codec=Some(match expected{2=>ArtifactCodecFrontier::Pack(Default::default()),1=>ArtifactCodecFrontier::Text(Default::default()),_=>ArtifactCodecFrontier::Json(Default::default())});Ok(Some(ArtifactPreparedOperationProgress{processed_items:1,copied_bytes,..Default::default()}))
+    }
     /// ✍️ Writes at most sixty-four bytes into caller-funded storage without copying the source owner.
     pub fn advance(&mut self, source: ArtifactPreparedOperationSource<'_>, output: &mut [u8], grant: RetainedCloneGrant) -> Result<ArtifactPreparedOperationProgress, ArtifactPreparedOperationError> {
         if self.closed { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "prepared operation cursor is closed").into()); }
+        if let Some(step)=self.admit_codec(source,grant)?{return Ok(step)}
         if let ArtifactPreparedOperationSource::Pack { tag, body, spec } = source {
             return self.advance_pack(tag,body,spec,output,grant);
         }
@@ -82,9 +103,9 @@ impl ArtifactPreparedOperationCursor {
         if mode == 2 && written < maximum {
             let ArtifactPreparedOperationSource::Text { body, .. } = source else { unreachable!() };
             let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - written, maximum_depth: grant.maximum_depth - 1, ..grant };
-            written += match self.text.advance(body, &mut output[written..maximum], child) { Ok(count) => count, Err(error) => { self.closed = true; return Err(text_failure(error,written)); } };
+            written += match self.text_mut().advance(body, &mut output[written..maximum], child) { Ok(count) => count, Err(error) => { self.closed = true; return Err(text_failure(error,written)); } };
         }
-        self.complete = self.header_offset == header.len() && self.prefix_offset == prefix.len() && self.hex_pending.is_none() && if mode == 2 { self.text.is_complete() } else { self.json.is_complete() };
+        self.complete = self.header_offset == header.len() && self.prefix_offset == prefix.len() && self.hex_pending.is_none() && if mode == 2 { self.text().is_complete() } else { self.json().is_complete() };
         if mode != 1 { copied = written; }
         Ok(ArtifactPreparedOperationProgress { processed_items: 1, written_bytes: written, copied_bytes:copied, complete: self.complete, ..Default::default() })
     }
@@ -111,17 +132,17 @@ impl ArtifactPreparedOperationCursor {
         if let Some(byte) = self.hex_pending {
             output[0] = b"0123456789abcdef"[usize::from(if self.hex_low { byte & 15 } else { byte >> 4 })];
             if self.hex_low { self.hex_pending = None; } else { self.hex_low = true; }
-            self.complete = self.hex_pending.is_none() && self.json.is_complete();
+            self.complete = self.hex_pending.is_none() && self.json().is_complete();
             return Ok(ArtifactPreparedOperationProgress { processed_items: 1, written_bytes: 1, copied_bytes: 1, complete: self.complete, ..Default::default() });
         }
-        let pending_copy = usize::from(hex && self.json.next_encode_output_bound() != 0);
+        let pending_copy = usize::from(hex && self.json().next_encode_output_bound() != 0);
         if grant.maximum_copy_bytes < pending_copy { return Ok(Default::default()); }
         let child = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - pending_copy, maximum_depth: grant.maximum_depth - 1, ..grant };
         let mut original_byte = [0];
-        let step = if hex { self.json.encode_chunk_admitted(body, &mut original_byte, child) } else { self.json.encode_chunk_admitted(body, output, child) }.map_err(|error| ArtifactPreparedOperationError { written_bytes: error.written_bytes, reason: error.reason })?;
+        let step = if hex { self.json_mut().encode_chunk_admitted(body, &mut original_byte, child) } else { self.json_mut().encode_chunk_admitted(body, output, child) }.map_err(|error| ArtifactPreparedOperationError { written_bytes: error.written_bytes, reason: error.reason })?;
         let progress = step.ownership.progress();
         if hex && step.written_bytes != 0 { self.hex_pending = Some(original_byte[0]); self.hex_low = false; }
-        self.complete = self.hex_pending.is_none() && self.json.is_complete();
+        self.complete = self.hex_pending.is_none() && self.json().is_complete();
         Ok(ArtifactPreparedOperationProgress { processed_items: progress.copied_items, written_bytes: if hex { 0 } else { step.written_bytes }, copied_bytes: progress.copied_bytes + usize::from(hex && step.written_bytes != 0), retained_capacity_bytes: progress.retained_capacity_bytes, released_bytes: progress.released_bytes, complete: self.complete })
     }
 
@@ -140,24 +161,26 @@ impl ArtifactPreparedOperationCursor {
             return Ok(ArtifactPreparedOperationProgress {processed_items:1,written_bytes:count,copied_bytes:count,..Default::default()});
         }
         self.source_identity=Some(identity);
-        let step=self.pack.advance(body,spec,output,grant)?;self.complete=step.complete;
+        let step=self.pack_mut().advance(body,spec,output,grant)?;self.complete=step.complete;
         Ok(ArtifactPreparedOperationProgress {processed_items:step.progress.copied_items,written_bytes:step.written_bytes,copied_bytes:step.progress.copied_bytes,retained_capacity_bytes:step.progress.retained_capacity_bytes,released_bytes:step.progress.released_bytes,complete:step.complete})
     }
 
     /// 🪙️ The same retained phase exposes whole symbol backing before physical allocation/release.
-    pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { if self.pack_idle() { Ok(0) } else { self.pack.next_capacity_byte_demand() } }
-    pub fn next_close_byte_demand(&self) -> Result<usize,ValueError> { if self.pack_idle() { Ok(0) } else { self.pack.next_close_byte_demand() } }
+    pub fn next_capacity_byte_demand(&self) -> Result<usize,ValueError> { if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_capacity_byte_demand()}else{Ok(0)} }
+    pub fn next_close_byte_demand(&self) -> Result<usize,ValueError> { if self.source_identity.is_some_and(|identity|identity.5==3){self.pack().next_close_byte_demand()}else{Ok(0)} }
     /// 🛌️ Only a Pack source ever births symbol or frame scaffolds, so every other source leaves its pack cursor unstarted.
     fn pack_idle(&self) -> bool { !self.pack_started }
     pub fn next_minimum_copy_bytes(&self) -> usize {
         if self.closed || self.complete { return 0; }
-        if self.source_identity.is_some_and(|identity|identity.5==3) && self.header_offset==self.pack_header_length { self.pack.next_minimum_copy_bytes() } else { 1 }
+        if self.codec.is_none(){return self.codec_birth_copy_bytes();}
+        if self.source_identity.is_some_and(|identity|identity.5==3) && self.header_offset==self.pack_header_length { self.pack().next_minimum_copy_bytes() } else { 1 }
     }
 
     /// 📏️ Prices only the retained codec frontier, keeping payload encoding separate.
     pub fn retirement_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
-        if self.closed || self.pack_idle() { return Ok(Default::default()); }
-        let mut demand = self.pack.retirement_demands()?;
+        if self.closed { return Ok(Default::default()); }
+        if !self.source_identity.is_some_and(|identity|identity.5==3){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        let mut demand = self.pack().retirement_demands()?;
         demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "operation codec retirement depth overflow"))?;
         Ok(demand)
     }
@@ -168,7 +191,8 @@ impl ArtifactPreparedOperationCursor {
         if self.pack_idle() { self.source_identity = None; self.closed = true; return Ok(ArtifactPreparedOperationProgress { complete: true, ..Default::default() }); }
         let demand = self.retirement_demands()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(ArtifactPreparedOperationProgress::default()); }
-        let step=self.pack.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
+        if !self.source_identity.is_some_and(|identity|identity.5==3){self.source_identity=None;self.closed=true;return Ok(ArtifactPreparedOperationProgress{processed_items:1,complete:true,..Default::default()})}
+        let step=self.pack_mut().close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?;
         if step.complete { self.source_identity=None;self.closed=true; }
         Ok(ArtifactPreparedOperationProgress {processed_items:step.progress.copied_items,retained_capacity_bytes:step.progress.retained_capacity_bytes,released_bytes:step.progress.released_bytes,copied_bytes:step.progress.copied_bytes,complete:step.complete,..Default::default()})
     }
@@ -205,6 +229,7 @@ impl<P: 'static, M: 'static> semio_framework_os_store_one_item_publication::Arti
     fn operation_wire_source<'a>(&self, mutation: &'a M) -> Option<ArtifactPreparedOperationSource<'a>> { (self.source)(mutation) }
     fn operation_schema_parts<'a>(&'a self, mutation: &'a M) -> Option<(&'a str, &'a str)> { (self.schema)(mutation) }
     fn preflight(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_os_store_one_item::ArtifactStoreOneItemFootprint, String> { self.factory.preflight(mutation, lane) }
+    fn begin_copy_byte_demand(&self,mutation:&M,lane:semio_framework_os_store_command::HistoryLane)->Result<usize,ValueError>{self.factory.begin_copy_byte_demand(mutation,lane)}
     fn begin_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> { self.factory.begin_demand(mutation, lane) }
     fn begin_copy_byte_demand(&self, mutation: &M, lane: semio_framework_os_store_command::HistoryLane) -> Result<usize, ValueError> { self.factory.begin_copy_byte_demand(mutation, lane) }
     fn begin(&self, request: semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: semio_framework_os_store_one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (ValueError, semio_framework_os_store_one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> { self.factory.begin(request, grant) }
@@ -219,3 +244,28 @@ mod tests;
 #[cfg(test)]
 #[global_allocator]
 static REQUESTED_ALLOCATOR: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+#[path="🧳️original/🦀️.rs"]
+pub mod original_bytes;
+pub use original_bytes::ArtifactOriginalOperationBytes;
+
+#[path="📤️edit/🦀️.rs"]
+pub mod original_edit;
+
+#[path="📜️history/🦀️.rs"]
+mod original_history;
+pub use original_history::OriginalHistoryTransitionPayload;
+
+#[path="🎯️common/🦀️.rs"]
+mod original_common_target;
+pub use original_common_target::OriginalCommonTarget;
+
+#[path="📜️history/✉️envelope/🦀️.rs"]
+mod original_history_envelope;
+pub use original_history_envelope::OriginalHistoryEnvelopeHeader;
+#[path="🧳️replacement/⚖️canonical/🦀️.rs"]
+mod original_wire_comparison;
+pub use original_wire_comparison::OriginalOperationWireComparison;
+
+#[path="📜️history/📤️batch/🦀️.rs"]
+mod original_history_batch_message;
+pub use original_history_batch_message::OriginalHistoryBatchMessage;

@@ -1,0 +1,573 @@
+{
+  "contract": "semio.energy.original-create-surface/v1",
+  "collection": "surfaces",
+  "existingRows": [
+    {
+      "id": 100,
+      "name": "existing",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        7,
+        100
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "Interzone",
+        "interzoneSurfaceId": 100,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        7,
+        100
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": 1
+      },
+      "outcome": "changed",
+      "after": [
+        100,
+        7
+      ]
+    },
+    {
+      "payload": {
+        "id": 100,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "　\t",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 99,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 99,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "Interzone",
+        "interzoneSurfaceId": 99,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 7
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "Interzone",
+        "interzoneSurfaceId": 7,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 7
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "Interzone",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 0,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "name": "new wall",
+        "zoneId": 1,
+        "class": "ExteriorWall",
+        "verticesM": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            1
+          ]
+        ],
+        "constructionId": 3,
+        "boundary": "OutdoorAir",
+        "interzoneSurfaceId": null,
+        "sunExposed": true,
+        "windExposed": true,
+        "multiplier": 1,
+        "index": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "model": {
+    "zones": [
+      {
+        "id": 1,
+        "name": "zone",
+        "volume_m3": 100,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ],
+    "constructions": [
+      {
+        "id": 3,
+        "name": "wall",
+        "layer_material_ids": []
+      }
+    ]
+  },
+  "recreate": {
+    "original": {
+      "id": 100,
+      "name": "existing",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": {
+        "Interzone": 7
+      },
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    "rank": 4,
+    "payload": {
+      "id": 100,
+      "name": "existing",
+      "zoneId": 1,
+      "class": "ExteriorWall",
+      "verticesM": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "constructionId": 3,
+      "boundary": "Interzone",
+      "interzoneSurfaceId": 7,
+      "sunExposed": true,
+      "windExposed": true,
+      "multiplier": 1,
+      "index": 4
+    }
+  }
+}

@@ -1,6 +1,7 @@
 //! 🧪️ Captured opaque snapshots retain original registry and typed issuer through every source prefix.
 use super::*;
-use semio_framework_value::{retained_clone::{RetainedCloneSource,RetainedOwnedProjection},OwnedValueRetirementFactory};
+use semio_framework_value::retained_clone::{RetainedCloneSource,RetainedOwnedProjection};
+use semio_framework_value_factory::OwnedValueRetirementFactory;
 struct OpaqueSnapshot{bytes:Vec<u8>}
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct OpaqueSnapshotIssuer;
@@ -22,7 +23,7 @@ fn captured_snapshot_source_uses_original_registry_and_installed_opaque_issuer()
   for axis in 0..3{let mut denied=g;match axis{0=>denied.maximum_items=0,1=>denied.maximum_copy_bytes-=1,_=>denied.maximum_depth-=1};let(result,born,released)=observe(||CapturedSnapshotSource::admit(&mut read,&issuer,denied).unwrap());assert!(result.is_none());assert_eq!((born,released),(0,0));assert_eq!(read.as_ref().unwrap().get()as*const _,pointer);assert!(registry.as_ref().unwrap().contains(index,generation));}
   let mut authority=if cancel_at==0{None}else{let(result,born,released)=observe(||CapturedSnapshotSource::admit(&mut read,&issuer,g).unwrap());let(value,p)=result.unwrap();receipt(p,g,born,released);assert_eq!(value.get()as*const _,pointer);Some(value)};
   let mut source=if cancel_at==2{type Source=RetainedCloneSource<OpaqueSnapshot,CapturedSnapshotSource<OpaqueSnapshot>>;let g=grant(RetirementDemand{copy_bytes:Source::constructor_copy_bytes(),capacity_bytes:Source::constructor_capacity_bytes::<()>(),depth:1,..Default::default()});let(result,born,released)=observe(||Source::admit_borrowed(authority.take().unwrap(),CapturedSnapshotSource::get,g));let(value,p)=result.map_err(|(error,_)|error).unwrap();receipt(p,g,born,released);assert_eq!(value.borrow().get()as*const _,pointer);Some(value)}else{None};
-  let mut projection=if source.is_some()&&law["projectionHeld"]==true{let g=grant(RetainedOwnedProjection::<OpaqueSnapshot>::constructor_demand());let((value,p),born,released)=observe(||source.as_ref().unwrap().retain_original(g).unwrap());receipt(p,g,born,released);assert_eq!(serde_json::to_value(&value.borrow().unwrap().get().bytes).unwrap(),law["expected"]);Some(value)}else{None};
+  let mut projection=if source.is_some()&&law["projectionHeld"]==true{let g=grant(RetainedOwnedProjection::<OpaqueSnapshot>::constructor_demand());let((value,p),born,released)=observe(||source.as_ref().unwrap().borrow().retain_owned(g).unwrap());receipt(p,g,born,released);assert_eq!(serde_json::to_value(&value.borrow().unwrap().get().bytes).unwrap(),law["expected"]);Some(value)}else{None};
   if cancel_at==0{let(value,_)=CapturedSnapshotSource::admit(&mut read,&issuer,g).unwrap().unwrap();authority=Some(value);}assert!(read.is_none());if law["registryHeld"]==false{drop(registry.take());}
   let mut close=semio_framework_value::retained_clone::RetainedCloneClose::default();let mut completed=false;
   for turn in 0..corpus["maximumTurns"].as_u64().unwrap(){if turn==3{if let Some(value)=projection.as_mut(){close_projection(value);}projection=None;}

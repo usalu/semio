@@ -1,0 +1,496 @@
+{
+  "cases": [
+    {
+      "branch": "geometry",
+      "collection": "fenestrations",
+      "field": "area_m2",
+      "row": {
+        "id": 7,
+        "name": "window",
+        "surface_id": 1,
+        "u_value_w_m2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "area_m2": 2.0,
+        "height_m": 1.0,
+        "sill_height_m": 0.5,
+        "frame_conductance_w_k": 0.0,
+        "divider_conductance_w_k": 0.0,
+        "overhang_depth_m": 0.0,
+        "overhang_offset_m": 0.0,
+        "fin_depth_m": 0.0,
+        "fin_offset_m": 0.0,
+        "glazing_construction_id": null,
+        "vertices_m": []
+      },
+      "before": 2.0,
+      "value": 3.0,
+      "after": 3.0,
+      "inverse": 2.0
+    },
+    {
+      "branch": "materials",
+      "collection": "glazing_materials",
+      "field": "thickness_m",
+      "row": {
+        "id": 7,
+        "name": "clear",
+        "thickness_m": 0.006,
+        "conductivity_w_m_k": 1.0,
+        "solar_transmittance": 0.6,
+        "solar_reflectance_front": 0.1,
+        "solar_reflectance_back": 0.1,
+        "visible_transmittance": 0.7,
+        "visible_reflectance_front": 0.1,
+        "visible_reflectance_back": 0.1,
+        "infrared_transmittance": 0.0,
+        "infrared_emissivity_front": 0.84,
+        "infrared_emissivity_back": 0.84
+      },
+      "before": 0.006,
+      "value": 0.008,
+      "after": 0.008,
+      "inverse": 0.006
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "people_per_area",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 0.05,
+      "value": 0.1,
+      "after": 0.1,
+      "inverse": 0.05
+    },
+    {
+      "branch": "controls",
+      "collection": "thermostats",
+      "field": "heating_throttle_range_k",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "heating_setpoint_schedule_id": 1,
+        "cooling_setpoint_schedule_id": 1,
+        "heating_throttle_range_k": 1.0,
+        "cooling_throttle_range_k": 1.0
+      },
+      "before": 1.0,
+      "value": 2.0,
+      "after": 2.0,
+      "inverse": 1.0
+    },
+    {
+      "branch": "systems",
+      "collection": "outdoor_air_systems",
+      "field": "min_oa_flow_m3_s",
+      "row": {
+        "id": 7,
+        "air_loop_id": 1,
+        "min_oa_flow_m3_s": 0.1,
+        "economizer_enabled": false
+      },
+      "before": 0.1,
+      "value": 0.2,
+      "after": 0.2,
+      "inverse": 0.1
+    },
+    {
+      "branch": "generation",
+      "collection": "battery_storage",
+      "field": "capacity_kwh",
+      "row": {
+        "id": 7,
+        "capacity_kwh": 5.0,
+        "max_charge_w": 1000.0,
+        "max_discharge_w": 1000.0,
+        "round_trip_efficiency": 0.9
+      },
+      "before": 5.0,
+      "value": 10.0,
+      "after": 10.0,
+      "inverse": 5.0
+    },
+    {
+      "branch": "materials",
+      "collection": "gas_materials",
+      "field": "gas",
+      "row": {
+        "id": 7,
+        "name": "cavity",
+        "thickness_m": 0.012,
+        "gas": "Air"
+      },
+      "before": "Air",
+      "value": "Argon",
+      "after": "Argon",
+      "inverse": "Air"
+    },
+    {
+      "branch": "geometry",
+      "collection": "spaces",
+      "field": "zone_id",
+      "row": {
+        "id": 7,
+        "name": "room",
+        "zone_id": 1,
+        "floor_area_m2": 10
+      },
+      "before": 1,
+      "value": 2,
+      "after": 2,
+      "inverse": 1,
+      "references": [
+        "Zones"
+      ],
+      "outcome": "changed",
+      "model": {
+        "zones": [
+          {
+            "id": 1,
+            "name": "1",
+            "volume_m3": 100,
+            "multiplier": 1,
+            "conditioned": true,
+            "part_of_total_floor_area": true
+          },
+          {
+            "id": 2,
+            "name": "2",
+            "volume_m3": 100,
+            "multiplier": 1,
+            "conditioned": true,
+            "part_of_total_floor_area": true
+          }
+        ]
+      }
+    },
+    {
+      "branch": "geometry",
+      "collection": "spaces",
+      "field": "zone_id",
+      "row": {
+        "id": 7,
+        "name": "room",
+        "zone_id": 1,
+        "floor_area_m2": 10
+      },
+      "before": 1,
+      "value": 1,
+      "after": 1,
+      "inverse": 1,
+      "references": [
+        "Zones"
+      ],
+      "outcome": "no-op",
+      "model": {
+        "zones": [
+          {
+            "id": 1,
+            "name": "1",
+            "volume_m3": 100,
+            "multiplier": 1,
+            "conditioned": true,
+            "part_of_total_floor_area": true
+          },
+          {
+            "id": 2,
+            "name": "2",
+            "volume_m3": 100,
+            "multiplier": 1,
+            "conditioned": true,
+            "part_of_total_floor_area": true
+          }
+        ]
+      }
+    },
+    {
+      "branch": "geometry",
+      "collection": "spaces",
+      "field": "zone_id",
+      "row": {
+        "id": 7,
+        "name": "room",
+        "zone_id": 1,
+        "floor_area_m2": 10
+      },
+      "before": 1,
+      "value": 999,
+      "after": 1,
+      "inverse": 1,
+      "references": [
+        "Zones"
+      ],
+      "outcome": "invalid-reference",
+      "model": {
+        "zones": [
+          {
+            "id": 1,
+            "name": "1",
+            "volume_m3": 100,
+            "multiplier": 1,
+            "conditioned": true,
+            "part_of_total_floor_area": true
+          },
+          {
+            "id": 2,
+            "name": "2",
+            "volume_m3": 100,
+            "multiplier": 1,
+            "conditioned": true,
+            "part_of_total_floor_area": true
+          }
+        ]
+      }
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "schedule_id",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 1,
+      "value": 8,
+      "after": 8,
+      "inverse": 1,
+      "references": [
+        "constants"
+      ],
+      "outcome": "changed",
+      "model": {
+        "schedules": {
+          "constants": [
+            {
+              "id": 8,
+              "value": 1
+            }
+          ]
+        }
+      }
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "schedule_id",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 1,
+      "value": 8,
+      "after": 8,
+      "inverse": 1,
+      "references": [
+        "daily"
+      ],
+      "outcome": "changed",
+      "model": {
+        "schedules": {
+          "daily": [
+            {
+              "id": 8,
+              "hourly_values": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ],
+              "interpolation": "Discrete",
+              "limits": null
+            }
+          ]
+        }
+      }
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "schedule_id",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 1,
+      "value": 8,
+      "after": 8,
+      "inverse": 1,
+      "references": [
+        "weekly"
+      ],
+      "outcome": "changed",
+      "model": {
+        "schedules": {
+          "weekly": [
+            {
+              "id": 8,
+              "daily_schedule_ids": [
+                1,
+                1,
+                1,
+                1,
+                1,
+                1,
+                1
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "schedule_id",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 1,
+      "value": 8,
+      "after": 8,
+      "inverse": 1,
+      "references": [
+        "annual"
+      ],
+      "outcome": "changed",
+      "model": {
+        "schedules": {
+          "annual": [
+            {
+              "id": 8,
+              "rules": [],
+              "default_daily_schedule_id": 1,
+              "holiday_daily_schedule_id": null,
+              "holiday_dates": []
+            }
+          ]
+        }
+      }
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "schedule_id",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 1,
+      "value": 8,
+      "after": 8,
+      "inverse": 1,
+      "references": [
+        "time_series"
+      ],
+      "outcome": "changed",
+      "model": {
+        "schedules": {
+          "time_series": [
+            {
+              "id": 8,
+              "values": [
+                1
+              ],
+              "timestep_seconds": 3600
+            }
+          ]
+        }
+      }
+    },
+    {
+      "branch": "loads",
+      "collection": "people",
+      "field": "schedule_id",
+      "row": {
+        "id": 7,
+        "zone_id": 1,
+        "schedule_id": 1,
+        "activity_schedule_id": 1,
+        "people_per_area": 0.05,
+        "sensible_fraction": 0.6,
+        "latent_fraction": 0.4,
+        "radiant_fraction": 0.3
+      },
+      "before": 1,
+      "value": 999,
+      "after": 1,
+      "inverse": 1,
+      "references": [
+        "absent"
+      ],
+      "outcome": "invalid-reference"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    4,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512
+  ]
+}

@@ -3,7 +3,7 @@
 use semio_framework_plugin::__semio_dispatch_PluginApp;
 use semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};
 use semio_framework_plugin::plugin_app_close_prelude::*;
-use semio_framework_plugin::{EditorApp, ExecutionMode, NeedsLabel, Plugin, PluginApp, PluginAssemblyError, PluginBuilder, VcsArtifactApp, ViewerApp};
+use semio_framework_plugin::{EditorApp, ExecutionMode, NeedsLabel, Plugin, PluginApp, PluginAssemblyError, PluginBuilder, OriginalVcsApp, ViewerApp};
 
 //#region 🗃️Apps
 // 🗃️ Closed runtime app fleet for the energy plugin's model surfaces. Both surfaces run over stdio's
@@ -11,8 +11,8 @@ use semio_framework_plugin::{EditorApp, ExecutionMode, NeedsLabel, Plugin, Plugi
 // `s.stdio.semio@v1/{value,table}` members (see `energy_genesis_child_pack`).
 semio_framework_dispatch_macros::dyn_enum_close! {
     pub enum EnergyApps: PluginApp {
-        ModelEditor(VcsArtifactApp<EditorApp<semio_s_artifact_energy_model_editor::EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>),
-        ModelViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
+        ModelEditor(OriginalVcsApp<EditorApp<semio_s_artifact_energy_model_editor::EnergyModelEditor>, semio_s_artifact_stdio_semio::SemioMembers>),
+        ModelViewer(OriginalVcsApp<ViewerApp<semio_s_artifact_energy_model_viewer::EnergyModelViewer>, semio_s_artifact_stdio_semio::SemioMembers>),
     }
 }
 //#endregion 🗃️Apps
@@ -42,9 +42,9 @@ pub fn plugin() -> Result<Plugin<EnergyApps>, PluginAssemblyError> {
         .version("0.1.0")
         .package_id("semio:energy")
         .artifact(semio_s_artifact_energy_model::declaration().map_err(PluginAssemblyError::definition)?)
-        .editor::<semio_s_artifact_energy_model_editor::EnergyModelEditor>(semio_s_artifact_energy_model_editor::create_energy_model_editor())
+        .native_editor::<semio_s_artifact_energy_model_editor::EnergyModelEditor,semio_s_artifact_energy_model_editor::EnergyModelNativeRegistration>(semio_s_artifact_energy_model_editor::create_energy_model_editor())?
         .editor_mutation_roster::<semio_s_artifact_energy_model_editor::EnergyModelEditor>()
-        .viewer::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>(semio_s_artifact_energy_model_viewer::create_energy_model_viewer())
+        .native_viewer::<semio_s_artifact_energy_model_viewer::EnergyModelViewer,semio_s_artifact_energy_model_viewer::EnergyModelViewerNativeRegistration>(semio_s_artifact_energy_model_viewer::create_energy_model_viewer())?
         .viewer_mutation_roster::<semio_s_artifact_energy_model_viewer::EnergyModelViewer>()
         .activation(ActivationEvent::OnArtifactKind { kind: semio_s_artifact_energy_model_snapshot::artifact_kind().id })
         .execution(ExecutionMode::Isolated)

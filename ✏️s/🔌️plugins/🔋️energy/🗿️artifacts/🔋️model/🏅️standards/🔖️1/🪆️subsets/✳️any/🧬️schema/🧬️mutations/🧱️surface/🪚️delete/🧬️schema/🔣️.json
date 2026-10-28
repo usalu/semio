@@ -2,7 +2,9 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/mutation/delete-surface/schema.json",
   "title": "DeleteSurface",
-  "x-semio-inverse-rows": { "bounded": 1025 },
+  "x-semio-inverse-rows": {
+    "bounded": 1025
+  },
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -36,5 +38,57 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "key": "id",
+    "inverse": "CreateSurface",
+    "inverseMode": "surface",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete Surface",
+      "de": "Fläche löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "Surface",
+      "kind": "delete-surface",
+      "record": "DeleteSurface"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The original aperture inverse must preserve its complete fields and polygon."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "A live source references the original fenestration."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original aperture roster is unchanged."
+      },
+      "cascade": {
+        "level": "info",
+        "code": "mutation.cascade",
+        "message": "Surface deletion also removed hosted fenestrations and adjacency pairs."
+      }
+    },
+    "cascade": [
+      "fenestrations",
+      "adjacency_pairs"
+    ]
   }
 }

@@ -113,9 +113,9 @@ impl ArtifactEditor for VcsPlayApp {
         Some(crate::editor::vcs::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> VcsSnapshot {
+    fn reference_birth()->Option<fn()->VcsSnapshot>{Some(||{
         crate::standards::v1::subsets::any::schema::empty_vcs_snapshot()
-    }
+    })}
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     fn command_id(command: &VcsCommand) -> &'static str {

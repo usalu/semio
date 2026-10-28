@@ -62,5 +62,43 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "owned-row",
+    "row": "StateShadingSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "shading_surfaces",
+    "field": "vertices_m",
+    "input": "new_vertices_m",
+    "key": "id",
+    "validation": "finite-points",
+    "labels": {
+      "en": "Replace Shading Surface Vertices",
+      "de": "Verschattungspolygon ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "shading-surface",
+      "kind": "replace-shading-surface-vertices",
+      "record": "ReplacedShadingSurfaceVertices"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored field has invalid length or nonfinite values."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed shading-surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The authored field is unchanged."
+      }
+    }
   }
 }

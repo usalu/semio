@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "field": "dc_capacity_w",
+    "input": "new_dc_capacity_w",
+    "key": "id",
+    "labels": {
+      "en": "Change pv system: DC rated power",
+      "de": "DC-Nennleistung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "pv-system",
+      "kind": "change-pv-system-dc-capacity",
+      "record": "ChangedPvSystemDcCapacity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "DC rated power violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The pv system already carries this dc rated power value."
+      }
+    }
   }
 }

@@ -105,5 +105,44 @@
         }
       }
     }
-  ]
+  ],
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "optional-positive-number",
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "field": "max_heating_capacity_w",
+    "input": "new_max_heating_capacity_w",
+    "presence": "new_capacity_present",
+    "key": "id",
+    "labels": {
+      "en": "Change capacity limit",
+      "de": "Leistungsgrenze ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ideal-loads-system",
+      "kind": "change-max-heating-capacity-w",
+      "record": "ChangedIdealLoadsSystemMaxHeatingCapacity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "An absent capacity carries zero; a stated capacity must be positive and finite."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The ideal loads system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The ideal loads system already has this capacity limit."
+      }
+    }
+  }
 }

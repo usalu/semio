@@ -87,6 +87,12 @@ pub enum PendingChildGroupPublicationPhase {
 
 #[doc(hidden)]
 pub struct PendingChildGroupPublication<A: ArtifactApp> {
+    pub native_children: Vec<semio_framework_plugin_decl_emission::child_emit_preparation::OwnedChildEmit>,
+    pub native_child_index: usize,
+    pub native_receiver: Option<Box<dyn store::os_store::MemberOriginalBatchReceiving>>,
+    pub native_wires: Option<Vec<Vec<u8>>>,
+    pub native_batch: Option<store::os_store::MemberStoreOwnedBatch>,
+    pub native_reserved: bool,
     pub artifact_mutations: ManuallyDrop<Vec<A::Mutation>>,
     pub child_emits: ManuallyDrop<Vec<ChildEmit>>,
     pub transaction: ManuallyDrop<Option<protocol::TransactionRef>>,
@@ -103,7 +109,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         if child_emits.is_empty() {
             return Err(plugin_sdk_fault("retained child-group publication requires at least one exact child output"));
         }
-        Ok(Self { artifact_mutations:ManuallyDrop::new(artifact_mutations), child_emits:ManuallyDrop::new(child_emits), transaction:ManuallyDrop::new(transaction), receipt:ManuallyDrop::new(None), mutation_retirement:None,transaction_retirement:None,receipt_retirement:None,fault:None,phase:PendingChildGroupPublicationPhase::Ready })
+        Ok(Self { native_children:Vec::new(),native_child_index:0,native_receiver:None,native_wires:None,native_batch:None,native_reserved:false,artifact_mutations:ManuallyDrop::new(artifact_mutations), child_emits:ManuallyDrop::new(child_emits), transaction:ManuallyDrop::new(transaction), receipt:ManuallyDrop::new(None), mutation_retirement:None,transaction_retirement:None,receipt_retirement:None,fault:None,phase:PendingChildGroupPublicationPhase::Ready })
     }
 
     pub fn begin_dispatch(&mut self) -> Result<(), Fault> {
@@ -146,6 +152,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
     }
 
     pub fn begin_close(&mut self) {
+        if let Some(receiver)=self.native_receiver.as_mut(){receiver.begin_close();}
         self.phase = PendingChildGroupPublicationPhase::Closing;
     }
 
@@ -153,7 +160,22 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         if owner.terminal_is_empty(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         Ok({let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child depth overflow"))?;demand})
     }
+    pub fn requires_original_control(&self)->bool{self.native_receiver.as_ref().is_some_and(|owner|!owner.terminal_is_empty())}
+    pub fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{
+        if self.phase!=PendingChildGroupPublicationPhase::Closing{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original pending child receiver is not closing"));}
+        let demand=self.retirement_demands(grant.maximum_copy_bytes)?;
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}
+        let owner=self.native_receiver.as_mut().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original pending child decoder owner is absent"))?;
+        if owner.terminal_is_empty(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"terminal child decoder needs its separate paid frame release"));}
+        owner.close_step(control,RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant}).map(|step|RetainedCloneStep::Progress(step.progress()))
+    }
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        if let Some(owner)=self.native_receiver.as_ref(){if owner.terminal_is_empty(){return Ok(RetirementDemand{release_bytes:owner.allocation_bytes(),depth:1,..Default::default()});}let mut d=owner.close_demands(body)?;d.depth=d.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"pending native receiver depth overflow"))?;return Ok(d);}
+        if self.native_wires.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Vec<Vec<u8>>>(),depth:1,..Default::default()});}
+        if let Some(owner)=self.native_batch.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{depth:1,..Default::default()})}else{owner.next_demands(body)};}
+        if let Some(owner)=self.native_children.last(){return owner.retirement_demands(body);}
+        if self.native_children.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.native_children.capacity()*size_of::<semio_framework_plugin_decl_emission::child_emit_preparation::OwnedChildEmit>(),depth:1,..Default::default()});}
+
         if let Some(child)=self.child_emits.last(){let mut demand=child.retirement_demands()?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"original pending child metadata depth overflow"))?;return Ok(demand);}
         if self.child_emits.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.child_emits.capacity()*size_of::<ChildEmit>(),depth:1,..Default::default()});}
         if let Some(owner)=self.mutation_retirement.as_ref(){return Self::controlled_demands(owner,body);}
@@ -175,6 +197,17 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
         if self.phase!=PendingChildGroupPublicationPhase::Closing{return Ok(PluginLifecycleStep::Blocked{reason:"original child publication is not admitted for closure"});}
         let demand=self.retirement_demands(grant.maximum_copy_bytes).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(idle));}
+        if let Some(owner)=self.native_receiver.as_ref(){
+            if !owner.terminal_is_empty(){return Err(plugin_sdk_fault("pending native child receiving requires its original retirement decoder"));}
+            self.native_receiver=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
+        }
+        if let Some(wires)=self.native_wires.take(){
+            let Some(child)=self.child_emits.get_mut(self.native_child_index)else{self.native_wires=Some(wires);return Err(plugin_sdk_fault("native child wire source lost its exact metadata slot"));};
+            if !child.ops.is_empty()||child.ops.capacity()!=0{self.native_wires=Some(wires);return Err(plugin_sdk_fault("native child wire source cannot replace occupied metadata"));}child.ops=wires;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..idle}));
+        }
+        if let Some(owner)=self.native_batch.as_mut(){if owner.terminal_is_empty(){self.native_batch=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return owner.close_granted(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}
+        if let Some(owner)=self.native_children.last_mut(){if owner.terminal_is_empty(){self.native_children.pop();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}return owner.close_granted(grant).map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}
+        if self.native_children.capacity()!=0{self.native_children=Vec::new();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));}
         if let Some(child)=self.child_emits.last_mut(){
             if child.terminal_is_empty(){self.child_emits.pop();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..idle}));}
             let child_grant=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=child.close_one(child_grant).map_err(|error|semio_framework_plugin_decl_emission::retirement_refusal_fault(&error))?;
@@ -195,7 +228,7 @@ impl<A: ArtifactApp> PendingChildGroupPublication<A> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        self.phase == PendingChildGroupPublicationPhase::Closing && self.artifact_mutations.is_empty() && self.artifact_mutations.capacity()==0&&self.child_emits.capacity()==0&&self.child_emits.is_empty()&&self.transaction.is_none()&&self.receipt.is_none()&&self.mutation_retirement.is_none()&&self.transaction_retirement.is_none()&&self.receipt_retirement.is_none()&&self.fault.is_none()
+        self.phase == PendingChildGroupPublicationPhase::Closing && self.native_receiver.is_none()&&self.native_wires.is_none()&&self.native_batch.is_none()&&self.native_children.capacity()==0&&self.artifact_mutations.is_empty() && self.artifact_mutations.capacity()==0&&self.child_emits.capacity()==0&&self.child_emits.is_empty()&&self.transaction.is_none()&&self.receipt.is_none()&&self.mutation_retirement.is_none()&&self.transaction_retirement.is_none()&&self.receipt_retirement.is_none()&&self.fault.is_none()
     }
 }
 
@@ -254,6 +287,13 @@ impl<A: ArtifactApp> PendingArtifactStorePublication<A> {
             Self::WindowConfig(publication)=>publication.retirement_demands(body),
             Self::WindowTransient(publication)=>publication.retirement_demands(body),
         }
+    }
+
+    pub fn requires_original_control(&self)->bool{match self{Self::Presence(owner)=>owner.requires_original_control(),Self::Transient(owner)=>owner.requires_original_control(),_=>false}}
+
+    pub fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{
+        let grant=store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(grant);
+        match self{Self::Presence(owner)=>owner.close_step_controlled(grant,control),Self::Transient(owner)=>owner.close_step_controlled(grant,control),_=>Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"publication has no decoder-bound ephemeral owner"))}
     }
 
     pub fn close_step(&mut self, grant:RetainedCloneGrant)->Result<RetainedCloneStep,Fault>{

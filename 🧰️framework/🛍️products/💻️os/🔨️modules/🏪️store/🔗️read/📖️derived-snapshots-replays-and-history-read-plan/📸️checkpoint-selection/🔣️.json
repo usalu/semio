@@ -1,0 +1,1 @@
+{"selection":"repinned","checkpoints":[{"id":"unrelated","changeIds":["later"]},{"id":"repinned","changeIds":["first","second"]}],"changes":[{"id":"later","editIds":["e3"]},{"id":"second","editIds":["e2"]},{"id":"first","editIds":["e1"]}],"edits":["e3","e2","e1"],"expected":["e1","e2"]}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "bodyBytes",
+    "capacityBytes",
+    "cancelAt",
+    "wideCharacters",
+    "cases"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semio.energy.original-root-links.v1"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "capacityBytes": {
+      "const": 16777216
+    },
+    "wideCharacters": {
+      "const": 8197
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 28,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "slot",
+          "before",
+          "value",
+          "outcome",
+          "after"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "slot": {
+            "enum": [
+              "weather_link",
+              "referenced_model"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "changed",
+              "no-op",
+              "missing",
+              "invalid"
+            ]
+          },
+          "before": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "value": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "after": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

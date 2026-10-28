@@ -13,10 +13,10 @@ impl EnergyJobAuthority {
         if context.should_yield() {
             return EnergyRun::Yield;
         }
-        context.consume_fuel(1);
         if let Some(outcome) = self.drive_wire_publication(context) {
             return outcome;
         }
+        context.consume_fuel(1);
         match self.stage {
             EnergyJobStage::Validate => {
                 if self.input_identity.digest().is_none() { return match self.step_input_identity(context) { Ok(_) => EnergyRun::Yield, Err(_) => self.begin_fault() }; }
@@ -153,18 +153,14 @@ impl EnergyJobAuthority {
         }
     }
 
-    /// 🧱️ Copies one weather record into the retained weather table, or finishes the weather resolution and starts the precompute.
+    /// 🌦️ Validates one original weather row before admitting numerical precomputation.
     fn run_resolve_weather(&mut self, context: &mut StepContext<'_>) -> EnergyRun {
         if self.weather_cursor < self.weather_target {
             let receipt=RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<WeatherRecord>()*4,..Default::default()};
             if !receipt.fits(context.retained_grant()){return EnergyRun::Yield;}
             let record = self.weather_record(self.weather_cursor);
-            let first=self.weather.get_index(0).copied().unwrap_or(record);let previous=self.weather_cursor.checked_sub(1).and_then(|i|self.weather.get_index(i)).copied();
+            let first=self.weather_record(0);let previous=self.weather_cursor.checked_sub(1).map(|i|self.weather_record(i));
             if !crate::site::chronology::admit_row(self.weather_calendar(),first,previous,record){self.weather_fault=Some(WeatherFault::ChronologyRejected);return self.begin_fault();}
-            if self.weather.insert_stable(self.weather_cursor, record).is_err() {
-                self.weather_fault = Some(WeatherFault::SlotRejected);
-                { return self.begin_fault(); }
-            }
             if context.consume_retained(receipt).is_err(){return self.begin_fault();}
             self.weather_cursor += 1;
             if self.weather_cursor.is_multiple_of(256) {
@@ -189,7 +185,7 @@ impl EnergyJobAuthority {
             return EnergyRun::Yield;
         }
         if let Some(zone) = self.model.zones.get(self.initialize_cursor) {
-            let weather = *self.weather.get_index(self.run_start_record().expect("admitted run start")).expect("admitted weather record");
+            let weather = self.weather_record(self.run_start_record().expect("admitted run start"));
             if self.state.as_mut().expect("state exists while initializing").zones.insert(zone.id, ZoneState::new(INITIAL_TEMPERATURE_C, weather.humidity_ratio())).is_err() {
                 { return self.begin_fault(); }
             }
@@ -404,7 +400,7 @@ impl EnergyJobAuthority {
 
     /// 🔧️ Starts the run period after the warmup.
     fn run_start_run(&mut self, context: &mut StepContext<'_>) -> EnergyRun {
-        let zones = self.numerical_census.series;
+        let series = self.numerical_census.series;
         let meters = self.numerical_census.meters;
         match self.run_backing_stage {
             0 => {
@@ -417,7 +413,7 @@ impl EnergyJobAuthority {
                 };
             }
             1 => {
-                if self.time_series.series.admit(zones).is_err() {
+                if self.time_series.series.admit(series).is_err() {
                     { return self.begin_fault(); }
                 }
                 self.result_backing.series_slots = self.time_series.series.capacity();
@@ -429,7 +425,7 @@ impl EnergyJobAuthority {
                 self.result_backing.meter_slots = self.meters.meters.capacity();
             }
             3 => {
-                if self.time_series_order.try_reserve_exact(zones).is_err() {
+                if self.time_series_order.try_reserve_exact(series).is_err() {
                     { return self.begin_fault(); }
                 }
             }

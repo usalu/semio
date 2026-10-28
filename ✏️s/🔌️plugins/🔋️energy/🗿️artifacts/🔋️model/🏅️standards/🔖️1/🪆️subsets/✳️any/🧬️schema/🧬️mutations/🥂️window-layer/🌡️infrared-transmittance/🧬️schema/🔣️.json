@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateGlazingMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "glazing_materials",
+    "field": "infrared_transmittance",
+    "input": "new_infrared_transmittance",
+    "key": "id",
+    "labels": {
+      "en": "Infrared transmittance",
+      "de": "Infraroter Transmissionsgrad"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "glazing-material",
+      "kind": "change-glazing-material-infrared-transmittance",
+      "record": "ChangedGlazingMaterialInfraredTransmittance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "An optical fraction must be finite and lie in 0..=1."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed glazing material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The optical field already has this value."
+      }
+    }
   }
 }

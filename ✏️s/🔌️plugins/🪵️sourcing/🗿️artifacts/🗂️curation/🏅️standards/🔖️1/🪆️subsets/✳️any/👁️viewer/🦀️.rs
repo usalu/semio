@@ -61,9 +61,9 @@ impl ArtifactViewer for SourcingViewer {
     const DIALECT: Dialect = SOURCING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SOURCING_CURATION_SCHEMA;
 
-    fn initial_snapshot() -> CurationSnapshot {
+    fn reference_birth()->Option<fn()->CurationSnapshot>{Some(||{
         crate::standards::v1::subsets::any::io::text::snapshot::default_document()
-    }
+    })}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         crate::curation_child_restore_projection(snapshot)

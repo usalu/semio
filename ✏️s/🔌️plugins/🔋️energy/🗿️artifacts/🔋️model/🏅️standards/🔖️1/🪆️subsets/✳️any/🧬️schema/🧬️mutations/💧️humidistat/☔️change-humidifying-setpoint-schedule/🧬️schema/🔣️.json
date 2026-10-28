@@ -57,5 +57,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "row": "StateHumidistat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "humidistats",
+    "field": "humidifying_setpoint_schedule_id",
+    "input": "new_humidifying_setpoint_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Change humidistat: Humidifying setpoint schedule",
+      "de": "Befeuchtungs-Sollwertzeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "humidistat",
+      "kind": "change-humidistat-humidifying-setpoint-schedule",
+      "record": "ChangedHumidistatHumidifyingSetpointSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Humidifying setpoint schedule violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed humidistat does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced humidifying setpoint schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The humidistat already carries this humidifying setpoint schedule reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

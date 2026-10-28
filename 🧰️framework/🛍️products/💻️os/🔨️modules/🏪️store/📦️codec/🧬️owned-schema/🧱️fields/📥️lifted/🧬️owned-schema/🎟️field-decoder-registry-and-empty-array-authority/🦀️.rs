@@ -182,6 +182,26 @@ pub struct ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
 }
 
 impl<P, Mutation> ArtifactEnvelopeFieldDecoderRegistry<P, Mutation> {
+    /// 🧾️ Quotes the exact final shared issuer and fixed empty backing; outstanding aliases keep custody unchanged.
+    pub fn empty_release_demands(owner:&Arc<Self>)->Result<Option<semio_framework_value::RetirementDemand>,ValueError>{
+        if Arc::strong_count(owner)!=1 || Arc::weak_count(owner)!=0{return Ok(None)}
+        let state=match owner.state.try_lock(){Ok(state)=>state,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original envelope issuer mutex is poisoned"))};
+        if owner.live.load(std::sync::atomic::Ordering::Acquire) != 0 || state.free_len != ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY{return Ok(None)}
+        let backing=state.slots.len()*std::mem::size_of::<ArtifactEnvelopeFieldDecoderSlot<P,Mutation>>() + (owner.returned.len()+owner.reclaimed.len())*std::mem::size_of::<std::sync::atomic::AtomicU64>();
+        Ok(Some(semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>()+backing+2*std::mem::size_of::<Option<Arc<Self>>>(),release_bytes:semio_framework_value::shared_retirement_allocation_bytes::<Self>()+backing,depth:2,..Default::default()}))
+    }
+    /// ♻️ Releases only this unique empty original issuer after every requested closure currency is admitted.
+    pub fn release_empty_original(owner:&mut Option<Arc<Self>>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let Some(current)=owner.as_ref()else{return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()))};
+        let Some(d)=Self::empty_release_demands(current)?else{return Ok(RetainedCloneStep::Progress(Default::default()))};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        drop(owner.take());
+        Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))
+    }
+
+    /// 📏️ Declares the actual shared issuer and every fixed backing allocation before original native birth.
+    pub fn birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<Self>()+ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY * (std::mem::size_of::<ArtifactEnvelopeFieldDecoderSlot<P, Mutation>>() + 2*std::mem::size_of::<std::sync::atomic::AtomicU64>()),depth:2,..Default::default()}}
+
     /// 🏗️ Preallocates the entire fixed decoder authority before any input owner exists.
     pub fn new() -> Arc<Self> {
         let slots = (0..ARTIFACT_ENVELOPE_FIELD_DECODER_CAPACITY).map(|_| ArtifactEnvelopeFieldDecoderSlot { generation: 0, owner: std::mem::ManuallyDrop::new(None) }).collect::<Vec<_>>().into_boxed_slice();

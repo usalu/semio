@@ -41,5 +41,33 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "site",
+    "field": "north_axis_deg",
+    "input": "new_north_axis_deg",
+    "labels": {
+      "en": "Change north axis deg",
+      "de": "Nordachse ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "site",
+      "kind": "change-site-north-axis",
+      "record": "ChangedSiteNorthAxis"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored north axis deg is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The north axis deg is unchanged."
+      }
+    }
   }
 }

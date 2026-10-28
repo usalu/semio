@@ -82,9 +82,9 @@ impl ArtifactEditor for BitmapEditor {
         Some(semio_framework_plugin::no_presence_store_disposer())
     }
 
-    fn initial_snapshot() -> BitmapSnapshot {
+    fn reference_birth()->Option<fn()->BitmapSnapshot>{Some(||{
         crate::examples::rooms_16::snapshot()
-    }
+    })}
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         registry.register::<input::config::BitmapInputWindowConfigOwner>()?;

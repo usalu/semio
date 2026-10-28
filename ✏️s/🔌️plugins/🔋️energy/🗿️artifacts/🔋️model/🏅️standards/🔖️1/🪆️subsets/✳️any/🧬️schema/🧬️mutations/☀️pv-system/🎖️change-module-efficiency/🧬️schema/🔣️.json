@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "field": "module_efficiency",
+    "input": "new_module_efficiency",
+    "key": "id",
+    "labels": {
+      "en": "Change pv system: Module efficiency",
+      "de": "Modulwirkungsgrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "pv-system",
+      "kind": "change-pv-system-module-efficiency",
+      "record": "ChangedPvSystemModuleEfficiency"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Module efficiency violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The pv system already carries this module efficiency value."
+      }
+    }
   }
 }

@@ -1,11 +1,17 @@
 {
   "mutation": "bindWeatherFile",
-  "target": {
-    "artifactId": "",
-    "dialect": {
-      "artifactKind": "",
-      "standard": "",
-      "subset": ""
-    }
+  "link": {
+    "target": {
+      "artifactId": "",
+      "dialect": {
+        "artifactKind": "",
+        "standard": "",
+        "subset": ""
+      }
+    },
+    "pin": {
+      "kind": "head"
+    },
+    "role": "weather"
   }
 }

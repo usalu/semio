@@ -45,12 +45,12 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         if let Err(error) = self.validate_original(native) { return NativeConstructionStepOutcome { result: Some(Err(error.into())), receipt_refusal: None, progress: Default::default() }; }
         if self.original_output.is_some() { return NativeConstructionStepOutcome { result: Some(Ok(HistoryFoldJobStep::Ready { value: (), progress: Default::default() })), receipt_refusal: None, progress: Default::default() }; }
         let ready_copy = if !self.control_closed && self.future.is_none() && self.waker.is_none() && self.control.empty() && self.control.0.retirements.lock().capacity() == 0 && matches!(self.result, Some(Ok(_))) { 2 * size_of::<ControlledRetirement<T>>() } else { 0 };
-        let demand = match self.next_step_grant(1, body).and_then(|grant| Ok(RetirementDemand { copy_bytes: grant.maximum_copy_bytes.checked_add(ready_copy).ok_or_else(|| invalid("original history output copy overflow"))?, capacity_bytes: grant.maximum_capacity_bytes, release_bytes: grant.maximum_release_bytes, depth: grant.maximum_depth })) {
+        let demand = match self.original_step_demand(body) {
             Ok(demand) => demand,
             Err(error) => return NativeConstructionStepOutcome { result: Some(Err(error.into())), receipt_refusal: None, progress: Default::default() },
         };
         native.receive_construction_step_typed(demand, |native, grant| {
-            let result = self.step_granted(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_copy_bytes - ready_copy, ..grant }, body, &mut || false);
+            let result = self.step_granted(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes - ready_copy, maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth }, body, &mut || false);
             let mut progress = match &result {
                 Ok(HistoryFoldJobStep::Pending { progress, .. } | HistoryFoldJobStep::Ready { progress, .. } | HistoryFoldJobStep::Rejected { progress }) => *progress,
                 Err(error) => error.retained_progress(),
@@ -75,11 +75,22 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         })
     }
 
+    /// 📏️ Borrows the next original coroutine action including its final retained output handoff.
+    pub fn original_step_demand(&self,body:usize)->Result<RetirementDemand,ValueError>{
+        let ready_copy=if !self.control_closed&&self.future.is_none()&&self.waker.is_none()&&self.control.empty()&&self.control.0.retirements.lock().capacity()==0&&matches!(self.result,Some(Ok(_))){2*size_of::<ControlledRetirement<T>>()}else{0};
+        self.next_step_grant(1,body).and_then(|grant|Ok(RetirementDemand{copy_bytes:grant.maximum_copy_bytes.checked_add(ready_copy).ok_or_else(||invalid("original history output copy overflow"))?,capacity_bytes:grant.maximum_capacity_bytes,release_bytes:grant.maximum_release_bytes,depth:grant.maximum_depth}))
+    }
+
+    /// 👁️ Observes whether the same original native output is ready for its funded handoff.
+    pub fn original_output_ready(&self)->bool{self.original_output.is_some()}
+    /// 🧯️ Observes an original refusal only after all producer cleanup has completed.
+    pub fn original_rejection_ready(&self)->bool{self.control_closed&&matches!(self.result,Some(Err(_)))}
+
     /// 📬️ A separate funded header handoff installs the actual output before receipt acceptance.
     pub fn take_original_output(&mut self, output: &mut Option<T>, native: &mut NativeDecodeControl<'_>) -> NativeConstructionStepOutcome<bool, OriginalReceivingPrimary> {
         let valid = self.validate_original(native).and_then(|()| if output.is_none() && self.original_output.as_ref().is_some_and(ControlledRetirement::original_is_untouched) { Ok(()) } else { Err(invalid("original history fold output is absent, retiring or its destination is occupied")) });
         if let Err(error) = valid { return NativeConstructionStepOutcome { result: Some(Err(error.into())), receipt_refusal: None, progress: Default::default() }; }
-        let demand = RetirementDemand { copy_bytes: 2 * size_of::<T>() + 2 * size_of::<Option<T>>(), depth: 1, ..Default::default() };
+        let demand = Self::original_output_demand();
         native.receive_construction_step_typed(demand, |_, _| {
             *output = self.original_output.as_mut().unwrap().take_original();
             self.original_output = None;
@@ -88,9 +99,15 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         })
     }
 
+    /// 📦️ Quotes the unchanged output header before the original decoder is borrowed for its transfer.
+    pub fn original_output_demand()->RetirementDemand{RetirementDemand{copy_bytes:2*size_of::<T>()+2*size_of::<Option<T>>(),depth:1,..Default::default()}}
+
     /// 📏️ Completion and post-effect refusal keep actual output inside the original job until handoff or closure.
     pub fn next_original_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
-        if let Some(owner) = &self.original_output { owner.next_demand(body) } else { self.next_demand(body) }
+        if self.terminal_is_empty(){return Ok(Default::default())}
+        if let Some(owner)=&self.original_output{if owner.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<T>>>()+size_of::<bool>(),depth:1,..Default::default()})}let mut demand=owner.next_demand(body)?;demand.depth=demand.depth.max(1);return Ok(demand)}
+        if self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none(){return Ok(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()})}
+        let mut demand=self.next_demand(body)?;demand.depth=demand.depth.max(1);Ok(demand)
     }
 
     /// ♻️ Closing borrows the original decoder even after cancellation, without creating fresh authority.
@@ -100,10 +117,10 @@ impl<'a, T: RetireOwned> HistoryFoldJob<'a, T> {
         if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         native.charge(demand.capacity_bytes)?;
         if let Some(owner) = self.original_output.as_mut() {
-            let step = owner.step(grant)?;
-            if owner.terminal_is_empty() { self.original_output = None; self.terminal = self.control_closed && self.future.is_none() && self.result.is_none() && self.waker.is_none(); }
-            return Ok(RetainedCloneStep::Progress(step.progress()));
+            if owner.terminal_is_empty(){self.original_output=None;self.terminal=self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+            return owner.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));
         }
+        if self.control_closed&&self.future.is_none()&&self.result.is_none()&&self.waker.is_none(){self.terminal=true;return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
         self.close_step(grant)
     }
 }

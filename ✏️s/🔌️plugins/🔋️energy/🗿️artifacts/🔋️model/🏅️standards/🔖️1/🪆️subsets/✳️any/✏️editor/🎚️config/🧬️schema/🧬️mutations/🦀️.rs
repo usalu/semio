@@ -12,7 +12,7 @@ mod change_result_field;
 pub use change_result_field::ChangeResultField;
 
 /// 🧬️ `EnergyModelEditor::ConfigMutation`.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[value(tag = "mutation", content = "payload", rename_all = "camelCase")]
@@ -37,7 +37,7 @@ impl store::snapshot_clone_preparation::ConfigApplyMutation<EnergyModelConfig> f
 
     fn admissible(&self) -> bool {
         match self {
-            Self::ChangeSimulationSettings(change) => change.config().is_valid(),
+            Self::ChangeSimulationSettings(change) => (1..=60).contains(&change.zone_timestep_minutes) && (1..=60).contains(&change.system_timestep_minutes) && change.warmup_days <= 365,
             Self::ChangeResultField(ChangeResultField { field }) => crate::ResultField::from_id(field).is_some(),
         }
     }

@@ -1,5 +1,10 @@
 //! 🧾️ Typed operation driving, task resume, response dispatch, intents and reserved presence.
 
+#[path="response.rs"]
+pub mod original_response;
+pub use original_response::OriginalResponseActionSource;
+#[path="intent.rs"]pub mod original_intent;
+pub use original_intent::OriginalIntentActionSource;
 use semio_framework_plugin_decl_emission::ActionMeta;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandle;
@@ -385,30 +390,14 @@ pub async fn plugin_resume_task<PA: PluginApp>(runtime: &PluginRuntime<PA>, inst
 /// `targeted window transient capture requires an exact ViewModel roster`, so no extension
 /// answer ever folded back and the preview never converged
 /// (ticket 26/09/09/PROCEDURAL-3D-END-TO-END).
-pub async fn plugin_dispatch_response_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<PluginExchangeOutput>,semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_dispatch_response_action<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>, source:&mut OriginalResponseActionSource, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<Option<PluginExchangeOutput>,semio_framework_job::OriginalTurnFailure> {
     let mut frames: Vec<protocol::AppFrame> = Vec::new();
     let mut effect_bytes: Vec<Vec<u8>> = Vec::new();
     let mut event_bytes: Vec<Vec<u8>> = Vec::new();
-    let view_state = with_instances_mut(runtime, |list| {
-        let instance = find_instance(list, instance_id)?;
-        Ok(instance.surface_contexts.view().cloned())
-    })
-    .await
-    .ok()
-    .flatten();
-    let actor = match instance_actor(runtime, instance_id).await {
-        Ok(actor) => actor.into(),
-        Err(fault) => {
-            push_app_fault(&mut frames, None, fault).await;
-            let mut output = PluginExchangeOutput::default();
-            for frame in &frames { output.frames.push(protocol::encode_app_frame(frame).await); }
-            return Ok(Some(output));
-        }
-    };
-    let meta = ActionMeta { actor, instance_id, view_state };
+    if !source.advance(runtime,cx).await?{return Ok(None)}
     let dispatched = with_instances_turn_mut(runtime, |list| {
         let mut instance = find_instance(list, instance_id)?;
-        ::semio_framework_async::poll::resolve_ready(instance.app.handle_response_action(action, args, original_fault, &meta, identity, cx))
+        ::semio_framework_async::poll::resolve_ready(instance.app.handle_response_action(action,args,original_fault,&mut source.metadata,identity,cx))
     })
     .await;
     match dispatched {
@@ -541,6 +530,18 @@ pub async fn plugin_dispatch_intents<PA: PluginApp, const N: usize>(runtime: &Pl
         presence_terminal_fault: None,
         typed_operation_pages: 0,
     }))
+
+pub async fn plugin_dispatch_intent<PA:PluginApp>(runtime:&PluginRuntime<PA>,instance_id:u32,intent:&mut ui_contract::UiIntent,source:&mut OriginalIntentActionSource,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<PluginExchangeOutput>,semio_framework_job::OriginalTurnFailure>{
+    if !source.advance(runtime,intent,cx).await?{return Ok(None)}
+    let dispatched=with_instances_turn_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;let(args,fault,meta)=source.command_inputs()?;::semio_framework_async::poll::resolve_ready(instance.app.handle_intent_frame(intent,args,fault,meta,identity,cx))}).await?;
+    let Some(result)=dispatched else{return Ok(None)};
+    let emit_wire=with_instances_mut(runtime,|list|{let mut instance=find_instance(list,instance_id)?;Ok(::semio_framework_async::poll::resolve_ready(instance.app.take_last_emit_wire()).unwrap_or_default())}).await?;
+    let EmitWire{document:document_ops,config:config_ops,draft:draft_ops,children:child_ops}=emit_wire;
+    let frame=protocol::AppFrame::Emit{in_reply_to:0,document_ops,config_ops,draft_ops,output:encode_wire_serialized(&result.output),diagnostics:encode_wire_serialized(&result.diagnostics),child_ops};
+    let mut output=PluginExchangeOutput::default();
+    output.frames.push(protocol::encode_app_frame(&frame).await);
+    push_invocation_side_frames(&mut output.effects,&mut output.events,&result).await;
+    Ok(Some(output))
 }
 pub async fn plugin_reserve_presence_ingress<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, seq: u64) -> Result<PresenceRosterAdmission, Fault> {
     with_instances_mut(runtime, |list| {

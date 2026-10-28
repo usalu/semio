@@ -162,9 +162,9 @@ impl ArtifactEditor for FormsPlayApp {
         Some(crate::editor::forms::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> FormsSnapshot {
+    fn reference_birth()->Option<fn()->FormsSnapshot>{Some(||{
         crate::schema::empty_forms_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(forms_io())

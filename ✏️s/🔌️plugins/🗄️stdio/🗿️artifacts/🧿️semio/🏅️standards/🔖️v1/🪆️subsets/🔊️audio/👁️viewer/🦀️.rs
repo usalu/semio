@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioAudioViewer {
     const DIALECT: Dialect = SEMIO_AUDIO_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_AUDIO_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioAudioSnapshot {
+    fn reference_birth()->Option<fn()->SemioAudioSnapshot>{Some(||{
         SemioAudioSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

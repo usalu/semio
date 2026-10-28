@@ -1,6 +1,9 @@
 //! 🗄️ Store state of the time-travel session: the store-free owners trait, the per-store history-edit state, the replay, preview and commit steps and the typed store commands, outputs and queries. See [`super`].
 
 use super::*;
+enum TimeTravelReceivingFailure{Native(ValueError),Semantic(Fault)}
+impl From<ValueError> for TimeTravelReceivingFailure{fn from(original:ValueError)->Self{Self::Native(original)}}
+impl TimeTravelReceivingFailure{fn progress(&self)->RetainedCloneProgress{match self{Self::Native(original)=>original.retained_progress(),Self::Semantic(original)=>original.retained_progress}}fn into_fault(self)->Fault{match self{Self::Native(original)=>original.into_fault(),Self::Semantic(original)=>original}}}
 
 //#region 🔖️StoreState
 /// 🧹️ The store-free half of one store's history-edit owners: whether a replay runs, whether owners still retire, the
@@ -14,7 +17,10 @@ pub trait TimeTravelOwners: Send {
     fn terminal_is_empty(&self) -> bool;
     fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError>;
     fn command_pending(&self)->bool;
+    fn finalizing(&self)->bool;
     fn cancel_prepared_command(&mut self);
+    fn requires_original_control(&self)->bool;
+    fn retire_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<Option<RetainedCloneStep>,Fault>;
     fn retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>, Fault>;
     fn as_any(&self) -> &dyn std::any::Any;
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
@@ -33,16 +39,19 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::Cold
     pub(super) preview_derived:Option<store::os_store::ArtifactDerivedOperation<P,Mu>>,
     pub(super) preview_input_close:Option<Box<dyn store::ErasedSnapshotRetirement>>,
     pub(super) preview_original_close:Option<Box<dyn store::ErasedSnapshotRetirement>>,
-    pub(super) preview_cancelled:bool,pub(super) preview_job_closing:bool,pub(super) replay_cancelled:bool,
+    pub(super) preview_cancelled:bool,pub(super) preview_job_closing:bool,pub(super) replay_cancelled:bool,pub(super) finished_cancelled:bool,
     pub(super) discard_effects: Option<Box<discard_decision::TimeTravelDiscardStoreEffects<P,Mu>>>,
     pub label_of: fn(&Mu) -> LocalizedLabel,
     pub(super) staged: Option<Mu>,
     pub(super) kind: Option<Mu>,
+    pub(super) kind_fallback:Option<&'static str>,
+    pub(super) staged_fallback:Option<&'static str>,
     pub(super) preview: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub(super) preview_job: Option<store::os_store::snapshot_read::ArtifactDerivedHistoryPreview<P, Mu>>,
     pub(super) preview_input: Option<protocol::InputReplacement>,
     pub(super) replay: Option<store::os_store::snapshot_read::ArtifactDerivedReplay<P, Mu>>,
     pub(super) finished: Option<store::os_store::replay::EditReplayResult<P, Mu>>,
+    pub(super) commit_request:Option<store::HistoryFinalization>,pub(super) commit_publisher:Option<Box<store::os_store::original_replay_publication::OriginalReplayPublication<P,Mu>>>,pub(super) commit_receipt:Option<store::os_store::original_replay_publication::OriginalReplayPublicationReceipt>,pub(super) commit_outcome:Option<TimeTravelCommit>,pub(super) commit_failure:Option<semio_framework_job::OriginalTurnFailure>,pub(super) commit_request_close:semio_framework_value::retained_clone::RetainedCloneClose,pub(super) commit_stage:u8,pub(super) commit_closing:bool,
     pub(super) head: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>,
     pub(super) snapshot_aliases: ManuallyDrop<[Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<P>>; 8]>,
     pub(super) snapshot_issuers: ManuallyDrop<Option<(Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<P>>,Arc<dyn semio_framework_value::ArtifactOwnedValueRetirementFactory<Mu>>)>>,
@@ -58,7 +67,7 @@ pub  struct TimeTravelStoreState<P, Mu: ::protocol::Mutation<P>+::protocol::Cold
 
 impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> Drop for TimeTravelStoreState<P,Mu>{
     fn drop(&mut self){
-        let empty=self.snapshot_aliases.iter().all(Option::is_none)&&self.snapshot_close.is_none()&&self.snapshot_issuers.is_none()&&self.snapshot_issuer_close.iter().all(Option::is_none);
+        let empty=self.commit_request.is_none()&&self.commit_publisher.is_none()&&self.commit_receipt.is_none()&&self.commit_outcome.is_none()&&self.commit_failure.is_none()&&self.commit_request_close.is_empty()&&self.snapshot_aliases.iter().all(Option::is_none)&&self.snapshot_close.is_none()&&self.snapshot_issuers.is_none()&&self.snapshot_issuer_close.iter().all(Option::is_none);
         assert!(std::thread::panicking()||empty,"original derived snapshot custody requires granted retirement");
         if empty{unsafe{ManuallyDrop::drop(&mut self.snapshot_aliases);ManuallyDrop::drop(&mut self.snapshot_close);ManuallyDrop::drop(&mut self.snapshot_issuers)}}
     }
@@ -78,7 +87,7 @@ impl<P,Mu:Mutation<P>+::protocol::ColdMutation<P>+Send+'static> TimeTravelStoreS
 pub enum TimeTravelReplayStep {
     Pending { done: u32, total: u32, ownership:RetainedCloneProgress },
     Refused(ValueError),
-    Completed(protocol::ReplayReport),
+    Completed(protocol::ReplayReport,RetainedCloneProgress),
     Faulted,
 }
 
@@ -94,9 +103,10 @@ pub enum TimeTravelPreviewStep {
 /// 🌿️ How a finalize ended on its store; a finalize carries the encoded envelopes of every transition it authored (an
 /// overwrite's `Supersede`; an alternative's pending-edit commit, `Branch` and scoped `Supersede`), in authoring order.
 #[doc(hidden)]
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum TimeTravelCommit {
-    Finalized { authored: Vec<u8> },
+    Pending,
+    Finalized { receipt:store::os_store::original_replay_publication::OriginalReplayPublicationReceipt },
     Stale,
     Blocked,
     Failed,
@@ -114,6 +124,7 @@ pub enum TimeTravelStoreCommand {
     CancelReplay,
     CloseOriginalSources { grant: RetainedCloneGrant },
     StepReplay { deadline_us: u64, clock: fn() -> Option<u64>,grant:RetainedCloneGrant },
+    StepCommit,
     Read(TimeTravelStage),
 }
 
@@ -125,6 +136,8 @@ pub enum TimeTravelStoreOutput {
     Previewed(TimeTravelPreviewStep),
     ReplayStarted(bool),
     Stepped(TimeTravelReplayStep),
+    Committed(TimeTravelCommit),
+    CommitRefused(semio_framework_job::OriginalTurnFailure),
     OriginalProgress(RetainedCloneProgress),
     Read(Option<(store::os_store::snapshot_read::ErasedSnapshotRead, [u8; 32])>),
     Done,
@@ -134,6 +147,7 @@ pub enum TimeTravelStoreOutput {
 #[doc(hidden)]
 pub enum TimeTravelStoreQuery {
     Base,
+    CommitCloseDemand(usize),
     Positions(Vec<MutationId>),
     ShownValue(TimeTravelStage),
 }
@@ -142,6 +156,7 @@ pub enum TimeTravelStoreQuery {
 #[doc(hidden)]
 pub enum TimeTravelQueryOutput {
     Base(TimeTravelBase),
+    CommitCloseDemand(Result<RetirementDemand,ValueError>),
     Positions(Option<Vec<TimeTravelTarget>>),
     Value(Option<DslValue>),
 }
@@ -156,7 +171,7 @@ where
 
     /// 🏗️ Owners at rest, labelling the store's operations with `label_of`.
     pub fn new(label_of: fn(&Mu) -> LocalizedLabel) -> Self {
-        Self { discard_effects:None,label_of, staged: None, kind: None, preview: None, preview_job: None, preview_input: None, preview_base:None,preview_original:None,preview_source:None,preview_native_input:None,preview_derived:None,preview_input_close:None,preview_original_close:None,preview_cancelled:false,preview_job_closing:false,replay_cancelled:false,replay: None, finished: None, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
+        Self { discard_effects:None,label_of, staged: None, kind: None,kind_fallback:None,staged_fallback:None, preview: None, preview_job: None, preview_input: None, preview_base:None,preview_original:None,preview_source:None,preview_native_input:None,preview_derived:None,preview_input_close:None,preview_original_close:None,preview_cancelled:false,preview_job_closing:false,replay_cancelled:false,finished_cancelled:false,replay: None, finished: None, commit_request:None,commit_publisher:None,commit_receipt:None,commit_outcome:None,commit_failure:None,commit_request_close:Default::default(),commit_stage:0,commit_closing:false, head: None, snapshot_aliases: ManuallyDrop::new(std::array::from_fn(|_|None)), snapshot_issuers: ManuallyDrop::new(None), snapshot_close: ManuallyDrop::new(None), snapshot_issuer_close: std::array::from_fn(|_|None), retirements: VecDeque::new(), discarded: Vec::new(), discarded_pending: None, discarded_active: None, discarded_factory: None, discarded_factory_close: None }
     }
 
     /// 🪞️ The snapshot the session shows at `stage`: the draft preview while editing; while replaying that preview — or,
@@ -204,11 +219,7 @@ where
         Ok(())
     }
 
-    fn cancel_finished(&mut self, store: &ArtifactStore<P, Mu>) -> Result<(), Fault> {
-        let grant=history_retirement_frame_grant(ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes());
-        if let Some((retirement,progress)) = store.retire_finished_history_replay(&mut self.finished,grant).map_err(ValueError::into_fault)? { assert!(progress.fits(grant));self.retirements.push_back(retirement); }
-        Ok(())
-    }
+    fn cancel_finished(&mut self,_store:&ArtifactStore<P,Mu>)->Result<(),Fault>{self.finished_cancelled=self.finished.is_some();Ok(())}
 
     pub fn discard(&mut self, op: Option<Mu>) {
         self.discarded.extend(op);
@@ -220,6 +231,7 @@ where
         self.snapshot_custody_available(2)?;
         if stage != TimeTravelStage::Editing {
             self.cancel_preview(store)?;
+            self.kind_fallback=None;self.staged_fallback=None;
             let kind = self.kind.take();
             self.discard(kind);
             let staged = self.staged.take();
@@ -233,6 +245,7 @@ where
             self.cancel_replay(store)?;
         }
         if stage == TimeTravelStage::Inactive {
+            self.commit_closing=self.finalizing();
             self.cancel_finished(store)?;
             let head = self.head.take();
             self.retire(store, head)?;
@@ -243,6 +256,7 @@ where
     /// 🔎️ A store-only read.
     pub fn query(owners: Option<&Self>, store: &ArtifactStore<P, Mu>, query: TimeTravelStoreQuery) -> TimeTravelQueryOutput {
         match query {
+            TimeTravelStoreQuery::CommitCloseDemand(body)=>TimeTravelQueryOutput::CommitCloseDemand(owners.map_or(Ok(Default::default()),|owners|owners.commit_close_demands(store,body))),
             TimeTravelStoreQuery::Base => TimeTravelQueryOutput::Base(TimeTravelBase { content_revision: store.content_revision() }),
             TimeTravelStoreQuery::Positions(targets) => TimeTravelQueryOutput::Positions(targets.into_iter().map(|target| store.mutation_position(&target).ok().map(|(position, _)| TimeTravelTarget { position: u32::try_from(position).unwrap_or(u32::MAX), mutation: target })).collect()),
             TimeTravelStoreQuery::ShownValue(stage) => TimeTravelQueryOutput::Value(owners.and_then(|owners| owners.shown(stage)).map(|shown| semio_framework_value::ToValue::to_value(shown.snapshot()))),
@@ -250,14 +264,14 @@ where
     }
 
     /// 📨️ Runs one typed command against `store`.
-    pub  async fn run(&mut self, store: &mut ArtifactStore<P, Mu>, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
+    pub fn run(&mut self, store: &mut ArtifactStore<P, Mu>, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
         Ok(match command {
             TimeTravelStoreCommand::Open { target, current, withdraw } => TimeTravelStoreOutput::Opened(self.open(store, &target, current.as_ref(), withdraw)),
             TimeTravelStoreCommand::Adopt(adopt) => {
-                let staged = self.staged.take();
+                let staged = self.staged.take();let fallback=self.staged_fallback.take();
                 match adopt {
                     true => {
-                        let previous = std::mem::replace(&mut self.kind, staged);
+                        self.kind_fallback=fallback;let previous = std::mem::replace(&mut self.kind, staged);
                         self.discard(previous);
                     }
                     false => self.discard(staged),
@@ -273,9 +287,10 @@ where
                 self.preview_input = Some(replacement);
                 TimeTravelStoreOutput::Previewed(TimeTravelPreviewStep::Pending)
             }
-            TimeTravelStoreCommand::StepPreview { deadline_us, clock,grant } => TimeTravelStoreOutput::Previewed(self.step_preview(store, deadline_us, clock,grant,receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history preview requires its original Job receiving issuer").into_fault())?)?),
+            TimeTravelStoreCommand::StepPreview { deadline_us, clock,grant } => {let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history preview requires its original Job receiving issuer").into_fault())?;let result=cx.with_native_receiving(|native|self.step_preview(store,deadline_us,clock,grant,native).map_err(TimeTravelReceivingFailure::Semantic));let progress=match &result{Ok(TimeTravelPreviewStep::Progress(p)|TimeTravelPreviewStep::Completed(_,p))=>*p,Ok(TimeTravelPreviewStep::Refused(error))=>error.retained_progress(),Err(error)=>error.progress(),_=>Default::default()};match cx.receiving_issued_grant(){Some(issued)=>cx.consume_receiving_retained(issued,progress),None=>cx.consume_retained(progress)}.map_err(ValueError::into_fault)?;TimeTravelStoreOutput::Previewed(result.map_err(TimeTravelReceivingFailure::into_fault)?)},
             TimeTravelStoreCommand::StartReplay { drafts, from } => {
-                self.cancel_replay(store)?;
+                if self.replay.is_some(){self.cancel_replay(store)?;return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"original history replay must close before its replacement is admitted").into_fault())}
+                self.cancel_finished(store)?;
                 match store.begin_derived_report_replay(drafts, Some(from)) {
                     Ok(replay) => {
                         self.replay = Some(replay);self.replay_cancelled=false;
@@ -284,38 +299,17 @@ where
                     Err(_) => TimeTravelStoreOutput::ReplayStarted(false),
                 }
             }
-            TimeTravelStoreCommand::CloseOriginalSources { grant } => TimeTravelStoreOutput::OriginalProgress(self.close_original_store_sources(store,grant).map_err(ValueError::into_fault)?),
+            TimeTravelStoreCommand::CloseOriginalSources { grant } => TimeTravelStoreOutput::OriginalProgress(if self.store_sources_require_original_control(){receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history source closure requires its original Job decoder").into_fault())?.with_native_retirement(|control|self.close_original_store_sources_with_control(store,grant,Some(control))).map_err(ValueError::into_fault)?}else{self.close_original_store_sources_with_control(store,grant,None).map_err(ValueError::into_fault)?}),
             TimeTravelStoreCommand::CancelReplay => {
                 self.cancel_replay(store)?;
                 TimeTravelStoreOutput::Done
             }
-            TimeTravelStoreCommand::StepReplay { deadline_us, clock,grant } => TimeTravelStoreOutput::Stepped(self.step_replay(store, deadline_us, clock,grant,receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history replay requires its original Job receiving issuer").into_fault())?)?),
+            TimeTravelStoreCommand::StepReplay { deadline_us, clock,grant } => {let cx=receiving.ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"history replay requires its original Job receiving issuer").into_fault())?;let result=cx.with_native_receiving(|native|self.step_replay(store,deadline_us,clock,grant,native).map_err(TimeTravelReceivingFailure::Semantic));let progress=match &result{Ok(TimeTravelReplayStep::Pending{ownership,..}|TimeTravelReplayStep::Completed(_,ownership))=>*ownership,Ok(TimeTravelReplayStep::Refused(error))=>error.retained_progress(),Err(error)=>error.progress(),_=>Default::default()};match cx.receiving_issued_grant(){Some(issued)=>cx.consume_receiving_retained(issued,progress),None=>cx.consume_retained(progress)}.map_err(ValueError::into_fault)?;TimeTravelStoreOutput::Stepped(result.map_err(TimeTravelReceivingFailure::into_fault)?)},
+            TimeTravelStoreCommand::StepCommit=>match receiving{Some(cx)=>match self.step_commit(store,cx){Ok(outcome)=>TimeTravelStoreOutput::Committed(outcome),Err(failure)=>TimeTravelStoreOutput::CommitRefused(failure)},None=>TimeTravelStoreOutput::CommitRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"completed replay publication requires its original Job continuation").into())},
             TimeTravelStoreCommand::Read(stage) => TimeTravelStoreOutput::Read(match self.shown(stage) {
                 Some(shown) => Some((store.snapshot_read_derived(shown).map_err(|error| error.into_fault())?, store.content_revision())),
                 None => None,
             }),
-        })
-    }
-
-    /// 🪪️ Commits the original finished replay through the caller's existing identity recipient.
-    pub async fn commit_finished(&mut self, store: &mut ArtifactStore<P, Mu>, drafts: protocol::HistoryInputDrafts, finalization: store::HistoryFinalization, actor: Option<&str>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelCommit, Fault> {
-        if self.finished.as_ref().is_none_or(|finished| *finished.drafts() != drafts) {
-            self.cancel_finished(store)?;
-            return Ok(TimeTravelCommit::Stale);
-        }
-        if actor.is_some_and(|actor| actor != store.local_actor_id().0.as_str()) {
-            return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("time-travel.actor"), "history edit actor differs from its opened session"));
-        }
-        let finished = self.finished.take().expect("admitted finished history replay");
-        let known: BTreeSet<MutationId> = store.envelope().transitions.iter().map(|transition| transition.mutation_id.clone()).collect();
-        Ok(match store.commit_finished_replay(finished, finalization, identity).await {
-            Ok(_) => {
-                let authored: Vec<_> = store.envelope().transitions.iter().filter(|transition| !known.contains(&transition.mutation_id)).cloned().collect();
-                TimeTravelCommit::Finalized { authored: store::os_spr::encode_envelopes(&authored) }
-            }
-            Err(vcs::VcsError::Stale { .. }) => TimeTravelCommit::Stale,
-            Err(vcs::VcsError::Rejected { .. }) => TimeTravelCommit::Blocked,
-            Err(error) => return Err(error.into_fault()),
         })
     }
 
@@ -343,11 +337,12 @@ where
             protocol::InputReplacement::Input { payload, .. } => <Mu as ::protocol::OpBinary>::decode_op(payload).ok(),
             protocol::InputReplacement::Withdrawn => None,
         };
-        let kind = decode(&original).unwrap_or_else(|| row.operation.clone());
+        let owned_kind=decode(&original);let kind=owned_kind.as_ref().unwrap_or(row.operation);
+        if self.discarded_factory.is_none(){self.discarded_factory=Some(Arc::clone(store.owned_mutation_retirement_factory().map_err(|_|refusal)?));}
         let value = match decode(current.unwrap_or(&original)) {
             Some(op) => {
                 let value = op.payload_value();
-                op.retire_cold();
+                self.discard(Some(op));
                 value
             }
             None => kind.payload_value(),
@@ -356,7 +351,7 @@ where
         let read = read.filter(|(_, inputs)| inputs.as_ref().map_or(true, |inputs| !time_travel_input_rows(inputs, &value).is_empty()));
         let admitted = if withdraw { time_travel_admits_withdrawal::<P, Mu>(row.operation) } else { read.is_some() };
         if !admitted {
-            kind.retire_cold();
+            self.discard(owned_kind);
             return Err(refusal);
         }
         let (schema, inputs, inputs_refused, validator) = match read {
@@ -374,7 +369,7 @@ where
             target: target.clone(),
             position: u32::try_from(row.position).unwrap_or(u32::MAX),
             op_index: row.op_index,
-            label: (self.label_of)(&kind),
+            label: (self.label_of)(kind),
             schema,
             inputs,
             inputs_refused,
@@ -383,25 +378,27 @@ where
             outcome: Vec::new(),
             refused: None,
         };
-        let previous = self.staged.replace(kind);
+        self.staged_fallback=Some(kind.descriptor().semantic_kind);let previous=std::mem::replace(&mut self.staged,owned_kind);
         self.discard(previous);
         Ok((editor, original))
     }
 
     /// 🎚️ The validated draft payload `candidate` rebuilt into the edited kind and canonically encoded.
     pub fn rebuild(&mut self, store: &ArtifactStore<P, Mu>, candidate: DslValue) -> Result<protocol::InputReplacement, String> {
-        let op = self.kind.as_ref().ok_or("the draft editor lost the operation kind it rebuilds")?.with_payload_value(candidate).map_err(|error| error.to_string())?;
+        let op=match self.kind.as_ref(){Some(kind)=>kind.with_payload_value(candidate),None=>Mu::from_payload_value(self.kind_fallback.ok_or("the draft editor lost its original semantic kind")?,candidate)}.map_err(|error|error.to_string())?;
         let encoded = <Mu as ::protocol::OpBinary>::encode_op(&op);
         self.discard(Some(op));
         Ok(protocol::InputReplacement::Input { schema: store.envelope().schema.clone(), payload: encoded.map_err(|error| error.to_string())? })
     }
 
     /// ♻️ Returns genuine history loans to the same Store ledger under original incoming cleanup grants.
-    fn close_original_store_sources(&mut self,store:&mut ArtifactStore<P,Mu>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-      let preview=(self.preview_cancelled||self.preview_job_closing)&&self.preview_job.is_some();let replay=self.replay_cancelled&&self.replay.is_some();if !preview&&!replay{return Ok(Default::default())}
+    fn store_sources_require_original_control(&self)->bool{self.preview_job.as_ref().and_then(|preview|preview.derived_operation.as_ref()).is_some_and(|owner|owner.requires_original_control())||self.replay.as_ref().is_some_and(|replay|replay.replacement_operation.is_some()||replay.failed_operation.as_ref().is_some_and(|owner|owner.requires_original_control())||replay.replay.as_ref().is_some_and(|owner|owner.requires_original_control()))}
+    fn close_original_store_sources_with_control(&mut self,store:&mut ArtifactStore<P,Mu>,grant:RetainedCloneGrant,mut control:Option<&mut dyn semio_framework_value::OriginalRetirementControl>)->Result<RetainedCloneProgress,ValueError>{
+      let preview=(self.preview_cancelled||self.preview_job_closing)&&self.preview_job.is_some();let replay=self.replay_cancelled&&self.replay.is_some();let finished=self.finished_cancelled&&self.finished.is_some();if !preview&&!replay&&!finished{return Ok(Default::default())}
       if self.retirements.len()==self.retirements.capacity(){let capacity=(self.retirements.len()+1)*size_of::<Box<dyn ErasedSnapshotRetirement>>();let released=self.retirements.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>();if grant.maximum_items==0||grant.maximum_capacity_bytes<capacity||grant.maximum_release_bytes<released||grant.maximum_depth==0{return Ok(Default::default())}self.retirements.try_reserve_exact(1).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history cleanup queue allocation refused"))?;return Ok(RetainedCloneProgress{copied_items:1,retained_capacity_bytes:self.retirements.capacity()*size_of::<Box<dyn ErasedSnapshotRetirement>>(),released_bytes:released,..Default::default()})}
-      if preview{if let Some((owner,p))=store.retire_derived_history_preview(&mut self.preview_job,grant)?{self.retirements.push_back(owner);return Ok(p)}return Ok(self.preview_job.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))}
-      if let Some((owner,p))=store.retire_derived_report_replay(&mut self.replay,grant)?{self.retirements.push_back(owner);return Ok(p)}Ok(self.replay.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))
+      if finished{if let Some((owner,p))=store.retire_finished_history_replay(&mut self.finished,grant)?{self.retirements.push_back(owner);self.finished_cancelled=false;return Ok(p)}return Ok(Default::default())}
+      if preview{if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_history_preview_controlled(&mut self.preview_job,grant,*control),None=>store.retire_derived_history_preview(&mut self.preview_job,grant)}?{self.retirements.push_back(owner);return Ok(p)}return Ok(self.preview_job.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))}
+      if let Some((owner,p))=match control.as_mut(){Some(control)=>store.retire_derived_report_replay_controlled(&mut self.replay,grant,*control),None=>store.retire_derived_report_replay(&mut self.replay,grant)}?{self.retirements.push_back(owner);return Ok(p)}Ok(self.replay.as_mut().map_or(Default::default(),|owner|owner.take_preparation_receipt()))
     }
     /// 🖼️ One bounded prefix slice; only a completed preview displaces the last complete projection.
     fn step_preview(&mut self,store:&mut ArtifactStore<P,Mu>,deadline_us:u64,clock:fn()->Option<u64>,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<TimeTravelPreviewStep,Fault>{
@@ -435,17 +432,19 @@ where
         Ok(match store.step_derived_report_replay(replay, grant, receiving,&mut deadline) {
             Ok(store::os_store::replay::ReplayStep::Pending(progress)) => TimeTravelReplayStep::Pending { done: progress.done, total: progress.total,ownership:replay.take_preparation_receipt() },
             Ok(store::os_store::replay::ReplayStep::Finished(_)) => {
+                let ownership=replay.take_preparation_receipt();
                 match store.finish_derived_report_replay(&mut self.replay).and_then(|(result, head)| store.replay_report(&result).map(|report| (result, head, report))) {
                     Ok((result, head, report)) => {
                         let previous = std::mem::replace(&mut self.head, head);
                         self.retire(store, previous)?;
                         self.cancel_finished(store)?;
-                        self.finished = Some(result);
-                        TimeTravelReplayStep::Completed(report)
+                        self.finished = Some(result);self.finished_cancelled=false;
+                        TimeTravelReplayStep::Completed(report,ownership)
                     }
                     Err(_) => TimeTravelReplayStep::Faulted,
                 }
             }
+            Err(vcs::VcsError::InverseRefused(error))=>TimeTravelReplayStep::Refused(error),
             Err(_) => {
                 self.cancel_replay(store)?;
                 TimeTravelReplayStep::Faulted
@@ -454,3 +453,5 @@ where
     }
 }
 //#endregion 🔖️StoreState
+
+#[path="📬️finalize/🦀️.rs"]mod original_finalize;

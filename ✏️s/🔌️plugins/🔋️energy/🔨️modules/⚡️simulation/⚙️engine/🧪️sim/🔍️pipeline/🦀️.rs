@@ -315,9 +315,14 @@ impl EnergyJobAuthority {
         let work = self.aggregate_zone_work.get_or_insert_with(AggregateZoneWork::new);
         let dt_s = 3600.0;
         match work.stage {
-            AggregateZoneStage::Temperature => {
+            AggregateZoneStage::Temperature | AggregateZoneStage::HeatingPower | AggregateZoneStage::CoolingPower => {
+                let (offset, prefix, unit, value, next) = match work.stage {
+                    AggregateZoneStage::Temperature => (0, "Zone Air Temperature [", Unit::Celsius, zone_state.mean_air_temp_c, AggregateZoneStage::HeatingPower),
+                    AggregateZoneStage::HeatingPower => (1, "Zone Heating Power [", Unit::Watts, zone_state.delivered.heating_w, AggregateZoneStage::CoolingPower),
+                    _ => (2, "Zone Cooling Power [", Unit::Watts, zone_state.delivered.cooling_w, AggregateZoneStage::Heating),
+                };
                 if self.hour_index == 0 && work.phase == 0 {
-                    if !copy_aggregate_names_step(work, ["Zone Air Temperature [", zone.name.as_str(), "]"]) {
+                    if !copy_aggregate_names_step(work, [prefix, zone.name.as_str(), "]"]) {
                         return false;
                     }
                     work.phase = 1;
@@ -352,7 +357,7 @@ impl EnergyJobAuthority {
                         .series
                         .insert_stable(
                             map_key,
-                            TimeSeries { key: series_key, timestamps_hours: std::mem::take(&mut work.timestamps), values: std::mem::take(&mut work.values), unit: Unit::Celsius, admitted_samples: self.result_backing.samples_per_series },
+                            TimeSeries { key: series_key, timestamps_hours: std::mem::take(&mut work.timestamps), values: std::mem::take(&mut work.values), unit, admitted_samples: self.result_backing.samples_per_series },
                         )
                         .is_err()
                     {
@@ -363,18 +368,18 @@ impl EnergyJobAuthority {
                     work.phase = 4;
                     return false;
                 }
-                let series = self.time_series.series.get_index_mut(self.aggregate_zone_cursor).expect("admitted zone series");
-                if self.zone_temperature_history.len() >= self.result_backing.history_slots {
+                let series = self.time_series.series.get_index_mut(self.aggregate_zone_cursor * 3 + offset).expect("admitted zone series");
+                if offset == 0 && self.zone_temperature_history.len() >= self.result_backing.history_slots {
                     work.backing_rejected = true;
                     return false;
                 }
-                if let Err(fault) = series.append_admitted(self.hour_index as f64, zone_state.mean_air_temp_c) {
+                if let Err(fault) = series.append_admitted(self.hour_index as f64, value) {
                     work.series_fault = Some(fault);
                     work.backing_rejected = true;
                     return false;
                 }
-                self.zone_temperature_history.push(zone_state.mean_air_temp_c);
-                work.advance(AggregateZoneStage::Heating);
+                if offset == 0 { self.zone_temperature_history.push(zone_state.mean_air_temp_c); }
+                work.advance(next);
             }
             AggregateZoneStage::Heating => {
                 if self.hour_index == 0 && work.phase == 0 {

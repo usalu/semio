@@ -64,7 +64,7 @@ use semio_framework_value::retirement::controlled::ControlledRetirement;
 
 /// 🧮️ Folds the provisional `leaf` onto `running` (else `committed`) and answers whether it applied (a leaf its base refuses
 /// is skipped); the displaced intermediate joins `displaced`, which the caller retires through its store, never plainly.
-fn fold_leaf<P: Clone, M: Mutation<P> + ColdMutation<P>>(committed: &Arc<P>, running: &mut Option<Arc<P>>, displaced: &mut Vec<Arc<P>>, leaf: &M) -> bool {
+fn fold_leaf<P: Clone, M: Mutation<P>+protocol::ColdMutation<P>>(committed: &Arc<P>, running: &mut Option<Arc<P>>, displaced: &mut Vec<Arc<P>>, leaf: &M) -> bool {
     let base: &P = running.as_deref().unwrap_or(committed.as_ref());
     let outcome = leaf.diff(base);
     let applicable = outcome.is_applicable(protocol::MergePolicy::default());
@@ -145,7 +145,7 @@ pub fn gesture_host_event(event: &HostEvent) -> GestureHostEvent {
 /// them all: a tick holds them as the press's provisional overlay, the release commits them as ONE transaction, a late input
 /// of a closed press and a refused input leave every lane as it was, a host abort drops them all with zero trace.
 #[doc(hidden)]
-#[derive(Clone,semio_framework_value::RetireOwned)]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum PressLeaf<M, CM> {
     Member(M),
     Child(ChildEmit),
@@ -198,7 +198,8 @@ pub struct ToolMachineRuntime<P, M:RetireOwned+Send+'static, C = NoConfig, CM = 
     pub pending_config_aliases: Option<Vec<Arc<C>>>,
     pub config_alias_retirement: Option<ToolOriginalAliasBatch<C>>,
     pub refold_owed: bool,
-    pub window_preview: window_preview::WindowPreviewRun,
+    pub refold_request:u64,
+    pub window_overlays: BTreeMap<String, WindowConfigSnapshot>,
     pub ingress: Option<ToolTag>,
     pub operations: Vec<(u64, ToolTag)>,
     pub tick: u64,
@@ -225,7 +226,8 @@ impl<P, M:RetireOwned+Send+'static, C, CM> Default for ToolMachineRuntime<P, M, 
             pending_config_aliases: None,
             config_alias_retirement: None,
             refold_owed: false,
-            window_preview: Default::default(),
+            refold_request:0,
+            window_overlays: BTreeMap::new(),
             ingress: None,
             operations: Vec::new(),
             tick: 0,
@@ -296,7 +298,7 @@ impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, 
     /// moved under one. Scrub leaves are absolute and fold on any base (a leaf the base refuses is skipped); a typing run
     /// whose leaves the moved base refuses is a conflict and aborts with zero trace (`baseMoved`). Answers every snapshot
     /// alias the refold displaced (the caller retires them through the store, never plainly) and every aborted run.
-    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) where P: Clone {
+    pub fn follow(&mut self, committed: &Arc<P>, generation: u64, changed: bool) -> (Vec<Arc<P>>, Vec<ToolStep<M>>) where P: Clone,M:protocol::ColdMutation<P> {
         if self.presses.provisional().all(|leaf| leaf.member().is_none()) && self.gestures.is_empty() && self.typing.is_empty() {
             let dropped: Vec<Arc<P>> = self.overlay.take().into_iter().collect();
             self.provisional_generation = self.provisional_generation.wrapping_add(u64::from(!dropped.is_empty()));
@@ -333,7 +335,7 @@ impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, 
 
     /// 🪞️ Refolds the app-config overlay on `committed` (config generation `generation`) when a held press changed or the
     /// config moved under one; answers the displaced aliases (retired by the caller through the config store).
-    pub fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> where C: Clone {
+    pub fn follow_config(&mut self, committed: &Arc<C>, generation: u64, changed: bool) -> Vec<Arc<C>> where C: Clone,CM:protocol::ColdMutation<C> {
         if self.presses.provisional().all(|leaf| leaf.config().is_none()) {
             return self.config_overlay.take().into_iter().collect();
         }
@@ -355,3 +357,10 @@ impl<P, M: Mutation<P> + ColdMutation<P> + Clone + RetireOwned+Send+'static, C, 
 //#region 🧪️Tests
 
 //#endregion 🧪️Tests
+
+/// 🔁️ Continuous overlays use the same original semantic producer as retained run operations.
+pub use crate::original_operations::OriginalToolOverlayFold;
+
+#[path="🔁️follow/🦀️.rs"]
+mod original_follow;
+pub use original_follow::OriginalToolMachineFollow;

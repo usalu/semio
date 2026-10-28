@@ -647,9 +647,9 @@ impl ArtifactEditor for Grid2dEditor {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn initial_snapshot() -> Grid2dSnapshot {
+    fn reference_birth()->Option<fn()->Grid2dSnapshot>{Some(||{
         crate::examples::grid2d::pipes::document()
-    }
+    })}
 
     fn register_tool_job_factories(registry: &mut ArtifactToolFactoryRegistry<'_, EditorApp<Self>>) -> Result<(), Fault> {
         Grid2dCommandJobFactory::register(registry)

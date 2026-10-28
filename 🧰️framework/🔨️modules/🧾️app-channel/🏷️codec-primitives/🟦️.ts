@@ -31,7 +31,7 @@ export function exactMediaExportFrame<T>(bytes: Uint8Array, pos: [number], value
 export const MEDIA_EXPORT_STATES = ["running", "complete", "cancelled", "failed"] as const;
 
 export function assertAppDocumentIdentity(identity: AppDocumentIdentity): void {
-  if (!Number.isSafeInteger(identity.app_instance_id) || identity.app_instance_id < 0 || identity.app_instance_id > 0xffff_ffff || (identity.parent_document_id !== null && (typeof identity.parent_document_id !== "string" || identity.parent_document_id.length === 0 || [...identity.parent_document_id].length > 512))) throw new Error("document identity: invalid owner");
+  if (typeof identity.base_revision !== "bigint" || identity.base_revision < 0n || identity.base_revision > 0xffff_ffff_ffff_ffffn || !Number.isSafeInteger(identity.app_instance_id) || identity.app_instance_id < 0 || identity.app_instance_id > 0xffff_ffff || (identity.parent_document_id !== null && (typeof identity.parent_document_id !== "string" || identity.parent_document_id.length === 0 || [...identity.parent_document_id].length > 512))) throw new Error("document identity: invalid owner");
 }
 
 export const APP_COMMAND_TAGS = {

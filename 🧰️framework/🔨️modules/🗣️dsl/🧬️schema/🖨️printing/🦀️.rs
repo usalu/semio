@@ -64,7 +64,7 @@ fn print_table_list(spec_fn: RecordSpecProducer, items: &[FieldValue], writer: &
     writer.atom("]");
 }
 
-fn base64_encode(bytes:&[u8])->String{semio_framework_value::bytes::encode_base64(bytes)}
+fn base64_encode(bytes:&(impl semio_framework_value::ByteReadSource+?Sized))->String{semio_framework_value::bytes::encode_base64(bytes)}
 
 //#region 🔖️Writer
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

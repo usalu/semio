@@ -48,23 +48,8 @@ pub(super) async fn arm_load_window_config<PA: PluginApp>(
     command: protocol::AppCommand,
 ) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
     let protocol::AppCommand::LoadWindowConfig { seq, entry } = command else { unreachable!("arm_load_window_config is dispatched only for its own command") };
-    match store::os_store::serialization::decode_document_pack_bytes(&entry.envelope_pack).await {
-        Ok((pack, spr)) => {
-            let loaded = with_instances_mut(runtime, |list| {
-                let mut instance = find_instance(list, instance_id)?;
-                ::semio_framework_async::poll::resolve_ready(instance.app.load_window_config_pack(WindowConfigPack {
-                    window_id: entry.window_id,
-                    window_kind_id: entry.window_kind_id,
-                    files: store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() },
-                }))
-            });
-            match loaded.await {
-                Ok(()) => frames.push(protocol::AppFrame::Done { in_reply_to: seq }),
-                Err(fault) => push_app_fault(frames, Some(seq), fault).await,
-            }
-        }
-        Err(error) => push_app_fault(frames, Some(seq), error.into_fault()).await,
-    }
+    if !entry.window_id.is_empty()||!entry.window_kind_id.is_empty()||!entry.envelope_pack.is_empty(){return Err(plugin_internal_fault("original native Window input remains before completed command dispatch").into())}
+    frames.push(protocol::AppFrame::Done { in_reply_to: seq });
     Ok(())
 }
 
@@ -84,7 +69,7 @@ pub(super) async fn arm_read_window_configs<PA: PluginApp>(
         Ok(packs) => {
             let mut entries = Vec::with_capacity(packs.len());
             for pack in packs {
-                entries.push(protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack: store::os_store::serialization::encode_document_pack_bytes(&pack.files.pack, &pack.files.spr).await });
+                entries.push(protocol::WindowConfigPackEntry { window_id: pack.window_id, window_kind_id: pack.window_kind_id, envelope_pack: match pack.source {semio_framework_plugin_window_config::WindowConfigPackSource::Pair(files)=>store::os_store::serialization::encode_document_pack_bytes(&files.pack,&files.spr).await,semio_framework_plugin_window_config::WindowConfigPackSource::Framed(bytes)=>bytes} });
             }
             frames.push(protocol::AppFrame::WindowConfigs { in_reply_to: seq, entries });
         }

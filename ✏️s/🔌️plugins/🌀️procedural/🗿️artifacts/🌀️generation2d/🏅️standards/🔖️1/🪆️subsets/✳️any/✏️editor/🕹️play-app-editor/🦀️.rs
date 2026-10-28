@@ -176,9 +176,9 @@ impl ArtifactEditor for Generation2dPlayApp {
         Some(semio_s_artifact_procedural_2d_editor_config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Generation2dSnapshot {
+    fn reference_birth()->Option<fn()->Generation2dSnapshot>{Some(||{
         semio_s_artifact_procedural_2d_io_text::snapshot::default_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(::semio_framework_async::poll::resolve_ready(generation2d_io()))

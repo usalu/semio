@@ -57,5 +57,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "Zones"
+    ],
+    "row": "StateHumidistat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "humidistats",
+    "field": "zone_id",
+    "input": "new_zone_id",
+    "key": "id",
+    "labels": {
+      "en": "Change humidistat: Zone",
+      "de": "Zone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "humidistat",
+      "kind": "change-humidistat-zone",
+      "record": "ChangedHumidistatZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Zone violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed humidistat does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The humidistat already carries this zone reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

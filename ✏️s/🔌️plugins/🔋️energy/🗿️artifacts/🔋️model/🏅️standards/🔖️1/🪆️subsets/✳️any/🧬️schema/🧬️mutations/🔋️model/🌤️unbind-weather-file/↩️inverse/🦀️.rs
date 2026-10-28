@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `UnbindWeatherFile` — always computed from BASE, never by inverting the delta.
 
 use crate as vocabulary;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
@@ -12,7 +12,7 @@ where
     Ok((|| {
     let _ = payload;
     match &base.weather_link {
-        Some(existing) => vec![vocabulary::bind_weather_file(existing.target.clone())],
+        Some(existing) => vec![vocabulary::bind_weather_file(existing.clone())],
         None => Vec::new(),
     }
 

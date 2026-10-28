@@ -18,6 +18,10 @@ pub fn derive_scalar(input: TokenStream) -> TokenStream { emit_scalar(parse_macr
 pub fn derive_enum(input: TokenStream) -> TokenStream { emit_enum(parse_macro_input!(input as DeriveInput)).into() }
 
 /// 🫴️ Derives typed receiving with every partial authored field retained by the original owner.
+/// 🫳️ Derives only moving source custody, without requiring borrowed whole-field reconstruction.
+#[proc_macro_derive(DslOwnedReceiving, attributes(dsl))]
+pub fn derive_owned_receiving(input:TokenStream)->TokenStream{owned_receiving::emit_owned_receiving(&parse_macro_input!(input as DeriveInput)).into()}
+
 #[proc_macro_derive(DslReceiving, attributes(dsl))]
 pub fn derive_receiving(input:TokenStream)->TokenStream{emit_receiving(parse_macro_input!(input as DeriveInput)).into()}
 

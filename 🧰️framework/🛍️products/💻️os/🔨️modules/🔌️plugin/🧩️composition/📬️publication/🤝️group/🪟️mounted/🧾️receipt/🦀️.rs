@@ -22,6 +22,10 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_value::SharedUtf8;
 use std::mem::ManuallyDrop;
 
+
+#[path="📦️payload/🦀️.rs"]
+mod canonical_payload;
+pub use canonical_payload::{MountedCausalPayload,MountedReceiptPayload,payload_demands,payload_close};
 #[doc(hidden)]
 pub fn mounted_nested_retirement_demand(mut demand: RetirementDemand, layers: usize) -> Result<RetirementDemand, ValueError> {
     demand.depth = demand.depth.checked_add(layers).ok_or_else(|| ValueError::literal(ValueRefusalKind::DepthLimit, "mounted receipt retirement depth overflow"))?;
@@ -128,6 +132,7 @@ impl MountedPreparedOperationBytes {
     pub fn new() -> Self { Self { cursor: Default::default(), output: MountedReceiptBytes::new(), pending: [0; 64], pending_len: 0, pending_offset: 0, encoded_complete: false, cursor_closed: false, failed: false, closing: false } }
     pub fn next_capacity_byte_demand(&self) -> Result<usize, ValueError> { if self.pending_offset < self.pending_len { self.output.next_capacity_byte_demand(self.pending_len - self.pending_offset) } else { self.cursor.next_capacity_byte_demand() } }
     pub fn next_growth_release_byte_demand(&self) -> Result<usize, ValueError> { if self.pending_offset < self.pending_len { Ok(self.output.next_growth_release_byte_demand()) } else if !self.cursor_closed { self.cursor.next_close_byte_demand() } else { Ok(0) } }
+    pub fn next_minimum_copy_bytes(&self)->usize{if self.pending_offset<self.pending_len{1}else{self.cursor.next_minimum_copy_bytes()}}
     pub fn is_complete(&self) -> bool { !self.failed && !self.closing && self.encoded_complete && self.cursor_closed && self.pending_len == self.pending_offset }
     /// 🧵️ Retains the exact encoded prefix before copying it into independently admitted output backing.
     pub fn advance(&mut self, source: store::ArtifactPreparedOperationSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -208,6 +213,7 @@ impl MountedPreparedOperationsBytes {
         (output, count)
     }
     pub fn new(count: usize) -> Self { let (integer, integer_len) = Self::integer(count); Self { output: MountedReceiptBytes::new(), operation: (count > 0).then(MountedPreparedOperationBytes::new), encoded: ManuallyDrop::new(None), count, index: 0, phase: MountedOperationFramingPhase::Count, integer, integer_len, integer_offset: 0, payload_offset: 0, closing: false } }
+    pub fn next_minimum_copy_bytes(&self)->usize{if self.phase==MountedOperationFramingPhase::Encoding{self.operation.as_ref().unwrap().next_minimum_copy_bytes()}else{1}}
     pub fn operation_index(&self) -> Option<usize> { (!self.closing && self.phase == MountedOperationFramingPhase::Encoding).then_some(self.index) }
     fn additional(&self) -> usize { match self.phase { MountedOperationFramingPhase::Count | MountedOperationFramingPhase::Length => self.integer_len - self.integer_offset, MountedOperationFramingPhase::Payload => (self.encoded.as_ref().unwrap().len() - self.payload_offset).min(64), _ => 0 } }
     pub fn next_capacity_byte_demand(&self) -> Result<usize, ValueError> { if self.phase == MountedOperationFramingPhase::Encoding { self.operation.as_ref().unwrap().next_capacity_byte_demand() } else { self.output.next_capacity_byte_demand(self.additional()) } }
@@ -297,7 +303,7 @@ impl MountedKernelMutationReceiptSource<'_> {
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 #[doc(hidden)]
-pub enum MountedKernelReceiptPhase { Strings, Inverse, DependencyBacking, Dependencies, Author, Complete }
+pub enum MountedKernelReceiptPhase { Strings, Inverse, DependencyBacking, Dependencies, Author, Forward, ForwardRelease, Complete }
 
 #[doc(hidden)]
 pub struct MountedKernelMutationReceipt {
@@ -308,7 +314,8 @@ pub struct MountedKernelMutationReceipt {
     pub undo_policy: UndoPolicy,
     pub strings: [MountedReceiptBytes; 9],
     pub forward: MountedReceiptBytes,
-    pub inverse: [MountedReceiptBytes; 2],
+    pub inverse: [MountedReceiptPayload; 2],
+    pub forward_payload:MountedReceiptPayload,
     pub dependencies: [ManuallyDrop<Vec<MutationId>>; 3],
     pub dependency: Option<MountedReceiptBytes>,
     pub author: ManuallyDrop<Option<SharedUtf8>>,
@@ -323,17 +330,19 @@ pub struct MountedKernelMutationReceipt {
 
 impl MountedKernelMutationReceipt {
     pub fn frame_birth_bytes() -> usize { size_of::<Self>() }
-    pub fn new(source: &MountedKernelMutationReceiptSource<'_>, forward: Vec<u8>) -> Self { Self { identity: source.identity(), document: source.document, base_version: source.base_version, timestamp: source.timestamp, undo_policy: source.undo_policy, strings: std::array::from_fn(|_| MountedReceiptBytes::new()), forward: MountedReceiptBytes::from_original(forward), inverse: std::array::from_fn(|_| MountedReceiptBytes::new()), dependencies: std::array::from_fn(|_| ManuallyDrop::new(Vec::new())), dependency: Some(MountedReceiptBytes::new()), author: ManuallyDrop::new(None), phase: MountedKernelReceiptPhase::Strings, field: 0, segment: 0, offset: 0, dependency_index: 0, closing: false, transferred: false } }
+    pub fn new(source: &MountedKernelMutationReceiptSource<'_>, forward: Vec<u8>) -> Self { Self { identity: source.identity(), document: source.document, base_version: source.base_version, timestamp: source.timestamp, undo_policy: source.undo_policy, strings: std::array::from_fn(|_| MountedReceiptBytes::new()), forward: MountedReceiptBytes::from_original(forward), inverse: std::array::from_fn(|_| MountedReceiptPayload::new()), forward_payload:MountedReceiptPayload::new(), dependencies: std::array::from_fn(|_| ManuallyDrop::new(Vec::new())), dependency: Some(MountedReceiptBytes::new()), author: ManuallyDrop::new(None), phase: MountedKernelReceiptPhase::Strings, field: 0, segment: 0, offset: 0, dependency_index: 0, closing: false, transferred: false } }
     pub fn validate(&self, source: &MountedKernelMutationReceiptSource<'_>) -> Result<(), ValueError> { if self.closing || self.transferred || self.identity != source.identity() || self.document != source.document || self.base_version != source.base_version || self.timestamp != source.timestamp || self.undo_policy != source.undo_policy { Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted host receipt lost its exact original causal source")) } else { Ok(()) } }
-    fn active_bytes(&self) -> Option<&MountedReceiptBytes> { match self.phase { MountedKernelReceiptPhase::Strings => self.strings.get(self.field), MountedKernelReceiptPhase::Inverse => self.inverse.get(self.field), MountedKernelReceiptPhase::Dependencies => self.dependency.as_ref(), _ => None } }
-    fn additional(&self, source: &MountedKernelMutationReceiptSource<'_>) -> usize { match self.phase { MountedKernelReceiptPhase::Strings => (source.text_parts(self.field)[self.segment].len() - self.offset).min(64), MountedKernelReceiptPhase::Inverse => (source.inverse.len() - self.offset).min(64), MountedKernelReceiptPhase::Dependencies if self.dependency_index < source.dependencies.len() => (source.dependencies[self.dependency_index].0.len() - self.offset).min(64), _ => 0 } }
+    fn active_bytes(&self) -> Option<&MountedReceiptBytes> { match self.phase { MountedKernelReceiptPhase::Strings => self.strings.get(self.field), MountedKernelReceiptPhase::Dependencies => self.dependency.as_ref(), _ => None } }
+    fn additional(&self, source: &MountedKernelMutationReceiptSource<'_>) -> usize { match self.phase { MountedKernelReceiptPhase::Strings => (source.text_parts(self.field)[self.segment].len() - self.offset).min(64), MountedKernelReceiptPhase::Inverse => (source.inverse.len() - self.offset).min(64), MountedKernelReceiptPhase::Forward => (self.forward.as_slice().len()-self.offset).min(64), MountedKernelReceiptPhase::Dependencies if self.dependency_index < source.dependencies.len() => (source.dependencies[self.dependency_index].0.len() - self.offset).min(64), _ => 0 } }
     pub fn next_capacity_byte_demand(&self, source: &MountedKernelMutationReceiptSource<'_>) -> Result<usize, ValueError> {
         self.validate(source)?;
         if self.phase == MountedKernelReceiptPhase::Author { return Ok(SharedUtf8::admission_demand().capacity_bytes); }
+        if self.phase == MountedKernelReceiptPhase::Forward { return self.forward_payload.next_capacity_byte_demand(self.additional(source)); }
+        if self.phase == MountedKernelReceiptPhase::Inverse { return self.inverse[self.field].next_capacity_byte_demand(self.additional(source)); }
         if self.phase == MountedKernelReceiptPhase::DependencyBacking { return source.dependencies.len().checked_mul(size_of::<MutationId>()).filter(|bytes| *bytes <= MOUNTED_RECEIPT_MAXIMUM_BYTES).ok_or_else(|| ValueError::new(ValueRefusalKind::OwnershipLimit, "mounted causal dependency backing exceeds original admission")); }
         self.active_bytes().map_or(Ok(0), |bytes| bytes.next_capacity_byte_demand(self.additional(source)))
     }
-    pub fn next_release_byte_demand(&self) -> usize { self.active_bytes().map_or(0, MountedReceiptBytes::next_growth_release_byte_demand) }
+    pub fn next_release_byte_demand(&self) -> usize { if self.phase==MountedKernelReceiptPhase::ForwardRelease{self.forward.next_close_byte_demand()}else{self.active_bytes().map_or(0, MountedReceiptBytes::next_growth_release_byte_demand)} }
     pub fn is_complete(&self) -> bool { !self.closing && !self.transferred && self.phase == MountedKernelReceiptPhase::Complete }
     /// 🧬️ Copies every original host-visible causal field and all independent dependency owners before staging.
     pub fn advance(&mut self, source: &MountedKernelMutationReceiptSource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
@@ -345,7 +354,7 @@ impl MountedKernelMutationReceipt {
             if grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
             let bytes = self.strings[5].take(grant).ok_or_else(|| ValueError::new(ValueRefusalKind::InvariantViolated, "mounted receipt author text is not settled"))?;
             let (author, progress) = SharedUtf8::admit(unsafe { String::from_utf8_unchecked(bytes) }, grant).map_err(|(error, _)| error)?;
-            *self.author = Some(author); self.phase = MountedKernelReceiptPhase::Complete;
+            *self.author = Some(author); self.phase = MountedKernelReceiptPhase::Forward; self.offset=0;
             return Ok(RetainedCloneStep::Progress(progress));
         }
         if self.phase == MountedKernelReceiptPhase::DependencyBacking {
@@ -361,10 +370,12 @@ impl MountedKernelMutationReceipt {
             if self.field == 3 { self.phase = MountedKernelReceiptPhase::Author; } else { self.dependency = Some(MountedReceiptBytes::new()); }
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
+        if self.phase==MountedKernelReceiptPhase::ForwardRelease { let step=self.forward.close_step(grant); if self.forward.terminal_is_empty(){self.phase=MountedKernelReceiptPhase::Complete;}return Ok(step); }
         let additional = self.additional(source);
+        if self.phase==MountedKernelReceiptPhase::Inverse||self.phase==MountedKernelReceiptPhase::Forward { if additional>0 {let (input,owner)=if self.phase==MountedKernelReceiptPhase::Inverse{(source.inverse,&mut self.inverse[self.field])}else{(self.forward.as_slice(),&mut self.forward_payload)};if !owner.ready_for(additional){return owner.reserve_step(additional,grant)}let step=owner.append_step(&input[self.offset..self.offset+additional],grant)?;self.offset+=step.progress().copied_bytes;return Ok(step)} self.offset=0;if self.phase==MountedKernelReceiptPhase::Inverse{self.field+=1;if self.field==2{self.field=0;self.phase=MountedKernelReceiptPhase::DependencyBacking;}}else{self.phase=MountedKernelReceiptPhase::ForwardRelease;}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})); }
         if additional > 0 {
             let borrowed = match self.phase { MountedKernelReceiptPhase::Strings => source.text_parts(self.field)[self.segment].as_bytes(), MountedKernelReceiptPhase::Inverse => source.inverse, MountedKernelReceiptPhase::Dependencies => source.dependencies[self.dependency_index].0.as_bytes(), _ => unreachable!() };
-            let owner = match self.phase { MountedKernelReceiptPhase::Strings => &mut self.strings[self.field], MountedKernelReceiptPhase::Inverse => &mut self.inverse[self.field], MountedKernelReceiptPhase::Dependencies => self.dependency.as_mut().unwrap(), _ => unreachable!() };
+            let owner = match self.phase { MountedKernelReceiptPhase::Strings => &mut self.strings[self.field], MountedKernelReceiptPhase::Dependencies => self.dependency.as_mut().unwrap(), _ => unreachable!() };
             if !owner.ready_for(additional) { return owner.reserve_step(additional, grant); }
             let step = owner.append_step(&borrowed[self.offset..self.offset + additional], grant)?; self.offset += step.progress().copied_bytes;
             return Ok(step);
@@ -385,12 +396,14 @@ impl MountedKernelMutationReceipt {
         let author = self.author.take().expect("complete receipt owns its admitted author");
         let [inverse, undo_inverse] = std::array::from_fn(|index| self.inverse[index].take(grant).unwrap());
         let dependencies = std::mem::take(&mut *self.dependencies[0]); let inverse_dependencies = std::mem::take(&mut *self.dependencies[1]); let undo_dependencies = std::mem::take(&mut *self.dependencies[2]);
-        let forward = self.forward.take(grant).unwrap(); self.transferred = true;
+        let forward = self.forward_payload.take(grant).unwrap(); self.transferred = true;
         Some((KernelMutation { id: MutationId(id), document: self.document, base_version: self.base_version, invocation_id: InvocationId(invocation), diff: ArtifactDiff { schema: SchemaId(schema), payload: forward }, inverse: InverseMutation { target_mutation: MutationId(target), inverse_diff: ArtifactDiff { schema: SchemaId(inverse_schema), payload: inverse }, base_version: self.base_version, dependencies: inverse_dependencies, undo_policy: self.undo_policy }, dependencies, author: ActorId(author), timestamp: self.timestamp }, MutationId(undo_id), InverseMutation { target_mutation: MutationId(undo_target), inverse_diff: ArtifactDiff { schema: SchemaId(undo_schema), payload: undo_inverse }, base_version: self.base_version, dependencies: undo_dependencies, undo_policy: self.undo_policy }))
     }
     pub fn next_close_byte_demand(&self) -> usize {
         if !self.forward.terminal_is_empty() { return self.forward.next_close_byte_demand(); }
-        if let Some(bytes) = self.strings.iter().chain(self.inverse.iter()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.next_close_byte_demand(); }
+        if !self.forward_payload.terminal_is_empty(){return self.forward_payload.next_close_byte_demand()}
+        if let Some(payload)=self.inverse.iter().find(|p|!p.terminal_is_empty()){return payload.next_close_byte_demand()}
+        if let Some(bytes) = self.strings.iter().find(|bytes| !bytes.terminal_is_empty()) { return bytes.next_close_byte_demand(); }
         if let Some(bytes) = self.dependency.as_ref() { return bytes.next_close_byte_demand(); }
         if let Some(author) = self.author.as_ref() { return author.original_allocation_bytes(); }
         for dependencies in &self.dependencies { if let Some(id) = dependencies.last() { return id.0.capacity(); } if dependencies.capacity() > 0 { return dependencies.capacity() * size_of::<MutationId>(); } }
@@ -400,7 +413,9 @@ impl MountedKernelMutationReceipt {
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
         if !self.forward.terminal_is_empty() { return mounted_nested_retirement_demand(self.forward.retirement_demands()?, 1); }
-        if let Some(bytes) = self.strings.iter().chain(self.inverse.iter()).find(|bytes| !bytes.terminal_is_empty()) { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
+        if !self.forward_payload.terminal_is_empty(){return mounted_nested_retirement_demand(self.forward_payload.retirement_demands()?,1)}
+        if let Some(payload)=self.inverse.iter().find(|p|!p.terminal_is_empty()){return mounted_nested_retirement_demand(payload.retirement_demands()?,1)}
+        if let Some(bytes) = self.strings.iter().find(|bytes| !bytes.terminal_is_empty()) { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
         if let Some(bytes) = self.dependency.as_ref() { return mounted_nested_retirement_demand(bytes.retirement_demands()?, 1); }
         if self.author.is_some() { return mounted_nested_retirement_demand(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 1, ..Default::default() }, 1); }
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand(), depth: 2, ..Default::default() })
@@ -412,7 +427,9 @@ impl MountedKernelMutationReceipt {
         if !plugin_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
         self.closing = true;
         if !self.forward.terminal_is_empty() { return self.forward.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
-        if let Some(bytes) = self.strings.iter_mut().chain(self.inverse.iter_mut()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
+        if !self.forward_payload.terminal_is_empty(){return self.forward_payload.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})}
+        if let Some(payload)=self.inverse.iter_mut().find(|p|!p.terminal_is_empty()){return payload.close_step(RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant})}
+        if let Some(bytes) = self.strings.iter_mut().find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
         if let Some(bytes) = self.dependency.as_mut() { let step = bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if bytes.terminal_is_empty() { self.dependency = None; } return step; }
         if let Some(author) = self.author.take() {
             return match author.close_original_lease(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }) {
@@ -427,7 +444,7 @@ impl MountedKernelMutationReceipt {
         }
         RetainedCloneStep::Complete(Default::default())
     }
-    pub fn terminal_is_empty(&self) -> bool { self.forward.terminal_is_empty() && self.strings.iter().chain(self.inverse.iter()).all(MountedReceiptBytes::terminal_is_empty) && self.dependency.is_none() && self.author.is_none() && self.dependencies.iter().all(|dependencies| dependencies.is_empty() && dependencies.capacity() == 0) }
+    pub fn terminal_is_empty(&self) -> bool { self.forward.terminal_is_empty() && self.forward_payload.terminal_is_empty() && self.inverse.iter().all(MountedReceiptPayload::terminal_is_empty) && self.strings.iter().all(MountedReceiptBytes::terminal_is_empty) && self.dependency.is_none() && self.author.is_none() && self.dependencies.iter().all(|dependencies| dependencies.is_empty() && dependencies.capacity() == 0) }
 }
 
 impl Drop for MountedKernelMutationReceipt { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted host receipt retains every original causal field until funded transfer or close"); } }
@@ -461,3 +478,6 @@ impl MountedArtifactHandleIssuer {
     pub fn take(&mut self, grant: RetainedCloneGrant) -> Option<ArtifactHandle> { if !self.ready() || grant.maximum_items == 0 { return None; } self.closed = true; Some(ArtifactHandle((u128::from(self.first) << 64) | u128::from(self.second))) }
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep { if self.closed { return RetainedCloneStep::Complete(Default::default()); } if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); } self.identity = None; self.closed = true; RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }) }
 }
+
+#[cfg(test)]
+include!("🧪️tests/🦀️.rs");

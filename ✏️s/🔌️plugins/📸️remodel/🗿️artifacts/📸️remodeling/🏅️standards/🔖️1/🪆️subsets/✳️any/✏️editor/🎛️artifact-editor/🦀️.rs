@@ -151,9 +151,9 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// 🚀️ Boots on the registered boot example when its committed text parses, falling back to the
     /// artifact's own `default_remodeling_scene()` otherwise — the same shape `🧱️block`'s
     /// `default_block2d_snapshot()` uses, so an unparsable example degrades instead of panicking.
-    fn initial_snapshot() -> RemodelingSnapshot {
+    fn reference_birth()->Option<fn()->RemodelingSnapshot>{Some(||{
         semio_s_artifact_remodel_remodeling_editor_kit::editor::remodeling::examples::boot_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(remodeling_io())

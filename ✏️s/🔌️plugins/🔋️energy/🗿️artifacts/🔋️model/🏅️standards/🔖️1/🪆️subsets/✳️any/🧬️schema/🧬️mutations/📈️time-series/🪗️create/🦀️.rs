@@ -1,14 +1,14 @@
 //! 🪗️ Energy model mutation — `CreateTimeSeriesSchedule`: Defines one externally measured series, indexed by timestep rather than by calendar — the shape a metered profile or a co-simulation trace takes.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🪗️ `create-time-series-schedule` payload. Defines one externally measured series, indexed by timestep rather than by calendar — the shape a metered profile or a co-simulation trace takes.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeRowBirth, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native_birth(schema="🧬️schema/🔣️.json")]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-time-series-schedule")]
 pub struct CreateTimeSeriesSchedule {
@@ -22,40 +22,7 @@ pub struct CreateTimeSeriesSchedule {
 pub fn create_time_series_schedule<Op: From<CreateTimeSeriesSchedule>>(index: u32, id: crate::schedule::ScheduleId, values: Vec<f64>, timestep_seconds: u32) -> Op {
     CreateTimeSeriesSchedule { index, id, values, timestep_seconds }.into()
 }
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateTimeSeriesSchedule
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateTimeSeriesSchedule> + From<crate::DeleteTimeSeriesSchedule>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "time-series-schedule", kind: "create-time-series-schedule", record: "CreatedTimeSeriesSchedule" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Time Series Schedule {} at index {}", self.id.0, self.index), &format!("Zeitreihenzeitplan {} an Index {} erstellen", self.id.0, self.index))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreateTimeSeriesSchedule
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreateTimeSeriesSchedule> + From<crate::DeleteTimeSeriesSchedule>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]
+#[path="🧪️native/🦀️.rs"]mod native_tests;

@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_plant_loop_supply_temperature {
     #[path = "☕️change-supply-temperature/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "☕️change-supply-temperature/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "☕️change-supply-temperature/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "☕️change-supply-temperature/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod change_plant_loop_type {
     #[path = "♻️change-type/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "♻️change-type/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "♻️change-type/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "♻️change-type/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod create_plant_loop {
     #[path = "⚗️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⚗️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⚗️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⚗️create/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod remove_plant_loop_equipment {
     #[path = "⚙️remove-equipment/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⚙️remove-equipment/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⚙️remove-equipment/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⚙️remove-equipment/↩️inverse/🦀️.rs"]
@@ -62,6 +70,8 @@ pub mod delete_plant_loop {
     #[path = "💣️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "💣️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "💣️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "💣️delete/↩️inverse/🦀️.rs"]
@@ -73,6 +83,8 @@ pub mod rename_plant_loop {
     #[path = "📛️rename/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📛️rename/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📛️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📛️rename/↩️inverse/🦀️.rs"]
@@ -84,6 +96,8 @@ pub mod add_plant_loop_equipment {
     #[path = "🔩️add-equipment/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔩️add-equipment/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔩️add-equipment/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔩️add-equipment/↩️inverse/🦀️.rs"]
@@ -95,6 +109,8 @@ pub mod change_plant_loop_design_flow {
     #[path = "🚤️change-design-flow/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🚤️change-design-flow/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🚤️change-design-flow/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🚤️change-design-flow/↩️inverse/🦀️.rs"]
@@ -106,6 +122,8 @@ pub mod change_plant_loop_return_temperature {
     #[path = "🫖️change-return-temperature/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🫖️change-return-temperature/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🫖️change-return-temperature/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🫖️change-return-temperature/↩️inverse/🦀️.rs"]

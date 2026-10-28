@@ -219,9 +219,9 @@ impl ArtifactEditor for SemioAnimationEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_animation_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> SemioAnimationSnapshot {
+    fn reference_birth()->Option<fn()->SemioAnimationSnapshot>{Some(||{
         SemioAnimationSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

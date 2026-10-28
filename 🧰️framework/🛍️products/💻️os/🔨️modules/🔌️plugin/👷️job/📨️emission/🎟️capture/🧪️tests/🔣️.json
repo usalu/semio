@@ -1,0 +1,45 @@
+{
+  "contract": "semio.plugin.original-emission-capture.v1",
+  "wideTextBytes": 8197,
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    3,
+    4
+  ],
+  "denials": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "movesOriginalMetadata": true,
+  "movesOriginalEmission": true,
+  "retainsOriginalCaller": true,
+  "receipt": {
+    "operationId": "18446744073709551615",
+    "generation": "18446744073709551615",
+    "invocationId": "operation:18446744073709551615:18446744073709551615",
+    "mutations": 0,
+    "inverseMutations": 0
+  },
+  "mountedHeader": {
+    "copyPolicyBytes": 32768,
+    "privateFreshBox": true,
+    "sameBackingThroughClose": true
+  },
+  "producer": {
+    "cancelAfter": [
+      0,
+      1,
+      2,
+      3,
+      8,
+      128
+    ],
+    "wideRepeat": 8197,
+    "verbText": "α🙂",
+    "sameMetadataBacking": true,
+    "maximumCopiedTextBytes": 64
+  }
+}

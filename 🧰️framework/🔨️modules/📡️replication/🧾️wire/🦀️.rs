@@ -245,7 +245,7 @@ pub fn write_varint_u64(out: &mut Vec<u8>, value: u64) {
     semio_framework_replication_codec::write_varint_u64(out, value);
 }
 
-pub fn read_varint_u64(bytes: &[u8], pos: &mut usize) -> Result<u64, ProtocolError> {
+pub fn read_varint_u64(bytes: &(impl semio_framework_value::ByteReadSource+?Sized), pos: &mut usize) -> Result<u64, ProtocolError> {
     Ok(semio_framework_replication_codec::read_varint_u64(bytes, pos)?)
 }
 
@@ -274,9 +274,8 @@ pub fn read_str(bytes: &[u8], pos: &mut usize) -> Result<String, ProtocolError> 
 }
 
 /// 📦️ `varint len + raw bytes`.
-pub fn write_bytes(out: &mut Vec<u8>, b: &[u8]) {
-    write_varint_u64(out, b.len() as u64);
-    out.extend_from_slice(b);
+pub fn write_bytes(out:&mut Vec<u8>,source:&(impl semio_framework_value::ByteReadSource+?Sized)){
+    write_varint_u64(out,source.byte_len()as u64);let mut at=0;let mut buffer=[0;256];while at<source.byte_len(){let count=source.read_bytes(at,&mut buffer);assert!(count>0&&count<=source.byte_len()-at,"original byte source truncated its declared length");out.extend_from_slice(&buffer[..count]);at+=count;}
 }
 
 pub fn read_bytes(bytes: &[u8], pos: &mut usize) -> Result<Vec<u8>, ProtocolError> {

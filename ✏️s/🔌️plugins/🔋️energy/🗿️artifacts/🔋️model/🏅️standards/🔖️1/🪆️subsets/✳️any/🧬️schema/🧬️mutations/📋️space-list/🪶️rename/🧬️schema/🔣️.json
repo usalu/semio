@@ -46,6 +46,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateSpaceList",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "space_lists",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename space list",
+      "de": "Raumliste umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "space-list",
+      "kind": "rename-space-list",
+      "record": "RenamedSpaceList"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A space list name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another space list already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed space list does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The space list already has this name."
       }
     }
   }

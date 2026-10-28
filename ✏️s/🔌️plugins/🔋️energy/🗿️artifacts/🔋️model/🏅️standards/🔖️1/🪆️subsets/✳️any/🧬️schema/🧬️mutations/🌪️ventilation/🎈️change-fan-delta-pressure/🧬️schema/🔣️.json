@@ -51,5 +51,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateMechanicalVentilation",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "mechanical_ventilations",
+    "field": "fan_delta_pressure_pa",
+    "input": "new_fan_delta_pressure_pa",
+    "key": "id",
+    "labels": {
+      "en": "Change mechanical ventilation: Fan pressure rise",
+      "de": "Ventilatordruckerhöhung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "mechanical-ventilation",
+      "kind": "change-mechanical-ventilation-fan-delta-pressure",
+      "record": "ChangedMechanicalVentilationFanDeltaPressure"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Fan pressure rise violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed mechanical ventilation does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The mechanical ventilation already carries this fan pressure rise value."
+      }
+    }
   }
 }

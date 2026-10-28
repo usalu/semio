@@ -1,0 +1,1 @@
+{"lanes":["presence","transient"],"initialState":{},"readyPhase":4,"cancelAfter":[0,1,2,4,8,16,64,128],"turn":{"items":1,"copyBytes":4096,"capacityBytes":4096,"releaseBytes":1048576,"depth":4096},"handoffPreservesPointer":true}

@@ -5,7 +5,7 @@ mod expression;
 pub use expression::{BorrowedExpressionSource,BorrowedExpressionView,RetainedExpressionCursor,RetainedExpressionStep};
 
 /// 🔎️ One immutable authored field at an ordinal path, without constructing a source mirror.
-pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value_paged_text::paged_text::TextReadView<'a>),Bytes(&'a [u8]),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),Expr(&'a dyn BorrowedExpressionSource),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value_paged_text::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicArray(usize),IntrinsicObject(usize)}
+pub enum FieldProjectionView<'a>{Absent,Bool(bool),Int(i64),UInt(u64),Float(f64),Enum(u32),Text(&'a str),TextSource(semio_framework_value_paged_text::paged_text::TextReadView<'a>),Bytes(&'a [u8]),BytesSource(&'a dyn semio_framework_value::paged::ByteReadSource),Record(&'static [u16]),List(usize),Tuple(usize),Map(usize),Block,Statements(usize),Wire(Option<bool>),Expr(&'a dyn BorrowedExpressionSource),IntrinsicNull,IntrinsicBool(bool),IntrinsicNumber(semio_framework_value::Number),IntrinsicText(&'a str),IntrinsicTextSource(semio_framework_value_paged_text::paged_text::TextReadView<'a>),IntrinsicBytes(&'a [u8]),IntrinsicBytesSource(&'a dyn semio_framework_value::paged::ByteReadSource),IntrinsicArray(usize),IntrinsicObject(usize)}
 
 /// 🌱️ The retained operation keeps this source immutable until projection and publication finish.
 pub trait FieldProjectionSource{
@@ -23,7 +23,10 @@ impl<T:DslField> FieldProjectionSource for T{
 }
 
 /// 🧭️ Refuses a path outside the same retained source owner.
-pub fn projection_path_error()->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained field projection source path changed")}
+pub fn projection_path_error()->ValueError{ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"retained field projection source path changed")}
+
+#[path="🛬️receiving/🦀️.rs"]
+mod receiving;
 
 struct FieldProjectionFrame{value:FieldValue,kind:u8,length:usize,next:usize,position:usize,ids:&'static [u16],key:Option<String>,key_length:usize}
 impl semio_framework_value::retirement::RetireOwned for FieldProjectionFrame{
@@ -57,7 +60,7 @@ impl RetainedFieldProjection{
                 if depth>=65{return Err(ValueError::new(K::DepthLimit,"retained source demand exceeds depth limit"))}
                 let mut frame=FieldProjectionMeasureFrame::default();
                 let (count,width)=match source.projection_view(&self.measure_path[..depth])?{
-                    V::Text(text)|V::IntrinsicText(text)=>(text.len(),1),V::TextSource(text)|V::IntrinsicTextSource(text)=>(text.len(),1),V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>(bytes.len(),1),
+                    V::Text(text)|V::IntrinsicText(text)=>(text.len(),1),V::TextSource(text)|V::IntrinsicTextSource(text)=>(text.len(),1),V::Bytes(bytes)|V::IntrinsicBytes(bytes)=>(bytes.len(),1),V::BytesSource(bytes)|V::IntrinsicBytesSource(bytes)=>(bytes.byte_len(),1),
                     V::Record(ids)=>{if ids.len()>256{return Err(ValueError::new(K::OwnershipLimit,"retained record exceeds declared field capacity"))}frame.kind=3;frame.length=ids.len();(ids.len(),size_of::<(u16,FieldValue)>())},
                     V::List(length)|V::Tuple(length)=>{frame.kind=4;frame.length=length;(length,size_of::<FieldValue>())},
                     V::Map(length)=>{frame.kind=7;frame.length=length;(length,size_of::<(String,FieldValue)>())},
@@ -89,10 +92,10 @@ impl RetainedFieldProjection{
         use FieldProjectionView as V;
         let mut frame=FieldProjectionFrame{value:FieldValue::Absent,kind:0,length:0,next:0,position:0,ids:&[],key:None,key_length:0};
         frame.value=match view{
-            V::TextSource(_)|V::IntrinsicTextSource(_)|V::Expr(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native semantic source requires its direct retained encoding route")),
+            V::TextSource(_)|V::IntrinsicTextSource(_)|V::BytesSource(_)|V::IntrinsicBytesSource(_)|V::Expr(_)=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native semantic source requires its direct retained encoding route")),
             V::Absent=>FieldValue::Absent,V::Bool(value)=>FieldValue::Bool(value),V::Int(value)=>FieldValue::Int(value),V::UInt(value)=>FieldValue::UInt(value),V::Float(value)=>FieldValue::Float(value),V::Enum(value)=>FieldValue::Enum(value),
             V::Text(text)=>{control.charge(text.len())?;let mut value=String::new();value.try_reserve_exact(text.len()).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"retained field text allocation failed"))?;frame.kind=1;frame.length=text.len();FieldValue::Text(value)},
-            V::Bytes(bytes)=>{frame.kind=2;frame.length=bytes.len();FieldValue::Bytes64(control.allocate_vec(bytes.len())?)},
+            V::Bytes(bytes)=>{frame.kind=2;frame.length=bytes.len();FieldValue::Bytes64(super::RecordBytes::default())},
             V::Record(ids)=>{if ids.len()>256{return Err(ValueError::new(semio_framework_value::ValueRefusalKind::OwnershipLimit,"retained record exceeds declared field capacity"))}frame.kind=3;frame.length=ids.len();frame.ids=ids;FieldValue::Record(RecordValue{fields:RecordFields::from_empty_slots(control.allocate_vec(ids.len())?)})},
             V::List(length)=>{frame.kind=4;frame.length=length;FieldValue::List(control.allocate_vec(length)?)},
             V::Tuple(length)=>{frame.kind=5;frame.length=length;FieldValue::Tuple(control.allocate_vec(length)?)},
@@ -121,7 +124,7 @@ impl RetainedFieldProjection{
                 if matches!(frame.kind,1|8)&&frame.position<frame.length{
                     let text=match source.projection_view(&self.path)?{FieldProjectionView::Text(value)|FieldProjectionView::IntrinsicText(value)=>value,_=>return Err(projection_path_error())};if text.len()!=frame.length||!text.is_char_boundary(frame.position){return Err(projection_path_error())}let character=text[frame.position..].chars().next().ok_or_else(projection_path_error)?;let value=match &mut frame.value{FieldValue::Text(value)|FieldValue::Value(super::DslValue::String(value))=>value,_=>return Err(projection_path_error())};value.push(character);frame.position+=character.len_utf8();
                 }else if matches!(frame.kind,2|9)&&frame.position<frame.length{
-                    let bytes=match source.projection_view(&self.path)?{FieldProjectionView::Bytes(value)|FieldProjectionView::IntrinsicBytes(value)=>value,_=>return Err(projection_path_error())};if bytes.len()!=frame.length{return Err(projection_path_error())}let value=match &mut frame.value{FieldValue::Bytes64(value)|FieldValue::Value(super::DslValue::Bytes(value))=>value,_=>return Err(projection_path_error())};value.push(bytes[frame.position]);frame.position+=1;
+                    let bytes=match source.projection_view(&self.path)?{FieldProjectionView::Bytes(value)|FieldProjectionView::IntrinsicBytes(value)=>value,_=>return Err(projection_path_error())};if bytes.len()!=frame.length{return Err(projection_path_error())}match &mut frame.value{FieldValue::Bytes64(value)=>{if !value.reserve_encoded_backing(control)?{value.push_reserved_byte(bytes[frame.position])?;frame.position+=1;}},FieldValue::Value(super::DslValue::Bytes(value))=>{value.push(bytes[frame.position]);frame.position+=1;},_=>return Err(projection_path_error())};
                 }else if matches!(frame.kind,7|11|13)&&frame.next<frame.length{
                     let text=source.projection_key(&self.path,frame.next)?;
                     if frame.key.is_none(){control.charge(text.len())?;let mut key=String::new();key.try_reserve_exact(text.len()).map_err(|_|ValueError::new(semio_framework_value::ValueRefusalKind::AllocationFailed,"retained field key allocation failed"))?;frame.key=Some(key);frame.key_length=text.len();frame.position=0;}

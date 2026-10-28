@@ -431,6 +431,8 @@ macro_rules! recursive_fixture_snapshot {
             }
         }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 
@@ -475,9 +477,9 @@ impl ArtifactApp for SingleDocumentApp {
     type TransientMutation = PublicationTransientMutation;
     type Command = TestCommand;
 
-    async fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         TestSnapshot { count: 0, label: "initial".into(), slot: Vec::new() }
-    }
+    })}
 
     async fn handle(
         _command: &Self::Command,

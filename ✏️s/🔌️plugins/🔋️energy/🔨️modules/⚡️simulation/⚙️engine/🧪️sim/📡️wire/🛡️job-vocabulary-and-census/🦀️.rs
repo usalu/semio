@@ -55,6 +55,8 @@ pub struct EnergyJobPreview {
 /// retained preview packet. `timestep` counts completed run timesteps, `warmup_hour` the warmup cursor.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct EnergyJobCursor {
+    pub input_identity_bytes: usize,
+    pub input_identity_ready: bool,
     pub stage: EnergyJobStage,
     pub tier: EnergyQualityTier,
     pub warmup_hour: u32,
@@ -193,17 +195,20 @@ impl Default for EnergyNumericalBounds {
 
 impl EnergyNumericalCensus {
     pub fn observe(model: &Model, config: &SimulationConfig) -> Option<Self> {
+        Self::from_observations(model,config,checked_sum(model.plant_loops.iter().map(|plant|plant.equipment_ids.capacity()))?,observed_identifier_bytes(model,config)?,observed_model_bytes(model,config)?)
+    }
+
+    /// 🧮️ Combines original scalar headers with the completed incremental metadata census.
+    pub fn from_observations(model:&Model,config:&SimulationConfig,plant_equipment:usize,identifier_bytes:usize,model_bytes:usize)->Option<Self>{
         let timesteps = SimulationKernel::run_period(config).total_hours() as usize;
         let weather_records = observed_weather_records(config);
         let airflow_nodes = model.airflow_network.as_ref().map_or(0, |network| network.zone_node_ids.capacity().saturating_add(1));
         let airflow_links = model.airflow_network.as_ref().map_or(0, |network| network.link_ids.capacity());
-        let plant_equipment = checked_sum(model.plant_loops.iter().map(|plant| plant.equipment_ids.capacity()))?;
         let meters = model.zones.capacity().checked_mul(3)?.checked_add(2)?;
-        let series = model.zones.capacity();
+        let series = model.zones.capacity().checked_mul(3)?;
         let samples = timesteps.checked_mul(series)?;
-        let history_values = samples;
+        let history_values = timesteps.checked_mul(model.zones.capacity())?;
         let summary_rows = 7usize;
-        let identifier_bytes = observed_identifier_bytes(model, config)?;
         let dimensions = [
             model.zones.capacity(),
             model.surfaces.capacity(),
@@ -237,7 +242,7 @@ impl EnergyNumericalCensus {
             identifier_bytes,
         ];
         let observed_items = checked_sum(dimensions)?;
-        let observed_bytes = observed_model_bytes(model, config)?.checked_add(weather_records.checked_mul(size_of::<Option<(usize, WeatherRecord)>>())?)?.checked_add(samples.checked_mul(size_of::<f64>() * 3)?)?.checked_add(identifier_bytes)?;
+        let observed_bytes = model_bytes.checked_add(samples.checked_mul(size_of::<f64>() * 2)?.checked_add(history_values.checked_mul(size_of::<f64>())?)?)?.checked_add(identifier_bytes)?;
         let pages = observed_bytes.checked_add(16_383)?.checked_div(16_384)?;
         Some(Self {
             zones: model.zones.capacity(),

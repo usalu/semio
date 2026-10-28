@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 artifact-app-testing = ["semio-framework-job/testkit"]
 
 [dependencies]
+replication = { package = "semio-framework-replication", path = "../../../../../../../🔨️modules/📡️replication/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }
 semio-framework-plugin-window-transient = { path = "../../../🪟️window/📦️packages/🦀️rust" }

@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `RenameModel` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch};
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RenameModel, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -10,7 +10,7 @@ pub fn diff(payload: &super::RenameModel, base: &EnergyModelSnapshot) -> protoco
         return protocol::MutationOutcome::fatal("mutation.invariant", "An energy model name must not be blank.", [payload.new_name.clone()]);
     }
     if base.model.name == payload.new_name {
-        return protocol::MutationOutcome::empty().warning("mutation.no-op", format!("The energy model is already named \"{}\".", payload.new_name));
+        return protocol::MutationOutcome::empty().warning("mutation.no-op", "The energy model already has this name.");
     }
     protocol::MutationOutcome::new(EnergyModelDiff::of(ModelPatch { name: Some(payload.new_name.clone()), ..Default::default() }))
 }

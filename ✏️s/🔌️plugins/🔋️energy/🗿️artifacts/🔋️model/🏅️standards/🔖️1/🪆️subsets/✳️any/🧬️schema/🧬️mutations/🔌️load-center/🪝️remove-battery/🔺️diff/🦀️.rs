@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `RemoveElectricalLoadCenterBattery` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ElectricalLoadCenterPatch, ModelPatch};
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ElectricalLoadCenterPatch, ModelPatch};
 use crate::diff_patch::{ListEdit, Rows};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::RemoveElectricalLoadCenterBattery, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

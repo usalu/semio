@@ -20,7 +20,11 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+original-wire-testing = ["dep:semio-framework-trace", "semio-framework-job/testkit"]
+
 [dependencies]
+semio-framework-trace = { workspace = true, optional = true }
 semio-framework-manifest-actions = { path = "../../../🛂️manifest/🕹️actions/📦️packages/🦀️rust" }
 semio-framework-manifest-app-surface = { path = "../../../🛂️manifest/🧱️app-surface/📦️packages/🦀️rust" }
 semio-framework-job = { path = "../../../🧵️job/📦️packages/🦀️rust", package = "semio-framework-job" }

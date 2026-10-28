@@ -118,12 +118,6 @@ pub enum ArtifactStoreVcsRetirementPhase {
 
 /// 🎫️ Prices a current original typed owner before its controlled child frame is born.
 
-/// 📋️ Admits the complete original derived snapshot and registry under unchanged caller authority.
-pub fn admit_original_snapshot_alias<P,Mu>(original:&mut Option<ArtifactDerivedSnapshot<P>>,snapshots:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,mutations:&Arc<dyn ArtifactOwnedValueRetirementFactory<Mu>>,grant:RetainedCloneGrant)->Result<Option<(Box<dyn ErasedSnapshotRetirement>,RetainedCloneProgress)>,ValueError>
-where P:Send+Sync+'static,Mu:Mutation<P>+Send+'static {
-    history_read_admission::admit_history_read_retirement(original,snapshots,mutations,grant,|owner,original|*owner.derived=Some(original))
-}
-
 pub struct ArtifactStoreHistoryLedgerRetirement<T> {
     pub ledger: std::mem::ManuallyDrop<Option<ArtifactHistoryLedger<T>>>,
     pub active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
@@ -140,6 +134,7 @@ impl<T: Send + 'static> ArtifactStoreHistoryLedgerRetirement<T> {
     pub fn demands(&self, copy: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if let Some(closing) = self.closing_factory.as_ref() { return closing.demands(copy); }
         if let Some(active) = self.active.as_ref() { return artifact_retirement_box_demands(active, copy); }
+        if let Some(owner)=self.closing_factory.as_ref(){if owner.terminal_is_empty(){return Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::FactoryAuthority>>(),depth:1,..Default::default()});}let mut demand=owner.demands(copy)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history factory authority depth overflow"))?;return Ok(demand);}
         if self.visibility.is_some() { return retirement_owner_demands(&self.visibility, copy); }
         if let Some(ledger) = self.ledger.as_ref() {
                         if let Some(key)=ledger.next_retained_read_key(){let overhead=size_of::<semio_framework_value::FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>();let mut demand=ledger.retained_read_return_demands(key,copy.saturating_sub(overhead))?;demand.copy_bytes=demand.copy_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"history read return metadata extent overflow"))?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"history read return owner depth overflow"))?;return Ok(demand);}
@@ -172,6 +167,7 @@ impl<T: Send + 'static> ErasedSnapshotRetirement for ArtifactStoreHistoryLedgerR
             return Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) });
         }
         if self.active.is_some() { return artifact_retirement_box_close_step(&mut self.active, grant); }
+        if let Some(owner)=self.closing_factory.as_mut(){if owner.terminal_is_empty(){self.closing_factory.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..empty}));}let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=owner.step(child)?;let step=semio_framework_value::retained_clone::admit_retained_clone_close(child,step,owner.terminal_is_empty(),"history ledger factory authority")?;return Ok(RetainedCloneStep::Progress(step.progress()));}
         if self.visibility.is_some() { return retirement_owner_close(&mut self.visibility, grant).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if let Some(ledger) = self.ledger.as_mut() {
                         if let Some(key)=ledger.next_retained_read_key(){let overhead=size_of::<semio_framework_value::FactoryAuthority>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<T>>>();let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,maximum_depth:grant.maximum_depth-1,..grant};let mut returned=None;let step=match ledger.return_retained_read(key,&mut returned,child){Ok(step)=>step,Err(error)if error.kind==semio_framework_value::ValueRefusalKind::WorkLimit=>return Ok(RetainedCloneStep::Progress(empty)),Err(error)=>return Err(error)};let mut progress=step.progress();if progress==empty{return Ok(RetainedCloneStep::Progress(empty));}if let Some(factory)=returned{let factory:Arc<dyn semio_framework_value::FactoryRetirement>=factory;*self.closing_factory=Some(semio_framework_value::FactoryAuthority::new(factory));}progress.copied_items=1;progress.copied_bytes=progress.copied_bytes.checked_add(overhead).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"history original read return receipt overflow"))?;admit_retained_clone_progress(grant,progress,"history original read source return")?;return Ok(RetainedCloneStep::Progress(progress));}

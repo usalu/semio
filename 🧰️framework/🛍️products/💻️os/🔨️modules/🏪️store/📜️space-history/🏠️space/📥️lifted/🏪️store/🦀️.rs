@@ -1,4 +1,5 @@
 //! 📥️ Items of `store` that belong to `os-store-space` (PLAN-OS-KERNEL-CRATES.md, Appendix C): lifted out of `🏪️store/🦀️.rs`.
+use semio_framework_os_store_space_member::lifted_store::ReferenceSpaceMember;
 use semio_framework_os_store_text_io::ArtifactStoreSnapshot as _;
 use semio_framework_os_vcs::io::binary::genesis::{AdmittedArtifactGenesis, ArtifactGenesisProducer};
 use semio_framework_value::FromValue;
@@ -65,8 +66,8 @@ impl MemberDirectory for SpaceHost {
 /// program drops): the registry's kind-keying now lives in the generated enum's own `match kind`.
 pub async fn create_member_store<P, Mutation, G, C>(schema: &str, id: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, initial_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + FromValue + ToValue + Send + Sync + 'static,
+    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {
@@ -90,8 +91,8 @@ where
 /// without consulting the parent.
 pub async fn open_member_store<P, Mutation, G, C>(schema: &str, expected: &semio_framework_artifact_reference::ArtifactRef, owner: Option<&OwnerRef>, envelope_pack: &[u8], actor: ActorId, producer:&G,catalog:&C) -> Result<ArtifactStore<P, Mutation>, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: Clone + FromValue + ToValue + Send + Sync + 'static,
+    Mutation: Clone + semio_framework_os_spr::ColdMutation<P> + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
     G: ArtifactGenesisProducer<P> + ArtifactStorePublication<P> + Sync,
     C:MemberStoreProducer<P,Mutation>,
 {

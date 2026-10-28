@@ -1,0 +1,1 @@
+{"version":1,"cases":[[7,0,18446744073709551615],[],[1]],"cancelPrefixes":[0,1,2,3,8,21,55],"deniedCurrencies":["items","copy","capacity","release","depth"],"bodyBytes":4096,"maximumTurns":100000}

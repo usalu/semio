@@ -410,20 +410,9 @@ fn partial_capture_closes_one_nested_character_or_item_per_grant() {
     let mut capture = ModelCapture::new();
     capture.model.name = "Gebäude".into();
     capture.model.zones.push(crate::model::Zone { id: crate::model::EntityId(1), name: "Raum".into(), volume_m3: 1.0, multiplier: 1, conditioned: true, part_of_total_floor_area: true });
-    let mut close = EnergyModelCloseCursor::new(capture.finish());
-    let mut turns = 0;
-    while !close.terminal_is_empty() {
-        match close.close_step(RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: 4, maximum_depth: 1 }) {
-            InteractiveJobCloseStep::Pending { progress } => {
-                assert!(progress.copied_items <= 1);
-                assert!(progress.released_bytes <= 4);
-            }
-            InteractiveJobCloseStep::Complete { .. } => {}
-            InteractiveJobCloseStep::Blocked => panic!("owned partial model cannot block"),
-        }
-        turns += 1;
-        assert!(turns < 64);
-    }
+    let mut close=semio_framework_value::retirement::controlled::ControlledRetirement::new(capture.finish()).unwrap_or_else(|_|panic!("captured Energy model supports original retirement"));
+    for index in 0..10000{if close.terminal_is_empty(){return}let d=close.selected_demand(4096).unwrap();let g=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth};let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||close.step(g).unwrap());assert!(step.progress().fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(step.progress().retained_capacity_bytes,step.progress().released_bytes));assert!(index<9999);}
+
 }
 //#endregion 🧮️Capture
 
@@ -495,7 +484,7 @@ fn a_tick_carrying_two_thousand_surfaces_stays_far_inside_the_tick_byte_ceiling(
 #[test]
 fn input_identity_progress_matches_neutral_bytes_unknown_total_and_original_counter(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/⚡️simulation/⚙️engine/🧪️sim/🪪️input-identity/🧪️tests/🧫️fixtures/🔣️.json")).unwrap();let mut cursor=EnergyRunCursor::new();let mut writer=ToolRunTickWriter::new(identity());
- for row in fixture["progress"]["samples"].as_array().unwrap(){let live=EnergyJobCursor{input_identity_bytes:row[0].as_u64().unwrap()as usize,input_identity_ready:row[1].as_bool().unwrap(),stage:EnergyJobStage::Validate,tier:EnergyQualityTier::SteadyStateEstimate,warmup_hour:0,warmup_hours:0,timestep:0,total_timesteps:0,facility_electricity_kwh:0.0};let(activity,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.observe(live,&mut writer));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(activity,row[2].as_bool().unwrap());let progress=cursor.progress(identity(),ToolRunState::Running,EnergySimulationRunStage::Prepare);assert_eq!(progress.completed,0);assert!(progress.total.is_none());assert_eq!(progress.counters.len(),5);assert_eq!(progress.counters[4].counter,EnergySimulationRunCounter::InputIdentityBytes.index());assert_eq!(progress.counters[4].value,row[0].as_u64().unwrap());}
+ for row in fixture["progress"]["samples"].as_array().unwrap(){let live=EnergyJobCursor{input_identity_bytes:row[0].as_u64().unwrap()as usize,input_identity_ready:row[1].as_bool().unwrap(),stage:EnergyJobStage::Validate,tier:EnergyQualityTier::SteadyStateEstimate,warmup_hour:0,warmup_hours:0,timestep:0,total_timesteps:0,facility_electricity_kwh:0.0};let(activity,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.observe(live,&mut writer));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(activity,row[2].as_bool().unwrap());let progress=cursor.progress(identity(),ToolRunState::Running,EnergySimulationRunStage::Prepare);assert_eq!(progress.completed,0);assert!(progress.total.is_none());assert_eq!(progress.counters.len(),9);assert_eq!(progress.counters[4].counter,EnergySimulationRunCounter::InputIdentityBytes.index());assert_eq!(progress.counters[4].value,row[0].as_u64().unwrap());}
  let mut owner=ControlledRetirement::new(writer).unwrap_or_else(|_|panic!("original progress writer close"));while !owner.terminal_is_empty(){let demand=RetirementDemand{copy_bytes:owner.next_copy_byte_demand().unwrap(),capacity_bytes:owner.next_capacity_byte_demand(4096).unwrap(),release_bytes:owner.next_release_byte_demand().unwrap(),depth:owner.next_depth_demand().unwrap()};owner.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:demand.copy_bytes,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth}).unwrap();}
  eprintln!("[DEBUG] Energy input bytes8 neutral monotone progress events unknown total original fifth counter heap0");
 }
@@ -525,4 +514,40 @@ fn original_session_child_loans_match_neutral_source_without_duplicate_receipts(
     }
     caller.retire(source_stock());
     eprintln!("[DEBUG] actual Energy nested original source loans3 preserve same source, finite fuel and zero duplicated retained receipts");
+}
+
+/// 🧮️ Actual retained meter values agree before and after the original final Results transfer.
+#[test]
+fn live_and_final_progress_publish_actual_heating_and_cooling_meters(){
+ let(snapshot,template)=scenario();
+ let mut run=RunFixture::new(identity(),snapshot,template);
+ let mut live=false;
+ let mut final_result=false;
+ for turn in 0..10_000_000{
+  let result=step_once(&mut run,semio_framework_job::INTERACTIVE_LANE_FUEL,u64::MAX);
+  match result{
+   Stepped::Tick(bytes)=>{
+    let tick=ToolRunTick::decode(&bytes).unwrap();
+    if let Some(progress)=tick.progress{
+     if let Some(numerical)=run.numerical.as_ref(){
+      let meters=numerical.live_meters();
+      for(counter,end_use)in [(EnergySimulationRunCounter::HeatingWh,semio_s_plugin_energy_engine_meters::EndUse::Heating),(EnergySimulationRunCounter::CoolingWh,semio_s_plugin_energy_engine_meters::EndUse::Cooling)]{
+       let joules:f64=meters.meters.values().filter(|meter|meter.end_use==end_use).map(|meter|meter.energy_j).sum();
+       let value=progress.counters.iter().find(|entry|entry.counter==counter.index()).expect("actual meter counter").value;
+       assert_eq!(value,(joules/3600.0).round().max(0.0)as u64);
+       if value>0&&progress.state==ToolRunState::Running{live=true;}
+       if value>0&&progress.state==ToolRunState::Complete{final_result=true;}
+      }
+     }
+    }
+   }
+   Stepped::Complete=>break,
+   Stepped::Yield=>{},
+   other=>panic!("meter run settled unexpectedly: {other:?}"),
+  }
+  assert!(turn<9_999_999,"meter run must settle");
+ }
+ assert!(live,"real meter progress is observable during the numerical run");
+ assert!(final_result,"real meter progress survives the original Results move");
+ close(&mut run);
 }

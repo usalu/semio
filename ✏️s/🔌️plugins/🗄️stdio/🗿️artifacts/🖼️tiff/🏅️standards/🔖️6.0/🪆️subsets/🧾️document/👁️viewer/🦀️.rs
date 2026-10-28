@@ -60,9 +60,9 @@ impl ArtifactViewer for TiffAnyViewer {
     const DIALECT: Dialect = TIFF_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TIFF_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v6_0::subsets::document::schema::blank_tiff_snapshot()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

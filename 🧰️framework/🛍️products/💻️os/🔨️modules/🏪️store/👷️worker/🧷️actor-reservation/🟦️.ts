@@ -1,3 +1,5 @@
+import { ReservationLinkedReads } from "./🔗️linked-read/🟦️.ts";
+import { ReservationSnapshotReads } from "./📖️snapshot-read/🎭️actor/🟦️.ts";
 import { ReservationPollLanes } from "./🛤️poll-lanes/🟦️.ts";
 import { ReservationTurnEffects } from "./📤️turn-effects/🟦️.ts";
 import { ReservationUiPatches } from "./🩹️ui-patch-reconciliation/🟦️.ts";
@@ -32,6 +34,8 @@ export class ReservationHubWiring implements ReservationHub {
   readonly surfaces: ReservationSurfaceRendering;
   readonly actions: ReservationActionDispatch;
   readonly link: ReservationLinkSuspension;
+  readonly snapshots: ReservationSnapshotReads;
+  readonly links: ReservationLinkedReads;
   constructor(readonly shell: DocumentBrowserActorReservation, readonly session: ReservationSession) {
     this.lanes = new ReservationPollLanes(this);
     this.effects = new ReservationTurnEffects(this);
@@ -43,6 +47,8 @@ export class ReservationHubWiring implements ReservationHub {
     this.surfaces = new ReservationSurfaceRendering(this);
     this.actions = new ReservationActionDispatch(this);
     this.link = new ReservationLinkSuspension(this);
+    this.snapshots = new ReservationSnapshotReads(this);
+    this.links = new ReservationLinkedReads(this);
   }
 }
 
@@ -89,5 +95,7 @@ export class DocumentBrowserActorReservation {
   suspendLink(): boolean { return this.hub.link.suspendLink(); }
   adoptGrant(grant: DocumentBrowserActorGrant): void { return this.hub.link.adoptGrant(grant); }
   resumeLink(socket: WebSocket): boolean { return this.hub.link.resumeLink(socket); }
+  readSnapshotHead(control: import("./📖️snapshot-read/🟦️.ts").SnapshotPackControl): Promise<Uint8Array> { return this.hub.snapshots.readHead(control); }
+  readSnapshotCheckpoint(id:string,control:import("./📖️snapshot-read/🟦️.ts").SnapshotPackControl):Promise<Uint8Array>{return this.hub.snapshots.readSelection(control,id); }
   close(): void { return this.hub.retirement.close(); }
 }

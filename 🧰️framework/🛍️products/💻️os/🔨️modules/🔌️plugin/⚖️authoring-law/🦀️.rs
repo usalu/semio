@@ -44,7 +44,7 @@ where
 pub async fn author_through_document_store<A: ArtifactApp>(mutation: A::Mutation, mut observe: impl FnMut(StoreAuthoringPhase, &A::Snapshot)) -> StoreAuthoringLaw {
     let demand = A::document_store_owners_source_demands().expect("the app quotes its document catalog");
     let owners = store::os_store::document_store_owners::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1) }, |grant| A::build_document_store_owners(grant).expect("the app supplies a document catalog"));
-    let envelope = store::os_store::document_materialize::create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, "authoring-law-document", A::initial_snapshot().await, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, "authoring-law-document", A::reference_birth().expect("explicit reference snapshot producer")(), None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
     let mut document = Box::pin(ArtifactStore::new::<::semio_framework_os_kernel::os_store::ArtifactSnapshotPublication>(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("the law document store");
     document.install_operation_wire(store::ArtifactOperationWire::semantic::<A::Snapshot>());
     store::install_unscheduled_catalog(&mut document, owners).expect("the app's real document catalog installs");

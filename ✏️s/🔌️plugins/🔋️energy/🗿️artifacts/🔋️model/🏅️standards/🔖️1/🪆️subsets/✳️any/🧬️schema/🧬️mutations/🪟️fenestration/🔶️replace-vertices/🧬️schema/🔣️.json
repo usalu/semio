@@ -71,5 +71,48 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "owned-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "vertices_m",
+    "input": "new_vertices_m",
+    "key": "id",
+    "validation": "host-plane",
+    "labels": {
+      "en": "Replace fenestration polygon",
+      "de": "Fensterpolygon ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "fenestration",
+      "kind": "replace-vertices",
+      "record": "ReplacedFenestrationVertices"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "An aperture is empty or contains at least three finite original points."
+      },
+      "context": {
+        "level": "error",
+        "code": "mutation.target-mismatch",
+        "message": "Every aperture point must lie in the original host surface plane."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed original fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original fenestration already has this polygon."
+      }
+    }
   }
 }

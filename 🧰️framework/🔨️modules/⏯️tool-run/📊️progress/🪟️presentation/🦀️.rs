@@ -12,11 +12,11 @@ pub mod seed;
 pub mod slot;
 
 #[derive(semio_framework_value::RetireOwned)]
-pub struct ToolRunPresentationBody{pub tool_id:SealedShared<String>,pub progress:ToolRunProgress,pub provenance:ToolRunEntityProvenance,pub payload:Option<SealedShared<Vec<u8>>>}
+pub struct ToolRunPresentationBody{pub tool_id:SealedShared<String>,pub progress:ToolRunProgress,pub provenance:ToolRunEntityProvenance,pub payload:Option<SealedShared<semio_framework_tool_run::payload_stream::ToolRunPayloadStream>>}
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ToolRunPresentation{body:SealedShared<ToolRunPresentationBody>}
 #[derive(Clone,Copy)]
-pub struct ToolRunView<'a>{pub tool_id:&'a str,pub identity:ToolRunIdentity,pub state:ToolRunState,pub provisional_entities:&'a semio_framework_tool_run_entities::EntityMap,pub progress:&'a ToolRunProgress,pub payload:Option<&'a [u8]>}
+pub struct ToolRunView<'a>{pub tool_id:&'a str,pub identity:ToolRunIdentity,pub state:ToolRunState,pub provisional_entities:&'a semio_framework_tool_run_entities::EntityMap,pub progress:&'a ToolRunProgress,pub payload:Option<semio_framework_tool_run::payload_stream::ToolRunPayloadView<'a>>}
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ToolRunCapturedView{presentation:ToolRunPresentation,identity:ToolRunIdentity,state:ToolRunState}
 impl ToolRunCapturedView{
@@ -29,10 +29,10 @@ impl ToolRunPresentation{
  pub fn birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<ToolRunPresentationBody>(),capacity_bytes:SealedShared::<ToolRunPresentationBody>::birth_bytes(),depth:1,..Default::default()}}
  pub fn capture_copy_bytes()->usize{size_of::<Self>()}
  pub fn admit(body:ToolRunPresentationBody,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),(ValueError,ToolRunPresentationBody)>{if grant.maximum_copy_bytes<Self::birth_demands().copy_bytes{return Err((ValueError::literal(ValueRefusalKind::OwnershipLimit,"original presentation fixed-body publication is not funded"),body));}SealedShared::admit(body,SharedIssuer::owned(),grant).map(|(body,mut receipt)|{receipt.copied_bytes=Self::birth_demands().copy_bytes;(Self{body},receipt)})}
- pub fn capture(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{self.body.try_duplicate(grant).map(|(body,mut receipt)|{receipt.copied_bytes=Self::capture_copy_bytes();(Self{body},receipt)})}
+ pub fn capture(&self,grant:RetainedCloneGrant)->Result<(Self,RetainedCloneProgress),ValueError>{if grant.maximum_items==0||grant.maximum_copy_bytes<Self::capture_copy_bytes()||grant.maximum_depth==0{return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"original presentation capture is not funded"));}self.body.try_duplicate(grant).map(|(body,mut receipt)|{receipt.copied_bytes=Self::capture_copy_bytes();(Self{body},receipt)})}
  pub fn body(&self)->&ToolRunPresentationBody{self.body.get()}
  pub fn identity(&self)->usize{self.body.identity()}
- pub fn borrowed_view(&self,identity:ToolRunIdentity,state:ToolRunState)->ToolRunView<'_>{let body=self.body();ToolRunView{tool_id:body.tool_id.get(),identity,state,provisional_entities:body.provenance.entities(),progress:&body.progress,payload:body.payload.as_ref().map(|payload|payload.get().as_slice())}}
+ pub fn borrowed_view(&self,identity:ToolRunIdentity,state:ToolRunState)->ToolRunView<'_>{let body=self.body();ToolRunView{tool_id:body.tool_id.get(),identity,state,provisional_entities:body.provenance.entities(),progress:&body.progress,payload:body.payload.as_ref().and_then(|payload|payload.get().borrowed_view(identity))}}
  pub fn capture_view(&self,identity:ToolRunIdentity,state:ToolRunState,grant:RetainedCloneGrant)->Result<(ToolRunCapturedView,RetainedCloneProgress),ValueError>{if grant.maximum_copy_bytes<ToolRunCapturedView::capture_copy_bytes(){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"captured presentation and scalar envelope handoff is not funded"));}let(presentation,mut receipt)=self.capture(grant)?;receipt.copied_bytes=ToolRunCapturedView::capture_copy_bytes();Ok((ToolRunCapturedView{presentation,identity,state},receipt))}
 }
 

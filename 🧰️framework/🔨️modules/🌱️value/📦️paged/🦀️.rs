@@ -32,6 +32,27 @@ impl<const N: usize> PagedBytes<N> {
         Ok(Self { bytes: PagedList::try_from_iter(value.iter().copied()).map_err(ValueError::from)? })
     }
 
+    /// 📐️ Quotes one actual backing frontier before a subsequent reserved octet placement.
+    pub fn byte_backing_demand(&self)->Result<crate::RetirementDemand,ValueError>{if self.bytes.has_reserved_slot(){return Ok(Default::default())}Ok(crate::RetirementDemand{copy_bytes:self.bytes.next_reserve_copy_byte_demand().map_err(ValueError::from)?,capacity_bytes:self.bytes.next_allocation_bytes().map_err(ValueError::from)?,depth:self.bytes.next_reserve_depth_demand().map_err(ValueError::from)?,..Default::default()})}
+    /// 🎟️ Reserves one page under all original structural currencies without moving an input byte.
+    pub fn reserve_byte_backing(&mut self,grant:crate::RetainedCloneGrant)->Result<crate::RetainedCloneProgress,ValueError>{self.bytes.reserve_one_funded(grant).map_err(|e|ValueError::from(e.refusal()))}
+    /// 🫳️ Places an octet only into already admitted canonical storage.
+    pub fn push_reserved_byte(&mut self,byte:u8)->Result<(),ValueError>{self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"octet has no original admitted backing"))}
+    /// 🪜️ Admits one encoded backing page while leaving the input octet untouched for its next turn.
+    pub fn reserve_encoded_backing(&mut self,control:&mut crate::NativeEncodeControl<'_>)->Result<bool,ValueError>{if self.bytes.has_reserved_slot(){return Ok(false)}let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;Ok(true)}
+    /// 🧱️ Places one encoded octet only after each actual backing allocation is charged to its original control.
+    pub fn push_encoded(&mut self,byte:u8,control:&mut crate::NativeEncodeControl<'_>)->Result<(),ValueError>{
+        while !self.bytes.has_reserved_slot(){control.checkpoint()?;let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;}
+        self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"encoded octet lost its reserved page"))
+    }
+    /// 🧱️ Places one decoded octet under the same original decoder and cumulative physical charge.
+    pub fn push_decoded(&mut self,byte:u8,control:&mut crate::NativeDecodeControl<'_>)->Result<(),ValueError>{
+        while !self.bytes.has_reserved_slot(){control.checkpoint()?;let capacity=self.bytes.next_allocation_bytes().map_err(ValueError::from)?;control.charge(capacity)?;self.bytes.reserve_one(capacity).map_err(|e|ValueError::from(e.refusal()))?;}
+        self.bytes.push_reserved(byte).map_err(|_|ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"decoded octet lost its reserved page"))
+    }
+    /// 🛫️ Projects a borrowed octet source into canonical pages through its actual output control.
+    pub fn copy_encoded(source:&(impl crate::ByteReadSource+?Sized),control:&mut crate::NativeEncodeControl<'_>)->Result<Self,ValueError>{control.scoped_stage(|control|{control.begin_stage(source.byte_len())?;let mut output=Self::default();for index in 0..source.byte_len(){output.push_encoded(source.byte_at(index).ok_or_else(||ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"encoded octet source changed"))?,control)?;control.step()?;}Ok(output)})}
+
     pub fn len(&self) -> usize {
         self.bytes.len()
     }
@@ -64,6 +85,9 @@ impl<const N: usize> PagedBytes<N> {
     pub fn retained_bytes(&self) -> &PagedList<u8, N> {
         &self.bytes
     }
+
+    /// 🧰️ Lends the canonical mutable page owner to its enclosing storage admission boundary.
+    pub fn retained_bytes_mut(&mut self)->&mut PagedList<u8,N>{&mut self.bytes}
 
     #[doc(hidden)]
     pub fn from_retained_bytes(bytes: PagedList<u8, N>) -> Self {
@@ -677,3 +701,6 @@ impl<V: FromValue, const N: usize> FromValue for PagedMap<V, N> {
 
 #[path="🛬️receive/🦀️.rs"]mod native_receive;
 pub use native_receive::PagedTextReceiver;
+#[path="📖️read/🦀️.rs"]
+mod byte_read;
+pub use byte_read::{ByteReadSource,ByteReadRange};

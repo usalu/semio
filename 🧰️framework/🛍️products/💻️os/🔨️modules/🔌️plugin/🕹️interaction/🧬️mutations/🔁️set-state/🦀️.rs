@@ -5,7 +5,7 @@ use protocol::InteractionState;
 
 //#region 🔖️Payload
 // 🌱️ The wire of this leaf is its inner `InteractionState` alone (`#[value(transparent)]`): its plain, controlled and canonical-tree codecs are derived and forward to the state.
-#[derive(Clone, Debug, PartialEq, dsl::MutationLeaf, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::CanonicalJsonTree)]
+#[derive(semio_framework_value::RetireOwned,Clone, Debug, PartialEq, dsl::MutationLeaf, serde::Serialize, serde::Deserialize, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_value_derive::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(transparent)]
 #[mutation_leaf(contract = ::protocol)]

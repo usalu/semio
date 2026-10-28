@@ -1,0 +1,184 @@
+{
+  "contract": "semio.energy.original-createthermostat/v1",
+  "collection": "thermostats",
+  "existingRows": [
+    {
+      "id": 100,
+      "zone_id": 1,
+      "heating_setpoint_schedule_id": 1,
+      "cooling_setpoint_schedule_id": 1,
+      "heating_throttle_range_k": 1.0,
+      "cooling_throttle_range_k": 1.0
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 1.0,
+        "coolingThrottleRangeK": 1.0,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        100,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 1.0,
+        "coolingThrottleRangeK": 1.0,
+        "index": 0
+      },
+      "outcome": "changed",
+      "after": [
+        3,
+        100
+      ]
+    },
+    {
+      "payload": {
+        "id": 100,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 1.0,
+        "coolingThrottleRangeK": 1.0,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 1.0,
+        "coolingThrottleRangeK": 1.0,
+        "index": 99
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 99,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 0,
+        "coolingThrottleRangeK": 1.0,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 99,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 1.0,
+        "coolingThrottleRangeK": 1.0,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 99,
+        "heatingThrottleRangeK": 1.0,
+        "coolingThrottleRangeK": 1.0,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "id": 3,
+        "zoneId": 1,
+        "heatingSetpointScheduleId": 1,
+        "coolingSetpointScheduleId": 1,
+        "heatingThrottleRangeK": 0,
+        "coolingThrottleRangeK": 1.0,
+        "index": null
+      },
+      "outcome": "invalid"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1.0
+        }
+      ],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    },
+    "zones": [
+      {
+        "id": 1,
+        "name": "A",
+        "volume_m3": 100,
+        "multiplier": 1,
+        "conditioned": true,
+        "part_of_total_floor_area": true
+      }
+    ]
+  },
+  "recreate": {
+    "original": {
+      "id": 100,
+      "zone_id": 1,
+      "heating_setpoint_schedule_id": 1,
+      "cooling_setpoint_schedule_id": 1,
+      "heating_throttle_range_k": 1.0,
+      "cooling_throttle_range_k": 1.0
+    },
+    "rank": 7,
+    "payload": {
+      "id": 100,
+      "zoneId": 1,
+      "heatingSetpointScheduleId": 1,
+      "coolingSetpointScheduleId": 1,
+      "heatingThrottleRangeK": 1.0,
+      "coolingThrottleRangeK": 1.0,
+      "index": 7
+    }
+  }
+}

@@ -1,6 +1,6 @@
 //! 📦️ EnergyModel artifact — binary document surface + laws.
 
-use crate::EnergyModelSnapshot;
+use crate::reference::EnergyModelSnapshot;
 use store::PackError;
 
 //#region 📡️SemioProtocol
@@ -28,8 +28,8 @@ mod tests;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::*;
-use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use crate::reference::*;
+use crate::reference::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
@@ -80,6 +80,8 @@ impl pack::snapshot::ArtifactPack for EnergyModelSnapshot {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EnergyModelSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
 }

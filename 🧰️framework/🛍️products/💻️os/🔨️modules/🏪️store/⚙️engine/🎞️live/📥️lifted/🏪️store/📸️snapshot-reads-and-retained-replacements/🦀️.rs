@@ -1,6 +1,7 @@
 //! 📸️ Snapshot reads and retained replacements: the projection event, the derived snapshots and history previews, the snapshot reads and the retained replacement of roots, edit ids, checkpoints and the tail undo cache. See [`super`].
 
 use super::*;
+use semio_framework_value::RetainedCloneProgress;
 use semio_framework_os_spr::ColdMutation;
 
 //#region 🔖️EphemeralLanes
@@ -17,8 +18,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLive<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 📬️ Captures one immutable projection or inference input from the current reconciled snapshot.
     
@@ -41,7 +42,7 @@ where
     }
 
     /// 🎞️ Derives a history-edit preview base from this Store's actual history and accepted draft inputs.
-    pub fn derived_snapshot_before(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, target: &MutationId, drafts: &protocol::HistoryInputDrafts) -> Result<ArtifactDerivedSnapshot<P>, VcsError> {
+    pub fn derived_snapshot_before(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, target: &MutationId, drafts: &protocol::HistoryInputDrafts) -> Result<ArtifactDerivedSnapshot<P>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let owner = self.state_before(store_log, store_owners, store_wire, store_cursor, target, drafts)?;
         Ok(store_cursor.seal_derived_snapshot(store_owners, store_wire, owner))
     }
@@ -52,60 +53,27 @@ where
     /// ⏭️ Steps sealed planning and replay against this store's actual immutable frontier.
     
 
-    pub fn step_history_read_plan(&self, store_log: &StoreLog<P, Mutation>, store_wire: &StoreWire<P, Mutation>, store_cursor: &StoreCursor<P, Mutation>, plan: &mut HistoryReadPlan, deadline: &mut dyn FnMut() -> bool) -> Result<bool, VcsError> {
-        use std::ops::Bound::{Excluded, Unbounded};
-        if plan.progress.total == 0 {
-            let work = usize::from(plan.target.is_some()).saturating_add(plan.drafts.len()).saturating_add(if plan.report { store_log.applied_edit_ids.len().saturating_add(self.supersessions.len()).saturating_add(plan.drafts.len()) } else { 0 });
-            plan.progress.total = u32::try_from(work).unwrap_or(u32::MAX);
+    fn selected_history_edit<'a>(&self,store_log:&'a StoreLog<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>,selection:Option<semio_framework_os_vcs::OriginalHistoryEditSelection>,position:usize)->Result<&'a Edit<Mutation>,VcsError>{match selection{Some(selection)=>match selection.original_position(position){None=>store_log.envelope.vcs.edits.get_key(selection.key).ok_or(VcsError::HistoryReplaying),Some(position)=>store_cursor.applied_edit(store_log,store_wire,position)},None=>store_cursor.applied_edit(store_log,store_wire,position)}}
+
+    pub fn step_history_read_plan(&self,store_log:&StoreLog<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>,plan:&mut HistoryReadPlan,order:Option<&semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>>,grant:RetainedCloneGrant,control:&mut semio_framework_value::NativeDecodeControl<'_>,deadline:&mut dyn FnMut()->bool)->Result<(bool,RetainedCloneProgress),VcsError>{
+        use semio_framework_value::{RetirementDemand,ValueRefusalKind};
+        if plan.original_order!=order.map(|o|(o as*const _ as usize,o.len())){return Err(VcsError::HistoryReplaying)}let idle=RetainedCloneProgress::default();if plan.finished{return Ok((true,idle))}if deadline()||grant.maximum_items==0{return Ok((false,idle))}
+        let metadata=2*size_of::<usize>()+size_of::<u8>()+size_of::<ReplayProgress>();
+        let mut demand=RetirementDemand{copy_bytes:metadata,depth:1,..Default::default()};
+        macro_rules! admit {()=>{if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok((false,idle))}control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(demand.capacity_bytes).map_err(VcsError::InverseRefused)?;}}
+        macro_rules! reserve {($index:expr,$key:expr)=>{{let index=&mut $index;let key=$key;let capacity=index.next_insert_capacity_byte_demand(key,grant.maximum_copy_bytes).map_err(VcsError::InverseRefused)?;if capacity!=0{let depth=index.next_insert_depth_demand(key).map_err(VcsError::InverseRefused)?;let child=RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes.saturating_sub(metadata),..grant};if grant.maximum_copy_bytes<metadata||grant.maximum_capacity_bytes<capacity||grant.maximum_depth<depth{return Ok((false,idle))}control.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(VcsError::InverseRefused)?;control.charge(capacity).map_err(VcsError::InverseRefused)?;let mut p=index.reserve_insert_step(key,child).map_err(|(error,_)|VcsError::InverseRefused(error))?;if p.copied_items!=0{p.copied_bytes+=metadata;}return Ok((false,p));}}}}
+        match plan.native_phase{
+            0=>{admit!();plan.progress.total=u32::try_from(usize::from(plan.target.is_some()).saturating_add(plan.drafts.len()).saturating_add(if plan.report{store_log.applied_edit_ids.len().saturating_add(self.supersessions.len())}else{0})).unwrap_or(u32::MAX);plan.native_phase=1;},
+            1=>{if let Some(target)=plan.target.as_ref(){reserve!(plan.positions,target);demand.copy_bytes+=target.0.len()+size_of::<(MutationId,(usize,usize))>();demand.capacity_bytes=target.0.len();demand.depth=demand.depth.max(plan.positions.next_insert_depth_demand(target).map_err(VcsError::InverseRefused)?);admit!();let position=store_cursor.locate_mutation(store_log,store_wire,target)?;plan.positions.insert_reserved(target.clone(),position,grant).map_err(|(error,_,_)|VcsError::InverseRefused(error))?;plan.first_input=plan.first_input.min(position.0);plan.progress.done=plan.progress.done.saturating_add(1);}else{admit!();}plan.located_target=true;plan.native_phase=2;},
+            2=>{if let Some((target,_))=plan.drafts.at_rank(plan.native_row){reserve!(plan.positions,target);demand.copy_bytes+=target.0.len()+size_of::<(MutationId,(usize,usize))>();demand.capacity_bytes=target.0.len();demand.depth=demand.depth.max(plan.positions.next_insert_depth_demand(target).map_err(VcsError::InverseRefused)?);admit!();let position=store_cursor.locate_mutation(store_log,store_wire,target)?;plan.positions.insert_reserved(target.clone(),position,grant).map_err(|(error,_,_)|VcsError::InverseRefused(error))?;plan.first_input=plan.first_input.min(position.0);plan.last_draft=Some(plan.last_draft.unwrap_or(0).max(position.0+1));plan.native_row+=1;plan.progress.done=plan.progress.done.saturating_add(1);}else{admit!();plan.located_inputs=true;plan.native_row=0;plan.native_phase=if plan.report{3}else{8};}},
+            3=>{if plan.cursor<if let Some(order)=order{order.len()}else{plan.original_selection.map_or(Some(store_log.applied_edit_ids.len()),|selection|selection.selected_len(store_log.applied_edit_ids.len())).ok_or(VcsError::HistoryReplaying)?}{let edit=if let Some(order)=order{store_log.envelope.vcs.edits.get_key(*order.get(plan.cursor).ok_or(VcsError::HistoryReplaying)?).ok_or(VcsError::HistoryReplaying)?}else{self.selected_history_edit(store_log,store_wire,store_cursor,plan.original_selection,plan.cursor)?};demand.copy_bytes+=size_of::<u32>();demand.capacity_bytes=plan.counts.next_push_allocation_bytes();admit!();plan.counts.try_push(plan.operations).map_err(|_|VcsError::InverseRefused(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native history count catalog is full")))?;plan.operations=plan.operations.saturating_add(u32::try_from(edit.forwards.len()).unwrap_or(u32::MAX));plan.native_phase=4;}else{demand.copy_bytes+=size_of::<u32>();demand.capacity_bytes=plan.counts.next_push_allocation_bytes();admit!();plan.counts.try_push(plan.operations).map_err(|_|VcsError::InverseRefused(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native history terminal count catalog is full")))?;plan.native_phase=5;}},
+            4=>{let edit=if let Some(order)=order{store_log.envelope.vcs.edits.get_key(*order.get(plan.cursor).ok_or(VcsError::HistoryReplaying)?).ok_or(VcsError::HistoryReplaying)?}else{self.selected_history_edit(store_log,store_wire,store_cursor,plan.original_selection,plan.cursor)?};demand.copy_bytes+=edit.id.len()+size_of::<String>();demand.capacity_bytes=plan.order.next_push_allocation_bytes()+edit.id.len();admit!();plan.order.try_push(edit.id.clone()).map_err(|_|VcsError::InverseRefused(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native history order catalog is full")))?;plan.cursor+=1;plan.progress.done=plan.progress.done.saturating_add(1);plan.native_phase=3;},
+            5 if plan.original_supersessions=>{admit!();plan.native_phase=6;},
+            5=>{if let Some((target,row))=self.supersessions.ranked(plan.native_row){reserve!(plan.supersessions,target);let bytes=target.0.len()+row.transition_id.len()+row.scope.as_ref().map_or(0,String::len)+match &row.replacement{protocol::InputReplacement::Input{schema,payload}=>schema.len()+payload.len(),protocol::InputReplacement::Withdrawn=>0};demand.copy_bytes+=bytes+size_of::<(MutationId,protocol::EffectiveSupersession)>();demand.capacity_bytes=bytes;demand.depth=demand.depth.max(plan.supersessions.next_insert_depth_demand(target).map_err(VcsError::InverseRefused)?);admit!();plan.supersessions.insert_reserved(target.clone(),row.clone(),grant).map_err(|(error,_,_)|VcsError::InverseRefused(error))?;plan.native_row+=1;plan.progress.done=plan.progress.done.saturating_add(1);}else{admit!();plan.native_phase=6;}},
+            6=>{demand.copy_bytes+=store_log.envelope.schema.len()+size_of::<String>();demand.capacity_bytes=store_log.envelope.schema.len();admit!();plan.native_schema=store_log.envelope.schema.clone();plan.native_phase=8;},
+            _=>{admit!();plan.finished=true;},
         }
-        while !plan.finished {
-            if !plan.located_target {
-                plan.located_target = true;
-                if let Some(target) = plan.target.as_ref() {
-                    let position = store_cursor.locate_mutation(store_log, store_wire, target)?;
-                    plan.first_input = plan.first_input.min(position.0);
-                    plan.positions.insert(target.clone(), position);
-                } else { continue; }
-            } else if !plan.located_inputs {
-                let next = match plan.located_draft.as_ref() { Some(key) => plan.drafts.range((Excluded(key), Unbounded)).next(), None => plan.drafts.iter().next() }.map(|(target, _)| target.clone());
-                if let Some(target) = next {
-                    let position = store_cursor.locate_mutation(store_log, store_wire, &target)?;
-                    plan.first_input = plan.first_input.min(position.0);
-                    plan.last_draft = Some(plan.last_draft.unwrap_or(0).max(position.0 + 1));
-                    plan.positions.insert(target.clone(), position);
-                    plan.located_draft = Some(target);
-                } else {
-                    plan.located_inputs = true;
-                    if !plan.report { plan.finished = true; }
-                    continue;
-                }
-            } else if plan.cursor < store_log.applied_edit_ids.len() {
-                let edit = store_cursor.applied_edit(store_log, store_wire, plan.cursor)?;
-                plan.counts.push(plan.operations);
-                plan.operations = plan.operations.saturating_add(u32::try_from(edit.forwards.len()).unwrap_or(u32::MAX));
-                plan.order.push(edit.id.clone());
-                plan.cursor += 1;
-            } else {
-                let next = if plan.copying_drafts {
-                    match plan.copied.as_ref() { Some(key) => plan.drafts.range((Excluded(key), Unbounded)).next(), None => plan.drafts.iter().next() }
-                        .map(|(target, replacement)| (target.clone(), protocol::EffectiveSupersession { transition_id: DRAFT_SUPERSESSION_ID.into(), actor: semio_framework_value::SharedUtf8::default(), timestamp: HybridLogicalTimestamp::new(0, 0), scope: None, replacement: replacement.clone() }))
-                } else {
-                    match plan.copied.as_ref() { Some(key) => self.supersessions.first_entry_after(key), None => self.supersessions.iter().next() }.map(|(target, supersession)| (target.clone(), supersession.clone()))
-                };
-                if let Some((target, supersession)) = next {
-                    plan.copied = Some(target.clone());
-                    plan.supersessions.insert(target, supersession);
-                } else if !plan.copying_drafts {
-                    plan.copying_drafts = true;
-                    plan.copied = None;
-                    continue;
-                } else { plan.finished = true; continue; }
-            }
-            plan.progress.done = plan.progress.done.saturating_add(1);
-            if deadline() { return Ok(false); }
-        }
-        if plan.report && plan.counts.len() == store_log.applied_edit_ids.len() { plan.counts.push(plan.operations); }
-        Ok(true)
+        Ok((plan.finished,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes}))
     }
 
     /// 🧵️ Immutable O(1) snapshot capability for worker and composition boundaries.
@@ -113,14 +81,17 @@ where
     where
         P: Sync,
     {
-        let generation = store_cursor.generation(store_wire);
-        let content_revision = store_cursor.content_revision(store_wire);
-        if !store_owners.snapshot_read_leases.publish_authority(generation, content_revision) {
-            return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()));
-        }
-        let owner = self.snapshot_owner(store_wire);
-        let lease = store_owners.snapshot_read_leases.try_issue(owner.clone()).map_err(|_| VcsError::ValidationFailed("snapshot read lease registry is busy, saturated, or exhausted".into()))?;
-        Ok(SnapshotRead::new(owner, lease))
+        if !store_owners.snapshot_read_leases.publish_authority(store_cursor.generation(store_wire),store_cursor.content_revision(store_wire)){return Err(VcsError::ValidationFailed("snapshot read commit authority is busy or exhausted".into()))}
+        self.snapshot_read_original(store_owners,store_wire,store_cursor).map_err(|error|VcsError::ValidationFailed(error.to_string()))
+    }
+
+    /// 🎟️ The original registry issues the same typed lease and preserves its allocation-free native refusal.
+    pub fn snapshot_read_original(&self,store_owners:&StoreOwners<P,Mutation>,store_wire:&StoreWire<P,Mutation>,store_cursor:&StoreCursor<P,Mutation>)->Result<SnapshotRead<P>,semio_framework_value::ValueError> where P:Sync {
+        let generation=store_cursor.generation(store_wire);let revision=store_cursor.content_revision(store_wire);
+        if !store_owners.snapshot_read_leases.authority_matches(generation,revision){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original snapshot read differs from its funded Store publication authority"))}
+        let owner=self.snapshot_owner(store_wire);
+        let lease=store_owners.snapshot_read_leases.try_issue_original(owner.clone()).map_err(|(error,_original)|error.into_value_error())?;
+        Ok(SnapshotRead::new(owner,lease))
     }
 
     pub fn snapshot_owner(&self, store_wire: &StoreWire<P, Mutation>) -> Arc<P> {
@@ -343,6 +314,7 @@ where
                 if std::ptr::eq(self.current.as_ref(), store_log.envelope.vcs.genesis.facts().snapshot()) { birth(ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes()) }
                 else { birth(store_owners.snapshot_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "current retirement requires exact snapshot factory"))?.retirement_birth_bytes(&self.current)) }
             }
+            ArtifactStoreCursorDisposerPhase::Backbone if !store_wire.original_outbox.terminal_is_empty()=>ArtifactStoreBackboneRetirement::original_outbox_birth_demands(),
             ArtifactStoreCursorDisposerPhase::Backbone if store_wire.member_inbox.capacity() != 0 || store_wire.backbone.is_some() => birth(ArtifactStoreBackboneRetirement::constructor_capacity_bytes()),
             ArtifactStoreCursorDisposerPhase::Causal => birth(size_of::<ArtifactStoreMutationDagRetirement>()),
             ArtifactStoreCursorDisposerPhase::Envelope if !store_log.envelope_detached => birth(size_of::<ArtifactStoreEnvelopeRetirement<P, Mutation>>()),

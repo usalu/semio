@@ -15,19 +15,22 @@ use semio_framework_plugin_reactor_app::PluginApp;
 use semio_framework_ui_contract::*;
 
 impl<A: ArtifactApp> InstanceStores<A> {
-    /// ⏪️ One revert unit: undoes the newest document edit while `edit_id` is not yet the document store's tail.
-    /// Answers whether an undo was applied (`false` once the target is the tail or the store refuses).
-    pub async fn framework_revert_unit(&mut self, edit_id: &str, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<bool, Fault> {
-        let applied = self.store.applied_edit_ids();
-        if !(applied.iter().any(|id| id.as_str() == edit_id) && applied.last().is_some_and(|tail| tail.as_str() != edit_id)) {
-            return Ok(false);
+    /// ⏪️ Advances one retained original Undo until its fixed receipt and physical return complete.
+    pub fn framework_revert_unit(&mut self,edit_id:&str,command:&mut Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>,result:&mut Option<store::os_store::ArtifactNativeVcsResult>,closing:&mut bool,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<bool>,semio_framework_job::OriginalTurnFailure>{
+        if command.is_none()&&*closing{*closing=false;return Ok(Some(false))}
+        if let Some(owner)=command.as_mut(){
+            if *closing||cx.is_cancelled(){*closing=true;let complete=cx.with_original_retirement(|cx|self.store.close_native_vcs_command(owner,cx))?;if complete{let applied=result.take().is_some_and(|result|result.selected.is_some());*command=None;*closing=false;return Ok(Some(applied))}return Ok(None)}
+            if result.is_some(){if self.store.ack_native_vcs_command(owner,cx)?{*closing=true;}return Ok(None)}
+            if owner.terminal_is_empty(){*command=None;return Ok(Some(false))}
+            let advance=self.store.advance_native_vcs_command(owner,cx)?;
+            if advance.phase==store::os_store::ArtifactNativeVcsPhase::AwaitingAck{self.store.take_native_vcs_result(owner,cx,result)?;}
+            return Ok(None)
         }
-        let undone = self.store.dispatch(ArtifactCommand::Undo, identity).await.map(|_| ());
-        match undone {
-            Ok(()) => Ok(true),
-            Err(vcs::VcsError::NothingToUndo) | Err(vcs::VcsError::ForeignEdit(_)) => Ok(false),
-            Err(error) => Err(error.into_fault()),
-        }
+        let applied=self.store.applied_edit_ids();
+        if cx.is_cancelled()||!applied.iter().any(|id|id.as_str()==edit_id)||applied.last().is_none_or(|tail|tail.as_str()==edit_id){return Ok(Some(false))}
+        let mut request=Some(store::os_store::ArtifactNativeVcsRequest::Undo{lane:store::os_store::store_schema::HistoryLane::Document,policy:protocol::UndoPolicy::TransformAgainstConcurrent});
+        self.store.admit_native_vcs_command(&mut request,cx,command)?;
+        Ok(None)
     }
 
     /// 🪪️ The identity every id one admitted command mints is scoped by ([`AppOperationContext::authoring_seed`]):

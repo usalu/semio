@@ -120,9 +120,9 @@ impl ArtifactViewer for EquationViewer {
 })())
 }
 
-    fn initial_snapshot() -> EquationSnapshot {
+    fn reference_birth()->Option<fn()->EquationSnapshot>{Some(||{
         EquationSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `EquationViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect,

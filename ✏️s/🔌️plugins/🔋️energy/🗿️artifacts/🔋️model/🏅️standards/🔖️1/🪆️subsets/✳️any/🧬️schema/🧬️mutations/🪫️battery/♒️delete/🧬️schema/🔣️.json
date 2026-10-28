@@ -33,5 +33,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateBatteryAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "battery_storage",
+    "key": "id",
+    "inverse": "CreateBattery",
+    "restriction": {
+      "row": "StateElectricalLoadCenter",
+      "branch": "systems",
+      "collection": "electrical_load_centers",
+      "field": "battery_ids",
+      "storage": "shared-array",
+      "kind": "references"
+    },
+    "labels": {
+      "en": "Delete Battery",
+      "de": "Batterie löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "battery",
+      "kind": "delete-battery",
+      "record": "DeletedBattery"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed battery does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

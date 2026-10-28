@@ -27,6 +27,8 @@ impl pack::snapshot::ArtifactPack for RunArtifact {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RunArtifact {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn native_snapshot_registration() -> Option<(semio_framework_artifact_reference::Dialect, store::serialization::ArtifactCodec)> {
         Some((semio_framework_artifact_reference::Dialect { artifact_kind: "os.run", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::bare_artifact_codec::<Self, crate::RunMutation>(S_RUN_SCHEMA)))
     }

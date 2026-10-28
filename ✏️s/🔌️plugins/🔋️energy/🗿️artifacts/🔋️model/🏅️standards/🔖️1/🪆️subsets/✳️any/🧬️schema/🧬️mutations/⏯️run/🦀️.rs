@@ -8,14 +8,16 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_run_end_day {
     #[path = "⏹️change-end-day/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⏹️change-end-day/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⏹️change-end-day/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⏹️change-end-day/↩️inverse/🦀️.rs"]
@@ -27,6 +29,8 @@ pub mod change_run_start_day {
     #[path = "▶️change-start-day/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "▶️change-start-day/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "▶️change-start-day/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "▶️change-start-day/↩️inverse/🦀️.rs"]
@@ -38,6 +42,8 @@ pub mod change_run_year {
     #[path = "📅️change-year/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📅️change-year/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📅️change-year/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📅️change-year/↩️inverse/🦀️.rs"]
@@ -49,6 +55,8 @@ pub mod change_run_start_month {
     #[path = "🛫️change-start-month/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🛫️change-start-month/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🛫️change-start-month/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🛫️change-start-month/↩️inverse/🦀️.rs"]
@@ -60,6 +68,8 @@ pub mod change_run_end_month {
     #[path = "🛬️change-end-month/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🛬️change-end-month/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🛬️change-end-month/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🛬️change-end-month/↩️inverse/🦀️.rs"]

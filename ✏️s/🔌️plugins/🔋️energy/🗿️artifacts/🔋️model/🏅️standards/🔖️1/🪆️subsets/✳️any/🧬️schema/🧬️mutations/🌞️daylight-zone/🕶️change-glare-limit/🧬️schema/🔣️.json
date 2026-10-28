@@ -56,5 +56,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateDaylightZoneConfig",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "daylight_zones",
+    "field": "glare_limit",
+    "input": "new_glare_limit",
+    "key": "id",
+    "labels": {
+      "en": "Change daylight zone: Glare limit",
+      "de": "Blendungsgrenzwert ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "daylight-zone",
+      "kind": "change-daylight-zone-glare-limit",
+      "record": "ChangedDaylightZoneGlareLimit"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Glare limit violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed daylight zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The daylight zone already carries this glare limit value."
+      }
+    }
   }
 }

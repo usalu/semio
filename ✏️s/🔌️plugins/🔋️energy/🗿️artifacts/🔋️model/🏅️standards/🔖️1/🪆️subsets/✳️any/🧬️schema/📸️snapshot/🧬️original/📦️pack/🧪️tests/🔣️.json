@@ -1,0 +1,30 @@
+{
+  "keyword": "energy-model",
+  "layout": "inline",
+  "fields": [
+    {
+      "id": 1,
+      "key": "document",
+      "shape": "value",
+      "optional": false,
+      "flatten": false
+    }
+  ],
+  "canonicalSchemaBytes": [
+    1,
+    1,
+    1,
+    8,
+    100,
+    111,
+    99,
+    117,
+    109,
+    101,
+    110,
+    116,
+    0,
+    14
+  ],
+  "schemaHash": "642dddd2a3cca7155886c1f68994d7cfa4bf6aeb8b39daedf05798bc5c27e20e"
+}

@@ -136,7 +136,8 @@ impl ArtifactEditor for EpwEditor {
         controller: "s.stdio.epw@energyplus/*#editor",
         artifact_schema: "stdio.epw",
         preparation: "stdio-epw-snapshot-edit",
-        bounded_native: true
+        bounded_native: true,
+        native_snapshot_pack: true
     }
 
     fn command_id(command: &Self::Command) -> &'static str {
@@ -166,9 +167,9 @@ impl ArtifactEditor for EpwEditor {
         })
     }
 
-    fn initial_snapshot() -> EpwSnapshot {
+    fn reference_birth()->Option<fn()->EpwSnapshot>{Some(||{
         crate::standards::energyplus::subsets::any::schema::blank_epw_snapshot()
-    }
+    })}
 
     /// ✏️ Resolves the addressed column to its canonical wire index and emits one
     /// `EpwMutation::SetRecordField` through the same guarded reducer as retained execution.

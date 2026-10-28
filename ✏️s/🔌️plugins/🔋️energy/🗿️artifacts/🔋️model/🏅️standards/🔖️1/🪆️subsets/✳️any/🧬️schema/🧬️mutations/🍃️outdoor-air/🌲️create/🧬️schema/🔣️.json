@@ -116,5 +116,91 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateOutdoorAirSystem",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "air_loop_id",
+        "input": "air_loop_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "min_oa_flow_m3_s",
+        "input": "min_oa_flow_m3_s",
+        "storage": "fixed"
+      },
+      {
+        "field": "economizer_enabled",
+        "input": "economizer_enabled",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateOutdoorAirSystem",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "outdoor_air_systems",
+    "key": "id",
+    "inverse": "DeleteOutdoorAirSystem",
+    "labels": {
+      "en": "Create outdoor air system",
+      "de": "Außenluftsystem erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "outdoor-air-system",
+      "kind": "create-outdoor-air-system",
+      "record": "CreatedOutdoorAirSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "air_loop_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "AirLoops"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

@@ -72,7 +72,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
 
     #[doc(hidden)]
     pub fn command_ctx(&mut self) -> CommandCtx<'_, A, M, InstanceExtensions> {
-        CommandCtx { app: &mut self.app, mounted_policy: self.mounted_policy, stores: &mut self.stores, roster: &mut self.roster, ingress: &mut self.ingress, interaction: &mut self.interaction, history: &mut self.history, host_events: &mut self.host_events, txn: &mut self.txn, child_composition: &mut self.child_composition, pending: &mut self.pending, tools: &mut self.tools, media: &mut self.media, ingest: &mut self.ingest, tool_runs: &mut self.tool_runs, time_travel: &mut self.time_travel, tool_machines: &mut self.tool_machines, extension: PhantomData }
+        CommandCtx { original_typed_command:&mut self.original_typed_command, original_emission:&mut self.original_emission, app: &mut self.app, mounted_policy: self.mounted_policy, stores: &mut self.stores, roster: &mut self.roster, ingress: &mut self.ingress, interaction: &mut self.interaction, history: &mut self.history, host_events: &mut self.host_events, txn: &mut self.txn, child_composition: &mut self.child_composition, pending: &mut self.pending, tools: &mut self.tools, media: &mut self.media, ingest: &mut self.ingest, tool_runs: &mut self.tool_runs, time_travel: &mut self.time_travel, tool_machines: &mut self.tool_machines, extension: PhantomData }
     }
 
     #[doc(hidden)]

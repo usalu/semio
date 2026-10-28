@@ -92,7 +92,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         if terminal{drop(self.private_child_groups.remove(operation));return Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress:RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..Default::default()}});}
         let owner=self.private_child_groups.get_mut(operation).ok_or_else(||plugin_sdk_fault("private group changed during its exact bounded close"))?;
         let child_grant=RetainedCloneGrant{maximum_items:1,maximum_depth:grant.maximum_depth-1,..grant};
-        let step=owner.close_step(&mut stores.store,&mut self.children,self.composition.ownership_graph_mut(),&self.child_content_root,cx,child_grant)?;
+        let step=owner.close_step(&mut *stores.store,&mut self.children,self.composition.ownership_graph_mut(),&self.child_content_root,cx,child_grant)?;
         Ok(step.admit(child_grant,owner.terminal_is_empty())?)
     }
 }

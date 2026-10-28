@@ -148,9 +148,9 @@ impl ArtifactEditor for ZipIso21320Editor {
         })
     }
 
-    fn initial_snapshot() -> ZipSnapshot {
+    fn reference_birth()->Option<fn()->ZipSnapshot>{Some(||{
         ZipSnapshot::default()
-    }
+    })}
 
     /// ✏️ Renames one unambiguous entry or changes the archive comment.
     fn handle(

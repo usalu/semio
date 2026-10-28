@@ -6,6 +6,14 @@ import Ajv from "ajv";
 import { KernelOriginalOperationIssuer, KernelOriginalResourcePool, OriginalOperationSource } from "@semio-tech/framework/actor/retained-turn";
 import law from "./🔣️.json";
 import schema from "./🧬️schema/🔣️.json";
+function readOwnedRustTree(file: URL, visited = new Set<string>()): string {
+  if (visited.has(file.href)) return "";
+  visited.add(file.href);
+  const source = readFileSync(file, "utf8");
+  const modules = [...source.matchAll(/((?:#\[[^\n]+\]\s*)*)#\[path\s*=\s*"([^"]+)"\]\s*(?:pub\s+)?mod\b/g)].filter(match => !match[1].includes("#[cfg(test)]"));
+  return [source, ...modules.map(match => readOwnedRustTree(new URL(match[2], file), visited))].join("\n");
+}
+
 export function verifyEnergyOriginalSessionOracle(): void {
   assert.equal(new Ajv({ strict: true }).compile(schema)(law), true);
   const database = new Database(":memory:");
@@ -29,7 +37,7 @@ export function verifyEnergyOriginalSessionOracle(): void {
       assert.equal(Boolean(oracle.timestep), row.timestep);
     }
   } finally { database.close(); }
-  const source = readFileSync(new URL("../../🦀️.rs", import.meta.url), "utf8");
+  const source = readOwnedRustTree(new URL("../../🦀️.rs", import.meta.url));
   const native = readFileSync(new URL("../🔬️unit/🦀️.rs", import.meta.url), "utf8");
   for (const forbidden of ["StepContext::new", "StepContext::with_payload_authority", "numerical_sequence", "Box::leak", "root_cancel_token()"] ) { assert.equal(source.includes(forbidden), false); assert.equal(native.includes(forbidden), false); }
   assert.ok(source.includes("cx.with_original_work_loan(fuel, deadline"));

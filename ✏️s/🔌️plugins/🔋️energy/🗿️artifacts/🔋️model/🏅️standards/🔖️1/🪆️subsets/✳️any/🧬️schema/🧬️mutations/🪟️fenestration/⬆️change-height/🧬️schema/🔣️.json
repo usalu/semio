@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "height_m",
+    "input": "new_height_m",
+    "key": "id",
+    "labels": {
+      "en": "Change fenestration: Height",
+      "de": "Höhe ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fenestration",
+      "kind": "change-fenestration-height",
+      "record": "ChangedFenestrationHeight"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Height violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fenestration already carries this height value."
+      }
+    }
   }
 }

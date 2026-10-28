@@ -318,3 +318,21 @@ state_patch!(StateTimeSeriesSchedulePatch,state_time_series_schedule_fields for 
 
 #[path="🚚️apply/🦀️.rs"]mod apply;
 pub use apply::StateZoneApply;
+
+/// 🌳️ Prepared branch deltas retain the original immutable candidate produced by sparse path staging.
+#[derive(Default,Debug,PartialEq,ToValue,semio_framework_value::RetireOwned)]
+pub struct EnergyModelStatePatch{
+ #[value(skip_serializing_if="Option::is_none")]pub identity:Option<SealedShared<ModelIdentityState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub geometry:Option<SealedShared<ModelGeometryState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub materials:Option<SealedShared<ModelMaterialState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub loads:Option<SealedShared<ModelLoadState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub controls:Option<SealedShared<ModelControlState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub systems:Option<SealedShared<ModelSystemState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub generation:Option<SealedShared<ModelGenerationState>>,
+ #[value(skip_serializing_if="Option::is_none")]pub outputs:Option<SealedShared<ModelOutputState>>,
+}
+protocol::retained_row_patch!(pub energy_model_fields for EnergyModelStatePatch=>EnergyModelState{identity:SealedShared<ModelIdentityState>,geometry:SealedShared<ModelGeometryState>,materials:SealedShared<ModelMaterialState>,loads:SealedShared<ModelLoadState>,controls:SealedShared<ModelControlState>,systems:SealedShared<ModelSystemState>,generation:SealedShared<ModelGenerationState>,outputs:SealedShared<ModelOutputState>});
+
+#[path="🌳️branches/🦀️.rs"]pub mod branches;
+
+impl EnergyModelStatePatch{pub fn is_empty(&self)->bool{self.identity.is_none()&&self.geometry.is_none()&&self.materials.is_none()&&self.loads.is_none()&&self.controls.is_none()&&self.systems.is_none()&&self.generation.is_none()&&self.outputs.is_none()}}

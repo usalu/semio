@@ -34,7 +34,11 @@
       ],
       "expected": {
         "n": 9
-      }
+      },
+      "withdrawn": {
+        "n": 1
+      },
+      "vacant": true
     },
     {
       "name": "unicode-original-allocation",
@@ -53,7 +57,11 @@
       ],
       "expected": {
         "text": "next β"
-      }
+      },
+      "withdrawn": {
+        "text": "original α\\0😀"
+      },
+      "vacant": true
     },
     {
       "name": "empty-native-vector",
@@ -81,7 +89,11 @@
           3,
           7
         ]
-      }
+      },
+      "withdrawn": {
+        "rows": []
+      },
+      "vacant": true
     },
     {
       "name": "unchanged-payload",
@@ -94,7 +106,11 @@
       "patch": [],
       "expected": {
         "text": "same"
-      }
+      },
+      "withdrawn": {
+        "text": "same"
+      },
+      "vacant": true
     }
   ],
   "workCases": [

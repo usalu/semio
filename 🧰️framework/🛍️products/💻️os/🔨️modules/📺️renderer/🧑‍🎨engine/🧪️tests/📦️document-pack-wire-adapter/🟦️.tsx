@@ -167,7 +167,7 @@ export async function registerDocumentPackWireAdapterTests(vitest: PluginRuntime
           expect(await handle.cancelMediaExport(instanceId, authority)).toBeUndefined();
           expect(await handle.takeMediaExportChunk(instanceId, authority)).toEqual({ handle: authority, data: new Uint8Array([0, 128, 255]), terminal: true });
           expect(commands).toEqual([
-            { SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: authority.parent_document_id, expected_base_revision: authority.base_revision } },
+            { SubmitMediaExport: { seq: 1n, port: "playback:out", expected_parent_document_id: authority.parent_document_id, expected_base_revision: authority.base_revision, checkpoint_id: null } },
             { PollMediaExport: { seq: 2n, handle: authority } }, { CancelMediaExport: { seq: 3n, handle: authority } }, { TakeMediaExportChunk: { seq: 4n, handle: authority } },
           ]);
           for (const field of ["app_instance_id", "parent_document_id", "operation_id", "base_revision", "generation"] as const) {

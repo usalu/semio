@@ -1,4 +1,4 @@
-//! 🧬️ EnergyModel diff schema — a sparse, typed, per-entity delta over the snapshot. [`EnergyModelDiff::model`] mirrors
+//! 🧬️ EnergyModel diff schema — a sparse, typed, per-entity delta over the snapshot. [`ReferenceEnergyModelDiff::model`] mirrors
 //! [`crate::model::Model`] field for field with [`ModelPatch`]: every collection is keyed rows (removed, inserted,
 //! modified), every record a field patch. Only the central applier turns a diff into a snapshot.
 
@@ -15,7 +15,7 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 use crate::diff_patch::{FieldPatch, Unchanged};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::{ApplyCapability, DiffAlgebra, ColdDiffAlgebra, MutationApplyResult, MutationDiff, ColdMutationDiff};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
@@ -57,7 +57,7 @@ impl EnergyLinkSlotDelta {
 #[derive(Clone, Debug, Default, PartialEq, ArtifactSchema, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 #[artifact_schema(id = "s.energy.model")]
 #[value(rename_all = "camelCase")]
-pub struct EnergyModelDiff {
+pub struct ReferenceEnergyModelDiff {
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Unchanged::unchanged")]
     pub model: ModelPatch,
@@ -69,7 +69,7 @@ pub struct EnergyModelDiff {
     pub weather_link: Option<EnergyLinkSlotDelta>,
 }
 
-impl EnergyModelDiff {
+impl ReferenceEnergyModelDiff {
     /// 🩹 The diff that carries exactly `model`.
     pub fn of(model: ModelPatch) -> Self {
         Self { model, ..Self::default() }
@@ -86,13 +86,13 @@ impl EnergyModelDiff {
     }
 }
 
-impl MutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
+impl MutationDiff<EnergyModelSnapshot> for ReferenceEnergyModelDiff {
 
 
 
 }
 
-impl ColdMutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
+impl ColdMutationDiff<EnergyModelSnapshot> for ReferenceEnergyModelDiff {
     fn absorb(&mut self, other: Self) {
         self.model.absorb(other.model);
         if other.referenced_model.is_some() {
@@ -115,7 +115,7 @@ impl ColdMutationDiff<EnergyModelSnapshot> for EnergyModelDiff {
     }
 }
 
-impl DiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
+impl DiffAlgebra<EnergyModelSnapshot> for ReferenceEnergyModelDiff {
 
 
     fn is_empty(&self) -> bool {
@@ -123,7 +123,7 @@ impl DiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
     }
 }
 
-impl ColdDiffAlgebra<EnergyModelSnapshot> for EnergyModelDiff {
+impl ColdDiffAlgebra<EnergyModelSnapshot> for ReferenceEnergyModelDiff {
     fn inverse(&self, base: &EnergyModelSnapshot) -> Self {
         Self {
             model: self.model.inverse(&base.model),
@@ -156,3 +156,8 @@ pub mod text;
 #[path = "../../🚪️io/💾️binary/🔺️diff/🦀️.rs"]
 pub mod binary;
 //#endregion 🚪️Representations
+
+use snapshot::{original as native_snapshot,state as native_state};
+#[path="🧬️original/🦀️.rs"]pub mod original;
+
+pub use original::EnergyModelDiff;

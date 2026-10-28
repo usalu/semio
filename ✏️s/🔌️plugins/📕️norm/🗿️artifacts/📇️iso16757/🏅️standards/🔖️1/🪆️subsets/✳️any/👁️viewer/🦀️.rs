@@ -63,9 +63,9 @@ impl ArtifactViewer for Iso16757Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn initial_snapshot() -> Iso16757Snapshot {
+    fn reference_birth()->Option<fn()->Iso16757Snapshot>{Some(||{
         Iso16757Snapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Iso16757ViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not

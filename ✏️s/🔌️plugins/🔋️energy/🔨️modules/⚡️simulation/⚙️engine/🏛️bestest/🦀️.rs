@@ -485,18 +485,15 @@ pub struct CaseResults {
     pub cooling_w: Vec<f64>,
 }
 
-/// 📊️ Project a [`Results`] onto [`CaseResults`].
-///
-/// ⚠️ Honest gap, left visible rather than faked: the aggregation pass in
-/// `⚙️engine/🧪️sim/🔍️pipeline/🦀️.rs`'s `step_aggregate_zone` registers exactly ONE time series per zone
-/// (`Zone Air Temperature [<zone>]`) and puts heating/cooling into METERS, which retain only the
-/// running total and the peak — not an hourly trace. So `heating_w`/`cooling_w` come back EMPTY
-/// here and the comparison harness reports the hourly-power metrics as unavailable instead of
-/// comparing zeros against EnergyPlus. Filling them needs `series` to become `zones × 3` in
-/// `EnergyNumericalCensus::observe` plus a series branch in the `Heating`/`Cooling` aggregation
-/// stages; that is a real change to the admission census, not a projection detail.
+/// 📊️ Projects the named zone temperature and power series alongside annual meters.
 pub fn project(case: &str, results: &Results) -> CaseResults {
-    let temperatures: Vec<f64> = results.time_series.series.values().next().map(|series| series.values.clone()).unwrap_or_default();
+    let temperature = results.time_series.series.iter().find(|(key, _)| key.starts_with("Zone Air Temperature ["));
+    let temperatures = temperature.map(|(_, series)| series.values.clone()).unwrap_or_default();
+    let zone = temperature.and_then(|(key, _)| key.strip_prefix("Zone Air Temperature [")).and_then(|name| name.strip_suffix(']'));
+    let power = |label: &str| zone.and_then(|name| {
+        let expected = format!("Zone {label} Power [{name}]");
+        results.time_series.series.iter().find(|(key, _)| **key == expected).map(|(_, series)| series.values.clone())
+    }).unwrap_or_default();
     let heating = results.meters.meters.iter().find(|(key, _)| key.ends_with(" Heating") && !key.starts_with("Facility")).map(|(_, meter)| meter);
     let cooling = results.meters.meters.iter().find(|(key, _)| key.ends_with(" Cooling")).map(|(_, meter)| meter);
     let (min_c, min_hour) = extremum(&temperatures, true);
@@ -516,8 +513,8 @@ pub fn project(case: &str, results: &Results) -> CaseResults {
         free_float_max_hour: max_hour,
         free_float_mean_c: if temperatures.is_empty() { 0.0 } else { temperatures.iter().sum::<f64>() / temperatures.len() as f64 },
         zone_air_temperature_c: temperatures,
-        heating_w: Vec::new(),
-        cooling_w: Vec::new(),
+        heating_w: power("Heating"),
+        cooling_w: power("Cooling"),
     }
 }
 
@@ -659,3 +656,7 @@ fn extremum(values: &[f64], minimum: bool) -> (f64, u32) {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[cfg(test)]
+#[global_allocator]
+static BESTEST_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

@@ -1,0 +1,1 @@
+{"contract":"semio.plugin.original-window-registration.v1","phases":["declared-tools","ephemeral-stores","window-owner","peer-root","peer-scope","field-issuers","record-issuers","ready"],"copyLimit":32768,"cancelCuts":[0,1,2,3,5,9,17,33,65,129,257],"sourceIdentityRetained":true,"installedFactoriesRetained":true,"physicalClosureRequired":true}

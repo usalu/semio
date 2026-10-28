@@ -51,7 +51,7 @@ pub async fn decode_transition(payload: &[u8], dict: &DictReader) -> Result<Hist
         dependencies.push(read_id_field(&mut input, dict, miss)?);
     }
     let len = input.read_varint_u64()? as usize;
-    let transition_payload = input.read_bytes(len)?.to_vec();
+    let transition_payload = protocol::CausalPayload::try_from_slice(input.read_bytes(len)?).map_err(|error|ProtocolError::from(semio_framework_os_pack::PackRefusal::ValueRefusal(error)))?;
     let observed = if format == 2 { Some(read_id_field(&mut input, dict, miss)?) } else { None };
     if input.remaining() != 0 {
         return Err(ProtocolError::Malformed { what: "transition", offset: input.position() as u64, detail: "trailing payload bytes".to_string() });

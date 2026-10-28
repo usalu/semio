@@ -106,7 +106,10 @@ pub struct CloseCursors<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory>
 
 impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> CloseCursors<A, M> {
     /// 🫏️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new() -> Self {
+    pub fn new() -> Self {Self::from_original(A::build_document_store_disposer(),A::build_config_store_disposer(),A::build_draft_store_disposer(),A::build_presence_store_disposer(),A::build_transient_store_disposer(),Some(Box::new(ArtifactDocumentStoreDisposer::<protocol::InteractionState,InteractionConfigMutation>::new())))}
+
+    /// 🧷️ Moves the actual admitted typed disposers into native closure custody without invoking App factories.
+    pub fn from_original(document:ArtifactDisposal<ArtifactStore<A::Snapshot,A::Mutation>>,config:ArtifactDisposal<ConfigStore<A::Config,A::ConfigMutation>>,draft:ArtifactDisposal<store::DraftStore<A::Draft,A::DraftMutation>>,presence:ArtifactDisposal<store::PresenceStore<A::Presence,A::PresenceMutation>>,transient:ArtifactDisposal<store::TransientStore<A::Transient,A::TransientMutation>>,interaction:ArtifactDisposal<ConfigStore<protocol::InteractionState,InteractionConfigMutation>>)->Self{
         Self {
             close_window_retirement_cursor: 0,
             close_started: false,
@@ -142,12 +145,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> CloseCur
             close_snapshot_reads_drained: false,
             close_owned_stage: 0,
             close_owned_advance_ready: false,
-            close_document_disposer: ManuallyDrop::new(A::build_document_store_disposer()),
-            close_config_disposer: ManuallyDrop::new(A::build_config_store_disposer()),
-            close_draft_disposer: ManuallyDrop::new(A::build_draft_store_disposer()),
-            close_presence_disposer: ManuallyDrop::new(A::build_presence_store_disposer()),
-            close_transient_disposer: ManuallyDrop::new(A::build_transient_store_disposer()),
-            close_interaction_disposer: ManuallyDrop::new(Some(Box::new(ArtifactDocumentStoreDisposer::<protocol::InteractionState, InteractionConfigMutation>::new()))),
+            close_document_disposer: ManuallyDrop::new(document),
+            close_config_disposer: ManuallyDrop::new(config),
+            close_draft_disposer: ManuallyDrop::new(draft),
+            close_presence_disposer: ManuallyDrop::new(presence),
+            close_transient_disposer: ManuallyDrop::new(transient),
+            close_interaction_disposer: ManuallyDrop::new(interaction),
         }
     }
 }

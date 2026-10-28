@@ -34,6 +34,8 @@ pub(super) enum PagedAppCommandDecodeState {
     MediaExportSubmitPort { seq: u64 },
     MediaExportSubmitDocument { seq: u64, port: Option<String> },
     MediaExportSubmitRevision { seq: u64, port: Option<String>, expected_parent_document_id: Option<String> },
+    MediaExportSubmitSelection { seq:u64,port:Option<String>,expected_parent_document_id:Option<String>,expected_base_revision:u64 },
+    MediaExportSubmitCheckpoint { seq:u64,port:Option<String>,expected_parent_document_id:Option<String>,expected_base_revision:u64 },
     MediaExportHandle { seq: u64, kind: u8, decode: PagedMediaExportHandleDecode },
     RejectedFields { fields: Vec<Vec<u8>> },
     Terminal,
@@ -99,6 +101,7 @@ impl DecodedAppCommandOwner {
         let field=match(self.close_stage,&mut*command){
             (0,AppCommand::SubmitMediaExport{port,..})=>Some(port),
             (1,AppCommand::SubmitMediaExport{expected_parent_document_id,..})=>Some(expected_parent_document_id),
+            (2,AppCommand::SubmitMediaExport{checkpoint_id,..})=>checkpoint_id.as_mut(),
             (0,AppCommand::PollMediaExport{handle,..})=>Some(&mut handle.parent_document_id),
             (1,AppCommand::MediaOut{port,..})=>Some(port),
             (_,AppCommand::SubmitMediaExport{..}|AppCommand::PollMediaExport{..}|AppCommand::MediaOut{..}|AppCommand::Command{..}|AppCommand::ArtifactCommand{..})=>None,
@@ -166,6 +169,7 @@ impl DecodedAppCommandOwner {
             (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => Some(std::mem::take(group_id).into_bytes()),
             (0, AppCommand::SubmitMediaExport { port, .. }) => Some(std::mem::take(port).into_bytes()),
             (1, AppCommand::SubmitMediaExport { expected_parent_document_id, .. }) => Some(std::mem::take(expected_parent_document_id).into_bytes()),
+            (2, AppCommand::SubmitMediaExport { checkpoint_id, .. }) => checkpoint_id.take().map(String::into_bytes),
             (0, AppCommand::PollMediaExport { handle, .. }) | (0, AppCommand::CancelMediaExport { handle, .. }) | (0, AppCommand::TakeMediaExportChunk { handle, .. }) => Some(std::mem::take(&mut handle.parent_document_id).into_bytes()),
             _ => None,
         };
@@ -194,6 +198,7 @@ impl DecodedAppCommandOwner {
                     (0, AppCommand::TransactionUndo { group_id, .. }) | (0, AppCommand::TransactionRedo { group_id, .. }) => *group_id = String::from_utf8(field).expect("decoded transaction group id remains valid UTF-8"),
                     (0, AppCommand::SubmitMediaExport { port, .. }) => *port = String::from_utf8(field).expect("decoded media export port remains valid UTF-8"),
                     (1, AppCommand::SubmitMediaExport { expected_parent_document_id, .. }) => *expected_parent_document_id = String::from_utf8(field).expect("decoded media export parent document id remains valid UTF-8"),
+                    (2, AppCommand::SubmitMediaExport { checkpoint_id, .. }) => *checkpoint_id=Some(String::from_utf8(field).expect("decoded checkpoint retains valid UTF-8")),
                     (0, AppCommand::PollMediaExport { handle, .. }) | (0, AppCommand::CancelMediaExport { handle, .. }) | (0, AppCommand::TakeMediaExportChunk { handle, .. }) => handle.parent_document_id = String::from_utf8(field).expect("decoded media export parent document id remains valid UTF-8"),
                     _ => unreachable!("decoded command close field has an exact restoration target"),
                 }

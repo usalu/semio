@@ -30,20 +30,23 @@ pub(super) fn normal_remaining(grant:RetainedCloneGrant,progress:RetainedClonePr
 
 type JsonCandidates<T> = semio_framework_value_persistent::list::PagedList<T,{usize::MAX}>;
 
-struct JsonFrame<V:JsonParsedValue> {
+#[doc(hidden)]
+pub struct JsonFrame<V:JsonParsedValue> {
     pub object: bool, pub state: u8, item_count:u64, pub values: JsonCandidates<V>, pub entries: JsonCandidates<(String,V)>,
     pub key: Option<String>, key_offset: usize, probe: usize, pub compare: usize, pub(super) duplicate: Option<usize>,
     pub array:Vec<V>, pub(super) members:Vec<(String,V)>, pub(super) admitted:bool, pub(super) reverse:usize,
 }
 
-struct JsonStringScan {pub start:usize,pub position:usize,pub bytes:usize,pub output:Vec<u8>,pending_scalar:u32,pending_width:u8,pending_index:u8,writing:bool,pub(super) admitted:bool}
+#[doc(hidden)]
+pub struct JsonStringScan {pub start:usize,pub position:usize,pub bytes:usize,pub output:Vec<u8>,pending_scalar:u32,pending_width:u8,pending_index:u8,writing:bool,pub(super) admitted:bool}
 
 impl JsonStringScan{
     pub(super) fn next_byte(&self)->u8{let scalar=self.pending_scalar;let width=self.pending_width;let index=self.pending_index;if width==1{return scalar as u8}if index==0{return match width{2=>0xc0|(scalar>>6)as u8,3=>0xe0|(scalar>>12)as u8,_=>0xf0|(scalar>>18)as u8}}0x80|((scalar>>(6*u32::from(width-index-1)))&63)as u8}
     fn write_byte(&mut self,receipt:&mut RetainedCloneProgress)->Result<(),JsonError>{if self.output.len()>=self.bytes{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"JSON string changed after admission").into())}self.output.push(self.next_byte());self.pending_index+=1;receipt.copied_bytes=1;Ok(())}
 }
 
-pub(super) enum JsonLexeme { String(JsonStringScan), Number(NumberScan) }
+#[doc(hidden)]
+pub enum JsonLexeme { String(JsonStringScan), Number(NumberScan) }
 
 fn json_candidate_slot<T>(owner:&mut JsonCandidates<T>,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,receipt:&mut RetainedCloneProgress)->Result<bool,JsonError> {
     if owner.has_reserved_slot() {return Ok(true);}
@@ -62,13 +65,13 @@ pub type JsonParseCursor=JsonGrammarCursor<Value>;
 
 /// 🖱️ One retained grammar moves admitted semantic cells directly into its declared first-party output.
 pub struct JsonGrammarCursor<V:JsonParsedValue> {
-    #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: Vec<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
+    #[doc(hidden)] pub position: usize, validated_position:usize, #[doc(hidden)] pub limits:JsonReadLimits, #[doc(hidden)] pub policy: JsonMemberPolicy, #[doc(hidden)] pub frames: JsonCandidates<JsonFrame<V>>, #[doc(hidden)] pub lexeme: Option<JsonLexeme>,
     #[doc(hidden)] pub pending: Option<V>, #[doc(hidden)] pub result: Option<V>, retired: JsonCandidates<V>, obsolete:Option<V>, pub(super) complete: bool, pub(super) normal_step_progress:RetainedCloneProgress,
 }
 
 impl<V:JsonParsedValue> JsonGrammarCursor<V> {
     /// 🌱️ Starts parsing without copying, scanning, or allocating for the source.
-    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Vec::new(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default() } }
+    pub fn new(policy: JsonMemberPolicy) -> Self { Self { position:0, validated_position:0, limits:JsonReadLimits{maximum_bytes:u64::MAX,maximum_allocation_bytes:usize::MAX,maximum_depth:MAX_DEPTH as usize,maximum_items:u64::MAX}, policy, frames:Default::default(), lexeme:None, pending:None, result:None, retired:Default::default(),obsolete:None,complete:false,normal_step_progress:Default::default() } }
     /// 📍️ Returns the measured source byte offset.
     pub fn position(&self) -> usize { self.position }
     /// 🧭️ Identifies the existing grammar or physical candidate frontier.
@@ -96,7 +99,7 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
         if let Some(JsonLexeme::String(scan))=&self.lexeme{
             if scan.writing&&!scan.admitted{demand.capacity_bytes=scan.bytes;}
             else if scan.writing{let mut position=scan.position;demand.copy_bytes=if scan.pending_index<scan.pending_width{1}else{usize::from(borrowed_read_source::json_character(input,&mut position)?.is_some())};}
-        }else if self.lexeme.is_none()&&self.frames.capacity()==0&&matches!(input.byte_at(self.position),Some(b'{'|b'[')){demand.capacity_bytes=(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)*size_of::<JsonFrame<V>>();}
+        }else if self.lexeme.is_none()&&matches!(input.byte_at(self.position),Some(b'{'|b'[')){json_candidate_demand(&self.frames,&mut demand)?;}
         Ok(demand)
     }
     pub fn step(&mut self,input:&str,maximum_units:usize,control:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>,grant:RetainedCloneGrant)->Result<Option<V>,JsonError>{
@@ -216,8 +219,8 @@ impl<V:JsonParsedValue> JsonGrammarCursor<V> {
             b'-'|b'0'..=b'9'=>self.lexeme=Some(JsonLexeme::Number(NumberScan::new(self.position))),
             b'{'|b'['=>{
                 self.admit_container_depth()?;
-                if self.frames.capacity()==0 {self.frames=control.allocate_vec(self.limits.maximum_depth.min(MAX_DEPTH as usize)+2)?;receipt.retained_capacity_bytes=self.frames.capacity()*size_of::<JsonFrame<V>>();return Ok(());}
-                self.frames.push(JsonFrame {object:byte==b'{',state:0,item_count:0,values:Default::default(),entries:Default::default(),key:None,key_offset:0,probe:0,compare:0,duplicate:None,array:Vec::new(),members:Vec::new(),admitted:false,reverse:0});self.position+=1;
+                if !json_candidate_slot(&mut self.frames,control,receipt)?{return Ok(());}
+                self.frames.push_reserved(JsonFrame {object:byte==b'{',state:0,item_count:0,values:Default::default(),entries:Default::default(),key:None,key_offset:0,probe:0,compare:0,duplicate:None,array:Vec::new(),members:Vec::new(),admitted:false,reverse:0}).unwrap_or_else(|_|unreachable!("original JSON grammar reserved its exact next frame"));self.position+=1;
             },
             b't'|b'f'|b'n'=>{let (text,value)=match byte {b't'=>("true",V::json_bool(true)),b'f'=>("false",V::json_bool(false)),_=>("null",V::json_null())};if !borrowed_read_source::starts_with(input,self.position,text) {return Err(error());}self.position+=text.len();self.pending=Some(value);},
             _=>return Err(error()),
@@ -293,7 +296,8 @@ impl JsonMemberOrder {
     }
 }
 
-pub(super) struct JsonProjectionIterator<T> {pub values:std::vec::IntoIter<T>,pub allocation:usize}
+#[doc(hidden)]
+pub struct JsonProjectionIterator<T> {pub values:std::vec::IntoIter<T>,pub allocation:usize}
 
 impl<T> JsonProjectionIterator<T> {pub(super) fn new(values:Vec<T>)->Self {let allocation=values.capacity().saturating_mul(size_of::<T>());Self {values:values.into_iter(),allocation}}pub(super) fn next(&mut self)->Option<T>{self.values.next()}pub(super) fn len(&self)->usize{self.values.len()}}
 
@@ -323,9 +327,11 @@ impl<T:semio_framework_value::retirement::RetireOwned> semio_framework_value::re
     fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
 }
 
-struct JsonProjectionFrame {pub values:JsonProjectionIterator<Value>,pub entries:JsonProjectionIterator<(String,Value)>,pub array:Vec<DslValue>,pub object:Vec<(String,DslValue)>,pub key:Option<String>,is_object:bool,order:Option<JsonMemberOrder>,pub(super) admitted:bool}
+#[doc(hidden)]
+pub struct JsonProjectionFrame {pub values:JsonProjectionIterator<Value>,pub entries:JsonProjectionIterator<(String,Value)>,pub array:Vec<DslValue>,pub object:Vec<(String,DslValue)>,pub key:Option<String>,is_object:bool,order:Option<JsonMemberOrder>,pub(super) admitted:bool}
 
-struct JsonCompletedFrameRetirement {pub frame:std::mem::ManuallyDrop<JsonProjectionFrame>,pub phase:u8}
+#[doc(hidden)]
+pub struct JsonCompletedFrameRetirement {pub frame:std::mem::ManuallyDrop<JsonProjectionFrame>,pub phase:u8}
 
 impl JsonCompletedFrameRetirement {
     pub(super) fn new(frame:JsonProjectionFrame)->Result<Self,(ValueError,JsonProjectionFrame)>{if frame.values.len()!=0||frame.entries.len()!=0||!frame.array.is_empty()||!frame.object.is_empty()||frame.key.is_some(){return Err((ValueError::literal(ValueRefusalKind::InvariantViolated,"completed JSON input frame still owns an untransferred value"),frame));}Ok(Self{frame:std::mem::ManuallyDrop::new(frame),phase:0})}

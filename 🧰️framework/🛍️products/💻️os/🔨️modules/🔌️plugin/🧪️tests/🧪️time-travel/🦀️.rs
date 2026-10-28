@@ -122,9 +122,9 @@ impl ArtifactApp for ToyHistoryApp {
         (example_id == "five").then(|| Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&example)))))
     }
 
-    async fn initial_snapshot() -> TestSnapshot {
+    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
         TestSnapshot::default()
-    }
+    })}
 
     async fn handle(
         command: &TestMutation,

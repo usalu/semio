@@ -50,6 +50,15 @@ extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_mut_run as run_mutations;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_session as session;
+extern crate semio_s_artifact_energy_model_mut_people_gain as people_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_lighting_gain as lighting_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_equipment_gain as equipment_gain_mutations;
+extern crate semio_s_artifact_energy_model_mut_infiltration as infiltration_mutations;
+extern crate semio_s_artifact_energy_model_mut_leakage as leakage_mutations;
+extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
+extern crate semio_s_artifact_energy_model_mut_shading as shading_mutations;
+extern crate semio_s_artifact_energy_model_mut_space as space_mutations;
+extern crate semio_s_artifact_energy_model_mut_ideal_loads as ideal_loads_mutations;
 extern crate semio_s_artifact_energy_model_mut_shading_device as shading_device_mutations;
 extern crate semio_s_artifact_energy_model_mut_site as site_mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
@@ -59,7 +68,7 @@ extern crate semio_s_artifact_energy_model_mut_window_layer as window_layer_muta
 extern crate semio_s_artifact_energy_model_mut_window_layer_optics as window_layer_optics_mutations;
 extern crate semio_s_artifact_energy_model_mut_zone as zone_mutations;
 
-use crate::editor_commands::{ASSIGN_SURFACE_CONSTRUCTION_ACTION_ID, CREATE_SURFACE_ACTION_ID, CREATE_ZONE_ACTION_ID, DELETE_SURFACE_ACTION_ID, DELETE_ZONE_ACTION_ID, ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS, ENERGY_MODEL_RETAINED_TOOL_IDS, EnergyModelEditorCommand, RENAME_ZONE_ACTION_ID, SET_ACTIVE_EXAMPLE_ACTION_ID, SET_CELL_ACTION_ID, SET_CONSTRUCTION_PROPERTY_ACTION_ID, SET_FENESTRATION_PROPERTY_ACTION_ID, SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_NODE_ACTION_ID, SET_RUN_PERIOD_ACTION_ID, SET_SITE_ACTION_ID, SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID, inspector_action_definitions};
+use crate::editor_commands::{ASSIGN_SURFACE_CONSTRUCTION_ACTION_ID, CREATE_SURFACE_ACTION_ID, CREATE_ZONE_ACTION_ID, DELETE_SURFACE_ACTION_ID, DELETE_ZONE_ACTION_ID, ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS, ENERGY_MODEL_RETAINED_TOOL_IDS, EnergyModelEditorCommand, RENAME_ZONE_ACTION_ID, SET_ACTIVE_EXAMPLE_ACTION_ID, SET_CELL_ACTION_ID, SET_CONSTRUCTION_PROPERTY_ACTION_ID, SET_FENESTRATION_PROPERTY_ACTION_ID, SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_LOAD_PROPERTY_ACTION_ID, SET_SHADING_PROPERTY_ACTION_ID, SET_HVAC_PROPERTY_ACTION_ID, SET_SPACE_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_NODE_ACTION_ID, SET_RUN_PERIOD_ACTION_ID, SET_SITE_ACTION_ID, SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID, inspector_action_definitions};
 use crate::editor_config::{ChangeResultField, ChangeSimulationSettings, EnergyModelConfig, EnergyModelConfigMutation};
 use crate::editor_edit::tools;
 use crate::editor_interaction::{EnergyModelInteractionSnapshot, ENERGY_MODEL_INTERACTION_DOMAIN};
@@ -143,3 +152,10 @@ mod tests;
 #[path = "👥️presence/🧬️schema/🦀️.rs"]
 pub mod presence;
 //#endregion 👥️Presence
+
+#[path="../🌱️initialization/🦀️.rs"]
+pub mod original_initial_source;
+
+#[path="🌱️initialization/🦀️.rs"]
+mod original_initialization;
+pub use original_initialization::EnergyModelNativeRegistration;

@@ -51,7 +51,7 @@ pub struct HistoryTransitionRecord {
     pub hlt: (u64, u64, u64),
     pub dependencies: Vec<String>,
     pub observed: Option<String>,
-    pub payload: Vec<u8>,
+    pub payload: protocol::CausalPayload,
 }
 
 /// 🧩️ The durable form of a document's composition facts, carried as ONE extension record
@@ -206,7 +206,7 @@ impl HistoryTransitionRecord {
             observed: self.observed.clone().map(protocol::MutationId),
             target: Vec::new(),
             diff: protocol::ArtifactDiff { schema: schema.clone(), payload: self.payload.clone() },
-            inverse: protocol::InverseMutation { schema, payload: Vec::new() },
+            inverse: protocol::InverseMutation { schema, payload: Default::default() },
             timestamp: protocol::HybridLogicalTimestamp { actor: self.hlt.0, physical_ms: self.hlt.1, logical: self.hlt.2 },
             transaction: None, verb: None, line: None,
         }

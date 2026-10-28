@@ -87,12 +87,12 @@ fn close_step(&mut self,grant:RetainedCloneGrant)->RetirementStep {match self.st
 impl<T:RetireOwned+Sync> RetireOwned for Arc<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(SharedControlledRetirement::new(self))}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<SharedControlledRetirement<T>>())}
-    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 impl<T:RetireOwned+Sync> RetireOwned for SharedControlledRetirement<T> {
     fn retirement(self)->Box<dyn RetirementCursor>{Box::new(self)}
     fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<Self>())}
-    fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 /// 📦️ Exact original shared backing demand used by the admitted shared retirement owners.
 pub fn shared_retirement_allocation_bytes<T>()->usize {std::alloc::Layout::new::<[usize;2]>().extend(std::alloc::Layout::new::<T>()).expect("shared Arc allocation layout").0.pad_to_align().size()}

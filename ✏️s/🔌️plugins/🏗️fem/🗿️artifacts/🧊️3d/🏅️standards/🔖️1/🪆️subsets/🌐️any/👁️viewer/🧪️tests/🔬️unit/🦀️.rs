@@ -14,7 +14,7 @@ fn viewer_dialect_matches_the_artifact_coordinate() {
 
 #[test]
 fn initial_snapshot_is_the_bundled_example_not_empty() {
-    let snapshot = <Fem3dViewer as ArtifactViewer>::initial_snapshot();
+    let snapshot = <Fem3dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")();
     let expected = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_io::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
     assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
 }

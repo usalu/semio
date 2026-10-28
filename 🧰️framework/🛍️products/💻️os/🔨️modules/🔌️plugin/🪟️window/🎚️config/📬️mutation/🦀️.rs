@@ -4,14 +4,12 @@ use std::any::Any;
 pub trait ErasedWindowMutationValue:Send+Sync{
  fn as_any(&self)->&dyn Any;
  fn into_any(self:Box<Self>)->Box<dyn Any+Send>;
- fn clone_value(&self)->Box<dyn ErasedWindowMutationValue>;
  fn retire_payload(self:Box<Self>)->Box<dyn RetirementCursor>;
  fn payload_birth_bytes(&self)->usize;
 }
-impl<T:Clone+Send+Sync+'static> ErasedWindowMutationValue for FactoryBoxedValue<T>{
+impl<T:Send+Sync+'static> ErasedWindowMutationValue for FactoryBoxedValue<T>{
  fn as_any(&self)->&dyn Any{self.original.as_ref()}
  fn into_any(self:Box<Self>)->Box<dyn Any+Send>{self}
- fn clone_value(&self)->Box<dyn ErasedWindowMutationValue>{Box::new(Self{original:self.original.clone(),factory:self.factory.clone()})}
  fn retire_payload(self:Box<Self>)->Box<dyn RetirementCursor>{self.retirement()}
  fn payload_birth_bytes(&self)->usize{boxed_owner_birth_bytes::<Self>()}
 }

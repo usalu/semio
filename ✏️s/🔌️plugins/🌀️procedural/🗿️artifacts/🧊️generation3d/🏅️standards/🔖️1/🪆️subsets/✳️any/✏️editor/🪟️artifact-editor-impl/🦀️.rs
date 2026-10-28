@@ -189,9 +189,9 @@ impl ArtifactEditor for Generation3dPlayApp {
         Some(semio_s_artifact_procedural_3d_editor_config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> Generation3dSnapshot {
+    fn reference_birth()->Option<fn()->Generation3dSnapshot>{Some(||{
         semio_s_artifact_procedural_3d_io_text::snapshot::default_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(::semio_framework_async::poll::resolve_ready(generation3d_io()))

@@ -8,7 +8,7 @@ use super::*;
 /// `json` string. `surface` carries scene-target info (`World3D`/`nodeGraph`/`tiledMap`/... hit-test
 /// results); `menu` is the `UiMenuRef` the host resolved from `data-menu-id`/a scene surface
 /// convention id (`"world3d"`, `"nodeGraph"`, `"window"`, `"panel:<tabId>"`, ...).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuHit {
@@ -19,7 +19,7 @@ pub struct ContextMenuHit {
     pub label: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuSelectionGroup {
@@ -27,7 +27,7 @@ pub struct ContextMenuSelectionGroup {
     pub ids: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuTextContext {
@@ -40,7 +40,7 @@ pub struct ContextMenuTextContext {
     pub has_completions: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuSurfaceTarget {
@@ -57,7 +57,7 @@ pub struct ContextMenuSurfaceTarget {
     pub text: Option<ContextMenuTextContext>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuPoint {
@@ -72,7 +72,7 @@ pub struct ContextMenuPoint {
 /// plugin SDK's `plugin_context_menu` free function parses the WIT-level combined JSON (which DOES
 /// carry `viewState`, matching the TS `PluginContextMenuRequest` wire shape) and splits it into this
 /// smaller struct plus a typed `ViewModel` before calling `ArtifactApp::context_menu`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuRequest {
@@ -88,7 +88,7 @@ pub struct ContextMenuRequest {
     pub point: Option<ContextMenuPoint>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ContextMenuResponse {

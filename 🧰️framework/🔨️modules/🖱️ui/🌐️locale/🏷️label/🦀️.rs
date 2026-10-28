@@ -331,3 +331,6 @@ mod localized_label_fixture_tests;
 pub trait AppLabels: Sized + 'static {
     fn labels(locale: Locale, terminology: Terminology) -> &'static Self;
 }
+
+#[path="🛬️receiving/🦀️.rs"]
+pub mod receiving;

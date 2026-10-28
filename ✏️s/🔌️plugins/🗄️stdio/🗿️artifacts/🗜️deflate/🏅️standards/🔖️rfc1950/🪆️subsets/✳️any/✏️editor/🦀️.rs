@@ -308,9 +308,9 @@ impl ArtifactEditor for DeflateEditor {
         })
     }
 
-    fn initial_snapshot() -> DeflateSnapshot {
+    fn reference_birth()->Option<fn()->DeflateSnapshot>{Some(||{
         DeflateSnapshot::default()
-    }
+    })}
 
     /// ✏️ Parses the whole `key=value` summary and, if every required field is present and valid,
     /// emits the header leaves the Apply changed as one gesture: `SetCompressionParams` when the method, window or level hint

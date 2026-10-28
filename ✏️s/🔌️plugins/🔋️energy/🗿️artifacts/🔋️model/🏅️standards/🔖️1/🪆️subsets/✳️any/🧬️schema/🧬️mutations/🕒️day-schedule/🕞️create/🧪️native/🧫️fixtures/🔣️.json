@@ -1,0 +1,611 @@
+{
+  "contract": "semio.energy.original-create-daily/v1",
+  "collection": "schedules.daily",
+  "existingRows": [
+    {
+      "id": 200,
+      "hourly_values": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interpolation": "Continuous",
+      "limits": {
+        "min": 0,
+        "max": 2
+      }
+    }
+  ],
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 100,
+          "value": 1
+        }
+      ],
+      "daily": [
+        {
+          "id": 200,
+          "hourly_values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "interpolation": "Continuous",
+          "limits": {
+            "min": 0,
+            "max": 2
+          }
+        }
+      ],
+      "weekly": [
+        {
+          "id": 300,
+          "daily_schedule_ids": [
+            200,
+            200,
+            200,
+            200,
+            200,
+            200,
+            200
+          ]
+        }
+      ],
+      "annual": [
+        {
+          "id": 400,
+          "rules": [],
+          "default_daily_schedule_id": 200,
+          "holiday_daily_schedule_id": null,
+          "holiday_dates": []
+        }
+      ],
+      "time_series": [
+        {
+          "id": 500,
+          "values": [
+            1,
+            2
+          ],
+          "timestep_seconds": 3600
+        }
+      ]
+    }
+  },
+  "receivingMaximumBytes": 67108864,
+  "cases": [
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "changed",
+      "after": [
+        200,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": null,
+        "limitsMax": null
+      },
+      "outcome": "changed",
+      "after": [
+        200,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 100,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 200,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 300,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 400,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 500,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 3,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 0,
+        "limitsMax": 1
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": null,
+        "limitsMax": 1
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "hourlyValues": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "interpolation": "Discrete",
+        "limitsMin": 2,
+        "limitsMax": 1
+      },
+      "outcome": "invalid"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    10,
+    20,
+    30,
+    50,
+    100,
+    200,
+    500,
+    1000
+  ],
+  "recreate": {
+    "original": {
+      "id": 200,
+      "hourly_values": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interpolation": "Continuous",
+      "limits": {
+        "min": 0,
+        "max": 2
+      }
+    },
+    "rank": 7,
+    "payload": {
+      "index": 7,
+      "id": 200,
+      "hourlyValues": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "interpolation": "Continuous",
+      "limitsMin": 0,
+      "limitsMax": 2
+    }
+  }
+}

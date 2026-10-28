@@ -349,5 +349,152 @@
         }
       }
     }
-  ]
+  ],
+  "x-semio-energy-row-birth": {
+    "row": "StateSurface",
+    "recreation": "exact",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "class",
+        "input": "class",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "vertices_m",
+        "input": "vertices_m",
+        "storage": "sealed"
+      },
+      {
+        "field": "construction_id",
+        "input": "construction_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "outside_boundary_condition",
+        "input": "boundary",
+        "partner": "interzone_surface_id",
+        "storage": "surface-boundary"
+      },
+      {
+        "field": "sun_exposed",
+        "input": "sun_exposed",
+        "storage": "fixed"
+      },
+      {
+        "field": "wind_exposed",
+        "input": "wind_exposed",
+        "storage": "fixed"
+      },
+      {
+        "field": "multiplier",
+        "input": "multiplier",
+        "storage": "fixed"
+      }
+    ]
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "key": "id",
+    "name": "name",
+    "unique": false,
+    "nameValidation": "nonblank",
+    "inverse": "DeleteSurface",
+    "validationBeforeRank": true,
+    "defaultRank": "id-order",
+    "scalarOrder": "after-rules",
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "construction_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Constructions"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "vertices_m",
+        "kind": "finite-points"
+      },
+      {
+        "input": "interzone_surface_id",
+        "kind": "reference",
+        "storage": "optional",
+        "collections": [
+          "Surfaces"
+        ],
+        "target": "row"
+      },
+      {
+        "input": "boundary",
+        "kind": "surface-boundary",
+        "partner": "interzone_surface_id"
+      }
+    ],
+    "labels": {
+      "en": "Create surface",
+      "de": "Oberfläche erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "surface",
+      "kind": "create",
+      "record": "CreatedSurface"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A named surface has a finite polygon, positive multiplicity and consistent outside boundary."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "A required original zone, construction or partner surface does not exist."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The surface identifier already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The insertion rank is outside the original surface roster."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original surface roster is unchanged."
+      }
+    }
+  }
 }

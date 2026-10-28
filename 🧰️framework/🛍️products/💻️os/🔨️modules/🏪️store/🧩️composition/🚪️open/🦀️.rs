@@ -129,6 +129,9 @@ pub trait MemberOpenOperation {
     fn next_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError>;
     fn next_depth_demand(&self) -> Result<usize, semio_framework_value::ValueError>;
     fn terminal_drop_byte_demand(&self) -> Option<usize>;
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { copy_bytes: self.next_copy_byte_demand()?, capacity_bytes: self.next_capacity_byte_demand(body)?, release_bytes: self.next_release_byte_demand()?, depth: self.next_depth_demand()? })
+    }
 }
 
 pub struct MemberOpenRequest {

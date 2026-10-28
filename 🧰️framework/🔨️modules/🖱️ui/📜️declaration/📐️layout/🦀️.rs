@@ -13,7 +13,7 @@ pub mod utilities {
     use semio_framework_value::{FromValue, ToValue};
     use serde::{Deserialize, Serialize};
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
     #[serde(rename_all = "camelCase")]
     #[value(rename_all = "camelCase")]
     pub enum UtilityCategory {
@@ -23,7 +23,7 @@ pub mod utilities {
         Sync,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
     #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
     pub enum UtilityNode {
@@ -250,7 +250,7 @@ pub mod role_chrome {
     //#region 🔖️ChromeRole
     /// 🎭️✏️ Wire-compatible with Rust `semio_framework::AppRole`/TS `AppRole` — exactly `"viewer"`/
     /// `"editor"`, contract freeze §1 C1.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
     #[serde(rename_all = "lowercase")]
     #[value(rename_all = "lowercase")]
     pub enum ChromeRole {

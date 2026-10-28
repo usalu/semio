@@ -57,5 +57,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "row": "StateRefrigerationConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "refrigeration_systems",
+    "field": "defrost_schedule_id",
+    "input": "new_defrost_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Change refrigeration system: Defrost schedule",
+      "de": "Abtauzeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "refrigeration-system",
+      "kind": "change-refrigeration-system-defrost-schedule",
+      "record": "ChangedRefrigerationSystemDefrostSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Defrost schedule violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed refrigeration system does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced defrost schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The refrigeration system already carries this defrost schedule reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

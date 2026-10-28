@@ -46,7 +46,7 @@ pub enum LinkState {
 /// of this artifact's own document and dispatch never touches it). A UI/renderer calls this only
 /// when it actually needs to show/open the linked content.
 pub trait LinkResolver {
-    async fn resolve(&self, link: &ArtifactLink) -> LinkState;
+    async fn resolve(&self, link: &ArtifactLink) -> Result<LinkState, VcsError>;
 }
 
 /// 🗂️ The read-only directory a `MemberLinkResolver` resolves against — whatever holds the
@@ -116,20 +116,20 @@ impl<D: MemberDirectory, B: BlobStore> MemberLinkResolver<D, B> {
 }
 
 impl<D: MemberDirectory, B: BlobStore> LinkResolver for MemberLinkResolver<D, B> {
-    async fn resolve(&self, link: &ArtifactLink) -> LinkState {
+    async fn resolve(&self, link: &ArtifactLink) -> Result<LinkState, VcsError> {
         let dialect = link.target.dialect.clone();
-        match &link.pin {
-            LinkPin::Head => match self.directory.head_pack(&link.target.artifact_id).await {
-                Some(Ok(pack_bytes)) => LinkState::Resolved { pack_bytes, dialect },
-                Some(Err(_)) | None => LinkState::Missing,
+        let state = match &link.pin {
+            LinkPin::Head => match self.directory.head_pack(&link.target.artifact_id).await.transpose()? {
+                Some(pack_bytes) => LinkState::Resolved { pack_bytes, dialect },
+                None => LinkState::Missing,
             },
-            LinkPin::Checkpoint { id } => match self.directory.checkpoint_pack(&link.target.artifact_id, id).await {
-                Some(Ok(pack_bytes)) => LinkState::Resolved { pack_bytes, dialect },
-                Some(Err(_)) | None => LinkState::Missing,
+            LinkPin::Checkpoint { id } => match self.directory.checkpoint_pack(&link.target.artifact_id, id).await.transpose()? {
+                Some(pack_bytes) => LinkState::Resolved { pack_bytes, dialect },
+                None => LinkState::Missing,
             },
             LinkPin::Snapshot { blob } => {
                 let resolved = match &self.blobs {
-                    Some(blobs) => blobs.get(&blob.hash).await.ok().flatten(),
+                    Some(blobs) => blobs.get(&blob.hash).await?,
                     None => None,
                 };
                 match resolved {
@@ -137,7 +137,8 @@ impl<D: MemberDirectory, B: BlobStore> LinkResolver for MemberLinkResolver<D, B>
                     None => LinkState::PinnedOnly { blob: blob.clone() },
                 }
             }
-        }
+        };
+        Ok(state)
     }
 }
 //#endregion 🔖️Composition
@@ -179,3 +180,7 @@ pub trait BlobStore: Send + Sync {
 //#endregion 🔖️BlobStore
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
+
+#[cfg(test)]
+#[path="🧪️tests/🦀️.rs"]
+mod tests;

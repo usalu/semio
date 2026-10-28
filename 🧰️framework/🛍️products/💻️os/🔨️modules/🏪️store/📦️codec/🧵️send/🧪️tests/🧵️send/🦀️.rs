@@ -16,7 +16,7 @@ async fn document_codec_native_send_compile_dsl_preserves_exact_snapshots() {
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let text = print_document_text(&envelope).await.expect("exact schema-owned input");
         envelope.retire_unadopted();
-        let future = (codec.compile_dsl)(&text.dsl, &text.ops);
+        let future = (codec.reference().expect("authored cold codec reference").compile_dsl)(&text.dsl, &text.ops);
         require_send(&future);
         let (files, mirror) = future.await.expect("actual registered compile future");
         let decoded = DemoSnapshot::decode_pack(&files.pack).expect("actual typed PACK decoder");
@@ -34,7 +34,7 @@ async fn document_codec_native_send_print_mirror_preserves_exact_snapshots() {
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None, &semio_framework_os_vcs::io::binary::genesis::ArtifactPackGenesisProducer);
         let files = print_document_pack(&envelope).await.expect("exact schema-owned PACK input");
         envelope.retire_unadopted();
-        let future = (codec.print_mirror)(&files.pack, &files.spr);
+        let future = (codec.reference().expect("authored cold codec reference").print_mirror)(&files.pack, &files.spr);
         require_send(&future);
         let mirror = future.await.expect("actual registered mirror future");
         let decoded = DemoSnapshot::parse_dsl(&mirror.dsl).expect("actual typed DSL decoder");

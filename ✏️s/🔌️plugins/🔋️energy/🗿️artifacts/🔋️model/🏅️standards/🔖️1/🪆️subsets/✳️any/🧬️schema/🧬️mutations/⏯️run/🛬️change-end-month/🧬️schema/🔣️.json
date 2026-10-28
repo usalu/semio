@@ -31,5 +31,39 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "run_period",
+    "field": "end_month",
+    "input": "new_end_month",
+    "labels": {
+      "en": "Change end month",
+      "de": "Endmonat ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "run",
+      "kind": "change-run-end-month",
+      "record": "ChangedRunEndMonth"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored end month is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The end month is unchanged."
+      },
+      "context": {
+        "level": "error",
+        "code": "mutation.target-mismatch",
+        "message": "The authored value does not form a valid calendar interval."
+      }
+    },
+    "calendarInterval": true
   }
 }

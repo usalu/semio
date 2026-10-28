@@ -104,6 +104,8 @@ impl pack::snapshot::ArtifactPack for TxnSnapshot {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for TxnSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
@@ -362,9 +364,9 @@ impl ArtifactApp for TxnApp {
         }
     }
 
-    async fn initial_snapshot() -> TxnSnapshot {
+    fn reference_birth()->Option<fn()->TxnSnapshot>{Some(||{
         TxnSnapshot::default()
-    }
+    })}
 
     async fn handle(
         command: &TxnCommand,

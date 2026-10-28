@@ -21,7 +21,7 @@ use crate::mounted_child_group_receipt::MountedKernelMutationReceipt;
 use crate::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
 use crate::mounted_child_group_receipt::MountedPreparedOperationBytes;
 use crate::mounted_child_group_receipt::MountedPreparedOperationsBytes;
-use crate::mounted_child_group_receipt::MountedReceiptBytes;
+use crate::mounted_child_group_receipt::{MountedReceiptBytes,MountedCausalPayload,payload_demands,payload_close};
 use semio_framework::kernel::MutationId;
 use semio_framework_plugin_composition_publication::group::private_publication_group::owner::PrivateChildPublicationGroup;
 use semio_framework_value::RetirementDemand;
@@ -186,17 +186,24 @@ impl MountedGroupReceipt {
     fn clear_text(text:&mut String){drop(std::mem::take(text));}
     fn shared_demand(text:&SharedUtf8)->usize{text.original_allocation_bytes()}
     fn clear_shared(text:&mut SharedUtf8){drop(std::mem::take(text));}
+    fn close_shared(text:&mut SharedUtf8,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{match std::mem::take(text).close_original_lease(grant){Ok((owned,mut p))=>{p.released_bytes+=owned.as_ref().map_or(0,String::capacity);drop(owned);Ok(RetainedCloneStep::Progress(p))},Err((error,original))=>{*text=original;Err(error)}}}
     fn dependencies_demand(ids:&Vec<MutationId>)->usize{ids.last().map_or(ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity())}
     fn clear_dependencies(ids:&mut Vec<MutationId>)->bool{if let Some(id)=ids.last_mut(){Self::clear_text(&mut id.0);ids.pop();false}else{drop(std::mem::take(ids));true}}
-    fn inverse_demand(inverse:&InverseMutation,field:usize)->usize{match field{0=>inverse.target_mutation.0.capacity(),1=>inverse.inverse_diff.schema.0.capacity(),2=>inverse.inverse_diff.payload.capacity(),3=>Self::dependencies_demand(&inverse.dependencies),_=>0}}
-    fn clear_inverse(inverse:&mut InverseMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut inverse.target_mutation.0),1=>Self::clear_text(&mut inverse.inverse_diff.schema.0),2=>drop(std::mem::take(&mut inverse.inverse_diff.payload)),3=>return Self::clear_dependencies(&mut inverse.dependencies),_=>{}}true}
-    fn mutation_demand(mutation:&KernelMutation,field:usize)->usize{match field{0=>mutation.id.0.capacity(),1=>mutation.invocation_id.0.capacity(),2=>mutation.diff.schema.0.capacity(),3=>mutation.diff.payload.capacity(),4..=7=>Self::inverse_demand(&mutation.inverse,field-4),8=>Self::dependencies_demand(&mutation.dependencies),9=>Self::shared_demand(&mutation.author.0),_=>0}}
-    fn clear_mutation(mutation:&mut KernelMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut mutation.id.0),1=>Self::clear_text(&mut mutation.invocation_id.0),2=>Self::clear_text(&mut mutation.diff.schema.0),3=>drop(std::mem::take(&mut mutation.diff.payload)),4..=7=>return Self::clear_inverse(&mut mutation.inverse,field-4),8=>return Self::clear_dependencies(&mut mutation.dependencies),9=>Self::clear_shared(&mut mutation.author.0),_=>{}}true}
+    fn inverse_demand(inverse:&InverseMutation,field:usize)->usize{match field{0=>inverse.target_mutation.0.capacity(),1=>inverse.inverse_diff.schema.0.capacity(),2=>payload_demands(&inverse.inverse_diff.payload).expect("original canonical inverse layout").release_bytes,3=>Self::dependencies_demand(&inverse.dependencies),_=>0}}
+    fn clear_inverse(inverse:&mut InverseMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut inverse.target_mutation.0),1=>Self::clear_text(&mut inverse.inverse_diff.schema.0),2=>assert!(inverse.inverse_diff.payload.retained_bytes().terminal_is_empty()),3=>return Self::clear_dependencies(&mut inverse.dependencies),_=>{}}true}
+    fn mutation_demand(mutation:&KernelMutation,field:usize)->usize{match field{0=>mutation.id.0.capacity(),1=>mutation.invocation_id.0.capacity(),2=>mutation.diff.schema.0.capacity(),3=>payload_demands(&mutation.diff.payload).expect("original canonical forward layout").release_bytes,4..=7=>Self::inverse_demand(&mutation.inverse,field-4),8=>Self::dependencies_demand(&mutation.dependencies),9=>Self::shared_demand(&mutation.author.0),_=>0}}
+    fn clear_mutation(mutation:&mut KernelMutation,field:usize)->bool{match field{0=>Self::clear_text(&mut mutation.id.0),1=>Self::clear_text(&mut mutation.invocation_id.0),2=>Self::clear_text(&mut mutation.diff.schema.0),3=>assert!(mutation.diff.payload.retained_bytes().terminal_is_empty()),4..=7=>return Self::clear_inverse(&mut mutation.inverse,field-4),8=>return Self::clear_dependencies(&mut mutation.dependencies),9=>Self::clear_shared(&mut mutation.author.0),_=>{}}true}
+    fn inverse_payload(inverse:&InverseMutation,field:usize)->Option<&MountedCausalPayload>{(field==2).then_some(&inverse.inverse_diff.payload)}
+    fn inverse_payload_mut(inverse:&mut InverseMutation,field:usize)->Option<&mut MountedCausalPayload>{(field==2).then_some(&mut inverse.inverse_diff.payload)}
+    fn mutation_payload(mutation:&KernelMutation,field:usize)->Option<&MountedCausalPayload>{match field{3=>Some(&mutation.diff.payload),6=>Some(&mutation.inverse.inverse_diff.payload),_=>None}}
+    fn mutation_payload_mut(mutation:&mut KernelMutation,field:usize)->Option<&mut MountedCausalPayload>{match field{3=>Some(&mut mutation.diff.payload),6=>Some(&mut mutation.inverse.inverse_diff.payload),_=>None}}
+    fn selected_payload(&self)->Option<&MountedCausalPayload>{match self.close_phase{0=>Self::mutation_payload(self.mutations.last()?,self.close_field),2=>Self::inverse_payload(self.inverses.last()?,self.close_field),_=>None}}
     /// 🍂️ Borrows the next exact original field or empty-vector backing retirement demand.
     pub fn next_close_byte_demand(&self)->usize{if self.transferred{return 0;}match self.close_phase{0=>self.mutations.last().map_or(self.mutations.capacity()*size_of::<KernelMutation>(),|mutation|Self::mutation_demand(mutation,self.close_field)),1=>self.undo_ids.last().map_or(self.undo_ids.capacity()*size_of::<MutationId>(),|id|id.0.capacity()),2=>self.inverses.last().map_or(self.inverses.capacity()*size_of::<InverseMutation>(),|inverse|Self::inverse_demand(inverse,self.close_field)),3=>self.member_edits.last().map_or(self.member_edits.capacity()*size_of::<EditRef>(),|edit|edit.edit_id.capacity()),4=>self.command_children.last().map_or(self.command_children.capacity()*size_of::<String>(),Self::text_demand),5=>self.invocation.next_close_byte_demand(),6=>self.parent.next_close_byte_demand(),7=>self.child.next_close_byte_demand(),8=>self.edit.next_close_byte_demand(),_=>0}}
     /// 📏️ Quotes the fixed causal field path or the selected original byte cursor.
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
+        if let Some(payload)=self.selected_payload(){return mounted_nested_retirement_demand(payload_demands(payload)?,2)}
         if (5..=8).contains(&self.close_phase) {
             let owner = match self.close_phase { 5 => &self.invocation, 6 => &self.parent, 7 => &self.child, _ => &self.edit };
             return mounted_nested_retirement_demand(owner.retirement_demands()?, 1);
@@ -213,6 +220,8 @@ impl MountedGroupReceipt {
     pub fn close_step(&mut self,grant:RetainedCloneGrant)->RetainedCloneStep{
         if self.terminal_is_empty(){return RetainedCloneStep::Complete(Default::default());}
         let bytes=self.next_close_byte_demand();if grant.maximum_items==0||grant.maximum_release_bytes<bytes{return RetainedCloneStep::Progress(Default::default());}if !plugin_grant_funds(self.retirement_demands().expect("fixed receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }self.closing=true;
+        if self.close_phase==0&&self.close_field==9&&self.mutations.last().is_some(){let step=Self::close_shared(&mut self.mutations.last_mut().unwrap().author.0,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant}).expect("funded original shared author lease");self.close_field+=1;return step;}
+        if self.selected_payload().is_some(){let payload=match self.close_phase{0=>Self::mutation_payload_mut(self.mutations.last_mut().unwrap(),self.close_field).unwrap(),2=>Self::inverse_payload_mut(self.inverses.last_mut().unwrap(),self.close_field).unwrap(),_=>unreachable!()};let step=payload_close(payload,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant}).expect("funded canonical group payload layout");if payload.retained_bytes().terminal_is_empty(){self.close_field+=1;}return RetainedCloneStep::Progress(step.progress());}
         match self.close_phase{
             0=>if let Some(mutation)=self.mutations.last_mut(){if self.close_field==10{self.mutations.pop();self.close_field=0;}else if Self::clear_mutation(mutation,self.close_field){self.close_field+=1;}}else{drop(std::mem::take(&mut *self.mutations));self.close_phase+=1;},
             1=>if let Some(id)=self.undo_ids.last_mut(){Self::clear_text(&mut id.0);self.undo_ids.pop();}else{drop(std::mem::take(&mut *self.undo_ids));self.close_phase+=1;},

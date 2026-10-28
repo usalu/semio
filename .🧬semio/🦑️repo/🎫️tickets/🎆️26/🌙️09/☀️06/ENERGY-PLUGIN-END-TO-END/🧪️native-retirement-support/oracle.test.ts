@@ -1,0 +1,6 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv2020 from "ajv/dist/2020.js";
+import {readFileSync} from "node:fs";
+const source=new URL("../../../../../../../../🧰️framework/🔨️modules/🌱️value/♻️retirement/🧭️support/🧪️tests/",import.meta.url);
+test("reachable unsupported owners agree with SQLite recursive graph traversal",()=>{const fixture=JSON.parse(readFileSync(new URL("🔣️.json",source),"utf8"));const schema=JSON.parse(readFileSync(new URL("📐️.json",source),"utf8"));expect(new Ajv2020({strict:false}).compile(schema)(fixture)).toBe(true);for(const row of fixture.cases){const db=new Database(":memory:");db.exec("CREATE TABLE edge(parent TEXT,child TEXT);CREATE TABLE unsupported(id TEXT);");for(const [parent,child]of row.edges)db.query("INSERT INTO edge VALUES(?,?)").run(parent,child);for(const id of row.unsupported)db.query("INSERT INTO unsupported VALUES(?)").run(id);const result=db.query("WITH RECURSIVE reachable(id) AS (SELECT ? UNION SELECT child FROM edge JOIN reachable ON parent=reachable.id) SELECT NOT EXISTS(SELECT 1 FROM reachable JOIN unsupported USING(id)) AS supported").get(row.root) as {supported:number};expect(Boolean(result.supported)).toBe(row.supported);db.close();}});

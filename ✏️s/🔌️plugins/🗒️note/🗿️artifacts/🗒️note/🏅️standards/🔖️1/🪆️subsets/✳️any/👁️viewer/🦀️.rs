@@ -113,9 +113,9 @@ impl ArtifactViewer for NoteViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn initial_snapshot() -> NoteSnapshot {
+    fn reference_birth()->Option<fn()->NoteSnapshot>{Some(||{
         empty_note_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `NoteViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

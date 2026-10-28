@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateThermalEnclosure",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "thermal_enclosures",
+    "key": "id",
+    "inverse": "CreateThermalEnclosure",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete Thermal Enclosure",
+      "de": "Zonenverbund löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "thermal-enclosure",
+      "kind": "delete-thermal-enclosure",
+      "record": "DeletedThermalEnclosure"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed thermal-enclosure does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

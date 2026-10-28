@@ -294,7 +294,7 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
 
     use semio_s_plugin_puzzle_retained::testing::PuzzleCommandWorkStep;
     use semio_framework_plugin::retained_command::ArtifactCommandWork;
-    let snapshot = Puzzle3dPlayApp::initial_snapshot();
+    let snapshot = Puzzle3dPlayApp::reference_birth().expect("explicit reference snapshot producer")();
     let config = Puzzle3dConfig::default();
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();

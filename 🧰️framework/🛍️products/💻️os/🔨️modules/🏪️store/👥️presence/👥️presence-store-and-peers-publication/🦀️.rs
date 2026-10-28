@@ -26,6 +26,14 @@ pub struct PresenceStore<P, Mutation> {
     pub(super) _mutation: PhantomData<fn() -> Mutation>,
 }
 
+impl<P,Mutation> PresenceStore<P,Mutation>{
+    /// 📏️ Quotes the original typed local root, empty peer root and fixed Store header; the read registry remains separately admitted.
+    pub fn original_birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Self>()+size_of::<P>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<P>()+semio_framework_value::shared_retirement_allocation_bytes::<PresencePeersRoot<P>>(),depth:2,..Default::default()}}
+
+    /// 🌱️ Adopts the same original typed source and fully admitted registry without cloning or constructing another registry.
+    pub fn admit_original(local:&mut Option<P>,reads:&mut Option<SnapshotReadRegistryHandle>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,ValueError>{let d=Self::original_birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}if local.is_none()||reads.is_none(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native presence birth requires its original local source and read registry"))}let value=Self{local:std::mem::ManuallyDrop::new(Some(Arc::new(local.take().unwrap()))),peers:std::mem::ManuallyDrop::new(Some(Arc::new(PresencePeersRoot::empty()))),peer_retirement_factory:None,local_retirement_factory:None,local_reads:std::mem::ManuallyDrop::new(reads.take()),active_returned_local:std::mem::ManuallyDrop::new(None),generation:0,close_started:false,_mutation:PhantomData};Ok(Some((value,RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})))}
+}
+
 #[cfg(any(test, feature = "testkit"))]
 impl<P, Mutation> PresenceStore<P, Mutation> {
     /// 🪝️ Test hook: the live local presence root, absent once its owner is closed.
@@ -211,6 +219,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
     pub async fn apply(&mut self, mutations: &[Mutation]) -> protocol::MutationApplyResult<()>
     where
         P: Send + Sync + 'static,
+        Mutation:protocol::ColdMutation<P>,
     {
         if self.close_started {
             return Err(protocol::MutationApplyError::new("mutation.apply.store-closed", "presence store no longer admits local mutations"));
@@ -275,7 +284,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
         Ok(ArtifactEphemeralOneItemPublication::preparing(operation, expected_generation, footprint, preparation, root_retirement_factory))
     }
 
-    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>
+    pub fn advance_publish_one(&mut self, publication: &mut ArtifactEphemeralOneItemPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, String>
     where
         P: Send + Sync + 'static,
     {
@@ -330,6 +339,10 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
                 Ok(ArtifactStoreOneItemAdvance::Progress(publication.progress()))
             }
             ArtifactStoreOneItemPublicationPhase::Publishing => {
+                let demand=publication.commit_demand();
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant.retained_grant(),demand){return Ok(ArtifactStoreOneItemAdvance::Blocked);}
+                receiving.admit_turn_capacity(grant.maximum_capacity_bytes).map_err(|error|error.to_string())?;
+                receiving.charge(demand.capacity_bytes).map_err(|error|error.to_string())?;
                 let prepared = publication.preparation.as_mut().and_then(|owner| owner.take_prepared()).ok_or_else(|| "presence publication lost its prepared root".to_string())?;
                 let generation_before = self.generation;
                 let previous = self.local.replace(prepared.next_root).expect("live original local presence");
@@ -341,7 +354,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
                 *publication.receipt = Some(receipt);
                 publication.published = true;
                 publication.phase = ArtifactStoreOneItemPublicationPhase::AwaitingAck;
-                Ok(ArtifactStoreOneItemAdvance::Published(receipt, semio_framework_value::RetainedCloneProgress::default()))
+                Ok(ArtifactStoreOneItemAdvance::Published(receipt,RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,..Default::default()}))
             }
             ArtifactStoreOneItemPublicationPhase::Fault => Ok(ArtifactStoreOneItemAdvance::PreparationRefused),
             ArtifactStoreOneItemPublicationPhase::AwaitingAck | ArtifactStoreOneItemPublicationPhase::Closing | ArtifactStoreOneItemPublicationPhase::Complete => unreachable!("handled presence publication control phase"),
@@ -362,6 +375,7 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
     pub fn apply_one(&mut self, expected_generation: u64, mutation: Mutation) -> Result<LaneItemReceipt, (String, Mutation)>
     where
         P: Send + Sync + 'static,
+        Mutation:protocol::ColdMutation<P>,
     {
         if self.close_started {
             return Err(("presence store no longer admits local mutations".into(), mutation));
@@ -441,8 +455,9 @@ impl<P: Clone, Mutation: super::Mutation<P> + protocol::ColdMutation<P>> Presenc
         self.generation
     }
 
+}
+
+impl<P, M> PresenceStore<P, M> {
     /// 🪪️ Reads the event-maintained generation at an already-owned operation boundary.
-    pub fn generation_now(&self) -> u64 {
-        self.generation
-    }
+    pub fn generation_now(&self) -> u64 { self.generation }
 }

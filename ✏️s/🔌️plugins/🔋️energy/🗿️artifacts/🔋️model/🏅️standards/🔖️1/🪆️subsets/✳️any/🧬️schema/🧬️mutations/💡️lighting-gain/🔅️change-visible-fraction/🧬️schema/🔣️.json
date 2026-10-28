@@ -61,5 +61,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateLightingGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "lighting",
+    "field": "visible_fraction",
+    "input": "new_visible_fraction",
+    "key": "id",
+    "labels": {
+      "en": "Change lighting gain: Visible fraction",
+      "de": "Sichtbarer Anteil ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "lighting-gain",
+      "kind": "change-lighting-gain-visible-fraction",
+      "record": "ChangedLightingGainVisibleFraction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Visible fraction violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed lighting gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The lighting gain already carries this visible fraction value."
+      }
+    }
   }
 }

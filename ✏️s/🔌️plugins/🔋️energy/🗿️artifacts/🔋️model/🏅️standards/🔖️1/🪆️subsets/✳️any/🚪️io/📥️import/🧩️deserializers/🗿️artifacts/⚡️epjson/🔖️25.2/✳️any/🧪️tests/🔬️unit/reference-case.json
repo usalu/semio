@@ -1,0 +1,17 @@
+{
+  "case": "600",
+  "referenceKeys": [
+    "zone_name",
+    "construction_name",
+    "building_surface_name",
+    "outside_layer"
+  ],
+  "referencePrefixes": [
+    "layer_"
+  ],
+  "expected": {
+    "zones": 1,
+    "surfaces": 6,
+    "fenestrations": 2
+  }
+}

@@ -22,6 +22,7 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-ui-layout = { path = "../../../../../../../🔨️modules/🖱️ui/📜️declaration/📐️layout/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-app = { path = "../../../📜️declaration/🧩️app/📦️packages/🦀️rust" }
 semio-framework-plugin-child = { path = "../../../🪆️child/📦️packages/🦀️rust" }

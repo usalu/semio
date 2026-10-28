@@ -142,7 +142,9 @@
         "softMax": 1,
         "group": "fault",
         "order": 50
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     },
     "startScheduleId": {
       "type": "integer",
@@ -167,5 +169,109 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateFaultDefinition",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "target_equipment_id",
+        "input": "target_equipment_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "fault_type",
+        "input": "fault_type",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "severity",
+        "input": "severity",
+        "storage": "fixed"
+      },
+      {
+        "field": "start_schedule_id",
+        "input": "start_schedule_id",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateFaultDefinition",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "faults",
+    "key": "id",
+    "inverse": "DeleteFault",
+    "labels": {
+      "en": "Create Fault at index",
+      "de": "Fehler an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "fault",
+      "kind": "create-fault",
+      "record": "CreatedFault"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "target_equipment_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "IdealLoads"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "start_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

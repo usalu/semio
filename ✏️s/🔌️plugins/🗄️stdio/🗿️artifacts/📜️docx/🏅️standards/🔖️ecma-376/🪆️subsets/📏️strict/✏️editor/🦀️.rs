@@ -181,9 +181,9 @@ impl ArtifactEditor for DocxStrictEditor {
         })
     }
 
-    fn initial_snapshot() -> DocxSnapshot {
+    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
         crate::standards::v_ecma_376::subsets::strict::io::DocxStrictBuilderConstruction::empty().add_paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default()).build().expect("the schema-authored initial strict DOCX is conformant")
-    }
+    })}
 
     /// ✏️ Replaces the addressed paragraph's text after its optimistic revision matches.
     /// The exact block/run structure is retained and invalid or stale targets return a fault.

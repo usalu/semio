@@ -58,8 +58,8 @@ describe("resumable media export wire", () => {
     for (const [index, name] of ["submit", "poll", "cancel", "takeChunk"].entries()) {
       const row = fixture.commands[name], value = row.fields, seq = BigInt(value.seq);
       const key = ["SubmitMediaExport", "PollMediaExport", "CancelMediaExport", "TakeMediaExportChunk"][index]!;
-      const command = { [key]: index === 0 ? { seq, port: value.port, expected_parent_document_id: value.expectedParentDocumentId, expected_base_revision: BigInt(value.expectedBaseRevision) } : { seq, handle } } as AppCommandValue;
-      const oracle = [37 + index, ...u64(seq), ...(index === 0 ? [...string(value.port), ...string(value.expectedParentDocumentId), ...u64(BigInt(value.expectedBaseRevision))] : handleBytes)];
+      const command = { [key]: index === 0 ? { seq, port: value.port, expected_parent_document_id: value.expectedParentDocumentId, expected_base_revision: BigInt(value.expectedBaseRevision),checkpoint_id:value.checkpointId } : { seq, handle } } as AppCommandValue;
+      const oracle = [37 + index, ...u64(seq), ...(index === 0 ? [...string(value.port), ...string(value.expectedParentDocumentId), ...u64(BigInt(value.expectedBaseRevision)),...(value.checkpointId===null?[0]:[1,...string(value.checkpointId)])] : handleBytes)];
       expect(oracle).toEqual(row.bytes);
       expect(Buffer.from(row.bytes).toString("hex")).toBe(row.hex);
       expect([...encodeAppCommand(command)]).toEqual(row.bytes);

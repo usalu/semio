@@ -1,0 +1,11 @@
+{
+  "schema": "test.window.genesis",
+  "window": "camera-left",
+  "actor": "window-reader",
+  "state": { "zoom": 1.25 },
+  "maximumTurns": 262144,
+  "registryEmptyBeforeCustodyClose": true,
+  "cancelAt": [0, 1, 2, 7, 31, 127, 255],
+  "grant": { "items": 64, "copyBytes": 1048576, "capacityBytes": 1048576, "releaseBytes": 2097152, "depth": 128 },
+  "requirements": ["canonical-pack", "third-party-blake3", "original-source", "exact-physical-receipts", "paid-cancellation", "denied-birth"]
+}

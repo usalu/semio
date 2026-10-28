@@ -18,7 +18,7 @@ use crate::life_cleanup_vocabulary::{RuntimeCloseStatus, RuntimeMaintenanceStatu
 use std::mem::size_of_val;
 /// 🧳️ Keeps the exact opening inputs and partial app through every original caller admission turn.
 #[doc(hidden)]
-pub struct PendingNativeCreation<PA:PluginApp>{pub request:semio_framework::kernel::ActorInstanceOpenRequest,pub source:std::mem::ManuallyDrop<Option<(String,String)>>,pub app:std::mem::ManuallyDrop<Option<PA>>,pub loan:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub returning_loan:bool,pub authority:Option<RuntimeActorAuthority>,pub issuer_ready:bool,pub closing:bool,pub failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,pub metadata_source:std::mem::ManuallyDrop<Option<String>>,pub metadata_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>>,pub source_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<(String,String)>>>}
+pub struct PendingNativeCreation<PA:PluginApp>{pub request:semio_framework::kernel::ActorInstanceOpenRequest,pub source:std::mem::ManuallyDrop<Option<(String,String)>>,pub app:std::mem::ManuallyDrop<Option<PA>>,pub construction:std::mem::ManuallyDrop<Option<Box<dyn semio_framework_plugin_reactor_app::OriginalPluginAppConstruction<PA>>>>,pub native_factory:Option<bool>,pub identity_bound:bool,pub loan:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,pub identity:(semio_framework_job::OperationId,semio_framework_job::Generation),pub parent:usize,pub returning_loan:bool,pub authority:Option<RuntimeActorAuthority>,pub issuer_ready:bool,pub closing:bool,pub failure:std::mem::ManuallyDrop<Option<semio_framework_job::OriginalTurnFailure>>,pub metadata_source:std::mem::ManuallyDrop<Option<String>>,pub metadata_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<String>>>,pub source_closing:std::mem::ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<(String,String)>>>}
 impl<PA:PluginApp> PendingNativeCreation<PA>{
  pub fn validate(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if self.identity!=(cx.operation(),cx.generation())||self.parent!=cx.original_source_parent()?.source_identity()?{return Err(plugin_internal_fault("original opening continuation requires its same actor creation source").into())}if !self.returning_loan{if let Some(loan)=self.loan.as_ref(){loan.validate_context(cx)?}}Ok(())}
 }
@@ -288,6 +288,13 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
                 return CleanupTurn::Fault(b"plugin app close authority is poisoned");
             }
         };
+        if !instance.surface_contexts.original_terminal_is_empty(){
+            let before=cx.retained_progress();
+            if let Err(failure)=cx.with_original_retirement(|cx|instance.surface_contexts.close_original_step(cx)){return CleanupTurn::OriginalFailure(failure)}
+            let after=cx.retained_progress();
+            *outcome_progress=Some(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}));
+            return CleanupTurn::Yield;
+        }
         runtime_close_phase(&state, 12);
         #[cfg(any(test, feature = "cleanup-probes"))]
         state.physical_close_calls.fetch_add(1, Ordering::SeqCst);
@@ -295,7 +302,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
             let identity = MountedOwnerIdentityV1 { instance_id: state.instance_id, operation: cx.operation(), generation: cx.generation() };
             let Some(mut turn) = MountedOwnerTurnV1::admit(state.instance_id, identity, MountedOwnerPhaseV1::Close, state.mounted_policy, cx)? else { return Ok(PluginLifecycleStep::AwaitingInput { reason: "mounted close retains its original scheduling authority" }); };
             let step = instance.app.mounted_owner_close_step(&mut turn)?;
-            if step.progress().unwrap_or_default() != turn.progress() || matches!(step, PluginLifecycleStep::Complete(_)) && !instance.app.close_terminal_is_empty() { return Err(Fault::from("mounted close receipt or terminal witness disagrees").into()); }
+            if step.progress().unwrap_or_default() != turn.progress() || matches!(step, PluginLifecycleStep::Complete(_)) && (!instance.app.close_terminal_is_empty()||!instance.surface_contexts.original_terminal_is_empty()) { return Err(Fault::from("mounted close receipt or terminal witness disagrees").into()); }
             Ok(step)
         })();
         runtime_close_phase(&state, 13);
@@ -315,7 +322,7 @@ impl<PA: PluginApp> RuntimeCloseCleanupJob<PA> {
                 CleanupTurn::Yield
             }
             Ok(progress @ PluginLifecycleStep::Complete(_)) => {
-                if !instance.app.close_terminal_is_empty() {
+                if !instance.app.close_terminal_is_empty()||!instance.surface_contexts.original_terminal_is_empty() {
                     return CleanupTurn::Fault(b"plugin close reported Complete without a terminal-empty app witness");
                 }
                 *outcome_progress = Some(progress);

@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioCadViewer {
     const DIALECT: Dialect = SEMIO_CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_CAD_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioCadSnapshot {
+    fn reference_birth()->Option<fn()->SemioCadSnapshot>{Some(||{
         SemioCadSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

@@ -11,14 +11,16 @@ extern crate semio_s_plugin_energy_engine_geometry as geometry;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_fenestration_height {
     #[path = "⬆️change-height/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⬆️change-height/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⬆️change-height/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⬆️change-height/↩️inverse/🦀️.rs"]
@@ -30,6 +32,8 @@ pub mod change_fenestration_sill_height {
     #[path = "⬇️change-sill-height/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⬇️change-sill-height/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⬇️change-sill-height/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⬇️change-sill-height/↩️inverse/🦀️.rs"]
@@ -41,6 +45,8 @@ pub mod rename_fenestration {
     #[path = "🏁️rename/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🏁️rename/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🏁️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🏁️rename/↩️inverse/🦀️.rs"]
@@ -52,6 +58,8 @@ pub mod replace_fenestration_vertices {
     #[path = "🔶️replace-vertices/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔶️replace-vertices/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔶️replace-vertices/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔶️replace-vertices/↩️inverse/🦀️.rs"]
@@ -63,6 +71,8 @@ pub mod delete_fenestration {
     #[path = "🚪️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🚪️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🚪️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🚪️delete/↩️inverse/🦀️.rs"]
@@ -74,6 +84,8 @@ pub mod change_fenestration_area {
     #[path = "🟥️change-area/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🟥️change-area/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🟥️change-area/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🟥️change-area/↩️inverse/🦀️.rs"]
@@ -85,6 +97,8 @@ pub mod change_fenestration_surface {
     #[path = "🧲️change-surface/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧲️change-surface/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧲️change-surface/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧲️change-surface/↩️inverse/🦀️.rs"]
@@ -96,6 +110,8 @@ pub mod create_fenestration {
     #[path = "🪟️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪟️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪟️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪟️create/↩️inverse/🦀️.rs"]

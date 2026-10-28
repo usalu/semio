@@ -96,6 +96,9 @@ pub(super) fn materialize(case: &str, fixture: &serde_json::Value) -> (PathBuf, 
             fs::rename(&taxonomy, &actual).unwrap();
             link_file(&actual, &taxonomy);
         }
+        "delegated-workspace-anchor"|"invalid-workspace-delegation"|"missing-workspace-delegation"=>{
+            let nested=workspace.join("nested");fs::create_dir_all(&nested).unwrap();let delegation=fixture["cases"].as_array().unwrap().iter().find(|v|v["name"]==case).unwrap()["workspaceRoot"].as_str().unwrap();fs::write(nested.join("package.json"),serde_json::to_vec(&serde_json::json!({"workspaces":[],"semio":{"mutationSourceAuthority":{"workspaceRoot":delegation}}})).unwrap()).unwrap();fs::rename(workspace.join("domain"),nested.join("domain")).unwrap();let source=nested.join("domain/🧬️mutations/🆕️insert-page/🦀️.rs");let mut descriptor=fixture["descriptor"].clone();descriptor["owner"]=mutation_authority_relative(&workspace,source.parent().unwrap()).unwrap().into();fs::write(source.parent().unwrap().join("🔣️.json"),serde_json::to_vec(&descriptor).unwrap()).unwrap();return(workspace.clone(),workspace,source);
+        }
         "nested-workspace-anchor" => {
             let nested = workspace.join("nested");
             fs::create_dir_all(&nested).unwrap();

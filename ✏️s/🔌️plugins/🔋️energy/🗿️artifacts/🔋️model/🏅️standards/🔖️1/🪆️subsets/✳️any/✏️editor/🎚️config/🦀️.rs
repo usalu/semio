@@ -28,7 +28,7 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 ///
 /// 🌱️ No longer `Copy` — `result_field` is an owned `String`, so the three `EnergyModelConfig`-by-value
 /// call sites (`render`, `settings_nodes`, `simulation_template`) take it by reference or clone.
-#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(semio_framework_dsl_record_derive::DslRecord, semio_framework_dsl_record_derive::DslReceiving, semio_framework_value::NativeReceive, Clone, Debug, PartialEq, Eq, ToValueDerive, FromValueDerive, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", default)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
 #[cfg_attr(test, serde(rename_all = "camelCase", default))]
@@ -107,8 +107,12 @@ impl pack::snapshot::ArtifactPack for EnergyModelConfig {
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
+    fn record_spec_producer()->Option<store::RecordSpecProducer>{Some(Self::__artifact_record_spec_producer())}
+    fn borrowed_record_spec_producer()->Option<store::BorrowedRecordSpecProducer>{Some(Self::__artifact_borrowed_record_spec_producer())}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for EnergyModelConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 //#endregion 🔖️ArtifactCodec
@@ -250,3 +254,8 @@ pub mod schema;
 
 #[path = "🚪️io/🦀️.rs"]
 pub mod io;
+
+#[path="🌱️initialization/🦀️.rs"]
+pub mod original_genesis;
+
+#[cfg(test)]#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;

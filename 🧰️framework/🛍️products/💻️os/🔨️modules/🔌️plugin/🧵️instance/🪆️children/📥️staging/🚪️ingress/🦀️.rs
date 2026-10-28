@@ -233,8 +233,8 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
     }
 
     pub(crate) async fn prepare_child_member(&self, admission: &ChildStoreAdmission, member: &mut M, restored: bool, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(ChildContentView, Option<usize>), Fault> {
-        let owner = member.owner_ref();
-        if member.artifact_ref().as_ref() != Some(&admission.expected) || (owner.as_ref() != Some(&admission.owner) && (restored || owner.is_some())) {
+        let member_identity=member.member_identity().ok_or_else(||plugin_sdk_fault("admitted child lacks its original declared dialect"))?;
+        if member_identity.artifact_id!=admission.expected.artifact_id||member_identity.dialect!=&admission.expected.dialect||member_identity.owner!=Some(&admission.owner) {
             return Err(plugin_sdk_fault("child member does not match its exact admitted identity and ownership"));
         }
         let pin_index = self.pending_child_pins.iter().position(|pin| pin.child_ref.artifact_id == admission.expected.artifact_id);
@@ -253,8 +253,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         Ok((root, pin_index))
     }
 
-    pub(crate) async fn commit_child_member(&mut self, admission: ChildStoreAdmission, mut member: M, root: ChildContentView, pin_index: Option<usize>) {
-        member.set_owner(Some(admission.owner.clone())).await;
+    pub(crate) async fn commit_child_member(&mut self, admission: ChildStoreAdmission, member: M, root: ChildContentView, pin_index: Option<usize>) {
         self.composition.graph_mut().await.commit_owns_admitted(admission.graph);
         self.children.insert_admitted(admission.member, admission.expected, admission.owner, member);
         let previous = std::mem::replace(&mut *self.child_content_root, root);
@@ -396,15 +395,7 @@ impl<M: ReferenceSpaceMember + MemberFactory + 'static> ChildComposition<M> {
         Ok(())
     }
 
-    /// 📥️ Routes every member-addressed backbone message the parent store pumped into the
-    /// live member that owns that exact lane, and answers how many lanes folded something. Runs after the
-    /// derivable children followed the freshly folded parent, so a lane for the child a parent op just named
-    /// finds its member. A lane naming a member the CURRENT parent declares but this replica does not hold is
-    /// a fault, never a silent drop: the two replicas would otherwise disagree about the document's own
-    /// composition. A lane naming a child the parent no longer declares is a superseded content address (a
-    /// peer's lane for the child its own later edit — or ours — replaced), and a lane naming a child the
-    /// follow pass has not opened yet because it waits on retirements is the child that pass derives: both
-    /// carry nothing the composition does not already hold and are skipped.
+    /// 📥️ Routes received member envelopes to the exact declared child owner.
     pub async fn fold_member_inbound<A: ArtifactApp>(&mut self, stores: &mut InstanceStores<A>, history: &mut CommandHistory<A>) -> Result<usize, Fault> {
         let inbound = stores.store.take_member_inbound();
         if inbound.is_empty() {

@@ -132,9 +132,9 @@ impl ArtifactEditor for En1994PlayApp {
         registry.register::<results::ResultsWindowConfigOwner>()
     }
 
-    fn initial_snapshot() -> En1994Snapshot {
+    fn reference_birth()->Option<fn()->En1994Snapshot>{Some(||{
         En1994Snapshot::default()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(semio_s_plugin_norm_app_surface::norm_io(VARIANT, DOCUMENT_SCHEMA))

@@ -14,6 +14,7 @@ pub mod live;
 
 #[path = "📖️capture/🦀️.rs"]
 mod capture;
+pub use capture::LocalInteractionCaptureCursor;
 
 #[path = "📃️query/🦀️.rs"]
 pub mod query;
@@ -33,3 +34,6 @@ pub type UiAssemblyResult<T> = Result<T, PluginAssemblyError>;
 pub fn ui_assembly_error(stage: &'static str) -> PluginAssemblyError {
     PluginAssemblyError::new("ui.fixed-capacity", format!("fixed UI admission failed at {stage}"))
 }
+
+#[path="🌱️genesis/🦀️.rs"]
+pub mod original_genesis;

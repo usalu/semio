@@ -1,6 +1,9 @@
 //! 🪪️ Canonical checkpoint identity representation and hashing.
 use super::super::super::{ArtifactHistoryLedger,Change,Author,CompositionPin};
 
+#[path="🎟️original/🦀️.rs"]
+pub mod original;
+
 struct PendingChangeRef<'a> {
     id: &'a str,
     edit_ids: &'a [String],
@@ -11,7 +14,7 @@ fn pending_change_ref_json(pending: &PendingChangeRef<'_>) -> String {
     let mut object = semio_framework_pack_json::Object::new();
     object.insert("id", semio_framework_pack_json::Value::String(pending.id.to_string()));
     object.insert("editIds", semio_framework_pack_json::Value::Array(pending.edit_ids.iter().map(|id| semio_framework_pack_json::Value::String(id.clone())).collect()));
-    object.insert("description", pending.description.map_or(semio_framework_pack_json::Value::Null, |text| semio_framework_pack_json::Value::String(text.to_string())));
+    if let Some(description)=pending.description{object.insert("description",semio_framework_pack_json::Value::String(description.to_string()));}
     object.insert("savedAt", semio_framework_pack_json::Value::String(pending.saved_at.to_string()));
     semio_framework_pack_json::to_string(&semio_framework_pack_json::Value::Object(object))
 }

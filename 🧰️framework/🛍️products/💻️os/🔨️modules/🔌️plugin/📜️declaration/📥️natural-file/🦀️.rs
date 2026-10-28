@@ -18,7 +18,7 @@ use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_plugin_decl_app::NaturalFileDecodeOwner;
 use semio_framework_plugin_decl_app::NaturalFileDecodeProgress;
 use semio_framework_plugin_decl_app::NaturalFileDecodeStep;
-use semio_framework_plugin_decl_app::document_load_emit;
+use semio_framework_plugin_decl_app::document_reference_load_emit;
 use semio_framework_plugin_decl_app::natural_file_input_bytes;
 use semio_framework_plugin_decl_app::app_emission::EphemeralEmit;
 use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
@@ -124,7 +124,7 @@ impl<E: ArtifactEditor> NaturalFileImportJob<E> {
                 return Err(MediaError::Payload(self.port.clone(), "natural-file synchronous decoder lost its byte owner".into()));
             };
             let snapshot = E::decode_natural_file(bytes)?;
-            Ok(document_load_emit(&snapshot, E::DOCUMENT_SCHEMA))
+            document_reference_load_emit(&snapshot, E::DOCUMENT_SCHEMA)
         })();
         Ok(outcome.map_err(|error: MediaError| Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string())))
     }
@@ -212,7 +212,7 @@ impl<E: ArtifactEditor> semio_framework_job::InteractiveJob for NaturalFileImpor
                         Ok(NaturalFileDecodeStep::Complete { snapshot, progress }) => {
                             match self.admit_controlled_progress(progress, true, cx) {
                                 Ok(()) => {
-                                    self.emit = Some(Ok(document_load_emit(&snapshot, E::DOCUMENT_SCHEMA)));
+                                    self.emit = Some(document_reference_load_emit(&snapshot, E::DOCUMENT_SCHEMA).map_err(|error| Fault::new(FaultOrigin::App, FaultCode::new("media.natural-import"), error.to_string())));
                                     self.stage = NaturalFileImportStage::Publish;
                                     self.checkpoint();
                                 }

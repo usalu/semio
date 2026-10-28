@@ -3,6 +3,9 @@ cargo-features = [ "trim-paths" ]
 [workspace]
 resolver = "2"
 members = [
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🌱️initialization/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️derive/📦️packages/🦀️rust",
+    "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/📦️packages/🦀️rust",
     "🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📦️packages/🦀️rust",
@@ -605,3 +608,18 @@ redundant_clone = "warn"
   level = "warn"
   priority = -1
 
+
+[workspace.dependencies.semio-s-artifact-energy-model-native-mutations]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧳️native/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-native-derive]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️derive/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-os-store-one-item-publication]
+path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-framework-value-edit]
+path = "../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust"
+
+[workspace.dependencies.semio-s-artifact-energy-model-initialization]
+path = "🏅️standards/🔖️1/🪆️subsets/✳️any/🌱️initialization/📦️packages/🦀️rust"

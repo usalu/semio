@@ -1,6 +1,6 @@
 /** 🎛️ App channel command codec: `encodeAppCommand` and `decodeAppCommand` over the tagged app command wire. */
 
-import { decodeLocalInteractionQueryCommand, encodeLocalInteractionQueryCommand, mutationEnvelopeFromWire, mutationEnvelopeToWire, readBytes, readStr, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, writeBytes, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
+import { decodeLocalInteractionQueryCommand, encodeLocalInteractionQueryCommand, mutationEnvelopeFromWire, mutationEnvelopeToWire, readBytes, readStr, readVarintU64, readVarintU64Exact, readVecBytes, readVecEnvelope, writeBool, writeBytes, writeStr, writeVarintU64, writeVarintU64Exact, writeVecBytes, writeVecEnvelope } from "../../📡️replication/📦️packages/🟦️typescript/🟦️.ts";
 import { replicationPackCodec } from "../../🎁️packs/🟦️.ts";
 import { type AppCommandValue, type MediaExportHandle, readDocumentArchive, readOptU8, readVecChildPackEntry, readWindowConfigPackEntry, writeDocumentArchive, writeOptU8, writeVecChildPackEntry, writeWindowConfigPackEntry } from "../../🪢️wire-contracts/🟦️.ts";
 import { APP_COMMAND_TAGS, exactMediaExportFrame, readMediaExportHandle, writeMediaExportHandle } from "../🏷️codec-primitives/🟦️.ts";
@@ -19,6 +19,8 @@ export function encodeAppCommand(cmd: AppCommandValue): Uint8Array {
     writeStr(out, cmd.SubmitMediaExport.port);
     writeStr(out, cmd.SubmitMediaExport.expected_parent_document_id);
     writeVarintU64Exact(out, cmd.SubmitMediaExport.expected_base_revision);
+    writeBool(out,cmd.SubmitMediaExport.checkpoint_id!==null);
+    if(cmd.SubmitMediaExport.checkpoint_id!==null)writeStr(out,cmd.SubmitMediaExport.checkpoint_id);
   } else if ("PollMediaExport" in cmd || "CancelMediaExport" in cmd || "TakeMediaExportChunk" in cmd) {
     const key = "PollMediaExport" in cmd ? "PollMediaExport" : "CancelMediaExport" in cmd ? "CancelMediaExport" : "TakeMediaExportChunk";
     const value = (cmd as Record<typeof key, { readonly seq: bigint; readonly handle: MediaExportHandle }>)[key];
@@ -213,7 +215,7 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
       return { ReadDocumentIdentity: { seq } };
     }
     case APP_COMMAND_TAGS.SubmitMediaExport:
-      return exactMediaExportFrame(bytes, pos, { SubmitMediaExport: { seq: readVarintU64Exact(bytes, pos), port: readStr(bytes, pos), expected_parent_document_id: readStr(bytes, pos), expected_base_revision: readVarintU64Exact(bytes, pos) } });
+      return exactMediaExportFrame(bytes, pos, { SubmitMediaExport: { seq: readVarintU64Exact(bytes, pos), port: readStr(bytes, pos), expected_parent_document_id: readStr(bytes, pos), expected_base_revision: readVarintU64Exact(bytes, pos), checkpoint_id:readCheckpointSelection(bytes,pos) } });
     case APP_COMMAND_TAGS.PollMediaExport:
       return exactMediaExportFrame(bytes, pos, { PollMediaExport: { seq: readVarintU64Exact(bytes, pos), handle: readMediaExportHandle(bytes, pos) } });
     case APP_COMMAND_TAGS.CancelMediaExport:
@@ -371,3 +373,6 @@ export function decodeAppCommand(bytes: Uint8Array): AppCommandValue {
 }
 //#endregion 🔖️Codec
 //#endregion 🔖️AppChannelCodec
+
+/** 📍️ A selector is either the actual head or one bounded exact checkpoint identity. */
+function readCheckpointSelection(bytes:Uint8Array,pos:[number]):string|null{const tag=bytes[pos[0]++];if(tag===0)return null;if(tag!==1)throw Error("media export: invalid checkpoint selector");const id=readStr(bytes,pos);if(id.length===0||[...id].length>512)throw Error("media export: checkpoint identity limit");return id;}

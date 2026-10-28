@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_fenestration_shgc {
     #[path = "🌇️change-shgc/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌇️change-shgc/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌇️change-shgc/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌇️change-shgc/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod change_fenestration_vlt {
     #[path = "🌈️change-vlt/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌈️change-vlt/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌈️change-vlt/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌈️change-vlt/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod change_fenestration_u_value {
     #[path = "🌐️change-u-value/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌐️change-u-value/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌐️change-u-value/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌐️change-u-value/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod change_fenestration_frame_conductance {
     #[path = "🖼️change-frame-conductance/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🖼️change-frame-conductance/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🖼️change-frame-conductance/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🖼️change-frame-conductance/↩️inverse/🦀️.rs"]
@@ -62,6 +70,8 @@ pub mod bind_fenestration_glazing_construction {
     #[path = "🧊️bind-glazing-construction/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧊️bind-glazing-construction/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧊️bind-glazing-construction/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧊️bind-glazing-construction/↩️inverse/🦀️.rs"]
@@ -73,6 +83,8 @@ pub mod change_fenestration_divider_conductance {
     #[path = "🧷️change-divider-conductance/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧷️change-divider-conductance/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧷️change-divider-conductance/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧷️change-divider-conductance/↩️inverse/🦀️.rs"]
@@ -84,6 +96,8 @@ pub mod clear_fenestration_glazing_construction {
     #[path = "🫗️clear-glazing-construction/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🫗️clear-glazing-construction/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🫗️clear-glazing-construction/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🫗️clear-glazing-construction/↩️inverse/🦀️.rs"]

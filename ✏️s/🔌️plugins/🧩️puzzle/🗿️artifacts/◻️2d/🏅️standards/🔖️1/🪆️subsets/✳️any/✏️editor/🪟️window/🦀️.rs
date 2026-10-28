@@ -179,6 +179,8 @@ macro_rules! json_store {
             }
         }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $state {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
     };
@@ -225,6 +227,8 @@ impl pack::snapshot::ArtifactPack for Puzzle2dWindowConfig {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for Puzzle2dWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 

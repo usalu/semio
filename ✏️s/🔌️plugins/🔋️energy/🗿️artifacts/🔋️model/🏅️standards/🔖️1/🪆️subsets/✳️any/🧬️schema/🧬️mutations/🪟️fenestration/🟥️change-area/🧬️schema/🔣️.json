@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "area_m2",
+    "input": "new_area_m2",
+    "key": "id",
+    "labels": {
+      "en": "Change fenestration: Area",
+      "de": "Fläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fenestration",
+      "kind": "change-fenestration-area",
+      "record": "ChangedFenestrationArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fenestration already carries this area value."
+      }
+    }
   }
 }

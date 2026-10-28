@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeSiteNorthAxis` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch, SitePatch};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch, SitePatch};
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeSiteNorthAxis, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

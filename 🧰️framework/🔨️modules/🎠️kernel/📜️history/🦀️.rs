@@ -72,6 +72,7 @@ mod history_severity_serde {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryTransaction {
     pub id: String,
     pub tool: String,
@@ -82,6 +83,7 @@ pub struct HistoryTransaction {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryMutationMessage {
     #[serde(with = "history_severity_serde")]
     pub level: Severity,
@@ -106,6 +108,7 @@ pub struct HistoryMutationMessage {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryMutationEntry {
     pub mutation_id: String,
     pub position: u32,
@@ -147,6 +150,7 @@ pub struct HistoryMutationEntry {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum HistoryTimeTravelStage {
     #[default]
     Editing,
@@ -161,6 +165,7 @@ pub enum HistoryTimeTravelStage {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum HistoryTimeTravelReview {
     NoChanges,
     NeedsReplay,
@@ -174,6 +179,7 @@ pub enum HistoryTimeTravelReview {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryTimeTravelProblem {
     pub mutation_id: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -189,6 +195,7 @@ pub struct HistoryTimeTravelProblem {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryTimeTravel {
     pub session_id: String,
     pub generation: u32,
@@ -241,6 +248,7 @@ pub struct HistoryTimeTravel {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryEntry {
     pub seq: u64,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -315,6 +323,7 @@ impl HistoryEntry {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub enum HistoryReprojectionKind {
     #[default]
     Remote,
@@ -329,6 +338,7 @@ pub enum HistoryReprojectionKind {
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryReprojection {
     pub done: u32,
     pub total: u32,
@@ -350,6 +360,7 @@ pub struct HistoryReprojection {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
+#[derive(semio_framework_value::RetireOwned)]
 pub struct HistoryPatch {
     /// 🖱️ Monotonic command-log cursor after applying this patch.
     pub cursor: u64,
@@ -608,7 +619,7 @@ pub fn history_reprojection_status(reprojection: &HistoryReprojection, terminolo
 /// text in every shell locale × terminology, whose `{name}` placeholders are filled from the fault's `params` — never from
 /// its English `message`. Published in [`AppDefinition::fault_notices`]; schema `🛂️manifest/🧬️schema` `$defs.FaultNoticeDefinition`,
 /// TS twin `FaultNoticeDefinition` (`🤖️generated/🪪️manifest`), corpus `🧫️fixtures/🧫️fault-notices`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct FaultNoticeDefinition {

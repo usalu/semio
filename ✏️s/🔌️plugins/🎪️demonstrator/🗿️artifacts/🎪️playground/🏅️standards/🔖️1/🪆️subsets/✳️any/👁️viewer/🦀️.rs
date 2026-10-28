@@ -69,9 +69,9 @@ impl ArtifactViewer for PlaygroundViewer {
     const DIALECT: Dialect = PLAYGROUND_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYGROUND_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> PlaygroundSnapshot {
+    fn reference_birth()->Option<fn()->PlaygroundSnapshot>{Some(||{
         empty_playground_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `PlaygroundViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no

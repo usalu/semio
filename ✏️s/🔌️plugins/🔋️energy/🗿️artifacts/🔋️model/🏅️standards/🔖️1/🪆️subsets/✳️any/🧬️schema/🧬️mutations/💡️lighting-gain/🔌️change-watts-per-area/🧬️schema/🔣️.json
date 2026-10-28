@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateLightingGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "lighting",
+    "field": "watts_per_area",
+    "input": "new_watts_per_area",
+    "key": "id",
+    "labels": {
+      "en": "Change lighting gain: Power per area",
+      "de": "Leistung pro Fläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "lighting-gain",
+      "kind": "change-lighting-gain-watts-per-area",
+      "record": "ChangedLightingGainWattsPerArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Power per area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed lighting gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The lighting gain already carries this power per area value."
+      }
+    }
   }
 }

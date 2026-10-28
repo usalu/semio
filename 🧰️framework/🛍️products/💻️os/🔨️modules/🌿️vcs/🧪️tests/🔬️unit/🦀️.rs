@@ -38,26 +38,26 @@ async fn fixed_history_ledger_preserves_order_capacity_and_aba_rejection() {
 #[semio_framework_async_macros::async_test]
 async fn fixed_history_ledger_vacancies_count_every_admissible_insert() {
     let mut ledger = ArtifactHistoryLedger::new();
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS);
-    let mut keys = Vec::with_capacity(ARTIFACT_HISTORY_PAGE_SLOTS);
-    for index in 0..ARTIFACT_HISTORY_PAGE_SLOTS {
-        assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS - index);
+    assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count());
+    let mut keys = Vec::with_capacity(ArtifactHistoryLedger::<String>::page_slot_count());
+    for index in 0..ArtifactHistoryLedger::<String>::page_slot_count() {
+        assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count() - index);
         keys.push(ledger.try_push(format!("history-{index:02}")).expect("the first page admits every slot"));
     }
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS, "a full page still admits the next page");
+    assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count(), "a full page still admits the next page");
     ledger.remove_key(keys[3]).expect("live generation removes its exact owner");
-    ledger.remove_key(keys[9]).expect("live generation removes its exact owner");
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS + 2);
+    ledger.remove_key(*keys.last().expect("the actual page has a distinct last slot")).expect("live generation removes its exact owner");
+    assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count() + 2);
     let reservation = ledger.reserve_one().expect("a tombstone admits a reservation");
     assert_eq!(ledger.vacancies(), 0, "a held reservation admits no further insert");
     ledger.cancel_reservation(reservation).expect("the exact reservation cancels");
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS + 2);
+    assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count() + 2);
     for vacancy in 0..2 {
         ledger.try_push(format!("refill-{vacancy}")).expect("every counted tombstone admits one insert");
     }
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS);
-    ledger.try_push("next-page".to_string()).expect("the 65th entry opens the next page");
-    assert_eq!(ledger.vacancies(), ARTIFACT_HISTORY_PAGE_SLOTS - 1);
+    assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count());
+    ledger.try_push("next-page".to_string()).expect("the next entry opens the next page");
+    assert_eq!(ledger.vacancies(), ArtifactHistoryLedger::<String>::page_slot_count() - 1);
     while ledger.pop().is_some() {}
     assert!(ledger.terminal_is_empty());
 }
@@ -149,8 +149,9 @@ async fn content_addressed_checkpoint_id_is_deterministic_and_content_sensitive(
 
 #[semio_framework_async_macros::async_test]
 async fn pending_change_checkpoint_hash_is_byte_identical_before_history_reservation() {
+    for description in [Some("pending".to_owned()),None]{
     let mut changes = ArtifactHistoryLedger::new();
-    let change = Change { id: "change-pending".into(), edit_ids: vec!["edit-a".into(), "edit-b".into()], description: Some("pending".into()), saved_at: "2026-08-23T00:00:00Z".into() };
+    let change = Change { id: "change-pending".into(), edit_ids: vec!["edit-a".into(), "edit-b".into()], description, saved_at: "2026-08-23T00:00:00Z".into() };
     let change_ids = vec![change.id.clone()];
     let authors = vec![Author { id: "actor".into(), name: "Actor".into(), avatar: None }];
     let before_reservation = content_addressed_checkpoint_id_with_pending_change(None, &change_ids, &changes, &change.id, &change.edit_ids, change.description.as_deref(), &change.saved_at, Some("checkpoint"), &authors, "2026-08-23T00:00:01Z", &[]);
@@ -159,6 +160,7 @@ async fn pending_change_checkpoint_hash_is_byte_identical_before_history_reserva
     let after_commit = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("checkpoint"), &authors, "2026-08-23T00:00:01Z", &[]).await;
     assert_eq!(before_reservation, after_commit, "borrowing the pending change before reservation preserves the exact wire hash");
     drop(changes.pop());
+    }
 }
 
 

@@ -137,12 +137,12 @@ pub fn encode_record_body(spec: &RecordSpec, record: &RecordValue, options: &Enc
 /// are preserved (subject to `options.preserve_unknown`), and are reported exactly like the
 /// document path; a `TAG_BYTES_CHUNKED` value is malformed here by construction.
 pub fn decode_record_body(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<(RecordValue, DecodeReport), PackRefusal> {
-    decode_record_body_inner(bytes, spec, options, false)
+    decode_record_body_inner(semio_framework_replication_codec::ByteSpan::from_slice(bytes), spec, options, false)
 }
 
 /// 🔒️ Decodes exactly one terminal record body, rejecting unknown fields and trailing bytes.
-pub fn decode_record_body_exact(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions) -> Result<RecordValue, PackRefusal> {
-    decode_record_body_inner(bytes, spec, options, true).map(|(record, _)| record)
+pub fn decode_record_body_exact<S:semio_framework_value::ByteReadSource+?Sized>(bytes: &S, spec: &RecordSpec, options: &DecodeOptions) -> Result<RecordValue, PackRefusal> {
+    decode_record_body_inner(semio_framework_replication_codec::ByteSpan::from_bytes(&bytes), spec, options, true).map(|(record, _)| record)
 }
 
 /// 📹️ Parses a terminal container-less record under the same control used by its typed constructor.
@@ -227,9 +227,9 @@ pub fn decode_value_record_body_span_exact_controlled(bytes:semio_framework_repl
     control.scoped_stage(|control|{control.begin_stage(0).map_err(PackRefusal::ValueRefusal)?;let mut reader=ByteReader::from_span(bytes);let materialization=ControlledMaterialization{control:std::cell::RefCell::new(control),maximum:options.limits.max_total_alloc};let symbols=decode_inline_symbols(&mut reader,&options.limits,&materialization)?;if reader.read_varint_u64()?!=1||reader.read_varint_u64()?!=u64::from(field_id)||reader.read_u8()?!=TAG_VALUE{return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"expected exactly one declared Value field".into()});}let mut ctx=DecCtx{source:DecSource::Inline{symbols},limits:options.limits.clone(),verification:options.verification,preserve_unknown:false,unknown_field_ids:Vec::new(),materialization:&materialization};let value=decode_dsl_value(&mut reader,&mut ctx,0)?;if reader.position()!=bytes.len(){return Err(PackRefusal::Malformed{ kind: ValueRefusalKind::InvalidValue,what:"intrinsic wire",offset:reader.position() as u64,detail:"trailing bytes after terminal intrinsic value".into()});}materialization.control.borrow_mut().checkpoint().map_err(PackRefusal::ValueRefusal)?;Ok(value)})
 }
 
-fn decode_record_body_inner(bytes: &[u8], spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackRefusal> {
+fn decode_record_body_inner(bytes: semio_framework_replication_codec::ByteSpan<'_>, spec: &RecordSpec, options: &DecodeOptions, exact: bool) -> Result<(RecordValue, DecodeReport), PackRefusal> {
     if bytes.len() as u64 > options.limits.max_file_len { return Err(PackRefusal::LimitExceeded { kind: ValueRefusalKind::WorkLimit, limit: "record body exceeds max_file_len" }); }
-    let mut reader = ByteReader::new(bytes);
+    let mut reader = ByteReader::from_span(bytes);
     let budget = ValueMaterialization { used: std::cell::Cell::new(0), maximum: options.limits.max_total_alloc };
     let symbols = decode_inline_symbols(&mut reader, &options.limits, &budget)?;
     let mut dec_ctx = DecCtx { source: DecSource::Inline { symbols }, limits: options.limits.clone(), verification: options.verification, preserve_unknown: options.preserve_unknown, unknown_field_ids: Vec::new(), materialization: &budget };

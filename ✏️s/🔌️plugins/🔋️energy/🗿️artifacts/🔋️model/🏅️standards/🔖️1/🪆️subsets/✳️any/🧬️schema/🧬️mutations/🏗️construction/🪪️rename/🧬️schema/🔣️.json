@@ -48,6 +48,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateConstruction",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "constructions",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename construction",
+      "de": "Konstruktion umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "construction",
+      "kind": "rename-construction",
+      "record": "RenamedConstruction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A construction name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another construction already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed construction does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The construction already has this name."
       }
     }
   }

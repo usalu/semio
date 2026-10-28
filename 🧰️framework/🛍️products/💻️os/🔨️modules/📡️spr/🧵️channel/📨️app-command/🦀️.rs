@@ -227,6 +227,7 @@ pub enum AppCommand {
         port: String,
         expected_parent_document_id: String,
         expected_base_revision: u64,
+        checkpoint_id: Option<String>,
     },
     PollMediaExport {
         seq: u64,

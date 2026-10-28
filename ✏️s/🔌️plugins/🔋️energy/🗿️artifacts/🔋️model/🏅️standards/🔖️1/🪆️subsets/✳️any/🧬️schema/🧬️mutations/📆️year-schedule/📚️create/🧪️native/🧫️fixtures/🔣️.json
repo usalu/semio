@@ -1,0 +1,211 @@
+{
+  "contract": "semio.energy.original-create-annual/v1",
+  "collection": "schedules.annual",
+  "existingRows": [
+    {
+      "id": 400,
+      "rules": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 200
+        }
+      ],
+      "default_daily_schedule_id": 200,
+      "holiday_daily_schedule_id": null,
+      "holiday_dates": [
+        [
+          2024,
+          1,
+          1
+        ]
+      ]
+    }
+  ],
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 100,
+          "value": 1
+        }
+      ],
+      "daily": [
+        {
+          "id": 200,
+          "hourly_values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "interpolation": "Continuous",
+          "limits": null
+        }
+      ],
+      "weekly": [
+        {
+          "id": 300,
+          "daily_schedule_ids": [
+            200,
+            200,
+            200,
+            200,
+            200,
+            200,
+            200
+          ]
+        }
+      ],
+      "annual": [
+        {
+          "id": 400,
+          "rules": [
+            {
+              "start_month": 1,
+              "start_day": 1,
+              "end_month": 12,
+              "end_day": 31,
+              "daily_schedule_id": 200
+            }
+          ],
+          "default_daily_schedule_id": 200,
+          "holiday_daily_schedule_id": null,
+          "holiday_dates": [
+            [
+              2024,
+              1,
+              1
+            ]
+          ]
+        }
+      ],
+      "time_series": [
+        {
+          "id": 500,
+          "values": [
+            1,
+            2
+          ],
+          "timestep_seconds": 3600
+        }
+      ]
+    }
+  },
+  "receivingMaximumBytes": 67108864,
+  "cases": [
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "defaultDailyScheduleId": 200,
+        "holidayDailyScheduleId": null
+      },
+      "outcome": "changed",
+      "after": [
+        400,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "defaultDailyScheduleId": 200,
+        "holidayDailyScheduleId": 200
+      },
+      "outcome": "changed",
+      "after": [
+        400,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 300,
+        "defaultDailyScheduleId": 200,
+        "holidayDailyScheduleId": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "index": 99,
+        "id": 3,
+        "defaultDailyScheduleId": 99,
+        "holidayDailyScheduleId": null
+      },
+      "outcome": "missing"
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "defaultDailyScheduleId": 99,
+        "holidayDailyScheduleId": null
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "defaultDailyScheduleId": 200,
+        "holidayDailyScheduleId": 99
+      },
+      "outcome": "reference",
+      "target": 99
+    },
+    {
+      "payload": {
+        "index": 1,
+        "id": 3,
+        "defaultDailyScheduleId": 100,
+        "holidayDailyScheduleId": null
+      },
+      "outcome": "reference",
+      "target": 100
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    10,
+    20,
+    30,
+    50,
+    100,
+    200,
+    500,
+    1000
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "cases"
+  ],
+  "properties": {
+    "cases": {
+      "const": [
+        {
+          "run": "0",
+          "group": "toolRun:0"
+        },
+        {
+          "run": "1",
+          "group": "toolRun:1"
+        },
+        {
+          "run": "4294967296",
+          "group": "toolRun:4294967296"
+        },
+        {
+          "run": "18446744073709551615",
+          "group": "toolRun:18446744073709551615"
+        }
+      ]
+    }
+  }
+}

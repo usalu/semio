@@ -1,0 +1,7 @@
+{
+  "port": "semio.snapshot.pack",
+  "mediaType": "application/vnd.semio.pack",
+  "maximumBytes": 33554432,
+  "maximumChunkBytes": 4096,
+  "maximumTurns": 1000000
+}

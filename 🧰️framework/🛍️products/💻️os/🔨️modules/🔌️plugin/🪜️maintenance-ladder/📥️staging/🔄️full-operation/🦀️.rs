@@ -29,6 +29,8 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: I
  fn granted_mounted_retirement_original(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
   let Some((index,id))=self.shared().next_granted_mounted_retirement()else{return Ok(RetainedCloneStep::Complete(Default::default()))};
   let closing=self.close.close_started;
+  if self.tools.tool_operations.get(id).unwrap().terminal_is_empty(){let d=self.tools.tool_operations.get(id).unwrap().original_frame_release_demands();if grant.maximum_items==0||grant.maximum_copy_bytes<d.copy_bytes||grant.maximum_release_bytes<d.release_bytes||grant.maximum_depth<d.depth{return Ok(RetainedCloneStep::Progress(Default::default()))}let original=self.tools.tool_operations.remove(id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))}
+
   if closing||self.tools.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{self.as_render().request_gesture_cancellation(id);}
   if self.tools.tool_operations.get(id).unwrap().close_fault_pending(){let step=self.tools.tool_operations.get_mut(id).unwrap().close_fault_step(grant)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step)}
   if self.tools.tool_operations.get(id).unwrap().lease_retirement_ready(){let step=self.tools.tool_operations.get_mut(id).unwrap().lease_retirement_step(&self.tools.tool_cancellations,grant)?;self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step)}
@@ -57,8 +59,7 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: I
   if matches!(step,RetainedCloneStep::Complete(_)){
    self.tools.tool_operations.get(id).filter(|owner|owner.terminal_is_empty()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted removal requires every original owner terminal"))?;
    if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()))}
-   let original=self.tools.tool_operations.remove(id).unwrap();self.tools.operation_progress_retired|=original.progress.is_some();drop(original);self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
-   return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:step.progress().copied_items.max(1),..step.progress()}))
+   return Ok(RetainedCloneStep::Progress(step.progress()))
   }
   self.close.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;Ok(step)
  }
@@ -69,6 +70,7 @@ impl<'v, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: Ins
 
  pub fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   let Some((_,id))=self.next_granted_mounted_retirement()else{return Ok(Default::default());};let owner=self.tools.tool_operations.get(id).unwrap();
+  if owner.terminal_is_empty(){return Ok(owner.original_frame_release_demands())}
   if owner.close_fault_pending(){return owner.close_fault_demands(body);}
   if owner.stage==MountedTypedCommandFullOperationStage::Retiring { if let Some(group)=owner.owned_child_group { return if self.child_composition.private_child_groups.get(group).is_some(){self.child_composition.private_child_group_operation_close_demands(group, body)}else{Ok(RetirementDemand{depth:1,..Default::default()})}; } }
   if owner.lease_retirement_ready(){return owner.lease_retirement_demands(&self.tools.tool_cancellations,body);}

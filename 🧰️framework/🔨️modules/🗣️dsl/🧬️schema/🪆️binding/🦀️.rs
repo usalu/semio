@@ -1,6 +1,8 @@
 //! 🪆️ Generic record field and variant construction under explicit owned controls.
 use crate::*;
 use semio_framework_dsl::{UnitSpec,unit_by_symbol};
+#[path="📦️bytes/🦀️.rs"]
+mod paged_byte_fields;
 
 /// ⛓️ Constructs the declared native sequence directly from semantic field owners.
 pub trait DslSequence<T>: Default + IntoIterator<Item = T> {

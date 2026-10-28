@@ -220,9 +220,9 @@ impl ArtifactEditor for SemioTextEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_text_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> SemioTextSnapshot {
+    fn reference_birth()->Option<fn()->SemioTextSnapshot>{Some(||{
         SemioTextSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

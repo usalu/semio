@@ -77,7 +77,7 @@ pub struct ArtifactEnvelopeOwners<P, Mutation> {
     /// Together with `vcs.edits` this is the document's complete semantic event log. The
     /// change/checkpoint/alternative ledgers are its projection. `active_alternative_id` and
     /// `viewer_checkpoint_id` are this replica's head, persisted local-only, not that projection.
-    pub transitions: Vec<protocol::MutationEnvelope>,
+    pub transitions: semio_framework_os_vcs::ArtifactHistoryLedger<protocol::MutationEnvelope>,
     /// 🗂️ The transitions this history holds ([`protocol::HistoryShape`]): a config store's history holds undo and
     /// redo only, so its store refuses every other transition at dispatch and at remote admission — the same law its
     /// retained loader applies.

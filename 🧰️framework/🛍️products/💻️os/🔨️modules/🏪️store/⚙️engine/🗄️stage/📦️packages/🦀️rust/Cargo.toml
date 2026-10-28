@@ -22,12 +22,15 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework-replication-edit = { path = "../../../../../../../../🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust" }
+semio-framework-os-semio = { path = "../../../../../🧬️semio/📦️packages/🦀️rust" }
 semio-framework-dsl-record = { path = "../../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 
 semio-framework-os-store-canonical-json = { path = "../../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 
 semio-framework-os-spr = { path = "../../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-os-store-durable-group-wire = { path = "../../../../🧩️composition/🗄️durable-group/📜️wire/📦️packages/🦀️rust" }
+semio-framework-os-store-engine-bundle = { path = "../../../🧳️bundle/📦️packages/🦀️rust" }
 semio-framework-os-store-engine-live = { path = "../../../🎞️live/📦️packages/🦀️rust" }
 semio-framework-os-store-ledger = { path = "../../../../📒️ledger/📦️packages/🦀️rust" }
 semio-framework-os-store-one-item-batch = { path = "../../../../📬️one-item-owners/📦️packages/🦀️rust" }
@@ -50,4 +53,10 @@ semio-framework-replication = { workspace = true }
 semio-framework-replication-edit = { path = "../../../../../../../../🔨️modules/📡️replication/🎮️mutation/✏️edit/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
+semio-framework-trace-memory-testing = { path = "../../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
+serde_json = "1.0.140"
 
+[features]
+default = ["deflate"]
+deflate = []

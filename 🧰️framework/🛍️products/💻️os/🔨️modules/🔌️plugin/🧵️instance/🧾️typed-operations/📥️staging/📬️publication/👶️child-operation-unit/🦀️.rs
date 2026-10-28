@@ -1,139 +1,67 @@
-//! 👶️ Child operation unit of the typed operation publication: the publication of one mounted child operation. See [`super`].
-
+//! 👶️ Converts exact encoded child sources through installed native decoders before the common private group ladder.
 use super::*;
-
-impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TypedCtx<'ctx, A, M, X> {
-    /// 🧩️ The composed lane is PUBLISHED, not discarded: `dispatch_emit_group` has just
-    /// built the parent's mutations, one per touched child under the child's own
-    /// content-addressed handle, and the single `UndoGroup` that names them all. The
-    /// three scalars of `receipt` are what the host ACKs; this is what the host READS.
-    pub(super) async fn publish_mounted_typed_child_operation_unit(&mut self, mounted: &mut MountedTypedCommandFullOperation<A>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), Fault> {
-        if mounted.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing)){return Ok(());}
-        let Some(mut pending) = mounted.pending_child_publication.take() else {
-            return Err(plugin_sdk_fault("typed-operation child publication lost its retained owner"));
-        };
-        match pending.phase {
-            PendingChildGroupPublicationPhase::Acknowledged | PendingChildGroupPublicationPhase::Closing => {
-                mounted.pending_child_publication=Some(pending);
-                return Err(plugin_sdk_fault("original mounted child publication escaped its full-grant close frontier"));
-            }
-            PendingChildGroupPublicationPhase::Committed => {
-                let receipt = pending.receipt.as_ref().cloned().ok_or_else(|| plugin_sdk_fault("committed child publication lost its exact result receipt"))?;
-                mounted.published_artifact = true;
-                self.as_dispatch().record_typed_operation_lane(mounted);
-                mounted.pending_child_publication = Some(pending);
-                return mounted.queue_page(TypedOperationResultPage::try_serialize_cold(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?);
-            }
-            PendingChildGroupPublicationPhase::Faulted => {
-                let fault = pending.fault().unwrap_or_else(|| plugin_sdk_fault("typed-operation child publication fault lost its bounded detail"));
-                mounted.pending_child_publication = Some(pending);
-                return Err(fault);
-            }
-            PendingChildGroupPublicationPhase::Ready => {}
-            PendingChildGroupPublicationPhase::Dispatching => {
-                mounted.pending_child_publication = Some(pending);
-                return Err(plugin_sdk_fault("typed-operation child publication re-entered a non-dispatchable phase"));
-            }
-        }
-        match self.child_composition.reclaim_child_retirements(1, 0) {
-            Ok(true) => {}
-            Ok(false) => {
-                mounted.pending_child_publication = Some(pending);
-                return Ok(());
-            }
-            Err(error) => {
-                let fault = pending.reject_and_fault(&error);
-                mounted.pending_child_publication = Some(pending);
-                return Err(fault);
-            }
-        }
-        let Some(_permit) = mounted.cancellation_lease.as_ref().and_then(ToolCancellationLease::try_claim_publication) else {
-            let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication claim is cancelled or occupied"));
-            mounted.pending_child_publication = Some(pending);
-            return Err(fault);
-        };
-        let live_revision = self.stores.store.content_revision_now();
-        let live_generation = self.stores.store.generation_now();
-        let Some(captured) = mounted.captured_child_content.as_ref() else {
-            let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication lost its captured immutable root"));
-            mounted.pending_child_publication = Some(pending);
-            return Err(fault);
-        };
-        let parent_fresh = typed_operation_document_is_fresh(&mounted.operation, mounted.canonical_revision, live_revision, live_generation);
-        let child_root_fresh = mounted.captured_child_content_generation == self.child_composition.child_content_generation && captured.identity_digest() == self.child_composition.child_content_root.identity_digest();
-        if !parent_fresh || !child_root_fresh {
-            let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication rejected stale parent or child immutable roots"));
-            mounted.pending_child_publication = Some(pending);
-            return Err(fault);
-        }
-        let mut seen = HashSet::with_capacity(pending.child_emits.len());
-        for child in pending.child_emits.iter() {
-            if !seen.insert((child.slot.clone(), child.child_id.clone())) {
-                let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication contains a duplicate exact target"));
-                mounted.pending_child_publication = Some(pending);
-                return Err(fault);
-            }
-            let expected_revision = match captured.revision(&child.slot, &child.child_id) {
-                Ok(revision) => revision,
-                Err(error) => {
-                    let fault = pending.reject_and_fault(&error);
-                    mounted.pending_child_publication = Some(pending);
-                    return Err(fault);
-                }
-            };
-            let Some(expected_dialect) = captured.dialect(&child.slot, &child.child_id) else {
-                let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication target is absent from its captured root"));
-                mounted.pending_child_publication = Some(pending);
-                return Err(fault);
-            };
-            let Some(entry) = self.child_composition.children.get(&(child.slot.clone(), child.child_id.clone())) else {
-                let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication target is absent from the live member registry"));
-                mounted.pending_child_publication = Some(pending);
-                return Err(fault);
-            };
-            if entry.reference.dialect != expected_dialect || entry.member.content_revision().await != expected_revision {
-                let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication rejected stale member identity, dialect, or revision"));
-                mounted.pending_child_publication = Some(pending);
-                return Err(fault);
-            }
-        }
-        if mounted.cancellation_lease.as_ref().expect("claimed child publication retains its cancellation lease").is_cancelled().await {
-            let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation child publication was cancelled before group linearization"));
-            mounted.pending_child_publication = Some(pending);
-            return Err(fault);
-        }
-        if let Err(error) = pending.begin_dispatch() {
-            let fault = pending.reject_and_fault(&error);
-            mounted.pending_child_publication = Some(pending);
-            return Err(fault);
-        }
-        let result = self.as_dispatch().dispatch_emit_group(&mounted.verb, &pending.artifact_mutations, &pending.child_emits, Vec::new(), Vec::new(), UiDirtyScope::None, &mounted.meta, None, pending.transaction.as_ref().cloned(), identity).await;
-        match result {
-            Ok(result) => {
-                mounted.artifact_generation = self.stores.store.generation_now();
-                mounted.canonical_revision = self.stores.store.content_revision_now();
-                mounted.operation.base_revision = semio_framework_job::RevisionId(u64::from_be_bytes(mounted.canonical_revision[..8].try_into().expect("revision lane width")));
-                mounted.operation.generation = semio_framework_job::Generation(mounted.artifact_generation);
-                let receipt = ChildPublicationResultV1 { invocation_id: result.inverse_group.invocation_id.0.clone(), committed_members: result.inverse_group.member_edits.len(), child_content_generation: self.child_composition.child_content_generation };
-                if self.tools.typed_composed_outbox.push(ComposedGestureResult { operation: mounted.operation.operation.0, mutations: result.mutations, inverse_group: result.inverse_group }).is_err() {
-                    let fault = pending.reject_and_fault(&plugin_sdk_fault("typed-operation composed gesture receiver is saturated"));
-                    mounted.pending_child_publication = Some(pending);
-                    return Err(fault);
-                }
-                if let Err(error) = pending.commit(receipt.clone()) {
-                    let fault = pending.reject_and_fault(&error);
-                    mounted.pending_child_publication = Some(pending);
-                    return Err(fault);
-                }
-                mounted.pending_child_publication = Some(pending);
-                mounted.queue_page(TypedOperationResultPage::try_serialize_cold(mounted.next_token(), TypedOperationResultLane::Child, &receipt)?)
-            }
-            Err(fault) => {
-                let fault = pending.reject_and_fault(&fault);
-                mounted.pending_child_publication = Some(pending);
-                Err(fault)
-            }
-        }
+use semio_framework_job::{OriginalTurnFailure,StepContext};
+use semio_framework_plugin_ownership::bounded_ownership::{PluginLifecycleFailure,plugin_grant_funds};
+use semio_framework_value::{RetirementDemand,ValueRefusalKind};
+use semio_framework_value::retained_clone::RetainedCloneStep;
+use semio_framework_plugin_decl_emission::{ChildEmit,child_emit_preparation::OwnedChildEmit};
+use semio_framework_plugin_decl_views::child_view::MemberKeyRef;
+fn original_failure(detail:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,detail)}
+fn original_header<T>()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<T>(),depth:1,..Default::default()}}
+fn post_original<T>(cx:&mut StepContext<'_>,result:Result<(T,RetainedCloneProgress),ValueError>)->Result<T,OriginalTurnFailure>{let p=result.as_ref().map(|(_,p)|*p).unwrap_or_else(|e|e.retained_progress());if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}else{cx.consume_retained(p)?;}cx.consume_fuel(p.copied_items as u64);Ok(result?.0)}
+impl<'ctx,A:ArtifactApp,M:SpaceMember+MemberFactory+'static,X:InstanceExtension> TypedCtx<'ctx,A,M,X>{
+    /// 🧳️ Native parsing keeps the original child vectors and hands the resulting typed owners to the installed group pipeline.
+    pub(super) async fn publish_mounted_typed_child_operation_unit(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,cx:&mut StepContext<'_>)->Result<(),PluginLifecycleFailure>{
+        if cx.should_yield(){return Ok(())}
+        let mut pending=mounted.pending_child_publication.take().ok_or_else(||original_failure("mounted child receiving lost its original owner"))?;
+        let result=self.advance_original_child_receiving(mounted,&mut pending,cx);
+        if pending.terminal_is_empty(){drop(pending);}else{mounted.pending_child_publication=Some(pending);}
+        result
     }
-
+    fn advance_original_child_receiving(&mut self,mounted:&mut MountedTypedCommandFullOperation<A>,pending:&mut PendingChildGroupPublication<A>,cx:&mut StepContext<'_>)->Result<(),PluginLifecycleFailure>{
+        let grant=cx.retained_grant();
+        if pending.phase==PendingChildGroupPublicationPhase::Closing{
+            let d=pending.retirement_demands(grant.maximum_copy_bytes)?;
+            if !plugin_grant_funds(d,grant){return Ok(())}
+            if pending.requires_original_control(){cx.with_original_retirement(|cx|{let result=cx.with_native_retirement(|control|pending.close_step_controlled(grant,control));let p=result.as_ref().map(|step|step.progress()).unwrap_or_else(|e|e.retained_progress());cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);result?;Ok::<_,OriginalTurnFailure>(())})?;}else{let result=pending.close_step(grant);let p=result.as_ref().ok().and_then(|step|step.progress()).unwrap_or_default();cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);result?;}
+            return Ok(())
+        }
+        if pending.phase!=PendingChildGroupPublicationPhase::Ready{return Err(original_failure("encoded child source cannot reenter a committed publication").into())}
+        if !pending.native_reserved{
+            let count=pending.child_emits.len();if count==0||count>PRIVATE_CHILD_GROUP_MAXIMUM_CHILDREN{return Err(original_failure("encoded child source exceeds the native group member bound").into())}
+            let d=RetirementDemand{capacity_bytes:count.checked_mul(size_of::<OwnedChildEmit>()).ok_or_else(||original_failure("native child source capacity overflow"))?,..original_header::<(Vec<OwnedChildEmit>,bool)>()};if !plugin_grant_funds(d,grant){return Ok(())}
+            pending.native_children.try_reserve_exact(count).map_err(|_|original_failure("original typed child vector allocation failed"))?;pending.native_reserved=true;
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
+        }
+        if let Some(receiver)=pending.native_receiver.as_mut(){
+            if pending.native_batch.is_some(){
+                let d=if receiver.terminal_is_empty(){RetirementDemand{release_bytes:receiver.allocation_bytes(),depth:1,..Default::default()}}else{receiver.close_demands(grant.maximum_copy_bytes)?};if !plugin_grant_funds(d,grant){return Ok(())}
+                if receiver.terminal_is_empty(){pending.native_receiver=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()})?;cx.consume_fuel(1);}else{cx.with_original_retirement(|cx|{let result=cx.with_native_retirement(|control|receiver.close_step(control,grant));let p=result.as_ref().map(|step|step.progress()).unwrap_or_else(|e|e.retained_progress());cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);result?;Ok::<_,OriginalTurnFailure>(())})?;}
+                return Ok(())
+            }
+            if receiver.ready(){let d=receiver.take_demands();if !plugin_grant_funds(d,grant){return Ok(())}let result=cx.with_native_receiving(|control|receiver.take(&mut pending.native_batch,&mut pending.native_wires,control,grant).map(|step|((),step.progress())));post_original(cx,result)?;return Ok(())}
+            let d=receiver.demands(grant.maximum_copy_bytes)?;if !plugin_grant_funds(d,grant){return Ok(())}
+            if receiver.settling(){cx.with_original_retirement(|cx|{let result=cx.with_native_retirement(|control|receiver.settle(control,grant));let p=result.as_ref().map(|step|step.progress()).unwrap_or_else(|e|e.retained_progress());cx.consume_retained(p)?;cx.consume_fuel(p.copied_items as u64);result?;Ok::<_,OriginalTurnFailure>(())})?;}else{let result=cx.with_native_receiving(|control|receiver.advance(control,grant).map(|step|((),step.progress())));post_original(cx,result)?;}
+            return Ok(())
+        }
+        if pending.native_batch.is_some(){
+            if pending.native_wires.is_some(){let d=original_header::<Vec<Vec<u8>>>();if !plugin_grant_funds(d,grant){return Ok(())}let child=pending.child_emits.get_mut(pending.native_child_index).ok_or_else(||original_failure("original child wire metadata slot is absent"))?;if !child.ops.is_empty()||child.ops.capacity()!=0{return Err(original_failure("original child wire metadata slot is occupied").into())}child.ops=pending.native_wires.take().unwrap();cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())}
+            let d=original_header::<(ChildEmit,OwnedChildEmit,usize)>();if !plugin_grant_funds(d,grant){return Ok(())}
+            let empty=ChildEmit{genesis:None,owner:String::new(),slot:String::new(),child_id:String::new(),ops:Vec::new(),op_schema:protocol::SchemaId(String::new()),labels:Vec::new()};
+            let metadata=std::mem::replace(&mut pending.child_emits[pending.native_child_index],empty);pending.native_children.push(OwnedChildEmit::new(metadata,pending.native_batch.take().unwrap()));pending.native_child_index+=1;
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
+        }
+        if pending.native_child_index==pending.child_emits.len(){
+            let d=original_header::<(Vec<A::Mutation>,Vec<OwnedChildEmit>,Option<protocol::TransactionRef>)>();if !plugin_grant_funds(d,grant){return Ok(())}
+            let Some(ArtifactToolCompletionValue::Emit(Ok(emit),_))=mounted.publication.as_mut()else{return Err(original_failure("original child conversion lost its same emission recipient").into())};
+            if !emit.artifact_mutations.is_empty()||emit.artifact_mutations.capacity()!=0||!emit.owned_child_emits.is_empty()||emit.owned_child_emits.capacity()!=0||emit.transaction.is_some(){return Err(original_failure("original child conversion recipient is occupied").into())}
+            emit.artifact_mutations=std::mem::take(&mut*pending.artifact_mutations);emit.owned_child_emits=std::mem::take(&mut pending.native_children);emit.transaction=pending.transaction.take();pending.begin_close();
+            cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())
+        }
+        let child=&mut pending.child_emits[pending.native_child_index];
+        if pending.native_wires.is_none(){let d=original_header::<Vec<Vec<u8>>>();if !plugin_grant_funds(d,grant){return Ok(())}pending.native_wires=Some(std::mem::take(&mut child.ops));cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);return Ok(())}
+        let member=self.child_composition.children.member(MemberKeyRef{owner:&child.owner,slot:&child.slot,child_id:&child.child_id}).ok_or_else(||original_failure("encoded child publication requires its exact live member; declared genesis uses typed child preparation"))?;
+        let d=member.member.original_batch_receiving_demands()?;if !plugin_grant_funds(d,grant){return Ok(())}
+        let result=cx.with_native_receiving(|control|member.member.admit_original_batch_receiving(&mut pending.native_wires,control,grant).map(|admitted|match admitted{Some((owner,p))=>{pending.native_receiver=Some(owner);((),p)},None=>((),Default::default())}));post_original(cx,result)?;Ok(())
+    }
 }

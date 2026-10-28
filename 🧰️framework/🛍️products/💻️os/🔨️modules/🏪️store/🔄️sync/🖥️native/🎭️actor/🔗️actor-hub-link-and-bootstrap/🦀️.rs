@@ -328,7 +328,7 @@ impl ArtifactActor {
         }
         let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
         let pushed = match self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await {
-            Ok(()) if !events.is_empty() => self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await,
+            Ok(()) if !events.is_empty() => self.remote.push(BackboneMessage::from_envelopes(&events)).await,
             result => result,
         };
         if let Err(error) = pushed {
@@ -370,7 +370,7 @@ impl ArtifactActor {
         if std::mem::take(&mut self.fail_bootstrap_local_replay_once) {
             return Err(semio_framework_os_vcs::VcsError::Backbone("injected bootstrap local replay failure".into()));
         }
-        self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await
+        self.remote.push(BackboneMessage::from_envelopes(&self.outbox)).await
     }
 
     #[cfg(any(test, feature = "testing"))]

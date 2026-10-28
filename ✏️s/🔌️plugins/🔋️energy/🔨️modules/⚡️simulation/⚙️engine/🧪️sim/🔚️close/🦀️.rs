@@ -1,6 +1,7 @@
 //! 🔚️ Job close ladder: close demands and steps, the interactive job trait implementation and the terminal-empty census.
 
 use super::*;
+use crate::state::release_energy_abandonment_slot;
 
 impl EnergyJobAuthority {
     pub(super) fn begin_close(&mut self) {
@@ -13,7 +14,7 @@ impl EnergyJobAuthority {
     }
 
     /// 📏️ Quotes the next close frontier: a payload owner, a staged page source, or one popped ladder rung.
-    fn precompute_close_demands(&self, body: usize) -> Option<Result<RetirementDemand, ValueError>> {
+    pub(crate) fn precompute_close_demands(&self, body: usize) -> Option<Result<RetirementDemand, ValueError>> {
         if !self.precompute_close.is_empty() || self.precompute.is_some() {
             return Some(self.precompute_close.next_owner_demands::<PrecomputeBuilder>(self.precompute.is_some(), &None, body));
         }
@@ -126,6 +127,15 @@ impl EnergyJobAuthority {
             self.commit_reservation = None;
             return Ok(energy_one());
         }
+        if !self.precompute_close.is_empty() {
+            return self.precompute_close.step_granted(grant).map(|step| InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        if let Some(step) = self.precompute_close.begin_granted(&mut self.precompute, grant)? {
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
+        if let Some(step) = self.precompute_close.begin_granted(&mut self.pre, grant)? {
+            return Ok(InteractiveJobCloseStep::Pending { progress: step.progress() });
+        }
         if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
             return Ok(energy_idle());
         }
@@ -144,7 +154,6 @@ impl EnergyJobAuthority {
                 }
             };
         }
-        pop_owner!(self.weather);
         if let Some((released_items, released_bytes)) = close_string_vector_step(&mut self.time_series_order, maximum_bytes) {
             return Ok(energy_rung((released_items, released_bytes)));
         }
@@ -254,12 +263,6 @@ impl EnergyJobAuthority {
             self.sizing_builder = None;
             return Ok(energy_one());
         }
-        if let Some((released_items, released_bytes)) = close_model_step(&mut self.model, maximum_bytes) {
-            return Ok(energy_rung((released_items, released_bytes)));
-        }
-        if let Some((released_items, released_bytes)) = close_config_step(&mut self.config, maximum_bytes) {
-            return Ok(energy_rung((released_items, released_bytes)));
-        }
         if self.run_hours.take().is_some() || self.final_environmental.take().is_some() || self.final_resilience.take().is_some() || self.output_fault.take().is_some() || self.weather_fault.take().is_some() {
             return Ok(energy_one());
         }
@@ -351,7 +354,7 @@ impl InteractiveJob for EnergyJob {
     }
 }
 impl EnergyJob{
-    fn original_close_demands(&self)->Result<RetirementDemand,ValueError>{
+    pub(crate) fn original_close_demands(&self)->Result<RetirementDemand,ValueError>{
         let Some(authority)=self.authority.as_deref()else{return Ok(Default::default())};
         if authority.closing&&authority_is_terminal_empty(authority){return Ok(RetirementDemand{release_bytes:std::mem::size_of::<EnergyJobAuthority>(),depth:1,..Default::default()})}
         authority.close_demands()
@@ -499,7 +502,6 @@ fn authority_inputs_are_retired(authority: &EnergyJobAuthority) -> bool {
         && authority.publication.faults.len == 0
         && !authority.publication.faults.reserved_push
         && authority.close_string_owner.is_empty()
-        && authority.weather.is_empty()
         && authority.time_series_order.is_empty()
         && authority.meter_order.is_empty()
         && authority.time_series.series.is_empty()
@@ -533,6 +535,4 @@ fn authority_inputs_are_retired(authority: &EnergyJobAuthority) -> bool {
         && authority.final_resilience.is_none()
         && authority.output_fault.is_none()
         && authority.weather_fault.is_none()
-        && model_is_terminal_empty(&authority.model)
-        && config_is_terminal_empty(&authority.config)
 }

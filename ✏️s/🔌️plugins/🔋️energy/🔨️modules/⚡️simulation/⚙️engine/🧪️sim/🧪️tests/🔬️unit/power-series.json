@@ -1,0 +1,16 @@
+{
+  "hours": 24,
+  "warmupDays": 3,
+  "seriesPerZone": 3,
+  "wattsToJoules": 3600.0,
+  "cases": [
+    {
+      "environment": "HeatingDesignDay",
+      "positive": "Heating"
+    },
+    {
+      "environment": "CoolingDesignDay",
+      "positive": "Cooling"
+    }
+  ]
+}

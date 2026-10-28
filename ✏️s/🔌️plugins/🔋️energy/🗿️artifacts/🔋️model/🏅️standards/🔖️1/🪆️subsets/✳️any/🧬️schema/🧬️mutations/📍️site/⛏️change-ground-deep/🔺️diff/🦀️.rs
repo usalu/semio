@@ -1,8 +1,8 @@
 //! 🔺️ Sparse diff builder for `ChangeGroundDeep` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, GroundTemperatureConfigPatch, ModelPatch};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, GroundTemperatureConfigPatch, ModelPatch};
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::ChangeGroundDeep, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

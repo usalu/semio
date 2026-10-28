@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateGasMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "gas_materials",
+    "field": "thickness_m",
+    "input": "new_thickness_m",
+    "key": "id",
+    "labels": {
+      "en": "Change gas material: Gap width",
+      "de": "Scheibenabstand ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "gas-material",
+      "kind": "change-gas-material-thickness",
+      "record": "ChangedGasMaterialThickness"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Gap width violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed gas material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The gas material already carries this gap width value."
+      }
+    }
   }
 }

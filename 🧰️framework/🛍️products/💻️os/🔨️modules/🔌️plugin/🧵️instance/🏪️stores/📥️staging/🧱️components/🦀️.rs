@@ -1,4 +1,5 @@
 //! 🧺️ The instance components of `instance-stores`: ConstructorState, InstanceStores, PeerRoster, ActionIngress, LocalInteraction (WP6, plan section 7.3).
+use semio_framework_plugin_ownership::original_store_genesis::OriginalStoreSlot;
 use semio_framework_plugin_ownership::bounded_ownership::{ARTIFACT_LIVE_OUTPUT_SLOTS, ArtifactFixedRegistry};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use std::sync::Arc;
@@ -56,11 +57,11 @@ impl<A: ArtifactApp> ConstructorState<A> {
 
 /// 🪥️ The stores of the instance: document, config, draft, presence, transient, interaction and window owner registries with their one-item publication factories.
 pub struct InstanceStores<A: ArtifactApp> {
-    pub store: ArtifactStore<A::Snapshot, A::Mutation>,
-    pub config_store: ConfigStore<A::Config, A::ConfigMutation>,
+    pub store: OriginalStoreSlot<A::Snapshot,A::Mutation>,
+    pub config_store: OriginalStoreSlot<A::Config,A::ConfigMutation>,
     /// 📝️ Volatile draft lane — never checkpoints; prune via `ArtifactCommand::PruneDrafts`.
     /// Moves to host `ArtifactSession` when CHANNEL_VERSION 5 exchange lands.
-    pub draft_store: store::DraftStore<A::Draft, A::DraftMutation>,
+    pub draft_store: OriginalStoreSlot<A::Draft,A::DraftMutation>,
     /// 👥️ Ephemeral SHARED lane — a last-writer-wins peer roster, not an event log. Holds
     /// this actor's own presence plus whatever peers last broadcast; never persisted, never
     /// checkpointed, never undoable.
@@ -93,21 +94,26 @@ pub struct InstanceStores<A: ArtifactApp> {
     /// every app's own `Config`/`ConfigMutation` types, since ~17 crates never need to know this
     /// exists — see `InteractionConfigMutation`'s own doc comment for the orphan-rule reason its
     /// `Mutation` impl couldn't target `A::Config` directly either way.
-    pub interaction_store: ConfigStore<protocol::InteractionState, InteractionConfigMutation>,
+    pub interaction_store: OriginalStoreSlot<protocol::InteractionState,InteractionConfigMutation>,
 }
 
 impl<A: ArtifactApp> InstanceStores<A> {
     /// 🪒️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
     pub fn new(store: ArtifactStore<A::Snapshot, A::Mutation>, config_store: ConfigStore<A::Config, A::ConfigMutation>, draft_store: store::DraftStore<A::Draft, A::DraftMutation>, presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>, window_config_store: WindowConfigOwnerRegistry, window_transient_store: WindowTransientOwnerRegistry, artifact_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>, config_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>>, draft_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Draft, A::DraftMutation>>>, presence_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Presence, A::PresenceMutation>>>, transient_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Transient, A::TransientMutation>>>, presence_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>, transient_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Transient>>>, unsupported_publication_contracts: BTreeMap<String, &'static str>, interaction_store: ConfigStore<protocol::InteractionState, InteractionConfigMutation>) -> Self {
+        Self::from_original(Box::new(store),Box::new(config_store),Box::new(draft_store),presence_store,store::TransientStore::new(A::Transient::default()),window_config_store,window_transient_store,artifact_one_item_factory,config_one_item_factory,draft_one_item_factory,presence_one_item_factory,transient_one_item_factory,presence_local_root_retirement_factory,transient_local_root_retirement_factory,unsupported_publication_contracts,Box::new(interaction_store),ArtifactFixedRegistry::new())
+    }
+
+    /// 🧳️ Moves the original ephemeral roots and typed Stores without constructing another default lane.
+    pub fn from_original(store: Box<ArtifactStore<A::Snapshot, A::Mutation>>, config_store: Box<ConfigStore<A::Config, A::ConfigMutation>>, draft_store: Box<store::DraftStore<A::Draft, A::DraftMutation>>, presence_store: store::PresenceStore<A::Presence, A::PresenceMutation>, transient_store:store::TransientStore<A::Transient,A::TransientMutation>, window_config_store: WindowConfigOwnerRegistry, window_transient_store: WindowTransientOwnerRegistry, artifact_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>>, config_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Config, A::ConfigMutation>>>, draft_one_item_factory: Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Draft, A::DraftMutation>>>, presence_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Presence, A::PresenceMutation>>>, transient_one_item_factory: Option<std::sync::Arc<dyn store::ArtifactEphemeralOneItemPreparationFactory<A::Transient, A::TransientMutation>>>, presence_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>, transient_local_root_retirement_factory: Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<A::Transient>>>, unsupported_publication_contracts: BTreeMap<String, &'static str>, interaction_store: Box<ConfigStore<protocol::InteractionState, InteractionConfigMutation>>,retired_window_transient_stores:ArtifactFixedRegistry<WindowTransientOwnerRegistry>) -> Self {
         Self {
-            store,
-            config_store,
-            draft_store,
+            store:OriginalStoreSlot::from_original(store),
+            config_store:OriginalStoreSlot::from_original(config_store),
+            draft_store:OriginalStoreSlot::from_original(draft_store),
             presence_store,
-            transient_store: store::TransientStore::new(A::Transient::default()),
+            transient_store,
             window_config_store,
             window_transient_store,
-            retired_window_transient_stores: ArtifactFixedRegistry::new(),
+            retired_window_transient_stores,
             artifact_one_item_factory,
             config_one_item_factory,
             draft_one_item_factory,
@@ -116,7 +122,7 @@ impl<A: ArtifactApp> InstanceStores<A> {
             presence_local_root_retirement_factory,
             transient_local_root_retirement_factory,
             unsupported_publication_contracts,
-            interaction_store,
+            interaction_store:OriginalStoreSlot::from_original(interaction_store),
         }
     }
 }
@@ -159,17 +165,23 @@ pub struct PeerRoster<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> PeerRoster<A> {
+    /// 📏️ Quotes this component frame and its fixed original backing; input roots remain separately admitted.
+    pub fn birth_demands()->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{semio_framework_plugin_ownership::bounded_ownership::original_component_birth::<Self>(&[semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_publications,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_roster_outcomes,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.peer_presence_retirements,64)?,semio_framework_plugin_ownership::bounded_ownership::original_registry_backing::<Self,_>(|owner|&owner.presence_peer_retirements,64)?])}
+
     /// 🪤️ Builds the component from the parts the composer constructs first; every other field starts at its construction value.
-    pub fn new() -> Self {
+    pub fn new() -> Self {Self::from_original(PeerPresenceRoot::empty_shared(),semio_framework_job::CancelToken::root_now())}
+
+    /// 🧷️ Uses the actual admitted presence root and cancellation source without minting either during component birth.
+    pub fn from_original(root:std::sync::Arc<PeerPresenceRoot>,scope:semio_framework_job::CancelToken)->Self{
         Self {
             own_color: None,
-            peer_presence: ManuallyDrop::new(PeerPresenceRoot::empty_shared()),
+            peer_presence: ManuallyDrop::new(root),
             peer_presence_generation: 0,
             peer_roster_admission_generation: 0,
             peer_roster_processed_generation: 0,
             peer_roster_outcome_generation: 0,
             peer_roster_reservations: std::array::from_fn(|_| None),
-            peer_roster_scope: semio_framework_job::CancelToken::root_now(),
+            peer_roster_scope: scope,
             peer_roster_publications: ArtifactFixedRegistry::new(),
             peer_roster_outcomes: ArtifactFixedRegistry::new(),
             peer_presence_retirements: ArtifactFixedRegistry::new(),

@@ -1,0 +1,74 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original UI Value Conversion",
+  "type": "object",
+  "required": [
+    "copyBytes",
+    "capacityBytes",
+    "cancelAfter",
+    "cases"
+  ],
+  "properties": {
+    "copyBytes": {
+      "const": 32768
+    },
+    "capacityBytes": {
+      "const": 16777216
+    },
+    "cancelAfter": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {}
+    }
+  },
+  "copyBytes": 32768,
+  "capacityBytes": 16777216,
+  "textFragmentBytes": 64,
+  "cancelAfter": [
+    0,
+    1,
+    4,
+    15,
+    100
+  ],
+  "cases": [
+    null,
+    true,
+    7,
+    -2.5,
+    "Grüße🙂",
+    [
+      1,
+      false,
+      {
+        "id": "original",
+        "items": [
+          null,
+          "東京"
+        ]
+      }
+    ],
+    {
+      "from": "original",
+      "nested": {
+        "value": 2.75,
+        "empty": []
+      },
+      "target": [
+        "first",
+        "second"
+      ]
+    }
+  ],
+  "deepListDepth": 80,
+  "wideText": {
+    "repeat": "界",
+    "count": 170
+  }
+}

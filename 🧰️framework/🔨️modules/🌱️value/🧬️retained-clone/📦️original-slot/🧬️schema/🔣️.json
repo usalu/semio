@@ -76,7 +76,9 @@
           "original",
           "replacement",
           "patch",
-          "expected"
+          "expected",
+          "withdrawn",
+          "vacant"
         ],
         "properties": {
           "name": {
@@ -93,6 +95,12 @@
           },
           "expected": {
             "type": "object"
+          },
+          "withdrawn": {
+            "type": "object"
+          },
+          "vacant": {
+            "const": true
           }
         }
       }

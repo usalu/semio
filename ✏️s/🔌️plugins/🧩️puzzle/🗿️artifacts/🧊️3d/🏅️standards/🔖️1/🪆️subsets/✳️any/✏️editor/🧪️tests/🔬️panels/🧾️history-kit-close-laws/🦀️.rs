@@ -50,7 +50,7 @@ async fn a_history_edit_draft_highlights_exactly_the_objects_it_references() {
 /// `meta.kind_catalogs.objects` (and the vortex kind inside `.vortices`).
 #[semio_framework_async_macros::async_test]
 async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_catalogs() {
-    let projection = Puzzle3dPlayApp::initial_snapshot();
+    let projection = Puzzle3dPlayApp::reference_birth().expect("explicit reference snapshot producer")();
     let history = semio_framework_plugin::HistoryView::empty();
     let doc = ArtifactView::new(&projection, &history);
 
@@ -96,7 +96,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
 /// `multiplicity: Many` port) must upsert idempotently — no duplicate rows.
 #[semio_framework_async_macros::async_test]
 async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
-    let projection = Puzzle3dPlayApp::initial_snapshot();
+    let projection = Puzzle3dPlayApp::reference_birth().expect("explicit reference snapshot producer")();
     let history = semio_framework_plugin::HistoryView::empty();
     let mut current = projection.typed().clone();
 

@@ -181,9 +181,9 @@ impl ArtifactEditor for Gif87aEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); gif87a_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v87a::subsets::any::schema::blank_gif_snapshot()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

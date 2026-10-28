@@ -10,6 +10,7 @@ use semio_framework_replication_mutation::ForeignTarget;
 /// ([`TransactionRef::mint`]), `tool` the authoring action/tool id `<appId>#<toolId>`. Every
 /// operation one transaction produced carries the same ref, in the edit ledger and on the wire.
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
+#[derive(semio_framework_value::RetainedClone)]
 pub struct TransactionRef {
     pub id: String,
     pub tool: String,
@@ -205,7 +206,7 @@ pub struct Edit<Op> {
     /// 🌿️ Authored branch identity; explicit null identifies trunk or unknown provenance.
     pub line: Option<String>,
     pub forwards: Vec<Op>,
-    pub inverse: semio_framework_value_persistent::list::PagedList<Op, {usize::MAX}>,
+    pub inverse: semio_framework_value::RetainedPublicationRoot<semio_framework_value_persistent::list::PagedList<Op, {usize::MAX}>>,
     pub mutation_meta: Vec<MutationMeta>,
     /// 🖊️ The id of the action or command that authored this edit — never display text: history resolves it through
     /// the authoring app's registry to its label in every locale at projection time, so a reload or a peer keeps it.
@@ -283,7 +284,7 @@ impl<Op: semio_framework_value::FromValue> semio_framework_value::FromValue for 
             actor,
             line: line.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Edit missing line"))?,
             forwards: forwards.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Edit missing forwards"))?,
-            inverse: inverse.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Edit missing inverse"))?,
+            inverse: inverse.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Edit missing inverse"))?.into(),
             mutation_meta,
             verb,
             sequence_number: sequence_number.ok_or_else(|| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "Edit missing sequenceNumber"))?,
@@ -306,7 +307,8 @@ mod transaction_ref_tests;
 /// 📍️ Provenance of one [`MutationMeta`]-described operation. `Owner` is the default (and
 /// the overwhelming common case), omitted from wire by `MutationMeta.origin`'s
 /// `skip_serializing_if`.
-#[derive(Clone, Debug, Default, PartialEq)]
+#[derive(Clone, Debug, Default, PartialEq,semio_framework_value::NativeReceive,semio_framework_value::RetainedClone)]
+#[value(tag="kind",rename_all="camelCase",rename_all_fields="camelCase")]
 pub enum MutationOrigin {
     #[default]
     Owner,

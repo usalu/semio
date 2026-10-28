@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "field": "visible_absorptance",
+    "input": "new_visible_absorptance",
+    "key": "id",
+    "labels": {
+      "en": "Change material: Visible absorptance",
+      "de": "Sichtbarer Absorptionsgrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "material",
+      "kind": "change-material-visible-absorptance",
+      "record": "ChangedMaterialVisibleAbsorptance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Visible absorptance violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The material already carries this visible absorptance value."
+      }
+    }
   }
 }

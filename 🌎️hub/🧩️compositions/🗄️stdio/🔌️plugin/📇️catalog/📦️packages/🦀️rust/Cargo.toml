@@ -66,6 +66,7 @@ semio-s-artifact-stdio-wav = { workspace = true }
 semio-s-artifact-stdio-epw = { workspace = true }
 semio-s-artifact-stdio-tsv = { workspace = true }
 semio-s-artifact-stdio-html = { workspace = true }
+semio-s-artifact-stdio-idf = { workspace = true }
 # /🧩️ Composition Dependencies
 serde = { workspace = true }
 serde_json = { workspace = true }

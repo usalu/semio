@@ -1,0 +1,119 @@
+{
+  "contract": "semio.energy.original-optional-reference/v1",
+  "collection": "setpoint_managers",
+  "field": "schedule_id",
+  "original": {
+    "id": 7,
+    "name": "Original manager",
+    "kind": "Scheduled",
+    "schedule_id": 1
+  },
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1
+        }
+      ],
+      "daily": [
+        {
+          "id": 2,
+          "hourly_values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "interpolation": "Continuous",
+          "limits": null
+        }
+      ],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newScheduleId": 1,
+        "newSchedulePresent": true
+      },
+      "outcome": "no-op",
+      "after": 1
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newScheduleId": 0,
+        "newSchedulePresent": false
+      },
+      "outcome": "changed",
+      "after": null
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newScheduleId": 99,
+        "newSchedulePresent": true
+      },
+      "outcome": "invalid-reference",
+      "after": 99
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newScheduleId": 99,
+        "newSchedulePresent": false
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newScheduleId": 99,
+        "newSchedulePresent": false
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "branch": "controls"
+}

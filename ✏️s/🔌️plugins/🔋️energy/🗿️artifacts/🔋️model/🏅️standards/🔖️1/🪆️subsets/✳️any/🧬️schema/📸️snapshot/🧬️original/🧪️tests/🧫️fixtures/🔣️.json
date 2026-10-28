@@ -1,0 +1,42 @@
+{
+  "schema": "semio.energy.original-document/v1",
+  "persistedFields": [
+    "schema",
+    "model",
+    "referencedModel",
+    "weatherLink"
+  ],
+  "document": {
+    "schema": "energy.model",
+    "referencedModel": null,
+    "weatherLink": null
+  },
+  "projection": {
+    "maximumCopyBytes": 4096,
+    "sameSchemaAuthority": true,
+    "sameModelBranchAuthority": true,
+    "sameLinkAuthorities": true
+  },
+  "cancelAt": [
+    0,
+    1,
+    2,
+    4,
+    8,
+    16
+  ],
+  "weather": {
+    "target": {
+      "artifactId": "original-weather",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "epw"
+      }
+    },
+    "pin": {
+      "kind": "head"
+    },
+    "role": "weather"
+  }
+}

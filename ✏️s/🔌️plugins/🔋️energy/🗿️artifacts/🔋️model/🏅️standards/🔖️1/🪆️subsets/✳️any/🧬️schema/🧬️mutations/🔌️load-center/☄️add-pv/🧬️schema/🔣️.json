@@ -76,5 +76,63 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "membership-row",
+    "membership": "insert",
+    "row": "StateElectricalLoadCenter",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "electrical_load_centers",
+    "field": "pv_ids",
+    "input": "pv_id",
+    "key": "id",
+    "memberKind": "EntityId",
+    "indexMode": "required",
+    "duplicate": "no-op",
+    "rankBeforeDuplicate": true,
+    "positiveMember": false,
+    "inverse": "RemoveElectricalLoadCenterPv",
+    "inverseMember": "pv_id",
+    "labels": {
+      "en": "Add Pv",
+      "de": "PV-Anlage hinzufügen"
+    },
+    "semantics": {
+      "verb": "add",
+      "entity": "ElectricalLoadCenter",
+      "kind": "AddElectricalLoadCenterPv",
+      "record": "AddElectricalLoadCenterPv"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored member identity must be valid."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed row, membership or insertion rank does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced member does not exist in its authored collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original row already contains this member."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original row already contains this member."
+      }
+    },
+    "member": "pv_id",
+    "index": "index",
+    "memberReference": "PvSystems"
   }
 }

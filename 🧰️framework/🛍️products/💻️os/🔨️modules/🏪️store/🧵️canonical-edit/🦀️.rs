@@ -41,6 +41,35 @@ pub const ARTIFACT_CANONICAL_JSON_CHUNK_BYTES: usize = 256;
 pub const CANONICAL_EDIT_MAXIMUM_BYTES: u64 = 16 * ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES as u64;
 pub const CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES: u64 = b"semio.artifact.cursor.v2".len() as u64 + 3 * 8 + b"edit".len() as u64 + 4 * ARTIFACT_STORE_ONE_ITEM_ID_BYTES as u64;
 
+/// 🌲️ Views one original mutation as its path-addressed canonical JSON without copying it: the wire of a mutation IS its canonical tree.
+#[repr(transparent)]
+pub struct ArtifactCanonicalTreeSource<M>(M);
+
+impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalTreeSource<M> {
+    /// 🔗️ Reborrows the original mutation in place as its canonical wire role.
+    pub const fn view(mutation: &M) -> &Self {
+        unsafe { &*(mutation as *const M).cast::<Self>() }
+    }
+
+    fn descend<'a>(&'a self, path: &[usize]) -> Result<&'a dyn ArtifactCanonicalJsonTree, ValueError> {
+        let mut node: &dyn ArtifactCanonicalJsonTree = &self.0;
+        for ordinal in path {
+            node = node.canonical_tree_child(*ordinal)?;
+        }
+        Ok(node)
+    }
+}
+
+impl<M: ArtifactCanonicalJsonTree> ArtifactCanonicalJson for ArtifactCanonicalTreeSource<M> {
+    fn canonical_json_node(&self, path: &[usize]) -> Result<ArtifactCanonicalJsonNode<'_>, ValueError> {
+        self.descend(path)?.canonical_tree_node()
+    }
+
+    fn canonical_json_key(&self, object_path: &[usize], index: usize) -> Result<ArtifactCanonicalJsonText<'_>, ValueError> {
+        self.descend(object_path)?.canonical_tree_key(index)
+    }
+}
+
 /// ⚠️ Exact initialized output prefix retained even when typed canonical traversal fails.
 #[derive(Debug, PartialEq, Eq)]
 pub struct ArtifactCanonicalJsonEncodeError {
@@ -492,3 +521,6 @@ impl ArtifactCanonicalJsonCursor {
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+#[path="🔏️borrowed-digest/🦀️.rs"]
+mod borrowed_digest;
+pub use borrowed_digest::ArtifactCanonicalRecordDigest;

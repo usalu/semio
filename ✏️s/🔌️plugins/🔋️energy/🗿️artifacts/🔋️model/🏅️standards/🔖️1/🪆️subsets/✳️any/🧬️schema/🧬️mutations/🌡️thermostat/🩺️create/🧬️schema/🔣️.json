@@ -172,5 +172,127 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateThermostat",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "heating_setpoint_schedule_id",
+        "input": "heating_setpoint_schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "cooling_setpoint_schedule_id",
+        "input": "cooling_setpoint_schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "heating_throttle_range_k",
+        "input": "heating_throttle_range_k",
+        "storage": "fixed"
+      },
+      {
+        "field": "cooling_throttle_range_k",
+        "input": "cooling_throttle_range_k",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateThermostat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "thermostats",
+    "key": "id",
+    "inverse": "DeleteThermostat",
+    "labels": {
+      "en": "Create thermostat",
+      "de": "Thermostat erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "thermostat",
+      "kind": "create-thermostat",
+      "record": "CreatedThermostat"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "heating_setpoint_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "cooling_setpoint_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

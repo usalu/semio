@@ -275,7 +275,7 @@ fn member_hydration_ready_auxiliary_retains_empty_capacity_until_paid_close() {
     let mut owner = RetainedPersistedDocumentHydration::<Snapshot, Mutation> {
         actor: ManuallyDrop::new(semio_framework_os_spr::ActorId(actor)),
         pack: ManuallyDrop::new(None), initial: ManuallyDrop::new(None), history: ManuallyDrop::new(None),
-        fold_job: ManuallyDrop::new(None), normalized_transitions: ManuallyDrop::new(None), normalized_conflicts: ManuallyDrop::new(None),
+        fold_job: ManuallyDrop::new(None), normalized_transitions: ManuallyDrop::new(None),transition_ledger:ManuallyDrop::new(Some(semio_framework_os_vcs::ArtifactHistoryLedger::empty())), normalized_conflicts: ManuallyDrop::new(None),
         replay_ids: ManuallyDrop::new(None), replay_order: ManuallyDrop::new(None), replay_total: 0,
         pin_refs: ManuallyDrop::new(None), loaded_result: ManuallyDrop::new(None), edit_lookup: ManuallyDrop::new(None), mutation_lookup: ManuallyDrop::new(None),
         target_source: ManuallyDrop::new(None), target_decoder: ManuallyDrop::new(None), pending_target: ManuallyDrop::new(None), target_address: ManuallyDrop::new(None),

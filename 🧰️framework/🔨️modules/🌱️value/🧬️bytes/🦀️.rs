@@ -9,8 +9,8 @@ pub fn from_value(value:DslValue)->Result<Vec<u8>,ValueError>{match value{DslVal
 /// 🛬️ Owns intrinsic octets under the same physical and typed construction budget.
 pub fn from_value_controlled(value:&DslValue,control:&mut super::NativeDecodeControl<'_>)->Result<Vec<u8>,ValueError>{match value{DslValue::Bytes(bytes)=>control.copy_bytes(bytes),DslValue::Array(_)=>Vec::<u8>::from_value_controlled(value,control),_=>Err(ValueError::new(crate::ValueRefusalKind::InvalidValue, "expected intrinsic octets or their JSON array projection"))}}
 /// 🔤️ Uses the single framework-owned standard base64 codec.
-pub fn encode_base64(bytes:&[u8])->String{crate::base64_standard_encode(bytes)}
-/// 🧱️ Uses the canonical decoder's strict padding and unused-bit checks.
+pub fn encode_base64(bytes:&(impl crate::ByteReadSource+?Sized))->String{let mut output=String::with_capacity(bytes.byte_len().div_ceil(3)*4);let mut fragment=[0;3];let mut offset=0;while offset<bytes.byte_len(){let count=bytes.read_bytes(offset,&mut fragment);assert!(count!=0,"base64 source changed");let word=semio_framework_io_base64::base64_standard_word(&fragment[..count]);for byte in word{output.push(byte as char);}offset+=count;}output}
+/// 🔤️ Uses the canonical decoder's strict padding and unused-bit checks.
 pub fn decode_base64(text:&str)->Result<Vec<u8>,String>{crate::base64_standard_decode(text).map_err(|error|error.to_string())}
 
 /// ❓️ Optional intrinsic octets preserve absence independently from an empty sequence.
@@ -23,3 +23,6 @@ pub mod optional{
     pub fn from_value_controlled(value:&DslValue,control:&mut super::super::NativeDecodeControl<'_>)->Result<Option<Vec<u8>>,ValueError>{if value.is_null(){control.step()?;Ok(None)}else{super::from_value_controlled(value,control).map(Some)}}
     pub fn from_value(value:DslValue)->Result<Option<Vec<u8>>,ValueError>{if value.is_null(){Ok(None)}else{super::from_value(value).map(Some)}}
 }
+
+/// 🧩️ Borrows the framework codec’s allocation-free padded octet fragment.
+pub fn base64_word(bytes:&[u8])->[u8;4]{semio_framework_io_base64::base64_standard_word(bytes)}

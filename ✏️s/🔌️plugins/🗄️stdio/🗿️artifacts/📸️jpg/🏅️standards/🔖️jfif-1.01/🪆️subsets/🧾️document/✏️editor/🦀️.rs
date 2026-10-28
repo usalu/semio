@@ -245,9 +245,9 @@ impl ArtifactEditor for JpgAnyEditor {
         jpg_any_editor_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

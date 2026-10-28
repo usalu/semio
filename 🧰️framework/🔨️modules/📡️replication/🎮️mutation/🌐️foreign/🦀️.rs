@@ -3,7 +3,8 @@
 /// identity travels as plain strings, never `semio_framework::*`/`io::*` types — see the
 /// dependency-edge law at `.🧬semio/🦑️repo/🎫️tickets/26/08/16/PLUGIN-DEPENDENCIES-ARTIFACT-CONTRIBUTIONS-AND-COMPOSITE-MUTATIONS/📋️contract-freeze.md`
 /// §0.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::NativeReceive,semio_framework_value::RetainedClone)]
+#[value(rename_all="camelCase")]
 pub struct ForeignTarget {
     pub artifact_id: String,
     pub artifact_kind: String,

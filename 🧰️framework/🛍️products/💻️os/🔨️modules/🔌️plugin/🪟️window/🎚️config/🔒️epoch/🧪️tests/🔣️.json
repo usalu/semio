@@ -1,0 +1,1 @@
+{"schemaVersion":1,"windows":["epoch-left","epoch-right"],"committed":[1.25,1.25],"epochs":[{"values":[5,7],"publish":true,"visible":[5,7]},{"values":[8,9],"publish":false,"visible":[5,7]},{"values":null,"publish":true,"visible":[1.25,1.25]},{"values":[11,13],"publish":true,"visible":[11,13],"cancelCaller":true}],"bodyBytes":4096}

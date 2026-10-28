@@ -65,5 +65,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateSizingObject",
+    "branchType": "ModelOutputState",
+    "branch": "outputs",
+    "collection": "sizing_objects",
+    "field": "sizing_type",
+    "input": "new_sizing_type",
+    "key": "id",
+    "labels": {
+      "en": "Change sizing object: Sizing type",
+      "de": "Auslegungsart ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "sizing-object",
+      "kind": "change-sizing-object-sizing-type",
+      "record": "ChangedSizingObjectSizingType"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Sizing type violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed sizing object does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The sizing object already carries this sizing type value."
+      }
+    }
   }
 }

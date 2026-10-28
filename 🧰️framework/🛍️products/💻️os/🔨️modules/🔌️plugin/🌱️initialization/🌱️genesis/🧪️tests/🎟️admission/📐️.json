@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "historyShape",
+    "maximumHeaderCopyBytes",
+    "phases",
+    "cancelAfter",
+    "visibleBeforePublication",
+    "denied",
+    "originalActorRetained"
+  ],
+  "properties": {
+    "historyShape": {
+      "const": "Document"
+    },
+    "maximumHeaderCopyBytes": {
+      "const": 32768
+    },
+    "phases": {
+      "const": [
+        "InitialPack",
+        "AwaitEnvelope",
+        "AdmittedEnvelope",
+        "PublishedStore"
+      ]
+    },
+    "cancelAfter": {
+      "const": [
+        0,
+        1,
+        2
+      ]
+    },
+    "visibleBeforePublication": {
+      "const": false
+    },
+    "denied": {
+      "const": [
+        "items",
+        "copy",
+        "capacity",
+        "depth"
+      ]
+    },
+    "originalActorRetained": {
+      "const": true
+    }
+  }
+}

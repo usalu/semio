@@ -66,9 +66,9 @@ impl ArtifactViewer for TxtViewer {
     const DIALECT: Dialect = TXT_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TXT_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> TxtSnapshot {
+    fn reference_birth()->Option<fn()->TxtSnapshot>{Some(||{
         TxtSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

@@ -128,8 +128,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.tool_runs.selected=Some(index);
         self.watch_tool_run_generations();
         if self.retire_tool_runs_until(cx)?{self.tool_runs.select_primary();return Ok(());}
-        let grant=cx.retained_grant();
-        let outcome=if self.tool_runs.select_run(run){match cx.with_native_receiving_ready(async |receiving| self.drive_selected_tool_run(deadline,grant,identity,receiving).await){Ok(driven)=>driven.map_err(semio_framework_job::OriginalTurnFailure::from),Err(error)=>Err(error.into())}}else{Ok(())};
+        let outcome=if self.tool_runs.select_run(run){if self.refold_tool_run(cx)?{Ok(())}else{self.drive_selected_tool_run(cx).await}}else{Ok(())};
+        if let Some((_,progress))=self.tool_runs.take_original_receipt(){cx.consume_retained(progress)?;cx.consume_fuel(progress.copied_items as u64);}
         self.tool_runs.select_primary();
         outcome
     }
@@ -137,70 +137,38 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// 🚰️ Retirement units until nothing retires, a retirement blocks or the turn deadline. `true` while owners still
     /// retire or a unit released nothing: the runs wait for the next turn instead of displacing more.
     fn retire_tool_runs_until(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
-        let grant=cx.retained_grant();let Some(step)=self.tool_run_retire_step(cx)?else{return Ok(false)};self.tool_runs.retain_original_receipt(grant,step.progress())?;Ok(true)
+        Ok(self.tool_run_retire_step(cx)?.is_some())
     }
 
-    /// ⏯️ The selected run's share of one driver turn.
-    async fn drive_selected_tool_run(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
-        let Some(state) = self.tool_runs.state() else { return Ok(()) };
-        match state {
-            ToolRunState::Aborting => {
-                if self.tool_runs.retired_jobs.is_empty() && self.tool_runs.retired_publications.is_empty() {
-                    let (run, generation) = self.tool_runs.slot().map(|slot| (slot.run, slot.generation)).expect("aborting slot");
-                    if selected_entry!(self.tool_runs).is_some_and(|entry|entry.finalize.is_some()) {
-                        if self.close_tool_run_finalize_owner(grant)?{let copy=size_of::<Option<ToolRunFinalize<A>>>();if tool_grant_funds(grant,RetirementDemand{copy_bytes:copy,depth:1,..Default::default()}){drop(selected_entry_mut!(self.tool_runs).unwrap().finalize.take());self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()})?;}}
-                        return Ok(());
-                    }
-                    if self.apply_tool_run_driver_event(ToolRunEvent::AbortComplete { run, generation }) == Some(ToolRunEffect::RetireProvisional) {
-                        self.tool_runs.discard_provisional();
-                        self.mark_tool_run_document_dirty();
-                    }
-                }
-                Ok(())
+    /// ⏯️ The selected run retains its original caller across native receiving and descriptor acknowledgement.
+    async fn drive_selected_tool_run(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        let Some(state)=self.tool_runs.state()else{return Ok(())};
+        match state{
+            ToolRunState::Starting=>self.admit_tool_run_job().await.map_err(Into::into),
+            ToolRunState::Running|ToolRunState::Paused=>{
+                let entry=selected_entry!(self.tool_runs).unwrap();
+                if state==ToolRunState::Paused&&!entry.pending_step{return Ok(())}
+                if entry.job.is_none(){self.admit_tool_run_job().await.map_err(Into::into)}else{self.step_tool_run_job(cx)}
             }
-            ToolRunState::Starting => self.admit_tool_run_job().await,
-            ToolRunState::Running | ToolRunState::Paused | ToolRunState::Complete => {
-                if self.refold_tool_run(deadline) || self.refresh_tool_run_member(deadline,grant,receiving)? {
-                    return Ok(());
-                }
-                let entry = selected_entry!(self.tool_runs).expect("live slot");
-                let wants_job = match entry.slot.state {
-                    ToolRunState::Running => true,
-                    ToolRunState::Paused => entry.pending_step,
-                    _ => false,
-                };
-                if wants_job && entry.job.is_none() {
-                    return self.admit_tool_run_job().await;
-                }
-                if wants_job {
-                    self.step_tool_run_job(deadline,grant)?;
-                }
-                Ok(())
+            ToolRunState::Aborting=>{
+                if self.tool_runs.retired_jobs.is_empty()&&self.tool_runs.retired_publications.is_empty(){
+                    let entry=selected_entry!(self.tool_runs).unwrap();let(run,generation)=(entry.slot.run,entry.slot.generation);
+                    if self.apply_tool_run_driver_event(ToolRunEvent::AbortComplete{run,generation})==Some(ToolRunEffect::RetireProvisional){self.tool_runs.discard_provisional();self.mark_tool_run_document_dirty();}
+                }Ok(())
             }
-            ToolRunState::Finalizing => {
-                if self.refresh_tool_run_member(deadline,grant,receiving)? {
-                    return Ok(());
-                }
-                self.finalize_tool_run_turn(deadline,grant,identity,receiving).await
-            }
-            ToolRunState::Finalized | ToolRunState::Aborted | ToolRunState::Faulted => self.settle_tool_run_member(deadline,grant,receiving),
+            ToolRunState::Finalizing=>self.finalize_tool_run_turn(cx).await,
+            ToolRunState::Complete|ToolRunState::Finalized|ToolRunState::Aborted|ToolRunState::Faulted=>Ok(()),
         }
     }
 
     /// 🔁️ `true` while a refold still owns this turn; a refold waiting only for its job's boundary lets the job step.
-    pub(super) fn refold_tool_run(&mut self, deadline: u64) -> bool {
-        let Some(entry) = selected_entry_mut!(self.tool_runs).filter(|entry| entry.refold.is_some()) else { return false };
-        if entry.job.is_none() {
-            entry.settle_refold();
-        }
-        match entry.refold_turn(deadline) {
-            ToolRunRefoldTurn::Pending => true,
-            ToolRunRefoldTurn::AwaitingBoundary => false,
-            ToolRunRefoldTurn::Swapped => {
-                self.mark_tool_run_document_dirty();
-                false
-            }
-        }
+    pub(super) fn refold_tool_run(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
+        let Some(entry)=selected_entry_mut!(self.tool_runs).filter(|entry|entry.refold.is_some())else{return Ok(false)};
+        if entry.job.is_none(){entry.settle_refold();}
+        if !entry.operations.refold(&self.stores.store,&mut entry.overlay,cx)?{return Ok(true)}
+        if !entry.refold.as_ref().unwrap().boundary{return Ok(false)}
+        let d=RetirementDemand{copy_bytes:std::mem::size_of_val(&entry.refold),depth:1,..Default::default()};
+        if !cx.retained_work_can_enter(d){return Ok(true)}entry.refold=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);self.mark_tool_run_document_dirty();Ok(false)
     }
 
 }

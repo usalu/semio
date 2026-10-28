@@ -234,9 +234,9 @@ impl ArtifactEditor for Wfc2dEditor {
         fill::build_tool_run_job(request)
     }
 
-    fn initial_snapshot() -> Wfc2dSnapshot {
+    fn reference_birth()->Option<fn()->Wfc2dSnapshot>{Some(||{
         crate::examples::two_room_corridor::document()
-    }
+    })}
 
     fn command_id(command: &Self::Command) -> &'static str {
         wfc2d_command_id(command)

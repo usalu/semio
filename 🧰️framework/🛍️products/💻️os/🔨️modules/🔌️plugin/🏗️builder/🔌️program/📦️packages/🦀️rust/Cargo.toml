@@ -21,6 +21,9 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
+[features]
+original-surface-testing=[]
+
 [dependencies]
 semio-framework-plugin-identity = { path = "../../../../🪪️identity/📦️packages/🦀️rust" }
 semio-framework-plugin-decl-views = { path = "../../../../📜️declaration/👁️view/📦️packages/🦀️rust" }
@@ -35,6 +38,7 @@ semio-framework-job = { path = "../../../../../../../../🔨️modules/🧵️jo
 semio-framework-os-kernel = { path = "../../../../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-value-native-owned = { path = "../../../../../../../../🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust" }
 semio-framework-value-derive = { path = "../../../../../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio_framework_ui_contract = { path = "../../../../../../../../🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-plugin-mounted-owner = { path = "../../../../🏇️mounted-owner/📦️packages/🦀️rust" }

@@ -88,3 +88,7 @@ mod whole_buffer_ingress_refusal;
 pub use whole_buffer_ingress_refusal::{
     reject_whole_buffer_artifact_envelope_ingress, ArtifactEnvelopeWholeBufferIngressError,
 };
+
+#[path="♻️issuers/🦀️.rs"]
+mod original_registry_owners;
+pub use original_registry_owners::{ArtifactEnvelopeRegistryOwner,ArtifactEnvelopeRegistryRelease};

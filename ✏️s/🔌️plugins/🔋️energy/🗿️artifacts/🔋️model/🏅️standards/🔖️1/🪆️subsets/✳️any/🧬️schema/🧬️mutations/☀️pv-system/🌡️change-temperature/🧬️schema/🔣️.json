@@ -31,7 +31,7 @@
     "newTemperatureCoefficient": {
       "type": "number",
       "x-semio-ui": {
-        "widget": "number",
+        "widget": "stepper",
         "role": "value",
         "label": {
           "en": "Temperature coefficient",
@@ -43,6 +43,43 @@
         "displayFactor": 100,
         "step": 0.0001,
         "precision": 2
+      }
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "field": "temperature_coefficient",
+    "input": "new_temperature_coefficient",
+    "key": "id",
+    "labels": {
+      "en": "Change pv system: Temperature coefficient",
+      "de": "Temperaturkoeffizient ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "pv-system",
+      "kind": "change-pv-system-temperature-coefficient",
+      "record": "ChangedPvSystemTemperatureCoefficient"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Temperature coefficient violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The pv system already carries this temperature coefficient value."
       }
     }
   }

@@ -82,5 +82,90 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateWeeklySchedule",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "daily_schedule_ids",
+        "input": "daily_schedule_ids",
+        "storage": "fixed-array",
+        "length": 7
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateWeeklySchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "weekly",
+    "key": "id",
+    "inverse": "DeleteWeeklySchedule",
+    "labels": {
+      "en": "Create weekly schedule",
+      "de": "Wochenzeitplan erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "schedule",
+      "kind": "create-weekly-schedule",
+      "record": "CreatedWeeklySchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The schedule requires finite values and a positive timestep."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "A schedule with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The insertion rank is past the end of this schedule collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The schedule creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced daily schedule does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit",
+    "identityCollections": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "rules": [
+      {
+        "input": "daily_schedule_ids",
+        "kind": "reference",
+        "storage": "array",
+        "collections": [
+          "DailySchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "scalarOrder": "before-rules"
   }
 }

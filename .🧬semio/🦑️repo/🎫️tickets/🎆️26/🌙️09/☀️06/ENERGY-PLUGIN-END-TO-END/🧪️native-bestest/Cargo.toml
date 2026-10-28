@@ -1,0 +1,18 @@
+[package]
+name = "energy-native-bestest-validation"
+version = "0.1.0"
+edition = "2024"
+
+[workspace]
+
+[dependencies]
+semio-framework-trace = { path = "../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-site = { path = "../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📍️site/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-bestest = { path = "../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🏛️bestest/📦️packages/🦀️rust" }
+semio-s-plugin-energy-engine-sim = { path = "../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🧪️sim/📦️packages/🦀️rust", features = ["testing"] }
+semio-framework-job = { path = "../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust", features = ["testkit"] }
+
+[[bin]]
+name = "native-bestest"
+path = "🦀️.rs"

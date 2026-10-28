@@ -4,8 +4,6 @@ package semio.s.energy.model;
 message EnergyModelSnapshot {
   string schema = 1;
   bytes model = 2;
-  bytes structure = 3;
-  bytes zones = 4;
-  bytes referenced_model = 5;
-  bytes weather_link = 6;
+  bytes referenced_model = 3;
+  bytes weather_link = 4;
 }

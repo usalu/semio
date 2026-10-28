@@ -189,7 +189,7 @@ impl DemoRetainedCloneEditCursor {
 impl RetainedCloneEdit<DemoSnapshot, DemoMutation> for DemoRetainedCloneEdit {
     type Cursor = DemoRetainedCloneEditCursor;
 
-    fn preflight(&self, _mutation: &DemoMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, _mutation: &DemoMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str> {
         if self.mode == DemoRetainedCloneEditMode::Reject {
             return Err("retained clone fixture rejects before owner transfer".into());
         }
@@ -438,7 +438,7 @@ struct RetainedTextEditCursor {
 impl RetainedCloneEdit<RetainedTextSnapshot, RetainedTextMutation> for RetainedTextEdit {
     type Cursor = RetainedTextEditCursor;
 
-    fn preflight(&self, _mutation: &RetainedTextMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, _mutation: &RetainedTextMutation, _lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str> {
         Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 16_384 })
     }
 

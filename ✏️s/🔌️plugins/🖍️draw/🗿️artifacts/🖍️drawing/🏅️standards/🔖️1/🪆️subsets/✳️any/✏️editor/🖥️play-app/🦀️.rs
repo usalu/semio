@@ -185,9 +185,9 @@ impl ArtifactEditor for DrawingPlayApp {
         Some(semio_s_artifact_draw_drawing_editor_interaction::config::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> DrawingSnapshot {
+    fn reference_birth()->Option<fn()->DrawingSnapshot>{Some(||{
         semio_s_artifact_draw_drawing_model::default_drawing_document("empty", None)
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(drawing_io())

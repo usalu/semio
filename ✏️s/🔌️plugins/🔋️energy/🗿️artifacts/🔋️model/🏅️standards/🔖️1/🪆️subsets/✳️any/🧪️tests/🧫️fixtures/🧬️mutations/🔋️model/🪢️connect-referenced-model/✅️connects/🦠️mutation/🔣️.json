@@ -1,11 +1,17 @@
 {
   "mutation": "connectReferencedModel",
-  "target": {
-    "artifactId": "doc-2",
-    "dialect": {
-      "artifactKind": "s.stdio.semio",
-      "standard": "v1",
-      "subset": "model"
-    }
+  "link": {
+    "target": {
+      "artifactId": "doc-2",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "model"
+      }
+    },
+    "pin": {
+      "kind": "head"
+    },
+    "role": "model"
   }
 }

@@ -447,9 +447,9 @@ impl ArtifactEditor for XmlAnyEditor {
         xml_any_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> XmlSnapshot {
+    fn reference_birth()->Option<fn()->XmlSnapshot>{Some(||{
         XmlSnapshot::with_empty_root()
-    }
+    })}
 
     /// ✏️ Only a `Text` node found at `node_id` accepts `set-node` — anything else (unparseable
     /// id, missing node, non-`Text` node) is a documented no-op (`Emit::default()`).

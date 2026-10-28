@@ -389,7 +389,7 @@ async fn the_four_projected_collections_emit_a_step_for_every_field_they_carry()
     let mut rehomed = base.clone();
     rehomed.thermostats[0].heating_throttle_range_k = 3.5;
     let thermostat = &base.thermostats[0];
-    let command = EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: thermostat.id.0, heating_schedule: thermostat.heating_setpoint_schedule_id.0, cooling_schedule: thermostat.cooling_setpoint_schedule_id.0, heating_throttle_range_k: 3.5, cooling_throttle_range_k: thermostat.cooling_throttle_range_k };
+    let command = EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: thermostat.id.0, zone: thermostat.zone_id.0, heating_schedule: thermostat.heating_setpoint_schedule_id.0, cooling_schedule: thermostat.cooling_setpoint_schedule_id.0, heating_throttle_range_k: 3.5, cooling_throttle_range_k: thermostat.cooling_throttle_range_k };
     assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-thermostat-heating-throttle-range".to_string()]);
     assert_eq!(applied(&snapshot, &command), rehomed);
     let mut relayered = base.clone();
@@ -400,3 +400,209 @@ async fn the_four_projected_collections_emit_a_step_for_every_field_they_carry()
     assert_eq!(applied(&snapshot, &command), relayered);
 }
 //#endregion 🧱️MaterialAndConstructionVerbs
+
+/// 📐️ Coordinate editing emits the existing geometry mutation and preserves all other coordinates.
+#[semio_framework_async_macros::async_test]
+async fn inspector_geometry_edits_preserve_other_coordinates_and_refuse_bad_operands() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️geometry-edit/🔣️.json")).unwrap();
+    let mut model = inspector_model();
+    model.fenestrations.iter_mut().find(|row| row.id.0 == 50).unwrap().vertices_m = vec![[1.0, 0.0, 1.0], [3.0, 0.0, 1.0], [3.0, 0.0, 3.0], [1.0, 0.0, 3.0]];
+    let snapshot = snapshot_of(&model);
+    for (kind, command) in [("surface", surface_property as fn(u32, &str, &str) -> EnergyModelEditorCommand), ("fenestration", fenestration_property)] {
+        let case = &law[kind];
+        let id = case["id"].as_u64().unwrap() as u32;
+        let property = case["property"].as_str().unwrap();
+        let value = case["value"].as_str().unwrap();
+        let edit = command(id, property, value);
+        assert_eq!(emitted_kinds(&snapshot, &edit), vec![case["kind"].as_str().unwrap()]);
+        let result = applied(&snapshot, &edit);
+        let (before, after, axis) = if kind == "surface" {
+            (&model.surfaces.iter().find(|row| row.id.0 == id).unwrap().vertices_m, &result.surfaces.iter().find(|row| row.id.0 == id).unwrap().vertices_m, 0)
+        } else {
+            (&model.fenestrations.iter().find(|row| row.id.0 == id).unwrap().vertices_m, &result.fenestrations.iter().find(|row| row.id.0 == id).unwrap().vertices_m, 2)
+        };
+        let mut expected = before.clone();
+        expected[0][axis] = value.parse().unwrap();
+        assert_eq!(*after, expected);
+        assert!(emitted_kinds(&snapshot_of(&result), &edit).is_empty());
+        for invalid in law["invalid"].as_array().unwrap() {
+            assert_eq!(refusal(&snapshot, &command(id, invalid.as_str().unwrap(), value)), "app.command.invalid-payload");
+        }
+        for invalid in law["nonfinite"].as_array().unwrap() {
+            assert_eq!(refusal(&snapshot, &command(id, property, invalid.as_str().unwrap())), "app.command.invalid-payload");
+        }
+    }
+}
+
+/// 🗺️ A complete polygon input also initializes windows whose geometry was only described by area.
+#[semio_framework_async_macros::async_test]
+async fn an_inspector_polygon_can_initialize_geometry_and_refuses_incomplete_polygons() {
+    let snapshot = snapshot_of(&inspector_model());
+    let edit = fenestration_property(50, "vertices", "1,0,1; 3,0,1; 3,0,3; 1,0,3");
+    assert_eq!(emitted_kinds(&snapshot, &edit), vec!["replace-fenestration-vertices"]);
+    let result = applied(&snapshot, &edit);
+    assert_eq!(result.fenestrations.iter().find(|row| row.id.0 == 50).unwrap().vertices_m, vec![[1.0,0.0,1.0], [3.0,0.0,1.0], [3.0,0.0,3.0], [1.0,0.0,3.0]]);
+    let cleared = applied(&snapshot_of(&result), &fenestration_property(50, "vertices", ""));
+    assert!(cleared.fenestrations.iter().find(|row| row.id.0 == 50).unwrap().vertices_m.is_empty());
+    for value in ["1,0,1; 3,0,1", "1,0; 3,0,1; 3,0,3", "NaN,0,1; 3,0,1; 3,0,3"] {
+        assert_eq!(refusal(&snapshot, &fenestration_property(50, "vertices", value)), "app.command.invalid-payload");
+    }
+}
+
+/// ⛱️ Shading details publish one semantic edit and admit only schedules that exist.
+#[semio_framework_async_macros::async_test]
+async fn shading_inspector_properties_publish_native_mutations() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️geometry-edit/🔣️.json")).unwrap();
+    assert_eq!(law["shading"]["nameKind"], "rename-shading-surface");
+    let mut model = inspector_model();
+    model.shading_surfaces.push(crate::model::ShadingSurface { id: EntityId(500), name: "Canopy".into(), vertices_m: vec![[0.0,0.0,3.0], [1.0,0.0,3.0], [1.0,1.0,3.0]], transmittance_schedule_id: None });
+    let snapshot = snapshot_of(&model);
+    let command = |property: &str, value: &str| EnergyModelEditorCommand::SetShadingProperty { shading: 500, property: property.into(), value: value.into() };
+    for (property, value, kind) in [("name", "Roof canopy", "rename-shading-surface"), ("vertex:0:z", "3.5", "replace-shading-surface-vertices")] {
+        assert_eq!(emitted_kinds(&snapshot, &command(property, value)), vec![kind]);
+    }
+    let changed = applied(&snapshot, &command("name", "Roof canopy"));
+    assert_eq!(changed.shading_surfaces.last().unwrap().name, "Roof canopy");
+    assert_eq!(refusal(&snapshot, &command("transmittanceSchedule", "999999")), "mutation.target-missing");
+    assert!(emitted_kinds(&snapshot, &command("transmittanceSchedule", "")).is_empty());
+}
+
+/// 🛋️ Space controls reach native mutations and refuse dangling zone assignments.
+#[semio_framework_async_macros::async_test]
+async fn space_inspector_edits_publish_native_mutations() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📐️geometry-edit/🔣️.json")).unwrap();
+    assert_eq!(law["space"]["areaKind"], "change-space-floor-area");
+    let mut model = inspector_model();
+    model.spaces.push(crate::model::Space { id: EntityId(501), name: "Office".into(), zone_id: EntityId(1), floor_area_m2: 20.0 });
+    let snapshot = snapshot_of(&model);
+    let command = |property: &str, value: &str| EnergyModelEditorCommand::SetSpaceProperty { space: 501, property: property.into(), value: value.into() };
+    assert_eq!(emitted_kinds(&snapshot, &command("name", "Main office")), vec!["rename-space"]);
+    assert_eq!(emitted_kinds(&snapshot, &command("floorAreaM2", "25")), vec!["change-space-floor-area"]);
+    assert_eq!(applied(&snapshot, &command("floorAreaM2", "25")).spaces.last().unwrap().floor_area_m2, 25.0);
+    assert!(emitted_kinds(&snapshot, &command("zone", "1")).is_empty());
+    assert_eq!(refusal(&snapshot, &command("zone", "999999")), "mutation.target-missing");
+    assert_eq!(refusal(&snapshot, &command("floorAreaM2", "-1")), "app.command.invalid-payload");
+}
+
+/// 🔗️ Reference controls publish a native reassignment and refuse references to missing targets.
+#[semio_framework_async_macros::async_test]
+async fn geometry_host_references_are_editable_and_admitted() {
+    let mut model = inspector_model();
+    let mut zone = model.zones[0].clone();
+    zone.id = EntityId(502);
+    zone.name = "Second zone".into();
+    model.zones.push(zone);
+    let snapshot = snapshot_of(&model);
+    assert_eq!(emitted_kinds(&snapshot, &surface_property(40, "zone", "502")), vec!["change-surface-zone"]);
+    assert_eq!(emitted_kinds(&snapshot, &fenestration_property(50, "surface", "41")), vec!["change-fenestration-surface"]);
+    assert_eq!(refusal(&snapshot, &surface_property(40, "zone", "999999")), "mutation.target-missing");
+    assert_eq!(refusal(&snapshot, &fenestration_property(50, "surface", "999999")), "mutation.target-missing");
+}
+
+/// 👥️ Load fixtures span all four families and publish only the addressed native parameter.
+#[semio_framework_async_macros::async_test]
+async fn load_inspector_law_spans_people_lighting_equipment_and_infiltration() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/💡️load-edit/🔣️.json")).unwrap();
+    let mut model = inspector_model();
+    let schedule = model.schedules.constants[0].id;
+    model.people.push(crate::model::PeopleGain { id: EntityId(503), zone_id: EntityId(1), schedule_id: schedule, activity_schedule_id: schedule, people_per_area: 0.1, sensible_fraction: 0.6, latent_fraction: 0.4, radiant_fraction: 0.3 });
+    model.lighting.push(crate::model::LightingGain { id: EntityId(504), zone_id: EntityId(1), schedule_id: schedule, watts_per_area: 5.0, radiant_fraction: 0.3, visible_fraction: 0.2, return_air_fraction: 0.1 });
+    let snapshot = snapshot_of(&model);
+    for case in law["cases"].as_array().unwrap() {
+        let command = EnergyModelEditorCommand::SetLoadProperty { load: case["id"].as_u64().unwrap() as u32, property: case["field"].as_str().unwrap().into(), value: case["value"].as_str().unwrap().into() };
+        assert_eq!(emitted_kinds(&snapshot, &command), vec![case["kind"].as_str().unwrap()]);
+        let result = applied(&snapshot, &command);
+        assert!(emitted_kinds(&snapshot_of(&result), &command).is_empty());
+    }
+    for (property, value, expected) in [("zone", "999999", "mutation.target-missing"), ("schedule", "999999", "mutation.target-missing"), ("wattsPerArea", "NaN", "app.command.invalid-payload"), ("radiantFraction", "1.1", "app.command.invalid-payload")] {
+        assert_eq!(refusal(&snapshot, &EnergyModelEditorCommand::SetLoadProperty { load: 60, property: property.into(), value: value.into() }), expected);
+    }
+}
+
+/// 🧬️ The catalog route preserves native mutation identity, sparse delta and inverse behavior.
+#[semio_framework_async_macros::async_test]
+async fn native_catalog_action_publishes_a_granular_mutation_and_its_original_inverse() {
+    use protocol::{ColdMutation, Mutation};
+    let snapshot = snapshot_of(&inspector_model());
+    let command = EnergyModelEditorCommand::ApplyNativeMutation { kind: "change-zone-volume".into(), payload: r#"{"id":1,"newVolumeM3":200}"#.into() };
+    assert_eq!(emitted_kinds(&snapshot, &command), vec!["change-zone-volume"]);
+    let history = HistoryView::empty();
+    let emit = reduce(&command, &ArtifactView::new(&snapshot, &history)).unwrap();
+    let mutation = &emit.artifact_mutations[0];
+    let outcome = mutation.diff(&snapshot);
+    let changed = protocol::apply_diff_cold(outcome.diff(), &snapshot).unwrap();
+    assert_eq!(changed.model.zones[0].volume_m3, 200.0);
+    let inverse = <EnergyModelMutation as ColdMutation<EnergyModelSnapshot>>::inverse(mutation, &snapshot).unwrap();
+    let mut undone = changed;
+    for mutation in inverse.iter().rev() {
+        let outcome = mutation.diff(&undone);
+        undone = protocol::apply_diff_cold(outcome.diff(), &undone).unwrap();
+    }
+    assert_eq!(undone.model, snapshot.model);
+    for (kind, payload) in [("unknown-native-kind", "{}"), ("change-zone-volume", "{}"), ("change-zone-volume", "not JSON")] {
+        assert_eq!(refusal(&snapshot, &EnergyModelEditorCommand::ApplyNativeMutation { kind: kind.into(), payload: payload.into() }), "app.command.invalid-payload");
+    }
+}
+
+/// 🗂️ Every native mutation has one schema-derived typed payload form in the retained action.
+#[semio_framework_async_macros::async_test]
+async fn native_catalog_forms_cover_the_complete_mutation_vocabulary() {
+    use protocol::Mutation;
+    let actions = crate::editor_commands::native_mutation_actions();
+    let descriptors = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::DESCRIPTORS;
+    assert_eq!(actions.len(), descriptors.len());
+    for descriptor in descriptors {
+        let action = actions.iter().find(|action| action.id == descriptor.aggregate_variant).unwrap();
+        assert_eq!(action.id, descriptor.aggregate_variant);
+        let command = crate::editor_commands::args_bridge::command_from_action(&action.id, None).unwrap();
+        assert_eq!(command.action_id(), action.id);
+    }
+}
+
+/// ❄️ Ideal loads retain native unlimited capacity and editable supply/outdoor-air controls.
+#[semio_framework_async_macros::async_test]
+async fn ideal_loads_properties_emit_native_intents() {
+    let model = inspector_model();
+    let id = model.ideal_loads[0].id.0;
+    let snapshot = snapshot_of(&model);
+    let command = |property: &str, value: &str| EnergyModelEditorCommand::SetHvacProperty { system: id, property: property.into(), value: value.into() };
+    assert_eq!(emitted_kinds(&snapshot, &command("maxHeatingCapacityW", "12000")), vec!["change-ideal-loads-system-max-heating-capacity"]);
+    let result = applied(&snapshot, &command("maxHeatingCapacityW", "12000"));
+    assert_eq!(result.ideal_loads[0].max_heating_capacity_w, Some(12000.0));
+    let cleared = applied(&snapshot_of(&result), &command("maxHeatingCapacityW", ""));
+    assert_eq!(cleared.ideal_loads[0].max_heating_capacity_w, None);
+    assert_eq!(refusal(&snapshot, &command("minCoolingSupplyAirTempC", "-300")), "app.command.invalid-payload");
+}
+
+/// 🧮️ Retained admission includes nested schedule values and text outside the original six row tables.
+#[semio_framework_async_macros::async_test]
+async fn native_action_extent_accounts_for_all_nested_model_owners() {
+    let mut model = inspector_model();
+    let command = EnergyModelEditorCommand::ApplyNativeMutation { kind: "change-zone-volume".into(), payload: r#"{"id":1,"newVolumeM3":200}"#.into() };
+    assert!(energy_model_extent(&command, &snapshot_of(&model), &protocol::InteractionState::default()).is_some());
+    model.schedules.time_series.push(crate::schedule::TimeSeriesSchedule { id: crate::schedule::ScheduleId(999), values: vec![1.0; ENERGY_MODEL_RETAINED_WORK_ITEMS + 1], timestep_seconds: 3600 });
+    assert!(energy_model_extent(&command, &snapshot_of(&model), &protocol::InteractionState::default()).is_none());
+    model.schedules.time_series.clear();
+    model.name = "x".repeat(ENERGY_MODEL_RETAINED_WORK_ITEMS + 1);
+    assert!(energy_model_extent(&command, &snapshot_of(&model), &protocol::InteractionState::default()).is_none());
+}
+
+/// 🌡️ Zone reassignment uses the same native diff path as the setpoint controls.
+#[semio_framework_async_macros::async_test]
+async fn thermostat_zone_control_changes_only_its_native_reference() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🌡️thermostat-zone/🔣️.json")).unwrap();
+    let mut model = inspector_model();
+    let mut zone = model.zones[0].clone();
+    zone.id = crate::model::EntityId(law["replacement"].as_u64().unwrap() as u32);
+    model.zones.push(zone);
+    let thermostat = &model.thermostats[0];
+    let command = EnergyModelEditorCommand::SetThermostatSetpoints { thermostat: thermostat.id.0, zone: model.zones.last().unwrap().id.0, heating_schedule: thermostat.heating_setpoint_schedule_id.0, cooling_schedule: thermostat.cooling_setpoint_schedule_id.0, heating_throttle_range_k: thermostat.heating_throttle_range_k, cooling_throttle_range_k: thermostat.cooling_throttle_range_k };
+    let snapshot = snapshot_of(&model);
+    assert_eq!(emitted_kinds(&snapshot, &command), vec![law["mutation"].as_str().unwrap().to_string()]);
+    let mut expected = model.clone();
+    expected.thermostats[0].zone_id = model.zones.last().unwrap().id;
+    assert_eq!(applied(&snapshot, &command), expected);
+    let EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k, .. } = command else { unreachable!() };
+    let missing = EnergyModelEditorCommand::SetThermostatSetpoints { thermostat, zone: law["missing"].as_u64().unwrap() as u32, heating_schedule, cooling_schedule, heating_throttle_range_k, cooling_throttle_range_k };
+    assert_eq!(refusal(&snapshot, &missing), "mutation.target-missing");
+}

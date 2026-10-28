@@ -18,11 +18,11 @@ use semio_framework_os_store_engine_close::{StoreCloseAdmission as _, StoreClose
 //#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStoreCloseHost<P, Mutation> for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     fn close_host_member_inbox_capacity(&self) -> usize { self.wire.member_inbox.capacity() }
-    fn close_host_backbone_attached(&self) -> bool { self.wire.backbone.is_some() }
+    fn close_host_backbone_attached(&self) -> bool { self.wire.backbone.is_some()||!self.wire.original_outbox.terminal_is_empty() }
     fn close_host_prefix_ring_is_empty(&self) -> bool { self.live.prefix_ring.is_empty() }
     fn close_host_snapshot_read_leases(&self) -> &SnapshotReadLeaseRegistryOwner { &self.owners.snapshot_read_leases }
     fn close_host_initial_snapshot_retirement_factory(&self) -> Option<&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>> { self.owners.initial_snapshot_retirement_factory.as_ref() }
@@ -65,7 +65,7 @@ where
 /// 🏁️ How a finished replay's drafts are authored: overwrite them in every alternative and checkpoint containing the
 /// operations, supersede them within the existing alternative `alternative_id` only (the line the replay was viewed on — the
 /// undo or redo of a finalize), or keep the originals and branch a new alternative `name` at the head that supersedes them.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
 pub enum HistoryFinalization {
     Overwrite,
     Scope { alternative_id: String },
@@ -100,8 +100,8 @@ pub enum SupersedeScope {
 //#region 🔖️ArtifactStore
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     pub(super) fn resident_backings_terminal_is_empty(&self) -> bool {
         let (report_messages, report_outbound, report_edit_ids) = self.replay.pending_report.resident_backings();
@@ -111,8 +111,8 @@ where
 
 impl<P, Mutation> ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     /// 🪞️ Delegates to [`StoreOwners::factory_aliases_present`].
     #[inline] pub fn factory_aliases_present(&self) -> bool { self.owners.factory_aliases_present() }
@@ -120,8 +120,8 @@ where
 
 impl<P, Mutation> Drop for ArtifactStore<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     /// 🪦️ Exact terminal-empty shallow-shell witness, strict on the ordinary path — the store must
     /// have been retired down to an empty shell before it may be dropped.
@@ -137,6 +137,7 @@ where
         let terminal = self.log.envelope_detached
             && self.live.current_detached
             && self.wire.backbone.is_none()
+            && self.wire.original_outbox.terminal_is_empty()
             && self.log.dag.terminal_is_empty()
             && self.log.applied_edit_ids.is_empty()
             && self.log.redo_edit_ids.is_empty()

@@ -47,6 +47,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.energy.model.schema.artifact", "schema", "s.energy.model", &[("schema", "s.energy.model")], None),
         ("s.energy.model.inference.artifact", "inference", "s.energy.model.inference", &[("schema", "s.energy.model.inference")], None),
         ("s.energy.model.composer.native", "composer", "s.energy.model@1/*", &[("dialect", "s.energy.model@1/*")], None),
+        ("s.energy.model.composer.idf", "composer", "s.stdio.idf@25.2/*", &[("dialect", "s.stdio.idf@25.2/*")], None),
         ("s.energy.model.composer.format-1", "composer", "s.stdio.zip@2.0/*", &[("dialect", "s.stdio.zip@2.0/*")], None),
         ("s.energy.model.composer.format-4", "composer", "s.stdio.json@rfc8259/*", &[("dialect", "s.stdio.json@rfc8259/*")], None),
         ("s.energy.model.grammar.1", "grammar", "energy.model", &[("grammar", "energy.model")], None),

@@ -11,14 +11,16 @@ extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod delete_setpoint_manager {
     #[path = "🍄️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🍄️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🍄️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🍄️delete/↩️inverse/🦀️.rs"]
@@ -30,6 +32,8 @@ pub mod change_setpoint_manager_schedule {
     #[path = "🎼️change-schedule/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🎼️change-schedule/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🎼️change-schedule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🎼️change-schedule/↩️inverse/🦀️.rs"]
@@ -41,6 +45,8 @@ pub mod create_setpoint_manager {
     #[path = "📌️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "📌️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "📌️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "📌️create/↩️inverse/🦀️.rs"]
@@ -52,6 +58,8 @@ pub mod replace_setpoint_manager_kind {
     #[path = "🔃️replace-kind/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔃️replace-kind/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔃️replace-kind/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔃️replace-kind/↩️inverse/🦀️.rs"]
@@ -63,6 +71,8 @@ pub mod rename_setpoint_manager {
     #[path = "🖇️rename/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🖇️rename/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🖇️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🖇️rename/↩️inverse/🦀️.rs"]

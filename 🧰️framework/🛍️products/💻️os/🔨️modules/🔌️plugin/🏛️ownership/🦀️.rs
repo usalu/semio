@@ -53,6 +53,15 @@ impl semio_framework_value::RetirementReceipt for PluginLifecycleStep {
     fn retirement_yield()->Self{Self::Progress(Default::default())}
 }
 
+/// 📏️ Combines only defining component headers and explicit original backing quotes.
+pub fn original_component_birth<S>(backing:&[usize])->Result<RetirementDemand,ValueError>{let capacity_bytes=backing.iter().try_fold(0usize,|total,bytes|total.checked_add(*bytes)).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original component backing extent overflow"))?;Ok(RetirementDemand{copy_bytes:2*std::mem::size_of::<S>(),capacity_bytes,depth:2,..Default::default()})}
+/// 📏️ Infers the actual registry row type from its defining component field without constructing either owner.
+pub fn original_registry_backing<S,T>(_:fn(&S)->&ArtifactFixedRegistry<T>,capacity:usize)->Result<usize,ValueError>{ArtifactFixedRegistry::<T>::birth_demands(capacity).map(|d|d.capacity_bytes)}
+/// 📏️ Infers the actual deque element type from its defining component field before source construction.
+pub fn original_deque_backing<S,T>(_:fn(&S)->&std::collections::VecDeque<T>,capacity:usize)->Result<usize,ValueError>{capacity.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original deque backing extent overflow"))}
+/// 📏️ Infers the actual queue element type from its defining component field without constructing backing.
+pub fn original_queue_backing<S,T>(_:fn(&S)->&ArtifactFixedQueue<T>,capacity:usize)->Result<usize,ValueError>{ArtifactFixedQueue::<T>::birth_demands(capacity).map(|d|d.capacity_bytes)}
+
 #[derive(Debug)]
 pub struct ArtifactFixedQueue<T> {
     pub items: std::collections::VecDeque<T>,
@@ -61,6 +70,18 @@ pub struct ArtifactFixedQueue<T> {
 }
 
 impl<T> ArtifactFixedQueue<T> {
+    /// 📏️ Declares the exact empty queue backing before native component construction.
+    pub fn birth_demands(capacity:usize)->Result<RetirementDemand,ValueError>{let bytes=capacity.checked_mul(std::mem::size_of::<T>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixed queue backing extent overflow"))?;Ok(RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:bytes,depth:1,..Default::default()})}
+
+    /// 🌱️ Retains the authored queue capacity until its original caller admits the backing.
+    pub fn unallocated(capacity:usize)->Self{Self{items:std::collections::VecDeque::new(),capacity,allocation_admitted:false}}
+
+    /// 🎟️ Admits this same queue's original empty backing independently of any enclosing service frame.
+    pub fn admit_backing_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if self.allocation_admitted{return Ok(RetainedCloneStep::Complete(Default::default()))}let d=Self::birth_demands(self.capacity)?;if !plugin_grant_funds(d,grant){return Ok(RetainedCloneStep::Progress(Default::default()))}self.items.try_reserve_exact(self.capacity).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"original fixed queue backing refused"))?;self.allocation_admitted=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:self.items.capacity()*std::mem::size_of::<T>(),..Default::default()}))}
+
+    /// 📍️ Borrows the next unchanged physical quote without allocating any backing.
+    pub fn backing_demands(&self)->Result<RetirementDemand,ValueError>{if self.allocation_admitted{Ok(Default::default())}else{Self::birth_demands(self.capacity)}}
+
     pub fn new(capacity: usize) -> Self {
         let mut items = std::collections::VecDeque::new();
         let allocation_admitted = items.try_reserve_exact(capacity).is_ok();
@@ -230,6 +251,12 @@ pub struct ArtifactFixedRegistry<T> {
 }
 
 impl<T> ArtifactFixedRegistry<T> {
+    /// 📏️ Declares this fixed registry's exact slot body before native admission.
+    pub fn birth_demands(capacity:usize)->Result<RetirementDemand,ValueError>{if capacity==0||capacity>ARTIFACT_LIVE_OUTPUT_SLOTS||ARTIFACT_LIVE_OUTPUT_SLOTS%capacity!=0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"fixed registry capacity does not divide its occupancy mask"))}let bytes=capacity.checked_mul(std::mem::size_of::<std::mem::MaybeUninit<(u64,T)>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"fixed registry backing extent overflow"))?;Ok(RetirementDemand{capacity_bytes:bytes,depth:1,..Default::default()})}
+
+    /// 📍️ Borrows the next unchanged physical quote without allocating any slot.
+    pub fn backing_demands(&self)->Result<RetirementDemand,ValueError>{if self.allocation_admitted{Ok(Default::default())}else{Self::birth_demands(self.capacity)}}
+
     /// 🪹️ Reserves every slot on the heap while leaving the occupied mask as the sole
     /// initialization witness. A successful exact reservation provides capacity for all slots;
     /// `MaybeUninit` permits extending their length without values. Insertion writes before setting

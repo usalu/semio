@@ -31,7 +31,9 @@ async fn member_owned_publication_birth_refuses_without_allocating_or_transferri
         }
         let exact = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_capacity_bytes: birth, ..one_item_test_policy() };
         let (publication, allocated, released) = semio_framework_trace_memory_testing::observe_backing(|| member.begin_one_item_owned_publication(&mut request, exact));
-        let mut publication = publication.unwrap().expect("exact birth funded");
+        let (mut publication, progress) = publication.unwrap().expect("exact birth funded");
+        assert_eq!(progress.copied_items,1);
+        assert_eq!(progress.retained_capacity_bytes,allocated);
         assert_eq!((allocated, released), (birth, 0));
         assert!(request.mutations.mutations::<DemoMutation>().is_none());
         publication.begin_close();

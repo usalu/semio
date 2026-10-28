@@ -6,7 +6,7 @@ struct Cursor<T:RetireOwned>{owner:ControlledRetirement<T>}
 impl<T:RetireOwned> RetireOwned for std::sync::Mutex<T>{
  fn retirement(self)->Box<dyn RetirementCursor>{let original=self.into_inner().unwrap_or_else(|poisoned|poisoned.into_inner());Box::new(Cursor{owner:ControlledRetirement::new(original).unwrap_or_else(|_|panic!("admitted original mutex payload refused typed custody"))})}
  fn retirement_birth_bytes(&self)->Option<usize>{T::controlled_retirement_supported().then_some(size_of::<Cursor<T>>())}
- fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()}
+ fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 impl<T:RetireOwned> RetirementCursor for Cursor<T>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.owner.next_demand(body)}

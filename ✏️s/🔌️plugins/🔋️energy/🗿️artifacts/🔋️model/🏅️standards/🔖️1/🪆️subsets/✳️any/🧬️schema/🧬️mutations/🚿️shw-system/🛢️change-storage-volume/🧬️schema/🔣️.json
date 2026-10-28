@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateShwSystemConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "shw_systems",
+    "field": "storage_volume_m3",
+    "input": "new_storage_volume_m3",
+    "key": "id",
+    "labels": {
+      "en": "Change service hot water system: Storage volume",
+      "de": "Speichervolumen ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "service-hot-water-system",
+      "kind": "change-shw-system-storage-volume",
+      "record": "ChangedShwSystemStorageVolume"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Storage volume violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed service hot water system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The service hot water system already carries this storage volume value."
+      }
+    }
   }
 }

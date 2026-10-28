@@ -49,5 +49,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateZone",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "zones",
+    "field": "part_of_total_floor_area",
+    "input": "new_part_of_total_floor_area",
+    "key": "id",
+    "labels": {
+      "en": "Change zone floor-area participation",
+      "de": "Flächenbeteiligung der Zone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "zone",
+      "kind": "change-zone-floor-area-participation",
+      "record": "ChangedZoneFloorAreaParticipation"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored zone floor-area participation is invalid."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The zone already has this floor-area participation."
+      }
+    }
   }
 }

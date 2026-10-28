@@ -35,7 +35,7 @@ pub(super) fn encoding_record_codegen(fields:&Fields,bindings:bool)->Vec<proc_ma
         let source=if bindings{let local=field_local(ident);quote!{#local}}else{quote!{&self.#ident}};
         let projection=match kind{
             FieldKind::Scalar=>quote!{<#elem_ty as ::semio_framework_dsl_record::DslField>::to_value_controlled(value,control)?},
-            FieldKind::Bytes64=>quote!{::semio_framework_dsl_record::FieldValue::Bytes64(control.copy_bytes(value)?)},
+            FieldKind::Bytes64=>quote!{::semio_framework_dsl_record::FieldValue::Bytes64(::semio_framework_dsl_record::RecordBytes::copy_encoded(value,control)?)},
             FieldKind::OptionScalar(inner)=>quote!{match value{Some(value)=><#inner as ::semio_framework_dsl_record::DslField>::to_value_controlled(value,control)?,None=>::semio_framework_dsl_record::FieldValue::Absent}},
             FieldKind::VecList(_)|FieldKind::VecTable(_)=>quote!{::semio_framework_dsl_record::FieldValue::List(::semio_framework_dsl_record::native_encoding::project_list(value,control)?)},
             FieldKind::VecTuple(_)=>quote!{::semio_framework_dsl_record::FieldValue::Tuple(::semio_framework_dsl_record::native_encoding::project_list(value,control)?)},

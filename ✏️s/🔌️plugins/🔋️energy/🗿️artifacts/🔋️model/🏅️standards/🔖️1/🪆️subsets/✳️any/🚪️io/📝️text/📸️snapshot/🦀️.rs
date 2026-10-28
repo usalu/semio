@@ -1,6 +1,6 @@
 //! 📜️ EnergyModel artifact — textual document grammar surface + laws.
 
-use crate::EnergyModelSnapshot;
+use crate::reference::EnergyModelSnapshot;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -35,14 +35,14 @@ pub type EnergyModelSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::*;
-use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use crate::reference::*;
+use crate::reference::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use crate::binary::{EnergyModelPackRecord};
+use crate::reference::binary::{EnergyModelPackRecord};
 /// 🖨️ The derived text body: the same `EnergyModelPackRecord` the pack encodes, printed by the spec-driven engine.
 pub(crate) fn print_pack_record_text(snapshot: &EnergyModelSnapshot) -> String {
     semio_framework_dsl_record::print(&EnergyModelPackRecord::from_snapshot(snapshot).__dsl_to_record(), &EnergyModelPackRecord::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document)
@@ -78,8 +78,8 @@ impl pack::snapshot::ArtifactDsl for EnergyModelSnapshot {
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::*;
-use crate::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
+use crate::reference::*;
+use crate::reference::{energy_snapshot_with_state, EnergyStructureChild, EnergyZonesChild, ENERGY_MODEL_DOCUMENT_SCHEMA};
 use framework_schema::ArtifactSchema;
 use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;

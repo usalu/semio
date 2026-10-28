@@ -36,5 +36,33 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "site",
+    "field": "longitude_deg",
+    "input": "new_longitude_deg",
+    "labels": {
+      "en": "Change longitude deg",
+      "de": "Längengrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "site",
+      "kind": "change-site-longitude",
+      "record": "ChangedSiteLongitude"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored longitude deg is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The longitude deg is unchanged."
+      }
+    }
   }
 }

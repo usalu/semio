@@ -97,6 +97,8 @@ macro_rules! impl_norm_artifact_record {
 
         }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $Snapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
                 $crate::impl_norm_artifact_record!(@sqlite $( $sqlite )?)
             }

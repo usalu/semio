@@ -76,10 +76,10 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 //#region 🔖️Aggregate
 /// 🧬️ Closed semantic mutation vocabulary for an energy model.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslEnum, dsl::Mutations, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_s_artifact_energy_model_native_derive::EnergyNativeTargets, semio_s_artifact_energy_model_native_derive::EnergyNativeActions)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(tag = "mutation", rename_all = "camelCase")]
-#[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model", reference = EnergyModelSnapshot, reference_diff = EnergyModelDiff)]
+#[mutations(snapshot = EnergyModelSnapshot, diff = EnergyModelDiff, schema = "energy.model", reference = snapshot::reference::EnergyModelSnapshot, reference_diff = diff::ReferenceEnergyModelDiff, retained)]
 pub enum EnergyModelMutation {
     RenameModel(crate::model_mutations::RenameModel),
     ChangeModelVersion(crate::model_mutations::ChangeModelVersion),

@@ -197,6 +197,7 @@ async fn a_thermostat_control_round_trips_the_typed_number_through_the_action_br
         command,
         crate::editor_commands::EnergyModelEditorCommand::SetThermostatSetpoints {
             thermostat: 62,
+            zone: thermostat.zone_id.0,
             heating_schedule: thermostat.heating_setpoint_schedule_id.0,
             cooling_schedule: thermostat.cooling_setpoint_schedule_id.0,
             heating_throttle_range_k: 4.5,
@@ -353,4 +354,91 @@ async fn no_inspector_field_edits_the_document_per_keystroke() {
         let tree: serde_json::Value = serde_json::from_str(&english(ids)).expect("the inspector projection is JSON");
         assert_eq!(semio_framework_plugin::artifact_app_laws::document_input_commit_findings(&tree, &|_| true), Vec::<String>::new(), "{ids:?}");
     }
+}
+
+/// 📍️ Surface and window vertices expose labelled number inputs through the same property command.
+#[semio_framework_async_macros::async_test]
+async fn selected_geometry_exposes_every_coordinate_as_a_bound_number_input() {
+    for (id, entity, action) in [("40", "surface", SET_SURFACE_PROPERTY_ACTION_ID), ("50", "fenestration", SET_FENESTRATION_PROPERTY_ACTION_ID)] {
+        let mut model = crate::examples::demo::model();
+        model.fenestrations.iter_mut().find(|row| row.id.0 == 50).unwrap().vertices_m = vec![[1.0, 0.0, 1.0], [3.0, 0.0, 1.0], [3.0, 0.0, 3.0], [1.0, 0.0, 3.0]];
+        let json = panel(&snapshot_of(&model), &[id], Locale::En);
+        assert!(json.contains(&format!("energy-model-inspection.{entity}.vertices.input")));
+        let tree: serde_json::Value = serde_json::from_str(&json).unwrap();
+        for axis in ["x", "y", "z"] {
+            let control = node_at(&tree, &format!("energy-model-inspection.{entity}.vertex.0.{axis}.input")).unwrap_or_else(|| panic!("{json}"));
+            assert_eq!(control["component"]["kind"].as_str(), Some("number"));
+            assert!(control["bindings"].to_string().contains(action));
+            assert!(control["bindings"].to_string().contains(&format!("vertex:0:{axis}")));
+        }
+    }
+}
+
+/// ⛱️ Selecting a shade exposes its name, optical schedule and full polygon.
+#[semio_framework_async_macros::async_test]
+async fn shading_details_are_editable() {
+    let mut model = crate::examples::demo::model();
+    model.shading_surfaces.push(ShadingSurface { id: crate::model::EntityId(500), name: "Canopy".into(), vertices_m: vec![[0.0,0.0,3.0], [1.0,0.0,3.0], [1.0,1.0,3.0]], transmittance_schedule_id: None });
+    let json = panel(&snapshot_of(&model), &["500"], Locale::De);
+    for id in ["shading.name.input", "shading.transmittance.select", "shading.vertices.input", "shading.vertex.0.z.input"] {
+        assert!(json.contains(&format!("energy-model-inspection.{id}")), "{json}");
+    }
+    assert!(json.contains(SET_SHADING_PROPERTY_ACTION_ID));
+}
+
+/// 🪑️ Space selection renders its own inspector rather than falling back to document summary.
+#[semio_framework_async_macros::async_test]
+async fn space_details_are_editable() {
+    let mut model = crate::examples::demo::model();
+    model.spaces.push(Space { id: crate::model::EntityId(501), name: "Office".into(), zone_id: crate::model::EntityId(1), floor_area_m2: 20.0 });
+    let json = panel(&snapshot_of(&model), &["501"], Locale::En);
+    for id in ["space.name.input", "space.zone.select", "space.floor-area.input"] {
+        assert!(json.contains(&format!("energy-model-inspection.{id}")), "{json}");
+    }
+    assert!(json.contains(SET_SPACE_PROPERTY_ACTION_ID));
+}
+
+/// 💡️ Load selections expose reference and SI inputs rather than the model summary.
+#[semio_framework_async_macros::async_test]
+async fn loads_and_infiltration_expose_adjustable_details() {
+    let equipment = english(&["60"]);
+    for id in ["load.zone.select", "load.schedule.select", "load.wattsPerArea.input", "load.radiantFraction.slider", "load.latentFraction.slider"] {
+        assert!(equipment.contains(&format!("energy-model-inspection.{id}")), "{equipment}");
+    }
+    let infiltration = english(&["61"]);
+    for id in ["load.method.select", "load.designFlowAch.input", "load.effectiveLeakageAreaM2.input", "load.stackHeightM.input", "load.velocitySquaredTermCoefficient.input"] {
+        assert!(infiltration.contains(&format!("energy-model-inspection.{id}")), "{infiltration}");
+    }
+    assert!(infiltration.contains(SET_LOAD_PROPERTY_ACTION_ID));
+}
+
+/// 🔢️ Large reference catalogues remain editable past the select's fixed item capacity.
+#[semio_framework_async_macros::async_test]
+async fn reference_catalogues_larger_than_twenty_four_offer_admitted_id_inputs() {
+    let mut model = crate::examples::demo::model();
+    for id in 1000..1030 {
+        let mut construction = model.constructions[0].clone();
+        construction.id = crate::model::EntityId(id);
+        construction.name = format!("Construction {id}");
+        model.constructions.push(construction);
+    }
+    model.surfaces.iter_mut().find(|row| row.id.0 == 40).unwrap().construction_id = crate::model::EntityId(1029);
+    let json = panel(&snapshot_of(&model), &["40"], Locale::En);
+    let tree: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let input = node_at(&tree, "energy-model-inspection.surface.construction.input").unwrap();
+    assert_eq!(input["component"]["kind"].as_str(), Some("number"));
+    assert!(input.to_string().contains("1029"));
+    assert!(input["bindings"].to_string().contains(SET_SURFACE_PROPERTY_ACTION_ID));
+}
+
+/// 🌡️ The zone selector carries the typed replacement through the original action binding.
+#[semio_framework_async_macros::async_test]
+async fn thermostat_zone_selector_round_trips_the_reference() {
+    let law: serde_json::Value = serde_json::from_str(include_str!("../../../../🧪️tests/🧫️fixtures/🌡️thermostat-zone/🔣️.json")).unwrap();
+    let json = english(&["62"]);
+    let tree: serde_json::Value = serde_json::from_str(&json).unwrap();
+    let control = node_at(&tree, "energy-model-inspection.thermostat.zone.select").unwrap();
+    let command = bridged(control, &law["replacement"].to_string());
+    let crate::editor_commands::EnergyModelEditorCommand::SetThermostatSetpoints { zone, .. } = command else { panic!("zone selector must emit a thermostat command") };
+    assert_eq!(u64::from(zone), law["replacement"].as_u64().unwrap());
 }

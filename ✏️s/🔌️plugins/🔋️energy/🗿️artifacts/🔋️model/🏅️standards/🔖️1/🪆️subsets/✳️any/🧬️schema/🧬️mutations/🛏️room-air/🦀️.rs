@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod create_room_air_model_assignment {
     #[path = "🛏️create-assignment/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🛏️create-assignment/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🛏️create-assignment/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🛏️create-assignment/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod delete_room_air_model_assignment {
     #[path = "🧺️delete-assignment/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧺️delete-assignment/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧺️delete-assignment/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧺️delete-assignment/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod change_room_air_model {
     #[path = "🪭️change/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪭️change/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪭️change/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪭️change/↩️inverse/🦀️.rs"]

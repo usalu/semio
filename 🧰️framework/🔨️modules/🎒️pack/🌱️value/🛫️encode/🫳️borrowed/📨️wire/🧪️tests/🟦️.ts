@@ -30,3 +30,16 @@ test("one owned Pack source returns its exact business tree after codec scaffold
   expect(source).not.toContain("JsonWrite");
   expect(source).not.toContain("to_value(");
 });
+
+test("paged octets preserve cross-page values against the Buffer oracle", () => {
+ const validate = new Ajv2020({ strict: true }).compile(schema);
+ expect(validate(fixture)).toBe(true);
+ const { length, pattern } = fixture.pagedBytes;
+ const original = Buffer.from(Array.from({ length }, (_, index) => pattern[index % pattern.length]));
+ const pages = Array.from({ length: Math.ceil(length / 1024) }, (_, index) => original.subarray(index * 1024, (index + 1) * 1024));
+ const emitted: number[] = [];
+ for (let offset = 0; offset < length; offset += 64) for (let index = offset; index < Math.min(length, offset + 64); index++) emitted.push(pages[Math.floor(index / 1024)][index % 1024]);
+ expect(Buffer.from(emitted).equals(original)).toBe(true);
+ expect(Buffer.from(emitted).toString("base64")).toBe(original.toString("base64"));
+ expect(pages.length).toBeGreaterThan(4);
+});

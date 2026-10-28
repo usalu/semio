@@ -69,7 +69,7 @@ pub use member_link_resolution_and_blob_store::{
 
 #[path = "👥️space-member-trait/🦀️.rs"]
 mod space_member_trait;
-pub use space_member_trait::SpaceMember;
+pub use space_member_trait::{SpaceMember,MemberIdentityRef};
 
 #[path = "🏪️space-member-for-artifact-store/🦀️.rs"]
 mod space_member_for_artifact_store;
@@ -87,3 +87,12 @@ pub use member_factory_visitors_and_no_members::{
 //#endregion 🔖️BlobStore
 //#endregion 🔖️Backbone
 //#endregion 🔖️EphemeralLanes
+
+#[path = "../../../🪪️member-facets/🧊️reference/🦀️.rs"]
+mod reference;
+pub use reference::ReferenceSpaceMember;
+
+pub use semio_framework_value_native_owned::native_decoding::NativeDecodeControl as MemberNativeDecodeControl;
+
+#[path="🎮️native-vcs/🦀️.rs"]mod native_vcs;
+pub use native_vcs::MemberNativeVcsCommand;

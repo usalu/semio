@@ -41,7 +41,7 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: I
  pub fn close_owned_stores_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,Fault>{
   let demand=self.shared().close_owned_stores_demands(grant.maximum_copy_bytes).map_err(|error|Fault::from(error.into_message()))?;
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Ok(PluginLifecycleStep::Progress(Default::default()));}
-  if self.close.close_owned_advance_ready{self.close.close_owned_stage += 1;self.close.close_owned_advance_ready=false;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
+  if self.close.close_owned_advance_ready{let step=match self.close.close_owned_stage{0 if !self.stores.store.terminal_is_empty()=>Some(self.stores.store.box_close_step(grant)),1 if !self.stores.config_store.terminal_is_empty()=>Some(self.stores.config_store.box_close_step(grant)),2 if !self.stores.draft_store.terminal_is_empty()=>Some(self.stores.draft_store.box_close_step(grant)),5 if !self.stores.interaction_store.terminal_is_empty()=>Some(self.stores.interaction_store.box_close_step(grant)),_=>None};if let Some(step)=step{return step.map(|step|PluginLifecycleStep::Progress(step.progress())).map_err(ValueError::into_fault)}self.close.close_owned_stage += 1;self.close.close_owned_advance_ready=false;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));}
   let (step,ready)=match self.close.close_owned_stage{
    0=>{original_disposal_step(&mut self.close.close_document_disposer,&mut self.stores.store,grant)?},
    1=>{original_disposal_step(&mut self.close.close_config_disposer,&mut self.stores.config_store,grant)?},
@@ -59,7 +59,7 @@ impl<'ctx, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: I
 
 impl<'v, A:ArtifactApp,M:ReferenceSpaceMember+MemberFactory+Send+'static, X: InstanceExtension> LadderRef<'v, A, M, X> {
  pub fn close_owned_stores_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  if self.close.close_owned_advance_ready{return Ok(RetirementDemand{depth:1,..Default::default()});}
+  if self.close.close_owned_advance_ready{return Ok(match self.close.close_owned_stage{0 if !self.stores.store.terminal_is_empty()=>self.stores.store.box_close_demands(),1 if !self.stores.config_store.terminal_is_empty()=>self.stores.config_store.box_close_demands(),2 if !self.stores.draft_store.terminal_is_empty()=>self.stores.draft_store.box_close_demands(),5 if !self.stores.interaction_store.terminal_is_empty()=>self.stores.interaction_store.box_close_demands(),_=>RetirementDemand{depth:1,..Default::default()}});}
   match self.close.close_owned_stage{
    0=>original_disposal_demands(&self.close.close_document_disposer,&self.stores.store,body),
    1=>original_disposal_demands(&self.close.close_config_disposer,&self.stores.config_store,body),

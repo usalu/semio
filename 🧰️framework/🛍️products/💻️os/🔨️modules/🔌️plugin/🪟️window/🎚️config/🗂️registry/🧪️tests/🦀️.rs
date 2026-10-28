@@ -1,156 +1,24 @@
-//! 🧪️ Original registry pages refuse independently and release their physical backing exactly.
-
-use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-use semio_framework_value::{RetirementDemand, ValueRefusalKind};
-use semio_framework_plugin_window_config::registry::{WindowRegistry, fits};
-
+//! 🧪️ Portable registry cases prove original custody and atomic visibility through each insertion prefix.
+#[path="../🦀️.rs"]mod registry;
+use registry::WindowRegistry;
+use semio_framework_value::{RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
+#[global_allocator]static HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth.max(1)}}
+fn keys(registry:&WindowRegistry<String,u64>)->serde_json::Value{serde_json::to_value(registry.iter().map(|(key,_)|key.as_str()).collect::<Vec<_>>()).unwrap()}
+fn measured<T>(g:RetainedCloneGrant,run:impl FnOnce()->(T,RetainedCloneProgress))->T{let((output,receipt),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(run);assert!(receipt.fits(g));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));output}
 #[test]
-fn window_config_paged_registry_actual_window_partition_custody() {
-    use semio_framework_plugin_window_config::{WindowConfigOwner, WindowConfigOwnerRegistry};
-    use semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleStep;
-    use crate::window_config_tests::pack_identity_tests::IdentityWindowOwner;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let copies = fixture["owningCopies"].as_u64().unwrap() as usize;
-    let repeat = fixture["addressRepeat"].as_u64().unwrap() as usize;
-    let (mut registry, birth) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_async::block_on(async {
-        let mut registry = WindowConfigOwnerRegistry::new(semio_framework_os_kernel::ActorId("original-registry-actor/λ".to_owned().into()));
-        registry.register::<IdentityWindowOwner>().unwrap();
-        for address in fixture["addresses"].as_array().unwrap() {
-            for ordinal in 0..copies {
-                let address = format!("{}/{ordinal:06}", address.as_str().unwrap().repeat(repeat));
-                drop(registry.owners.get_mut(IdentityWindowOwner::WINDOW_KIND_ID).unwrap().capture(&address).await.unwrap());
-            }
-        }
-        registry
-    }));
-    let mut allocated = birth.requested_bytes;
-    let mut released = birth.released_bytes;
-    let mut turns = 0;
-    while !registry.terminal_is_empty() {
-        let body = fixture["maximumPageBytes"].as_u64().unwrap() as usize;
-        let demand = registry.retirement_demands(body).unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(body), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        let mut denied = vec![RetainedCloneGrant { maximum_items: 0, ..grant }];
-        if demand.copy_bytes > 0 { denied.push(RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }); }
-        if demand.capacity_bytes > 0 { denied.push(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }); }
-        if demand.release_bytes > 0 { denied.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
-        if demand.depth > 0 { denied.push(RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }); }
-        for denied in denied {
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_step(denied));
-            let progress = result.unwrap().progress().unwrap_or_default();
-            assert_eq!(progress, RetainedCloneProgress::default());
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        }
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_step(grant));
-        let result = result.unwrap();
-        let progress = result.progress().expect("actual original window close reports its independent currencies");
-        if matches!(result, PluginLifecycleStep::Complete(_)) { assert!(registry.terminal_is_empty()); }
-        assert!(progress.fits(grant));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-        allocated += heap.requested_bytes;
-        released += heap.released_bytes;
-        turns += 1;
-        assert!(turns < 2_000_000);
-    }
-    assert_eq!(allocated, released);
-    let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry));
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, fixture["terminalDropBytes"].as_u64().unwrap() as usize));
-}
-
-#[test]
-fn window_config_paged_registry_original_order_and_physical_backing() {
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
-    let copies = fixture["copies"].as_u64().unwrap() as usize;
-    let repeat = fixture["addressRepeat"].as_u64().unwrap() as usize;
-    let mut registry = WindowRegistry::<String, usize>::new();
-    let (_, born) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
-        for (address_index, address) in fixture["addresses"].as_array().unwrap().iter().enumerate() {
-            for ordinal in 0..copies {
-                registry.insert(format!("{}/{ordinal:06}", address.as_str().unwrap().repeat(repeat)), address_index * copies + ordinal);
-            }
-        }
-    });
-    let expected = fixture["ordered"].as_array().unwrap().iter().flat_map(|address| (0..copies).map(move |ordinal| format!("{}/{ordinal:06}", address.as_str().unwrap().repeat(repeat)))).collect::<Vec<_>>();
-    assert_eq!(registry.iter().map(|(key, _)| key).collect::<Vec<_>>(), expected.iter().collect::<Vec<_>>());
-    let mut allocated = born.requested_bytes;
-    let mut released = born.released_bytes;
-    let mut released_pages = 0;
-    while !registry.is_empty() {
-        let demand = registry.pop_demand().unwrap();
-        let original_pointer = registry.last().unwrap().0.as_ptr();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: 0, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_copy_bytes: demand.copy_bytes - 1, ..grant }, RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }] {
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.pop_original(denied));
-            assert!(result.unwrap().is_none());
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        }
-        let (((key, value), progress), heap) = {
-            let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.pop_original(grant));
-            (result.unwrap().unwrap(), heap)
-        };
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        assert!(progress.fits(grant));
-        assert_eq!(format!("{}/{:06}", fixture["addresses"][value / copies].as_str().unwrap().repeat(repeat), value % copies), key);
-        assert_eq!(key.as_ptr(), original_pointer);
-        let (result, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| semio_framework_value::retirement::controlled::ControlledRetirement::new(key));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        let mut owner = result.unwrap_or_else(|_| panic!("original registry address refuses controlled ownership"));
-        while !owner.terminal_is_empty() {
-            let copy = owner.next_copy_byte_demand().unwrap().max(fixture["maximumPageBytes"].as_u64().unwrap() as usize);
-            let demand = RetirementDemand { copy_bytes: owner.next_copy_byte_demand().unwrap(), capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), release_bytes: owner.next_release_byte_demand().unwrap(), depth: owner.next_depth_demand().unwrap() };
-            let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: copy, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            let mut denied = vec![RetainedCloneGrant { maximum_items: 0, ..grant }];
-            if demand.capacity_bytes > 0 { denied.push(RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes - 1, ..grant }); }
-            if demand.release_bytes > 0 { denied.push(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }); }
-            if demand.depth > 0 { denied.push(RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }); }
-            for denied in denied {
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(denied));
-                let progress = match step {
-                    Ok(step) => step.progress(),
-                    Err(error) => { assert_eq!(error.kind, ValueRefusalKind::DepthLimit); assert!(denied.maximum_depth < demand.depth); RetainedCloneProgress::default() },
-                };
-                assert_eq!(progress, RetainedCloneProgress::default());
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-            }
-            if demand.copy_bytes > 0 {
-                let short_copy = demand.copy_bytes - 1;
-                let narrow = RetainedCloneGrant { maximum_copy_bytes: short_copy, maximum_capacity_bytes: owner.next_capacity_byte_demand(short_copy).unwrap(), ..grant };
-                let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(narrow));
-                let progress = step.unwrap().progress();
-                assert!(progress.fits(narrow));
-                assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-                allocated += heap.requested_bytes;
-                released += heap.released_bytes;
-            }
-            let demand = RetirementDemand { copy_bytes: owner.next_copy_byte_demand().unwrap(), capacity_bytes: owner.next_capacity_byte_demand(copy).unwrap(), release_bytes: owner.next_release_byte_demand().unwrap(), depth: owner.next_depth_demand().unwrap() };
-            let grant = RetainedCloneGrant { maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..grant };
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.step(grant));
-            let progress = step.unwrap().progress();
-            assert!(progress.fits(grant));
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (progress.retained_capacity_bytes, progress.released_bytes));
-            allocated += heap.requested_bytes;
-            released += heap.released_bytes;
-        }
-        let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    }
-    while !registry.terminal_is_empty() {
-        let demand = registry.backing_demand().unwrap();
-        let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..Default::default() };
-        for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }, RetainedCloneGrant { maximum_depth: demand.depth - 1, ..grant }] {
-            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_backing_step(denied));
-            assert_eq!(step.unwrap().progress(), RetainedCloneProgress::default());
-            assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-        }
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_backing_step(grant));
-        let progress = step.unwrap().progress();
-        assert!(progress.fits(grant));
-        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, progress.released_bytes));
-        released += heap.released_bytes;
-        released_pages += 1;
-    }
-    assert!(released_pages > 2);
-    assert_eq!(released, allocated);
-    let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry));
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, fixture["terminalDropBytes"].as_u64().unwrap() as usize));
+fn native_registry_custody_matches_portable_atomic_publication_and_cancellation(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
+ for case in law["cases"].as_array().unwrap(){for cut in law["cancelCuts"].as_array().unwrap(){
+  let mut registry=WindowRegistry::new();for key in case["before"].as_array().unwrap(){registry.insert(key.as_str().unwrap().to_owned(),1);}
+  let mut key=Some(law["key"].as_str().unwrap().to_owned());let original=key.as_ref().unwrap().as_ptr();let mut value=Some(law["value"].as_u64().unwrap());let mut ready=false;
+  for _ in 0..cut.as_u64().unwrap(){let demand=registry.insert_original_demands().unwrap();let funded=grant(demand);
+   for axis in 0..5{let mut denied=funded;match axis{0=>denied.maximum_items=0,1 if demand.copy_bytes>0=>denied.maximum_copy_bytes-=1,2 if demand.capacity_bytes>0=>denied.maximum_capacity_bytes-=1,3 if demand.release_bytes>0=>denied.maximum_release_bytes-=1,4=>denied.maximum_depth=0,_=>continue}let(done,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.insert_original(&mut key,&mut value,denied).unwrap());assert_eq!(done,(false,RetainedCloneProgress::default()));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(keys(&registry),case["before"]);assert_eq!(key.as_ref().unwrap().as_ptr(),original);}
+   ready=measured(funded,||registry.insert_original(&mut key,&mut value,funded).unwrap());assert_eq!(keys(&registry),case[if ready{"after"}else{"before"}]);if ready{break;}assert_eq!(key.as_ref().unwrap().as_ptr(),original);assert_eq!(value,law["value"].as_u64());
+  }
+  if ready{assert!(key.is_none()&&value.is_none());assert_eq!(registry.get(law["key"].as_str().unwrap()),law["value"].as_u64().as_ref());}else{for turn in 0..32{let d=registry.cancel_insert_original_demands().unwrap();let funded=grant(d);let done=measured(funded,||registry.cancel_insert_original(&mut key,&mut value,funded).unwrap());assert_eq!(keys(&registry),case["before"]);assert_eq!(key.as_ref().unwrap().as_ptr(),original);assert_eq!(value,law["value"].as_u64());if done{break;}assert!(turn<31,"original registry hole failed to cancel");}}
+  while !registry.is_empty(){let d=registry.pop_demand().unwrap();let g=grant(d);let original=measured(g,||{let(original,p)=registry.pop_original(g).unwrap().unwrap();(original,p)});drop(original);}
+  for turn in 0..32{if registry.terminal_is_empty(){break;}let d=registry.backing_demand().unwrap();let g=grant(d);measured(g,||{let step=registry.close_backing_step(g).unwrap();((),step.progress())});assert!(turn<31,"original registry backing failed to close");}
+  assert!(registry.terminal_is_empty());
+ }}
 }

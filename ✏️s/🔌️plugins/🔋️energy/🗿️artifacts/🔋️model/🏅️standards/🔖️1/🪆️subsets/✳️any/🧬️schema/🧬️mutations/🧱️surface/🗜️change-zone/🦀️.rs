@@ -1,14 +1,13 @@
 //! 🗜️ Energy model mutation — `ChangeSurfaceZone`: Reassigns one surface to another existing zone — the zone whose air heat balance the surface's inside face exchanges with.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🗜️ `change-surface-zone` payload. Reassigns one surface to another existing zone — the zone whose air heat balance the surface's inside face exchanges with.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-surface-zone")]
 pub struct ChangeSurfaceZone {
@@ -19,41 +18,5 @@ pub struct ChangeSurfaceZone {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn change_surface_zone<Op: From<ChangeSurfaceZone>>(id: crate::model::EntityId, new_zone_id: crate::model::EntityId) -> Op {
     ChangeSurfaceZone { id, new_zone_id }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceZone
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeSurfaceZone>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "surface", kind: "change-surface-zone", record: "ChangedSurfaceZone" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Move surface {} to zone {}", self.id.0, self.new_zone_id.0), &format!("Oberfläche {} nach Zone {} verschieben", self.id.0, self.new_zone_id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeSurfaceZone
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeSurfaceZone>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

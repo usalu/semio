@@ -13,10 +13,10 @@ extern crate semio_s_artifact_energy_model_mutations as mutations;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.txt", "stdio.zip"]
+    &["stdio.json", "stdio.txt", "stdio.zip", "stdio.idf"]
 }
 pub fn export_stdio_kinds() -> &'static [&'static str] {
-    &["stdio.json", "stdio.txt", "stdio.zip"]
+    &["stdio.json", "stdio.txt", "stdio.zip", "stdio.idf"]
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -27,6 +27,7 @@ pub mod derived_composition {
     const DIALECT: Dialect = Dialect { artifact_kind: "s.energy.model", standard: StandardId("1"), subset: SubsetId("*") };
     const DEP_JSON: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
     const DEP_TXT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standard: StandardId("utf-8"), subset: SubsetId("*") };
+    const DEP_IDF: Dialect = Dialect { artifact_kind: "s.stdio.idf", standard: StandardId("25.2"), subset: SubsetId("*") };
     const DEP_ZIP: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
 
     pub struct EnergyModelComposerComposition;
@@ -36,7 +37,7 @@ pub mod derived_composition {
         const WRITES: Dialect = DIALECT;
 
         fn reads() -> &'static [Dialect] {
-            &[DIALECT, DEP_JSON, DEP_TXT, DEP_ZIP]
+            &[DIALECT, DEP_JSON, DEP_TXT, DEP_ZIP, DEP_IDF]
         }
 
         fn compose(sources: &[ComposeSource<'_>]) -> Result<Composition<Self::Snapshot>, ComposeError> {
@@ -69,6 +70,14 @@ pub mod derived_composition {
                     if let Ok(snapshot) = crate::import::txt::deserialize_bytes(&bytes) {
                         return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                     }
+                }
+                if source.dialect == DEP_IDF {
+                    let bytes: &[u8] = match &source.payload {
+                        AnalyzeSource::Text(text) => text.as_bytes(),
+                        AnalyzeSource::Binary(bytes) => bytes,
+                    };
+                    let snapshot = crate::import::idf::deserialize_bytes(bytes).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+                    return Ok(Composition { snapshot, confidence: semio_framework_plugin::io::Confidence::Medium, diagnostics: Vec::new() });
                 }
                 if source.dialect == DEP_ZIP {
                     let bytes: Vec<u8> = match &source.payload {
@@ -131,6 +140,14 @@ pub mod io_registry {
         Err(ComposeError { message: "EnergyModelComposer export: no native or json-bridge source provided".into(), diagnostics: Vec::new() })
     }
 
+    const EXPORT_IDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.idf", standard: StandardId("25.2"), subset: SubsetId("*") };
+    fn compose_export_idf(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
+        Box::pin(async move {
+            let snapshot = rebuild_native_snapshot(sources)?;
+            let text = crate::export::idf::serialize(&snapshot).map_err(|message| ComposeError { message, diagnostics: Vec::new() })?;
+            Ok(ComposedArtifact { dialect: EXPORT_IDF_DIALECT, payload: IoPayload::Text(text), diagnostics: Vec::new(), confidence: semio_framework_plugin::io::Confidence::Medium })
+        })
+    }
     const EXPORT_ZIP_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.zip", standard: StandardId("2.0"), subset: SubsetId("*") };
     fn compose_export_zip(sources: &[ErasedComposeSource]) -> semio_framework_plugin::ComposeFuture<'_> {
         Box::pin(async move {
@@ -154,6 +171,7 @@ pub mod io_registry {
             .get_or_init(|| {
                 vec![
                     composer_entry_of::<EnergyModelAnyComposer>(),
+                    ComposerEntry { writes: EXPORT_IDF_DIALECT, reads: &[MODEL_DIALECT, MODEL_JSON_BRIDGE_DIALECT], compose: compose_export_idf },
                     ComposerEntry { writes: EXPORT_ZIP_DIALECT, reads: &[MODEL_DIALECT], compose: compose_export_zip },
                     ComposerEntry { writes: EXPORT_JSON_DIALECT, reads: &[MODEL_DIALECT], compose: compose_export_json },
                 ]
@@ -274,3 +292,17 @@ semio_framework_plugin::derive_artifact_facets!(
     analyzer: EnergyModelAnalyzer,
     composer: EnergyModelComposer,
 );
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn idf_export_admits_native_and_canonical_json_sources() {
+        let entries = super::io_registry::entries();
+        for kind in ["s.stdio.idf"] {
+            let entry = entries.iter().find(|entry| entry.writes.artifact_kind == kind).unwrap();
+            assert!(entry.reads.iter().any(|dialect| dialect.artifact_kind == "s.energy.model"));
+            assert!(entry.reads.iter().any(|dialect| dialect.artifact_kind == "s.stdio.json" && dialect.standard.0 == "rfc8259"));
+            assert!(!entry.reads.contains(&entry.writes));
+        }
+    }
+}

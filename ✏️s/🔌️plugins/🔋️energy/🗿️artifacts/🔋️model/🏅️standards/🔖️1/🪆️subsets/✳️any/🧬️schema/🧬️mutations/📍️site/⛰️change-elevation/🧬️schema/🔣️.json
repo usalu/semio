@@ -34,5 +34,33 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "site",
+    "field": "elevation_m",
+    "input": "new_elevation_m",
+    "labels": {
+      "en": "Change elevation m",
+      "de": "Höhe ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "site",
+      "kind": "change-site-elevation",
+      "record": "ChangedSiteElevation"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored elevation m is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The elevation m is unchanged."
+      }
+    }
   }
 }

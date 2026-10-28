@@ -19,17 +19,17 @@
 
 use crate::editor_interaction::{
     energy_entity_kind, energy_target_id, EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_CONSTRUCTION, ENERGY_GRANULARITY_FENESTRATION, ENERGY_GRANULARITY_GAS_MATERIAL, ENERGY_GRANULARITY_GLAZING_MATERIAL, ENERGY_GRANULARITY_MATERIAL,
-    ENERGY_GRANULARITY_SHADING, ENERGY_GRANULARITY_SURFACE, ENERGY_GRANULARITY_THERMOSTAT, ENERGY_GRANULARITY_ZONE,
+    ENERGY_GRANULARITY_HVAC, ENERGY_GRANULARITY_LOAD, ENERGY_GRANULARITY_SHADING, ENERGY_GRANULARITY_SPACE, ENERGY_GRANULARITY_SURFACE, ENERGY_GRANULARITY_THERMOSTAT, ENERGY_GRANULARITY_ZONE,
 };
 use crate::editor_config::EnergyModelConfig;
 use crate::editor_config::{result_field, ResultField};
 use crate::editor_commands::{
     energy_model_action, gas_kind_id, outside_boundary_kind_id, surface_class_id, surface_roughness_id, ui_label, DELETE_SURFACE_ACTION_ID, DELETE_ZONE_ACTION_ID, GAS_KIND_IDS, OUTSIDE_BOUNDARY_KIND_IDS,
-    SET_CONSTRUCTION_PROPERTY_ACTION_ID, SET_FENESTRATION_PROPERTY_ACTION_ID, SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_SITE_ACTION_ID,
+    SET_CONSTRUCTION_PROPERTY_ACTION_ID, SET_FENESTRATION_PROPERTY_ACTION_ID, SET_GAS_MATERIAL_PROPERTY_ACTION_ID, SET_LOAD_PROPERTY_ACTION_ID, SET_SHADING_PROPERTY_ACTION_ID, SET_HVAC_PROPERTY_ACTION_ID, SET_SPACE_PROPERTY_ACTION_ID, SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID, SET_MATERIAL_PROPERTY_ACTION_ID, SET_SITE_ACTION_ID,
     SET_SURFACE_PROPERTY_ACTION_ID, SET_THERMOSTAT_SETPOINTS_ACTION_ID, SET_ZONE_PROPERTY_ACTION_ID, SURFACE_CLASS_IDS, SURFACE_ROUGHNESS_IDS,
 };
 use crate::editor_edit::windows::simulation::SET_RESULT_FIELD_ACTION_ID;
-use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Surface, Thermostat, Zone};
+use crate::model::{Construction, Fenestration, GasMaterial, GlazingMaterial, Material, Model, ShadingSurface, Space, Surface, Thermostat, Zone};
 use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{InputKind};
 use semio_framework_plugin::{Buildable, HasBase, HasChildren};
@@ -180,6 +180,13 @@ fn toggle_row(suffix: &str, label: &str, on: bool, action: &str, field_name: &st
 }
 
 fn select_row(suffix: &str, label: &str, value: &str, options: Vec<(String, String)>, action: &str, field_name: &str, id: &str) -> UiAssemblyResult<BuiltNode> {
+    if options.len() > SELECT_ITEMS_MAX {
+        return if options.iter().all(|(id, _)| id.parse::<u32>().is_ok()) {
+            number_row(suffix, &format!("{label} (Id)"), value.parse::<u32>().map(f64::from).unwrap_or(0.0), 1.0, action, field_name, id)
+        } else {
+            text_row(suffix, &format!("{label} (Id)"), value, action, field_name, id)
+        };
+    }
     let row_id = format!("{ROOT}.{suffix}");
     let mut control = ui_id(ui::select(ui_text(value)?), format!("{row_id}.select"))?;
     for (option, option_label) in options.into_iter().take(SELECT_ITEMS_MAX) {
@@ -282,6 +289,8 @@ fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyR
             &id,
         ),
     )?;
+    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    push(&mut rows, select_row("surface.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(surface.zone_id), zones, SET_SURFACE_PROPERTY_ACTION_ID, "zone", &id))?;
     let partners = partner_options(model, surface);
     if !partners.is_empty() {
         let held = surface.outside_boundary_condition.interzone_partner().map(energy_target_id).unwrap_or_default();
@@ -308,14 +317,37 @@ fn surface_rows(model: &Model, surface: &Surface, locale: Locale) -> UiAssemblyR
     Ok(rows)
 }
 
+/// 📐️ Windowed coordinate rows keep arbitrary polygon sizes inside the shared tree capacity.
+fn geometry_section(builder: PanelTreeBuilder, windows: &TreeWindows<'_>, entity: &str, id: &str, vertices: &[[f64; 3]], action: &str, locale: Locale) -> UiAssemblyResult<PanelTreeBuilder> {
+    let polygon = vertices.iter().map(|vertex| format!("{},{},{}", vertex[0], vertex[1], vertex[2])).collect::<Vec<_>>().join("; ");
+    let builder = if UiText::try_from_str(&polygon).is_some() {
+        let mut rows = UiFixedList::default();
+        push(&mut rows, text_row(&format!("{entity}.vertices"), say(locale, "Polygon: x,y,z; … (m)", "Polygon: x,y,z; … (m)"), &polygon, action, "vertices", id))?;
+        builder.section(format!("{ROOT}.{entity}.polygon"), Some(ui_label(say(locale, "Polygon", "Polygon"))?), true, rows)?
+    } else { builder };
+    builder.window_indexed_section(
+        windows,
+        &format!("{ROOT}.{entity}.geometry"),
+        Some(ui_label(say(locale, "Vertices (m)", "Eckpunkte (m)"))?),
+        true,
+        vertices.len().saturating_mul(3),
+        |coordinate| {
+            let index = coordinate / 3;
+            let axis_index = coordinate % 3;
+            let axis = ["x", "y", "z"][axis_index];
+            number_row(&format!("{entity}.vertex.{index}.{axis}"), &format!("{} {} · {axis} (m)", say(locale, "Vertex", "Eckpunkt"), index + 1), vertices[index][axis_index], 0.01, action, &format!("vertex:{index}:{axis}"), id)
+        },
+    )
+}
+
 fn fenestration_rows(model: &Model, window: &Fenestration, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(window.id);
     let action = SET_FENESTRATION_PROPERTY_ACTION_ID;
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("fenestration.id", say(locale, "Id", "Id"), &id))?;
     push(&mut rows, text_row("fenestration.name", say(locale, "Name", "Bezeichnung"), &window.name, action, "name", &id))?;
-    let host = model.surfaces.iter().find(|surface| surface.id == window.surface_id);
-    push(&mut rows, read_only_row("fenestration.surface", say(locale, "Surface", "Fläche"), host.map_or_else(|| window.surface_id.0.to_string(), |surface| surface.name.clone())))?;
+    let surfaces = model.surfaces.iter().map(|surface| (energy_target_id(surface.id), surface.name.clone())).collect();
+    push(&mut rows, select_row("fenestration.surface", say(locale, "Surface", "Fläche"), &energy_target_id(window.surface_id), surfaces, action, "surface", &id))?;
     push(&mut rows, number_row("fenestration.u-value", say(locale, "U-value (W/m²K)", "U-Wert (W/m²K)"), window.u_value_w_m2k, 0.1, action, "uValueWM2K", &id))?;
     push(&mut rows, slider_row("fenestration.shgc", say(locale, "SHGC", "g-Wert"), window.shgc, (0.0, 1.0, 0.01), action, "shgc", &id))?;
     push(&mut rows, slider_row("fenestration.vlt", say(locale, "VLT", "Lichttransmission"), window.vlt, (0.0, 1.0, 0.01), action, "vlt", &id))?;
@@ -349,6 +381,124 @@ fn zone_rows(zone: &Zone, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltN
 /// 🧱️ A material's WHOLE addressable record: its name, its roughness class and its seven SI scalars.
 /// `set-material-property` now carries TEXT, and `change-material-roughness` is a real mutation kind,
 /// so nothing here is read-only any more.
+/// 🪑️ Space records retain their own identity while their thermal zone assignment remains editable.
+fn space_rows(model: &Model, space: &Space, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut rows = UiFixedList::default();
+    let id = energy_target_id(space.id);
+    push(&mut rows, read_only_row("space.id", say(locale, "Id", "Id"), &id))?;
+    push(&mut rows, text_row("space.name", say(locale, "Name", "Bezeichnung"), &space.name, SET_SPACE_PROPERTY_ACTION_ID, "name", &id))?;
+    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    push(&mut rows, select_row("space.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(space.zone_id), zones, SET_SPACE_PROPERTY_ACTION_ID, "zone", &id))?;
+    push(&mut rows, number_row("space.floor-area", say(locale, "Floor area (m²)", "Grundfläche (m²)"), space.floor_area_m2, 0.1, SET_SPACE_PROPERTY_ACTION_ID, "floorAreaM2", &id))?;
+    Ok(rows)
+}
+
+/// 🔌️ Every load family shares admitted zone and schedule reference controls.
+fn load_reference_rows(model: &Model, id: &str, zone: crate::model::EntityId, schedule: u32, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let mut rows = UiFixedList::default();
+    push(&mut rows, read_only_row("load.id", say(locale, "Id", "Id"), id))?;
+    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    push(&mut rows, select_row("load.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(zone), zones, SET_LOAD_PROPERTY_ACTION_ID, "zone", id))?;
+    push(&mut rows, select_row("load.schedule", say(locale, "Schedule", "Profil"), &schedule.to_string(), schedule_options(model), SET_LOAD_PROPERTY_ACTION_ID, "schedule", id))?;
+    Ok(rows)
+}
+
+/// 💨️ Loads and infiltration expose their own complete native scalar records.
+fn load_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let id = energy_target_id(entity);
+    if let Some(target) = model.people.iter().find(|row| row.id == entity) {
+        let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
+        push(&mut rows, select_row("load.activity", say(locale, "Activity schedule", "Aktivitätsprofil"), &target.activity_schedule_id.0.to_string(), schedule_options(model), SET_LOAD_PROPERTY_ACTION_ID, "activitySchedule", &id))?;
+        for (field, en, de, value, fraction) in [
+            ("peoplePerArea", "People per m²", "Personen je m²", target.people_per_area, false),
+            ("sensibleFraction", "Sensible fraction", "Sensibler Anteil", target.sensible_fraction, true),
+            ("latentFraction", "Latent fraction", "Latenter Anteil", target.latent_fraction, true),
+            ("radiantFraction", "Radiant fraction", "Strahlungsanteil", target.radiant_fraction, true),
+        ] {
+            let suffix = format!("load.{field}");
+            let label = say(locale, en, de);
+            push(&mut rows, if fraction { slider_row(&suffix, label, value, (0.0, 1.0, 0.01), SET_LOAD_PROPERTY_ACTION_ID, field, &id) } else { number_row(&suffix, label, value, 0.01, SET_LOAD_PROPERTY_ACTION_ID, field, &id) })?;
+        }
+        return Ok(rows);
+    }
+    if let Some(target) = model.lighting.iter().find(|row| row.id == entity) {
+        let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
+        for (field, en, de, value, fraction) in [
+            ("wattsPerArea", "Power (W/m²)", "Leistung (W/m²)", target.watts_per_area, false),
+            ("radiantFraction", "Radiant fraction", "Strahlungsanteil", target.radiant_fraction, true),
+            ("visibleFraction", "Visible fraction", "Sichtbarer Anteil", target.visible_fraction, true),
+            ("returnAirFraction", "Return air fraction", "Abluftanteil", target.return_air_fraction, true),
+        ] {
+            let suffix = format!("load.{field}");
+            let label = say(locale, en, de);
+            push(&mut rows, if fraction { slider_row(&suffix, label, value, (0.0, 1.0, 0.01), SET_LOAD_PROPERTY_ACTION_ID, field, &id) } else { number_row(&suffix, label, value, 0.01, SET_LOAD_PROPERTY_ACTION_ID, field, &id) })?;
+        }
+        return Ok(rows);
+    }
+    if let Some(target) = model.equipment.iter().find(|row| row.id == entity) {
+        let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
+        for (field, en, de, value, fraction) in [
+            ("wattsPerArea", "Power (W/m²)", "Leistung (W/m²)", target.watts_per_area, false),
+            ("radiantFraction", "Radiant fraction", "Strahlungsanteil", target.radiant_fraction, true),
+            ("latentFraction", "Latent fraction", "Latenter Anteil", target.latent_fraction, true),
+        ] {
+            let suffix = format!("load.{field}");
+            let label = say(locale, en, de);
+            push(&mut rows, if fraction { slider_row(&suffix, label, value, (0.0, 1.0, 0.01), SET_LOAD_PROPERTY_ACTION_ID, field, &id) } else { number_row(&suffix, label, value, 0.01, SET_LOAD_PROPERTY_ACTION_ID, field, &id) })?;
+        }
+        return Ok(rows);
+    }
+    if let Some(target) = model.infiltrations.iter().find(|row| row.id == entity) {
+        let mut rows = load_reference_rows(model, &id, target.zone_id, target.schedule_id.0, locale)?;
+        use crate::air_exchange::InfiltrationMethod;
+        let method = match target.method { InfiltrationMethod::ScheduledAch => "scheduledAch", InfiltrationMethod::PerExteriorArea => "perExteriorArea", InfiltrationMethod::EffectiveLeakageArea => "effectiveLeakageArea", InfiltrationMethod::WindAndStack => "windAndStack" };
+        let methods = [("scheduledAch", "Scheduled ACH", "Geplanter Luftwechsel"), ("perExteriorArea", "Per exterior area", "Je Außenfläche"), ("effectiveLeakageArea", "Effective leakage area", "Effektive Leckagefläche"), ("windAndStack", "Wind and stack", "Wind und Auftrieb")].into_iter().map(|(id, en, de)| (id.to_string(), say(locale, en, de).to_string())).collect();
+        push(&mut rows, select_row("load.method", say(locale, "Method", "Methode"), method, methods, SET_LOAD_PROPERTY_ACTION_ID, "method", &id))?;
+        for (field, en, de, value, fraction) in [
+            ("designFlowAch", "Air changes per hour", "Luftwechsel pro Stunde", target.design_flow_ach, false),
+            ("flowPerExteriorAreaM3SM2", "Flow per exterior area (m³/s·m²)", "Volumenstrom je Außenfläche (m³/s·m²)", target.flow_per_exterior_area_m3_s_m2, false),
+            ("effectiveLeakageAreaM2", "Leakage area (m²)", "Leckagefläche (m²)", target.effective_leakage_area_m2, false),
+            ("dischargeCoefficient", "Discharge coefficient", "Ausflusskoeffizient", target.discharge_coefficient, true),
+            ("stackHeightM", "Stack height (m)", "Auftriebshöhe (m)", target.stack_height_m, false),
+            ("constantTermCoefficient", "Constant coefficient", "Konstanter Koeffizient", target.constant_term_coefficient, false),
+            ("temperatureTermCoefficient", "Temperature coefficient", "Temperaturkoeffizient", target.temperature_term_coefficient, false),
+            ("velocityTermCoefficient", "Velocity coefficient", "Geschwindigkeitskoeffizient", target.velocity_term_coefficient, false),
+            ("velocitySquaredTermCoefficient", "Velocity squared coefficient", "Quadratischer Geschwindigkeitskoeffizient", target.velocity_squared_term_coefficient, false),
+        ] {
+            let suffix = format!("load.{field}");
+            let label = say(locale, en, de);
+            push(&mut rows, if fraction { slider_row(&suffix, label, value, (0.0, 1.0, 0.01), SET_LOAD_PROPERTY_ACTION_ID, field, &id) } else { number_row(&suffix, label, value, 0.01, SET_LOAD_PROPERTY_ACTION_ID, field, &id) })?;
+        }
+        return Ok(rows);
+    }
+    Err(ui_error("ui.document"))
+}
+
+/// 🌡️ Ideal loads include supply air temperatures, outdoor air and optional capacity limits.
+fn hvac_rows(model: &Model, entity: crate::model::EntityId, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+    let target = model.ideal_loads.iter().find(|row| row.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+    let mut rows = UiFixedList::default();
+    let id = energy_target_id(entity);
+    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    push(&mut rows, read_only_row("hvac.id", say(locale, "Id", "Id"), &id))?;
+    push(&mut rows, select_row("hvac.zone", say(locale, "Thermal zone", "Thermische Zone"), &energy_target_id(target.zone_id), zones, SET_HVAC_PROPERTY_ACTION_ID, "zone", &id))?;
+    for (field, en, de, value, step) in [
+        ("maxHeatingSupplyAirTempC", "Heating supply temperature (°C)", "Heiz-Zulufttemperatur (°C)", target.max_heating_supply_air_temp_c, 0.1),
+        ("minCoolingSupplyAirTempC", "Cooling supply temperature (°C)", "Kühl-Zulufttemperatur (°C)", target.min_cooling_supply_air_temp_c, 0.1),
+        ("outdoorAirPerPersonM3S", "Outdoor air per person (m³/s)", "Außenluft je Person (m³/s)", target.outdoor_air_per_person_m3_s, 0.001),
+        ("outdoorAirPerAreaM3SM2", "Outdoor air per area (m³/s·m²)", "Außenluft je Fläche (m³/s·m²)", target.outdoor_air_per_area_m3_s_m2, 0.0001),
+    ] {
+        push(&mut rows, number_row(&format!("hvac.{field}"), say(locale, en, de), value, step, SET_HVAC_PROPERTY_ACTION_ID, field, &id))?;
+    }
+    for (field, en, de, capacity) in [
+        ("maxHeatingCapacityW", "Heating capacity (W; empty = unlimited)", "Heizleistung (W; leer = unbegrenzt)", target.max_heating_capacity_w),
+        ("maxCoolingCapacityW", "Cooling capacity (W; empty = unlimited)", "Kühlleistung (W; leer = unbegrenzt)", target.max_cooling_capacity_w),
+    ] {
+        push(&mut rows, text_row(&format!("hvac.{field}"), say(locale, en, de), &capacity.map(|value| value.to_string()).unwrap_or_default(), SET_HVAC_PROPERTY_ACTION_ID, field, &id))?;
+    }
+    Ok(rows)
+}
+
 fn material_rows(material: &Material, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let id = energy_target_id(material.id);
     let action = SET_MATERIAL_PROPERTY_ACTION_ID;
@@ -496,8 +646,8 @@ fn construction_u_value_text(model: &Model, construction: &Construction, locale:
 fn thermostat_rows(model: &Model, thermostat: &Thermostat, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("thermostat.id", say(locale, "Id", "Id"), energy_target_id(thermostat.id)))?;
-    let zone = model.zones.iter().find(|zone| zone.id == thermostat.zone_id);
-    push(&mut rows, read_only_row("thermostat.zone", say(locale, "Zone", "Zone"), zone.map_or_else(|| thermostat.zone_id.0.to_string(), |zone| zone.name.clone())))?;
+    let zones = model.zones.iter().map(|zone| (energy_target_id(zone.id), zone.name.clone())).collect();
+    push(&mut rows, thermostat_select("thermostat.zone", say(locale, "Thermal zone", "Thermische Zone"), thermostat, "zone", &energy_target_id(thermostat.zone_id), zones))?;
     let options = schedule_options(model);
     push(
         &mut rows,
@@ -529,6 +679,7 @@ fn thermostat_args(thermostat: &Thermostat, edited: &str) -> UiAssemblyResult<Ui
         ("heatingSchedule", thermostat.heating_setpoint_schedule_id.0.to_string()),
         ("heatingThrottleRangeK", thermostat.heating_throttle_range_k.to_string()),
         ("thermostat", thermostat.id.0.to_string()),
+        ("zone", thermostat.zone_id.0.to_string()),
     ];
     for (key, value) in entries {
         args.push(key.to_owned(), ui_value_text(value)?).map_err(|_| ui_error("ui.value.map.entry"))?;
@@ -537,6 +688,9 @@ fn thermostat_args(thermostat: &Thermostat, edited: &str) -> UiAssemblyResult<Ui
 }
 
 fn thermostat_select(suffix: &str, label: &str, thermostat: &Thermostat, field: &str, value: &str, options: Vec<(String, String)>) -> UiAssemblyResult<BuiltNode> {
+    if options.len() > SELECT_ITEMS_MAX {
+        return thermostat_number(suffix, &format!("{label} (Id)"), thermostat, field, value.parse::<u32>().map(f64::from).unwrap_or(0.0));
+    }
     let row_id = format!("{ROOT}.{suffix}");
     let mut control = ui_id(ui::select(ui_text(value)?), format!("{row_id}.select"))?;
     for (option, option_label) in options.into_iter().take(SELECT_ITEMS_MAX) {
@@ -590,10 +744,15 @@ fn site_number(suffix: &str, label: &str, field: &str, value: f64) -> UiAssembly
     control_row(&row_id, label, ui_build(control)?)
 }
 
-fn shading_rows(shading: &ShadingSurface, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
+fn shading_rows(model: &Model, shading: &ShadingSurface, locale: Locale) -> UiAssemblyResult<UiFixedList<BuiltNode>> {
     let mut rows = UiFixedList::default();
     push(&mut rows, read_only_row("shading.id", say(locale, "Id", "Id"), energy_target_id(shading.id)))?;
-    push(&mut rows, read_only_row("shading.name", say(locale, "Name", "Bezeichnung"), &shading.name))?;
+    let id = energy_target_id(shading.id);
+    push(&mut rows, text_row("shading.name", say(locale, "Name", "Bezeichnung"), &shading.name, SET_SHADING_PROPERTY_ACTION_ID, "name", &id))?;
+    let mut options = vec![(String::new(), say(locale, "Opaque", "Undurchlässig").to_string())];
+    options.extend(schedule_options(model));
+    let schedule = shading.transmittance_schedule_id.map(|id| id.0.to_string()).unwrap_or_default();
+    push(&mut rows, select_row("shading.transmittance", say(locale, "Transmittance schedule", "Transmissionsprofil"), &schedule, options, SET_SHADING_PROPERTY_ACTION_ID, "transmittanceSchedule", &id))?;
     push(&mut rows, read_only_row("shading.vertices", say(locale, "Vertices", "Eckpunkte"), shading.vertices_m.len()))?;
     Ok(rows)
 }
@@ -690,16 +849,22 @@ pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteracti
     builder = match kind {
         ENERGY_GRANULARITY_SURFACE => {
             let surface = model.surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.surface"), Some(ui_label(say(locale, "Surface", "Fläche"))?), true, surface_rows(model, surface, locale)?)?
+            geometry_section(builder.section(format!("{ROOT}.surface"), Some(ui_label(say(locale, "Surface", "Fläche"))?), true, surface_rows(model, surface, locale)?)?, windows, "surface", &id, &surface.vertices_m, SET_SURFACE_PROPERTY_ACTION_ID, locale)?
         }
         ENERGY_GRANULARITY_FENESTRATION => {
             let window = model.fenestrations.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.fenestration"), Some(ui_label(say(locale, "Window", "Fenster"))?), true, fenestration_rows(model, window, locale)?)?
+            geometry_section(builder.section(format!("{ROOT}.fenestration"), Some(ui_label(say(locale, "Window", "Fenster"))?), true, fenestration_rows(model, window, locale)?)?, windows, "fenestration", &id, &window.vertices_m, SET_FENESTRATION_PROPERTY_ACTION_ID, locale)?
         }
         ENERGY_GRANULARITY_ZONE => {
             let zone = model.zones.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
             builder.section(format!("{ROOT}.zone"), Some(ui_label(say(locale, "Zone", "Zone"))?), true, zone_rows(zone, locale)?)?
         }
+        ENERGY_GRANULARITY_SPACE => {
+            let space = model.spaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
+            builder.section(format!("{ROOT}.space"), Some(ui_label(say(locale, "Space", "Raum"))?), true, space_rows(model, space, locale)?)?
+        }
+        ENERGY_GRANULARITY_HVAC => builder.section(format!("{ROOT}.hvac"), Some(ui_label(say(locale, "Ideal loads system", "Ideales Lastsystem"))?), true, hvac_rows(model, entity, locale)?)?,
+        ENERGY_GRANULARITY_LOAD => builder.section(format!("{ROOT}.load"), Some(ui_label(say(locale, "Load", "Last"))?), true, load_rows(model, entity, locale)?)?,
         ENERGY_GRANULARITY_MATERIAL => {
             let material = model.materials.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
             builder.section(format!("{ROOT}.material"), Some(ui_label(say(locale, "Material", "Material"))?), true, material_rows(material, locale)?)?
@@ -723,7 +888,7 @@ pub fn render(snapshot: &EnergyModelSnapshot, interaction: &EnergyModelInteracti
         }
         ENERGY_GRANULARITY_SHADING => {
             let shading = model.shading_surfaces.iter().find(|entry| entry.id == entity).ok_or_else(|| ui_error("ui.document"))?;
-            builder.section(format!("{ROOT}.shading"), Some(ui_label(say(locale, "Shading surface", "Verschattungsfläche"))?), true, shading_rows(shading, locale)?)?
+            geometry_section(builder.section(format!("{ROOT}.shading"), Some(ui_label(say(locale, "Shading surface", "Verschattungsfläche"))?), true, shading_rows(model, shading, locale)?)?, windows, "shading", id, &shading.vertices_m, SET_SHADING_PROPERTY_ACTION_ID, locale)?
         }
         _ => return summary(model, config, locale),
     };

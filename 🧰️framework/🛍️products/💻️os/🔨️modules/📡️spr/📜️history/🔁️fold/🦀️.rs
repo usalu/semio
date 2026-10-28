@@ -57,10 +57,10 @@ impl HistoryLog {
             let mut dependencies = control.vector(source.dependencies.len()).await?;
             for dependency in &source.dependencies { control.push_vec(&mut dependencies,protocol::MutationId(protocol::copy_history_text(dependency, control).await?)).await?; }
             let observed = control.track(match &source.observed { Some(observed) => Some(protocol::MutationId(protocol::copy_history_text(observed, control).await?)), None => None }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
-            let payload = control.track(protocol::copy_history_bytes(&source.payload, control).await?).unwrap_or_else(|_|unreachable!("history payload declares controlled ownership")).await;
+            let payload = control.track(protocol::copy_history_payload(&source.payload, control).await?).unwrap_or_else(|_|unreachable!("history payload declares controlled ownership")).await;
             let schema = control.track(protocol::SchemaId(protocol::copy_history_text(protocol::HISTORY_TRANSITION_SCHEMA,control).await?)).unwrap_or_else(|_|unreachable!("history schema declares controlled ownership")).await;
             let inverse_schema=protocol::SchemaId(protocol::copy_history_text(protocol::HISTORY_TRANSITION_SCHEMA,control).await?);
-            control.push_vec(&mut transitions,protocol::MutationEnvelope { mutation_id: mutation_id.take(), document_id: document_id.take(), actor: actor.take(), dependencies: dependencies.take(), observed: observed.take(), target: Vec::new(), diff: protocol::ArtifactDiff { schema: schema.take(), payload:payload.take() }, inverse: protocol::InverseMutation { schema:inverse_schema, payload: Vec::new() }, timestamp: protocol::HybridLogicalTimestamp { actor: source.hlt.0, physical_ms: source.hlt.1, logical: source.hlt.2 }, transaction: None, verb: None, line: None }).await?;
+            control.push_vec(&mut transitions,protocol::MutationEnvelope { mutation_id: mutation_id.take(), document_id: document_id.take(), actor: actor.take(), dependencies: dependencies.take(), observed: observed.take(), target: Vec::new(), diff: protocol::ArtifactDiff { schema: schema.take(), payload:payload.take() }, inverse: protocol::InverseMutation { schema:inverse_schema, payload: Default::default() }, timestamp: protocol::HybridLogicalTimestamp { actor: source.hlt.0, physical_ms: source.hlt.1, logical: source.hlt.2 }, transaction: None, verb: None, line: None }).await?;
         }
         let document_id = control.track(protocol::ArtifactId(protocol::copy_history_text(&self.doc_id, control).await?)).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
         let trunk = control.track(semio_framework_replication_history::copy_history_trunk(&document_id, control).await?).unwrap_or_else(|_|unreachable!("history trunk declares controlled local ownership")).await;
@@ -68,7 +68,7 @@ impl HistoryLog {
         let checkpoint_id = match &self.viewer_checkpoint { Some(checkpoint) => Some(protocol::copy_history_text(checkpoint, control).await?), None => None };
         let head = control.track(protocol::ViewerHead { line_id: line_id.take(), checkpoint_id }).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
         let excluded_index: &::protocol::HistoryFoldIndex<String, ()> = &excluded;
-        let folded = protocol::fold_history_for_controlled(&document_id, &edits, &transitions, excluded_index, &head, control).await?;
+        let folded = protocol::fold_history_for_controlled(&document_id, &edits, &*transitions, excluded_index, &head, control).await?;
         let folded = control.track(folded).unwrap_or_else(|_| unreachable!("history schema declares controlled local ownership")).await;
         let mut replay_order = control.vector(if shape == protocol::HistoryShape::Document { folded.applied.len() } else { 0 }).await?;
         if shape == protocol::HistoryShape::Document { for id in &folded.applied { control.push_vec(&mut replay_order,protocol::copy_history_text(id, control).await?).await?; } }

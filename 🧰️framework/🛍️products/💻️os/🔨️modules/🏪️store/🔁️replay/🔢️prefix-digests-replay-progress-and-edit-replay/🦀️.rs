@@ -121,6 +121,7 @@ pub enum ReplayMode {
 /// 📚️ Where a replay reads the edits its order names.
 pub trait ReplayEdits<Mutation> {
     fn replay_edit(&self, edit_id: &str) -> Option<&Edit<Mutation>>;
+    fn replay_edit_at(&self,_position:usize,edit_id:&str)->Option<&Edit<Mutation>>{self.replay_edit(edit_id)}
 }
 
 pub struct IndexedAppliedReplayEdits<'a, Mutation> {
@@ -138,6 +139,10 @@ impl<Mutation> ReplayEdits<Mutation> for IndexedAppliedReplayEdits<'_, Mutation>
         self.edits.get_key(key).filter(|edit| edit.id == edit_id)
     }
 }
+
+/// 🪡️ A reinstated original row extends the same authenticated applied index without cloning its mutation owner.
+pub struct SelectedReplayEdits<'a,M>{pub original:IndexedAppliedReplayEdits<'a,M>,pub reinstated:Option<&'a Edit<M>>,pub checkpoint_order:Option<&'a semio_framework_os_vcs::HistoryPageStack<semio_framework_os_vcs::ArtifactHistoryKey>>}
+impl<M> ReplayEdits<M> for SelectedReplayEdits<'_,M>{fn replay_edit(&self,id:&str)->Option<&Edit<M>>{self.reinstated.filter(|edit|edit.id==id).or_else(||self.original.replay_edit(id))}fn replay_edit_at(&self,position:usize,id:&str)->Option<&Edit<M>>{if let Some(order)=self.checkpoint_order{let edit=self.original.edits.get_key(*order.get(position)?)?;(edit.id==id).then_some(edit)}else{self.replay_edit(id)}}}
 
 /// 📶️ Completed replay work: folded operations, planned source rows and sealed suffix edits.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -189,7 +194,7 @@ impl<P, Mutation: super::Mutation<P>> std::ops::DerefMut for EditReplay<P, Mutat
 impl<P: Clone, Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary> EditReplay<P, Mutation> {
     pub fn retain(original: ReplayOwnedState<P, Mutation>) -> Self { Self { original: std::mem::ManuallyDrop::new(original), raw_retirement: std::mem::ManuallyDrop::new(None), raw_factory: std::mem::ManuallyDrop::new(None), retiring: false } }
     pub fn new(mode: ReplayMode, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new(mode, base, order, from, schema, supersessions, edits).map(Self::retain) }
-    pub fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
+    pub fn new_counted(mode: ReplayMode, base: Arc<P>, order: semio_framework_os_vcs::HistoryPageStack<String>, from: usize, schema: String, supersessions: EffectiveSupersessions, total: u32) -> Result<Self, VcsError> { ReplayOwnedState::new_counted(mode, base, order, from, schema, supersessions, total).map(Self::retain) }
     pub fn new_after_prefix(mode: ReplayMode, base_length: usize, base: Arc<P>, order: Vec<String>, from: usize, schema: &str, supersessions: EffectiveSupersessions, edits: &impl ReplayEdits<Mutation>) -> Result<Self, VcsError> { ReplayOwnedState::new_after_prefix(mode, base_length, base, order, from, schema, supersessions, edits).map(Self::retain) }
     pub fn with_convergence(mut self, convergence: Option<ReplayConvergence<P>>) -> Self { self.original.replace_convergence(convergence); self }
     pub fn recording(mut self, stride: usize, prefixes: Vec<(usize, Arc<P>)>) -> Self { self.original.record_stride = stride.max(1); self.original.recorded.extend(prefixes); self.original.record(); self }
@@ -230,6 +235,8 @@ pub fn step_operations(&mut self, edits: &impl ReplayEdits<Mutation>, maximum_op
         let outcomes = std::mem::take(&mut self.outcomes);
         let worst = self.report_worst;
         let result = ReplayResultOwnedState {
+            original_history:None,original_decode:None,original_selection:None,original_order:None,
+            conflict_target:std::mem::take(&mut self.conflict_target),
             order: std::mem::replace(&mut self.order, semio_framework_os_vcs::HistoryPageStack::empty()),
             from: self.from,
             supersessions: std::mem::take(&mut self.supersessions),

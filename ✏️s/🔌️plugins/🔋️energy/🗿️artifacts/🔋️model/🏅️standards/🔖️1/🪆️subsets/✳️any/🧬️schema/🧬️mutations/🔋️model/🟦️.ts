@@ -1,5 +1,5 @@
 /** 🔋️ Energy-model mutation payloads of the `model` group: the TypeScript twin of the Rust leaves below `./`, one interface per leaf, wire-tagged by the camelCase variant name. */
-import type { ArtifactRef } from "@semio-tech/framework/schema/artifact-reference";
+import type { ArtifactLink } from "@semio-tech/framework/schema/artifact-reference";
 
 /** 🏷️ `rename-model` payload. */
 export interface RenameModel {
@@ -42,7 +42,7 @@ export interface RemoveOutputVariable {
 /** 🌦️ `bind-weather-file` payload. */
 export interface BindWeatherFile {
   readonly mutation: "bindWeatherFile";
-  readonly target: ArtifactRef;
+  readonly link: ArtifactLink;
 }
 
 /** 🌤️ `unbind-weather-file` payload. */
@@ -53,7 +53,7 @@ export interface UnbindWeatherFile {
 /** 🪢️ `connect-referenced-model` payload. */
 export interface ConnectReferencedModel {
   readonly mutation: "connectReferencedModel";
-  readonly target: ArtifactRef;
+  readonly link: ArtifactLink;
 }
 
 /** ✂️ `disconnect-referenced-model` payload. */

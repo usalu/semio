@@ -59,6 +59,28 @@ pub fn close_protocol_error_one(cause:&mut Option<ProtocolError>,grant:RetainedC
  if matches!(step,RetainedCloneStep::Complete(_)){drop(cause.take());}
  Ok(step)
 }
+struct ProtocolErrorRetirement{cause:std::mem::ManuallyDrop<Option<ProtocolError>>}
+impl semio_framework_value::retirement::RetirementCursor for ProtocolErrorRetirement{
+ fn next_demand(&self,_:usize)->Result<RetirementDemand,ValueError>{protocol_error_retirement_demand(&self.cause)}
+ fn close_step(&mut self,grant:RetainedCloneGrant)->semio_framework_value::retirement::RetirementStep{
+  use semio_framework_value::retirement::RetirementStep;
+  match close_protocol_error_one(&mut self.cause,grant){
+   Err(error)=>RetirementStep::Failure(error),
+   Ok(RetainedCloneStep::Complete(progress)) if progress==RetainedCloneProgress::default()=>RetirementStep::Complete,
+   Ok(RetainedCloneStep::Progress(progress)|RetainedCloneStep::Complete(progress))=>RetirementStep::Progress(progress),
+  }
+ }
+ fn terminal_is_empty(&self)->bool{self.cause.is_none()}
+ fn next_close_byte_demand(&self)->Option<usize>{protocol_error_retirement_demand(&self.cause).ok().map(|demand|demand.release_bytes)}
+ fn next_birth_bytes(&self,_:usize)->Option<usize>{Some(0)}
+ fn terminal_release_bytes(&self)->Option<usize>{self.cause.is_none().then_some(size_of::<Self>())}
+}
+impl Drop for ProtocolErrorRetirement{fn drop(&mut self){assert!(std::thread::panicking()||self.cause.is_none(),"protocol error retirement abandoned original cause");if self.cause.is_none(){unsafe{std::mem::ManuallyDrop::drop(&mut self.cause)}}}}
+impl semio_framework_value::retirement::RetireOwned for ProtocolError{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{Box::new(ProtocolErrorRetirement{cause:std::mem::ManuallyDrop::new(Some(self))})}
+ fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<ProtocolErrorRetirement>())}
+ fn controlled_retirement_supported()->bool{true}
+}
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;

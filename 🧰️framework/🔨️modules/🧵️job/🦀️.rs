@@ -176,6 +176,8 @@ impl JobPayloadStep for StepContext<'_> {
 
 impl<'a> StepContext<'a> {
     /// 🛬️ Captures the owning operation's original decoder without creating replacement capacity or cancellation authority.
+    /// 🪪️ Reads the installed original decoder continuation without creating a decoder or borrowing construction credit.
+    pub fn native_receiving_identity(&self)->Option<(u64,u64)>{self.original_decoder.as_deref().and_then(OriginalJobDecodeOwner::receiving_identity)}
     pub fn with_original_decoder(mut self,original:&'a mut OriginalJobDecodeOwner)->Self{self.original_decoder=Some(original);self}
     /// 🫴️ Loans original cancellation, clock, independent remaining credits and the exact shared construction receipt.
     pub fn with_native_receiving<T,E:From<ValueError>>(&mut self,operation:impl FnOnce(&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>)->Result<T,E>)->Result<T,E>{

@@ -22,7 +22,7 @@ fn generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight() 
 #[semio_framework_async_macros::async_test]
 async fn every_bounded_retained_route_answers_an_admissible_extent() {
     let _serial = semio_s_artifact_procedural_3d_testkit::test_serial::lock();
-    let read = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::initial_snapshot());
+    let read = semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshotRead::new(<Generation3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")());
     let interaction = protocol::InteractionState::default();
     let capacity = GENERATION3D_RETAINED_CAPACITY;
     let instance_owner = semio_framework_plugin::ArtifactInstanceOperationOwnerHandle::new(<Generation3dPlayApp as ArtifactEditor>::build_instance_operation_owner());

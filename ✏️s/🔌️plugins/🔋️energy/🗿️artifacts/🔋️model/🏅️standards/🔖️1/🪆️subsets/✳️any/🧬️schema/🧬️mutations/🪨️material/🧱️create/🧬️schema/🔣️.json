@@ -141,7 +141,8 @@
         "precision": 1,
         "group": "geometry",
         "order": 50
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "conductivityWMK": {
       "type": "number",
@@ -157,7 +158,8 @@
         "precision": 3,
         "group": "thermal",
         "order": 60
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "densityKgM3": {
       "type": "number",
@@ -173,7 +175,8 @@
         "precision": 0,
         "group": "thermal",
         "order": 70
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "specificHeatJKgK": {
       "type": "number",
@@ -189,7 +192,8 @@
         "precision": 0,
         "group": "thermal",
         "order": 80
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "thermalAbsorptance": {
       "type": "number",
@@ -210,7 +214,9 @@
         "softMax": 1,
         "group": "optics",
         "order": 90
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     },
     "solarAbsorptance": {
       "type": "number",
@@ -227,7 +233,9 @@
         "softMax": 1,
         "group": "optics",
         "order": 100
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     },
     "visibleAbsorptance": {
       "type": "number",
@@ -244,7 +252,116 @@
         "softMax": 1,
         "group": "optics",
         "order": 110
-      }
+      },
+      "minimum": 0,
+      "maximum": 1
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateMaterial",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "roughness",
+        "input": "roughness",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "thickness_m",
+        "input": "thickness_m",
+        "storage": "fixed"
+      },
+      {
+        "field": "conductivity_w_m_k",
+        "input": "conductivity_w_m_k",
+        "storage": "fixed"
+      },
+      {
+        "field": "density_kg_m3",
+        "input": "density_kg_m3",
+        "storage": "fixed"
+      },
+      {
+        "field": "specific_heat_j_kg_k",
+        "input": "specific_heat_j_kg_k",
+        "storage": "fixed"
+      },
+      {
+        "field": "thermal_absorptance",
+        "input": "thermal_absorptance",
+        "storage": "fixed"
+      },
+      {
+        "field": "solar_absorptance",
+        "input": "solar_absorptance",
+        "storage": "fixed"
+      },
+      {
+        "field": "visible_absorptance",
+        "input": "visible_absorptance",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "key": "id",
+    "inverse": "DeleteMaterial",
+    "labels": {
+      "en": "Create Material at index",
+      "de": "Material an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "material",
+      "kind": "create-material",
+      "record": "CreatedMaterial"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit",
+    "name": "name",
+    "nameValidation": "verbatim",
+    "unique": false
   }
 }

@@ -1,0 +1,59 @@
+{
+  "contract": "semio.energy.original-deleteconstruction/v1",
+  "collection": "constructions",
+  "existingRows": [
+    {
+      "id": 1,
+      "name": "Original layers",
+      "layer_material_ids": []
+    },
+    {
+      "id": 4,
+      "name": "Original layers",
+      "layer_material_ids": []
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 1
+      },
+      "outcome": "changed",
+      "after": [
+        4
+      ]
+    },
+    {
+      "payload": {
+        "id": 4
+      },
+      "outcome": "changed",
+      "after": [
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ]
+}

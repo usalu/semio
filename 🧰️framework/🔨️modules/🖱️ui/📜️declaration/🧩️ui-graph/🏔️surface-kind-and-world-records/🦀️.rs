@@ -4,7 +4,7 @@ use super::*;
 
 // #region ui
 //#region 🔖️ComponentScenes
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 pub enum SurfaceKind {
     #[serde(rename = "canvas-2d")]
     #[value(rename = "canvas-2d")]

@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateShwSystemConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "shw_systems",
+    "key": "id",
+    "inverse": "CreateShwSystem",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete Shw System",
+      "de": "Trinkwarmwasseranlage löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "service-hot-water-system",
+      "kind": "delete-shw-system",
+      "record": "DeletedShwSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed service-hot-water-system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

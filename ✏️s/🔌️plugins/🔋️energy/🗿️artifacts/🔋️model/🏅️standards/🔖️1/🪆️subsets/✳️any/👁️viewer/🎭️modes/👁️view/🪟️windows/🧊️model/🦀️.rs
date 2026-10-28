@@ -79,7 +79,7 @@ pub fn definition() -> WindowKindDefinition {
 //#region 🔖️Render
 /// 👁️ Real `Model -> World3d surface`, with neither picking nor a results overlay — the read-only
 /// projection of the same geometry the editor's twin renders.
-pub fn render(model: &crate::model::Model) -> UiAssemblyResult<BuiltNode> {
+pub fn render(model: &impl crate::scene::EnergySceneModel) -> UiAssemblyResult<BuiltNode> {
     render_with_camera(model, None)
 }
 
@@ -88,7 +88,7 @@ pub fn render(model: &crate::model::Model) -> UiAssemblyResult<BuiltNode> {
 /// once; `Some` republishes exactly the pose the host last sent, which
 /// `shouldReattachWorldViewportCamera` recognizes as its own echo and therefore does NOT reattach —
 /// so a re-render never yanks a camera the user just moved.
-pub fn render_with_camera(model: &crate::model::Model, camera: Option<&config::EnergyModelViewerWindowConfig>) -> UiAssemblyResult<BuiltNode> {
+pub fn render_with_camera(model: &impl crate::scene::EnergySceneModel, camera: Option<&config::EnergyModelViewerWindowConfig>) -> UiAssemblyResult<BuiltNode> {
     let mut scene = energy_model_scene(model, &EnergySceneStyle::default(), None);
     if let Some(window) = camera {
         scene.camera_json = window.camera.scene_camera_json();

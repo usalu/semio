@@ -1,0 +1,50 @@
+{
+  "bodyBytes": [
+    1,
+    7,
+    64,
+    4096
+  ],
+  "cases": [
+    {
+      "scope": null,
+      "inputs": [
+        {
+          "target": "b",
+          "withdrawn": true
+        },
+        {
+          "target": "a",
+          "schema": "energy/model",
+          "payloadLength": 0,
+          "payloadSeed": 3
+        }
+      ],
+      "wireBytes": 23,
+      "sha256": "6544a1ad63515e6330f51342762f5601d055c8a16e7768aa0f826347ee76475e"
+    },
+    {
+      "scope": "alternative:ä",
+      "inputs": [
+        {
+          "target": "energy:001",
+          "schema": "energy/model",
+          "payloadLength": 8197,
+          "payloadSeed": 17
+        },
+        {
+          "target": "energy:002",
+          "withdrawn": true
+        },
+        {
+          "target": "energy:003",
+          "schema": "energy/model",
+          "payloadLength": 11,
+          "payloadSeed": 255
+        }
+      ],
+      "wireBytes": 8291,
+      "sha256": "0b76cd706450028a1e2f0286b9e87ed9c007cd52e3dce1292b18b6e863739332"
+    }
+  ]
+}

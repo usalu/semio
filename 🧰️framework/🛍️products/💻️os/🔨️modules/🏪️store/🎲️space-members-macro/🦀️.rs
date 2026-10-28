@@ -84,6 +84,19 @@ macro_rules! space_members {
             fn artifact_ref(&self) -> Option<::semio_framework_artifact_reference::ArtifactRef> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::artifact_ref(m.as_ref())),+ }
             }
+            fn member_native_vcs_capture_demands(&self)->semio_framework_value::RetirementDemand{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::member_native_vcs_capture_demands(m.as_ref())),+}}
+            fn admit_member_native_vcs_command(&self,request:&mut Option<$crate::os_store::ArtifactNativeVcsRequest>,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<Box<dyn $crate::os_store::MemberNativeVcsCommand>>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::admit_member_native_vcs_command(m.as_ref(),request,cx,output)),+}}
+            fn advance_member_native_vcs_command(&mut self,owner:&mut dyn $crate::os_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<$crate::os_store::ArtifactNativeVcsAdvance,semio_framework_job::OriginalTurnFailure>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::advance_member_native_vcs_command(m.as_mut(),owner,cx)),+}}
+            fn take_member_native_vcs_result(&self,owner:&mut dyn $crate::os_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>,output:&mut Option<$crate::os_store::ArtifactNativeVcsResult>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::take_member_native_vcs_result(m.as_ref(),owner,cx,output)),+}}
+            fn ack_member_native_vcs_command(&self,owner:&mut dyn $crate::os_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::ack_member_native_vcs_command(m.as_ref(),owner,cx)),+}}
+            fn member_native_vcs_close_demands(&self,owner:&dyn $crate::os_store::MemberNativeVcsCommand,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::member_native_vcs_close_demands(m.as_ref(),owner,body)),+}}
+            fn close_member_native_vcs_command(&mut self,owner:&mut dyn $crate::os_store::MemberNativeVcsCommand,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::close_member_native_vcs_command(m.as_mut(),owner,cx)),+}}
+            fn native_head_pack_source(&self)->Option<$crate::os_store::serialization::OriginalSnapshotPackView<'_>>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::native_head_pack_source(m.as_ref())),+}}
+            fn native_pack_generation(&self)->u64{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::native_pack_generation(m.as_ref())),+}}
+            fn native_checkpoint_id(&self)->Option<&str>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::native_checkpoint_id(m.as_ref())),+}}
+            fn native_checkpoint_probe_demands(&self,probe:&$crate::os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds)->Result<semio_framework_value::RetirementDemand,$crate::os_store::MemberValueError>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::native_checkpoint_probe_demands(m.as_ref(),probe)),+}}
+            fn advance_native_checkpoint_probe(&self,probe:&mut $crate::os_vcs::io::binary::checkpoint_identity::original::pending::OriginalPendingEditIds,grant:$crate::os_store::RetainedCloneGrant)->Result<$crate::os_store::RetainedCloneProgress,$crate::os_store::MemberValueError>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::advance_native_checkpoint_probe(m.as_ref(),probe,grant)),+}}
+            fn member_identity(&self)->Option<$crate::os_store::MemberIdentityRef<'_>>{match self{$(Self::$variant(m)=>$crate::os_store::SpaceMember::member_identity(m.as_ref())),+}}
             fn owner_ref(&self) -> Option<$crate::os_store::OwnerRef> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owner_ref(m.as_ref())),+ }
             }
@@ -99,17 +112,25 @@ macro_rules! space_members {
             fn one_item_wire_publication_supported(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::one_item_wire_publication_supported(m.as_ref())),+ }
             }
+
+
+            fn original_batch_receiving_demands(&self) -> Result<$crate::os_store::MemberRetirementDemand, $crate::os_store::MemberValueError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::original_batch_receiving_demands(m.as_ref())),+ }
+            }
+            fn admit_original_batch_receiving(&self, wires:&mut Option<Vec<Vec<u8>>>, control:&mut $crate::os_store::MemberNativeDecodeControl<'_>, grant:$crate::os_store::RetainedCloneGrant) -> Result<Option<(Box<dyn $crate::os_store::MemberOriginalBatchReceiving>, $crate::os_store::RetainedCloneProgress)>, $crate::os_store::MemberValueError> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::admit_original_batch_receiving(m.as_ref(), wires, control, grant)),+ }
+            }
             fn owned_publication_birth_bytes(&self, request: &$crate::os_store::MemberStoreOwnedBatchRequest) -> Result<usize, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::owned_publication_birth_bytes(m.as_ref(), request)),+ }
             }
-            fn begin_one_item_owned_publication(&self, request: &mut $crate::os_store::MemberStoreOwnedBatchRequest, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>>, String> {
+            fn begin_one_item_owned_publication(&self, request: &mut $crate::os_store::MemberStoreOwnedBatchRequest, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<Option<(Box<dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication>, $crate::os_store::RetainedCloneProgress)>, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::begin_one_item_owned_publication(m.as_ref(), request, grant)),+ }
             }
-            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut  $crate::os_store::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, body, grant, receiving)),+ }
+            fn advance_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body:usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut $crate::os_store::MemberNativeDecodeControl<'_>) -> Result<$crate::os_store::one_item_publication::ArtifactStoreOneItemAdvance, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::advance_one_item_publication(m.as_mut(), publication, body, grant,receiving)),+ }
             }
-            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body: usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut  $crate::os_store::NativeDecodeControl<'_>) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, $crate::os_store::VcsError> {
-                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, body, grant, receiving)),+ }
+            fn prepare_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, body:usize, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut $crate::os_store::MemberNativeDecodeControl<'_>) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
+                match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::prepare_one_item_publication(m.as_mut(), publication, body, grant,receiving)),+ }
             }
             fn stage_one_item_publication(&mut self, publication: &mut dyn $crate::os_store::one_item_publication::ErasedMemberStoreOneItemPublication, visibility: &::std::sync::Arc<$crate::os_vcs::ArtifactGroupVisibility>, grant: $crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<$crate::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::stage_one_item_publication(m.as_mut(), publication, visibility, grant)),+ }
@@ -165,12 +186,18 @@ macro_rules! space_members {
             async fn is_dirty(&self) -> bool {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::is_dirty(m.as_ref()).await),+ }
             }
+
+
             async fn current_checkpoint_id(&self) -> Option<String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_checkpoint_id(m.as_ref()).await),+ }
             }
             async fn current_alternative_id(&self) -> Option<String> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::current_alternative_id(m.as_ref()).await),+ }
             }
+
+
+
+
             async fn last_local_edit_timestamp(&self) -> Option<$crate::os_spr::HybridLogicalTimestamp> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::last_local_edit_timestamp(m.as_ref()).await),+ }
             }
@@ -189,6 +216,20 @@ macro_rules! space_members {
             async fn redo_tail(&self) -> Option<(String, Option<String>)> {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::redo_tail(m.as_ref()).await),+ }
             }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
             async fn merge_policy(&self) -> $crate::os_spr::MergePolicy {
                 match self { $(Self::$variant(m) => $crate::os_store::SpaceMember::merge_policy(m.as_ref()).await),+ }
             }

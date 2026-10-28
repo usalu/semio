@@ -56,7 +56,7 @@ impl<T:DslReceivingField> DslReceivingField for Vec<T>{
    *slot=Some(Sequence{values:Vec::new(),child:None});
    let backing=original.receive::<Vec<T>,Vec<T>>(|slot,native,body|{*slot=Some(Vec::new());body.allocate_vec_into(native,length,slot.as_mut().unwrap(),1)?;Ok(slot.take().unwrap())})?;slot.as_mut().unwrap().values=backing;
    for index in 0..length{
-    let frame=slot.as_mut().unwrap();frame.child=Some(match value{FieldValue::List(values)|FieldValue::Tuple(values)=>T::receive_value(&values[index],original)?,FieldValue::Bytes64(values)=>T::receive_value(&FieldValue::UInt(u64::from(values[index])),original)?,_=>unreachable!()});
+    let frame=slot.as_mut().unwrap();frame.child=Some(match value{FieldValue::List(values)|FieldValue::Tuple(values)=>T::receive_value(&values[index],original)?,FieldValue::Bytes64(values)=>T::receive_value(&FieldValue::UInt(u64::from(values.retained_bytes()[index])),original)?,_=>unreachable!()});
     work(original,size_of::<T>(),1)?;frame.values.push(frame.child.take().unwrap());
    }
    work(original,size_of::<Self>(),1)?;Ok(std::mem::take(&mut slot.as_mut().unwrap().values))

@@ -60,9 +60,9 @@ impl ArtifactViewer for MdViewer {
     const DIALECT: Dialect = MD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_MD_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         MdSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

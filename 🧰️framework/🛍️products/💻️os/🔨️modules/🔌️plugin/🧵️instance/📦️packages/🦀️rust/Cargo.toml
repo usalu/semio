@@ -25,6 +25,8 @@ path = "../../🦀️.rs"
 artifact-app-testing = ["dep:semio-framework-test-fixtures"]
 
 [dependencies]
+semio-framework-value-factory = {path="../../../../../../../🔨️modules/🌱️value/♻️retirement/🏭️factory/📦️packages/🦀️rust"}
+semio-framework-value-snapshot-read = {path="../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust"}
 semio-framework-plugin-interaction = { path = "../../../🕹️interaction/📦️packages/🦀️rust" }
 semio-framework-plugin-operation = { path = "../../../♻️cancellation/📦️packages/🦀️rust" }
 semio-framework-plugin-window-config = { path = "../../../🪟️window/🎚️config/📦️packages/🦀️rust" }

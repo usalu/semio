@@ -1,0 +1,73 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "window",
+    "actor",
+    "initialZoom",
+    "zooms",
+    "sources",
+    "maximumTurns",
+    "cancelAt",
+    "requirements",
+    "maximumHeaderCopyBytes"
+  ],
+  "properties": {
+    "window": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "actor": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "initialZoom": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "zooms": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 64,
+      "items": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "sources": {
+      "const": [
+        "pair",
+        "framed"
+      ]
+    },
+    "maximumTurns": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 200000
+    },
+    "cancelAt": {
+      "type": "array",
+      "minItems": 6,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 200000
+      }
+    },
+    "requirements": {
+      "type": "array",
+      "minItems": 8,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "maximumHeaderCopyBytes": {
+      "const": 32768
+    }
+  }
+}

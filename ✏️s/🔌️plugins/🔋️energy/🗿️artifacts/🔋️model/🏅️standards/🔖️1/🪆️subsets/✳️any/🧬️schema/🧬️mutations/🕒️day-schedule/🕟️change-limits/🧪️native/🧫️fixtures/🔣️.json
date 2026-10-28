@@ -1,0 +1,144 @@
+{
+  "contract": "semio.energy.original-paired-bounds/v1",
+  "collection": "schedules.daily",
+  "field": "limits",
+  "original": {
+    "id": 7,
+    "hourly_values": [
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
+    ],
+    "interpolation": "Continuous",
+    "limits": {
+      "min": 0,
+      "max": 2
+    }
+  },
+  "model": {
+    "schedules": {
+      "constants": [],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": 0,
+        "newLimitsMax": 2
+      },
+      "outcome": "no-op",
+      "after": {
+        "min": 0,
+        "max": 2
+      }
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": null,
+        "newLimitsMax": null
+      },
+      "outcome": "changed",
+      "after": null
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": -2,
+        "newLimitsMax": 5
+      },
+      "outcome": "changed",
+      "after": {
+        "min": -2,
+        "max": 5
+      }
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": 2,
+        "newLimitsMax": 2
+      },
+      "outcome": "changed",
+      "after": {
+        "min": 2,
+        "max": 2
+      }
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": 5,
+        "newLimitsMax": 2
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": null,
+        "newLimitsMax": 2
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newLimitsMin": 2,
+        "newLimitsMax": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newLimitsMin": 5,
+        "newLimitsMax": 2
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "branch": "outputs"
+}

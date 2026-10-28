@@ -1,0 +1,1 @@
+{"zones":["Alpha","Beta"],"zoneCapacity":5,"weatherRecords":24,"weatherCapacity":32,"cancelPrefixes":[0,1,7,23,128],"expected":{"zones":5,"weather_records":32,"operations":1,"process_jobs":1},"refusedDimension":"WeatherRecords"}

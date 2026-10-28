@@ -3,7 +3,7 @@
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️DocumentHelpers
-/// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::initial_snapshot()` and by every
+/// 🌱️ The artifact's empty/default snapshot — used as `VcsPlayApp::reference_birth().expect("explicit reference snapshot producer")()` and by every
 /// test fixture that needs a base document (was: `⚙️engine::empty_vcs_snapshot()`, dissolved per ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 pub fn empty_vcs_snapshot() -> crate::VcsSnapshot {

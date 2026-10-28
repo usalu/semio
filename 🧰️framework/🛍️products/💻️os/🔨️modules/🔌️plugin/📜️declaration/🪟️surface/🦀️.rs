@@ -28,6 +28,7 @@ use semio_framework::{kernel::{ActorId, ClipboardError, ClipboardFragment, Effec
 use semio_framework::onboarding::{IntroductionDefinition, TutorialDefinition};
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework::{kernel::{AppEvent, HistoryPatch, InvocationResult}};
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_2d_compute::EngineHandles;
 /// 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (`sdk-flip`, 26/08/20): the choke point. Every
 /// UI-bearing plugin in the fleet imports its UI vocabulary through THIS block, so flipping it
@@ -117,7 +118,7 @@ use semio_framework_plugin_decl_app::ArtifactApp;
 use semio_framework_plugin_decl_app::NATURAL_FILE_PORT;
 use semio_framework_plugin_decl_app::NaturalFileCodec;
 use semio_framework_plugin_decl_app::NaturalFileDecodeOwner;
-use semio_framework_plugin_decl_app::document_load_emit;
+use semio_framework_plugin_decl_app::{document_load_emit,document_reference_load_emit};
 use semio_framework_plugin_decl_app::natural_file_input_bytes;
 use semio_framework_plugin_decl_emission::Emit;
 use semio_framework_plugin_decl_emission::surface_contract::ViewEmit;
@@ -182,3 +183,7 @@ pub use viewer_app::*;
 #[path = "🏗️surface-builders/🦀️.rs"]
 mod surface_builders;
 pub use surface_builders::*;
+
+#[path="🌱️original/🦀️.rs"]
+pub mod original_admission;
+pub use original_admission::{OriginalArtifactEditorBirth,OriginalArtifactViewerBirth};

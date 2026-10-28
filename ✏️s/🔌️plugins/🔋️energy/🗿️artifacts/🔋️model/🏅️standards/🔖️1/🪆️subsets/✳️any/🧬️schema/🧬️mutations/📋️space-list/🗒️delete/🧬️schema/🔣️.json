@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateSpaceList",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "space_lists",
+    "key": "id",
+    "inverse": "CreateSpaceList",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete Space List",
+      "de": "Raumliste löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "space-list",
+      "kind": "delete-space-list",
+      "record": "DeletedSpaceList"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed space-list does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

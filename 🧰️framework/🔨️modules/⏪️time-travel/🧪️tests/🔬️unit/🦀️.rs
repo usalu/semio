@@ -155,8 +155,8 @@ fn effect(value: &Value) -> TimeTravelEffect {
         "startReplay" => TimeTravelEffect::StartReplay { drafts: inputs(&value["drafts"]), from: mutation(&value["from"]) },
         "cancelReplay" => TimeTravelEffect::CancelReplay,
         "openFinalizePrompt" => TimeTravelEffect::OpenFinalizePrompt,
-        "commitOverwrite" => TimeTravelEffect::CommitOverwrite { inputs: inputs(&value["inputs"]) },
-        "commitAlternative" => TimeTravelEffect::CommitAlternative { name: text(&value["name"]).to_string(), inputs: inputs(&value["inputs"]) },
+        "commitOverwrite" => TimeTravelEffect::CommitOverwrite,
+        "commitAlternative" => TimeTravelEffect::CommitAlternative { name: text(&value["name"]).to_string() },
         "close" => TimeTravelEffect::Close,
         other => panic!("unknown effect {other}"),
     }

@@ -51,5 +51,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePlantLoopConfig",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "plant_loops",
+    "field": "design_flow_kg_s",
+    "input": "new_design_flow_kg_s",
+    "key": "id",
+    "labels": {
+      "en": "Change plant loop: Design mass flow",
+      "de": "Bemessungsmassenstrom ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "plant-loop",
+      "kind": "change-plant-loop-design-flow",
+      "record": "ChangedPlantLoopDesignFlow"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Design mass flow violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed plant loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The plant loop already carries this design mass flow value."
+      }
+    }
   }
 }

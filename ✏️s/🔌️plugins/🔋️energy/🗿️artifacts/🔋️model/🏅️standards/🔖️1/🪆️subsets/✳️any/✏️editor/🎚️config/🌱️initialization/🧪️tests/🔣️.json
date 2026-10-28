@@ -1,0 +1,1 @@
+{"default":{"zoneTimestepMinutes":60,"systemTimestepMinutes":60,"warmupDays":7,"resultField":"conductionLoss"},"cancelStages":[0,3,6]}

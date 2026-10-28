@@ -50,5 +50,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateRefrigerationConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "refrigeration_systems",
+    "field": "case_count",
+    "input": "new_case_count",
+    "key": "id",
+    "labels": {
+      "en": "Change refrigeration system: Display cases",
+      "de": "Anzahl Kühlmöbel ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "refrigeration-system",
+      "kind": "change-refrigeration-system-case-count",
+      "record": "ChangedRefrigerationSystemCaseCount"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Display cases violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed refrigeration system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The refrigeration system already carries this display cases value."
+      }
+    }
   }
 }

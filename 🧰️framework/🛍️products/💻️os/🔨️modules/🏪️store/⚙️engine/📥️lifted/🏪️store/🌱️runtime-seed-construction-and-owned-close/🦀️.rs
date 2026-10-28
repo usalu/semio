@@ -3,6 +3,7 @@
 use super::*;
 use semio_framework_os_spr::ColdMutation;
 use semio_framework_os_store_engine_close::StoreCloseWitness as _;
+use semio_framework_value::RetirementDemand;
 
 //#region 🔖️EphemeralLanes
 //#region 🔖️Backbone
@@ -86,7 +87,7 @@ where
     /// into a process abort instead of the `VcsError` the caller is meant to read. The candidate lives
     /// in a slot {@link construct} empties only on success; whatever is left is detached here.
     pub async fn new<C:ArtifactStorePublication<P>>(envelope: ArtifactEnvelope<P, Mutation>, actor: ActorId) -> Result<Self, VcsError>
-    {
+    where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let mut candidate = Some(envelope);
         let constructed = Self::construct::<C>(&mut candidate, actor).await;
         if let Some(rejected) = candidate {
@@ -96,7 +97,7 @@ where
     }
 
     pub async fn construct<C:ArtifactStorePublication<P>>(candidate: &mut Option<ArtifactEnvelope<P, Mutation>>, actor: ActorId) -> Result<Self, VcsError>
-    {
+    where Mutation: semio_framework_os_spr::ColdMutation<P> {
         let envelope = candidate.as_mut().expect("artifact store construction holds its candidate envelope");
         if actor.0.trim().is_empty() { return Err(VcsError::ValidationFailed("opened actor identity cannot be empty".into())); }
         validate_durable_history(envelope).await?;
@@ -161,6 +162,7 @@ where
             wire: StoreWire {
                 backbone: std::mem::ManuallyDrop::new(None),
                 member_inbox: VecDeque::new(),
+                original_outbox: Default::default(),
                 durable_group_root: std::mem::ManuallyDrop::new(None),
             },
             cursor: StoreCursor {
@@ -193,16 +195,9 @@ where
         })
     }
 
-    /// 🏗️ Atomically adopts a domain-validated initialization runtime. Every
-    /// history/reference/snapshot owner was prepared under the caller's StepContext before this
-    /// non-suspending move; no validation or collection traversal occurs at publication.
-    pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {
-        config_store_from_initialized_runtime_with_owners(envelope, runtime, generation, owners)
-    }
-
     /// ♻️ Sole public reload API: adopts `envelope`'s event log and derives every position from
     /// it — a reload replays history, it never injects a cursor.
-    pub async fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<CommandReceipt, VcsError> {
+    pub async fn reset(&mut self, envelope: ArtifactEnvelope<P, Mutation>) -> Result<CommandReceipt, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
         self.ensure_durable_group_idle()?;
         self.set_state(envelope).await?;
         self.cursor.last_projection_cause = Some(ArtifactProjectionCause::Reset);
@@ -286,7 +281,7 @@ where
     /// pins rather than merely storing them beside it, and records the re-identification as a
     /// `Repin` transition so every replica and every reload derives the same identity.
     #[must_use]
-    pub async fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<semio_framework_os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> {
+    pub async fn set_checkpoint_composition_pins(&mut self, checkpoint_id: &str, pins: Vec<semio_framework_os_vcs::CompositionPin>) -> Result<ArtifactProjectionInvalidation, VcsError> where Mutation: semio_framework_os_spr::ColdMutation<P> {
 use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactReferenceText as _;
 
         self.ensure_durable_group_idle()?;
@@ -307,6 +302,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::ArtifactRe
         self.commit_transition(semio_framework_os_spr::HistoryTransition::Repin { checkpoint_id: previous_id, pinned_checkpoint_id: next_id, pins }, dependencies).await?;
         self.flush_outbound().await?;
         self.invalidate_projections(ArtifactProjectionCause::Checkpoint)
+    }
+
+ }
+
+impl<P, Mutation> ArtifactStore<P, Mutation>
+where
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+{
+    /// 🏗️ Atomically adopts a domain-validated initialization runtime. Every
+    /// history/reference/snapshot owner was prepared under the caller's StepContext before this
+    /// non-suspending move; no validation or collection traversal occurs at publication.
+    pub fn initialized_runtime_adoption_demands(envelope:&ArtifactEnvelope<P,Mutation>,runtime:&ArtifactStoreInitializationRuntime<P>)->Result<RetirementDemand,ValueError>{
+        let checkpoint=runtime.current_checkpoint_id.as_ref().map_or(0,String::len);let ring=PREFIX_SNAPSHOT_RING_CAPACITY.checked_mul(size_of::<PrefixSnapshot<P>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initialized prefix ring extent overflow"))?;let displaced=semio_framework_os_store_read::ARTIFACT_STORE_DISPLACED_RETIREMENT_CAPACITY.checked_mul(size_of::<Box<dyn ErasedSnapshotRetirement>>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"initialized displaced queue extent overflow"))?;let previous=envelope.cursor.as_ref().map_or(0,|_|size_of::<semio_framework_os_store_read::ArtifactStoreCursorRetirement>());Ok(RetirementDemand{copy_bytes:2*previous+size_of::<Self>()+size_of::<ArtifactStoreInitializationRuntime<P>>()+size_of::<ArtifactEnvelope<P,Mutation>>()+size_of::<DocumentStoreOwners<P,Mutation>>()+size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<P>>>()+size_of::<u64>()+size_of::<[u8;32]>()+checkpoint,capacity_bytes:ring+displaced+checkpoint+previous,depth:1,release_bytes:0})
+    }
+
+    pub fn from_initialized_runtime_with_owners(envelope: ArtifactEnvelope<P, Mutation>, runtime: ArtifactStoreInitializationRuntime<P>, generation: u64, owners: DocumentStoreOwners<P, Mutation>) -> Self {
+        config_store_from_initialized_runtime_with_owners(envelope, runtime, generation, owners)
     }
 
     /// 📏️ Publishes the installed disposer's exact retained payload or terminal allocation demand.

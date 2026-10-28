@@ -1,0 +1,59 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "name",
+    "version",
+    "year",
+    "groundTemperature",
+    "cancelCuts",
+    "maximumCopyBytes",
+    "contract",
+    "creationStages",
+    "links"
+  ],
+  "properties": {
+    "schema": {
+      "const": "energy.model"
+    },
+    "name": {
+      "const": ""
+    },
+    "version": {
+      "const": ""
+    },
+    "year": {
+      "const": 2026
+    },
+    "groundTemperature": {
+      "const": 18
+    },
+    "maximumCopyBytes": {
+      "const": 4096
+    },
+    "contract": {
+      "const": "semio.energy.original-app-genesis.v1"
+    },
+    "creationStages": {
+      "const": 20
+    },
+    "links": {
+      "const": {
+        "referencedModel": null,
+        "weatherLink": null
+      }
+    },
+    "cancelCuts": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "integer",
+        "minimum": 0,
+        "maximum": 20
+      }
+    }
+  }
+}

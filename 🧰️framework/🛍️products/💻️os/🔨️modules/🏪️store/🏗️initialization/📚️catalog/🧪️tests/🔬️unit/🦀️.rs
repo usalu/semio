@@ -10,13 +10,21 @@ fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_
     let mut catalog = ArtifactStoreInitializationOwnerCatalog::try_new().unwrap();
     assert_eq!(catalog.admitted_items(), lanes.len() * page_slots);
     let mut total_released = 0;
-    for (index, _lane) in lanes.iter().enumerate() {
-        let remaining = (lanes.len() - index - 1) * page_slots;
-        let mut steps = 0;
-        while catalog.admitted_items() != remaining {
-            steps += 1;
-            assert!(steps <= 2, "one lane releases its directory chunk and then its page");
-            let (demand, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.next_release_byte_demand().unwrap());
+    for index in 0..lanes.len()*fixture["extentsPerLane"].as_u64().unwrap() as usize {
+        let (demand, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.next_release_byte_demand().unwrap());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        assert!(demand > 0);
+        let demands = catalog.close_demands().unwrap();
+        assert_eq!(demands.copy_bytes, fixture["currencies"]["copyBytes"].as_u64().unwrap() as usize);
+        assert_eq!(demands.capacity_bytes, fixture["currencies"]["capacityBytes"].as_u64().unwrap() as usize);
+        assert_eq!(demands.depth, fixture["currencies"]["depth"].as_u64().unwrap() as usize);
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand, maximum_depth: demands.depth, ..Default::default() };
+        let (refused, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(RetainedCloneGrant { maximum_depth: 0, ..grant }));
+        assert_eq!(refused.unwrap_err().kind, ValueRefusalKind::DepthLimit);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        for denied in [RetainedCloneGrant { maximum_items: 0, ..grant }, RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }] {
+            let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(denied).unwrap());
+            assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
             assert!(demand > 0);
             let demands = catalog.close_demands().unwrap();
@@ -39,9 +47,15 @@ fn retained_empty_initialization_catalog_releases_one_exact_native_page_without_
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
             total_released += demand;
         }
-        assert_eq!(steps, 2);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(grant).unwrap());
+        assert_eq!(step.progress(), RetainedCloneProgress { copied_items: 1, released_bytes: demand, ..Default::default() });
+        assert_eq!(matches!(step, RetainedCloneStep::Complete(_)), catalog.terminal_is_empty());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
+        let completed_lanes=(index+1)/fixture["extentsPerLane"].as_u64().unwrap() as usize;
+        assert_eq!(catalog.admitted_items(), (lanes.len() - completed_lanes) * page_slots);
         let resident = [catalog.applied_edit_ids.capacity(), catalog.redo_edit_ids.capacity(), catalog.cursor_applied_edit_ids.capacity(), catalog.cursor_redo_edit_ids.capacity(), catalog.applied_revision.capacity(), catalog.redo_revision.capacity()];
-        assert_eq!(resident, std::array::from_fn(|lane| if lane <= index { 0 } else { page_slots }));
+        assert_eq!(resident, std::array::from_fn(|lane| if lane < completed_lanes { 0 } else { page_slots }));
+        total_released += demand;
     }
     assert!(catalog.terminal_is_empty());
     assert_eq!(catalog.next_release_byte_demand().unwrap(), 0);
@@ -81,7 +95,7 @@ fn retained_initialization_catalog_birth_denial_and_cancellation_preserve_every_
         }
         assert_eq!(catalog.admission_is_complete(), cancel_after == 6);
         let mut freed = 0;
-        for _ in 0..12 {
+        for _ in 0..lanes_close_turns(&fixture) {
             if catalog.terminal_is_empty() { break; }
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| catalog.close_step(policy).unwrap());
             assert!(step.progress().fits(policy));
@@ -94,3 +108,5 @@ fn retained_initialization_catalog_birth_denial_and_cancellation_preserve_every_
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     }
 }
+
+fn lanes_close_turns(fixture:&serde_json::Value)->usize{fixture["lanes"].as_array().unwrap().len()*fixture["extentsPerLane"].as_u64().unwrap() as usize}

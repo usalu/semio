@@ -425,11 +425,13 @@ impl Drop for SnapshotReadLeaseRegistry {
 pub struct SnapshotReadLeaseRegistryOwner(Option<SnapshotReadRegistryAliasRetirement>);
 
 impl SnapshotReadLeaseRegistryOwner {
+    /// 🧳️ Receives the exact admitted registry handle without constructing another registry.
+    pub fn from_original(registry:SnapshotReadRegistryHandle)->Self{Self(Some(SnapshotReadRegistryAliasRetirement::new(registry)))}
     pub fn returned_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.returned_count()) }
+    pub fn has_returned(&self)->bool{self.0.as_ref().is_some_and(|owner|SnapshotReadLeaseRegistry::has_returned(owner))}
 
     pub fn new() -> Self { Self(Some(SnapshotReadRegistryAliasRetirement::new(SnapshotReadRegistryHandle::new()))) }
-    /// 🔬️ The registry holds no lease, outstanding or returned. The alias owner's own `ErasedSnapshotRetirement::terminal_is_empty` means only that its registry custody is already released, so both are named explicitly.
-    pub fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| ErasedSnapshotRetirement::terminal_is_empty(owner) || SnapshotReadLeaseRegistry::terminal_is_empty(owner)) }
+    pub fn terminal_is_empty(&self) -> bool { self.0.as_ref().is_none_or(|owner| SnapshotReadLeaseRegistry::terminal_is_empty(owner)) }
     pub fn closed(&self) -> bool { self.0.is_none() }
     pub fn occupied_count(&self) -> usize { self.0.as_ref().map_or(0, |owner| owner.occupied_count()) }
     pub fn empty_backing_demands(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> { self.0.as_ref().map_or(Ok(Default::default()), |owner| owner.empty_backing_demands()) }
@@ -438,7 +440,7 @@ impl SnapshotReadLeaseRegistryOwner {
     pub fn custody_byte_demand(&self) -> Result<usize, ValueError> { self.0.as_ref().map_or(Ok(0), |owner| owner.custody_byte_demand()) }
     /// 🪜️ Releases the registry's own custody one frame or page at a time once it is the sole terminal owner.
     pub fn close_custody_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !(ErasedSnapshotRetirement::terminal_is_empty(owner) || SnapshotReadLeaseRegistry::terminal_is_empty(owner))) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if self.0.as_ref().is_some_and(|owner| owner.strong_count() != 1 || !SnapshotReadLeaseRegistry::terminal_is_empty(owner)) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         snapshot_registry_alias_close_step(&mut self.0, grant)
     }
 }
@@ -526,6 +528,9 @@ impl<T: ?Sized> SnapshotRead<T> {
     pub fn belongs_to(&self, registry: &SnapshotReadRegistryHandle) -> bool { self.lease.as_ref().is_some_and(|lease| lease.registry.ptr_eq(registry)) }
     pub fn terminal_is_empty(&self) -> bool { self.owner.is_none() && self.lease.is_none() }
     pub fn lease_identity(&self) -> Option<(usize, u16, u64)> { self.lease.as_ref().map(|lease| (lease.registry.identity(), lease.index, lease.generation)) }
+
+    /// 📏️ Quotes the captured read and the registry's original shared-root header.
+    pub fn capture_copy_byte_demand() -> usize { size_of::<Self>() + size_of::<Arc<T>>() }
 
     pub fn new(owner: Arc<T>, lease: SnapshotReadLease) -> Self {
         Self { owner: Some(owner), lease: Some(lease) }

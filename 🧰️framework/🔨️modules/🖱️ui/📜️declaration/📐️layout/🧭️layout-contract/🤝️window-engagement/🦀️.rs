@@ -4,7 +4,7 @@ use super::*;
 
 // #region layout
 //#region 🔖️WindowEngagement
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementOption {
@@ -26,7 +26,7 @@ pub struct WindowEngagementOption {
     pub action: Option<ActionDescriptor>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementInput {
@@ -56,7 +56,7 @@ pub struct WindowEngagementInput {
     pub on_abort: Option<ActionDescriptor>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementStatus {
@@ -64,7 +64,7 @@ pub struct WindowEngagementStatus {
     pub text: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementPossible {
@@ -78,7 +78,7 @@ pub struct WindowEngagementPossible {
     pub action: Option<ActionDescriptor>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementRingOption {
@@ -89,7 +89,7 @@ pub struct WindowEngagementRingOption {
     pub disabled: Option<bool>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementToggleGroupOption {
@@ -100,7 +100,7 @@ pub struct WindowEngagementToggleGroupOption {
     pub disabled: Option<bool>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagementSelectItem {
@@ -109,7 +109,7 @@ pub struct WindowEngagementSelectItem {
     pub label: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 #[value(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum WindowEngagementControl {
@@ -120,7 +120,7 @@ pub enum WindowEngagementControl {
     Select { id: Option<String>, label: Option<String>, value: Option<String>, placeholder: Option<String>, items: Vec<WindowEngagementSelectItem>, disabled: Option<bool>, on_change: Option<ActionDescriptor> },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowEngagement {
@@ -153,7 +153,7 @@ pub struct WindowEngagement {
 /// larger than `None` — boxing it would be a breaking public-API change (every construction/match
 /// site across ~30 plugins would need `Box::new`/deref updates), out of scope for a mechanical pass.
 #[allow(clippy::large_enum_variant, reason = "boxing is a breaking public API change, out of T1 scope")]
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "value")]
 #[value(rename_all = "camelCase", tag = "kind", content = "value")]
 pub enum WindowEngagementSlot {
@@ -186,7 +186,7 @@ pub fn default_viewport_engagement() -> WindowEngagement {
 /// 🎛️ Everything a window kind can expose beyond its rendered body — always present as a shape,
 /// empty collections/`WindowEngagementSlot::None` for windows that don't use a given facet.
 /// Replaces the previously separately-optional `measures`/`engagement` pair on `WindowKindDefinition`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowOptions {

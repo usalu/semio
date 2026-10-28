@@ -76,9 +76,9 @@ impl ArtifactViewer for DagViewer {
 })())
 }
 
-    fn initial_snapshot() -> DagSnapshot {
+    fn reference_birth()->Option<fn()->DagSnapshot>{Some(||{
         default_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `DagViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

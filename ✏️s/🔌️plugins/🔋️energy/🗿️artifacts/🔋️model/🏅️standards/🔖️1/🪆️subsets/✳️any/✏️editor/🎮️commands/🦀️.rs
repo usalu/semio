@@ -8,11 +8,11 @@ extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 extern crate semio_s_plugin_energy_engine_model as model;
 
-use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
+use semio_framework_diagnostic::{Fault, FaultCode, FaultOrigin};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 use crate::model::SurfaceClass;
-use semio_framework_plugin::UiAssemblyResult;
+use semio_framework_plugin_interaction::UiAssemblyResult;
 
 //#region 🏷️ActionIds
 /// 🏷️ Every dispatchable verb of this editor, exactly once. `set-node`/`set-cell` come from the two
@@ -35,6 +35,10 @@ pub const SET_SURFACE_PROPERTY_ACTION_ID: &str = "set-surface-property";
 pub const SET_FENESTRATION_PROPERTY_ACTION_ID: &str = "set-fenestration-property";
 pub const SET_ZONE_PROPERTY_ACTION_ID: &str = "set-zone-property";
 pub const SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID: &str = "set-glazing-material-property";
+pub const SET_LOAD_PROPERTY_ACTION_ID: &str = "set-load-property";
+pub const SET_SHADING_PROPERTY_ACTION_ID: &str = "set-shading-property";
+pub const SET_HVAC_PROPERTY_ACTION_ID: &str = "set-hvac-property";
+pub const SET_SPACE_PROPERTY_ACTION_ID: &str = "set-space-property";
 pub const SET_GAS_MATERIAL_PROPERTY_ACTION_ID: &str = "set-gas-material-property";
 pub const SET_SIMULATION_SETTINGS_ACTION_ID: &str = "set-simulation-settings";
 pub const SET_RESULT_FIELD_ACTION_ID: &str = "set-result-field";
@@ -47,6 +51,8 @@ pub const SET_CONSTRUCTION_PROPERTY_ACTION_ID: &str = "set-construction-property
 pub const SET_THERMOSTAT_SETPOINTS_ACTION_ID: &str = "set-thermostat-setpoints";
 pub const SET_SITE_ACTION_ID: &str = "set-site";
 pub const SET_RUN_PERIOD_ACTION_ID: &str = "set-run-period";
+pub const SELECT_WEATHER_FILE_ACTION_ID: &str = "select-weather-file";
+pub const CLEAR_WEATHER_FILE_ACTION_ID: &str = "clear-weather-file";
 /// 📚️ Framework-fixed id: the react shell's example picker and the wgpu shell both dispatch exactly
 /// `setActiveExample` with `{ exampleId }` (`🏛️ShellHost/🟦️.tsx` `dispatchActiveExample`,
 /// `🐚️Shell/🎯️targets/🧊️wgpu/🦀️.rs:6481`). It is camelCase, unlike this editor's own kebab verbs,
@@ -56,7 +62,7 @@ pub const SET_ACTIVE_EXAMPLE_ACTION_ID: &str = "setActiveExample";
 /// 🧵️ The complete retained-tool roster. Order is the declaration order of
 /// [`EnergyModelEditorCommand`] and is asserted equal to it, to the manifest's classification list
 /// and to the proof rows by `retained_roster_is_exact_and_exhaustive`.
-pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
+pub const ENERGY_MODEL_AUTHORED_TOOL_IDS: &[&str] = &[
     SET_NODE_ACTION_ID,
     SET_CELL_ACTION_ID,
     CREATE_ZONE_ACTION_ID,
@@ -76,9 +82,15 @@ pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &[
     SET_FENESTRATION_PROPERTY_ACTION_ID,
     SET_ZONE_PROPERTY_ACTION_ID,
     SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+    SET_LOAD_PROPERTY_ACTION_ID,
+    SET_SHADING_PROPERTY_ACTION_ID,
+    SET_HVAC_PROPERTY_ACTION_ID,
+    SET_SPACE_PROPERTY_ACTION_ID,
     SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
     SET_CAMERA_ACTION_ID,
     SET_CONSTRUCTION_PROPERTY_ACTION_ID,
+    SELECT_WEATHER_FILE_ACTION_ID,
+    CLEAR_WEATHER_FILE_ACTION_ID,
 ];
 
 /// ⚠️ The verbs that discard user content no later verb reconstructs — the two inspector deletes and
@@ -90,7 +102,7 @@ pub const ENERGY_MODEL_DESTRUCTIVE_ACTION_IDS: &[&str] = &[DELETE_ZONE_ACTION_ID
 /// 📬️ The twelve verbs that publish a semantic mutation into the document store. `setActiveExample`
 /// is deliberately NOT one of them — it swaps the whole document through `kernel::Effect::LoadDocument`
 /// (outside history), so it publishes to no store lane and declares `HostOnly`.
-pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
+pub const ENERGY_MODEL_AUTHORED_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_NODE_ACTION_ID,
     SET_CELL_ACTION_ID,
     CREATE_ZONE_ACTION_ID,
@@ -107,9 +119,26 @@ pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &[
     SET_FENESTRATION_PROPERTY_ACTION_ID,
     SET_ZONE_PROPERTY_ACTION_ID,
     SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+    SET_LOAD_PROPERTY_ACTION_ID,
+    SET_SHADING_PROPERTY_ACTION_ID,
+    SET_HVAC_PROPERTY_ACTION_ID,
+    SET_SPACE_PROPERTY_ACTION_ID,
     SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
     SET_CONSTRUCTION_PROPERTY_ACTION_ID,
+    SELECT_WEATHER_FILE_ACTION_ID,
+    CLEAR_WEATHER_FILE_ACTION_ID,
 ];
+pub const ENERGY_MODEL_NATIVE_DESCRIPTORS: &[protocol::MutationLeafDescriptor] = <semio_s_artifact_energy_model_mutations::EnergyModelMutation as protocol::Mutation<semio_s_artifact_energy_model_snapshot::EnergyModelSnapshot>>::DESCRIPTORS;
+const fn with_native_tools<const N: usize>(authored: &[&'static str]) -> [&'static str; N] {
+    let mut tools = [""; N];
+    let mut index = 0;
+    while index < authored.len() { tools[index] = authored[index]; index += 1; }
+    let mut native = 0;
+    while native < ENERGY_MODEL_NATIVE_DESCRIPTORS.len() { tools[index] = ENERGY_MODEL_NATIVE_DESCRIPTORS[native].aggregate_variant; native += 1; index += 1; }
+    tools
+}
+pub const ENERGY_MODEL_RETAINED_TOOL_IDS: &[&str] = &with_native_tools::<{ ENERGY_MODEL_AUTHORED_TOOL_IDS.len() + ENERGY_MODEL_NATIVE_DESCRIPTORS.len() }>(ENERGY_MODEL_AUTHORED_TOOL_IDS);
+pub const ENERGY_MODEL_DOCUMENT_TOOL_IDS: &[&str] = &with_native_tools::<{ ENERGY_MODEL_AUTHORED_DOCUMENT_TOOL_IDS.len() + ENERGY_MODEL_NATIVE_DESCRIPTORS.len() }>(ENERGY_MODEL_AUTHORED_DOCUMENT_TOOL_IDS);
 //#endregion 🏷️ActionIds
 
 //#region 🔖️Command
@@ -140,7 +169,7 @@ pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-material-property")]
     SetMaterialProperty { material: u32, property: String, value: String },
     #[dsl(key = "set-thermostat-setpoints")]
-    SetThermostatSetpoints { thermostat: u32, heating_schedule: u32, cooling_schedule: u32, heating_throttle_range_k: f64, cooling_throttle_range_k: f64 },
+    SetThermostatSetpoints { thermostat: u32, zone: u32, heating_schedule: u32, cooling_schedule: u32, heating_throttle_range_k: f64, cooling_throttle_range_k: f64 },
     #[dsl(key = "set-site")]
     SetSite { latitude_deg: Option<f64>, longitude_deg: Option<f64>, elevation_m: Option<f64>, time_zone_hours: Option<f64>, north_axis_deg: Option<f64> },
     #[dsl(key = "set-run-period")]
@@ -174,6 +203,16 @@ pub enum EnergyModelEditorCommand {
     #[dsl(key = "set-glazing-material-property")]
     SetGlazingMaterialProperty { material: u32, property: String, value: String },
     /// 💨️ One gas-gap field by name: its thickness, its fill gas, or its name.
+    #[dsl(key = "set-load-property")]
+    SetLoadProperty { load: u32, property: String, value: String },
+    #[dsl(key = "set-shading-property")]
+    SetShadingProperty { shading: u32, property: String, value: String },
+    #[dsl(key = "apply-native-mutation")]
+    ApplyNativeMutation { kind: String, #[dsl(statements)] mutation: Option<semio_s_artifact_energy_model_mutations::EnergyModelMutation> },
+    #[dsl(key = "set-hvac-property")]
+    SetHvacProperty { system: u32, property: String, value: String },
+    #[dsl(key = "set-space-property")]
+    SetSpaceProperty { space: u32, property: String, value: String },
     #[dsl(key = "set-gas-material-property")]
     SetGasMaterialProperty { material: u32, property: String, value: String },
     /// 🎥️ The 3d window's orbit pose, as the canonical `{position,target,zoom,up?}` JSON the react
@@ -185,6 +224,10 @@ pub enum EnergyModelEditorCommand {
     /// LAST so no existing `OpBinary` ordinal moves.
     #[dsl(key = "set-construction-property")]
     SetConstructionProperty { construction: u32, property: String, value: String },
+    #[dsl(key = "select-weather-file")]
+    SelectWeatherFile { value: String },
+    #[dsl(key = "clear-weather-file")]
+    ClearWeatherFile,
 }
 
 impl EnergyModelEditorCommand {
@@ -210,9 +253,16 @@ impl EnergyModelEditorCommand {
             Self::SetFenestrationProperty { .. } => SET_FENESTRATION_PROPERTY_ACTION_ID,
             Self::SetZoneProperty { .. } => SET_ZONE_PROPERTY_ACTION_ID,
             Self::SetGlazingMaterialProperty { .. } => SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID,
+            Self::SetLoadProperty { .. } => SET_LOAD_PROPERTY_ACTION_ID,
+            Self::SetShadingProperty { .. } => SET_SHADING_PROPERTY_ACTION_ID,
+            Self::ApplyNativeMutation { kind, .. } => ENERGY_MODEL_NATIVE_DESCRIPTORS.iter().find(|descriptor| descriptor.semantic_kind == kind).map_or("native-mutation.invalid", |descriptor| descriptor.aggregate_variant),
+            Self::SetHvacProperty { .. } => SET_HVAC_PROPERTY_ACTION_ID,
+            Self::SetSpaceProperty { .. } => SET_SPACE_PROPERTY_ACTION_ID,
             Self::SetGasMaterialProperty { .. } => SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
             Self::SetCamera { .. } => SET_CAMERA_ACTION_ID,
             Self::SetConstructionProperty { .. } => SET_CONSTRUCTION_PROPERTY_ACTION_ID,
+            Self::SelectWeatherFile { .. } => SELECT_WEATHER_FILE_ACTION_ID,
+            Self::ClearWeatherFile => CLEAR_WEATHER_FILE_ACTION_ID,
         }
     }
 }
@@ -263,6 +313,10 @@ pub mod args_bridge {
         let f64_or = |key: &str, fallback: f64| number(args, key).unwrap_or(fallback);
         let u32_or = |key: &str, fallback: u32| number(args, key).map_or(fallback, |value| value as u32);
         let bool_or = |key: &str, fallback: bool| flag(args, key).unwrap_or(fallback);
+        if let Some(descriptor) = super::ENERGY_MODEL_NATIVE_DESCRIPTORS.iter().find(|descriptor| descriptor.aggregate_variant == action) {
+            let _ = descriptor;
+            return Err(Fault::from("app.command.original-admission-required"));
+        }
         Ok(match action {
             super::SET_NODE_ACTION_ID => Command::SetStructureField { field: text(args, "nodeId").unwrap_or_else(|| text_or("id", "")), value: text_or("value", "") },
             super::SET_CELL_ACTION_ID => Command::SetZoneCell { row: u32_or("row", 0), column: text_or("column", ""), value: text_or("value", "") },
@@ -283,6 +337,7 @@ pub mod args_bridge {
                 let merged = |key: &str, fallback: f64| if edited.as_deref() == Some(key) { number(args, "value").unwrap_or(fallback) } else { f64_or(key, fallback) };
                 Command::SetThermostatSetpoints {
                     thermostat: u32_or("thermostat", u32_or("id", 0)),
+                    zone: merged("zone", 0.0) as u32,
                     heating_schedule: merged("heatingSchedule", 0.0) as u32,
                     cooling_schedule: merged("coolingSchedule", 0.0) as u32,
                     heating_throttle_range_k: merged("heatingThrottleRangeK", 2.0),
@@ -298,6 +353,8 @@ pub mod args_bridge {
                 };
                 Command::SetSite { latitude_deg: field("latitudeDeg"), longitude_deg: field("longitudeDeg"), elevation_m: field("elevationM"), time_zone_hours: field("timeZoneHours"), north_axis_deg: field("northAxisDeg") }
             }
+            super::SELECT_WEATHER_FILE_ACTION_ID => Command::SelectWeatherFile { value: text_or("value", "") },
+            super::CLEAR_WEATHER_FILE_ACTION_ID => Command::ClearWeatherFile,
             super::SET_RUN_PERIOD_ACTION_ID => Command::SetRunPeriod { start_month: u32_or("startMonth", 1), start_day: u32_or("startDay", 1), end_month: u32_or("endMonth", 12), end_day: u32_or("endDay", 31) },
             super::SET_ACTIVE_EXAMPLE_ACTION_ID => Command::SetActiveExample { example_id: text_or("exampleId", "") },
             super::SET_SURFACE_PROPERTY_ACTION_ID => Command::SetSurfaceProperty {
@@ -312,6 +369,18 @@ pub mod args_bridge {
             super::SET_ZONE_PROPERTY_ACTION_ID => Command::SetZoneProperty { zone: u32_or("zone", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") },
             super::SET_GLAZING_MATERIAL_PROPERTY_ACTION_ID => {
                 Command::SetGlazingMaterialProperty { material: u32_or("material", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_HVAC_PROPERTY_ACTION_ID => {
+                Command::SetHvacProperty { system: u32_or("system", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_SPACE_PROPERTY_ACTION_ID => {
+                Command::SetSpaceProperty { space: u32_or("space", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_LOAD_PROPERTY_ACTION_ID => {
+                Command::SetLoadProperty { load: u32_or("load", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
+            }
+            super::SET_SHADING_PROPERTY_ACTION_ID => {
+                Command::SetShadingProperty { shading: u32_or("shading", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
             }
             super::SET_GAS_MATERIAL_PROPERTY_ACTION_ID => {
                 Command::SetGasMaterialProperty { material: u32_or("material", u32_or("id", 0)), property: text(args, "property").unwrap_or_else(|| text_or("field", "")), value: text_or("value", "") }
@@ -388,12 +457,12 @@ pub const ENERGY_MODEL_EDITOR_CONTROLLER_ID: &str = "s.energy.model@1/*#editor";
 
 /// 🏷️ Admits resolved energy text into the semantic UI contract.
 pub fn ui_label(value: impl AsRef<str>) -> UiAssemblyResult<semio_framework_ui_contract::Label> {
-    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
+    semio_framework_ui_contract::Label::try_from(value.as_ref()).map_err(|_| semio_framework_plugin_ownership::sdk_fault::PluginAssemblyError::new("ui.fixed-capacity", "energy UI label admission failed"))
 }
 
 /// 🎛️ Mints one energy-editor action for a panel row or an inspector control binding.
-pub fn energy_model_action(action: &str, args: Option<semio_framework_plugin::UiValue>) -> UiAssemblyResult<(semio_framework_plugin::ActionId, Option<semio_framework_plugin::UiValue>)> {
-    semio_framework_plugin::ActionFactory::new(ENERGY_MODEL_EDITOR_CONTROLLER_ID).action(action, args)
+pub fn energy_model_action(action: &str, args: Option<semio_framework_ui_contract::UiValue>) -> UiAssemblyResult<(semio_framework_ui_contract::ActionId, Option<semio_framework_ui_contract::UiValue>)> {
+    semio_framework_plugin_window_kits::ActionFactory::new(ENERGY_MODEL_EDITOR_CONTROLLER_ID).action(action, args)
 }
 
 /// 🟫️ Wire spelling of a [`SurfaceClass`] — the inverse of [`surface_class_from_id`], so the
@@ -475,18 +544,20 @@ pub const SURFACE_ROUGHNESS_IDS: &[&str] = &["veryRough", "rough", "mediumRough"
 /// `structure::actions()` or `zones::actions()`, it belongs to that window ALONE and the shell
 /// refuses it from anywhere else with `window kind energy.model.3d does not own action
 /// set-fenestration-property` — exactly the defect the first browser probe of this ticket hit.
-fn inspector_action(id: &str, en: &str, de: &str, args: Vec<semio_framework_plugin::ActionArgDef>) -> semio_framework_plugin::ActionDefinition {
-    semio_framework_plugin::ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), semio_framework_plugin::ActionKind::Mutation).with_args(args)
+fn inspector_action(id: &str, en: &str, de: &str, args: Vec<semio_framework::ActionArgDef>) -> semio_framework::ActionDefinition {
+    semio_framework::ActionDefinition::bounded_catalog(id, LocalizedLabel::native(en, de), semio_framework::ActionKind::Mutation).with_args(args)
 }
 
 /// 🔍️ Every verb the inspection panel can dispatch, in one place. They must be reachable while ANY
 /// window kind is active — the structure tree, the zones table, the simulation window and the 3d
 /// model window alike.
-pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefinition> {
-    use semio_framework_plugin::ActionArgDef as Arg;
+pub fn inspector_action_definitions() -> Vec<semio_framework::ActionDefinition> {
+    use semio_framework::ActionArgDef as Arg;
     let property = || Arg::text("property", LocalizedLabel::native("Property", "Eigenschaft")).required();
     let text_value = || Arg::text("value", LocalizedLabel::native("Value", "Wert")).required();
-    vec![
+    let mut actions = vec![
+        inspector_action(SELECT_WEATHER_FILE_ACTION_ID,"Select weather artifact","Wetterartefakt auswählen",vec![Arg::text("value",LocalizedLabel::native("EPW artifact address","EPW-Artefaktadresse")).required()]),
+        inspector_action(CLEAR_WEATHER_FILE_ACTION_ID,"Clear weather artifact","Wetterartefakt lösen",Vec::new()),
         inspector_action(
             SET_SURFACE_PROPERTY_ACTION_ID,
             "Set surface property",
@@ -511,6 +582,10 @@ pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
             "Verglasungsmaterial-Eigenschaft setzen",
             vec![Arg::number("material", LocalizedLabel::native("Glazing material id", "Verglasungsmaterial-Id")).required(), property(), text_value()],
         ),
+        inspector_action(SET_LOAD_PROPERTY_ACTION_ID, "Set load property", "Lasteigenschaft setzen", vec![Arg::number("load", LocalizedLabel::native("Load id", "Last-Id")).required(), property(), text_value()]),
+        inspector_action(SET_SHADING_PROPERTY_ACTION_ID, "Set shading property", "Verschattungseigenschaft setzen", vec![Arg::number("shading", LocalizedLabel::native("Shading surface id", "Verschattungsflächen-Id")).required(), property(), text_value()]),
+        inspector_action(SET_HVAC_PROPERTY_ACTION_ID, "Set HVAC property", "HLK-Eigenschaft setzen", vec![Arg::number("system", LocalizedLabel::native("System id", "System-Id")).required(), property(), text_value()]),
+        inspector_action(SET_SPACE_PROPERTY_ACTION_ID, "Set space property", "Raumeigenschaft setzen", vec![Arg::number("space", LocalizedLabel::native("Space id", "Raum-Id")).required(), property(), text_value()]),
         inspector_action(
             SET_GAS_MATERIAL_PROPERTY_ACTION_ID,
             "Set gas gap property",
@@ -521,7 +596,7 @@ pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
             SET_MATERIAL_PROPERTY_ACTION_ID,
             "Set material property",
             "Materialeigenschaft setzen",
-            vec![Arg::number("material", LocalizedLabel::native("Material id", "Material-Id")).required(), property(), Arg::number("value", LocalizedLabel::native("Value", "Wert")).required()],
+            vec![Arg::number("material", LocalizedLabel::native("Material id", "Material-Id")).required(), property(), text_value()],
         ),
         inspector_action(
             SET_THERMOSTAT_SETPOINTS_ACTION_ID,
@@ -529,6 +604,7 @@ pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
             "Thermostat-Sollwerte setzen",
             vec![
                 Arg::number("thermostat", LocalizedLabel::native("Thermostat id", "Thermostat-Id")).required(),
+                Arg::number("zone", LocalizedLabel::native("Thermal zone", "Thermische Zone")).required(),
                 Arg::number("heatingSchedule", LocalizedLabel::native("Heating setpoint schedule", "Heiz-Sollwertprofil")).required(),
                 Arg::number("coolingSchedule", LocalizedLabel::native("Cooling setpoint schedule", "Kühl-Sollwertprofil")).required(),
                 Arg::number("heatingThrottleRangeK", LocalizedLabel::native("Heating throttle range (K)", "Heiz-Regelbereich (K)")),
@@ -555,7 +631,69 @@ pub fn inspector_action_definitions() -> Vec<semio_framework_plugin::ActionDefin
             "Konstruktionseigenschaft setzen",
             vec![Arg::number("construction", LocalizedLabel::native("Construction id", "Konstruktions-Id")).required(), property(), text_value()],
         ),
-    ]
+    ];
+    actions.extend(native_mutation_actions());
+    actions
 }
 
 //#endregion 🔍️InspectorActions
+
+/// 🧬️ Each native mutation receives one precise schema-derived action form and one retained tool identity.
+pub fn native_mutation_actions() -> Vec<semio_framework::ActionDefinition> {
+    use protocol::Mutation;
+    use semio_s_artifact_energy_model_mutations::EnergyModelMutation;
+    use semio_s_artifact_energy_model_snapshot::EnergyModelSnapshot;
+    use semio_framework::{ActionArgDef, ArgSchema};
+    let schemas = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::INPUT_SCHEMAS;
+    let documents = <EnergyModelMutation as Mutation<EnergyModelSnapshot>>::INPUT_SCHEMA_DOCUMENTS;
+    let resolver = |id: &str| documents.iter().flat_map(|row| row.iter()).find_map(|document| {
+        let value: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(document, semio_framework_pack_json::JsonMemberPolicy::Reject).ok()?;
+        (value.get("$id").and_then(semio_framework_value::DslValue::as_str) == Some(id)).then_some(value)
+    }).or_else(|| semio_framework_manifest_mutation_inputs::registered_input_schema_document(id));
+    fn schema_keys(schema: &mut ArgSchema) {
+        match schema {
+            ArgSchema::Object { fields } => action_keys(fields),
+            ArgSchema::Array { items, .. } => schema_keys(items),
+            _ => {}
+        }
+    }
+    fn action_keys(fields: &mut [ActionArgDef]) {
+        for field in fields {
+            field.id = field.id.rsplit('/').next().unwrap_or(&field.id).replace("~1", "/").replace("~0", "~");
+            schema_keys(&mut field.schema);
+        }
+    }
+    ENERGY_MODEL_NATIVE_DESCRIPTORS.iter().zip(schemas).map(|(descriptor, schema)| {
+        let mut fields = semio_framework_manifest_mutation_inputs::mutation_input_defs(schema, &resolver).unwrap_or_else(|error| panic!("{} input schema refused: {error:?}", descriptor.semantic_kind));
+        action_keys(&mut fields);
+        let mut action = inspector_action(descriptor.aggregate_variant, descriptor.display_name, descriptor.display_name, fields);
+        let verb = match descriptor.semantic_kind.split('-').next().unwrap_or("") {
+            "create" => "Erstellen", "delete" | "remove" => "Entfernen", "change" => "Ändern", "rename" => "Umbenennen", "replace" => "Ersetzen", "add" => "Hinzufügen", "insert" => "Einfügen", "reorder" => "Neu ordnen", "bind" => "Zuordnen", "clear" => "Löschen", _ => "Bearbeiten",
+        };
+        let entity = [
+            ("fault", "Fehler"), ("daily-schedule", "Tagesprofil"), ("setpoint-manager", "Sollwertmanager"), ("infiltration", "Infiltration"), ("fenestration", "Fenster"), ("annual-schedule", "Jahresprofil"), ("weekly-schedule", "Wochenprofil"), ("lighting-gain", "Beleuchtungslast"), ("sizing-object", "Auslegungsobjekt"), ("room-air-model", "Raumluftmodell"), ("constant-schedule", "Konstantes Profil"), ("plant-loop", "Anlagenkreislauf"), ("shw-system", "Warmwassersystem"), ("battery", "Batterie"), ("refrigeration-system", "Kältesystem"), ("ideal-loads-system", "Ideales Lastsystem"), ("outdoor-air-system", "Außenluftsystem"), ("mechanical-ventilation", "Mechanische Lüftung"), ("electrical-load-center", "Elektrische Lastzentrale"), ("water-system", "Wassersystem"), ("equipment-gain", "Gerätelast"), ("air-loop", "Luftkreislauf"), ("time-series-schedule", "Zeitreihenprofil"), ("daylight-zone", "Tageslichtzone"), ("humidistat", "Feuchteregler"), ("surface", "Fläche"), ("glazing-material", "Verglasungsmaterial"), ("gas-material", "Gaszwischenraum"), ("material", "Material"), ("thermostat", "Thermostat"), ("shading-surface", "Verschattungsfläche"), ("thermal-enclosure", "Thermische Hülle"), ("pv-system", "PV-System"), ("solar-thermal-system", "Solarthermieanlage"), ("people-gain", "Personenlast"), ("zone-equipment", "Zonenausstattung"), ("zone", "Zone"), ("construction", "Konstruktion"), ("space", "Raum"), ("space-list", "Raumliste"), ("ground", "Erdboden"), ("site", "Standort"), ("run", "Simulationszeitraum"), ("airflow-network", "Luftströmungsnetz"), ("output-variable", "Ausgabegröße"), ("model", "Energiemodell"),
+        ].into_iter().filter(|(kind, _)| descriptor.semantic_kind.contains(kind)).max_by_key(|(kind, _)| kind.len()).map_or("Energiemodell", |(_, label)| label);
+        action.label = LocalizedLabel::from_fn(|terminology, locale| {
+            if locale == semio_framework_ui_locale::Locale::De {
+                let field = action.args.iter().find(|field| field.id != "id" && field.id != "index").map(|field| field.label.resolve(terminology, locale));
+                field.map_or_else(|| format!("{verb} · {entity}"), |field| format!("{verb} · {entity} · {field}"))
+            } else { descriptor.display_name.to_string() }
+        });
+        action.category = Some("🔋".to_string());
+        if descriptor.semantic_kind.starts_with("delete-") { action = action.destructive(); }
+        action
+    }).collect()
+}
+
+#[path="🛬️action/🦀️.rs"]pub mod original_action;
+impl original_action::EnergyOriginalCommand<semio_s_artifact_energy_model_mutations::EnergyModelMutation> for EnergyModelEditorCommand{
+ fn descriptor(index:usize)->Option<(&'static str,&'static str,semio_s_artifact_energy_model_native_mutations::action::NativeActionFactory<semio_s_artifact_energy_model_mutations::EnergyModelMutation>)>{let descriptor=ENERGY_MODEL_NATIVE_DESCRIPTORS.get(index)?;let(action,factory)=semio_s_artifact_energy_model_mutations::EnergyModelMutation::ORIGINAL_ACTION_RECEIVERS.get(index)?;if *action!=descriptor.aggregate_variant{return None}Some((action,descriptor.semantic_kind,*factory))}
+ fn from_original_mutation(kind:String,mutation:semio_s_artifact_energy_model_mutations::EnergyModelMutation)->Self{Self::ApplyNativeMutation{kind,mutation:Some(mutation)}}
+ fn original_wire(&self)->semio_framework_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource<'_>{let(_,ordinal,spec)=semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_identity(self);semio_framework_plugin_command::command_admission::original_typed_command::original_wire::ArtifactPreparedOperationSource::Pack{tag:ordinal as u64,body:self,spec}}
+ const MAXIMUM_WIRE_BYTES:usize=262144;
+}
+impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for EnergyModelEditorCommand{
+ fn projection_view(&self,path:&[usize])->Result<semio_framework_dsl_record::native_encoding::FieldProjectionView<'_>,semio_framework_value::ValueError>{semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_view(self,path)}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{semio_framework_dsl_record::BorrowedDslVariants::projected_borrowed_variant_key(self,path,index)}
+}
+pub static ENERGY_ORIGINAL_ACTION_FACTORY:original_action::EnergyActionFactory<EnergyModelEditorCommand,semio_s_artifact_energy_model_mutations::EnergyModelMutation>=original_action::EnergyActionFactory::new();

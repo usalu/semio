@@ -5,7 +5,7 @@
 
 use crate::model::Model;
 use crate::mutations::EnergyModelMutation;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 async fn holds(mut model: Model, setup: impl FnOnce(&mut Model), mutation: EnergyModelMutation) {
     setup(&mut model);

@@ -135,7 +135,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.note_time_travel_changed(true, true);
         }
         let mut dialogs = Vec::new();
-        self.perform_time_travel_effects(effects, None, &mut dialogs, identity).await?;
+        self.perform_time_travel_effects(effects, None, &mut dialogs, identity,None).await?;
         Ok(true)
     }
 

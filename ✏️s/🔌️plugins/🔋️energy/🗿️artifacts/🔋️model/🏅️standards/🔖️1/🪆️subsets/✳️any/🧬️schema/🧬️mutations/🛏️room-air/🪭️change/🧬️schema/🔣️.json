@@ -72,5 +72,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateRoomAirModelAssignment",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "room_air_models",
+    "field": "model",
+    "input": "new_model",
+    "key": "zone_id",
+    "labels": {
+      "en": "Change room air model assignment: Room air model",
+      "de": "Raumluftmodell ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "room-air-model-assignment",
+      "kind": "change-room-air-model",
+      "record": "ChangedRoomAirModel"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Room air model violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed room air model assignment does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The room air model assignment already carries this room air model value."
+      }
+    }
   }
 }

@@ -48,6 +48,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateGlazingMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "glazing_materials",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": false,
+    "labels": {
+      "en": "Rename glazing material",
+      "de": "Glasmaterial umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "glazing-material",
+      "kind": "rename-glazing-material",
+      "record": "RenamedGlazingMaterial"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A glazing material name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another glazing material already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed glazing material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The glazing material already has this name."
       }
     }
   }

@@ -587,9 +587,9 @@ impl ArtifactEditor for Grid3dEditor {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn initial_snapshot() -> Grid3dSnapshot {
+    fn reference_birth()->Option<fn()->Grid3dSnapshot>{Some(||{
         crate::examples::blocks::snapshot()
-    }
+    })}
 
     fn register_window_config_owners(registry: &mut semio_framework_plugin::WindowConfigOwnerRegistry) -> Result<(), Fault> {
         crate::editor::grid3d::window::register_config(registry)

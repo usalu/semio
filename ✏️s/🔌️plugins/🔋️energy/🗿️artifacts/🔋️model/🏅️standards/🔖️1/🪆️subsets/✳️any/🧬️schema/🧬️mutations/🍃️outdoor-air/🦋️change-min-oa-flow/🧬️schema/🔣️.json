@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateOutdoorAirSystem",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "outdoor_air_systems",
+    "field": "min_oa_flow_m3_s",
+    "input": "new_min_oa_flow_m3_s",
+    "key": "id",
+    "labels": {
+      "en": "Change outdoor air system: Minimum outdoor air flow",
+      "de": "Minimaler Außenluftvolumenstrom ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "outdoor-air-system",
+      "kind": "change-outdoor-air-system-min-oa-flow",
+      "record": "ChangedOutdoorAirSystemMinOaFlow"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Minimum outdoor air flow violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed outdoor air system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The outdoor air system already carries this minimum outdoor air flow value."
+      }
+    }
   }
 }

@@ -215,6 +215,7 @@ pub async fn encode_app_frame(frame: &AppFrame) -> Vec<u8> {
             if let Some(id) = &identity.parent_document_id {
                 protocol::write_str(&mut out, id);
             }
+            protocol::write_varint_u64(&mut out, identity.base_revision);
         }
         AppFrame::ChildHeads { in_reply_to, entries } => {
             out.push(32);
@@ -346,7 +347,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol::Protoc
             terminal: protocol::read_bool(bytes, &mut pos)?,
         },
         31 => {
-            if bytes.len() > 2_070 {
+            if bytes.len() > 2_077 {
                 return Err(malformed("channel document identity", pos as u64, "identity frame byte budget exceeded"));
             }
             let in_reply_to = protocol::read_varint_u64(bytes, &mut pos)?;
@@ -363,7 +364,7 @@ pub async fn decode_app_frame(bytes: &[u8]) -> Result<AppFrame, protocol::Protoc
                 }
                 Some(id)
             } else { None };
-            AppFrame::DocumentIdentity { in_reply_to, identity: AppDocumentIdentity { app_instance_id, parent_document_id } }
+            AppFrame::DocumentIdentity { in_reply_to, identity: AppDocumentIdentity { app_instance_id, parent_document_id, base_revision: protocol::read_varint_u64(bytes, &mut pos)? } }
         }
         32 => AppFrame::ChildHeads { in_reply_to: protocol::read_varint_u64(bytes, &mut pos)?, entries: read_vec_child_head(bytes, &mut pos)? },
         other => return Err(malformed("channel app-frame tag", pos as u64, &format!("unknown tag {other:#x}"))),

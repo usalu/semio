@@ -1,0 +1,77 @@
+{
+  "contract": "semio.energy.original-delete-setpoint/v1",
+  "collection": "setpoint_managers",
+  "existingRows": [
+    {
+      "id": 100,
+      "name": "existing",
+      "kind": {
+        "OutdoorAirReset": {
+          "low_outdoor_c": -15,
+          "high_outdoor_c": 25,
+          "low_setpoint_c": 19,
+          "high_setpoint_c": 11
+        }
+      },
+      "schedule_id": 1
+    }
+  ],
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1
+        }
+      ],
+      "daily": [],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 100
+      },
+      "outcome": "changed",
+      "after": []
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "inverses": {
+    "100": {
+      "id": 100,
+      "name": "existing",
+      "kind": "OutdoorAirReset",
+      "lowOutdoorC": -15.0,
+      "highOutdoorC": 25.0,
+      "lowSetpointC": 19.0,
+      "highSetpointC": 11.0,
+      "schedulePresent": true,
+      "scheduleId": 1,
+      "index": 0
+    }
+  },
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

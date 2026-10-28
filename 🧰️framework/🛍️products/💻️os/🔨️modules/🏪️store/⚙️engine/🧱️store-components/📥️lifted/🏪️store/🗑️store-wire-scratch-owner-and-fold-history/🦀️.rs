@@ -16,8 +16,8 @@ use super::*;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreWire<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn durable_group_read_root(&self) -> Option<&semio_framework_os_store_durable_group_wire::lifted_durable_group::ArtifactStoreDurableGroupRootV1<P, Mutation>> {
         self.durable_group_root.as_ref().filter(|root| root.visibility.committed() && !root.adopted)
@@ -67,6 +67,7 @@ where
     }
 
     pub fn close_take_backbone_retirement(&mut self, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
+        if !self.original_outbox.terminal_is_empty(){return ArtifactStoreBackboneRetirement::admit_original_outbox(&mut self.original_outbox,grant)}
         ArtifactStoreBackboneRetirement::admit_attached(&mut self.member_inbox, &mut self.backbone, grant)
     }
 
@@ -109,14 +110,14 @@ where
             let mut encoded = Vec::new();
             semio_framework_os_spr::encode_envelope(&event, &mut encoded);
             if !batch.is_empty() && batch_bytes + encoded.len() > semio_framework_os_spr::DOCUMENT_BACKBONE_BATCH_MAXIMUM_BYTES / 2 {
-                messages.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&std::mem::take(&mut batch)) });
+                messages.push(BackboneMessage::from_envelopes(&std::mem::take(&mut batch)));
                 batch_bytes = 0;
             }
             batch_bytes += encoded.len();
             batch.push(event);
         }
         if !batch.is_empty() {
-            messages.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&batch) });
+            messages.push(BackboneMessage::from_envelopes(&batch));
         }
         let Some(mut backbone) = self.backbone.take() else { return Ok(()) };
         let mut result = Ok(());
@@ -213,7 +214,7 @@ impl<T> Drop for ScratchOwner<T> {
 pub async fn fold_history<P, Mutation, I, S>(envelope: &ArtifactEnvelope<P, Mutation>, applied_edit_ids: I, supersessions: &EffectiveSupersessions) -> Result<P, VcsError>
 where
     P: Clone,
-    Mutation: super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
+    Mutation: super::Mutation<P> + OpBinary+protocol::ColdMutation<P>,
     I: IntoIterator<Item = S>,
     S: AsRef<str>,
 {

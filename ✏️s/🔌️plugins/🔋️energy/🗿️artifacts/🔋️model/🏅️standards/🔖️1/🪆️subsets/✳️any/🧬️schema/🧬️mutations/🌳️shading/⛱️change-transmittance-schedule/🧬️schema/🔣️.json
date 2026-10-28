@@ -62,5 +62,56 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "optional-reference",
+    "row": "StateShadingSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "shading_surfaces",
+    "field": "transmittance_schedule_id",
+    "input": "new_transmittance_schedule_id",
+    "key": "id",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "referenceTarget": "key",
+    "labels": {
+      "en": "Change optional schedule",
+      "de": "Optionalen Zeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "schedule-reference",
+      "kind": "change-transmittance-schedule-id",
+      "record": "ChangedOptionalSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "An absent schedule carries the identity zero."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed object does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced schedule does not exist in the authored schedule collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The addressed object already has this schedule."
+      }
+    }
   }
 }

@@ -1,6 +1,6 @@
 //! 🛠️ Constructors of the energy mutation fixtures: the BESTEST 600 zone, snapshot, link, space, material, glazing, gas, construction, surface, window and shading builders. See [`super`].
 
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 /// 🏠️ One conditioned zone with the BESTEST 600 envelope's own air volume.
 pub fn zone(id: u32, name: &str) -> crate::model::Zone {

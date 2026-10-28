@@ -122,7 +122,7 @@ impl<T:RetireOwned+Sync> Drop for RegistryRetirement<T> {fn drop(&mut self){asse
 impl<T:RetireOwned+Sync> RetireOwned for ReadOwnershipRegistry<T> {
     fn retirement(self)->Box<dyn RetirementCursor> {Box::new(RegistryRetirement {owner:ManuallyDrop::new(self),active:None})}
     fn retirement_birth_bytes(&self)->Option<usize> {Some(size_of::<RegistryRetirement<T>>())}
-    fn controlled_retirement_supported()->bool {T::controlled_retirement_supported()}
+    fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()}
 }
 
 impl<T:RetireOwned+Sync> crate::FactoryPayloadRetirement for ReadOwnershipRegistry<T> {

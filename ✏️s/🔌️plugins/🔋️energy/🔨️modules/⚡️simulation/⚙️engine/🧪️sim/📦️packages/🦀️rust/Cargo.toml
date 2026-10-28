@@ -20,7 +20,6 @@ testkit = []
 testing = ["semio-framework-job/testkit"]
 
 [dependencies]
-semio-framework-os-kernel = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust" }
 semio-framework-job = { workspace = true }
 semio-framework-job-payload = { workspace = true }
 semio-framework-value = { workspace = true }
@@ -45,5 +44,6 @@ semio-framework-os-store-canonical-json = { path = "../../../../../../../../../�
 
 
 [dev-dependencies]
+semio-framework-job = { workspace = true, features = ["testkit"] }
 semio-framework-trace = { path = "../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 serde_json = { workspace = true }

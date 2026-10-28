@@ -47,5 +47,49 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "output-variable-row",
+    "intent": "remove",
+    "identity": [
+      "name",
+      "key"
+    ],
+    "row": "StateOutputVariableSpec",
+    "branchType": "ModelOutputState",
+    "branch": "outputs",
+    "collection": "output_variables",
+    "labels": {
+      "en": "Remove output variable",
+      "de": "Ausgabevariable entfernen"
+    },
+    "semantics": {
+      "verb": "remove",
+      "entity": "output-variable",
+      "kind": "remove-output-variable",
+      "record": "RemovedOutputVariable"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "An output variable name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The output variable is already registered for this key."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The output registration or insertion position is absent."
+      },
+      "unchanged": {
+        "level": "info",
+        "code": "mutation.no-change",
+        "message": "The output registration is unchanged."
+      }
+    }
   }
 }

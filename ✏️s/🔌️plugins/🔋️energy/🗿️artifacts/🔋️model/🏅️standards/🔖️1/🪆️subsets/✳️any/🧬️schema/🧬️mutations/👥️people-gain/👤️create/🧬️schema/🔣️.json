@@ -218,5 +218,137 @@
         "order": 90
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StatePeopleGain",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "schedule_id",
+        "input": "schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "activity_schedule_id",
+        "input": "activity_schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "people_per_area",
+        "input": "people_per_area",
+        "storage": "fixed"
+      },
+      {
+        "field": "sensible_fraction",
+        "input": "sensible_fraction",
+        "storage": "fixed"
+      },
+      {
+        "field": "latent_fraction",
+        "input": "latent_fraction",
+        "storage": "fixed"
+      },
+      {
+        "field": "radiant_fraction",
+        "input": "radiant_fraction",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StatePeopleGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "people",
+    "key": "id",
+    "inverse": "DeletePeopleGain",
+    "labels": {
+      "en": "Create People Gain at index",
+      "de": "Personenwärmegewinn an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "people-gain",
+      "kind": "create-people-gain",
+      "record": "CreatedPeopleGain"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "activity_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "after-rules"
   }
 }

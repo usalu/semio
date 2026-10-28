@@ -22,6 +22,8 @@ workspace = true
 path = "../../🦀️.rs"
 
 [features]
+default = ["deflate"]
+deflate = ["semio-framework-os-store-engine-stage/deflate"]
 durable-group-testing = ["semio-framework-os-store-durable-group-wire/durable-group-testing"]
 
 [dependencies]

@@ -17,8 +17,8 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🔄️ Invalidates projections after a verified replay that did not otherwise change history.
     pub fn invalidate_after_replay(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>) -> Result<ArtifactProjectionInvalidation, VcsError> {
@@ -126,7 +126,7 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
 
     /// 📥️ Admits remote history transitions the causal graph released: known ones must repeat
     /// their established payload, new ones join the log, and the projection follows the fold.
-    pub async fn admit_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> {
+    pub async fn admit_remote_transitions(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let mut fresh: Vec<semio_framework_os_spr::MutationEnvelope> = Vec::new();
         for envelope in transitions {
             store_log.admit_history_shape(std::slice::from_ref(&envelope))?;
@@ -171,8 +171,7 @@ if publication.phase != ArtifactStoreOneItemPublicationPhase::AwaitingAck || !pu
         if retracted.is_empty() {
             return Ok(retracted);
         }
-        let removed: Vec<semio_framework_os_spr::MutationEnvelope> = store_log.envelope.transitions.iter().filter(|transition| retracted.contains(&transition.mutation_id.0)).cloned().collect();
-        store_log.envelope.transitions.retain(|transition| !retracted.contains(&transition.mutation_id.0));
+        let removed=store_log.envelope.transitions.extract_if(|transition|retracted.contains(&transition.mutation_id.0)).map_err(|_|VcsError::HistoryReplaying)?;
         if let Err(error) = store_live.reproject(store_log, store_owners, store_cursor).await {
             for envelope in removed {
                 store_live.insert_transition(store_log, envelope);

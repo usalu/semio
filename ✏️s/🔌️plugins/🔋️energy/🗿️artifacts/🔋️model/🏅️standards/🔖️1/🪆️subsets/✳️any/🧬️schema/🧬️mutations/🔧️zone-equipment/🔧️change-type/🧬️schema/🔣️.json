@@ -90,5 +90,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateZoneEquipmentAssignment",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "zone_equipment",
+    "field": "equipment_type",
+    "input": "new_equipment_type",
+    "key": "id",
+    "labels": {
+      "en": "Change zone equipment: Equipment type",
+      "de": "Gerätetyp ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "zone-equipment",
+      "kind": "change-zone-equipment-type",
+      "record": "ChangedZoneEquipmentType"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Equipment type violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone equipment does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The zone equipment already carries this equipment type value."
+      }
+    }
   }
 }

@@ -1,0 +1,118 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contract",
+    "bodyBytes",
+    "cancelAt",
+    "widePairCount",
+    "cases"
+  ],
+  "properties": {
+    "contract": {
+      "const": "semio.energy.original-network-singleton.v1"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "widePairCount": {
+      "type": "integer",
+      "minimum": 1200
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 14,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "before",
+          "payload",
+          "outcome",
+          "after",
+          "inverse"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "before": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "payload": {
+            "type": "object",
+            "required": [
+              "present",
+              "zoneIds",
+              "nodeIds",
+              "outdoorNodeId",
+              "linkIds"
+            ],
+            "properties": {
+              "present": {
+                "type": "boolean"
+              },
+              "zoneIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "nodeIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              },
+              "outdoorNodeId": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "linkIds": {
+                "type": "array",
+                "items": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            },
+            "additionalProperties": false
+          },
+          "outcome": {
+            "enum": [
+              "changed",
+              "no-op",
+              "invalid"
+            ]
+          },
+          "after": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "inverse": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        }
+      }
+    }
+  }
+}

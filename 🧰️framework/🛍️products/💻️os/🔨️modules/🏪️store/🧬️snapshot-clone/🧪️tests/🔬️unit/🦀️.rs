@@ -86,7 +86,7 @@ impl ArtifactCanonicalJsonTree for BirthMutation {
 static BIRTH_PREFLIGHT_CALLS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 impl RetainedCloneEdit<u64, BirthMutation> for BirthEdit {
     type Cursor = BirthCursor;
-    fn preflight(&self, _: &BirthMutation, _: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, _: &BirthMutation, _: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str> {
         BIRTH_PREFLIGHT_CALLS.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
         Ok(ArtifactStoreOneItemFootprint { work_items: 1, retained_bytes: 16384 })
     }

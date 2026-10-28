@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "field": "outdoor_air_per_person_m3_s",
+    "input": "new_outdoor_air_per_person_m3_s",
+    "key": "id",
+    "labels": {
+      "en": "Change ideal loads system: Outdoor air per person",
+      "de": "Außenluftrate pro Person ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ideal-loads-system",
+      "kind": "change-ideal-loads-system-outdoor-air-per-person",
+      "record": "ChangedIdealLoadsSystemOutdoorAirPerPerson"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Outdoor air per person violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed ideal loads system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The ideal loads system already carries this outdoor air per person value."
+      }
+    }
   }
 }

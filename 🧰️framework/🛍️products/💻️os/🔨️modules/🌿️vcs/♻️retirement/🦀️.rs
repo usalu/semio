@@ -97,4 +97,7 @@ impl RetireOwned for super::ArtifactGroupVisibility {
     fn retirement_element_copy_bytes() -> usize { size_of::<Self>() }
 }
 
-artifact_retire_struct!(super::Author { id, name, avatar });
+artifact_retire_struct!(super::Change { id, edit_ids, description, saved_at });
+artifact_retire_struct!(super::CompositionPin { child_ref, checkpoint_id });
+artifact_retire_struct!(super::Checkpoint { id, change_ids, parent_id, authors, message, timestamp, composition_pins });
+artifact_retire_struct!(super::Alternative { id, name, checkpoint_ids });

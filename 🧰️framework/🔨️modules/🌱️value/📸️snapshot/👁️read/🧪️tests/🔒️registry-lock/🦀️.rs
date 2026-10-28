@@ -66,3 +66,14 @@ fn erased_snapshot_read_refuses_a_swapped_owner_type_and_restores_the_exact_orig
     });
     assert!(registry.terminal_is_empty());
 }
+
+#[test]
+fn original_snapshot_issuer_preserves_typed_refusal_and_exact_owner_without_heap_effects(){
+ let registry=SnapshotReadRegistryHandle::new();let owner=Arc::new(String::from("native-original"));
+ let guard=registry.state.try_lock().unwrap();
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.try_issue_original(owner.clone()));
+ let(reason,original)=result.err().expect("same original registry is held");assert!(matches!(reason,SnapshotReadLeaseRefusal::Busy));assert!(Arc::ptr_eq(&owner,&original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));drop(original);drop(guard);
+ registry.state.try_lock().unwrap().next_generation=(1u64<<63)-1;
+ let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||registry.try_issue_original(owner.clone()));
+ let(reason,original)=result.err().expect("same original generation is exhausted");assert!(matches!(reason,SnapshotReadLeaseRefusal::Admission(_)));assert!(Arc::ptr_eq(&owner,&original));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(registry.terminal_is_empty());
+}

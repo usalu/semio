@@ -57,5 +57,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "Zones"
+    ],
+    "row": "StateSizingObject",
+    "branchType": "ModelOutputState",
+    "branch": "outputs",
+    "collection": "sizing_objects",
+    "field": "zone_id",
+    "input": "new_zone_id",
+    "key": "id",
+    "labels": {
+      "en": "Change sizing object: Zone",
+      "de": "Zone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "sizing-object",
+      "kind": "change-sizing-object-zone",
+      "record": "ChangedSizingObjectZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Zone violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed sizing object does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The sizing object already carries this zone reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

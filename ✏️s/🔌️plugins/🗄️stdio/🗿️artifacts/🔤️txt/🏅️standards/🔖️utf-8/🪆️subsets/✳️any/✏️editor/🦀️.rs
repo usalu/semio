@@ -406,9 +406,9 @@ impl ArtifactEditor for TxtEditor {
         txt_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> TxtSnapshot {
+    fn reference_birth()->Option<fn()->TxtSnapshot>{Some(||{
         TxtSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

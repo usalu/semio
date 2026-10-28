@@ -51,7 +51,7 @@ fn canvas_pointer_wire_reads_only_a_samples_batch_and_defaults_cancelled() {
     assert_eq!(moved.last_sample(), Some([3.0, 4.0]));
     assert_eq!(bridge("canvasPointerUp", bare_point), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: false }), "an absent `cancelled` is a real release");
     assert_eq!(bridge("canvasPointerUp", semio_framework_value::DslValue::object([("cancelled".into(), semio_framework_value::DslValue::Bool(true))])), Generation2dCommand::CanvasPointerUp(canvas_pointer_up::CanvasPointerUp { cancelled: true }));
-    let document = Generation2dPlayApp::initial_snapshot();
+    let document = Generation2dPlayApp::reference_birth().expect("explicit reference snapshot producer")();
     let history = semio_framework_plugin::HistoryView::empty();
     let view = ArtifactView::new(&document, &history);
     let config = Generation2dConfig::default();

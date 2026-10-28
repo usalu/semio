@@ -1,0 +1,9 @@
+use super::*;
+use crate::CreateIdealLoadsSystem;
+#[path="../../../🧳️native/🌱️construction/🧪️tests/🧰️leaf/🦀️.rs"]mod laws;
+use crate::snapshot::original::EnergyModelSnapshot;
+#[derive(Debug,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]enum Operation{Create(CreateIdealLoadsSystem),Delete(crate::DeleteIdealLoadsSystem)}
+impl From<CreateIdealLoadsSystem> for Operation{fn from(p:CreateIdealLoadsSystem)->Self{Self::Create(p)}}impl From<crate::DeleteIdealLoadsSystem> for Operation{fn from(p:crate::DeleteIdealLoadsSystem)->Self{Self::Delete(p)}}
+impl protocol::Mutation<EnergyModelSnapshot> for Operation{type Diff=crate::diff::original::EnergyModelDiff;const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[<CreateIdealLoadsSystem as protocol::MutationLeaf>::DESCRIPTOR,<crate::DeleteIdealLoadsSystem as protocol::MutationLeaf>::DESCRIPTOR];fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{match self{Self::Create(_)=>&<CreateIdealLoadsSystem as protocol::MutationLeaf>::DESCRIPTOR,Self::Delete(_)=>&<crate::DeleteIdealLoadsSystem as protocol::MutationLeaf>::DESCRIPTOR}}}
+#[test]
+fn original_ideal_loads_deletion_rejects_fault_references_and_retains_optional_capacity_inverse_fields(){for fixture in[include_str!("🧫️fixtures/🔣️.json"),include_str!("🧫️fixtures/🔗️referenced.json")]{laws::run::<DeleteIdealLoadsSystem,Operation>(fixture,|post|{let rows=&post.model.controls.get().ideal_loads;(0..rows.len()).map(|i|rows.get(i).unwrap().id.0).collect()},|operation|match operation{Operation::Create(row)=>{assert_eq!(row.index,Some(0));assert!(!row.max_heating_capacity_present);assert_eq!(row.max_heating_capacity_w,0.0);assert!(row.max_cooling_capacity_present);assert_eq!(row.max_cooling_capacity_w,1000.0);row.id.0},_=>panic!("deletion must preserve its actual typed create inverse")});}}

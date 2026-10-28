@@ -105,7 +105,7 @@ fn field_hlc(record: &RecordValue, id: u16) -> Result<(u64, u64, u64), ProtocolE
     }
 }
 
-fn field_bytes(record: &RecordValue, id: u16, what: &'static str) -> Result<Vec<u8>, ProtocolError> {
+fn field_bytes(record: &RecordValue, id: u16, what: &'static str) -> Result<protocol::CausalPayload, ProtocolError> {
     match record.get(id) {
         Some(FieldValue::Bytes64(bytes)) => Ok(bytes.clone()),
         _ => Err(ProtocolError::Malformed { what, offset: 0, detail: "missing required field in ops text".to_string() }),

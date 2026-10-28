@@ -48,3 +48,13 @@ semio-framework-test-fixtures = { path = "../../../../../../../../../../../../�
 semio-framework-trace = { path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-ui-scene = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+
+[dev-dependencies.semio-framework-job]
+path = "../../../../../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust"
+features = ["testkit"]
+
+[dev-dependencies.semio-framework-trace-memory-testing]
+path = "../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust"
+
+[dev-dependencies.semio-framework-plugin-ownership]
+path = "../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"

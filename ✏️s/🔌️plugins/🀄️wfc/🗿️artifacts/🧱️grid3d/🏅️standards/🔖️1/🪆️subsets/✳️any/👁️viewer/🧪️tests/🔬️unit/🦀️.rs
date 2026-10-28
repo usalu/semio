@@ -23,5 +23,5 @@ fn the_view_command_is_inert_in_both_directions() {
 
 #[test]
 fn the_viewer_opens_on_the_same_committed_example_the_editor_does() {
-    assert_eq!(<Grid3dViewer as ArtifactViewer>::initial_snapshot(), crate::examples::blocks::snapshot());
+    assert_eq!(<Grid3dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::blocks::snapshot());
 }

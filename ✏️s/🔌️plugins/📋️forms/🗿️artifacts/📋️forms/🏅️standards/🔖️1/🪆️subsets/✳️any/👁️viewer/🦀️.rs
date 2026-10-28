@@ -77,9 +77,9 @@ impl ArtifactViewer for FormsViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = FORMS_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> FormsSnapshot {
+    fn reference_birth()->Option<fn()->FormsSnapshot>{Some(||{
         empty_forms_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `FormsViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

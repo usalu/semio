@@ -1,12 +1,11 @@
 //! 🫧️ Energy model mutation — `ReplaceAirflowNetwork`: Swaps the document-root airflow-network singleton whole. `present` false detaches it, so one kind covers both attach and detach. `zone_ids[i]` pairs with `node_ids[i]`: the payload carries the two halves of `AirflowNetworkDefinition::zone_node_ids` as parallel lists because its tuple element type has no `dsl::DslField` (see the ticket ledger's follow-up note).
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🫧️ `replace-airflow-network` payload. Swaps the document-root airflow-network singleton whole. `present` false detaches it, so one kind covers both attach and detach. `zone_ids[i]` pairs with `node_ids[i]`: the payload carries the two halves of `AirflowNetworkDefinition::zone_node_ids` as parallel lists because its tuple element type has no `dsl::DslField` (see the ticket ledger's follow-up note).
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -24,47 +23,4 @@ pub fn replace_airflow_network<Op: From<ReplaceAirflowNetwork>>(present: bool, z
     ReplaceAirflowNetwork { present, zone_ids, node_ids, outdoor_node_id, link_ids }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ReplaceAirflowNetwork
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ReplaceAirflowNetwork>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "replace", entity: "airflow-network", kind: "replace-airflow-network", record: "ReplacedAirflowNetwork" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&{
-        if self.present {
-            format!("Replace airflow network with {} zone nodes", self.zone_ids.len())
-        } else {
-            "Detach the airflow network".to_string()
-        }
-        }, &{
-        if self.present {
-            format!("Luftströmungsnetz durch {} Zonenknoten ersetzen", self.zone_ids.len())
-        } else {
-            "Luftströmungsnetz entfernen".to_string()
-        }
-        })
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ReplaceAirflowNetwork
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ReplaceAirflowNetwork>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-
-    })
-}
-}
 //#endregion 🔖️Mutation

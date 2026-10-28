@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_fenestration_overhang_offset {
     #[path = "🎩️change-overhang-offset/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🎩️change-overhang-offset/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🎩️change-overhang-offset/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🎩️change-overhang-offset/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod change_fenestration_fin_offset {
     #[path = "🐋️change-fin-offset/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🐋️change-fin-offset/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🐋️change-fin-offset/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🐋️change-fin-offset/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod change_fenestration_fin_depth {
     #[path = "🐬️change-fin-depth/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🐬️change-fin-depth/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🐬️change-fin-depth/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🐬️change-fin-depth/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod change_fenestration_overhang_depth {
     #[path = "🧢️change-overhang-depth/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧢️change-overhang-depth/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧢️change-overhang-depth/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧢️change-overhang-depth/↩️inverse/🦀️.rs"]

@@ -125,5 +125,102 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateShadingSurface",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "vertices_m",
+        "input": "vertices_m",
+        "storage": "sealed"
+      },
+      {
+        "field": "transmittance_schedule_id",
+        "input": "transmittance_schedule_id",
+        "storage": "sealed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateShadingSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "shading_surfaces",
+    "key": "id",
+    "inverse": "DeleteShadingSurface",
+    "labels": {
+      "en": "Create shading surface \\",
+      "de": "Verschattungsfläche \\"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "shading-surface",
+      "kind": "create-shading-surface",
+      "record": "CreatedShadingSurface"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "vertices_m",
+        "kind": "finite-points"
+      },
+      {
+        "input": "transmittance_schedule_id",
+        "kind": "reference",
+        "storage": "optional",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "row"
+      }
+    ],
+    "defaultRank": "id-order",
+    "scalarOrder": "before-rules",
+    "name": "name",
+    "nameValidation": "nonblank",
+    "unique": false
   }
 }

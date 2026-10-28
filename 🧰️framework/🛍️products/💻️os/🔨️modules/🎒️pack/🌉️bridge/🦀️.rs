@@ -211,3 +211,6 @@ pub fn renormalize_whole_number_floats(value: DslValue) -> DslValue {
         other => other,
     }
 }
+
+#[path="🌱️original/🦀️.rs"]mod original_wire_value;
+pub use original_wire_value::{BorrowedWireValue,BorrowedDiagnosticsWireValue,WireValueKeyOrderCursor};

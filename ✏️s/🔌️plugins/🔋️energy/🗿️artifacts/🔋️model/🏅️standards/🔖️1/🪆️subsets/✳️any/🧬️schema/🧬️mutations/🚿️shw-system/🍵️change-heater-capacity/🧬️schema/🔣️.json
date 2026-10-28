@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateShwSystemConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "shw_systems",
+    "field": "heater_capacity_w",
+    "input": "new_heater_capacity_w",
+    "key": "id",
+    "labels": {
+      "en": "Change service hot water system: Heater capacity",
+      "de": "Heizleistung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "service-hot-water-system",
+      "kind": "change-shw-system-heater-capacity",
+      "record": "ChangedShwSystemHeaterCapacity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Heater capacity violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed service hot water system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The service hot water system already carries this heater capacity value."
+      }
+    }
   }
 }

@@ -1,1 +1,18 @@
 //! 🔬️ Unit tests of os-store-initialization-runtime; the work package moves the tests of its sources here.
+use crate::lifted_store::{ArtifactStoreInitializationEditIndex,ArtifactStoreInitializationEditAdmission};
+use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
+#[global_allocator]
+static ALLOCATOR:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+fn grant(d:RetirementDemand)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:d.copy_bytes,maximum_capacity_bytes:d.capacity_bytes,maximum_release_bytes:d.release_bytes,maximum_depth:d.depth}}
+#[test]
+fn original_initializer_index_matches_json_oracle_and_closes_every_cancelled_birth(){
+ let law:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let mut edits=semio_framework_os_vcs::ArtifactHistoryLedger::new();
+ for id in law["ids"].as_array().unwrap(){edits.try_push(semio_framework_os_spr::Edit::<i64>{id:id.as_str().unwrap().into(),actor:None,line:None,forwards:Vec::new(),inverse:Default::default(),mutation_meta:Vec::new(),verb:None,sequence_number:0,started_at:String::new(),finished_at:None}).unwrap();}
+ for cutoff in law["cancelPrefixes"].as_array().unwrap(){let cutoff=cutoff.as_u64().unwrap()as usize;let mut index=ArtifactStoreInitializationEditIndex::default();let(mut position,mut births)=(0,0usize);
+  for _ in 0..cutoff{let d=index.admission_demands(&edits,position,256).unwrap();let g=grant(d);for axis in 0..4{let mut denied=g;match axis{0=>denied.maximum_items=0,1 if d.copy_bytes>0=>denied.maximum_copy_bytes-=1,2 if d.capacity_bytes>0=>denied.maximum_capacity_bytes-=1,3=>denied.maximum_depth=0,_=>continue};let(result,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||index.admit(&edits,position,256,denied).unwrap());assert_eq!(result.1,RetainedCloneProgress::default());assert_eq!((allocated,released),(0,0));assert_eq!(index.admission_demands(&edits,position,256).unwrap(),d);}
+   let((admission,p),allocated,released)=semio_framework_trace_memory_testing::observe_backing(||index.admit(&edits,position,256,g).unwrap());assert!(p.fits(g));assert_eq!((allocated,released),(p.retained_capacity_bytes,p.released_bytes));births+=allocated;if admission==ArtifactStoreInitializationEditAdmission::Admitted{position+=1;}if admission==ArtifactStoreInitializationEditAdmission::Complete{break;}}
+  if position==4{let actual:Vec<usize>=law["lookup"].as_array().unwrap().iter().map(|id|index.position(id.as_str().unwrap()).unwrap()).collect();assert_eq!(serde_json::to_value(actual).unwrap(),law["expected"]);}
+  let mut releases=0;for _ in 0..10000{let d=index.retirement_demands(4096).unwrap();let g=RetainedCloneGrant{maximum_copy_bytes:4096,..grant(d)};let(step,allocated,released)=semio_framework_trace_memory_testing::observe_backing(||index.retire_step(g).unwrap());assert_eq!((allocated,released),(step.progress().retained_capacity_bytes,step.progress().released_bytes));births+=allocated;releases+=released;if matches!(step,RetainedCloneStep::Complete(_)){break;}}assert_eq!(births,releases);
+ }
+ while let Some(edit)=edits.pop(){drop(edit)}while edits.retained_terminal_slot_count()>0{let(_,p)=edits.retire_terminal_slot(RetainedCloneGrant{maximum_items:1,maximum_depth:1,..Default::default()}).unwrap();assert_eq!(p.retained_capacity_bytes,0);}while !edits.backing_is_empty(){let release=edits.next_empty_page_release_byte_demand().unwrap();edits.release_empty_page(RetainedCloneGrant{maximum_items:1,maximum_release_bytes:release,maximum_depth:1,..Default::default()}).unwrap();}
+}

@@ -16,16 +16,26 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
+semio-framework = { workspace = true }
+semio-framework-plugin-window-kits = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust" }
+semio-framework-plugin-ownership = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust" }
+semio-framework-plugin-interaction = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🕹️interaction/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-native-mutations = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-action-bus = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🎯️action-bus/📦️packages/🦀️rust" }
+semio-framework-plugin-command = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🎮️command/📦️packages/🦀️rust" }
+semio-framework-plugin-decl-app = { path = "../../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📜️declaration/🧩️app/📦️packages/🦀️rust" }
+semio-framework-manifest-mutation-inputs = { path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🛂️manifest/🔡️mutation-inputs/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-mutations = { workspace = true }
+semio-s-artifact-energy-model-snapshot = { workspace = true }
 semio-framework-diagnostic = { workspace = true }
 semio-framework-dsl-record = { workspace = true }
 semio-framework-dsl-record-derive = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
 semio-framework-pack-json = { workspace = true }
-semio-framework-plugin = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
 semio-framework-ui-locale = { workspace = true }
 semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
-semio-s-artifact-fem-2d-editor-model-window = { path = "../../../../../../../../../../../🏗️fem/🗿️artifacts/◻️2d/🏅️standards/🔖️1/🪆️subsets/🌐️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🧱️model/📦️packages/🦀️rust" }
 semio-s-artifact-energy-model-editor-config = { workspace = true }

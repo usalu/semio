@@ -23,61 +23,26 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             None => store::HistoryFinalization::Overwrite,
         };
         match self.stores.store.begin_derived_report_replay(drafts, None) {
-            Ok(replay) => self.time_travel.authoring = Some(SupersedeAuthoring { replay, finalization }),
+            Ok(replay) => self.time_travel.authoring = Some(SupersedeAuthoring { replay:Some(replay),result:None,ready:false,failure:None,retirement:Default::default(),finalization:Some(finalization),closing:false }),
             Err(vcs::VcsError::ValidationFailed(_) | vcs::VcsError::Rejected { .. }) => return Ok(SupersedeAuthored::Refused),
             Err(error) => return Err(error.into_fault()),
         }
         Ok(SupersedeAuthored::Pending)
     }
 
-    /// ⏭️ One turn of the undo or redo of a finalize being authored: steps its replay until the turn deadline, then commits
-    /// the finished replay in its scope; a store that moved meanwhile replays the same inputs again from the new base.
-    pub(super)  async fn step_supersede_authoring(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<SupersedeAuthored, Fault> {
-        let stepped = {
-            let TimeTravelCtx { stores, time_travel, .. } = self;
-            let store = &mut stores.store;
-            let clock = time_travel.turn_clock;
-            let Some(authoring) = time_travel.authoring.as_mut() else { return Ok(SupersedeAuthored::Refused) };
-            let mut deadline = || clock().is_none_or(|now| now >= deadline_us);
-            store.step_derived_report_replay(&mut authoring.replay, grant,receiving, &mut deadline)
-        };
-        match stepped {
-            Ok(store::os_store::replay::ReplayStep::Pending(_)) => return Ok(SupersedeAuthored::Pending),
-            Ok(store::os_store::replay::ReplayStep::Finished(_)) => {}
-            Err(_) => {
-                if let Some(authoring) = self.time_travel.authoring.take() {
-                    let SupersedeAuthoring {replay,finalization}=authoring;let mut replay=Some(replay);
-                    let grant=history_retirement_frame_grant(ArtifactStore::<A::Snapshot,A::Mutation>::history_read_retirement_birth_bytes());
-                    match self.stores.store.retire_derived_report_replay(&mut replay,grant) {
-                        Ok(Some((retirement,progress)))=>{assert!(progress.fits(grant));self.time_travel.document.queue_retirement(retirement);}
-                        Ok(None)=>unreachable!("retained supersede authoring is present"),
-                        Err(error)=>{self.time_travel.authoring=Some(SupersedeAuthoring {replay:replay.take().unwrap(),finalization});return Err(error.into_fault());}
-                    }
-                }
-                return Ok(SupersedeAuthored::Refused);
-            }
-        }
-        let SupersedeAuthoring { replay, finalization } = self.time_travel.authoring.take().expect("a finished authoring replay was held");
-        let Ok((result, head)) = self.stores.store.finish_derived_report_replay(&mut Some(replay)) else { return Ok(SupersedeAuthored::Refused) };
-        if let Some(head) = head {
-            self.time_travel.document.retire(&self.stores.store, Some(head))?;
-        }
-        let drafts = result.drafts().clone();
-        match self.stores.store.commit_finished_replay(result, finalization.clone(), identity).await {
-            Ok(_) => {
-                self.history.cache = None;
-                Ok(SupersedeAuthored::Landed)
-            }
-            Err(vcs::VcsError::Stale { .. }) => match self.stores.store.begin_derived_report_replay(drafts, None) {
-                Ok(replay) => {
-                    self.time_travel.authoring = Some(SupersedeAuthoring { replay, finalization });
-                    Ok(SupersedeAuthored::Pending)
-                }
-                Err(_) => Ok(SupersedeAuthored::Refused),
-            },
-            Err(vcs::VcsError::ValidationFailed(_) | vcs::VcsError::Rejected { .. } | vcs::VcsError::UnknownAlternative(_)) => Ok(SupersedeAuthored::Refused),
-            Err(error) => Err(error.into_fault()),
-        }
+    pub(super) fn close_supersede_authoring(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<SupersedeAuthored,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+      let Some(owner)=self.time_travel.authoring.as_mut()else{return Ok(SupersedeAuthored::Refused)};owner.closing=true;
+      if let Some(result)=owner.result.as_mut(){result.begin_retirement();if result.terminal_is_empty(){let d=RetirementDemand{copy_bytes:size_of::<Option<store::os_store::replay::EditReplayResult<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()};semio_framework_job::close_original_retained_step(cx,d,|_|{owner.result=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;}else{let g=cx.retained_grant();let step=cx.with_native_retirement(|control|result.close_original_step_controlled(g,control))?;cx.consume_retained(step.progress())?;cx.consume_fuel(step.progress().copied_items as u64);}return Ok(SupersedeAuthored::Pending)}
+      if owner.replay.is_some(){self.time_travel.document.retire_authoring_replay(&mut self.stores.store,&mut owner.replay,cx)?;return Ok(SupersedeAuthored::Pending)}
+      let body=cx.retained_grant().maximum_copy_bytes;if !owner.retirement.is_empty(){let d=RetirementDemand{copy_bytes:owner.retirement.next_copy_byte_demand()?,capacity_bytes:owner.retirement.next_capacity_byte_demand(body)?,release_bytes:owner.retirement.next_release_byte_demand()?,depth:owner.retirement.next_depth_demand()?};semio_framework_job::close_original_retained_step(cx,d,|g|owner.retirement.step_granted(g))?;return Ok(SupersedeAuthored::Pending)}
+      macro_rules! close{($field:ident,$ty:ty)=>{if owner.$field.is_some(){let d=owner.retirement.next_owner_demands::<$ty>(true,&None,body)?;semio_framework_job::close_original_retained_step(cx,d,|g|Ok(owner.retirement.begin_granted(&mut owner.$field,g)?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;return Ok(SupersedeAuthored::Pending)}};}close!(failure,vcs::VcsError);close!(finalization,store::HistoryFinalization);let d=RetirementDemand{copy_bytes:size_of::<Option<SupersedeAuthoring<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()};let mut complete=false;semio_framework_job::close_original_retained_step(cx,d,|_|{self.time_travel.authoring=None;complete=true;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;Ok(if complete{SupersedeAuthored::Refused}else{SupersedeAuthored::Pending})
+    }
+    /// ⏭️ Undo and redo use the same retained original Report publisher; no cold replay or second draft copy is created.
+    pub(super) async fn step_supersede_authoring(&mut self,grant:RetainedCloneGrant,deadline_us:u64,_identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>)->Result<SupersedeAuthored,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+      if self.time_travel.authoring.as_ref().is_none_or(|owner|owner.closing)||cx.is_cancelled(){return cx.with_original_retirement(|cx|self.close_supersede_authoring(grant,cx))}
+      let owner=self.time_travel.authoring.as_mut().unwrap();if owner.result.is_some(){let result=self.time_travel.document.commit_report(&self.stores.store,&mut owner.result,&mut owner.finalization,cx);match result{Ok(true)=>{self.time_travel.authoring_finalization=true;owner.closing=true;},Ok(false)=>{},Err(failure)=>{self.time_travel.document.retain_commit_failure(failure)?;owner.closing=true;}}return Ok(SupersedeAuthored::Pending)}
+      if owner.ready{let d=RetirementDemand{copy_bytes:2*size_of::<store::os_store::replay::EditReplayResult<A::Snapshot,A::Mutation>>()+size_of::<store::os_store::snapshot_read::ArtifactDerivedSnapshot<A::Snapshot>>(),depth:1,..Default::default()};let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{match self.stores.store.take_derived_report_result(&mut owner.replay){Ok(result)=>owner.result=Some(result),Err(error)=>{owner.failure=Some(error);owner.closing=true;}}Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;return Ok(SupersedeAuthored::Pending)}
+      let clock=self.time_travel.turn_clock;let mut deadline=||clock().is_none_or(|now|now>=deadline_us);let result=cx.with_native_receiving(|native|self.stores.store.step_derived_report_replay(owner.replay.as_mut().unwrap(),grant,native,&mut deadline));let p=match &result{Err(vcs::VcsError::InverseRefused(error))=>error.retained_progress(),_=>owner.replay.as_mut().unwrap().take_preparation_receipt()};if let Some(issued)=cx.receiving_issued_grant(){cx.consume_receiving_retained(issued,p)?;}else{cx.consume_retained(p)?;}cx.consume_fuel(p.copied_items as u64);match result{Ok(store::os_store::replay::ReplayStep::Finished(_))=>owner.ready=true,Ok(_)=>{},Err(error)=>{owner.failure=Some(error);owner.closing=true;}}Ok(SupersedeAuthored::Pending)
     }
 
     /// ⏪️⏩️ A plain `undo` or `redo` whose newest own target is a history edit (design §2: the undo of a finalize is a new
@@ -194,6 +159,6 @@ impl InstanceExtension for TimeTravelExtension {
         }
         let grant = semio_framework_plugin_ownership::bounded_ownership::original_plugin_turn_grant(ctx.mounted_policy.maintenance, *retained);
         ctx.drive_time_travel_turn(grant, identity, cx).await?;
-        Ok(ctx.time_travel.has_command_receipt())
+        Ok(ctx.time_travel.has_command_receipt()||cx.retained_grant().maximum_items==0)
     }
 }

@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateDaylightZoneConfig",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "daylight_zones",
+    "field": "window_transmittance",
+    "input": "new_window_transmittance",
+    "key": "id",
+    "labels": {
+      "en": "Change daylight zone: Window transmittance",
+      "de": "Fenstertransmissionsgrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "daylight-zone",
+      "kind": "change-daylight-zone-window-transmittance",
+      "record": "ChangedDaylightZoneWindowTransmittance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Window transmittance violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed daylight zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The daylight zone already carries this window transmittance value."
+      }
+    }
   }
 }

@@ -201,6 +201,13 @@ impl Host {
     //#endregion 🔖️Documents
 
     //#region 🔖️Links
+    /// 🧷️ Captures a linked artifact reply for a retained Send job through the same actor registry.
+    pub fn resolve_link_retained(&self, link: String, wake: std::task::Waker) -> Result<requests::SharedRequestReceiver, Fault> {
+        match &self.backend {
+            HostBackend::Poll(registry) => registry.request_retained(wake, move |req| Effect::LinkResolve { req, link }),
+        }
+    }
+
     pub async fn resolve_link(&self, link: impl Into<String>) -> Result<Vec<u8>, Fault> {
         let link = link.into();
         match &self.backend {

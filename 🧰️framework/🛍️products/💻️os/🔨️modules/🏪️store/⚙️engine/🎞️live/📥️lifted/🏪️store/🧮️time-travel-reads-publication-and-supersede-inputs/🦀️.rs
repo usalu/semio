@@ -233,7 +233,7 @@ if publication.phase!=ArtifactStoreOneItemPublicationPhase::Preparing||publicati
         output:&mut protocol::ForeignStepsPreparation, grant:RetainedCloneGrant,
     )->Result<RetainedCloneStep,ValueError> {
         let(original,prebase)=self.original_proposal_forward(store_owners, store_cursor, publication)?;
-        let source=if original.may_emit_foreign_steps(){<Mutation as super::Mutation<P>>::foreign_step_source(original,prebase,output.source_index())?}else{None};
+        let source=if original.may_emit_foreign_steps(){original.foreign_step_source(prebase,output.source_index())?}else{None};
         let step=output.advance_source(source,grant)?;
         semio_framework_value::retained_clone::admit_retained_clone_progress(grant,step.progress(),"original prepared foreign row turn")?;
         Ok(step)

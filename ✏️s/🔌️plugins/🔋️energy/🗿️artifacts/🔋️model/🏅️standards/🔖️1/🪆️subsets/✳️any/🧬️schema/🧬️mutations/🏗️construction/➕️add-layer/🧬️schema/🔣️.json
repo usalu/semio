@@ -80,5 +80,64 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "membership-row",
+    "membership": "insert",
+    "row": "StateConstruction",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "constructions",
+    "field": "layer_material_ids",
+    "input": "material_id",
+    "key": "id",
+    "memberKind": "EntityId",
+    "indexMode": "required",
+    "duplicate": "allow",
+    "rankBeforeDuplicate": true,
+    "positiveMember": false,
+    "inverse": "RemoveConstructionLayer",
+    "inverseMember": "index",
+    "labels": {
+      "en": "Add Layer",
+      "de": "Schicht hinzufügen"
+    },
+    "semantics": {
+      "verb": "add",
+      "entity": "Construction",
+      "kind": "AddConstructionLayer",
+      "record": "AddConstructionLayer"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored member identity must be valid."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed row, membership or insertion rank does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced member does not exist in its authored collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original row already contains this member."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original row already contains this member."
+      }
+    },
+    "member": "material_id",
+    "index": "index",
+    "inverseByIndex": true,
+    "memberReference": "Materials"
   }
 }

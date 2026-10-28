@@ -169,9 +169,9 @@ impl ArtifactEditor for Fem2dPlayApp {
 
     /// 🌱️ Boots on the bundled `📚️examples/🎬️demo` document so the playground paints a real structure
     /// at first frame instead of an empty canvas — the same snapshot `Fem2dViewer` already booted on.
-    fn initial_snapshot() -> Fem2dSnapshot {
+    fn reference_birth()->Option<fn()->Fem2dSnapshot>{Some(||{
         semio_s_artifact_fem_2d_model::standards::v1::subsets::any::io::text::snapshot::default_fem2d_snapshot()
-    }
+    })}
 
     fn io() -> Option<AppIo> {
         Some(fem2d_io())

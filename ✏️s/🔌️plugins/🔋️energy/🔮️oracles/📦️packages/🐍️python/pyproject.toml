@@ -25,6 +25,7 @@ dependencies = []
 
 [dependency-groups]
 test = [
+    "eppy==0.5.69",
     "honeybee-energy==1.123.32",
     "honeybee-openstudio==0.7.2",
     "jsonschema==4.26.0",

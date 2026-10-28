@@ -1,0 +1,24 @@
+{
+  "schema": "energy.model",
+  "name": "",
+  "version": "",
+  "year": 2026,
+  "groundTemperature": 18,
+  "cancelCuts": [
+    0,
+    1,
+    4,
+    8,
+    13,
+    18,
+    19,
+    20
+  ],
+  "maximumCopyBytes": 4096,
+  "contract": "semio.energy.original-app-genesis.v1",
+  "creationStages": 20,
+  "links": {
+    "referencedModel": null,
+    "weatherLink": null
+  }
+}

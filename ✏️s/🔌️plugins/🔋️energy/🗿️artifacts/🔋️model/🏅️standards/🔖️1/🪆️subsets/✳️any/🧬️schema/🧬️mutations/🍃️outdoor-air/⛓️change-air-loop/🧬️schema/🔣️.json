@@ -55,5 +55,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "AirLoops"
+    ],
+    "row": "StateOutdoorAirSystem",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "outdoor_air_systems",
+    "field": "air_loop_id",
+    "input": "new_air_loop_id",
+    "key": "id",
+    "labels": {
+      "en": "Change outdoor air system: Air loop",
+      "de": "Luftkreislauf ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "outdoor-air-system",
+      "kind": "change-outdoor-air-system-air-loop",
+      "record": "ChangedOutdoorAirSystemAirLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Air loop violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed outdoor air system does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced air loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The outdoor air system already carries this air loop reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

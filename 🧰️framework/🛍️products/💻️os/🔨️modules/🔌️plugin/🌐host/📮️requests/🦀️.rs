@@ -20,7 +20,12 @@ use std::pin::Pin;
 use std::rc::Rc;
 use std::task::{Context, Poll, Waker};
 
+#[path = "🫴️retained/🦀️.rs"]
+mod retained;
+pub use retained::SharedRequestReceiver;
+
 enum Slot {
+    Shared { sender: retained::SharedRequestSender, partial: Vec<u8> },
     Receiving,
     Pending {
         waker: Option<Waker>,
@@ -147,6 +152,13 @@ impl Inner {
     /// 🚫️async: E1 pure in-memory slot mutation consumed by `RequestRegistry`'s sync API below — R9.
     fn complete(&mut self, id: u64, result: Result<Vec<u8>, Fault>) -> Option<Waker> {
         match self.get_mut(id).map(|entry| &mut entry.value) {
+            Some(Slot::Shared { sender, partial }) if partial.is_empty() => {
+                let mut original=Some(result);
+                if sender.receive(&mut original) {
+                    self.take(id);
+                }
+                None
+            }
             Some(slot @ Slot::Pending { .. }) => {
                 let Slot::Pending { waker, .. } = std::mem::replace(slot, Slot::Ready { result }) else { unreachable!() };
                 waker
@@ -256,6 +268,21 @@ impl RequestRegistry {
     /// variant embeds its own `req: RequestId`), queues it for the next `turn-result.effects`
     /// drain, and returns a future that resolves once `resolve(id, ...)` is called from the
     /// `Event::Completed` (or job/http-chunk) routing step of `poll`.
+    /// 📨️ Mints one actor-owned request whose reply can be received by a Send retained job.
+    pub fn request_retained(&self, wake: Waker, build: impl FnOnce(RequestId) -> Effect) -> Result<SharedRequestReceiver, Fault> {
+        let mut inner = self.inner.borrow_mut();
+        inner.next_id = inner.next_id.saturating_add(1);
+        let raw = inner.next_id;
+        if !inner.allocation_admitted || inner.outbound.len() >= REQUEST_OUTBOUND_SLOTS || inner.occupied(Inner::index(raw)) {
+            return Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.capacity"), "fixed request authority is saturated"));
+        }
+        let effect = build(RequestId(raw));
+        let (sender, receiver) = retained::pair(wake);
+        inner.insert_admitted(SlotEntry { id: raw, instance: self.instance, value: Slot::Shared { sender, partial: Vec::new() } });
+        inner.outbound.push_back((self.instance, effect));
+        Ok(receiver)
+    }
+
     pub fn request(&self, build: impl FnOnce(RequestId) -> Effect) -> RequestFuture {
         let mut inner = self.inner.borrow_mut();
         inner.next_id = inner.next_id.saturating_add(1);
@@ -355,15 +382,23 @@ impl RequestRegistry {
 
     /// 🧾️ Quotes a parked request without consuming its original prologue or waker.
     #[doc(hidden)]
-    pub fn pending_instance(&self,id:RequestId)->Option<u32>{self.inner.borrow().get(id.0).filter(|entry|matches!(entry.value,Slot::Pending{..})).map(|entry|entry.instance)}
+    pub fn pending_instance(&self,id:RequestId)->Option<u32>{self.inner.borrow().get(id.0).filter(|entry|matches!(entry.value,Slot::Pending{..}|Slot::Shared{..})).map(|entry|entry.instance)}
 
     /// 📥️ Transfers only the admitted request prologue while its original slot remains occupied.
     #[doc(hidden)]
-    pub fn take_pending_partial(&self,id:RequestId)->Option<Vec<u8>>{match &mut self.inner.borrow_mut().get_mut(id.0)?.value{Slot::Pending{partial,..}=>Some(std::mem::take(partial)),_=>None}}
+    pub fn take_pending_partial(&self,id:RequestId)->Option<Vec<u8>>{match &mut self.inner.borrow_mut().get_mut(id.0)?.value{Slot::Pending{partial,..}|Slot::Shared{partial,..}=>Some(std::mem::take(partial)),_=>None}}
 
     /// 📨️ Hands the funded result to the same parked request without consuming a refused donor.
     #[doc(hidden)]
-    pub fn resolve_original(&self,id:RequestId,result:&mut Option<Result<Vec<u8>,Fault>>)->bool{let waker={let mut inner=self.inner.borrow_mut();let Some(entry)=inner.get_mut(id.0)else{return false};if !matches!(&entry.value,Slot::Pending{partial,..}if partial.is_empty()){return false}let Some(result)=result.take()else{return false};let Slot::Pending{waker,..}=std::mem::replace(&mut entry.value,Slot::Ready{result})else{unreachable!()};waker};if let Some(waker)=waker{waker.wake()}true}
+    pub fn resolve_original(&self,id:RequestId,result:&mut Option<Result<Vec<u8>,Fault>>)->bool{let shared = {
+        let mut inner=self.inner.borrow_mut();
+        let Some(entry)=inner.get_mut(id.0)else{return false};
+        if let Slot::Shared{sender,partial}=&mut entry.value {
+            if !partial.is_empty() || !sender.receive(result) { return false; }
+            entry.value=Slot::Receiving;
+            true
+        } else { false }
+    }; if shared { return true; }let waker={let mut inner=self.inner.borrow_mut();let Some(entry)=inner.get_mut(id.0)else{return false};if !matches!(&entry.value,Slot::Pending{partial,..}if partial.is_empty()){return false}let Some(result)=result.take()else{return false};let Slot::Pending{waker,..}=std::mem::replace(&mut entry.value,Slot::Ready{result})else{unreachable!()};waker};if let Some(waker)=waker{waker.wake()}true}
 
     /// ♻️ Releases the original redispatch occupancy after decoder, publication and source return.
     #[doc(hidden)]
@@ -373,6 +408,11 @@ impl RequestRegistry {
     /// equivalent streaming completion) arrives. Wakes the parked task if one was already polled
     /// once (a request resolved before its future is ever polled just sits `Ready`).
     pub fn resolve(&self, id: RequestId, result: Result<Vec<u8>, Fault>) {
+        if matches!(self.inner.borrow().get(id.0).map(|entry| &entry.value), Some(Slot::Shared { .. })) {
+            let mut result=Some(result);
+            if self.resolve_original(id,&mut result) { self.release_completed(id); }
+            return;
+        }
         let mut inner = self.inner.borrow_mut();
         let waker = inner.complete(id.0, result);
         drop(inner);
@@ -395,7 +435,7 @@ impl RequestRegistry {
     pub fn append_chunk(&self, id: RequestId, bytes: &[u8], done: bool, cap: usize) {
         let mut inner = self.inner.borrow_mut();
         let outcome = match inner.get_mut(id.0).map(|entry| &mut entry.value) {
-            Some(Slot::Pending { partial, .. }) => {
+            Some(Slot::Pending { partial, .. } | Slot::Shared { partial, .. }) => {
                 partial.extend_from_slice(bytes);
                 if partial.len() > cap {
                     Some(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.body-too-large"), format!("http/blob body exceeded the {cap}-byte instance quota (message_bytes)"))))
@@ -445,7 +485,7 @@ impl RequestRegistry {
     /// (see design-abi.md §4: async tasks are never serialised, only marked re-run-on-restore).
     pub fn pending_ids(&self) -> Vec<RequestId> {
         let inner = self.inner.borrow();
-        (0..REQUEST_SLOTS).filter_map(|index| inner.get_at(index)).filter(|entry| matches!(entry.value, Slot::Pending { .. })).map(|entry| RequestId(entry.id)).collect()
+        (0..REQUEST_SLOTS).filter_map(|index| inner.get_at(index)).filter(|entry| matches!(entry.value, Slot::Pending { .. } | Slot::Shared { .. })).map(|entry| RequestId(entry.id)).collect()
     }
 
     /// 🚫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): `Event::InstanceClose`
@@ -527,7 +567,7 @@ impl Future for RequestFuture {
                 inner.insert_admitted(SlotEntry { id: self.id, instance, value: Slot::Pending { waker: Some(cx.waker().clone()), partial } });
                 Poll::Pending
             }
-            Some(entry @ SlotEntry { value: Slot::Continuation { .. }, .. }) => {
+            Some(entry @ SlotEntry { value: Slot::Continuation { .. } | Slot::Shared { .. }, .. }) => {
                 inner.insert_admitted(entry);
                 Poll::Ready(Err(Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.request-registry.continuation"), "a redispatch continuation id can never back a parked future".to_string())))
             }

@@ -45,7 +45,8 @@ pub fn to_json_string_controlled<T: ToValue>(value: &T, control: &mut semio_fram
 }
 
 #[derive(Clone, Copy)]
-struct JsonWriteFrame { pub state: u8, pub(super) index: usize, pub position: usize }
+#[doc(hidden)]
+pub struct JsonWriteFrame { pub state: u8, pub(super) index: usize, pub position: usize }
 
 enum JsonNativeNode<'a> { Value(&'a DslValue), Byte(u8) }
 

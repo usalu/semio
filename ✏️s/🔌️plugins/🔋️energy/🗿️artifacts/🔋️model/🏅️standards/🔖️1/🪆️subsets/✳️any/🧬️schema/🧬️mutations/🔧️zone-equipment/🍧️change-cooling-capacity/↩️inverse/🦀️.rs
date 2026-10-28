@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ChangeZoneEquipmentCoolingCapacity` — always computed from BASE, never by inverting the delta.
 
 use crate as vocabulary;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.

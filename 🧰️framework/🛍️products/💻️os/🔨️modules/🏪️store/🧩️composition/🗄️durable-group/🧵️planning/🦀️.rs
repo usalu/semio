@@ -2,9 +2,15 @@
 use super::*;
 use semio_framework_os_store_canonical_json::{ArtifactCanonicalJson, ArtifactCanonicalJsonCursor};
 use semio_framework_value::{NativeEncodeControl, RetainedCloneGrant, RetainedCloneProgress, RetirementDemand, ValueError, ValueRefusalKind};
-#[path = "📤️source/🦀️.rs"]
-mod borrowed_source;
-pub use borrowed_source::DurableBorrowedValue;
+use semio_framework_os_store_durable_group_wire::lifted_durable_group::{DurableBorrowedValue,DurableBorrowedDecisionFields};
+/// 🪪️ Projects the same owned decision into canonical wire fields without cloning its payloads.
+pub trait DurableDecisionSource {
+    fn fields(&self) -> DurableBorrowedDecisionFields<'_>;
+    fn set_anchor_hash(&mut self, hash: String);
+    fn set_decision_hash(&mut self, hash: String);
+}
+pub fn decision_source(decision: &impl DurableDecisionSource, unsigned: bool) -> DurableBorrowedValue<'_> { let fields = decision.fields(); if unsigned { DurableBorrowedValue::Unsigned(fields) } else { DurableBorrowedValue::Decision(fields) } }
+
 #[path = "🎒️pack/🦀️.rs"]
 mod pack;
 pub use pack::DurablePackOutputV1;
@@ -20,11 +26,11 @@ pub use budget::DurableJsonBudgetV1;
 
 #[derive(Default)]
 pub struct DurableCanonicalOutputV1 {
-    cursor: Option<Box<ArtifactCanonicalJsonCursor>>,
-    output: Option<Vec<u8>>,
-    length: usize,
-    phase: u8,
-    budget:DurableJsonBudgetV1,
+    pub(super) cursor: Option<Box<ArtifactCanonicalJsonCursor>>,
+    pub(super) output: Option<Vec<u8>>,
+    pub(super) length: usize,
+    pub(super) phase: u8,
+    pub(super) budget:DurableJsonBudgetV1,
 }
 
 pub fn permit(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool { grant.maximum_items != 0 && demand.copy_bytes <= grant.maximum_copy_bytes && demand.capacity_bytes <= grant.maximum_capacity_bytes && demand.release_bytes <= grant.maximum_release_bytes && demand.depth <= grant.maximum_depth }

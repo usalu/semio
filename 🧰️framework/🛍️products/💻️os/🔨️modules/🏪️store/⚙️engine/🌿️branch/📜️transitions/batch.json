@@ -1,0 +1,28 @@
+{
+  "modes": [
+    "overwrite",
+    "trunk",
+    "alternative"
+  ],
+  "cancelTurns": [
+    0,
+    1,
+    8,
+    32,
+    64,
+    128
+  ],
+  "expected": {
+    "envelopes": 1,
+    "appliesToHead": true,
+    "target": [
+      "zoom"
+    ],
+    "transition": "supersede",
+    "envelopesByMode": {
+      "overwrite": 1,
+      "trunk": 1,
+      "alternative": 3
+    }
+  }
+}

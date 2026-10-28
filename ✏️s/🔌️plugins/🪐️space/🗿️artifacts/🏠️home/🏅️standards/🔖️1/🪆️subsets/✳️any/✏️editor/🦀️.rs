@@ -481,9 +481,9 @@ impl ArtifactEditor for HomeApp {
         } })
     }
 
-    fn initial_snapshot() -> SHomeSnapshot {
+    fn reference_birth()->Option<fn()->SHomeSnapshot>{Some(||{
         SHomeSnapshot::default()
-    }
+    })}
 
     fn command_id(command: &HomeCommand) -> &'static str {
         command.command_id()

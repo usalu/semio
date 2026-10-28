@@ -54,5 +54,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "field": "min_cooling_supply_air_temp_c",
+    "input": "new_min_cooling_supply_air_temp_c",
+    "key": "id",
+    "labels": {
+      "en": "Change ideal loads system: Minimum cooling supply air temperature",
+      "de": "Minimale Kühlzulufttemperatur ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ideal-loads-system",
+      "kind": "change-ideal-loads-system-min-cooling-supply-air-temp",
+      "record": "ChangedIdealLoadsSystemMinCoolingSupplyAirTemp"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Minimum cooling supply air temperature violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed ideal loads system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The ideal loads system already carries this minimum cooling supply air temperature value."
+      }
+    }
   }
 }

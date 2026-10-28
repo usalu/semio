@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["initialZoom","handoffAllocations","handoffReleases","singleRecipient"],"properties":{"initialZoom":{"type":"number"},"handoffAllocations":{"const":0},"handoffReleases":{"const":0},"singleRecipient":{"const":true}}}

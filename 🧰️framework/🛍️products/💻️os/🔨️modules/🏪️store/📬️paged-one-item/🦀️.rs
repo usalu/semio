@@ -17,7 +17,7 @@ use semio_framework_os_spr::{Edit, Mutation};
 use semio_framework_os_store_command::HistoryLane;
 use semio_framework_os_spr::ActorId;
 use semio_framework_value::retained_clone::{ RetainedCloneBirthDemand, RetainedCloneClose, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep, RetainedCloneRef, RetainedCloneSourceTake};
-use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor};
+use semio_framework_value_snapshot_projection::snapshot_projection::{SnapshotProjection, SnapshotProjectionCursor, ProjectionOutput};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 use semio_framework_value_factory::owned::FactoryOwnedSourceAuthority;
 use std::{marker::PhantomData, mem::{size_of, ManuallyDrop}, sync::Arc};
@@ -196,6 +196,7 @@ where
                 base: ManuallyDrop::new(Some(base)),
                 source: ManuallyDrop::new(None),
                 cursor: ManuallyDrop::new(None),
+                projection_output:ManuallyDrop::new(None),
                 post: ManuallyDrop::new(None),
                 projected: ManuallyDrop::new(None),
                 post_read: OriginalPostRead::default(),
@@ -251,6 +252,7 @@ struct PagedOneItemPreparation<S: SnapshotProjection<Output = S>, M: Send + Sync
     pub base: ManuallyDrop<Option<SnapshotRead<S>>>,
     pub source: ManuallyDrop<Option<RetainedCloneSource<S, SnapshotRead<S>>>>,
     pub cursor: ManuallyDrop<Option<S::Projection>>,
+    projection_output:ManuallyDrop<Option<S::Output>>,
     pub post: ManuallyDrop<Option<S>>,
     projected: ManuallyDrop<Option<S::Output>>,
     post_read: OriginalPostRead<S>,
@@ -501,7 +503,7 @@ where
                 if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked);}
                 let child=RetainedCloneGrant{maximum_depth:clone_grant.maximum_depth-1,..clone_grant};
                 let Some((post,progress))=cursor.take(child)?else{return Err(fault(prefix,"projection-result"));};
-                *self.projected=Some(post);
+                *self.projection_output=Some(post);
                 let progress=semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"structural immutable projection output")?;
                 cursor.begin_close();
                 self.phase=Phase::PlaceProjection;
@@ -511,6 +513,13 @@ where
                 let progress=self.place_projected(clone_grant)?;
                 if self.projected.is_none(){self.phase=Phase::CloseProjection;}
                 Ok(self.record(progress))
+            }
+            Phase::PlaceProjection=>{
+                let demand=<S::Output as ProjectionOutput<S>>::placement_demand();
+                if !semio_framework_value::retained_clone::retained_clone_grant_admits(clone_grant,demand){return Ok(ArtifactStoreOneItemPreparationStep::Blocked)}
+                let output=self.projection_output.take().ok_or_else(||fault(prefix,"projection-output"))?;let mut post=std::mem::MaybeUninit::uninit();
+                let progress=match output.place(&mut post,clone_grant){Ok(progress)=>progress,Err((error,output))=>{*self.projection_output=Some(output);return Err(error)}};
+                *self.post=Some(unsafe{post.assume_init()});self.phase=Phase::CloseProjection;Ok(self.record(progress))
             }
             Phase::CloseProjection => {
                 let cursor=self.cursor.as_mut().ok_or_else(||fault(prefix,"projection"))?;
@@ -679,6 +688,7 @@ where
         if !self.retirement.is_empty() {
             return self.retirement.step_granted(child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
+        if let Some(step)=self.retirement.begin_granted(&mut self.projection_output,child)?{return Ok(RetainedCloneStep::Progress(step.progress()))}
         if let Some(original)=self.post.take(){
             *self.returned_post=Some(Arc::new(original));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<S>()+size_of::<Arc<S>>(),retained_capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<S>(),..Default::default()}));
@@ -793,6 +803,7 @@ where
             && self.base.is_none()
             && self.source.is_none()
             && self.cursor.is_none()
+            && self.projection_output.is_none()
             && self.post.is_none()
             && self.projected.is_none()
             && self.post_read.terminal_is_empty()
@@ -847,6 +858,7 @@ where
         if !self.retirement.is_empty() {
             return child(RetirementDemand { copy_bytes: self.retirement.next_copy_byte_demand()?, capacity_bytes: self.retirement.next_capacity_byte_demand(body)?, release_bytes: self.retirement.next_release_byte_demand()?, depth: self.retirement.next_depth_demand()? });
         }
+        if self.projection_output.is_some(){return child(self.retirement.next_owner_demands::<S::Output>(true,&None,body)?)}
         if self.post.is_some() {
             return child(RetirementDemand{copy_bytes:size_of::<S>()+size_of::<Arc<S>>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<S>(),depth:1,..Default::default()});
         }
@@ -898,7 +910,8 @@ impl<S: SnapshotProjection<Output = S>, M: Send + Sync + 'static, E: PagedOneIte
                     && self.base.is_none()
                     && self.source.is_none()
                     && self.cursor.is_none()
-                    && self.post.is_none()
+                    && self.projection_output.is_none()
+            && self.post.is_none()
                     && self.pending_inverse.is_none()
                     && self.inverse_retirement.is_none()
                     && self.outcome_messages.is_none()

@@ -156,9 +156,8 @@ impl CommandPageWriter {
         }
     }
 
-    pub(in super::super) fn bytes(&mut self, bytes: &[u8]) -> Result<(), semio_framework_diagnostic::Fault> {
-        self.varint(bytes.len() as u64)?;
-        self.write(bytes)
+    pub(in super::super) fn bytes(&mut self,source:&(impl semio_framework_value::ByteReadSource+?Sized))->Result<(),semio_framework_diagnostic::Fault>{
+        self.varint(source.byte_len()as u64)?;let mut at=0;let mut page=[0;256];while at<source.byte_len(){let count=source.read_bytes(at,&mut page);assert!(count>0&&count<=source.byte_len()-at,"original byte source must preserve its declared length");self.write(&page[..count])?;at+=count;}Ok(())
     }
 
     pub(in super::super) fn string(&mut self, value: &str) -> Result<(), semio_framework_diagnostic::Fault> {

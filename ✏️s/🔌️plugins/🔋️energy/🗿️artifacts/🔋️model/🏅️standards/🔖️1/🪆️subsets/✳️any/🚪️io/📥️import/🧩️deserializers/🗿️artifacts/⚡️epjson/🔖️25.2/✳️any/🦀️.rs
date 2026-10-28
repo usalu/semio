@@ -124,6 +124,10 @@ fn text<'a>(fields: &'a Object, key: &str) -> Option<&'a str> {
     fields.get(key).and_then(Value::as_str)
 }
 
+fn name_matches(actual: &str, expected: Option<&str>) -> bool {
+    expected.is_some_and(|name| actual.eq_ignore_ascii_case(name))
+}
+
 fn flag(fields: &Object, key: &str, fallback: bool) -> bool {
     match text(fields, key) {
         Some("Yes") => true,
@@ -375,13 +379,13 @@ fn decode_constructions(root: &Object, model: &mut Model, material_names: &[Stri
     let mut next = CONSTRUCTION_BASE;
     for (name, fields) in objects(root, "Construction") {
         let layers: Vec<&str> = LAYER_KEYS.iter().filter_map(|key| text(fields, key)).collect();
-        if let Some(single) = layers.first().filter(|_| layers.len() == 1).and_then(|layer| glazing_materials.iter().find(|(material, _, _, _)| material == layer)) {
+        if let Some(single) = layers.first().filter(|_| layers.len() == 1).and_then(|layer| glazing_materials.iter().find(|(material, _, _, _)| material.eq_ignore_ascii_case(layer))) {
             glazing_constructions.push((name.to_string(), single.1, single.2, single.3));
             continue;
         }
         let mut ids = Vec::new();
         for (index, layer) in layers.iter().enumerate() {
-            match material_names.iter().position(|material| material == layer) {
+            match material_names.iter().position(|material| material.eq_ignore_ascii_case(layer)) {
                 Some(position) => ids.push(EntityId(MATERIAL_BASE + position as u32)),
                 None => {
                     diagnostics.push(EpJsonDiagnostic::new("epjson.construction.unknown-layer", name, format!("layer {index} names {layer:?}, which this document does not define as a Material, Material:NoMass, WindowMaterial:Glazing, WindowMaterial:Gas or WindowMaterial:SimpleGlazingSystem")));
@@ -408,7 +412,7 @@ fn decode_zones(root: &Object, model: &mut Model) -> Vec<String> {
         names.push(name.to_string());
     }
     for (index, (name, fields)) in objects(root, "Space").into_iter().enumerate() {
-        let Some(zone) = text(fields, "zone_name").and_then(|zone| names.iter().position(|candidate| candidate == zone)) else { continue };
+        let Some(zone) = text(fields, "zone_name").and_then(|zone| names.iter().position(|candidate| candidate.eq_ignore_ascii_case(zone))) else { continue };
         model.spaces.push(Space { id: EntityId(SPACE_BASE + index as u32), name: name.to_string(), zone_id: EntityId(ZONE_BASE + zone as u32), floor_area_m2: number_or(fields, "floor_area", 0.0) });
     }
     names
@@ -418,11 +422,11 @@ fn decode_surfaces(root: &Object, model: &mut Model, zone_names: &[String], diag
     let rows = objects(root, "BuildingSurface:Detailed");
     let surface_names: Vec<&str> = rows.iter().map(|(name, _)| *name).collect();
     for (index, (name, fields)) in rows.iter().enumerate() {
-        let Some(zone) = text(fields, "zone_name").and_then(|zone| zone_names.iter().position(|candidate| candidate == zone)) else {
+        let Some(zone) = text(fields, "zone_name").and_then(|zone| zone_names.iter().position(|candidate| candidate.eq_ignore_ascii_case(zone))) else {
             diagnostics.push(EpJsonDiagnostic::new("epjson.surface.unknown-zone", *name, "the surface names a zone this document does not define and is skipped"));
             continue;
         };
-        let construction = model.constructions.iter().find(|construction| Some(construction.name.as_str()) == text(fields, "construction_name")).map(|construction| construction.id);
+        let construction = model.constructions.iter().find(|construction| name_matches(&construction.name, text(fields, "construction_name"))).map(|construction| construction.id);
         let Some(construction_id) = construction else {
             diagnostics.push(EpJsonDiagnostic::new("epjson.surface.unknown-construction", *name, "the surface names a construction this document does not define and is skipped"));
             continue;
@@ -432,7 +436,7 @@ fn decode_surfaces(root: &Object, model: &mut Model, zone_names: &[String], diag
             "Ground" => OutsideBoundary::Ground,
             "Adiabatic" => OutsideBoundary::Adiabatic,
             "OtherSideCoefficients" => OutsideBoundary::OtherSideTemperature,
-            "Surface" => match text(fields, "outside_boundary_condition_object").and_then(|peer| surface_names.iter().position(|candidate| candidate == &peer)) {
+            "Surface" => match text(fields, "outside_boundary_condition_object").and_then(|peer| surface_names.iter().position(|candidate| candidate.eq_ignore_ascii_case(peer))) {
                 Some(position) => OutsideBoundary::Interzone(EntityId(SURFACE_BASE + position as u32)),
                 None => {
                     diagnostics.push(EpJsonDiagnostic::new("epjson.surface.dangling-interzone", *name, "outside_boundary_condition is Surface but the named partner is not in this document; read as Adiabatic"));
@@ -477,16 +481,16 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
         .map(|(material, fields)| (material, number_or(fields, "u_factor", 0.0), number_or(fields, "solar_heat_gain_coefficient", 0.0), number_or(fields, "visible_transmittance", 0.0)))
         .collect();
     for (index, (name, fields)) in objects(root, "FenestrationSurface:Detailed").into_iter().enumerate() {
-        let Some(host) = model.surfaces.iter().find(|surface| Some(surface.name.as_str()) == text(fields, "building_surface_name")).cloned() else {
+        let Some(host) = model.surfaces.iter().find(|surface| name_matches(&surface.name, text(fields, "building_surface_name"))).cloned() else {
             diagnostics.push(EpJsonDiagnostic::new("epjson.fenestration.unknown-host", name, "the aperture names a building surface this document does not define and is skipped"));
             continue;
         };
         let construction = text(fields, "construction_name").unwrap_or_default();
-        let simple = glazing.iter().find(|(candidate, _, _, _)| candidate == construction).map(|(_, u_value, shgc, vlt)| (None, *u_value, *shgc, *vlt));
+        let simple = glazing.iter().find(|(candidate, _, _, _)| candidate.eq_ignore_ascii_case(construction)).map(|(_, u_value, shgc, vlt)| (None, *u_value, *shgc, *vlt));
         let layered = || {
-            let stack = model.constructions.iter().find(|candidate| candidate.name == construction)?.id;
+            let stack = model.constructions.iter().find(|candidate| candidate.name.eq_ignore_ascii_case(construction))?.id;
             let fallback = glazing_material_name(name);
-            fallbacks.iter().find(|(material, _, _, _)| *material == fallback).map(|(_, u_value, shgc, vlt)| (Some(stack), *u_value, *shgc, *vlt))
+            fallbacks.iter().find(|(material, _, _, _)| material.eq_ignore_ascii_case(fallback)).map(|(_, u_value, shgc, vlt)| (Some(stack), *u_value, *shgc, *vlt))
         };
         let Some((glazing_construction_id, u_value, shgc, vlt)) = simple.or_else(layered) else {
             diagnostics.push(EpJsonDiagnostic::new(
@@ -542,7 +546,7 @@ fn decode_apertures(root: &Object, model: &mut Model, glazing: &[(String, f64, f
 
 fn zone_id_of(zone_names: &[String], named: Option<&str>) -> Option<EntityId> {
     let named = named?;
-    zone_names.iter().position(|candidate| candidate == named || format!("{candidate}_Space") == named).map(|position| EntityId(ZONE_BASE + position as u32))
+    zone_names.iter().position(|candidate| candidate.eq_ignore_ascii_case(named) || format!("{candidate}_Space").eq_ignore_ascii_case(named)).map(|position| EntityId(ZONE_BASE + position as u32))
 }
 
 fn schedule_reference(fields: &Object, key: &str, subject: &str, diagnostics: &mut Vec<EpJsonDiagnostic>) -> ScheduleId {
@@ -665,7 +669,7 @@ fn decode_hvac(root: &Object, model: &mut Model, zone_names: &[String], diagnost
             diagnostics.push(EpJsonDiagnostic::new("epjson.thermostat.unknown-zone", name, "the thermostat names a zone this document does not define and is skipped"));
             continue;
         };
-        let Some((setpoint_name, setpoint)) = dual.iter().find(|(candidate, _)| Some(*candidate) == text(fields, "control_1_name")) else {
+        let Some((setpoint_name, setpoint)) = dual.iter().find(|(candidate, _)| name_matches(candidate, text(fields, "control_1_name"))) else {
             diagnostics.push(EpJsonDiagnostic::new("epjson.thermostat.unsupported-control", name, "only a ThermostatSetpoint:DualSetpoint control decodes into a semio Thermostat"));
             continue;
         };
@@ -687,7 +691,7 @@ fn decode_hvac(root: &Object, model: &mut Model, zone_names: &[String], diagnost
             diagnostics.push(EpJsonDiagnostic::new("epjson.equipment-connections.unknown-zone", name, "the equipment connections name a zone this document does not define and are skipped"));
             continue;
         };
-        let equipment = lists.iter().find(|(candidate, _)| Some(*candidate) == text(fields, "zone_conditioning_equipment_list_name")).and_then(|(_, list)| match list.get("equipment") {
+        let equipment = lists.iter().find(|(candidate, _)| name_matches(candidate, text(fields, "zone_conditioning_equipment_list_name"))).and_then(|(_, list)| match list.get("equipment") {
             Some(Value::Array(items)) => items.first().and_then(|item| if let Value::Object(row) = item { Some(row) } else { None }),
             _ => None,
         });
@@ -700,7 +704,7 @@ fn decode_hvac(root: &Object, model: &mut Model, zone_names: &[String], diagnost
             ));
             continue;
         }
-        let Some((_, system)) = systems.iter().find(|(candidate, _)| Some(*candidate) == text(equipment, "zone_equipment_name")) else { continue };
+        let Some((_, system)) = systems.iter().find(|(candidate, _)| name_matches(candidate, text(equipment, "zone_equipment_name"))) else { continue };
         model.ideal_loads.push(IdealLoadsSystem {
             id: EntityId(next),
             zone_id,

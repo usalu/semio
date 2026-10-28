@@ -57,5 +57,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "IdealLoads"
+    ],
+    "row": "StateFaultDefinition",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "faults",
+    "field": "target_equipment_id",
+    "input": "new_target_equipment_id",
+    "key": "id",
+    "labels": {
+      "en": "Change fault: Affected system",
+      "de": "Betroffene Anlage ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fault",
+      "kind": "change-fault-target-equipment",
+      "record": "ChangedFaultTargetEquipment"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Affected system violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fault does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced affected system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fault already carries this affected system reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

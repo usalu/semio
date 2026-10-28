@@ -7,7 +7,7 @@ async fn attach_folds_a_pushed_event_log() {
     test_support::dispatch_test_command(&mut seed_store, ArtifactCommand::Apply { mutations: vec![DemoMutation::SetN(SetN { n: 5 })], transaction: None }).await.expect("apply");
     test_support::dispatch_test_command(&mut seed_store, ArtifactCommand::CommitCheckpoint { message: Some("seed".into()), authors: Vec::new() }).await.expect("commit");
     remote.push(BackboneMessage::Genesis { pack: seed_store.envelope().vcs.genesis.pack().to_vec() }).await.expect("push genesis");
-    remote.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&seed_store.event_log().expect("seed log")) }).await.expect("push events");
+    remote.push(BackboneMessage::from_envelopes(&seed_store.event_log().expect("seed log"))).await.expect("push events");
 
     let mut store = fresh_demo_store().await;
     store.attach_backbone(Backbones::Channel(channel)).await.expect("attach folds the pushed events");
@@ -28,7 +28,7 @@ async fn channel_backbone_round_trips_between_store_and_actor() {
     let outbound = drain_channel_for_test(&remote).expect("drain apply");
     assert!(outbound.iter().any(|message| matches!(message, BackboneMessage::Mutations { .. })), "a local apply is sent outbound as mutations: {outbound:?}");
 
-    remote.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&[foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 8 })).await]) }).await.expect("push inbound operations");
+    remote.push(BackboneMessage::from_envelopes(&[foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 8 })).await])).await.expect("push inbound operations");
     store.tick().await.expect("tick");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(8), "store ingests the actor's inbound operations");
 }
@@ -57,7 +57,7 @@ async fn pump_acks_ingested_operations() {
 
     let inbound = foreign_mutation_envelope("peer", DemoMutation::SetN(SetN { n: 7 })).await;
     let mutation_id = inbound.mutation_id.0.clone();
-    remote.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&[inbound]) }).await.expect("push inbound operations");
+    remote.push(BackboneMessage::from_envelopes(&[inbound])).await.expect("push inbound operations");
     store.tick().await.expect("tick");
     assert_eq!(store.snapshot().expect("snapshot").n, Some(7), "ingested the inbound operation");
 

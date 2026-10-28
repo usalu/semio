@@ -478,12 +478,12 @@ impl ArtifactEditor for DocxEditor {
         })
     }
 
-    fn initial_snapshot() -> DocxSnapshot {
+    fn reference_birth()->Option<fn()->DocxSnapshot>{Some(||{
         semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxDocument {
             body: vec![semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxBlock::Paragraph(semio_s_artifact_stdio_docx_base_model::standards::v_ecma_376::subsets::base::schema::snapshot::DocxParagraph::default())],
             styles: Vec::new(),
         })
-    }
+    })}
 
     /// ✏️ Replaces the addressed paragraph's text after its optimistic revision matches.
     /// The exact block/run structure is retained and invalid or stale targets return a fault.

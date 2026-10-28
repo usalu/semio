@@ -76,5 +76,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "field": "method",
+    "input": "new_method",
+    "key": "id",
+    "labels": {
+      "en": "Change infiltration: Method",
+      "de": "Methode ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "infiltration",
+      "kind": "change-infiltration-method",
+      "record": "ChangedInfiltrationMethod"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Method violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The infiltration already carries this method value."
+      }
+    }
   }
 }

@@ -62,5 +62,43 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateDailySchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "daily",
+    "field": "interpolation",
+    "input": "new_interpolation",
+    "key": "id",
+    "labels": {
+      "en": "Daily schedule interpolation",
+      "de": "Tageszeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "daily-schedule",
+      "kind": "change-daily-schedule-interpolation",
+      "record": "ChangedDailyScheduleInterpolation"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Daily schedule requires a valid interpolation."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed daily schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "Daily schedule already has this interpolation."
+      }
+    }
   }
 }

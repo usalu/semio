@@ -97,5 +97,89 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateConstruction",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "layer_material_ids",
+        "input": "layer_material_ids",
+        "storage": "sealed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateConstruction",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "constructions",
+    "key": "id",
+    "inverse": "DeleteConstruction",
+    "labels": {
+      "en": "Create Construction at index",
+      "de": "Konstruktion an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "construction",
+      "kind": "create-construction",
+      "record": "CreatedConstruction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "layer_material_ids",
+        "kind": "reference",
+        "storage": "array",
+        "collections": [
+          "Materials"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "before-rules",
+    "name": "name",
+    "nameValidation": "verbatim",
+    "unique": false
   }
 }

@@ -17,6 +17,7 @@ pub struct ArtifactView<'a, P> {
     pub(super) parent_document_id: Option<&'a str>,
     snapshot_read: std::sync::Mutex<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,
     tool_run: Option<ToolRunView>,
+    original_tool_run:Option<semio_framework_tool_run_presentation::ToolRunView<'a>>,
     operations: &'a [ArtifactOperationProgress],
     provisional_generation: u64,
     instance: Option<ArtifactInstanceOperationOwnerHandle>,
@@ -42,7 +43,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// shape every leaf app and test uses. Prefer this over a struct literal: lane views grow
     /// over time, and a constructor absorbs that growth without touching every call site.
     pub fn new(snapshot: &'a P, history: &'a HistoryView) -> Self {
-        Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, operations: &[], provisional_generation: 0, instance: None }
+        Self { snapshot, history, children: ChildContentView::EMPTY, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None, operations: &[], provisional_generation: 0, instance: None }
     }
 
     /// 🪪️ Synchronous retained-worker view bound to one exact admitted operation.
@@ -55,7 +56,7 @@ impl<'a, P> ArtifactView<'a, P> {
             render_operation: None,
             parent_document_id: None,
             snapshot_read: std::sync::Mutex::new(None),
-            tool_run: None,
+            tool_run: None, original_tool_run:None,
             operations: &[],
             provisional_generation: 0,
             instance: None,
@@ -66,7 +67,7 @@ impl<'a, P> ArtifactView<'a, P> {
     /// [`ArtifactOwnedToolJobContext::children`] rather than through a host render pass and so
     /// carries no render identity. Synchronous on purpose: it only moves owned fields.
     pub fn with_children(snapshot: &'a P, history: &'a HistoryView, children: ChildContentView) -> Self {
-        Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, operations: &[], provisional_generation: 0, instance: None }
+        Self { snapshot, history, children, operation: None, render_operation: None, parent_document_id: None, snapshot_read: std::sync::Mutex::new(None), tool_run: None, original_tool_run:None, operations: &[], provisional_generation: 0, instance: None }
     }
 
     /// 🪪️ Binds a composing retained view to the exact admitted operation it runs under, so its handlers mint ids
@@ -91,7 +92,7 @@ impl<'a, P> ArtifactView<'a, P> {
             render_operation: Some(render_operation),
             parent_document_id: Some(parent_document_id),
             snapshot_read: std::sync::Mutex::new(snapshot_read),
-            tool_run: None,
+            tool_run: None, original_tool_run:None,
             operations: &[],
             provisional_generation: 0,
             instance: None,
@@ -184,4 +185,11 @@ impl<'a, P> ArtifactView<'a, P> {
         let mut owner = self.snapshot_read.try_lock().map_err(|_| plugin_sdk_fault("the live snapshot-read lease is busy"))?;
         owner.take().ok_or_else(|| plugin_sdk_fault("the artifact view has no transferable live snapshot-read lease"))
     }
+}
+
+impl<'a,P> ArtifactView<'a,P>{
+ /// 🪟️ Borrows the original immutable presentation pages for this mounted render without materializing metadata or result bytes.
+ pub fn with_original_tool_run(mut self,view:Option<semio_framework_tool_run_presentation::ToolRunView<'a>>)->Self{self.original_tool_run=view;self}
+ /// 🔎️ Reads the same retained presentation that the native tick receiver published.
+ pub fn original_tool_run(&self)->Option<semio_framework_tool_run_presentation::ToolRunView<'_>>{self.original_tool_run}
 }

@@ -180,11 +180,11 @@ impl WasmActor {
         if envelopes.is_empty() {
             return true;
         }
-        if self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).await.is_err() {
+        if self.remote.push(BackboneMessage::from_envelopes(&envelopes)).await.is_err() {
             return false;
         }
         if self.hub_space_id.is_some() {
-            let message = match (BackboneMessage::Mutations { envelopes: encode_envelopes(&envelopes) }).encode_op() {
+            let message = match (BackboneMessage::from_envelopes(&envelopes)).encode_op() {
                 Ok(message) => message,
                 Err(_) => return false,
             };

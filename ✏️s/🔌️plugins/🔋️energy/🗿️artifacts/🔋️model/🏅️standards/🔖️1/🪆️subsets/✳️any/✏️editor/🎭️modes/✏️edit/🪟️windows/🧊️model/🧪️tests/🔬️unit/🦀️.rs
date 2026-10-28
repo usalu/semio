@@ -49,7 +49,7 @@ async fn definition_declares_a_world3d_window() {
 
 #[semio_framework_async_macros::async_test]
 async fn render_binds_the_shared_interaction_domain_at_surface_granularity() {
-    let node = render(&bestest_600(), &EnergyModelInteractionSnapshot::default(), None, None).expect("the world surface assembles");
+    let node = render(&bestest_600(), &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("the world surface assembles");
     let scene = scene_of(&node);
     assert_eq!(scene.domain_id.as_deref(), Some(ENERGY_MODEL_INTERACTION_DOMAIN));
     assert_eq!(scene.domain_granularity_id.as_deref(), Some(ENERGY_GRANULARITY_SURFACE));
@@ -61,7 +61,7 @@ async fn render_emits_one_instance_per_surface_and_per_window_keyed_by_the_share
     let model = bestest_600();
     assert_eq!(model.surfaces.len(), 6, "ANSI/ASHRAE 140 case 600 is a six-sided box");
     assert_eq!(model.fenestrations.len(), 2, "case 600 carries two south windows");
-    let node = render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("the world surface assembles");
+    let node = render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("the world surface assembles");
     let scene = scene_of(&node);
     for surface in &model.surfaces {
         let id = energy_target_id(surface.id);
@@ -85,9 +85,9 @@ async fn the_scene_target_id_is_the_one_the_tree_and_the_inspector_use() {
 #[semio_framework_async_macros::async_test]
 async fn selection_publishes_the_lane_without_rebaking_mesh_colours() {
     let model = bestest_600();
-    let plain = render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("plain");
+    let plain = render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("plain");
     let selected_id = energy_target_id(model.surfaces[0].id);
-    let picked = render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![selected_id.clone()], hovered_ids: Vec::new() }, None, None).expect("picked");
+    let picked = render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![selected_id.clone()], hovered_ids: Vec::new() }, None, None,Locale::En).expect("picked");
     assert_eq!(scene_of(&plain).meshes_json, scene_of(&picked).meshes_json, "interaction paint is host-owned; geometry stays on the class swatch");
     assert!(scene_of(&picked).selection_json.contains(&selected_id), "the selection lane names the picked id");
 }
@@ -95,12 +95,12 @@ async fn selection_publishes_the_lane_without_rebaking_mesh_colours() {
 #[semio_framework_async_macros::async_test]
 async fn an_overlay_replaces_a_surfaces_colour_and_a_caption_wraps_the_scene() {
     let model = bestest_600();
-    let plain = render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("plain");
+    let plain = render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("plain");
     let overlay = HashMap::from([(model.surfaces[0].id.0, [1.0_f64, 0.0, 0.0])]);
-    let coloured = render(&model, &EnergyModelInteractionSnapshot::default(), Some(&overlay), None).expect("coloured");
+    let coloured = render(&model, &EnergyModelInteractionSnapshot::default(), Some(&overlay), None,Locale::En).expect("coloured");
     assert_ne!(scene_of(&plain).meshes_json, scene_of(&coloured).meshes_json, "a results overlay replaces the class swatch");
 
-    let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Transmission loss (kWh)")).expect("captioned");
+    let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Transmission loss (kWh)"),Locale::En).expect("captioned");
     assert!(!matches!(captioned.component, semio_framework_plugin::Component::Surface(_)), "a captioned render wraps the surface in a column");
     assert_eq!(captioned.children.len(), 2, "the caption sits above the scene stack");
 }
@@ -113,7 +113,7 @@ async fn an_overlay_replaces_a_surfaces_colour_and_a_caption_wraps_the_scene() {
 async fn a_captioned_overlay_render_has_unique_sibling_keys_and_still_decodes() {
     let model = bestest_600();
     let overlay: HashMap<u32, [f64; 3]> = model.surfaces.iter().enumerate().map(|(index, surface)| (surface.id.0, [index as f64 / 10.0, 0.5, 1.0 - index as f64 / 10.0])).collect();
-    let node = render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![energy_target_id(model.surfaces[0].id)], hovered_ids: vec![energy_target_id(model.surfaces[1].id)] }, Some(&overlay), Some("Conduction loss 0 – 412 kWh")).expect("the captioned overlay render assembles");
+    let node = render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![energy_target_id(model.surfaces[0].id)], hovered_ids: vec![energy_target_id(model.surfaces[1].id)] }, Some(&overlay), Some("Conduction loss 0 – 412 kWh"),Locale::En).expect("the captioned overlay render assembles");
 
     assert_sibling_keys_unique(&node, "root");
     let keys: Vec<&str> = node.children.iter().map(|child| child.key.as_str()).collect();
@@ -124,12 +124,12 @@ async fn a_captioned_overlay_render_has_unique_sibling_keys_and_still_decodes() 
     let scene = scene_of(surface_node(&node));
     assert_eq!(scene.domain_id.as_deref(), Some(ENERGY_MODEL_INTERACTION_DOMAIN), "the captioned scene is still domain-bound");
     assert!(scene.instances_json.contains(&format!("\"id\":\"{}\"", model.surfaces[0].id.0)), "the captioned scene still carries every instance");
-    assert_ne!(scene.meshes_json, scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("plain")).meshes_json, "the overlay still repaints under a caption");
+    assert_ne!(scene.meshes_json, scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("plain")).meshes_json, "the overlay still repaints under a caption");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn an_empty_model_renders_without_faulting() {
-    let node = render(&crate::model::Model::default(), &EnergyModelInteractionSnapshot::default(), None, None).expect("an empty model still assembles a surface");
+    let node = render(&crate::model::Model::default(), &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("an empty model still assembles a surface");
     let scene = scene_of(&node);
     assert_eq!(scene.meshes_json, "[]");
     assert_eq!(scene.instances_json, "[]");
@@ -138,7 +138,7 @@ async fn an_empty_model_renders_without_faulting() {
 #[semio_framework_async_macros::async_test]
 async fn a_quad_surface_fan_triangulates_into_two_triangles() {
     let model = bestest_600();
-    let node = render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("assembles");
+    let node = render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("assembles");
     let meshes: serde_json::Value = serde_json::from_str(&scene_of(&node).meshes_json).expect("the mesh lane is json");
     let first = &meshes[0];
     assert_eq!(first["id"].as_str(), Some(format!("energy-surface-{}", model.surfaces[0].id.0).as_str()));
@@ -187,8 +187,8 @@ async fn the_window_declares_the_camera_verb_the_world3d_host_dispatches() {
 async fn a_stored_camera_replaces_the_model_derived_one() {
     let model = bestest_600();
     let stored = config::EnergyModelWindowConfig { camera: config::EnergyModelCameraPose { position: [30.0, -25.0, 18.0], target: [4.0, 3.0, 1.35], zoom: 1.0 } };
-    let default_scene = scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("plain"));
-    let stored_scene = scene_of(&render_with_camera(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some(&stored)).expect("stored"));
+    let default_scene = scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("plain"));
+    let stored_scene = scene_of(&render_with_camera(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some(&stored),Locale::En).expect("stored"));
 
     assert_ne!(default_scene.camera_json, stored_scene.camera_json);
     assert_eq!(stored_scene.camera_json, stored.camera.scene_camera_json());
@@ -206,13 +206,13 @@ async fn a_stored_camera_replaces_the_model_derived_one() {
 #[semio_framework_async_macros::async_test]
 async fn a_re_render_of_the_same_model_never_re_arms_the_auto_fit() {
     let model = bestest_600();
-    let first = scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None).expect("first"));
-    let picked = scene_of(&render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![energy_target_id(model.surfaces[0].id)], hovered_ids: Vec::new() }, None, None).expect("picked"));
+    let first = scene_of(&render(&model, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("first"));
+    let picked = scene_of(&render(&model, &EnergyModelInteractionSnapshot { selected_ids: vec![energy_target_id(model.surfaces[0].id)], hovered_ids: Vec::new() }, None, None,Locale::En).expect("picked"));
     assert_eq!(first.fit_json, picked.fit_json, "a selection must not re-frame the camera");
     assert_eq!(first.camera_json, picked.camera_json, "a selection must not reattach the camera");
 
     let other = crate::examples::bestest_610::model();
-    let changed = scene_of(&render(&other, &EnergyModelInteractionSnapshot::default(), None, None).expect("other"));
+    let changed = scene_of(&render(&other, &EnergyModelInteractionSnapshot::default(), None, None,Locale::En).expect("other"));
     assert_ne!(first.fit_json, changed.fit_json, "new geometry DOES re-frame once");
 }
 
@@ -244,7 +244,7 @@ fn text_values(node: &BuiltNode) -> Vec<String> {
 async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_are_painted_with() {
     let model = bestest_600();
     let overlay: HashMap<u32, [f64; 3]> = model.surfaces.iter().map(|surface| (surface.id.0, [0.5, 0.5, 0.5])).collect();
-    let node = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), Some(&overlay), Some("Conduction loss · 0.0 – 412.3 kWh"), Some((0.0, 412.3)), None).expect("the legend render assembles");
+    let node = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), Some(&overlay), Some("Conduction loss · 0.0 – 412.3 kWh"), Some((0.0, 412.3)), None,Locale::En).expect("the legend render assembles");
 
     assert_sibling_keys_unique(&node, "root");
     let legend = &node.children[0];
@@ -277,11 +277,11 @@ async fn the_results_legend_draws_eight_swatches_from_the_very_ramp_the_meshes_a
 #[semio_framework_async_macros::async_test]
 async fn without_an_overlay_there_is_no_legend_at_all() {
     let model = bestest_600();
-    let bare = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some((0.0, 9.0)), None).expect("the bare render assembles");
+    let bare = render_with_legend(&model, &EnergyModelInteractionSnapshot::default(), None, None, Some((0.0, 9.0)), None,Locale::En).expect("the bare render assembles");
     assert!(matches!(bare.component, semio_framework_plugin::Component::Surface(_)), "an un-overlaid viewport is the surface itself, with no legend column");
     assert!(swatch_sources(&bare).is_empty(), "no overlay, no swatches");
 
-    let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Conduction loss")).expect("the captioned render assembles");
+    let captioned = render(&model, &EnergyModelInteractionSnapshot::default(), None, Some("Conduction loss"),Locale::En).expect("the captioned render assembles");
     assert!(swatch_sources(&captioned).is_empty(), "a caption without bounds draws no ramp strip");
     assert_eq!(captioned.children[0].children.iter().count(), 1, "the legend column is just the caption line");
 }
@@ -296,3 +296,13 @@ async fn a_swatch_source_is_a_self_contained_inline_svg() {
     assert_eq!(legend_swatch_src("1d4ed8"), source, "a bare hex and a `#`-prefixed one are the same swatch");
 }
 //#endregion 🧱️LegendStrip
+
+#[semio_framework_async_macros::async_test]
+async fn original_indexed_results_paint_the_real_scene_with_localized_bounded_reads(){
+ use crate::editor_results::indexed::{EnergyResultSource,IndexedEnergyResults};use std::cell::Cell;
+ struct Original<'a>{bytes:&'a[u8],reads:&'a Cell<usize>}
+ impl EnergyResultSource for Original<'_>{fn complete(&self)->bool{true}fn byte_len(&self)->usize{self.bytes.len()}fn read_fixed<const N:usize>(&self,offset:usize)->Option<[u8;N]>{assert!(N<=64);self.reads.set(self.reads.get()+1);self.bytes.get(offset..offset.checked_add(N)?)?.try_into().ok()}}
+ let law:serde_json::Value=serde_json::from_str(include_str!("indexed-render.json")).unwrap();let model=bestest_600();let id=model.surfaces[0].id.0;let mut bytes=[0u8;100];bytes[..4].copy_from_slice(law["magic"].as_str().unwrap().as_bytes());bytes[4..8].copy_from_slice(&1u32.to_le_bytes());for field in 0..4{for index in 0..2{bytes[12+field*16+index*8..20+field*16+index*8].copy_from_slice(&law["bounds"][index].as_f64().unwrap().to_le_bytes());}}bytes[76..80].copy_from_slice(&id.to_le_bytes());bytes[96..100].fill(law["band"].as_u64().unwrap()as u8);let original=bytes.as_ptr();let reads=Cell::new(0);let result=IndexedEnergyResults::new(Original{bytes:&bytes,reads:&reads}).unwrap();let color=crate::editor_results::hex_to_rgb01(crate::editor_results::SURFACE_ENERGY_BANDS[law["band"].as_u64().unwrap()as usize]);let expected=HashMap::from([(id,color)]);let expected=scene_of(&render(&model,&EnergyModelInteractionSnapshot::default(),Some(&expected),None,Locale::En).unwrap()).meshes_json;
+ for repaint in 0..law["repaints"].as_u64().unwrap(){let locale_index=repaint as usize%law["locales"].as_array().unwrap().len();let locale=match law["locales"][locale_index].as_str().unwrap(){"en"=>Locale::En,"de"=>Locale::De,_=>unreachable!()};let interaction=EnergyModelInteractionSnapshot{selected_ids:Vec::new(),hovered_ids:vec![id.to_string()]};let node=render_indexed(&model,&interaction,Some(&result),crate::editor_results::ResultField::ConductionLoss,locale,None).unwrap();assert_eq!(scene_of(surface_node(&node)).meshes_json,expected);let labels=text_values(&node);assert!(labels.iter().any(|value|value.contains(law["captions"][locale_index].as_str().unwrap())));assert!(labels.iter().any(|value|value==law["upperLabels"][locale_index].as_str().unwrap()));assert_sibling_keys_unique(&node,"original indexed scene");}
+ assert_eq!(bytes.as_ptr(),original);assert!(reads.get()<3000,"repaint probes remain bounded by binary-search paths");
+}

@@ -56,5 +56,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateZone",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "zones",
+    "field": "multiplier",
+    "input": "new_multiplier",
+    "key": "id",
+    "labels": {
+      "en": "Change zone multiplier",
+      "de": "Zonenmultiplikator ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "zone",
+      "kind": "change-zone-multiplier",
+      "record": "ChangedZoneMultiplier"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A zone needs at least one instance."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The zone already has this multiplier."
+      }
+    }
   }
 }

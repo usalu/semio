@@ -1,6 +1,7 @@
 //! 🧵️ Reserved tool job of the tool job contract: the owned job request, the reserved input and request, the reserved job trait and state and the reserved tool job with its interactive job and drop implementations. See [`super`].
 
 use super::*;
+use crate::ArtifactInstanceOperationOwnerHandle;
 
 #[path="../🎟️request/🔒️command/🦀️.rs"]
 mod original_command;

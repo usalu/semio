@@ -6,7 +6,7 @@ pub const BOUNDED_FIRST_STEP_FACTORY: &str = "BoundedFirstStepCommandJobFactory"
 
 /// 📜️ One owner-local bounded reducer proof. The constructor derives the concrete Rust
 /// owner witness; copied controller, schema, file, or tool strings cannot grant authority.
-#[derive(Clone)]
+#[derive(Clone,Copy)]
 pub struct ArtifactBoundedFirstStepProof {
     pub owner_file: &'static str,
     pub owner: ToolOwnerWitness,
@@ -174,4 +174,15 @@ impl<'a, A: ArtifactApp> ArtifactToolFactoryRegistry<'a, A> {
     pub fn finish(self) -> BTreeMap<String, ArtifactToolRegistration> {
         self.registrations
     }
+}
+
+impl semio_framework_value::retirement::RetireOwned for ArtifactToolRegistration{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;(self.key,self.schema_id).retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<semio_framework::ToolFactoryKey>(),semio_framework_value::retirement::deferred_birth_bytes::<String>()])}
+ fn controlled_retirement_supported()->bool{true}
+}
+impl semio_framework_value::retirement::RetireOwned for ArtifactToolPublicContract{
+ fn retirement(self)->Box<dyn semio_framework_value::retirement::RetirementCursor>{use semio_framework_value::retirement::RetireOwned;(self.controller_id,self.tool_id,self.schema_id).retirement()}
+ fn retirement_birth_bytes(&self)->Option<usize>{semio_framework_value::retirement::sequence_birth_bytes(&[semio_framework_value::retirement::deferred_birth_bytes::<String>();3])}
+ fn controlled_retirement_supported()->bool{true}
 }

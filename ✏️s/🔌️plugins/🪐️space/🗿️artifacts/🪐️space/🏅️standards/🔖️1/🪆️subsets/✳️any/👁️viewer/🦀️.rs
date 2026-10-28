@@ -50,9 +50,9 @@ impl ArtifactViewer for SpaceIndexViewer {
     const DIALECT: Dialect = SPACE_INDEX_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::S_SPACE_INDEX_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SSpaceSnapshot {
+    fn reference_birth()->Option<fn()->SSpaceSnapshot>{Some(||{
         SSpaceSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `SpaceIndexViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`.

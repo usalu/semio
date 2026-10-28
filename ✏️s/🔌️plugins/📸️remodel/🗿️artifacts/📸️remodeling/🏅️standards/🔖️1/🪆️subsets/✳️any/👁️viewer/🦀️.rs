@@ -71,9 +71,9 @@ impl ArtifactViewer for RemodelingViewer {
     /// the two surfaces of one dialect open the same scene. A viewer has no `setActiveExample` action (its
     /// sole command is `Noop`), so the artifact's own `default_remodeling_scene()` is only the fallback for
     /// example text that no longer parses, never the ordinary boot.
-    fn initial_snapshot() -> RemodelingSnapshot {
+    fn reference_birth()->Option<fn()->RemodelingSnapshot>{Some(||{
         semio_s_artifact_remodel_remodeling_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_remodel_remodeling_examples::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| default_remodeling_scene())
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `RemodelingViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

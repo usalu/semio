@@ -30,6 +30,7 @@ name = "history_transition_unit"
 path = "../../🧪️tests/🔬️unit/🦀️.rs"
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-replication-causal = { path = "../../../📦️packages/🦀️rust" }
 semio-framework-replication-crypto = { path = "../../../../🔐️crypto/📦️packages/🦀️rust" }
 semio-framework-replication-edit = { path = "../../../../🎮️mutation/✏️edit/📦️packages/🦀️rust" }

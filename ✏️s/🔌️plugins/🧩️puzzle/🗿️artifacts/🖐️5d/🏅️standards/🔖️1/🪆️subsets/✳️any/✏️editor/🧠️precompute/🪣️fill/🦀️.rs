@@ -54,6 +54,7 @@ pub fn fill_run_job<A: Puzzle5dEditor>(request: ToolRunJobRequest<'_, EditorApp<
         provisional: &provisional,
         instance_owner: request.instance_owner,
         port: request.port,
+        host: request.host,
         trace_keys: request.trace_keys,
         entity_marks: request.entity_marks,
         children: request.children,

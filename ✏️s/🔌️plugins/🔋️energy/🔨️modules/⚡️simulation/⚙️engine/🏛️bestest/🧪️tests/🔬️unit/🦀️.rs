@@ -185,3 +185,27 @@ fn a_window_row_carries_transmitted_solar_on_a_sunny_design_day() {
     assert!(results.per_surface.iter().any(|row| !windows.contains(&row.id) && row.solar_absorbed_kwh > 0.0), "the sun-exposed opaque surfaces absorb solar on their outside face too");
 }
 //#endregion ☀️DesignDaySolar
+
+#[test]
+fn projection_selects_named_temperature_and_preserves_both_power_traces() {
+    use semio_s_plugin_energy_engine_output::TimeSeries;
+    use semio_s_plugin_energy_engine_units::Unit;
+    let fixture = semio_framework_pack_json::parse(include_str!("../🧫️fixtures/projection.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let read = |key: &str| fixture.as_object().unwrap().get(key).unwrap().as_array().unwrap().iter().map(|value| value.as_f64().unwrap()).collect::<Vec<_>>();
+    let mut results = Results::default();
+    results.time_series.series.admit(4).unwrap();
+    for (key, values, unit) in [
+        ("Facility Unrelated", vec![999.0, 999.0], Unit::Watts),
+        ("Zone Heating Power [Zone]", read("heatingW"), Unit::Watts),
+        ("Zone Cooling Power [Zone]", read("coolingW"), Unit::Watts),
+        ("Zone Air Temperature [Zone]", read("temperatureC"), Unit::Celsius),
+    ] {
+        results.time_series.series.insert_stable(key.into(), TimeSeries { key: key.into(), timestamps_hours: vec![0.0, 1.0], values, unit, admitted_samples: 2 }).unwrap();
+    }
+    let actual = project("600", &results);
+    assert_eq!(actual.zone_air_temperature_c, read("temperatureC"));
+    assert_eq!(actual.heating_w, read("heatingW"));
+    assert_eq!(actual.cooling_w, read("coolingW"));
+    assert_eq!(actual.free_float_min_c, 20.0);
+    assert_eq!(actual.free_float_max_c, 22.0);
+}

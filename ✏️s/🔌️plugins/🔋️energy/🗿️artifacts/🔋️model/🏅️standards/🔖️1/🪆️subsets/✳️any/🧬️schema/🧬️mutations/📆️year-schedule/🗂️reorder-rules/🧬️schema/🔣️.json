@@ -77,5 +77,49 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "schedule-row",
+    "scheduleAction": "reorder-rules",
+    "row": "StateAnnualSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "collection": "annual",
+    "nested": "schedules",
+    "key": "id",
+    "field": "rules",
+    "input": "from",
+    "labels": {
+      "en": "Reorder annual schedule rules",
+      "de": "Jahreszeitplanregeln umordnen"
+    },
+    "semantics": {
+      "verb": "reorder",
+      "entity": "annual-schedule",
+      "kind": "schedule",
+      "record": "ReorderAnnualScheduleRules"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The original schedule intent violates its authored calendar or weekday limits."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original schedule or selected ordinal does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored daily schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original schedule already has the requested arrangement."
+      }
+    }
   }
 }

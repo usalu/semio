@@ -1,7 +1,7 @@
 //! 🎯️ Document and child commands: local interaction queries, context menus, envelope ingestion, composed children and the history read of one plugin exchange. See [`super`].
 
 use super::*;
-use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText as _;
+use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
 
 /// 🔎️ Reads, acknowledges or cancels a local interaction query and answers its receipt or rejection.
 pub(super) async fn arm_local_interaction_query<PA: PluginApp>(

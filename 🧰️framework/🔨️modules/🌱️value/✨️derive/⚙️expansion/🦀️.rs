@@ -244,7 +244,7 @@ struct ContainerAttrs {
     deny_unknown_fields: bool,
     transparent: bool,
     send_only: bool,
-    receive_recursive: bool,
+    boxed_original: bool,
     bound: Option<String>,
     crate_path: Option<String>,
     native_owned_path: Option<String>,
@@ -343,7 +343,7 @@ fn parse_container_attrs(attrs: &[syn::Attribute]) -> syn::Result<ContainerAttrs
             "deny_unknown_fields" => out.deny_unknown_fields = true,
             "transparent" => out.transparent = true,
             "send_only" => out.send_only = true,
-            "receive_recursive" if value.is_none() => out.receive_recursive = true,
+            "boxed_original" => out.boxed_original = true,
             "bound" => out.bound = value,
             "rename_all_fields" => out.rename_all_fields = value,
             "crate" => out.crate_path = value,
@@ -759,3 +759,6 @@ pub fn declared_send_only(input:&DeriveInput)->syn::Result<bool>{Ok(parse_contai
 pub fn declared_persistent_crate(input:&DeriveInput)->syn::Result<syn::Path>{Ok(container_persistent_path(&parse_container_attrs(&input.attrs)?))}
 #[path="../🛬️receive/🦀️.rs"]mod native_receiving;
 pub fn expand_native_receive(input:&syn::DeriveInput)->syn::Result<proc_macro2::TokenStream>{native_receiving::expand(input)}
+
+/// 📦️ A defining owner explicitly opts into unique allocation field retirement.
+pub fn declared_boxed_original(input:&DeriveInput)->syn::Result<bool>{Ok(parse_container_attrs(&input.attrs)?.boxed_original)}

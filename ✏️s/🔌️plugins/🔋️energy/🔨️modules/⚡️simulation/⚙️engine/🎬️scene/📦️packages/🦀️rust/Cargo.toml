@@ -16,7 +16,9 @@ workspace = true
 path = "../../🦀️.rs"
 
 [dependencies]
-semio-framework-plugin = { workspace = true }
+semio-framework-ui-declaration = { path = "../../../../../../../../../🧰️framework/🔨️modules/🖱️ui/📜️declaration/📦️packages/🦀️rust" }
+semio-framework-plugin-window-kits-rich = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/🧱️rich/📦️packages/🦀️rust" }
+semio-framework-plugin-window-kits = { path = "../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window-kits/📦️packages/🦀️rust" }
 semio-s-plugin-energy-engine-geometry = { workspace = true }
 semio-s-plugin-energy-engine-model = { workspace = true }
 semio-s-plugin-energy-engine-precompute = { workspace = true }

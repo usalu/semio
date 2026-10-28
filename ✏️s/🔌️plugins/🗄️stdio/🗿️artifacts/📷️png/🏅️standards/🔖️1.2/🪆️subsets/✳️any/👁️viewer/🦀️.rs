@@ -60,9 +60,9 @@ impl ArtifactViewer for PngViewer {
     const DIALECT: Dialect = PNG_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_PNG_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v1_2::subsets::any::schema::blank_png_snapshot()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

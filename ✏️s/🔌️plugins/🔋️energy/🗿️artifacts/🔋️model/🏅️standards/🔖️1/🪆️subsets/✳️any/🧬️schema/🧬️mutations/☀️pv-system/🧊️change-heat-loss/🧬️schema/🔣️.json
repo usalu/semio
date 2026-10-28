@@ -32,7 +32,7 @@
       "type": "number",
       "exclusiveMinimum": 0,
       "x-semio-ui": {
-        "widget": "number",
+        "widget": "stepper",
         "role": "value",
         "label": {
           "en": "Constant heat loss",
@@ -42,6 +42,43 @@
         "order": 20,
         "displayUnit": "W/(m²·K)",
         "precision": 2
+      }
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePvSystemAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "pv_systems",
+    "field": "faiman_heat_loss_constant_w_m2k",
+    "input": "new_faiman_heat_loss_constant_w_m2k",
+    "key": "id",
+    "labels": {
+      "en": "Change pv system: Constant heat loss",
+      "de": "Konstanter Wärmeverlust ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "pv-system",
+      "kind": "change-pv-system-faiman-heat-loss-constant",
+      "record": "ChangedPvSystemFaimanHeatLossConstant"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Constant heat loss violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed pv system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The pv system already carries this constant heat loss value."
       }
     }
   }

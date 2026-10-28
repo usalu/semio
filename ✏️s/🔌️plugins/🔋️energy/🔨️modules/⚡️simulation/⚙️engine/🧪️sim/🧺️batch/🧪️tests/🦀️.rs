@@ -29,3 +29,30 @@ fn original_batch_slots_and_foreign_roots_keep_exact_custody(){
   original.finish();
  }
 }
+
+#[test]
+fn packet_page_birth_waits_for_the_next_original_turn() {
+    use semio_framework_job_payload::JobPayloadStep;
+    let law: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/page-birth.json")).unwrap();
+    for case in law["cases"].as_array().unwrap() {
+        let operation = Operation::new(allocate_operation_id(), RevisionId(82), Generation(19), 71);
+        let mut original = OriginalEnergyCaller::new(operation.operation, operation.generation);
+        let mut job = EnergyJob::new(operation, crate::model::test_model_single_zone(), SimulationConfig::default()).unwrap();
+        job.start_wire(EnergyWireKind::Preview, 1, JobPayloadStream::Preview).unwrap();
+        let result = original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| {
+            if case["pageAlreadyGranted"].as_bool().unwrap() { cx.grant_payload_page(); }
+            Ok(job.step_wire_build(cx))
+        }).unwrap();
+        assert_eq!(result, Ok(false));
+        let build = job.wire_build.as_ref().unwrap();
+        assert_eq!(build.field, 0);
+        assert_eq!(build.writer.staged_page_len().is_some(), case["staged"].as_bool().unwrap());
+        if !case["staged"].as_bool().unwrap() {
+            assert_eq!(original.turn(ENERGY_BATCH_GRANT, 8, u64::MAX, |cx| Ok(job.step_wire_build(cx))).unwrap(), Ok(false));
+            assert!(job.wire_build.as_ref().unwrap().writer.staged_page_len().is_some());
+        }
+        original.close_job(&mut job);
+        drop(job);
+        original.finish();
+    }
+}

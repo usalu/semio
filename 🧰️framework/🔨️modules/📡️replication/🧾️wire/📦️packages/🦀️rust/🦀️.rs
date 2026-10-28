@@ -21,4 +21,4 @@ pub use dictionary::*;
 
 #[path = "../../../⚙️codec/🛬️retained/🦀️.rs"]
 pub mod retained;
-pub use retained::{RetainedWireFieldDecode, RetainedWireFieldStep, RetainedWireByteSource, OriginalWireSourceIdentity};
+pub use retained::{RetainedWireFieldDecode, RetainedWireBytesDecode, RetainedWireFieldStep, RetainedWireByteSource, OriginalWireSourceIdentity};

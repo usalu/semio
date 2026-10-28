@@ -1,6 +1,9 @@
 //! 📒️ Driver and ledger of the tool run ledger: the tick receipt, the driver, the ledger with its trace window and the ledger operations over the selected run. See [`super`].
 
 use super::*;
+#[path="../♻️retirement/📒️entry/🦀️.rs"]
+mod original_entry_retirement;
+use original_entry_retirement::ToolRunEntryRetirement;
 use semio_framework::kernel::UiDirtyScope;
 use std::collections::BTreeSet;
 use semio_framework_os_kernel::os_store::ArtifactStore;
@@ -39,6 +42,8 @@ impl Default for ToolRunDriver {
 /// non-terminal mutating run, else the most recent one — so the single-run accessors (`state`, `slot`, `view`, …)
 /// answer for it; [`ToolRunLedger::select_run`] addresses another.
 pub struct ToolRunLedger<A: ArtifactApp> {
+    retiring_entries:Option<Box<ToolRunEntry<A>>>,
+    entry_retirement:Option<Box<ToolRunEntryRetirement<A>>>,
     pub next_run: u64,
     pub driver_cursor: usize,
     pub entries: Vec<Box<ToolRunEntry<A>>>,
@@ -72,6 +77,7 @@ pub struct ToolRunTraceWindow {
 impl<A: ArtifactApp> Default for ToolRunLedger<A> {
     fn default() -> Self {
         Self {
+            retiring_entries:None,entry_retirement:None,
             next_run: 1,
             driver_cursor: 0,
             entries: Vec::new(),
@@ -95,6 +101,10 @@ impl<A: ArtifactApp> Default for ToolRunLedger<A> {
 }
 
 impl<A: ArtifactApp> ToolRunLedger<A> {
+    /// 📐️ Reports real retained owner layouts for mounted construction regressions.
+    #[cfg(any(test,feature="artifact-app-testing"))]
+    pub fn original_owner_layout()->[(&'static str,usize);11]{[("ledger",size_of::<Self>()),("entry",size_of::<ToolRunEntry<A>>()),("entry_retirement",size_of::<ToolRunEntryRetirement<A>>()),("operations",size_of::<crate::original_operations::OriginalToolRunOperations<A::Snapshot,A::Mutation>>()),("native",size_of::<crate::original_native_tick::OriginalToolRunNativeState>()),("finalize",size_of::<ToolRunFinalize<A>>()),("driver",size_of::<ToolRunDriver>()),("presentation",size_of::<semio_framework_tool_run_presentation::slot::ToolRunPresentationSlot>()),("presentation_update",size_of::<semio_framework_tool_run_presentation::update::ToolRunPresentationUpdate>()),("presentation_seed",size_of::<semio_framework_tool_run_presentation::seed::ToolRunPresentationSeed>()),("tick_cursor",size_of::<semio_framework_tool_run_tick_wire::tick_receive::ToolRunTickNativeCursor>())]}
+
     /// 🎟️ A retained original receipt stops the next publication callback until transport collects it.
     pub fn has_original_receipt(&self)->bool{self.original_receipt.is_some()}
     /// 🧾️ Transfers the actual caller grant and actual currencies without inventing another operation.
@@ -126,6 +136,18 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     /// 🪟️ The run a window renders: the most recent read-only run started from `window_id`, else the primary run.
+    /// 🪟️ Fixed original reads stay borrowed from the selected entry's immutable native presentation.
+    pub fn original_view_for(&self,window_id:Option<&str>)->Option<semio_framework_tool_run_presentation::ToolRunView<'_>>{
+        let index=self.window_index(window_id).or_else(||self.primary_index())?;
+        let entry=&self.entries[index];entry.native.borrowed_view(entry.identity,entry.slot.state)
+    }
+
+    /// 📸️ One paid strong alias retains the exact original presentation for an owned command context.
+    pub fn capture_original_view_for(&self,window_id:Option<&str>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<semio_framework_tool_run_presentation::ToolRunCapturedView>,ValueError>{
+        let Some(index)=self.window_index(window_id).or_else(||self.primary_index())else{return Ok(None)};let entry=&self.entries[index];
+        if let Some((capture,receipt))=entry.native.capture(entry.identity,entry.slot.state,cx.retained_grant())?{cx.consume_retained(receipt)?;cx.consume_fuel(1);Ok(Some(capture))}else{Ok(None)}
+    }
+
     pub fn view_for(&self, window_id: Option<&str>) -> Option<ToolRunView> {
         self.window_index(window_id).or_else(|| self.primary_index()).map(|index| self.entries[index].view())
     }
@@ -252,7 +274,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     /// 🏃️ Whether a driver turn has work: any run's stepping job, refold, close, finalize or port effects, or cold
     /// retirement. A job waiting on its port is not work.
     pub fn has_pending_work(&self) -> bool {
-        !self.retired_jobs.is_empty()
+        self.retiring_entries.is_some()||self.entry_retirement.is_some()||self.entries.iter().any(|entry|entry.native.close_requested())||!self.retired_jobs.is_empty()
             || !self.retired_publications.is_empty()
             || !self.retired_snapshots.is_empty()
             || self.snapshot_retirement.is_some()
@@ -265,7 +287,8 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
 
     /// 🧬️ Applies one decoded tick to the current run (the driver's per-tick O(k) overlay append);
     /// ticks of another run or generation are stale no-ops.
-    pub fn apply_tick(&mut self, tick: ToolRunTick) -> Result<ToolRunTickReceipt, Fault> {
+    #[cfg(test)]
+    pub fn apply_tick(&mut self, tick: ToolRunTick) -> Result<ToolRunTickReceipt, Fault> where A::Snapshot:Clone,A::Mutation:protocol::ColdMutation<A::Snapshot> {
         let Some(entry) = selected_entry_mut!(self) else { return Ok(ToolRunTickReceipt { stale: true, ..ToolRunTickReceipt::default() }) };
         entry.apply_tick(tick, &mut self.discarded)
     }
@@ -362,7 +385,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             }
             (Some(index), None) => {
                 let entry = self.entries.remove(index);
-                self.retire_entry(*entry);
+                self.retire_entry(entry);
                 self.select_primary();
             }
             (None, _) => {}
@@ -370,17 +393,8 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         Ok(transition.effect)
     }
 
-    pub fn retire_entry(&mut self, entry: ToolRunEntry<A>) {
-        let ToolRunEntry { job, provisional, finalize, base, overlay, refold, mut displaced, member, .. } = entry;
-        self.retired_members.extend(member);
-        self.retired_snapshots.push(base);
-        self.retired_snapshots.push(overlay);
-        if let Some(running) = refold.and_then(|refold| refold.running) {
-            self.retired_snapshots.push(Arc::new(running));
-        }
-        self.retired_snapshots.append(&mut displaced);
-        self.retire_owners(job, provisional, finalize);
-    }
+    /// ♻️ Links the same original entry frames without allocating a separate retirement queue.
+    pub fn retire_entry(&mut self,mut entry:Box<ToolRunEntry<A>>){entry.retired_next=self.retiring_entries.take();self.retiring_entries=Some(entry);}
 
     pub fn retire_owners(&mut self, job: Option<ToolRunJobSlot<A::Config>>, mut provisional: Vec<A::Mutation>, finalize: Option<ToolRunFinalize<A>>) {
         assert!(finalize.as_ref().is_none_or(|finalize|finalize.ingress.terminal_is_empty()),"original ToolRun ingress remains in its entry until granted closure");
@@ -397,6 +411,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     pub fn close_current_job(&mut self) {
         let Some(entry) = selected_entry_mut!(self) else { return };
         entry.settle_refold();
+        if entry.native.has_pending_tick(){entry.native.request_close();}
         if let Some(mut job) = entry.job.take() {
             job.begin_close();
             self.retired_jobs.push(job);
@@ -444,13 +459,16 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             member.release();
         }
         if !keep_payload {
+            entry.native.request_close();
             entry.payload = None;
         }
     }
 
     /// 🧹️ Advances the owners that outlived their slot by one bounded unit; `None` when nothing is retiring.
     pub fn retirement_demands(&self,store:&ArtifactStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{
-        if self.closing&&!self.entries.is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original tool entries retain job cancellation and native metadata until granted entry retirement is available"));}
+        if let Some(entry)=self.entry_retirement.as_ref(){return if entry.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<ToolRunEntryRetirement<A>>>>(),release_bytes:size_of::<ToolRunEntryRetirement<A>>(),depth:1,..Default::default()})}else{entry.demand(store,body)}}
+        if self.retiring_entries.is_some()||self.closing&&!self.entries.is_empty(){return Ok(ToolRunEntryRetirement::<A>::capture_demand())}
+        if let Some(entry)=self.entries.iter().find(|entry|entry.native.close_requested()){return entry.native.next_close_demands(body)}
         if let Some(job)=self.retired_jobs.last(){
             if job.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:size_of::<ToolRunJobSlot<A::Config>>(),release_bytes:job.scaffold_release_bytes(),depth:1,..Default::default()});}
             return job.next_demands(body);
@@ -460,7 +478,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
             let mut demand=publication.retirement_demands(body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"tool publication close depth overflow"))?;return Ok(demand);
         }
         if self.snapshot_retirement.is_some(){return tool_erased_retirement_demand(&self.snapshot_retirement,body);}
-        if self.pending_snapshot_alias.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Arc<A::Snapshot>>>(),capacity_bytes:ArtifactStore::<A::Snapshot,A::Mutation>::snapshot_alias_retirement_birth_bytes(),depth:2,..Default::default()});}
+        if self.pending_snapshot_alias.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<Arc<A::Snapshot>>>(),capacity_bytes:semio_framework_value::factory::FactorySharedRetirement::<A::Snapshot>::constructor_capacity_bytes(),depth:2,..Default::default()});}
         if self.pending_discarded.is_some(){return Ok(RetirementDemand{copy_bytes:size_of::<Option<A::Mutation>>(),capacity_bytes:store.owned_mutation_retirement_birth_bytes()?,depth:2,..Default::default()});}
         if !self.retired_snapshots.is_empty()||self.entries.iter().any(|entry|!entry.displaced.is_empty()){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<Arc<A::Snapshot>>>(),depth:1,..Default::default()});}
         if !self.discarded.is_empty(){return Ok(RetirementDemand{copy_bytes:2*size_of::<Option<A::Mutation>>(),depth:1,..Default::default()});}
@@ -476,6 +494,18 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         let demand=self.retirement_demands(store,grant.maximum_copy_bytes)?;if demand==RetirementDemand::default(){return Ok(None)}
         if !tool_grant_funds(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        if let Some(entry)=self.entry_retirement.as_mut(){
+            if !entry.terminal_is_empty(){return entry.step(store,cx).map(Some)}
+            let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{self.entry_retirement=None;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes:demand.release_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))
+        }
+        if self.retiring_entries.is_some()||self.closing&&!self.entries.is_empty(){
+            let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{
+                let original=if let Some(mut entry)=self.retiring_entries.take(){self.retiring_entries=entry.retired_next.take();entry}else{self.entries.pop().unwrap()};
+                self.entry_retirement=Some(ToolRunEntryRetirement::capture(original));
+                Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,retained_capacity_bytes:demand.capacity_bytes,released_bytes:demand.release_bytes,..Default::default()}))
+            })?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))
+        }
+        if let Some(entry)=self.entries.iter_mut().find(|entry|entry.native.close_requested()){let step=semio_framework_job::close_original_retained_step(cx,demand,|grant|entry.native.close_step(grant))?;return Ok(Some(RetainedCloneStep::Progress(step.progress())))}
         if let Some(job)=self.retired_jobs.last_mut(){
             if job.terminal_is_empty(){let released_bytes=job.scaffold_release_bytes();let step=semio_framework_job::close_original_retained_step(cx,demand,|_|{drop(self.retired_jobs.pop());Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,released_bytes,..Default::default()}))})?;return Ok(Some(RetainedCloneStep::Progress(step.progress())));}
             return job.close_step(cx).map(Some);
@@ -517,7 +547,7 @@ impl<A: ArtifactApp> ToolRunLedger<A> {
     }
 
     pub fn terminal_is_empty(&self) -> bool {
-        ledger_backing_is_empty(&self.entries)&&ledger_backing_is_empty(&self.retired_jobs)&&ledger_backing_is_empty(&self.retired_publications)&&ledger_backing_is_empty(&self.retired_snapshots)&&ledger_backing_is_empty(&self.discarded)&&ledger_backing_is_empty(&self.retired_members)&&self.snapshot_retirement.is_none()&&self.pending_snapshot_alias.is_none()&&self.pending_discarded.is_none()&&self.trace_windows.is_empty()&&!self.has_original_receipt()
+        self.retiring_entries.is_none()&&self.entry_retirement.is_none()&&ledger_backing_is_empty(&self.entries)&&ledger_backing_is_empty(&self.retired_jobs)&&ledger_backing_is_empty(&self.retired_publications)&&ledger_backing_is_empty(&self.retired_snapshots)&&ledger_backing_is_empty(&self.discarded)&&ledger_backing_is_empty(&self.retired_members)&&self.snapshot_retirement.is_none()&&self.pending_snapshot_alias.is_none()&&self.pending_discarded.is_none()&&self.trace_windows.is_empty()&&!self.has_original_receipt()
     }
 }
 //#endregion 🔖️Ledger

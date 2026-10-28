@@ -101,7 +101,7 @@ where
                     Ok(semio_framework_os_spr::HistoryFoldJobStep::Ready { value: (fold, transitions, replay_order, conflicts), progress }) => {
                         let valid_auxiliary = replay_order.is_empty() && conflicts.is_empty();
                         *self.fold = Some(fold);
-                        *self.normalized_transitions = Some(transitions);
+                        *self.normalized_transitions = Some(transitions.into());
                         if replay_order.capacity() != 0 || conflicts.capacity() != 0 { *self.fold_auxiliary = Some((replay_order, conflicts)); }
                         if !progress.fits(grant) || !valid_auxiliary || !self.fold_job.as_ref().is_some_and(ErasedSnapshotRetirement::terminal_is_empty) { return self.reject(ConfigStoreHydrationDiagnostic::Replay); }
                         self.last_retirement_progress = progress;
@@ -113,6 +113,8 @@ where
                 ConfigStoreHydrationStep::Pending(self.progress())
             }
             Phase::BindGenesis => {
+                if let Some(rows)=self.normalized_transitions.as_mut(){if !rows.is_empty(){match self.transition_ledger.as_mut().unwrap().admit_deque_front(rows,grant){Ok(p)=>self.last_retirement_progress=p,Err(_)=>return self.reject(ConfigStoreHydrationDiagnostic::Initialization)}return ConfigStoreHydrationStep::Pending(self.progress())}match Self::admit_input(&mut self.normalized_transitions,grant){Ok(Some((owner,p)))=>{*self.active=Some(owner);self.last_retirement_progress=p},Ok(None)=>{},Err(_)=>return self.reject(ConfigStoreHydrationDiagnostic::Initialization)}return ConfigStoreHydrationStep::Pending(self.progress())}
+
                 let history = std::sync::Arc::get_mut(self.history.as_mut().expect("config history remains retained")).expect("config fold aliases close before genesis binding");
                 let fold = self.fold.as_mut().expect("derived config history remains retained");
                 let initial = self.initial.take().expect("typed config initial snapshot remains retained");
@@ -122,7 +124,7 @@ where
                 let mut envelope = semio_framework_os_store_document::create_document_envelope_from_genesis::<P, M>(&schema, &expected_id, initial, None);
                 envelope.history_shape = semio_framework_os_spr::HistoryShape::Config;
                 envelope.cursor = Some(semio_framework_os_store_space_schema::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
-                envelope.transitions = self.normalized_transitions.take().expect("normalized config transitions remain retained");
+                envelope.transitions = self.transition_ledger.take().expect("native config transition ledger remains retained");
                 *self.source_edits = Some(semio_framework_os_store_retirement::resident_backing::PagedSourceIterator::new(std::mem::take(&mut history.edits),Self::vacant_history_edit));
                 *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, semio_framework_os_spr::ActorId(std::mem::take(&mut self.actor.0))));
                 *self.expected_id = Some(expected_id);

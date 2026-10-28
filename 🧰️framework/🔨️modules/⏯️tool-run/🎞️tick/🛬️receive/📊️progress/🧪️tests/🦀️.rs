@@ -9,7 +9,7 @@ use semio_framework_value_persistent::list::PagedList;
 use std::mem::MaybeUninit;
 use protocol::codec::{OriginalWireSourceIdentity,RetainedWireByteSource};
 type Receipt=Option<(RetainedCloneGrant,RetainedCloneProgress)>;
-fn counters<'a>(slot:&'a MaybeUninit<ToolRunReceivedProgress>)->&'a PagedList<ToolRunCounter,8>{unsafe{&*std::ptr::addr_of!((*slot.as_ptr()).counters)}}
+fn counters<'a>(slot:&'a MaybeUninit<ToolRunReceivedProgress>)->&'a PagedList<ToolRunCounter,9>{unsafe{&*std::ptr::addr_of!((*slot.as_ptr()).counters)}}
 fn steps<'a>(slot:&'a MaybeUninit<ToolRunReceivedProgress>)->&'a PagedList<ToolRunStep,64>{unsafe{&*std::ptr::addr_of!((*slot.as_ptr()).steps)}}
 struct Pages<'a>(&'a[u8]);
 impl RetainedWireByteSource for Pages<'_>{fn original_source_identity(&self)->OriginalWireSourceIdentity{OriginalWireSourceIdentity{address:self.0.as_ptr()as usize,extent:self.0.len(),authority:Some((42,7))}}fn byte_at(&self,index:usize)->Option<u8>{self.0.chunks(7).nth(index/7)?.get(index%7).copied()}}

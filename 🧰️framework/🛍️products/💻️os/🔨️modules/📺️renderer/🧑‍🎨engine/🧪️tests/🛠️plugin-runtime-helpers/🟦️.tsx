@@ -56,7 +56,7 @@ export function createPluginRuntimeSupport(dependencies: PluginRuntimeDependenci
       subscribeOperationProgress: () => () => {},
       readWindowConfigPacks: async () => [],
       loadWindowConfigPack: async () => {},
-      readAppDocumentIdentity: async (instanceId) => ({ app_instance_id: instanceId, parent_document_id: `fake-document-${instanceId}` }),
+      readAppDocumentIdentity: async (instanceId) => ({ app_instance_id: instanceId, parent_document_id: `fake-document-${instanceId}`, base_revision: 0n }),
       documentPack: (instanceId) => (options.pack !== undefined ? options.pack : { pack: new Uint8Array([1]), spr: new Uint8Array([instanceId]) }),
       transactionPrepare: async (instanceId, _txnId, _request) => {
         calls.push(`${pluginId}:${instanceId}:prepare`);

@@ -11,6 +11,8 @@ impl<E:ArtifactEditor> Default for EditorApp<E>{
 }
 
 impl<E:ArtifactEditor> EditorApp<E>{
+    /// 🌱️ Moves the already admitted original surface identity into this concrete controller.
+    pub(super) fn from_admitted_identity(id:String)->Self{Self{id,_editor:std::marker::PhantomData}}
     /// 🪪️ Borrows the actual derived surface identity used by the owning stores.
     pub async fn surface_id(&self)->&str{&self.id}
 }
@@ -190,16 +192,15 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
             return None;
         }
         if example_id.is_empty() {
-            return Some(Ok(<E::Snapshot as pack::snapshot::ArtifactDsl>::print_dsl(&E::initial_snapshot())));
+            let codec=<E::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec()?;
+            let initial=E::reference_birth()?;return Some(Ok((codec.print_dsl?)(&initial())));
         }
         Some(match examples.into_iter().find(|source| source.id() == example_id) {
             Some(source) => Ok(source.document()),
             None => Err(Fault::new(FaultOrigin::App, FaultCode::new("app.example.unknown"), format!("no registered example '{example_id}'"))),
         })
     }
-    async fn initial_snapshot() -> Self::Snapshot {
-        E::initial_snapshot()
-    }
+    fn reference_birth()->Option<fn()->Self::Snapshot>{E::reference_birth()}
     async fn initial_config() -> Self::Config {
         E::initial_config()
     }
@@ -238,6 +239,7 @@ impl<E: ArtifactEditor> ArtifactApp for EditorApp<E> {
     async fn command_id(command: &Self::Command) -> &'static str {
         E::command_id(command)
     }
+    fn original_action_command_producer()->Option<&'static dyn semio_framework_plugin_decl_app::tool_contract::ArtifactOriginalCommandProducerFactory<Self::Command>>{E::original_action_command_producer()}
     async fn command_from_action(action: &str, args: &mut Option<DslValue>, original_fault: &mut Option<Fault>) -> Result<Self::Command, Fault> {
         E::command_from_action(action, args, original_fault)
     }

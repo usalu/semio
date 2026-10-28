@@ -22,6 +22,21 @@ pub enum ArtifactStoreInitializationNext<P> {
 }
 
 impl<P> ArtifactStoreInitializationRuntime<P> {
+    /// 🧳️ Transfers the semantic producer's original shared result without allocating another snapshot.
+    pub fn adopt_native_next_demand()->RetirementDemand where P:Send+Sync+'static {
+        RetirementDemand{copy_bytes:2*std::mem::size_of::<Option<Arc<P>>>(),capacity_bytes:ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes(),depth:2,..Default::default()}
+    }
+    /// 🎟️ Keeps both actual roots unchanged when the original replacement frame is unfunded.
+    pub fn adopt_native_next(&mut self,next:&mut Option<Arc<P>>,factory:&Arc<dyn ArtifactOwnedValueRetirementFactory<P>>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError> where P:Send+Sync+'static {
+        let demand=Self::adopt_native_next_demand();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(Default::default());}
+        if self.close_phase!=0||self.close_active.is_some()||self.current.is_none()||next.is_none(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native initialization adoption requires its settled original roots"));}
+        let previous=self.current.take().unwrap();
+        match ReturnedSnapshotReadRetirement::admit(previous,Arc::clone(factory),grant){
+            Ok((owner,mut receipt))=>{*self.close_active=Some(owner);*self.current=next.take();receipt.copied_bytes+=demand.copy_bytes;Ok(receipt)}
+            Err((error,previous,alias))=>{*self.current=Some(previous);drop(alias);Err(error)}
+        }
+    }
     /// 👁️ Quotes the original current lease without cloning the snapshot or replacing its registry.
     pub fn native_snapshot_read_demand() -> RetirementDemand {
         RetirementDemand { copy_bytes: std::mem::size_of::<semio_framework_value_snapshot_read::SnapshotRead<P>>() + std::mem::size_of::<semio_framework_value_snapshot_read::SnapshotReadLeaseSlot>(), depth: 1, ..Default::default() }
@@ -30,7 +45,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     pub fn admit_native_snapshot_read(&self, generation: u64, grant: RetainedCloneGrant) -> Result<Option<(semio_framework_value_snapshot_read::SnapshotRead<P>, RetainedCloneProgress)>, ValueError>
     where P: Send + Sync + 'static,
     {
-        let demand=Self::native_snapshot_read_demand();if !retained_clone_grant_admits(grant,demand){return Ok(None);}
+        let demand=Self::native_snapshot_read_demand();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(None);}
         let revision=self.revision.revision(self.current_checkpoint_id.as_deref());
         if !self.read_registry.publish_authority(generation,revision){return Err(ValueError::literal(ValueRefusalKind::WorkLimit,"initialization read registry authority is busy"));}
         let current=self.current.as_ref().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"initialization original current absent"))?;

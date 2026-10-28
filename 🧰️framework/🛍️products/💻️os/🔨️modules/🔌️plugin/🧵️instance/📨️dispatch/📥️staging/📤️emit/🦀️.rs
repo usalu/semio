@@ -1,39 +1,20 @@
 //! 🎿️ Staged `emit` members of the `instance-dispatch` use cases, as methods of the borrowed bundle (WP7 of the instance family).
 //!
-//! 📤️ `dispatch_emit` and the emit transaction groups: how one app emit lands as commands, effects and history rows.
-use semio_framework::{ActionKind, AppRole, Fault, FaultCode, FaultFrom, FaultOrigin};
-use semio_framework_plugin_decl_emission::{ActionMeta, ChildEmit, Emit, TransactionPhase};
-use semio_framework::kernel::{ActorId, AppEvent, ArtifactDiff, ArtifactHandle, ArtifactVersion, EditRef, Effect, HybridLogicalTimestamp, InverseMutation, InvocationId, InvocationResult, KernelMutation, MutationId, SchemaId, UiDirtyScope, UndoGroup, UndoPolicy};
+//! 📤️ Native mounted publication command history and composed history navigation.
+use semio_framework::{ActionKind,Fault,FaultCode,FaultOrigin};
+use semio_framework_plugin_decl_emission::TransactionPhase;
 use semio_framework_plugin_decl_app::ArtifactApp;
 use store::os_store::store_schema::ArtifactCommand;
-use semio_framework_artifact_reference::{ArtifactDialect, ArtifactRef};
-use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
-use pack::snapshot::ArtifactPack;
-use semio_framework_plugin_child::ChildContentRetirement;
-use semio_framework_plugin_decl_views::child_view::{ChildContentView, MemberKeyRef};
-use store::os_store::composition_coordinator::{ChildDispatch, CompositionCoordinator, GroupMeta};
+use semio_framework_artifact_reference::{ArtifactDialect,ArtifactRef};
+use store::os_store::composition_coordinator::CompositionCoordinator;
 use crate::dispatch_bundle::DispatchCtx;
-use semio_framework_value::DslValue;
-use semio_framework_plugin_job::{EmitWire, TransactionProposalDraft};
-use std::future::Future;
-use std::collections::HashSet;
 use semio_framework_plugin_instance_extension::InstanceExtension;
 use semio_framework_plugin_instance_docs::docs_components::MediaTransfers;
-use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember};
+use store::{ColdMutation, MemberFactory, Mutation, ReferenceSpaceMember, SpaceMember};
 use semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation;
-use protocol::OpText;
-use semio_framework_plugin_reactor_app::PluginApp;
-use semio_framework_plugin_instance_jobs::jobs_components::ToolOperations;
-use crate::dispatch_emit;
-use semio_framework_plugin_ownership::sdk_fault::plugin_sdk_fault;
-use semio_framework_plugin_interaction::interaction_topology::take_inline_interaction_verbs;
-use semio_framework_ui_contract::*;
-use semio_framework_plugin_time_travel as time_travel;
-use semio_framework_plugin_instance_docs::docs_instance_root::artifact_handle_of;
-use semio_framework_plugin_instance_docs::docs_instance_root::tool_transaction_shape_fault;
-use semio_framework_plugin_instance_docs::docs_instance_root::viewer_read_only_fault;
 
-impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+impl<'ctx, A: ArtifactApp, M: SpaceMember + MemberFactory + 'static, X: InstanceExtension> DispatchCtx<'ctx, A, M, X> {
+
     /// 🧪️ Lands one app `Emit` through the production `dispatch_emit` seam under a named
     /// verb — the harness for laws about what the reactor does with an emit's effect list before
     /// the host sees it (ticket 26/09/16/INPUT-CAUSALITY-LEDGER: the inline interaction fold),

@@ -1,0 +1,174 @@
+{
+  "contract": "semio.energy.original-adjacency/v1",
+  "insert": false,
+  "surfaces": [
+    {
+      "id": 1,
+      "name": "wall",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    {
+      "id": 2,
+      "name": "wall",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    {
+      "id": 3,
+      "name": "wall",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    },
+    {
+      "id": 4,
+      "name": "wall",
+      "zone_id": 1,
+      "class": "ExteriorWall",
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ],
+      "construction_id": 3,
+      "outside_boundary_condition": "OutdoorAir",
+      "sun_exposed": true,
+      "wind_exposed": true,
+      "multiplier": 1
+    }
+  ],
+  "original": [
+    {
+      "surface_a_id": 4,
+      "surface_b_id": 3
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "surfaceAId": 4,
+        "surfaceBId": 3
+      },
+      "outcome": "changed",
+      "after": [],
+      "inverse": [
+        4,
+        3,
+        0
+      ]
+    },
+    {
+      "payload": {
+        "surfaceAId": 3,
+        "surfaceBId": 4
+      },
+      "outcome": "changed",
+      "after": [],
+      "inverse": [
+        4,
+        3,
+        0
+      ]
+    },
+    {
+      "payload": {
+        "surfaceAId": 1,
+        "surfaceBId": 2
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

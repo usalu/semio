@@ -31,5 +31,39 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "run_period",
+    "field": "start_month",
+    "input": "new_start_month",
+    "labels": {
+      "en": "Change start month",
+      "de": "Startmonat ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "run",
+      "kind": "change-run-start-month",
+      "record": "ChangedRunStartMonth"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored start month is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The start month is unchanged."
+      },
+      "context": {
+        "level": "error",
+        "code": "mutation.target-mismatch",
+        "message": "The authored value does not form a valid calendar interval."
+      }
+    },
+    "calendarInterval": true
   }
 }

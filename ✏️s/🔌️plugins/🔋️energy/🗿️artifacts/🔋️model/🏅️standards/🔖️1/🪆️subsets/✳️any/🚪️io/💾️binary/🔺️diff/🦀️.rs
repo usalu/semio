@@ -1,6 +1,6 @@
 //! 💾️ Native value transport for owned EnergyModel field edits.
 
-use crate::EnergyModelDiff;
+use crate::ReferenceEnergyModelDiff;
 use semio_framework_value::{FromValue,ToValue};
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");

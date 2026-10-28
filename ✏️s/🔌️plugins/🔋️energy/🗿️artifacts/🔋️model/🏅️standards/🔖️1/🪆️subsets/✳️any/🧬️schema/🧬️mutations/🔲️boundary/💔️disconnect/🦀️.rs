@@ -1,12 +1,11 @@
 //! 💔️ Energy model mutation — `DisconnectSurfaces`: Removes the adjacency relationship between two surfaces, addressed by the unordered pair. Refused when the two are not adjacent, so an undo chain can never invent a disconnect that had no partner.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 💔️ `disconnect-surfaces` payload. Removes the adjacency relationship between two surfaces, addressed by the unordered pair. Refused when the two are not adjacent, so an undo chain can never invent a disconnect that had no partner.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -21,39 +20,6 @@ pub fn disconnect_surfaces<Op: From<DisconnectSurfaces>>(surface_a_id: crate::mo
     DisconnectSurfaces { surface_a_id, surface_b_id }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for DisconnectSurfaces
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<DisconnectSurfaces> + From<crate::ConnectSurfaces>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "disconnect", entity: "surfaces", kind: "disconnect-surfaces", record: "DisconnectedSurfaces" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Disconnect surfaces {} and {}", self.surface_a_id.0, self.surface_b_id.0), &format!("Oberflächen {} und {} trennen", self.surface_a_id.0, self.surface_b_id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.surface_a_id.0.to_string(), self.surface_b_id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for DisconnectSurfaces
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<DisconnectSurfaces> + From<crate::ConnectSurfaces>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

@@ -32,7 +32,7 @@ fn the_viewer_and_the_editor_share_one_dialect() {
 
 #[test]
 fn the_viewer_boots_on_a_real_document() {
-    assert_eq!(<Wfc3dViewer as ArtifactViewer>::initial_snapshot(), crate::examples::two_room_corridor::snapshot());
+    assert_eq!(<Wfc3dViewer as ArtifactViewer>::reference_birth().expect("explicit reference snapshot producer")(), crate::examples::two_room_corridor::snapshot());
 }
 
 #[test]

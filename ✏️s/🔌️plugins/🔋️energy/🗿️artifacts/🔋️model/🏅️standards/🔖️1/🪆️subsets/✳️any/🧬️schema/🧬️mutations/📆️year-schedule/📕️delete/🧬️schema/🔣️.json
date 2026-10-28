@@ -38,5 +38,218 @@
   },
   "x-semio-inverse-rows": {
     "bounded": 1025
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateAnnualSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "annual",
+    "key": "id",
+    "inverse": "CreateAnnualSchedule",
+    "restriction": {
+      "kind": "all",
+      "sources": [
+        {
+          "kind": "references",
+          "row": "StatePeopleGain",
+          "branch": "loads",
+          "collection": "people",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StatePeopleGain",
+          "branch": "loads",
+          "collection": "people",
+          "field": "activity_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateLightingGain",
+          "branch": "loads",
+          "collection": "lighting",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateEquipmentGain",
+          "branch": "loads",
+          "collection": "equipment",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateInfiltration",
+          "branch": "loads",
+          "collection": "infiltrations",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateMechanicalVentilation",
+          "branch": "loads",
+          "collection": "mechanical_ventilations",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateThermostat",
+          "branch": "controls",
+          "collection": "thermostats",
+          "field": "heating_setpoint_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateThermostat",
+          "branch": "controls",
+          "collection": "thermostats",
+          "field": "cooling_setpoint_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateHumidistat",
+          "branch": "controls",
+          "collection": "humidistats",
+          "field": "humidifying_setpoint_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateHumidistat",
+          "branch": "controls",
+          "collection": "humidistats",
+          "field": "dehumidifying_setpoint_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateShwSystemConfig",
+          "branch": "generation",
+          "collection": "shw_systems",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateRefrigerationConfig",
+          "branch": "generation",
+          "collection": "refrigeration_systems",
+          "field": "defrost_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateWaterSystemConfig",
+          "branch": "generation",
+          "collection": "water_systems",
+          "field": "schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateFaultDefinition",
+          "branch": "generation",
+          "collection": "faults",
+          "field": "start_schedule_id",
+          "storage": "direct"
+        },
+        {
+          "kind": "references",
+          "row": "StateSetpointManager",
+          "branch": "controls",
+          "collection": "setpoint_managers",
+          "field": "schedule_id",
+          "storage": "shared-optional"
+        },
+        {
+          "kind": "references",
+          "row": "StateShadingSurface",
+          "branch": "geometry",
+          "collection": "shading_surfaces",
+          "field": "transmittance_schedule_id",
+          "storage": "shared-optional"
+        },
+        {
+          "kind": "references",
+          "row": "StateWeeklySchedule",
+          "branch": "outputs",
+          "collection": "weekly",
+          "field": "daily_schedule_ids",
+          "storage": "shared-array",
+          "nested": "schedules"
+        },
+        {
+          "kind": "references",
+          "row": "StateAnnualSchedule",
+          "branch": "outputs",
+          "collection": "annual",
+          "field": "default_daily_schedule_id",
+          "storage": "direct",
+          "nested": "schedules"
+        },
+        {
+          "kind": "references",
+          "row": "StateAnnualSchedule",
+          "branch": "outputs",
+          "collection": "annual",
+          "field": "holiday_daily_schedule_id",
+          "storage": "shared-optional",
+          "nested": "schedules"
+        },
+        {
+          "kind": "references",
+          "row": "StateAnnualSchedule",
+          "branch": "outputs",
+          "collection": "annual",
+          "field": "rules",
+          "storage": "shared-record-array",
+          "nested": "schedules",
+          "member": "daily_schedule_id"
+        }
+      ]
+    },
+    "labels": {
+      "en": "Delete annual schedule",
+      "de": "Jahreszeitplan löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "schedule",
+      "kind": "delete-annual-schedule",
+      "record": "DeletedAnnualSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The original schedule removal violates its declared invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The schedule is still referenced by the document."
+      }
+    },
+    "inverseMode": "annual"
   }
 }

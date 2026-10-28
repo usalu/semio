@@ -5,7 +5,7 @@ use super::*;
 //#region 🔖️Tutorial
 /// 📹️ A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialVideoCue {
@@ -27,7 +27,7 @@ pub struct TutorialVideoCue {
 
 /// 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialEvent {
@@ -37,7 +37,7 @@ pub struct TutorialEvent {
 
 /// 📘️ What one `TutorialEvent` annotates.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialEventKind {
@@ -62,7 +62,7 @@ pub enum TutorialEventKind {
 /// 🧮️ One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
 /// sparse list of changes since the previous sample.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialUiKeyframe {
@@ -72,7 +72,7 @@ pub struct TutorialUiKeyframe {
 
 /// 🧫️ See `TutorialUiKeyframe`.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiSample {
@@ -85,7 +85,7 @@ pub enum TutorialUiSample {
 /// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
 /// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialUiSnapshot {
@@ -133,7 +133,7 @@ pub struct TutorialUiSnapshot {
 /// `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
 /// every sample.
 // 🚧️ Kept additive: consumed outside this pass by 🛍️products/💻️os (plugin/renderer modules) and/or ✏️s/🔌️plugins/** while still serde-deriving; ToValue/FromValue added alongside, not replacing, Serialize/Deserialize. Ticket 26/09/01/RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialUiChange {
@@ -203,7 +203,7 @@ pub enum TutorialUiChange {
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
 /// (fresh ids/timestamps) and would double-apply against this track.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialDocumentEvent {
@@ -214,7 +214,7 @@ pub struct TutorialDocumentEvent {
 /// 📄️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
 /// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialDocumentEventKind {
@@ -253,7 +253,7 @@ fn tutorial_camera_up_z() -> [f64; 3] {
 
 /// 🎥️ One camera track keyframe for a specific window instance.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialCameraKeyframe {
@@ -270,7 +270,7 @@ pub struct TutorialCameraKeyframe {
 /// 🎬️ A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
 /// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 #[value(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
 pub enum TutorialCameraState {
@@ -293,7 +293,7 @@ pub enum TutorialCameraState {
 
 /// 📈️ Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum TutorialEasing {
@@ -307,7 +307,7 @@ pub enum TutorialEasing {
 /// 👻️ One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
 /// both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct TutorialGestureCue {

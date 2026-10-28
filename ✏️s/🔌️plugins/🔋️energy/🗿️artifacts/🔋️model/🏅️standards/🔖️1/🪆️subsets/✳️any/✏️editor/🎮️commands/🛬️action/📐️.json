@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/editor/original-action.json",
+  "title": "Energy Original Action Command",
+  "type": "object",
+  "required": ["action", "args"],
+  "properties": {
+    "action": {"type": "string", "minLength": 1, "description": "The exact aggregateVariant of one authored mutation leaf."},
+    "args": {"type": "object", "description": "The original argument record received against that exact leaf payload schema."}
+  },
+  "additionalProperties": false,
+  "x-semio-custody": {
+    "source": "original-action-arguments",
+    "receiving": "authored-leaf-native-receiver",
+    "command": "apply-native-mutation",
+    "mutation": "unique-typed-owner",
+    "wire": "original-borrowed-pack",
+    "publication": "single-reserved-semantic-row"
+  }
+}

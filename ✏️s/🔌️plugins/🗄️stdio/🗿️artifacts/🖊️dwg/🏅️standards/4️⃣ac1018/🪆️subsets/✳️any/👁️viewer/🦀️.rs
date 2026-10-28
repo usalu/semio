@@ -71,9 +71,9 @@ impl ArtifactViewer for DwgAc1018Viewer {
     const DIALECT: Dialect = DWG_AC1018_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DWG_AC1018_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> DwgSnapshot {
+    fn reference_birth()->Option<fn()->DwgSnapshot>{Some(||{
         DwgSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

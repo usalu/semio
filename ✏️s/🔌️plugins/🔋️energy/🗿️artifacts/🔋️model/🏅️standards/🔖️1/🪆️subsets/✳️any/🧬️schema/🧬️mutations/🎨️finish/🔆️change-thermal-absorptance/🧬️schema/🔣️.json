@@ -59,5 +59,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "field": "thermal_absorptance",
+    "input": "new_thermal_absorptance",
+    "key": "id",
+    "labels": {
+      "en": "Change material: Thermal absorptance",
+      "de": "Thermischer Absorptionsgrad ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "material",
+      "kind": "change-material-thermal-absorptance",
+      "record": "ChangedMaterialThermalAbsorptance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Thermal absorptance violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The material already carries this thermal absorptance value."
+      }
+    }
   }
 }

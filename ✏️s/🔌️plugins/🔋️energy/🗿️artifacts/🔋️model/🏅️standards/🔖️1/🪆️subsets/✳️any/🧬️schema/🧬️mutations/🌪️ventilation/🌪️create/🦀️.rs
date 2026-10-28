@@ -1,14 +1,14 @@
 //! 🌪️ Energy model mutation — `CreateMechanicalVentilation`: Adds one mechanical ventilation specification to a zone: the design supply flow, its schedule and the fan work the supply air arrives with.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 🌪️ `create-mechanical-ventilation` payload. Adds one mechanical ventilation specification to a zone: the design supply flow, its schedule and the fan work the supply air arrives with.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeRowBirth, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
+#[energy_native_birth(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-mechanical-ventilation")]
 pub struct CreateMechanicalVentilation {
@@ -32,41 +32,5 @@ pub fn create_mechanical_ventilation<Op: From<CreateMechanicalVentilation>>(
     fan_delta_pressure_pa: f64,
 ) -> Op {
     CreateMechanicalVentilation { index, id, zone_id, schedule_id, design_flow_m3_s, fan_total_efficiency, fan_delta_pressure_pa }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreateMechanicalVentilation
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreateMechanicalVentilation> + From<crate::DeleteMechanicalVentilation>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "mechanical-ventilation", kind: "create-mechanical-ventilation", record: "CreatedMechanicalVentilation" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create Mechanical Ventilation {} at index {}", self.id.0, self.index), &format!("Mechanische Lüftung {} an Index {} erstellen", self.id.0, self.index))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreateMechanicalVentilation
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreateMechanicalVentilation> + From<crate::DeleteMechanicalVentilation>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

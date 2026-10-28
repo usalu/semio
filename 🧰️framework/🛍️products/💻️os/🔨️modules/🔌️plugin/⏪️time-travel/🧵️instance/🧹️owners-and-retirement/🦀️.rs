@@ -11,11 +11,11 @@ use semio_framework_value_retirement::retirement::controlled::ControlledRetireme
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: InstanceExtension> TimeTravelCtx<'ctx, A, M, X> {
     /// 📨️ Runs one typed command on the store the session edits: the document's own, or the composed member's through
     /// its typed visitor (design §12).
-    pub(super)  async fn time_travel_run(&mut self, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
+    pub(super)  async fn time_travel_run(&mut self, command: TimeTravelStoreCommand,receiving:Option<&mut semio_framework_job::StepContext<'_>>) -> Result<TimeTravelStoreOutput, Fault> {
         let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
         let (store, children) = (&mut stores.store, &mut child_composition.children);
         match time_travel.member.as_mut() {
-            None => time_travel.document.run(store, command,receiving).await,
+            None => time_travel.document.run(store, command,receiving),
             Some(member) => {
                 let key = member.key.clone();
                 let entry = children.member_mut(key.borrowed()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new(TIME_TRAVEL_MEMBER_GONE_CODE), format!("the composed member {} a history edit targets is gone", member.store())))?;
@@ -24,18 +24,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
     }
 
-    /// 🪪️ Finalizes the same retained document or composed member replay.
-    pub(super) async fn time_travel_commit(&mut self, drafts: protocol::HistoryInputDrafts, finalization: store::HistoryFinalization, actor: Option<&str>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<TimeTravelCommit, Fault> {
-        let TimeTravelCtx { stores, time_travel, child_composition, .. } = self;
-        let (store, children) = (&mut stores.store, &mut child_composition.children);
-        match time_travel.member.as_mut() {
-            None => time_travel.document.commit_finished(store, drafts, finalization, actor, identity).await,
-            Some(member) => {
-                let entry = children.member_mut(member.key.borrowed()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new(TIME_TRAVEL_MEMBER_GONE_CODE), "the composed member a history edit targets is gone"))?;
-                entry.member.visit_member_mut(TimeTravelMemberCommit { owners: &mut member.owners, drafts, finalization, actor, identity }).await
-            }
-        }
-    }
+    /// 🪪️ Finalization moves the original request into the same typed document or member owner.
+    pub(super) async fn time_travel_commit(&mut self,request:&mut Option<store::HistoryFinalization>,actor:Option<&str>,cx:&mut semio_framework_job::StepContext<'_>)->Result<TimeTravelCommit,Fault>{let TimeTravelCtx{stores,time_travel,child_composition,..}=self;match time_travel.member.as_mut(){None=>time_travel.document.commit_finished(&mut stores.store,request,actor,cx),Some(member)=>{let entry=child_composition.children.member_mut(member.key.borrowed()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"original finalization member is absent").into_fault())?;entry.member.visit_member_mut(TimeTravelMemberCommit{owners:&mut member.owners,request,actor,receiving:cx}).await}}}
 
     /// 🧽️ Settles the typed owners for the session's stage (design §4): what it no longer shows retires against its own
     /// store, and the draft editor closes outside `Editing`. A member subject the session left hands its owners to the
@@ -95,6 +85,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()})))
     }
 
+    pub fn time_travel_retire_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<Option<RetainedCloneStep>,Fault>{if !self.time_travel.requires_original_control(){return self.time_travel_retire_step(grant)}let result=cx.with_native_retirement(|control|Ok(self.time_travel.retire_step_controlled(grant,control))).map_err(ValueError::into_fault)??;match result{Some(step)=>Ok(Some(step)),None=>self.member_subject_retirement_step(grant)}}
     pub fn time_travel_retire_step(&mut self, grant: RetainedCloneGrant) -> Result<Option<RetainedCloneStep>,Fault> {
         if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         if self.time_travel.document.discard_issuer_missing(){
@@ -104,7 +95,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if let Some(step)=self.time_travel.retire_step(grant)?{return Ok(Some(step))}self.member_subject_retirement_step(grant)
     }
 
-    pub fn time_travel_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep,Fault> {
+    pub fn time_travel_close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.time_travel_close_step_with_context(grant,None)}
+    pub fn time_travel_close_step_context(&mut self,grant:RetainedCloneGrant,cx:&mut semio_framework_job::StepContext<'_>)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{self.time_travel_close_step_with_context(grant,Some(cx))}
+    fn time_travel_close_step_with_context(&mut self,grant:RetainedCloneGrant,mut cx:Option<&mut semio_framework_job::StepContext<'_>>)->Result<RetainedCloneStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if self.time_travel.has_command_receipt(){return Ok(RetainedCloneStep::Progress(Default::default()))}
         if !self.time_travel.closing{
@@ -114,9 +107,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.time_travel.document.cancel_prepared_command();if let Some(owners)=self.time_travel.member.as_mut().and_then(|member|member.owners.as_deref_mut()){owners.cancel_prepared_command()}
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))
         }
+        if self.time_travel.finalize_outcome.is_some(){let d=RetirementDemand{copy_bytes:size_of::<Option<TimeTravelCommit>>()+size_of::<bool>(),depth:1,..Default::default()};if protocol::retained_mutation_demand_fits(d,grant){self.time_travel.finalize_outcome=None;self.time_travel.authoring_finalization=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if let Some(cx)=cx.as_deref_mut(){
+            if self.time_travel.owners().any(TimeTravelOwners::finalizing){let before=cx.retained_progress();match semio_framework_async::poll::resolve_ready(self.time_travel_run(TimeTravelStoreCommand::StepCommit,Some(cx)))?{TimeTravelStoreOutput::CommitRefused(failure)=>return Err(failure.into()),_=>{}};let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
+            if self.time_travel.authoring.is_some(){let before=cx.retained_progress();self.time_travel.authoring.as_mut().unwrap().closing=true;self.close_supersede_authoring(grant,cx)?;let after=cx.retained_progress();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))}
+            if let TimeTravelStoreOutput::OriginalProgress(progress)=semio_framework_async::poll::resolve_ready(self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources{grant},Some(cx)))?{if progress!=Default::default(){return Ok(RetainedCloneStep::Progress(progress))}}
+        }
         if self.drive_original_discard_command(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original command turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
         if self.drive_original_review_children(grant)?{let (original,receipt)=self.time_travel.take_command_receipt().expect("close owns its original review view turn receipt");assert_eq!(original,grant);return Ok(RetainedCloneStep::Progress(receipt))}
-        if let Some(step)=self.time_travel_retire_step(grant)?{return Ok(RetainedCloneStep::Progress(step.progress()));}
+        if let Some(step)=match cx{Some(cx)=>self.time_travel_retire_step_context(grant,cx),None=>self.time_travel_retire_step(grant)}?{return Ok(RetainedCloneStep::Progress(step.progress()));}
         self.shared().time_travel_retirement_demands(grant.maximum_copy_bytes).map_err(ValueError::into_fault)?;
         Ok(if self.time_travel.terminal_is_empty(){RetainedCloneStep::Complete(Default::default())}else{RetainedCloneStep::Progress(Default::default())})
     }

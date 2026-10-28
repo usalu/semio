@@ -153,7 +153,7 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
 /// on first paint instead of the pre-fix empty document.
 #[semio_framework_async_macros::async_test]
 async fn initial_snapshot_is_the_bundled_example_not_empty() {
-    let snapshot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
+    let snapshot = <Fem3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let expected = semio_s_artifact_fem_3d_model::standards::v1::subsets::any::io::text::snapshot::parse_dsl(semio_s_artifact_fem_3d_io::examples::concrete_forest::PRIMARY_TEXT).expect("concrete-forest example parses");
     assert_eq!(snapshot.nodes.len(), expected.nodes.len(), "expected the bundled concrete-forest example's nodes");
     assert_eq!(snapshot.elements.len(), expected.elements.len(), "expected the bundled concrete-forest example's elements");
@@ -588,7 +588,7 @@ async fn mounted_camera_and_interaction_presence_reach_peers_without_document_ed
     use semio_framework_plugin::artifact_app_laws::fixture_mounted_policy;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/👥️presence/📷️camera/🧪️tests/🧫️fixtures/🔣️.json")).expect("portable shared presence fixture");
     let expected = protocol::PresenceWindowView::from_value(semio_framework_value::DslValue::from(&fixture["admission"][1]["value"])).expect("admitted shared camera");
-    let boot = <Fem3dPlayApp as ArtifactEditor>::initial_snapshot();
+    let boot = <Fem3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let node = boot.nodes.first().expect("bundled structural node");
     let selected = protocol::wire::encode_scoped_identity(&["node", &node.id]).expect("canonical node target");
     let window_kind = semio_s_artifact_fem_3d_editor_model_window::editor::fem3d::modes::edit::windows::model::FEM3D_WINDOW_MODEL;

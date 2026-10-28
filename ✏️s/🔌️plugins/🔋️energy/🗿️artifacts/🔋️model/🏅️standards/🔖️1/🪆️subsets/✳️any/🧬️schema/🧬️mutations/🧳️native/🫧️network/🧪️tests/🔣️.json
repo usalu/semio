@@ -1,0 +1,681 @@
+{
+  "contract": "semio.energy.original-network-singleton.v1",
+  "bodyBytes": 4096,
+  "cancelAt": [
+    0,
+    1,
+    3,
+    7,
+    13,
+    29,
+    61,
+    127,
+    511
+  ],
+  "widePairCount": 1200,
+  "cases": [
+    {
+      "id": "attach",
+      "before": null,
+      "payload": {
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      },
+      "outcome": "changed",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": {
+        "mutation": "replaceAirflowNetwork",
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      }
+    },
+    {
+      "id": "same",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      },
+      "outcome": "no-op",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": null
+    },
+    {
+      "id": "detach",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      },
+      "outcome": "changed",
+      "after": null,
+      "inverse": {
+        "mutation": "replaceAirflowNetwork",
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      }
+    },
+    {
+      "id": "already-absent",
+      "before": null,
+      "payload": {
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      },
+      "outcome": "no-op",
+      "after": null,
+      "inverse": null
+    },
+    {
+      "id": "detach-ignored-outdoor",
+      "before": null,
+      "payload": {
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 981,
+        "linkIds": []
+      },
+      "outcome": "no-op",
+      "after": null,
+      "inverse": null
+    },
+    {
+      "id": "empty-attached",
+      "before": null,
+      "payload": {
+        "present": true,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      },
+      "outcome": "changed",
+      "after": {
+        "zone_node_ids": [],
+        "outdoor_node_id": 0,
+        "link_ids": []
+      },
+      "inverse": {
+        "mutation": "replaceAirflowNetwork",
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      }
+    },
+    {
+      "id": "same-empty-attached",
+      "before": {
+        "zone_node_ids": [],
+        "outdoor_node_id": 0,
+        "link_ids": []
+      },
+      "payload": {
+        "present": true,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      },
+      "outcome": "no-op",
+      "after": {
+        "zone_node_ids": [],
+        "outdoor_node_id": 0,
+        "link_ids": []
+      },
+      "inverse": null
+    },
+    {
+      "id": "reorder-pairs",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": true,
+        "zoneIds": [
+          2,
+          1
+        ],
+        "nodeIds": [
+          12,
+          11
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      },
+      "outcome": "changed",
+      "after": {
+        "zone_node_ids": [
+          [
+            2,
+            12
+          ],
+          [
+            1,
+            11
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": {
+        "mutation": "replaceAirflowNetwork",
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      }
+    },
+    {
+      "id": "reorder-links",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          13,
+          8,
+          5
+        ]
+      },
+      "outcome": "changed",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          13,
+          8,
+          5
+        ]
+      },
+      "inverse": {
+        "mutation": "replaceAirflowNetwork",
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      }
+    },
+    {
+      "id": "replace-outdoor",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 100,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      },
+      "outcome": "changed",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 100,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": {
+        "mutation": "replaceAirflowNetwork",
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11,
+          12
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      }
+    },
+    {
+      "id": "mismatched-pairs",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": true,
+        "zoneIds": [
+          1,
+          2
+        ],
+        "nodeIds": [
+          11
+        ],
+        "outdoorNodeId": 99,
+        "linkIds": [
+          5,
+          8,
+          13
+        ]
+      },
+      "outcome": "invalid",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": null
+    },
+    {
+      "id": "detached-nodes",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": false,
+        "zoneIds": [
+          1
+        ],
+        "nodeIds": [
+          11
+        ],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      },
+      "outcome": "invalid",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": null
+    },
+    {
+      "id": "detached-links",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [],
+        "outdoorNodeId": 0,
+        "linkIds": [
+          5
+        ]
+      },
+      "outcome": "invalid",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": null
+    },
+    {
+      "id": "detached-mismatched-node-only",
+      "before": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "payload": {
+        "present": false,
+        "zoneIds": [],
+        "nodeIds": [
+          11
+        ],
+        "outdoorNodeId": 0,
+        "linkIds": []
+      },
+      "outcome": "invalid",
+      "after": {
+        "zone_node_ids": [
+          [
+            1,
+            11
+          ],
+          [
+            2,
+            12
+          ]
+        ],
+        "outdoor_node_id": 99,
+        "link_ids": [
+          5,
+          8,
+          13
+        ]
+      },
+      "inverse": null
+    }
+  ]
+}

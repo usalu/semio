@@ -75,5 +75,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateFaultDefinition",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "faults",
+    "field": "fault_type",
+    "input": "new_fault_type",
+    "key": "id",
+    "labels": {
+      "en": "Change fault: Fault type",
+      "de": "Fehlertyp ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fault",
+      "kind": "change-fault-type",
+      "record": "ChangedFaultType"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Fault type violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fault does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fault already carries this fault type value."
+      }
+    }
   }
 }

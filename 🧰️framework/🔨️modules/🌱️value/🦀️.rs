@@ -53,6 +53,7 @@ pub mod numeric_scratch;
 pub mod scratch_hash;
 #[path = "📦️paged/🦀️.rs"]
 pub mod paged;
+pub use paged::{ByteReadSource,ByteReadRange};
 #[path = "📝️shared-utf8/🦀️.rs"]
 pub mod shared_utf8;
 pub use shared_utf8::SharedUtf8;
@@ -84,3 +85,7 @@ pub use semio_framework_value_intrinsic::{NativeDecodeControl,NativeDecodeProgre
 
 
 
+
+#[path="📣️publication/🌳️root/🦀️.rs"]
+pub mod publication_root;
+pub use publication_root::{RetainedPublicationDecision,RetainedPublicationRoot};

@@ -75,9 +75,9 @@ impl ArtifactViewer for RasterViewer {
     /// construction derive-`Clone`s and `encode_pack`s the initial snapshot, and raster admits only
     /// the empty shell to both — see `RasterPlayApp::initial_snapshot`. A viewer instance receives its
     /// document through the archive/pack load path (raster's own paged clone authority).
-    fn initial_snapshot() -> RasterSnapshot {
+    fn reference_birth()->Option<fn()->RasterSnapshot>{Some(||{
         semio_s_artifact_raster_raster_model::io::text::snapshot::snapshot_wire_codec::empty_raster_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `RasterViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

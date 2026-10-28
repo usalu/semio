@@ -1,0 +1,13 @@
+[package]
+name="energy-window-registry-custody"
+version="0.1.0"
+edition="2021"
+[workspace]
+[[test]]
+name="registry"
+path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🪟️window/🎚️config/🗂️registry/🧪️tests/🦀️.rs"
+[dependencies]
+semio-framework-value={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"}
+semio-framework-value-persistent={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"}
+semio-framework-trace={path="../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"}
+serde_json="1.0.140"

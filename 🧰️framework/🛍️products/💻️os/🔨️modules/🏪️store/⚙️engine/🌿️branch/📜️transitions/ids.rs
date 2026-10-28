@@ -1,0 +1,30 @@
+//! 🪪️ Native transition identities reserve their canonical headers once and copy original text in bounded fragments.
+use semio_framework_value::{RetirementDemand,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneClose,retained_clone_grant_admits}};
+use semio_framework_os_spr::MutationId;
+use std::mem::{ManuallyDrop,size_of};
+fn invalid()->ValueError{ValueError::literal(ValueRefusalKind::InvariantViolated,"original transition identity source changed")}
+fn paid(d:RetirementDemand)->RetainedCloneProgress{RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:d.release_bytes}}
+fn fixed()->RetirementDemand{RetirementDemand{copy_bytes:256,depth:1,..Default::default()}}
+/// 🧵️ The enclosing original Store publisher authenticates the source row; this owner guards each borrowed identity field.
+pub struct OriginalTransitionIds{values:ManuallyDrop<Option<Vec<MutationId>>>,retirement:RetainedCloneClose,source:Option<(usize,usize,Option<usize>)>,count:Option<usize>,complete:usize,offset:usize,phase:u8,closing:bool}
+impl Default for OriginalTransitionIds{fn default()->Self{Self{values:ManuallyDrop::new(None),retirement:Default::default(),source:None,count:None,complete:0,offset:0,phase:0,closing:false}}}
+fn suffix_bytes(value:Option<usize>,bytes:&mut[u8;22])->&[u8]{let Some(mut value)=value else{return &bytes[22..]};let mut index=22;loop{index-=1;bytes[index]=b'0'+(value%10)as u8;value/=10;if value==0{break}}index-=1;bytes[index]=b'#';&bytes[index..]}
+impl OriginalTransitionIds{
+ /// 📏️ Quotes one actual header reservation, String birth or bounded original UTF8 fragment.
+ pub fn demands(&self,source:&str,suffix:Option<usize>,count:usize)->Result<RetirementDemand,ValueError>{if self.closing||self.count.is_some_and(|original|original!=count)||self.source.is_some_and(|original|original!=(source.as_ptr()as usize,source.len(),suffix)){return Err(invalid())}let mut bytes=[0;22];let length=source.len().checked_add(suffix_bytes(suffix,&mut bytes).len()).ok_or_else(invalid)?;Ok(match self.phase{0=>RetirementDemand{capacity_bytes:count.checked_mul(size_of::<MutationId>()).ok_or_else(invalid)?,..fixed()},1 if self.complete<count=>RetirementDemand{capacity_bytes:length,..fixed()},_=>fixed()})}
+ /// ✍️ Preserves canonical order while admitting no whole identifier clone or growing header allocation.
+ pub fn advance(&mut self,source:&str,suffix:Option<usize>,count:usize,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{let d=self.demands(source,suffix,count)?;if self.complete==count&&self.phase!=0{return Ok(Default::default())}if !retained_clone_grant_admits(grant,d){return Ok(Default::default())}self.count=Some(count);match self.phase{0=>{let mut values=Vec::new();values.try_reserve_exact(count).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original transition identity header reservation failed"))?;*self.values=Some(values);self.phase=1;},1=>{let mut bytes=[0;22];let length=source.len()+suffix_bytes(suffix,&mut bytes).len();let mut value=String::new();value.try_reserve_exact(length).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"original transition identity field reservation failed"))?;self.values.as_mut().unwrap().push(MutationId(value));self.source=Some((source.as_ptr()as usize,source.len(),suffix));self.offset=0;self.phase=2;},2=>{let value=&mut self.values.as_mut().unwrap().last_mut().unwrap().0;if self.offset<source.len(){let mut end=(self.offset+64).min(source.len());while !source.is_char_boundary(end){end-=1;}value.push_str(&source[self.offset..end]);self.offset=end;}else{let mut bytes=[0;22];value.push_str(std::str::from_utf8(suffix_bytes(suffix,&mut bytes)).map_err(|_|invalid())?);self.complete+=1;self.source=None;self.phase=1;}},_=>return Err(invalid())}Ok(paid(d))}
+ pub fn complete(&self)->usize{self.complete}
+ pub fn ready(&self)->bool{!self.closing&&self.count==Some(self.complete)&&self.phase==1}
+ pub fn values(&self)->&[MutationId]{self.values.as_deref().unwrap_or(&[])}
+ /// 🤝️ Transfers the actual canonical vector only after every admitted identifier is complete.
+ pub fn take(&mut self,grant:RetainedCloneGrant)->Result<Option<(Vec<MutationId>,RetainedCloneProgress)>,ValueError>{if self.closing||self.count!=Some(self.complete)||self.phase!=1{return Err(invalid())}let d=fixed();if !retained_clone_grant_admits(grant,d){return Ok(None)}let values=self.values.take().ok_or_else(invalid)?;self.phase=3;self.count=None;Ok(Some((values,paid(d))))}
+ pub fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{if !self.retirement.is_empty(){return self.retirement.demands(body)}if self.values.is_some(){return self.retirement.next_owner_demands::<Vec<MutationId>>(true,&None,body)}Ok(fixed())}
+ /// ♻️ Partial Strings, canonical headers and actual retirement frames all close under their independent currencies.
+ pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{self.closing=true;if self.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}let d=self.close_demands(grant.maximum_copy_bytes)?;if !retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if !self.retirement.is_empty(){return self.retirement.select(grant.maximum_copy_bytes)?.step(grant)}if self.values.is_some(){return Ok(self.retirement.begin_granted(&mut self.values,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}self.source=None;self.count=None;Ok(RetainedCloneStep::Progress(paid(d)))}
+ pub fn terminal_is_empty(&self)->bool{self.values.is_none()&&self.retirement.is_empty()&&self.source.is_none()&&self.count.is_none()}
+}
+impl Drop for OriginalTransitionIds{fn drop(&mut self){assert!(self.terminal_is_empty()||std::thread::panicking(),"original transition identities require paid handoff or closure");}}
+#[cfg(test)]
+#[path="ids-tests.rs"]
+mod tests;

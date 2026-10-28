@@ -1,30 +1,12 @@
 //! 🔆️ A semantic intent changes only the named glazing optical field.
-use crate::{diff::EnergyModelDiff,EnergyModelSnapshot};
 use semio_framework_value_derive::{FromValue as FromValueDerive,ToValue as ToValueDerive};
 /// 🪟️ Solar back reflectance is addressed by the original glazing row identity.
-#[derive(Clone,Debug,PartialEq,ToValueDerive,FromValueDerive,semio_framework_dsl_record_derive::DslRecord,dsl::MutationLeaf,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone,Debug,PartialEq,ToValueDerive,FromValueDerive,semio_framework_dsl_record_derive::DslRecord,dsl::MutationLeaf, semio_framework_value::NativeReceive,semio_s_artifact_energy_model_native_derive::EnergyNativeMutation,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner=semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all="camelCase")]
 #[dsl(keyword="change-glazing-material-solar-reflectance-back")]
 pub struct ChangeGlazingMaterialSolarReflectanceBack{pub id:crate::model::EntityId,pub new_solar_reflectance_back:f64}
 /// 🎯️ Constructs the explicit optical field intent.
 pub fn change_glazing_material_solar_reflectance_back<Op: From<ChangeGlazingMaterialSolarReflectanceBack>>(id:crate::model::EntityId,new_solar_reflectance_back:f64)->Op{ChangeGlazingMaterialSolarReflectanceBack{id,new_solar_reflectance_back}.into()}
-impl<Op> protocol::MutationKind<EnergyModelSnapshot,Op> for ChangeGlazingMaterialSolarReflectanceBack
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeGlazingMaterialSolarReflectanceBack>,
-{
- const SEMANTICS:protocol::SemanticDescriptor=protocol::SemanticDescriptor{verb:"change",entity:"glazing-material",kind:"change-glazing-material-solar-reflectance-back",record:"ChangedGlazingMaterialSolarReflectanceBack"};
-
-
- fn label(&self)->semio_framework_ui_locale::LocalizedLabel{semio_framework_ui_locale::LocalizedLabel::native(&format!("Solar back reflectance of glazing material {}",self.id.0),&format!("Solarer Reflexionsgrad hinten von Verglasungsmaterial {}",self.id.0))}
- fn target(&self)->Vec<String>{vec![self.id.0.to_string()]}
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot,Op> for ChangeGlazingMaterialSolarReflectanceBack
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeGlazingMaterialSolarReflectanceBack>,
-{
- fn diff(&self,base:&EnergyModelSnapshot)->protocol::MutationOutcome<EnergyModelDiff>{super::diff::diff(self,base)}
- fn inverse(&self,base:&EnergyModelSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{super::inverse::inverse(self,base)}
-}

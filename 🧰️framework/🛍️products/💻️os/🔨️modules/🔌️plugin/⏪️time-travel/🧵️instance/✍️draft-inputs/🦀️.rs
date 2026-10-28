@@ -115,7 +115,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 return Ok(outcome);
             }
         };
-        let outcome = self.apply_time_travel_event(TimeTravelEvent::Draft { generation, replacement }, Some(meta), effects, identity).await?;
+        let outcome = self.apply_time_travel_event(TimeTravelEvent::Draft { generation, replacement }, Some(meta), effects, identity,None).await?;
         if matches!(outcome, TimeTravelActionOutcome::Applied(_)) {
             if let Some(editor) = self.time_travel.editor.as_mut() {
                 editor.value = candidate;

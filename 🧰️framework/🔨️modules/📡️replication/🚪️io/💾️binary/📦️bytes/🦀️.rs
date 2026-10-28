@@ -229,7 +229,7 @@ impl OperationByteOutput for OperationByteComparison<'_> {
         if let Err(error)=control.begin_stage(bytes.len()){self.refused=true;return Err(error.into());}
         for byte in bytes{
             if let Err(error)=control.checkpoint(){self.refused=true;return Err(error.into());}
-            if self.source.get(self.position)!=Some(byte){self.refused=true;return Err(Self::mismatch(self.position));}
+            if self.source.get(self.position)!=Some(*byte){self.refused=true;return Err(Self::mismatch(self.position));}
             self.position+=1;
             if let Err(error)=control.step(){self.refused=true;return Err(error.into());}
         }

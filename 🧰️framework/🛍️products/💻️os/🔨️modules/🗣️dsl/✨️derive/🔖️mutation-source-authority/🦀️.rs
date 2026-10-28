@@ -241,26 +241,17 @@ fn mutation_authority_raw_lexical(path: &Path) -> Result<(), String> {
     Ok(())
 }
 
-#[doc(hidden)] pub fn mutation_authority_workspace_root(source: &Path) -> Result<PathBuf, String> {
-    for ancestor in source.parent().into_iter().flat_map(Path::ancestors) {
-        let package = ancestor.join("package.json");
-        match mutation_authority_node(&package) {
-            "missing" => continue,
-            "symlink" => return Err("workspace package.json marker is a symlink".to_string()),
-            "file" => {},
-            _ => return Err("workspace package.json marker is not a regular file".to_string()),
-        }
-        let package: serde_json::Value = serde_json::from_slice(&fs::read(&package).map_err(|error| error.to_string())?).map_err(|error| error.to_string())?;
-        if !matches!(package.get("workspaces"), Some(serde_json::Value::Array(_) | serde_json::Value::Object(_))) { continue; }
-        match mutation_authority_node(&ancestor.join("📋️project.json")) {
-            "file" => return Ok(ancestor.to_path_buf()),
-            "missing" if mutation_authority_node(&ancestor.join("bun.lock")) == "file" => continue,
-            "missing" => return Err("workspace package.json declaration lacks paired 📋️project.json".to_string()),
-            "symlink" => return Err("workspace 📋️project.json marker is a symlink".to_string()),
-            _ => return Err("workspace 📋️project.json marker is not a regular file".to_string()),
-        }
-    }
-    Err("source has no exact package workspace declaration and 📋️project.json pair".to_string())
+/// 🧭️ Exact package/project anchors may explicitly delegate only to an ancestor's genuine workspace authority.
+#[doc(hidden)] pub fn mutation_authority_workspace_root(source:&Path)->Result<PathBuf,String>{for ancestor in source.parent().into_iter().flat_map(Path::ancestors){if let Some(root)=mutation_authority_workspace_anchor(ancestor)?{return Ok(root);}}Err("source has no exact package workspace declaration and 📋️project.json pair".to_string())}
+fn mutation_authority_workspace_anchor(ancestor:&Path)->Result<Option<PathBuf>,String>{
+ let package=ancestor.join("package.json");match mutation_authority_node(&package){"missing"=>return Ok(None),"symlink"=>return Err("workspace package.json marker is a symlink".to_string()),"file"=>{},_=>return Err("workspace package.json marker is not a regular file".to_string())}
+ let package:serde_json::Value=serde_json::from_slice(&fs::read(&package).map_err(|error|error.to_string())?).map_err(|error|error.to_string())?;
+ if !matches!(package.get("workspaces"),Some(serde_json::Value::Array(_)|serde_json::Value::Object(_))){return Ok(None);}
+ if let Some(delegation)=package.pointer("/semio/mutationSourceAuthority/workspaceRoot"){
+  let relative=delegation.as_str().filter(|s|!s.is_empty()).ok_or_else(||"mutation authority delegation must name an exact ancestor".to_string())?;let mut target=ancestor.to_path_buf();for part in relative.split('/'){if part!=".."||!target.pop(){return Err("mutation authority delegation must name an exact ancestor".to_string());}}
+  return mutation_authority_workspace_anchor(&target)?.map(Some).ok_or_else(||"delegated mutation authority lacks an exact package workspace and project pair".to_string());
+ }
+ match mutation_authority_node(&ancestor.join("📋️project.json")){"file"=>Ok(Some(ancestor.to_path_buf())),"missing"=>Err("workspace package.json declaration lacks paired 📋️project.json".to_string()),"symlink"=>Err("workspace 📋️project.json marker is a symlink".to_string()),_=>Err("workspace 📋️project.json marker is not a regular file".to_string())}
 }
 
 fn mutation_authority_node(path: &Path) -> &'static str {

@@ -133,9 +133,9 @@ impl ArtifactEditor for PptxStrictEditor {
         })
     }
 
-    fn initial_snapshot() -> PptxSnapshot {
+    fn reference_birth()->Option<fn()->PptxSnapshot>{Some(||{
         semio_s_artifact_stdio_pptx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::blank_strict_pptx_snapshot()
-    }
+    })}
 
     /// ✏️ Replaces the addressed text-bearing shape after its optimistic revision matches.
     /// Existing paragraph and run formatting is retained wherever a submitted line corresponds.

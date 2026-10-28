@@ -35,6 +35,7 @@ borrowed_scalar_fields!(UInt;u8,u16,u32,u64,usize);
 borrowed_scalar_fields!(Float;f32,f64);
 borrowed_scalar_fields!(Text;String,semio_framework_value::SharedUtf8);
 impl<const N:usize> BorrowedDslField for semio_framework_value::paged::PagedUtf8<N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Text;}
+impl<const N:usize> BorrowedDslField for semio_framework_value::paged::PagedBytes<N>{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Bytes64;}
 impl BorrowedDslField for crate::ExprValue{const SHAPE:crate::BorrowedShape=crate::BorrowedShape::Expr;}
 borrowed_scalar_fields!(Wire;crate::Wire);
 borrowed_scalar_fields!(Value;semio_framework_value::DslValue);

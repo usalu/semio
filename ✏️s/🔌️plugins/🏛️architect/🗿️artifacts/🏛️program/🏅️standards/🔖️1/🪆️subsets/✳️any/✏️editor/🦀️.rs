@@ -575,9 +575,9 @@ impl ArtifactEditor for ArchitectPlayApp {
         registry.register::<report_window::config::ArchitectReportWindowConfigOwner>()
     }
 
-    fn initial_snapshot() -> ProgramSnapshot {
+    fn reference_birth()->Option<fn()->ProgramSnapshot>{Some(||{
         sample_plugin()
-    }
+    })}
 
     fn initial_config() -> ArchitectConfig {
         ArchitectConfig::default()

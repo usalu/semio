@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioMeshViewer {
     const DIALECT: Dialect = SEMIO_MESH_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_MESH_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioMeshSnapshot {
+    fn reference_birth()->Option<fn()->SemioMeshSnapshot>{Some(||{
         SemioMeshSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

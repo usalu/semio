@@ -367,7 +367,7 @@ async fn primitive_tuple_list_and_base64_round_trip() {
     assert_round_trip("vertex 1,2,3 tags=[a b c]", &spec);
     assert_round_trip("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec);
     let value = parse("vertex 0,0,0 blob=\"aGVsbG8=\"", &spec, &ParseOptions::default()).expect("parse");
-    assert_eq!(value.get(2), Some(&FieldValue::Bytes64(b"hello".to_vec())));
+    assert_eq!(value.get(2), Some(&FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&b"hello".to_vec()).unwrap())));
 }
 
 // --- primitive 11: dynamic value literal ---

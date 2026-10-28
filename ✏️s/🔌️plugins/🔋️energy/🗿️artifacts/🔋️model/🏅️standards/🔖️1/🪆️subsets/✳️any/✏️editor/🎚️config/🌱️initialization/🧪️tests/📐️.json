@@ -1,0 +1,42 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "default",
+    "cancelStages"
+  ],
+  "properties": {
+    "default": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zoneTimestepMinutes",
+        "systemTimestepMinutes",
+        "warmupDays",
+        "resultField"
+      ],
+      "properties": {
+        "zoneTimestepMinutes": {
+          "const": 60
+        },
+        "systemTimestepMinutes": {
+          "const": 60
+        },
+        "warmupDays": {
+          "const": 7
+        },
+        "resultField": {
+          "const": "conductionLoss"
+        }
+      }
+    },
+    "cancelStages": {
+      "const": [
+        0,
+        3,
+        6
+      ]
+    }
+  }
+}

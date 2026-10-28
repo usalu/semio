@@ -1,0 +1,50 @@
+{
+  "contract": "semio.plugin.native-instance.v1",
+  "instance": "native-window",
+  "actor": "native-app-reader",
+  "lanes": [
+    {
+      "id": "native-window",
+      "shape": "document",
+      "zoom": 1.25
+    },
+    {
+      "id": "native-window-config",
+      "shape": "config",
+      "zoom": 1.25
+    },
+    {
+      "id": "native-window-draft",
+      "shape": "document",
+      "zoom": 1.25
+    },
+    {
+      "id": "native-window-interaction",
+      "shape": "config",
+      "maps": {
+        "activeGranularity": {},
+        "activeMode": {},
+        "hover": {},
+        "selection": {}
+      }
+    }
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "capacity",
+    "release",
+    "depth"
+  ],
+  "cancelLanes": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "cancelPhases": [
+    2,
+    6,
+    7
+  ]
+}

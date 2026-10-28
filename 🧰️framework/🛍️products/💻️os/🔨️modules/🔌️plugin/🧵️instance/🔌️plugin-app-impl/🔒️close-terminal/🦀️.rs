@@ -26,6 +26,10 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.tools.pending_tool_lease_admission.is_none()
             && self.media.pending_media_import_permit.is_none()
             && self.tools.tool_operations.is_empty()
+            && !self.original_emission.pending()
+            && !self.original_typed_command.pending()
+            && self.tools.original_emission_admission.is_none()
+            && self.tools.original_emission_receipt.is_none()
             && self.child_composition.private_child_groups_terminal_is_empty()
             && self.tools.latest_wins_commands.is_empty()
             && self.tools.typed_operation_reservations.iter().all(Option::is_none)
@@ -63,5 +67,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             && self.ingest.envelope_field_decoder_retirements.is_empty()
             && self.ingest.envelope_completed_record_retirements.is_empty()
             && self.ladder_ref().retained_fields_terminal_is_empty()
+            && self.original_controller_close.as_ref().is_none_or(|owner|(owner.terminal)(&self.app))
     }
 }

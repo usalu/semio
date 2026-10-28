@@ -130,7 +130,7 @@ async fn event_log_catch_up_adds_only_unknown_events_and_derives_their_records()
     let (channel, remote_end) = ChannelBackbone::pair("chan").await;
     store.attach_backbone(Backbones::Channel(channel)).await.expect("attach");
     let _ = drain_channel_for_test(&remote_end).expect("drain attach announcement");
-    remote_end.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&remote_store.event_log().expect("remote log")) }).await.expect("push the whole remote log");
+    remote_end.push(BackboneMessage::from_envelopes(&remote_store.event_log().expect("remote log"))).await.expect("push the whole remote log");
     store.tick().await.expect("tick folds the pushed events");
 
     assert_eq!(store.envelope().vcs.edits.len(), 2, "the shared original edit is deduplicated, only the new remote edit is added");

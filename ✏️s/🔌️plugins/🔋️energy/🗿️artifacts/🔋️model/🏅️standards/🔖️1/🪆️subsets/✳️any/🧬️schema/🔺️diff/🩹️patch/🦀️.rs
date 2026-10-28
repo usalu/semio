@@ -185,12 +185,8 @@ impl<T: Clone + PartialEq + Debug, const N: usize> FieldPatch for Slots<T, N> {
         Ok(())
     }
     fn absorb(&mut self, later: Self) {
-        for slot in later.0 {
-            match self.0.binary_search_by_key(&slot.index, |own| own.index) {
-                Ok(position) => self.0[position] = slot,
-                Err(position) => self.0.insert(position, slot),
-            }
-        }
+        let slots: std::collections::BTreeMap<_, _> = std::mem::take(&mut self.0).into_iter().chain(later.0).map(|slot| (slot.index, slot.value)).collect();
+        self.0 = slots.into_iter().map(|(index, value)| Slot { index, value }).collect();
     }
     fn inverse(&self, base: &[T; N]) -> Self {
         Self(self.0.iter().filter_map(|slot| base.get(slot.index).map(|value| Slot { index: slot.index, value: value.clone() })).collect())
@@ -439,7 +435,12 @@ impl<P: RowPatch> FieldPatch for Rows<P> {
             let row = target.iter_mut().find(|row| P::row_key(row) == key).ok_or_else(|| refused("diff.target-missing", "a row patch names a row the collection does not hold"))?;
             patch.commit_onto(row)?;
         }
-        *target = self.edit.commit_onto(std::mem::take(target), |row, key| P::row_key(row) == *key).map_err(splice_refused)?;
+        let next = self.edit.commit_onto(std::mem::take(target), |row, key| row.key() == *key).map_err(splice_refused)?;
+        let mut keys = std::collections::BTreeSet::new();
+        if next.iter().any(|row| !keys.insert(row.key())) {
+            return Err(refused("diff.duplicate-key", "a collection cannot hold multiple rows with the same entity key"));
+        }
+        *target = next;
         Ok(())
     }
     fn absorb(&mut self, later: Self) {

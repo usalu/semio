@@ -1,0 +1,8 @@
+//! 🪆️ Owned value leaves preserve genuine typed inverse preparation and the original mutation factory.
+use super::*;
+use crate::leaf::{RowLeafSpec,RowLeafPreparation};
+use protocol::mutation::retained::RetainedDiagnosticSpec;
+pub trait OwnedLeafSpec<L,M>:OwnedRowPath{const INVALID:RetainedDiagnosticSpec;const INVALID_REFERENCE:RetainedDiagnosticSpec=Self::INVALID;const INVALID_CONTEXT:RetainedDiagnosticSpec=Self::INVALID;const UNCHANGED:RetainedDiagnosticSpec;const MISSING:RetainedDiagnosticSpec;fn input(payload:RetainedCloneRef<'_,L>)->RetainedCloneRef<'_,Self::Value>;fn key(payload:RetainedCloneRef<'_,L>)->RetainedCloneRef<'_,u32>;fn inverse(payload:RetainedCloneRef<'_,L>,value:Self::Value)->M;}
+pub struct OwnedSpec<S>(std::marker::PhantomData<fn()->S>);
+impl<L,M,S:OwnedLeafSpec<L,M>> RowLeafSpec<L,M> for OwnedSpec<S>{type Input=S::Value;type Inverse=S::Value;type Core=OwnedRowPreparation<S>;const INVALID:RetainedDiagnosticSpec=S::INVALID;const INVALID_REFERENCE:RetainedDiagnosticSpec=S::INVALID_REFERENCE;const INVALID_CONTEXT:RetainedDiagnosticSpec=S::INVALID_CONTEXT;const UNCHANGED:RetainedDiagnosticSpec=S::UNCHANGED;const MISSING:RetainedDiagnosticSpec=S::MISSING;fn input(p:RetainedCloneRef<'_,L>)->RetainedCloneRef<'_,Self::Input>{S::input(p)}fn key(p:RetainedCloneRef<'_,L>)->Option<RetainedCloneRef<'_,u32>>{Some(S::key(p))}fn inverse(p:RetainedCloneRef<'_,L>,v:Self::Inverse)->M{S::inverse(p,v)}fn diagnostic_targets(p:RetainedCloneRef<'_,L>,_:RowOutcome)->Result<[protocol::mutation::retained::RetainedDiagnosticTarget<'_>;1],ValueError>{Ok([protocol::mutation::retained::RetainedDiagnosticTarget::Unsigned(S::key(p))])}}
+pub type OwnedLeafPreparation<L,M,S>=RowLeafPreparation<L,M,OwnedSpec<S>>;

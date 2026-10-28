@@ -1,6 +1,7 @@
 //! 📮️ Job authority wire surface: packet leases for preview, checkpoint, commit and fault, result hand-off, weather and wire building, and the numerical digest.
 
 use super::*;
+use crate::site::{design_day_hour, synthetic_hour};
 
 impl EnergyJobAuthority {
     pub fn stage(&self) -> EnergyJobStage {
@@ -115,6 +116,16 @@ impl EnergyJobAuthority {
         self.result.take()
     }
 
+    /// 📈️ Borrows the original hourly table before and after final result assembly.
+    pub fn live_time_series(&self) -> &TimeSeriesTable {
+        self.result.as_ref().map_or(&self.time_series, |results| &results.time_series)
+    }
+
+    /// 🔢️ Borrows the original meter table before and after final result assembly.
+    pub fn live_meters(&self) -> &MeterTable {
+        self.result.as_ref().map_or(&self.meters, |results| &results.meters)
+    }
+
     /// 🧱️ The live per-surface energy table WHILE the run is running — the only path to per-surface
     /// physics before the job settles, since the framework tool-run driver discards the settled
     /// `Complete` candidate's payload unread. A run job reads this on a tier boundary and encodes it
@@ -132,13 +143,13 @@ impl EnergyJobAuthority {
     pub(super) fn weather_calendar(&self)->crate::site::WeatherCalendar{self.config.weather.as_ref().map_or(crate::site::WeatherCalendar::ActualDates,|weather|weather.calendar)}
 
     /// 🔎️ Exact authored calendar matching over the admitted timestamp sequence.
-    pub(super) fn weather_index(&self,date:crate::calendar::SimDate,hour:u8)->Option<usize>{crate::site::chronology::record_index(self.weather_calendar(),self.weather.len(),|i|self.weather.get_index(i).copied(),date,hour)}
+    pub(super) fn weather_index(&self,date:crate::calendar::SimDate,hour:u8)->Option<usize>{crate::site::chronology::record_index(self.weather_calendar(),self.weather_cursor,|i|(i<self.weather_cursor).then(||self.weather_record(i)),date,hour)}
 
     /// 🌦️ The run starts at its authored first date, independent of weather-file length.
     pub(super) fn run_start_record(&self)->Option<usize>{let period=SimulationKernel::run_period(&self.config);self.weather_index(calendar::SimDate::new(period.year,period.start_month,period.start_day),0)}
 
     /// 🌗️ Continuous simulation keeps real neighbour timestamps; warmup explicitly repeats its selected day.
-    pub(super) fn hour_weather(&self,index:usize,repeat_day:bool)->Option<HourWeather>{let[previous,current,next]=crate::site::chronology::neighbours(self.weather.len(),|i|self.weather.get_index(i).copied(),index,if repeat_day{crate::site::chronology::NeighbourPolicy::RepeatDay}else{crate::site::chronology::NeighbourPolicy::Continuous})?;Some(HourWeather{previous,current,next})}
+    pub(super) fn hour_weather(&self,index:usize,repeat_day:bool)->Option<HourWeather>{let[previous,current,next]=crate::site::chronology::neighbours(self.weather_cursor,|i|(i<self.weather_cursor).then(||self.weather_record(i)),index,if repeat_day{crate::site::chronology::NeighbourPolicy::RepeatDay}else{crate::site::chronology::NeighbourPolicy::Continuous})?;Some(HourWeather{previous,current,next})}
 
     pub(super) fn weather_record(&self,index:usize)->WeatherRecord{
         if let Some(weather)=&self.config.weather{return weather.records[index];}
@@ -226,8 +237,10 @@ impl EnergyJobAuthority {
     }
 
     pub fn step_wire_build(&mut self, context: &mut StepContext<'_>) -> Result<bool, EnergyWireRejection> {
+        if context.should_yield() { return Ok(false); }
         let (kind, field) = self.wire_build.as_ref().map(|build| (build.kind, build.field)).ok_or(EnergyWireRejection::Backing)?;
         let Some((fragment, length)) = self.wire_fragment(kind, field) else {
+            context.consume_fuel(1);
             let build = self.wire_build.as_mut().expect("wire build remains mounted");
             if build.writer.staged_page_len().is_some() {
                 build.writer.commit_staged_page().map_err(|_| EnergyWireRejection::Backing)?;
@@ -240,9 +253,10 @@ impl EnergyJobAuthority {
         };
         let build = self.wire_build.as_mut().expect("wire build remains mounted");
         if build.writer.staged_page_len().is_none() {
-            build.writer.begin_staged_page(context).map_err(|_| EnergyWireRejection::Backing)?;
+            build.writer.begin_staged_page_funded(context).map_err(|_| EnergyWireRejection::Backing)?;
             return Ok(false);
         }
+        context.consume_fuel(1);
         if build.writer.staged_page_remaining() < length {
             build.writer.commit_staged_page().map_err(|_| EnergyWireRejection::Backing)?;
             return Ok(false);
@@ -265,9 +279,10 @@ impl EnergyJobAuthority {
 
     pub(super) fn drive_wire_publication(&mut self, context: &mut StepContext<'_>) -> Option<EnergyRun> {
         if let Some(retiring) = self.publication.retiring_preview.as_mut() {
+            context.consume_fuel(1);
             let step = retiring.close_step(context.retained_grant());
             match energy_spend(context, step) {
-                Ok(true) => self.publication.retiring_preview = None,
+                Ok(true) => { self.publication.retiring_preview = None; return Some(EnergyRun::Yield); },
                 Ok(false) => return Some(EnergyRun::Yield),
                 Err(_) => return Some(Self::fault()),
             }
@@ -279,6 +294,7 @@ impl EnergyJobAuthority {
             return Some(EnergyRun::Yield);
         }
         let mut packet = self.wire_ready.take()?;
+        context.consume_fuel(1);
         match packet.kind {
             EnergyWireKind::Preview => {
                 if self.publication.preview.is_some() {

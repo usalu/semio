@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "field": "outdoor_air_per_area_m3_s_m2",
+    "input": "new_outdoor_air_per_area_m3_s_m2",
+    "key": "id",
+    "labels": {
+      "en": "Change ideal loads system: Outdoor air per floor area",
+      "de": "Außenluftrate pro Geschossfläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ideal-loads-system",
+      "kind": "change-ideal-loads-system-outdoor-air-per-area",
+      "record": "ChangedIdealLoadsSystemOutdoorAirPerArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Outdoor air per floor area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed ideal loads system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The ideal loads system already carries this outdoor air per floor area value."
+      }
+    }
   }
 }

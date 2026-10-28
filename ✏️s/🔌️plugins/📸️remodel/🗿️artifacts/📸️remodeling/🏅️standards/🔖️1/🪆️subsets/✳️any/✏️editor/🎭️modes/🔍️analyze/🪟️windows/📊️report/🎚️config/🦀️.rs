@@ -78,6 +78,8 @@ impl pack::snapshot::ArtifactPack for RemodelingReportWindowConfig {
     }
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for RemodelingReportWindowConfig {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 
 }
 impl store::ConfigRecord for RemodelingReportWindowConfig {}

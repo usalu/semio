@@ -10,14 +10,16 @@ extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod delete_daylight_zone {
     #[path = "🌗️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌗️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌗️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌗️delete/↩️inverse/🦀️.rs"]
@@ -29,6 +31,8 @@ pub mod change_daylight_zone_zone {
     #[path = "🏫️change-zone/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🏫️change-zone/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🏫️change-zone/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🏫️change-zone/↩️inverse/🦀️.rs"]
@@ -40,6 +44,8 @@ pub mod create_daylight_zone {
     #[path = "🔭️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔭️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔭️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔭️create/↩️inverse/🦀️.rs"]
@@ -51,6 +57,8 @@ pub mod change_daylight_zone_glare_limit {
     #[path = "🕶️change-glare-limit/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🕶️change-glare-limit/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🕶️change-glare-limit/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🕶️change-glare-limit/↩️inverse/🦀️.rs"]
@@ -62,6 +70,8 @@ pub mod change_daylight_zone_window_transmittance {
     #[path = "🥃️change-window-transmittance/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🥃️change-window-transmittance/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🥃️change-window-transmittance/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🥃️change-window-transmittance/↩️inverse/🦀️.rs"]
@@ -73,6 +83,8 @@ pub mod change_daylight_zone_illuminance_target {
     #[path = "🪔️change-illuminance-target/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪔️change-illuminance-target/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪔️change-illuminance-target/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪔️change-illuminance-target/↩️inverse/🦀️.rs"]

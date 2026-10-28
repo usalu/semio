@@ -1,0 +1,31 @@
+{
+  "contract": "semio.original-publication/v1",
+  "input": {
+    "zoom": 1.25
+  },
+  "operation": {
+    "kind": "zoom",
+    "zoom": 7.5
+  },
+  "expected": {
+    "zoom": 7.5
+  },
+  "historyCount": 1,
+  "outboxCount": 1,
+  "limits": {
+    "copy": 4096,
+    "capacity": 4096,
+    "ownerFrames": "original-demand"
+  },
+  "cancelAt": [
+    "message",
+    "seeds",
+    "metadata",
+    "publish"
+  ],
+  "cancelled": {
+    "zoom": 1.25,
+    "historyCount": 0,
+    "outboxCount": 0
+  }
+}

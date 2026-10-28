@@ -71,9 +71,9 @@ impl ArtifactViewer for StlAnyViewer {
     const DIALECT: Dialect = STL_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STL_ANY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> StlSnapshot {
+    fn reference_birth()->Option<fn()->StlSnapshot>{Some(||{
         StlSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

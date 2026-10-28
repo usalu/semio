@@ -104,5 +104,113 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateAnnualSchedule",
+    "recreation": "separate-intents",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "rules",
+        "storage": "empty-vector",
+        "item": "crate::schedule::CompactScheduleRule"
+      },
+      {
+        "field": "default_daily_schedule_id",
+        "input": "default_daily_schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "holiday_daily_schedule_id",
+        "input": "holiday_daily_schedule_id",
+        "storage": "sealed"
+      },
+      {
+        "field": "holiday_dates",
+        "storage": "empty-vector",
+        "item": "(u16,u8,u8)"
+      }
+    ]
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateAnnualSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "annual",
+    "key": "id",
+    "inverse": "DeleteAnnualSchedule",
+    "labels": {
+      "en": "Create annual schedule",
+      "de": "Jahreszeitplan erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "schedule",
+      "kind": "create-annual-schedule",
+      "record": "CreatedAnnualSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The schedule requires finite values and a positive timestep."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "A schedule with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The insertion rank is past the end of this schedule collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The schedule creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced daily schedule does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit",
+    "identityCollections": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "rules": [
+      {
+        "input": "default_daily_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "DailySchedules"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "holiday_daily_schedule_id",
+        "kind": "reference",
+        "storage": "optional",
+        "collections": [
+          "DailySchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "scalarOrder": "before-rules"
   }
 }

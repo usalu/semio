@@ -71,9 +71,9 @@ impl ArtifactViewer for ObjAnyViewer {
     const DIALECT: Dialect = OBJ_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = OBJ_ANY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> ObjSnapshot {
+    fn reference_birth()->Option<fn()->ObjSnapshot>{Some(||{
         ObjSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

@@ -1,14 +1,14 @@
 //! ⚗️ Energy model mutation — `CreatePlantLoop`: Creates one plant loop. ⚠️ `equipment_ids` is the ONE reference this group cannot check: `Model` carries no chiller/boiler/pump collection at all (vocabulary §5.4), so the ids are opaque here — the list is only held to being ascending, free of duplicates and free of the unset id zero. When a plant-equipment collection lands, add a `g3_chk_reference` over it; the hole is recorded in this ticket's `📓️w7-g3-hvac.md` rather than papered over.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// ⚗️ `create-plant-loop` payload. Creates one plant loop. ⚠️ `equipment_ids` is the ONE reference this group cannot check: `Model` carries no chiller/boiler/pump collection at all (vocabulary §5.4), so the ids are opaque here — the list is only held to being ascending, free of duplicates and free of the unset id zero. When a plant-equipment collection lands, add a `g3_chk_reference` over it; the hole is recorded in this ticket's `📓️w7-g3-hvac.md` rather than papered over.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeRowBirth, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
+#[energy_native_birth(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "create-plant-loop")]
 pub struct CreatePlantLoop {
@@ -34,41 +34,5 @@ pub fn create_plant_loop<Op: From<CreatePlantLoop>>(
     index: Option<u32>,
 ) -> Op {
     CreatePlantLoop { id, name, loop_type, supply_temperature_c, return_temperature_c, design_flow_kg_s, equipment_ids, index }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for CreatePlantLoop
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<CreatePlantLoop> + From<crate::DeletePlantLoop>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "create", entity: "plant-loop", kind: "create-plant-loop", record: "CreatedPlantLoop" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Create plant loop {}", self.id.0), &format!("Anlagenkreislauf {} erstellen", self.id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for CreatePlantLoop
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<CreatePlantLoop> + From<crate::DeletePlantLoop>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

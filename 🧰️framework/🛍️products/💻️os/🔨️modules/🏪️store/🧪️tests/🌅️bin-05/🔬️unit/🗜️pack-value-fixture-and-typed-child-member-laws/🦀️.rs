@@ -401,14 +401,15 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
         other => panic!("expected Resolved, found {other:?}"),
     };
 
-    assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Head)).await).await, DemoSnapshot { n: Some(99) }, "a Head pin must follow the target's live tip");
-    assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Checkpoint { id: pinned })).await).await, DemoSnapshot { n: Some(42) }, "a Checkpoint pin must keep resolving to the pinned history, not the tip");
+    assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Head)).await.unwrap()).await, DemoSnapshot { n: Some(99) }, "a Head pin must follow the target's live tip");
+    assert_eq!(decode(resolver.resolve(&link_of(LinkPin::Checkpoint { id: pinned })).await.unwrap()).await, DemoSnapshot { n: Some(42) }, "a Checkpoint pin must keep resolving to the pinned history, not the tip");
 
+    assert!(matches!(resolver.resolve(&link_of(LinkPin::Checkpoint { id: "no-such-checkpoint".into() })).await, Err(VcsError::UnknownChange(_))));
     let blob = BlobRef { hash: "deadbeef".into(), size: 3, media_type: "application/octet-stream".into() };
-    assert!(matches!(resolver.resolve(&link_of(LinkPin::Snapshot { blob })).await, LinkState::PinnedOnly { .. }), "a snapshot pin with no blob store must degrade to PinnedOnly, never Missing");
+    assert!(matches!(resolver.resolve(&link_of(LinkPin::Snapshot { blob })).await.unwrap(), LinkState::PinnedOnly { .. }), "a snapshot pin with no blob store must degrade to PinnedOnly, never Missing");
 
     let absent = ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "gone".into(), dialect: demo_child_dialect() }, pin: LinkPin::Head, role: "representation".into() };
-    assert_eq!(resolver.resolve(&absent).await, LinkState::Missing);
+    assert_eq!(resolver.resolve(&absent).await.unwrap(), LinkState::Missing);
     identity.encode(|control| { assert!(control.owned_bytes() <= IDENTITY_CEILING); Ok::<(), semio_framework_value::ValueError>(()) }).expect("same original cumulative identity observation");
     drop(identity.pause().expect("original Unit cumulative identity receipt"));
 }
@@ -417,19 +418,19 @@ async fn member_link_resolver_resolves_head_checkpoint_and_degrades_snapshot_pin
 async fn link_resolver_reports_resolved_missing_and_pinned_only_states() {
     struct DemoResolver;
     impl LinkResolver for DemoResolver {
-        async fn resolve(&self, link: &ArtifactLink) -> LinkState {
-            match link.role.as_str() {
+        async fn resolve(&self, link: &ArtifactLink) -> Result<LinkState, VcsError> {
+            Ok(match link.role.as_str() {
                 "known" => LinkState::Resolved { pack_bytes: vec![1, 2, 3], dialect: link.target.dialect.clone() },
                 "pinned" => LinkState::PinnedOnly { blob: BlobRef { hash: "deadbeef".into(), size: 3, media_type: "application/octet-stream".into() } },
                 _ => LinkState::Missing,
-            }
+            })
         }
     }
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "linked-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.image".into(), standard: "1".into(), subset: "*".into() } };
     let resolver = DemoResolver;
-    assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "known".into() }).await, LinkState::Resolved { .. }));
-    assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "pinned".into() }).await, LinkState::PinnedOnly { .. }));
-    assert!(matches!(resolver.resolve(&ArtifactLink { target, pin: LinkPin::Head, role: "gone".into() }).await, LinkState::Missing));
+    assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "known".into() }).await.unwrap(), LinkState::Resolved { .. }));
+    assert!(matches!(resolver.resolve(&ArtifactLink { target: target.clone(), pin: LinkPin::Head, role: "pinned".into() }).await.unwrap(), LinkState::PinnedOnly { .. }));
+    assert!(matches!(resolver.resolve(&ArtifactLink { target, pin: LinkPin::Head, role: "gone".into() }).await.unwrap(), LinkState::Missing));
 }
 
 #[semio_framework_async_macros::async_test]

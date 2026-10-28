@@ -330,39 +330,6 @@ pub fn close_model_step(model: &mut Model, maximum_bytes: usize) -> Option<(usiz
     None
 }
 
-/// 🧹 Exact-owner bounded disposer for a partially captured Energy model. Mounted product capture
-/// uses this narrow interface so cancellation never drops a nested record, string, or page whole.
-pub struct EnergyModelCloseCursor {
-    model: Option<Model>,
-}
-
-impl EnergyModelCloseCursor {
-    pub fn new(model: Model) -> Self {
-        Self { model: Some(model) }
-    }
-
-    /// 📏️ Quotes the next popped model owner.
-    pub fn close_demands(&self) -> RetirementDemand {
-        if self.model.is_some() { ENERGY_RUNG_DEMAND } else { RetirementDemand::default() }
-    }
-
-    pub fn close_step(&mut self, grant: RetainedCloneGrant) -> InteractiveJobCloseStep {
-        let Some(model) = self.model.as_mut() else { return energy_done() };
-        if !energy_grant_covers(grant, ENERGY_RUNG_DEMAND) {
-            return energy_idle();
-        }
-        if let Some(released) = close_model_step(model, grant.maximum_release_bytes) {
-            return energy_rung(released);
-        }
-        self.model = None;
-        energy_one()
-    }
-
-    pub fn terminal_is_empty(&self) -> bool {
-        self.model.is_none()
-    }
-}
-
 pub fn close_config_step(config: &mut SimulationConfig, maximum_bytes: usize) -> Option<(usize, usize)> {
     macro_rules! close_plain {
         ($owners:expr) => {

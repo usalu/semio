@@ -19,6 +19,13 @@ fn borrowed_type_name(shape:H)->&'static str{match shape{
 }}
 
 impl Emitter{
+ fn source_octets(&mut self,source:&dyn semio_framework_value::paged::ByteReadSource,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
+  const ALPHABET:&[u8;64]=b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+  self.raw("\"",control)?;
+  control.scoped_stage(|control|{control.begin_stage(source.byte_len())?;let mut offset=0;let mut part=[0;3];while offset<source.byte_len(){control.checkpoint()?;let count=(source.byte_len()-offset).min(3);if source.read_bytes(offset,&mut part[..count])!=count{return Err(invalid())}let a=part[0];let b=if count>1{part[1]}else{0};let c=if count>2{part[2]}else{0};let word=[ALPHABET[(a>>2)as usize],ALPHABET[((a&3)<<4|b>>4)as usize],if count>1{ALPHABET[((b&15)<<2|c>>6)as usize]}else{b'='},if count>2{ALPHABET[(c&63)as usize]}else{b'='}];self.raw(std::str::from_utf8(&word).map_err(|_|invalid())?,control)?;control.advance(count)?;offset+=count;}Ok(())})?;
+  self.raw("\"",control)
+ }
+
  fn borrowed_table<T:FieldProjectionSource>(&mut self,source:&T,spec:&R,path:&mut[usize;64],depth:usize,length:usize,columnar:bool,control:&mut NativeEncodeControl<'_>)->Result<(),ValueError>{
   if depth+1>=path.len(){return Err(ValueError::new(ValueRefusalKind::DepthLimit,"borrowed table exceeds fixed path frontier"))}
   self.atom("[",control)?;
@@ -86,6 +93,7 @@ impl Emitter{
    (V::Text(text),H::Text|H::Ref(_))=>{self.begin_atom(control)?;self.text(text,false,control)},
    (V::Text(text),H::Embed(language))=>self.verbatim(language,text,control),
    (V::Bytes(bytes),H::Bytes64)=>{self.begin_atom(control)?;self.octets(bytes,control)},
+   (V::BytesSource(bytes),H::Bytes64)=>{self.begin_atom(control)?;self.source_octets(bytes,control)},
    (V::Enum(value),H::Enum(variants))=>{let(keyword,_)=variants.iter().find(|(_,ordinal)|*ordinal==value).ok_or_else(invalid)?;self.atom(keyword,control)},
    (V::Record(_),H::Record(make))=>self.borrowed_record(source,&make(),path,depth,control),
    (V::List(length),H::List(make))=>{self.atom("[",control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{path[depth]=index;control.scoped_stage(|control|{if matches!(make(),H::Record(_)){self.atom("{",control)?;self.borrowed_shape(source,make(),path,depth+1,control)?;self.atom("}",control)}else{self.borrowed_shape(source,make(),path,depth+1,control)}})?;control.step()?;}Ok::<_,ValueError>(())})?;self.atom("]",control)},
@@ -124,6 +132,7 @@ impl Emitter{
    V::IntrinsicNull=>self.atom("null",control),V::IntrinsicBool(value)=>self.atom(if value{"true"}else{"false"},control),V::IntrinsicNumber(value)=>self.intrinsic_number(value,control),
    V::IntrinsicText(text)=>{self.begin_atom(control)?;self.quoted(text,control)},
    V::IntrinsicBytes(bytes)=>{self.begin_atom(control)?;self.raw("bytes64(",control)?;self.octets(bytes,control)?;self.raw(")",control)},
+   V::IntrinsicBytesSource(bytes)=>{self.begin_atom(control)?;self.raw("bytes64(",control)?;self.source_octets(bytes,control)?;self.raw(")",control)},
    V::IntrinsicArray(length)=>{self.atom("[",control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{path[depth]=index;control.scoped_stage(|control|self.borrowed_intrinsic(source,path,depth+1,control))?;control.step()?;}Ok::<_,ValueError>(())})?;self.atom("]",control)},
    V::IntrinsicObject(length)=>{self.open(control)?;control.scoped_stage(|control|{control.begin_stage(length)?;for index in 0..length{control.scoped_stage(|control|{self.key(source.projection_key(&path[..depth],index)?,control)?;path[depth]=index;self.borrowed_intrinsic(source,path,depth+1,control)})?;control.step()?;}Ok::<_,ValueError>(())})?;self.close(control)},
    _=>Err(ValueError::new(ValueRefusalKind::InvariantViolated,"borrowed Text intrinsic projection changed"))

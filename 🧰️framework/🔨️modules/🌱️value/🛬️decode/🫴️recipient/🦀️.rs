@@ -23,6 +23,8 @@ impl NativeDecodeRetirementRecipient{
 }
 impl ErasedSnapshotRetirement for NativeDecodeRetirementRecipient{
  fn close_original_step(&mut self,original:&mut semio_framework_value_control_contract::OriginalRetirementCloseLoan<'_>,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{if original.retirement_recipient_identity()!=Some(self.identity){return Err(ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"decoder cleanup changed its original recipient"))}let d=self.next_demand(grant.maximum_copy_bytes)?;if !crate::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}if self.reserved{self.reserved=false;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}))}crate::close_factory_ticket_original(&mut self.owner,original,grant)}
+ fn requires_original_control(&self)->bool{self.owner.as_ref().is_some_and(|owner|owner.requires_original_control())}
+ fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value_retirement::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{if self.reserved{return self.close_step(grant);}semio_framework_value_retirement::close_factory_ticket_controlled(&mut self.owner,grant,control)}
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if self.reserved{Ok(crate::RetirementDemand{depth:1,..Default::default()})}else{self.owner.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}}
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         if grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}

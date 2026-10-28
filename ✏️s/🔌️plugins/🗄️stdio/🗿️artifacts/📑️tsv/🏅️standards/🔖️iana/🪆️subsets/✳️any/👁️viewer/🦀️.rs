@@ -66,9 +66,9 @@ impl ArtifactViewer for TsvViewer {
     const DIALECT: Dialect = TSV_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_TSV_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> TsvSnapshot {
+    fn reference_birth()->Option<fn()->TsvSnapshot>{Some(||{
         TsvSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

@@ -1,0 +1,83 @@
+{
+  "changeId": "change-new",
+  "savedAt": "1780000000000",
+  "timestamp": "1780000000001",
+  "parent": {
+    "id": "ck-parent",
+    "changeIds": [
+      "change-old",
+      "change-other"
+    ]
+  },
+  "pending": [
+    "edit-new",
+    "edit-next"
+  ],
+  "message": "Energy checkpoint λ",
+  "authors": [
+    {
+      "id": "author-energy",
+      "name": "Energy Author",
+      "avatar": "energy-avatar"
+    }
+  ],
+  "expected": {
+    "change": {
+      "id": "change-new",
+      "editIds": [
+        "edit-new",
+        "edit-next"
+      ],
+      "description": "Energy checkpoint λ",
+      "savedAt": "1780000000000"
+    },
+    "checkpoint": {
+      "id": "",
+      "changeIds": [
+        "change-old",
+        "change-other",
+        "change-new"
+      ],
+      "parentId": "ck-parent",
+      "message": "Energy checkpoint λ",
+      "authors": [
+        {
+          "id": "author-energy",
+          "name": "Energy Author",
+          "avatar": "energy-avatar"
+        }
+      ],
+      "timestamp": "1780000000001"
+    }
+  },
+  "cancelCuts": [
+    0,
+    1,
+    2,
+    3,
+    8,
+    16,
+    32
+  ],
+  "committed": [
+    {
+      "id": "change-old",
+      "editIds": [
+        "edit-old"
+      ],
+      "savedAt": "1770000000000"
+    },
+    {
+      "id": "change-other",
+      "editIds": [
+        "edit-other"
+      ],
+      "savedAt": "1770000000001"
+    }
+  ],
+  "identity": {
+    "messageSuffixPattern": "λ\"",
+    "repeat": 16384,
+    "digestHex": "63eea1006730c00084d8c38f47e6b4a528058412762f611fdf3efd6b7f100305"
+  }
+}

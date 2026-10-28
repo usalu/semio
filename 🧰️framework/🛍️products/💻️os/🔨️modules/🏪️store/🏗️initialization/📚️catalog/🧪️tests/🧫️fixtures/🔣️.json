@@ -1,4 +1,5 @@
 {
+  "extentsPerLane": 2,
   "version": 1,
   "pageSlots": 64,
   "lanes": [
@@ -15,17 +16,17 @@
     "exact"
   ],
   "expected": {
-    "pagesReleasedPerExactTurn": 1,
-    "totalReleasedPages": 6,
+    "physicalExtentsReleasedPerExactTurn": 1,
+    "totalReleasedPhysicalExtents": 12,
     "retainedAfterZeroOrBelow": true,
     "terminalHeapRelease": 0
   },
   "currencies": {
     "copyBytes": 0,
     "capacityBytes": 0,
-    "release": "exact-native-page-and-final-directory",
+    "release": "exact-native-directory-or-detached-value-page",
     "depth": 1,
-    "terminalReceipt": "full-final-page-release"
+    "terminalReceipt": "full-final-detached-value-page-release"
   },
   "birthPolicy": {
     "maximumItems": 1,

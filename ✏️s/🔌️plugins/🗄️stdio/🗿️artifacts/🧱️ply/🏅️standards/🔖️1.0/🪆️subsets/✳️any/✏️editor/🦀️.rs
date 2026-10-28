@@ -220,9 +220,9 @@ impl ArtifactEditor for PlyAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); ply_any_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> PlySnapshot {
+    fn reference_birth()->Option<fn()->PlySnapshot>{Some(||{
         PlySnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

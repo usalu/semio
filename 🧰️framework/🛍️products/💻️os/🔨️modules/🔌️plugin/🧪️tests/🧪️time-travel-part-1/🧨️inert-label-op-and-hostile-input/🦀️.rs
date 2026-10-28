@@ -111,7 +111,7 @@ async fn replayed_report(owners: &mut time_travel::TimeTravelStoreState<TestSnap
     assert!(matches!(started, time_travel::TimeTravelStoreOutput::ReplayStarted(true)), "the store starts the Report replay");
     for _ in 0..65_536 {
         match receiving_job.receive(grant,|receiving|semio_framework_async::poll::resolve_ready(owners.run(document, time_travel::TimeTravelStoreCommand::StepReplay { deadline_us: u64::MAX, clock: semio_framework_job::default_now_us,grant },Some(receiving)))).expect("a replay slice") {
-            time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Completed(report)) => return report,
+            time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Completed(report,_)) => return report,
             time_travel::TimeTravelStoreOutput::Stepped(time_travel::TimeTravelReplayStep::Pending { .. }) => {}
             _ => panic!("the replay faulted"),
         }

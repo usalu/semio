@@ -244,12 +244,14 @@ impl PagedAppCommandDecodeCursor {
                 self.state = PagedAppCommandDecodeState::MediaExportSubmitRevision { seq, port, expected_parent_document_id: Some(expected_parent_document_id) };
                 None
             }
-            PagedAppCommandDecodeState::MediaExportSubmitRevision { seq, mut port, mut expected_parent_document_id } => Some(AppCommand::SubmitMediaExport {
-                seq,
-                port: port.take().expect("retained media export port"),
-                expected_parent_document_id: expected_parent_document_id.take().expect("retained media export parent document id"),
-                expected_base_revision: self.reader.read_varint()?,
-            }),
+            PagedAppCommandDecodeState::MediaExportSubmitRevision { seq, port, expected_parent_document_id } => {let expected_base_revision=match self.reader.read_varint(){Ok(value)=>value,Err(fault)=>{self.state=PagedAppCommandDecodeState::MediaExportSubmitRevision{seq,port,expected_parent_document_id};return Err(fault)}};self.state=PagedAppCommandDecodeState::MediaExportSubmitSelection{seq,port,expected_parent_document_id,expected_base_revision};None}
+            PagedAppCommandDecodeState::MediaExportSubmitSelection { seq,mut port,mut expected_parent_document_id,expected_base_revision } => {let selection=match self.reader.read_byte(){Ok(value)=>value,Err(fault)=>{self.state=PagedAppCommandDecodeState::MediaExportSubmitSelection{seq,port,expected_parent_document_id,expected_base_revision};return Err(fault)}};match selection{0=>Some(AppCommand::SubmitMediaExport{seq,port:port.take().unwrap(),expected_parent_document_id:expected_parent_document_id.take().unwrap(),expected_base_revision,checkpoint_id:None}),1=>{self.state=PagedAppCommandDecodeState::MediaExportSubmitCheckpoint{seq,port,expected_parent_document_id,expected_base_revision};None},_=>{self.state=PagedAppCommandDecodeState::MediaExportSubmitSelection{seq,port,expected_parent_document_id,expected_base_revision};return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,semio_framework_diagnostic::FaultCode::new("plugin.command-checkpoint-tag"),"checkpoint selection tag must be zero or one"))}}}
+            PagedAppCommandDecodeState::MediaExportSubmitCheckpoint { seq,mut port,mut expected_parent_document_id,expected_base_revision } => {
+                let bytes=match self.reader.read_bounded_bytes(2048){Ok(bytes)=>bytes,Err(fault)=>{self.state=PagedAppCommandDecodeState::MediaExportSubmitCheckpoint{seq,port,expected_parent_document_id,expected_base_revision};return Err(fault)}};
+                let checkpoint_id=match String::from_utf8(bytes){Ok(value)=>value,Err(error)=>{self.state=PagedAppCommandDecodeState::RejectedFields{fields:vec![port.take().unwrap().into_bytes(),expected_parent_document_id.take().unwrap().into_bytes(),error.into_bytes()]};return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,semio_framework_diagnostic::FaultCode::new("plugin.command-field-utf8"),"checkpoint selection is not valid UTF-8"))}};
+                if checkpoint_id.is_empty()||checkpoint_id.chars().count()>512{self.state=PagedAppCommandDecodeState::RejectedFields{fields:vec![port.take().unwrap().into_bytes(),expected_parent_document_id.take().unwrap().into_bytes(),checkpoint_id.into_bytes()]};return Err(semio_framework_diagnostic::Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,semio_framework_diagnostic::FaultCode::new("plugin.command-checkpoint-identity"),"checkpoint identity exceeds its bound"))}
+                Some(AppCommand::SubmitMediaExport{seq,port:port.take().unwrap(),expected_parent_document_id:expected_parent_document_id.take().unwrap(),expected_base_revision,checkpoint_id:Some(checkpoint_id)})
+            }
             PagedAppCommandDecodeState::MediaExportHandle { seq, kind, mut decode } => match decode.step(&mut self.reader) {
                 Ok(Some(handle)) => Some(match kind {
                     38 => AppCommand::PollMediaExport { seq, handle },
@@ -307,7 +309,7 @@ impl PagedAppCommandDecodeCursor {
                     }
                     AppCommand::TransactionCommit { txn_id, .. } | AppCommand::TransactionRollback { txn_id, .. } => vec![txn_id.into_bytes()],
                     AppCommand::TransactionUndo { group_id, .. } | AppCommand::TransactionRedo { group_id, .. } => vec![group_id.into_bytes()],
-                    AppCommand::SubmitMediaExport { port, expected_parent_document_id, .. } => vec![port.into_bytes(), expected_parent_document_id.into_bytes()],
+                    AppCommand::SubmitMediaExport { port, expected_parent_document_id, checkpoint_id,.. } => {let mut fields=vec![port.into_bytes(),expected_parent_document_id.into_bytes()];if let Some(id)=checkpoint_id{fields.push(id.into_bytes());}fields},
                     AppCommand::PollMediaExport { handle, .. } | AppCommand::CancelMediaExport { handle, .. } | AppCommand::TakeMediaExportChunk { handle, .. } => vec![handle.parent_document_id.into_bytes()],
                     AppCommand::Presence { .. } => unreachable!("Presence is never decoded by the generic paged cursor"),
                     _ => unreachable!("route-specific AppCommand is never decoded by the generic paged cursor"),
@@ -393,7 +395,7 @@ impl PagedAppCommandDecodeCursor {
         }
         if let Some(retained) = match &mut self.state {
             PagedAppCommandDecodeState::MediaExportSubmitDocument { port, .. } => Some(port),
-            PagedAppCommandDecodeState::MediaExportSubmitRevision { port, expected_parent_document_id, .. } => Some(if port.is_some() { port } else { expected_parent_document_id }),
+            PagedAppCommandDecodeState::MediaExportSubmitRevision { port, expected_parent_document_id, .. } | PagedAppCommandDecodeState::MediaExportSubmitSelection { port, expected_parent_document_id, .. } | PagedAppCommandDecodeState::MediaExportSubmitCheckpoint { port, expected_parent_document_id, .. } => Some(if port.is_some() { port } else { expected_parent_document_id }),
             _ => None,
         } {
             if let Some(text) = retained.take() {

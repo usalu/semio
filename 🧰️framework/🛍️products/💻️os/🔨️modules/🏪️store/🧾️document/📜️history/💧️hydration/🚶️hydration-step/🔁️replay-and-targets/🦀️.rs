@@ -21,7 +21,7 @@ where
             self.replay_ids.take();
             let envelope = self.envelope.as_ref().expect("hydrated envelope remains retained");
             let supersessions = std::mem::take(&mut *self.runtime.as_mut().expect("hydration runtime remains retained").supersessions);
-            match EditReplay::new_counted(semio_framework_os_store_replay::ReplayMode::Report, envelope.vcs.genesis.facts().share_snapshot(), self.replay_order.take().expect("prepared replay order remains retained"), 0, &envelope.schema, supersessions, self.replay_total) {
+            match EditReplay::new_counted(semio_framework_os_store_replay::ReplayMode::Report, envelope.vcs.genesis.facts().share_snapshot(), self.replay_order.take().expect("prepared replay order remains retained"), 0, envelope.schema.clone(), supersessions, self.replay_total) {
                 Ok(replay) => { *self.replay = Some(replay); self.phase = Phase::ReplayCursor; },
                 Err(_) => return self.reject(MemberOpenDiagnostic::Replay),
             }
@@ -57,7 +57,7 @@ where
         if let Some((id, inverse)) = result.rebased_inverse.last_mut() {
             let Some(position) = self.edit_lookup.as_ref().expect("hydrated edit index remains retained").get(id).copied() else { return self.reject(MemberOpenDiagnostic::Replay) };
             let edit = self.envelope.as_mut().expect("hydrated envelope remains retained").vcs.edits.get_mut(position).expect("indexed hydrated edit remains retained");
-            let displaced = std::mem::replace(&mut edit.inverse, std::mem::take(inverse));
+            let displaced = std::mem::replace(&mut *edit.inverse, std::mem::take(inverse));
             let (id, _) = result.rebased_inverse.pop().expect("adopted inverse identity remains retained");
             *self.active = Some(Box::new(semio_framework_os_store_ledger::edit_retirement::ArtifactStoreOperationRowsRetirement::new(displaced, self.owners.as_ref().expect("hydration owner catalog remains retained").mutation_retirement.clone()).with_identity(id)));
         } else { self.phase = Phase::AdoptMessages; }
@@ -117,8 +117,15 @@ where
             return self.admitted_step(step, cx);
         }
         if self.target_source.is_none() {
-            *self.target_source = Some(std::sync::Arc::new(std::mem::take(&mut self.envelope.as_mut().expect("hydrated envelope remains retained").transitions)));
+            type Events=semio_framework_os_vcs::ArtifactHistoryLedger<semio_framework_os_spr::MutationEnvelope>;
+            let d=semio_framework_value::RetirementDemand{copy_bytes:2*size_of::<Events>()+size_of::<std::sync::Arc<Events>>(),capacity_bytes:semio_framework_value::retirement::arc_custody::arc_bytes::<Events>(),depth:1,..Default::default()};
+            if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return PersistedDocumentHydrationStep::Pending(self.progress())}
+            let original=std::mem::replace(&mut self.envelope.as_mut().expect("hydrated envelope remains retained").transitions,Events::empty());
+            *self.target_source = Some(std::sync::Arc::new(original));
             self.record_index = 0;
+            let p=RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()};
+            if let Err(d)=semio_framework_os_store_member_open::record_member_step(cx,p){return self.reject(d)}
+            return PersistedDocumentHydrationStep::Pending(self.progress())
         }
         let source = self.target_source.as_ref().expect("immutable transition source remains retained");
         if let Some(transition) = source.get(self.record_index) {

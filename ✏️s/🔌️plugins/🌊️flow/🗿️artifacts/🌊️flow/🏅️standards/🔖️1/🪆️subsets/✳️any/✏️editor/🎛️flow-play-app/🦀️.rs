@@ -165,9 +165,9 @@ impl ArtifactEditor for FlowPlayApp {
         Box::new(FlowInstanceOperationOwner::new())
     }
 
-    fn initial_snapshot() -> FlowSnapshot {
+    fn reference_birth()->Option<fn()->FlowSnapshot>{Some(||{
         FlowSnapshot::default()
-    }
+    })}
 
     /// 🌱️ Derives the `content` child at boot and on every archive load, so a live shell composes the
     /// child that every verb edits and every window reads — see [`crate::flow_genesis_content_pack`] and

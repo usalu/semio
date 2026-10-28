@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Emit Frame Borrowed Wire",
+  "type": "object",
+  "required": [
+    "tag",
+    "reply",
+    "fields",
+    "fragmentSizes"
+  ],
+  "properties": {
+    "tag": {
+      "const": 10
+    },
+    "reply": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "fields": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "array",
+        "items": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 255
+        }
+      }
+    },
+    "fragmentSizes": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 1
+      }
+    }
+  },
+  "tag": 10,
+  "reply": 18446744073709551615,
+  "fields": [
+    [
+      1,
+      2
+    ],
+    [],
+    [
+      3
+    ],
+    [
+      4,
+      5,
+      6
+    ],
+    [
+      7
+    ],
+    [
+      8,
+      9
+    ]
+  ],
+  "fragmentSizes": [
+    1,
+    7,
+    64,
+    4096
+  ],
+  "expectedHex": "0affffffffffffffffff01020102000103030405060107020809",
+  "wide": {
+    "index": 3,
+    "length": 8197,
+    "byte": 97,
+    "expectedSha256": "bfb4ff898adfb845a73551e874f2b3a9614e222e19b657440648844f0bebf9d1"
+  },
+  "cancelAfter": [
+    0,
+    1,
+    2,
+    7,
+    23,
+    70
+  ]
+}

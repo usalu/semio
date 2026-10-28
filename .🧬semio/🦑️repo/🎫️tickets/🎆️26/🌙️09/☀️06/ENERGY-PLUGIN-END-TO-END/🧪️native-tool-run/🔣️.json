@@ -1,0 +1,30 @@
+{
+  "schema": "original-tool-run-preview-presentation",
+  "payloadBytes": 65565,
+  "chunkBytes": 65536,
+  "sourcePageBytes": 67,
+  "counters": [
+    0,
+    24,
+    3,
+    0,
+    1024,
+    4358948,
+    6067258,
+    511010,
+    8760
+  ],
+  "maximumTurns": 200000,
+  "orders": [
+    "producerFirst",
+    "captureFirst"
+  ],
+  "cancelAndRestart": {
+    "cancelAfterTurns": 11,
+    "generations": [
+      1,
+      2
+    ],
+    "completed": 8760
+  }
+}

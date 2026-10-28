@@ -1,0 +1,1 @@
+{"actor":"energy-stage-owner","operation":71,"generation":3,"revisionByte":9,"forward":true,"inverse":false,"post":true,"maximumTurns":100000,"maximumBodyBytes":32768,"maximumDepth":64,"deniedBirthAxes":["items","copy","capacity","depth"]}

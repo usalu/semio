@@ -42,6 +42,10 @@ impl<'a,T:?Sized> RetainedCloneRef<'a,T>{
   let(alias,progress)=self.lease.try_duplicate(grant)?;*binding=Some(RetainedCloneBinding::new(alias,self.projection));Ok(Some(progress))
  }
 }
+impl<T:?Sized+Sync> RetainedCloneRef<'_,T>{
+ /// 🧷️ Retains this exact issued source and projected path for resumed immutable work.
+ pub fn retain_owned(self,grant:RetainedCloneGrant)->Result<(RetainedOwnedProjection<T>,RetainedCloneProgress),crate::ValueError>{unsafe{RetainedOwnedProjection::from_source(self,grant)}}
+}
 fn close_query_busy()->crate::ValueError{crate::ValueError::literal(crate::ValueRefusalKind::WorkLimit,"original close query already holds exclusive cursor custody")}
 pub struct RetainedCloneBinding{lease:ManuallyDrop<Option<crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>,close:ManuallyDrop<Option<RetainedOwnerGate<crate::retirement::controlled::ControlledRetirement<crate::shared_issuance::SealedShared<RetainedCloneLeaseOwner>>>>>,projection:RetainedCloneProjection}
 impl RetainedCloneBinding{
@@ -99,3 +103,5 @@ mod original_zero_header_tests;
 #[cfg(test)]
 #[path="../../🧪️tests/🔐️query/🦀️.rs"]
 mod shared_query_tests;
+
+#[cfg(test)]#[path="../../🧪️tests/📌️retain/🦀️.rs"]mod retained_source_ref_tests;

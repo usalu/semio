@@ -61,5 +61,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateLightingGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "lighting",
+    "field": "radiant_fraction",
+    "input": "new_radiant_fraction",
+    "key": "id",
+    "labels": {
+      "en": "Change lighting gain: Radiant fraction",
+      "de": "Strahlungsanteil ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "lighting-gain",
+      "kind": "change-lighting-gain-radiant-fraction",
+      "record": "ChangedLightingGainRadiantFraction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Radiant fraction violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed lighting gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The lighting gain already carries this radiant fraction value."
+      }
+    }
   }
 }

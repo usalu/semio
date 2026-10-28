@@ -2098,7 +2098,7 @@
   "limits": {
     "stepRingCapacity": 64,
     "stepArgsMax": 4,
-    "countersMax": 8,
+    "countersMax": 9,
     "provisionalOpsMax": 65536,
     "memberOpsMax": 4096,
     "traceResidentRecords": 1048576,

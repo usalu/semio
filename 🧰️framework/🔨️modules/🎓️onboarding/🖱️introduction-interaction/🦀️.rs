@@ -6,7 +6,7 @@ use super::*;
 /// 🏛️ One institution/partner logo shown in an `IntroductionStepDefinition`'s info box — a plain
 /// URL pair (no DOM/CSS types), optionally linking out when clicked.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionLogo {
@@ -22,7 +22,7 @@ pub struct IntroductionLogo {
 
 /// 📍️ Where the info box is placed relative to its anchor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionPlacement {
@@ -41,7 +41,7 @@ pub enum IntroductionPlacement {
 /// 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
 /// that renders the window, so only shells that render a 3D world (the React shell) can complete them.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
 #[value(rename_all = "camelCase", tag = "kind", content = "id")]
 pub enum IntroductionInteractionKind {
@@ -66,7 +66,7 @@ pub enum IntroductionInteractionKind {
 /// ✅️ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
 /// rendered as a checklist row in the info box and celebrated individually on completion.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionInteraction {
@@ -136,7 +136,7 @@ impl IntroductionInteraction {
 /// element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
 /// a 3D scene world position projected through that window's live camera.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 // 🐢️ `rename_all_fields` is required alongside `rename_all` — the latter only renames the *variant* tag
 // values; without the former, a future multi-word field inside a variant would silently serialize
 // snake_case and desync from the generated TS type (see `UiDirtyScope`'s comment for the full story).
@@ -214,7 +214,7 @@ impl IntroductionPoint {
 
 /// 🖱️ Which mouse button a drag-like demonstration presses.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionPointerButton {
@@ -226,7 +226,7 @@ pub enum IntroductionPointerButton {
 
 /// ⌨️ Keyboard modifier held during a drag-like demonstration.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionKeyModifier {
@@ -254,7 +254,7 @@ fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
 /// 👆️ A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
 /// and performs the visual press/release affordance for the gesture kind.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 // 🐢️ `rename_all_fields` required alongside `rename_all` so `Scroll`'s `delta_y` field actually
 // serializes/types as `deltaY` — see `IntroductionPoint`'s comment / `UiDirtyScope`'s for the full story.
 #[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
@@ -299,7 +299,7 @@ pub enum IntroductionGesture {
 
 /// 👻️ Ghost-cursor glyph, mirroring `🎨️ui.css`'s `--cursor-*` custom cursors.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum IntroductionCursor {
@@ -318,7 +318,7 @@ pub enum IntroductionCursor {
 /// active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
 /// derives from `gesture` (clicks → pointer, drag → grab/grabbing).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct IntroductionDemonstration {

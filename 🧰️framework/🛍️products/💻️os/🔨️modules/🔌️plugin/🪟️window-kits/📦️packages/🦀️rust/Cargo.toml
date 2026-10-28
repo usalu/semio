@@ -25,6 +25,8 @@ path = "../../🦀️.rs"
 artifact-app-testing = []
 
 [dependencies]
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-async = { path = "../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust", package = "semio-framework-async" }
 semio-framework-dsl-record = { path = "../../../../../../../🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
@@ -43,6 +45,8 @@ semio_framework_ui_contract = { path = "../../../../../../../🔨️modules/🖱
 semio_framework_ui_scene = { path = "../../../../../../../🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+semio-framework-value-persistent = { path = "../../../../../../../🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

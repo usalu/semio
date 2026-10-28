@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateBatteryAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "battery_storage",
+    "field": "max_discharge_w",
+    "input": "new_max_discharge_w",
+    "key": "id",
+    "labels": {
+      "en": "Change battery: Maximum discharge power",
+      "de": "Maximale Entladeleistung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "battery",
+      "kind": "change-battery-max-discharge",
+      "record": "ChangedBatteryMaxDischarge"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Maximum discharge power violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed battery does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The battery already carries this maximum discharge power value."
+      }
+    }
   }
 }

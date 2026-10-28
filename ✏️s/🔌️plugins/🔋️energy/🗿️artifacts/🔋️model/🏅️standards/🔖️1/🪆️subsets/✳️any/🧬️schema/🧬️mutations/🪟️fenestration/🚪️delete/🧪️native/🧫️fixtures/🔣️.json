@@ -1,0 +1,171 @@
+{
+  "contract": "semio.energy.original-delete-fenestration/v1",
+  "collection": "fenestrations",
+  "existingRows": [
+    {
+      "id": 7,
+      "name": "aperture",
+      "surface_id": 10,
+      "u_value_w_m2k": 1.6,
+      "shgc": 0.5,
+      "vlt": 0.7,
+      "area_m2": 2,
+      "height_m": 1,
+      "sill_height_m": 0.5,
+      "frame_conductance_w_k": 0,
+      "divider_conductance_w_k": 0,
+      "overhang_depth_m": 0,
+      "overhang_offset_m": 0,
+      "fin_depth_m": 0,
+      "fin_offset_m": 0,
+      "glazing_construction_id": null,
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          1
+        ]
+      ]
+    },
+    {
+      "id": 8,
+      "name": "empty",
+      "surface_id": 10,
+      "u_value_w_m2k": 1.6,
+      "shgc": 0.5,
+      "vlt": 0.7,
+      "area_m2": 2,
+      "height_m": 1,
+      "sill_height_m": 0.5,
+      "frame_conductance_w_k": 0,
+      "divider_conductance_w_k": 0,
+      "overhang_depth_m": 0,
+      "overhang_offset_m": 0,
+      "fin_depth_m": 0,
+      "fin_offset_m": 0,
+      "glazing_construction_id": null,
+      "vertices_m": []
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 7
+      },
+      "outcome": "changed",
+      "after": [
+        8
+      ],
+      "inverseCount": 2,
+      "inverseSteps": [
+        {
+          "Vertices": {
+            "id": 7,
+            "newVerticesM": [
+              [
+                0,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                0
+              ],
+              [
+                1,
+                0,
+                1
+              ]
+            ]
+          }
+        },
+        {
+          "Create": {
+            "id": 7,
+            "name": "aperture",
+            "surfaceId": 10,
+            "uValueWM2k": 1.6,
+            "shgc": 0.5,
+            "vlt": 0.7,
+            "areaM2": 2,
+            "heightM": 1,
+            "sillHeightM": 0.5,
+            "frameConductanceWK": 0,
+            "dividerConductanceWK": 0,
+            "overhangDepthM": 0,
+            "overhangOffsetM": 0,
+            "finDepthM": 0,
+            "finOffsetM": 0,
+            "glazingConstructionId": null,
+            "index": 0
+          }
+        }
+      ]
+    },
+    {
+      "payload": {
+        "id": 8
+      },
+      "outcome": "changed",
+      "after": [
+        7
+      ],
+      "inverseCount": 1,
+      "inverseSteps": [
+        {
+          "Create": {
+            "id": 8,
+            "name": "empty",
+            "surfaceId": 10,
+            "uValueWM2k": 1.6,
+            "shgc": 0.5,
+            "vlt": 0.7,
+            "areaM2": 2,
+            "heightM": 1,
+            "sillHeightM": 0.5,
+            "frameConductanceWK": 0,
+            "dividerConductanceWK": 0,
+            "overhangDepthM": 0,
+            "overhangOffsetM": 0,
+            "finDepthM": 0,
+            "finOffsetM": 0,
+            "glazingConstructionId": null,
+            "index": 1
+          }
+        }
+      ]
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

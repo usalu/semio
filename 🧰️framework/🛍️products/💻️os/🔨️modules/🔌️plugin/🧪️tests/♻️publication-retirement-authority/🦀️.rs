@@ -55,7 +55,7 @@ fn mounted_original_close_fault_retains_refused_payload_and_retires_actual_frame
   let operation=semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(),semio_framework_job::RevisionId(0),semio_framework_job::Generation(0),17);
   let mut mounted=semio_framework_plugin_retained_command::typed_operation::MountedTypedCommandFullOperation::<RetirementApp>{
    verb:String::new(),meta:semio_framework_plugin_decl_emission::ActionMeta{actor:Default::default(),instance_id:7,view_state:None},operation,canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,
-   window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,cancellation_retirement:None,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,
+   window_config_authority:None,window_transient_authority:None,publication_lanes:&[],contract:Some(semio_framework::ToolExecutionContract::bounded_first_step(1 << 20, 1 << 20, 1 << 20, 1 << 20, 7_999)),session:None,session_rejected:None,producer_source:None,producer_request:None,producer_request_retirement:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,cancellation_retirement:None,worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_resume_pending:false,terminal_seen:true,publication:None,pending_artifact_publication:None,pending_stream_abort:None,stream_abort_completed:false,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None, diagnostics:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:true,interaction_revalidated:false,
    terminal_fault:row["existingCode"].as_str().map(|code|semio_framework_plugin_decl_app::borrowed_report(FaultOrigin::Framework,code,semio_framework_diagnostic::Severity::Error,"earlier original terminal report",false)),retained_close_fault:Some(original),retained_close_fault_retirement:None,retained_close_fault_refusal:None,stage:semio_framework_plugin_composition_publication::MountedTypedCommandFullOperationStage::Retiring
   };
   let mut capacity=0;let mut released=0;let mut frame_released=false;
@@ -250,9 +250,9 @@ impl ArtifactApp for RetirementApp {
         Some(Arc::new(semio_framework_value::factory::SharedValueRetirementFactory::<PublicationTransient>::default()))
     }
 
-    async fn initial_snapshot() -> TestSnapshot {
+    fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
         TestSnapshot::default()
-    }
+    })}
 
     async fn handle(
         _command: &PublicationTransientMutation,
@@ -650,7 +650,7 @@ async fn a_refused_window_transient_emission_keeps_its_mutation_and_faults() {
         worker_semantic_pending: false, worker_outcome_pending: false, worker_fault_capture: None,
         terminal_seen: true, worker_resume_pending: false,
         publication: Some(semio_framework_plugin_decl_app::tool_contract::ArtifactToolCompletionValue::Emit(Ok(semio_framework_plugin_decl_emission::Emit::default()), semio_framework_plugin_decl_app::app_emission::EphemeralEmit { window_transient: vec![misaddressed], ..Default::default() })),
-        pending_artifact_publication: None, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
+        pending_artifact_publication: None, pending_stream_abort:None, stream_abort_completed:false, pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,
         pending_child_publication: None,
         owned_child_group: None,
         owned_child_committed: false,

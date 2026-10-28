@@ -72,5 +72,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateGasMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "gas_materials",
+    "field": "gas",
+    "input": "new_gas",
+    "key": "id",
+    "labels": {
+      "en": "Change gas material: Fill gas",
+      "de": "Füllgas ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "gas-material",
+      "kind": "change-gas-material-gas",
+      "record": "ChangedGasMaterialGas"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Fill gas violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed gas material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The gas material already carries this fill gas value."
+      }
+    }
   }
 }

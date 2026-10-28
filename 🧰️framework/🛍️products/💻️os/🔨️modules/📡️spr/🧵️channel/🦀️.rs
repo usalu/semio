@@ -80,7 +80,7 @@ pub use app_command::AppCommand;
 
 #[path = "🎞️app-frame/🦀️.rs"]
 mod app_frame;
-pub use app_frame::AppFrame;
+pub use app_frame::{AppFrame,AppEmitFrameView,AppEmitFrameWireCursor,AppEmitFrameWireProgress};
 
 
 #[path = "🗜️codec/🦀️.rs"]

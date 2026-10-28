@@ -1,0 +1,45 @@
+[package]
+name="energy-original-document-tests"
+version="0.1.0"
+edition="2021"
+[workspace]
+[lib]
+path="document.rs"
+[dependencies]
+semio-s-plugin-energy-engine-geometry={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📐️geometry/📦️packages/🦀️rust"}
+semio-framework-value-edit={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔺️edit/📦️packages/🦀️rust"}
+semio-framework-dsl-record-derive = { path = "../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
+semio-s-artifact-energy-model-native-derive = { path = "../../../../../../../../✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/✨️derive/📦️packages/🦀️rust" }
+semio-framework-os-store-one-item-publication = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/📦️packages/🦀️rust" }
+native_dsl = { package = "semio-framework-os-kernel-dsl-derive", path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust" }
+semio-framework-os-command = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/📡️spr/🎮️command/📦️packages/🦀️rust" }
+semio-framework-schema-state = { path = "../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
+semio-framework-schema={path="../../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust"}
+semio-framework-schema-composition={path="../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust"}
+semio-framework-value={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust"}
+semio-framework-value-derive={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust"}
+semio-framework-value-native-owned={features=["testkit"],path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/🛬️decode/🧳️owned/📦️packages/🦀️rust"}
+semio-framework-value-snapshot-projection={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📽️projection/📦️packages/🦀️rust"}
+semio-framework-value-persistent={path="../../../../../../../../🧰️framework/🔨️modules/🌱️value/📋️list/🔗️persistent/📦️packages/🦀️rust"}
+semio-framework-pack-json={path="../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust"}
+original_replication={package="semio-framework-replication",path="../../../../../../../../🧰️framework/🔨️modules/📡️replication/📦️packages/🦀️rust"}
+semio-s-plugin-energy-engine-model={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔋️model/📦️packages/🦀️rust"}
+semio-s-plugin-energy-engine-schedule={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🗓️schedule/📦️packages/🦀️rust"}
+semio-s-plugin-energy-engine-air-exchange={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/🔄️air_exchange/📦️packages/🦀️rust"}
+semio-s-plugin-energy-engine-calendar={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🔨️modules/⚡️simulation/⚙️engine/📅️calendar/📦️packages/🦀️rust"}
+semio-framework-trace={path="../../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust"}
+serde_json="1.0.140"
+semio-framework-artifact-reference={path="../../../../../../../../🧰️framework/🔨️modules/🗿️artifact-reference/📦️packages/🦀️rust"}
+semio-framework-diagnostic={path="../../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust"}
+semio-framework-os-store-link-schema={path="../../../../../../../../🧰️framework/🔨️modules/🧬️schema/🗿️artifact-reference/🔗️link/🧬️schema/📦️packages/🦀️rust"}
+semio-framework-dsl-record={path="../../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust"}
+semio-framework-pack-record-preflight={path="../../../../../../../../🧰️framework/🔨️modules/🎒️pack/🌱️value/🫳️preflight/📦️packages/🦀️rust"}
+semio-framework-ui-locale={path="../../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust"}
+
+semio-framework-job={path="../../../../../../../../🧰️framework/🔨️modules/🧵️job/📦️packages/🦀️rust",features=["testkit"]}
+
+semio-framework-plugin-ownership={path="../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏛️ownership/🧱️owner/📦️packages/🦀️rust"}
+
+semio-s-artifact-energy-model-editor-config={path="../../../../../../../../✏️s/🔌️plugins/🔋️energy/🗿️artifacts/🔋️model/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎚️config/📦️packages/🦀️rust"}
+
+semio-framework-os-kernel={path="../../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust"}

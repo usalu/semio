@@ -636,9 +636,9 @@ impl ArtifactEditor for ReasoningWiresPlayApp {
 })())
 }
 
-    fn initial_snapshot() -> WiresSnapshot {
+    fn reference_birth()->Option<fn()->WiresSnapshot>{Some(||{
         crate::empty_wires_snapshot()
-    }
+    })}
 
     /// 🏷️ Supplied wholesale by `app_commands!`'s generated `command_id()`.
     fn command_id(command: &WiresCommand) -> &'static str {

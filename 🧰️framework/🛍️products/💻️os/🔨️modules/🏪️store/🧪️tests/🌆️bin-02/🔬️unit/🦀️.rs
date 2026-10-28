@@ -61,7 +61,7 @@ async fn member_owned_batch_admission_defers_whole_source_census_and_retains_phy
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         let (mutations, _) = MemberStoreOwnedBatch::try_new(values, grant).unwrap_or_else(|_| panic!("exact funded source"));
         let mut request = MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(717), expected_generation: member.generation_now(), expected_revision: member.content_revision_now(), actor: fixture["metadata"]["actor"].as_str().unwrap().into(), group_id: None, transaction: None, mutations };
-        let mut publication = member.begin_one_item_owned_publication(&mut request, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() }).expect("bounded source admission").expect("funded publication birth");
+        let (mut publication,_) = member.begin_one_item_owned_publication(&mut request, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() }).expect("bounded source admission").expect("funded publication birth");
         assert_eq!(preflights.load(Ordering::SeqCst), 0, "admission cannot scan every source row before the first caller grant");
         assert_eq!(member.snapshot_ref().n, Some(0));
         assert!(matches!(receiving_fixture.receive(|receiving|member.prepare_one_item_publication(&mut *publication, 4096, ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, ..one_item_test_policy() },receiving)).unwrap(), ArtifactStoreOneItemPreparationStep::Blocked));

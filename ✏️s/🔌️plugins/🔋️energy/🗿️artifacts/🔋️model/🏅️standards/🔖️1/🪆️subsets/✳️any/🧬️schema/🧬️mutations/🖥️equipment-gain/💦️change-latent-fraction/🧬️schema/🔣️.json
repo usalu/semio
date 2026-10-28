@@ -61,5 +61,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateEquipmentGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "equipment",
+    "field": "latent_fraction",
+    "input": "new_latent_fraction",
+    "key": "id",
+    "labels": {
+      "en": "Change equipment gain: Latent fraction",
+      "de": "Latenter Anteil ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "equipment-gain",
+      "kind": "change-equipment-gain-latent-fraction",
+      "record": "ChangedEquipmentGainLatentFraction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Latent fraction violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed equipment gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The equipment gain already carries this latent fraction value."
+      }
+    }
   }
 }

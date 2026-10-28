@@ -43,7 +43,7 @@ pub enum BackboneMessage {
     /// ✉️ Semantic events — edit operations and history transitions — as causal envelopes.
     Mutations {
         #[dsl(base64)]
-        envelopes: Vec<u8>,
+        envelopes: original_outbox::OriginalBackboneMessageBytes,
     },
     /// ✅️ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
@@ -65,6 +65,11 @@ pub enum BackboneMessage {
     /// projection follows — the author converges with the hub, which never took them. No inverse exists for a
     /// transition; a retraction is the refusal's exact compensation.
     Retract { mutation_ids: Vec<String> },
+}
+
+impl BackboneMessage{
+    /// 📨️ Encodes an owned reference event batch into the canonical paged message field.
+    pub fn from_envelopes(envelopes:&[semio_framework_os_spr::MutationEnvelope])->Self{Self::Mutations{envelopes:original_outbox::OriginalBackboneMessageBytes::try_from_slice(&semio_framework_os_spr::encode_envelopes(envelopes)).expect("addressable reference wire fits canonical paged storage")}}
 }
 
 /// 🎞️ Handcrafted OpText (P6).
@@ -479,6 +484,13 @@ pub struct ChannelBackboneRemote {
 }
 
 impl ChannelBackbone {
+    /// 🚇️ Lends the actual actor queue to one funded original page-custody handoff.
+    pub fn send_original(&self,source:&mut original_outbox::OriginalBackboneOutbox,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(bool,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{
+        let Some(queue)=self.outbound.as_ref()else{return Ok(None)};
+        let mut queue=match queue.try_lock(){Ok(queue)=>queue,Err(std::sync::TryLockError::WouldBlock)=>return Ok(None),Err(std::sync::TryLockError::Poisoned(_))=>return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original actor queue is poisoned"))};
+        source.transfer_to_channel_step(&mut queue,grant)
+    }
+
     /// 🔗️ Creates a crossed pair sharing a URI: the store attaches the `ChannelBackbone`; the
     /// actor keeps the `ChannelBackboneRemote`.
     pub async fn pair(uri: &str) -> (ChannelBackbone, ChannelBackboneRemote) {
@@ -509,6 +521,16 @@ impl Backbone for ChannelBackbone {
 }
 
 impl ChannelBackboneRemote {
+    /// 🪢️ Releases only this endpoint alias while the actual Store retains every shared owner.
+    pub fn close_alias_step(original:&mut Option<Self>,grant:semio_framework_value::RetainedCloneGrant)->Result<Option<semio_framework_value::RetainedCloneProgress>,semio_framework_value::ValueError>{
+        let Some(owner)=original.as_ref()else{return Ok(None)};
+        if Arc::strong_count(&owner.inbound)<2||Arc::strong_count(&owner.outbound)<2||Arc::strong_count(&owner.outbound_wake)<2{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"endpoint alias release requires its original retained Store"))}
+        let d=semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Option<Self>>(),release_bytes:owner.uri.capacity(),depth:1,..Default::default()};
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}
+        drop(original.take());
+        Ok(Some(semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))
+    }
+
     pub async fn descriptor(&self) -> ArtifactBackboneRef {
         document_backbone_ref(&self.uri).await
     }
@@ -582,3 +604,5 @@ pub async fn resolve_backbone(uri: &str) -> Result<Backbones, VcsError> {
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER: semio_framework_trace_memory_testing::RequestedAllocator = semio_framework_trace_memory_testing::RequestedAllocator;
+#[path="📤️original-outbox/🦀️.rs"]
+pub mod original_outbox;

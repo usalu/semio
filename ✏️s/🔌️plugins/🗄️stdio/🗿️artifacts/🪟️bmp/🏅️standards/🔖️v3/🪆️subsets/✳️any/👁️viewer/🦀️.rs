@@ -60,9 +60,9 @@ impl ArtifactViewer for BmpViewer {
     const DIALECT: Dialect = BMP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_BMP_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         BmpSnapshot::default()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

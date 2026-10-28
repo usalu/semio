@@ -1,0 +1,1 @@
+{"feature":"Original Borrowed SPR File Encoding","epoch":73,"widths":[1,7,31,64],"cancelPrefixes":[0,1,7,31,127],"records":[{"kind":17,"critical":true,"text":"Energy λ 🏠"},{"kind":18,"critical":false,"text":"original retained source","repeat":8197}],"commitSequence":1,"previousCommitOffset":0,"codec":0,"canonical":true,"maximumOutputBytesPerTurn":64}

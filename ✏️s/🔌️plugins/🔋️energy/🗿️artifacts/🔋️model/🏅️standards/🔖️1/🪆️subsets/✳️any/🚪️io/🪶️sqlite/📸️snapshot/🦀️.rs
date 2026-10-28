@@ -1,6 +1,6 @@
 //! 🔋️ Handcrafted Energy model entities and ordered structural ownership.
 use pack::snapshot::ArtifactSqliteSnapshot as _;
-use crate::EnergyModelSnapshot;
+use crate::reference::EnergyModelSnapshot;
 use crate::model::*;
 use crate::schedule::ScheduleId;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text}};

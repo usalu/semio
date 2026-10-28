@@ -32,7 +32,7 @@ pub use ::replication::{DomainHover, DomainSelection, DomainTopology, HierarchyP
 // 🌱️ RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS: the `HierarchyProvider`/`HoverSpec`
 // /`SelectionSpec` fields below have completed their move to `ToValue`/`FromValue`, so the additive
 // serde half of this declaration no longer has impls to stand on and comes off with them.
-#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 #[value(rename_all = "camelCase")]
 pub struct InteractionDefinition {
     pub id: String,
@@ -59,7 +59,7 @@ impl InteractionDefinition {
 // both now `ToValue`/`FromValue`). Kept additive for the same reason: transitively embedded in
 // `AppDefinition`/`InteractionDefinition.granularities`, still consumed with plain serde outside
 // this pass.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct GranularityDefinition {
@@ -77,7 +77,7 @@ pub struct GranularityDefinition {
 // `ui_wgpu::LocalizedLabel`/`IconName`/`SurfaceKind`/`WindowOptions`, none owned by this pass), so
 // this type still needs the serde half regardless of its own `ToValue`/`FromValue`. Revisit once
 // `WindowKindDefinition` converts.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(transparent)]
 #[value(transparent)]
 pub struct InteractionRef(String);

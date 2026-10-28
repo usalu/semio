@@ -53,7 +53,7 @@ async fn a_hub_genesis_pair_is_produced_and_parses_back_without_trapping() {
     let snapshot = semio_framework_plugin::artifact_pair_snapshot::<semio_s_artifact_procedural_3d_model::snapshot::Generation3dSnapshot, semio_s_artifact_procedural_3d_mutations::Generation3dMutation>(&pair.pack, &pair.spr)
         .await
         .expect("the genesis pair parses back");
-    let initial = <Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::initial_snapshot();
+    let initial = <Generation3dPlayApp as semio_framework_plugin::ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let expected: Vec<String> = initial.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     let loaded: Vec<String> = snapshot.host_snapshot.widgets.iter().map(|widget| semio_s_artifact_procedural_3d_model::widget_id(widget).to_string()).collect();
     assert_eq!(loaded, expected, "the genesis document is exactly the editor's initial document");

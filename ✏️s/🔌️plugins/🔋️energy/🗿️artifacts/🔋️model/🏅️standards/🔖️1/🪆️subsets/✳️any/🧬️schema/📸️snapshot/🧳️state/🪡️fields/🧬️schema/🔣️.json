@@ -1,0 +1,61 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "bodyBytes",
+    "strings",
+    "cancelAt",
+    "laws",
+    "largeText"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.energy.original-field-sealing/v1"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "strings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "minItems": 3
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      },
+      "uniqueItems": true
+    },
+    "laws": {
+      "const": [
+        "originalSourceRetained",
+        "deniedAxesHaveNoEffect",
+        "actualCapacityAndReleaseReceipts",
+        "newSealedValueHasDistinctOriginalStorage",
+        "everyPrefixCloses"
+      ]
+    },
+    "largeText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pattern",
+        "repetitions"
+      ],
+      "properties": {
+        "pattern": {
+          "const": "β🙂"
+        },
+        "repetitions": {
+          "const": 2048
+        }
+      }
+    }
+  }
+}

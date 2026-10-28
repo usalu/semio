@@ -60,9 +60,9 @@ impl ArtifactViewer for JpgAnyViewer {
     const DIALECT: Dialect = JPG_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_JPG_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         crate::standards::v_jfif_1_01::subsets::document::io::blank_jpg_snapshot()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

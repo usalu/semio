@@ -220,9 +220,9 @@ impl ArtifactEditor for StlAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); stl_any_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> StlSnapshot {
+    fn reference_birth()->Option<fn()->StlSnapshot>{Some(||{
         StlSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

@@ -21,7 +21,7 @@ impl<const VIEWER:bool> ArtifactApp for CounterApp<VIEWER> {
     type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;
     type Transient=NoTransient;type TransientMutation=NoTransientMutation;
     type Command=crate::Mutation;
-    async fn initial_snapshot()->Self::Snapshot {crate::Snapshot::default()}
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{crate::Snapshot::default()})}
     async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d_compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation> {Ok(Emit::default())}
     async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree> {semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.count.to_string()).map(|root|ComponentTree::new(root))}
 }
@@ -41,7 +41,7 @@ fn surface<const VIEWER:bool>()->SurfaceDeclaration<FixtureApps> {
     fn viewer(definition:&AppDefinition,actor:semio_framework_os_kernel::ActorId,mounted_policy:semio_framework_plugin::MountedOwnerPolicyV1,identity:&mut semio_framework_os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>)->FixtureApps {::semio_framework_async::poll::resolve_ready(VcsArtifactApp::<CounterApp<true>>::with_registry_on_bus(CounterApp::<true>,AppActionRegistry::from_definition(definition),semio_framework::ActionBus::production(),actor,mounted_policy,identity)).into()}
     let mut definition=if VIEWER {Viewer::builder(DIALECT).document(["fixture","neutral-host-fixture","counter"]).mode("view",LocalizedLabel::native("View","Ansicht"),"eye").window_kind("main",LocalizedLabel::native("Counter","Zähler"),"fixture.counter",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()} else {Editor::builder(DIALECT).document(["fixture","neutral-host-fixture","counter"]).mode("edit",LocalizedLabel::native("Edit","Bearbeiten"),"pencil").window_kind("main",LocalizedLabel::native("Counter","Zähler"),"fixture.counter",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()};
     definition.io.artifact_schema=KIND.into();
-    SurfaceDeclaration {definition,factory:if VIEWER {viewer} else {editor},app_schema:||None,document_schema:KIND,codec:semio_framework_plugin::app::artifact_codec_table::<CounterApp<VIEWER>>(),mutation_roster:None,rights:if VIEWER {Rights::Read} else {Rights::Write}}
+    SurfaceDeclaration {definition,original_factory:None,factory:Some(if VIEWER {viewer} else {editor}),app_schema:||None,document_schema:KIND,codec:semio_framework_plugin::app::artifact_codec_table::<CounterApp<VIEWER>>(),mutation_roster:None,rights:if VIEWER {Rights::Read} else {Rights::Write}}
 }
 fn facet(role:&str,json_schema:&'static str)->FacetLeaves {
     let (rust,typescript,graphql,proto)=match role {
@@ -91,7 +91,7 @@ impl<C:RefusalOwner,const VIEWER:bool> ArtifactApp for RefusalApp<C,VIEWER>{
  type Presence=NoPresence;type PresenceMutation=NoPresenceMutation;
  type Transient=NoTransient;type TransientMutation=NoTransientMutation;
  type Command=refusal::Mutation;
- async fn initial_snapshot()->Self::Snapshot{refusal::Snapshot::default()}
+ fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{refusal::Snapshot::default()})}
  async fn handle(_command:&Self::Command,_doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_interaction:&InteractionView<'_>,_view_state:Option<&ViewModel>,_draft:&DraftView<'_,Self::Draft>,_engines:&semio_framework_2d_compute::EngineHandles)->ArtifactMutationOutcome<Self::Mutation,Self::ConfigMutation,Self::DraftMutation>{Ok(Emit::default())}
  async fn render(body_key:&str,doc:&ArtifactView<'_,Self::Snapshot>,_cfg:&ConfigView<'_,Self::Config>,_view:&ViewModel)->UiAssemblyResult<ComponentTree>{semio_framework_plugin::app::paged_text_carrier(body_key,&doc.snapshot.value.to_string()).map(|root|ComponentTree::new(root))}
 }
@@ -102,7 +102,7 @@ where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<
  let dialect=<RefusalApp<C,VIEWER> as ArtifactApp>::DIALECT;
  let mut definition=if VIEWER{Viewer::builder(dialect).document(["fixture","neutral-host-fixture","snapshot-refusal"]).mode("view",LocalizedLabel::native("View","Ansicht"),"eye").window_kind("main",LocalizedLabel::native("Refusal","Ablehnung"),"fixture.snapshot-refusal",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()}else{Editor::builder(dialect).document(["fixture","neutral-host-fixture","snapshot-refusal"]).mode("edit",LocalizedLabel::native("Edit","Bearbeiten"),"pencil").window_kind("main",LocalizedLabel::native("Refusal","Ablehnung"),"fixture.snapshot-refusal",SurfaceKind::Canvas2d,IconName::AppWindow).build_definition()};
  definition.io.artifact_schema=refusal::KIND.into();
- SurfaceDeclaration{definition,factory:if VIEWER{viewer::<C>}else{editor::<C>},app_schema:||None,document_schema:refusal::KIND,codec:semio_framework_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
+ SurfaceDeclaration{definition,original_factory:None,factory:if VIEWER{viewer::<C>}else{editor::<C>},app_schema:||None,document_schema:refusal::KIND,codec:semio_framework_plugin::app::artifact_codec_table::<RefusalApp<C,VIEWER>>(),mutation_roster:None,rights:if VIEWER{Rights::Read}else{Rights::Write}}
 }
 fn refusal_subset<C:RefusalOwner>()->SubsetDeclaration<FixtureApps>
 where FixtureApps:From<VcsArtifactApp<RefusalApp<C,false>>>+From<VcsArtifactApp<RefusalApp<C,true>>>{

@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["applied","committed","pending"],"properties":{"applied":{"type":"array","items":{"type":"string"}},"committed":{"type":"array","items":{"type":"array","items":{"type":"string"}}},"pending":{"type":"array","items":{"type":"string"}}}}

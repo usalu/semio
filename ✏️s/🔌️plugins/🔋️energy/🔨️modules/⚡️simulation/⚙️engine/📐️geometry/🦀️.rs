@@ -61,14 +61,14 @@ pub fn polygon_normal(vertices_m: &[[f64; 3]]) -> [f64; 3] {
     let mut n = [0.0_f64; 3];
     let len = vertices_m.len();
     for i in 0..len {
-        let (x0, y0, z0) = (vertices_m[i][0], vertices_m[i][1], vertices_m[i][2]);
-        let (x1, y1, z1) = (vertices_m[(i + 1) % len][0], vertices_m[(i + 1) % len][1], vertices_m[(i + 1) % len][2]);
-        n[0] += (y0 - y1) * (z0 + z1);
-        n[1] += (z0 - z1) * (x0 + x1);
-        n[2] += (x0 - x1) * (y0 + y1);
+        accumulate_polygon_normal(&mut n,vertices_m[i],vertices_m[(i + 1) % len]);
     }
-    normalize(n)
+    normalize_polygon_normal(n)
 }
+/// 📐️ One original polygon edge contributes the defining Newell normal sum.
+pub fn accumulate_polygon_normal(n:&mut[f64;3],a:[f64;3],b:[f64;3]){n[0]+=(a[1]-b[1])*(a[2]+b[2]);n[1]+=(a[2]-b[2])*(a[0]+b[0]);n[2]+=(a[0]-b[0])*(a[1]+b[1]);}
+/// 📐️ A completed Newell sum uses the same native vector normalization as the numerical geometry engine.
+pub fn normalize_polygon_normal(n:[f64;3])->[f64;3]{normalize(n)}
 // #endregion 🔖️AreaNormal
 
 // #region 🔖️Orientation

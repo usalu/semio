@@ -1,0 +1,43 @@
+{
+  "alternative": {
+    "id": "alt-original",
+    "name": "Alternative λ",
+    "checkpointIds": [
+      "ck-before",
+      "ck-original",
+      "ck-after",
+      "ck-original"
+    ]
+  },
+  "checkpointId": "ck-original",
+  "replacement": "ck-0123456789abcdef",
+  "expected": {
+    "id": "alt-original",
+    "name": "Alternative λ",
+    "checkpointIds": [
+      "ck-before",
+      "ck-0123456789abcdef",
+      "ck-after",
+      "ck-0123456789abcdef"
+    ]
+  },
+  "cuts": [
+    0,
+    1,
+    3,
+    7,
+    19,
+    41
+  ],
+  "expectedAppend": {
+    "id": "alt-original",
+    "name": "Alternative λ",
+    "checkpointIds": [
+      "ck-before",
+      "ck-original",
+      "ck-after",
+      "ck-original",
+      "ck-0123456789abcdef"
+    ]
+  }
+}

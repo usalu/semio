@@ -167,7 +167,7 @@ impl ChildEmitPreparation {
         Self{authority:None,owner:Box::new(TypedChildEmitPreparation::<M>{
             remaining:ManuallyDrop::new(Some(operations.into_iter())),owned_source:ManuallyDrop::new(None),take_batch:None,batch_capacity_bytes:0,backing_bytes,operation_count,
             current:ManuallyDrop::new(None),retirement:ManuallyDrop::new(None),retired_schema:ManuallyDrop::new(None),
-            prefix:Some(ChildEmit::open(slot,child_id,0)),cause:ManuallyDrop::new(None),close_refusal:ManuallyDrop::new(None),factory:ManuallyDrop::new(factory),closing_factory:ManuallyDrop::new(None),retire_builtin,
+            prefix:Some(ChildEmit::open(slot,child_id,0)),cause:ManuallyDrop::new(None),cause_close:ManuallyDrop::new(None),close_refusal:ManuallyDrop::new(None),factory:ManuallyDrop::new(factory),closing_factory:ManuallyDrop::new(None),retire_builtin,
             schema_parts:|operation|{let semantics=protocol::SemanticMutation::<S>::semantics(operation);(semantics.entity,semantics.kind)},schema_offset:0,schema_started:false,schema_done:false,
             encode:|operation|{let encoded=::protocol::OpBinary::encode_op(operation)?;Ok((encoded,protocol::SemanticMutation::<S>::label(operation)))},
             closing:false,ready:false,
@@ -216,6 +216,7 @@ struct TypedChildEmitPreparation<M> {
     retired_schema:ManuallyDrop<Option<String>>,
     prefix:Option<ChildEmit>,
     cause:ManuallyDrop<Option<::protocol::ProtocolError>>,
+    cause_close:ManuallyDrop<Option<semio_framework_value::retirement::controlled::ControlledRetirement<::protocol::ProtocolError>>>,
     close_refusal:ManuallyDrop<Option<ValueError>>,
     factory:ManuallyDrop<Option<Arc<dyn ArtifactOwnedValueRetirementFactory<M>>>>,
     closing_factory:ManuallyDrop<Option<semio_framework_value::FactoryAuthority>>,
@@ -465,8 +466,8 @@ where M:Send+'static {
             semio_framework_value::retained_clone::admit_retained_clone_close(child,step,prefix.terminal_is_empty(),"original child preparation prefix").map_err(value_fault)?;
             return Ok(PluginLifecycleStep::Progress(step.progress()));
         }
-        if self.cause.is_some(){
-            let step=match close_protocol_owned_cause_one(&mut self.cause,grant){
+        if self.cause.is_some()||self.cause_close.is_some(){
+            let step=match semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_step(&mut self.cause,&mut self.cause_close,grant).map(|step|PluginLifecycleStep::retained(step,self.cause.is_none()&&self.cause_close.is_none())){
                 Ok(step)=>step,
                 Err(error)=>{let fault=retirement_refusal_fault(&error);*self.close_refusal=Some(error);return Err(fault);}
             };
@@ -486,7 +487,7 @@ where M:Send+'static {
         Ok(PluginLifecycleStep::Complete(idle))
     }
     fn terminal_is_empty(&self)->bool{
-        self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()&&self.backing_bytes==0
+        self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.cause_close.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()&&self.backing_bytes==0
     }
     fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if !self.retire_stage_is_empty(){return self.retire_demands(body);}
@@ -496,7 +497,7 @@ where M:Send+'static {
             demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original prefix depth overflow"))?;
             return Ok(demand);
         }
-        if self.cause.is_some(){return ::protocol::protocol_error_retirement_demand(&self.cause);}
+        if self.cause.is_some()||self.cause_close.is_some(){return semio_framework_plugin_ownership::bounded_ownership::plugin_typed_owner_demand(&self.cause,&self.cause_close,body);}
         if self.factory.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
         if let Some(factory)=self.closing_factory.as_ref(){return factory.demands(body);}
         Ok(Default::default())
@@ -508,14 +509,11 @@ where M:Send+'static {
 }
 impl<M> Drop for TypedChildEmitPreparation<M>{
     fn drop(&mut self){
-        assert!(std::thread::panicking()||(self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()),"typed child emission lost actual operation, prefix or encoder refusal owners");
-        unsafe{ManuallyDrop::drop(&mut self.remaining);ManuallyDrop::drop(&mut self.owned_source);ManuallyDrop::drop(&mut self.current);ManuallyDrop::drop(&mut self.retirement);ManuallyDrop::drop(&mut self.cause);ManuallyDrop::drop(&mut self.retired_schema);ManuallyDrop::drop(&mut self.close_refusal);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}
+        assert!(std::thread::panicking()||(self.remaining.is_none()&&self.owned_source.is_none()&&self.current.is_none()&&self.retirement.is_none()&&self.retired_schema.is_none()&&self.prefix.is_none()&&self.cause.is_none()&&self.cause_close.is_none()&&self.close_refusal.is_none()&&self.factory.is_none()&&self.closing_factory.is_none()),"typed child emission lost actual operation, prefix or encoder refusal owners");
+        unsafe{ManuallyDrop::drop(&mut self.remaining);ManuallyDrop::drop(&mut self.owned_source);ManuallyDrop::drop(&mut self.current);ManuallyDrop::drop(&mut self.retirement);ManuallyDrop::drop(&mut self.cause);ManuallyDrop::drop(&mut self.cause_close);ManuallyDrop::drop(&mut self.retired_schema);ManuallyDrop::drop(&mut self.close_refusal);ManuallyDrop::drop(&mut self.factory);ManuallyDrop::drop(&mut self.closing_factory);}
     }
 }
 
-fn close_protocol_owned_cause_one(cause:&mut Option<::protocol::ProtocolError>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,ValueError>{
-    ::protocol::close_protocol_error_one(cause,grant).map(|step|PluginLifecycleStep::retained(step,cause.is_none()))
-}
 
 pub fn retirement_refusal_fault(error:&ValueError)->Fault{
     Fault::new(semio_framework_diagnostic::FaultOrigin::Framework,"interactive-job.child-emission-retirement-refused",error.message.as_ref()).with_param("refusalKind",error.kind.as_str()).with_retained_progress(error.retained_progress())

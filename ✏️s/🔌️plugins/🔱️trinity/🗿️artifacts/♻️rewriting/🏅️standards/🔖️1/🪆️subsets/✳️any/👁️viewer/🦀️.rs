@@ -79,9 +79,9 @@ impl ArtifactViewer for TrinityRewritingViewer {
         crate::standards::v1::subsets::any::content::genesis_working_child_pack(snapshot, slot, child_id)
     }
 
-    fn initial_snapshot() -> RewritingSnapshot {
+    fn reference_birth()->Option<fn()->RewritingSnapshot>{Some(||{
         empty_rule_state()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `TrinityRewritingViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no

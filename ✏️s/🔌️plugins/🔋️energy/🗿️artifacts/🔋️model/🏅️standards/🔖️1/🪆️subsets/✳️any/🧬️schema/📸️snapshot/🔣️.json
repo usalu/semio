@@ -7,38 +7,38 @@
   "required": [
     "schema",
     "model",
-    "structure",
-    "zones"
+    "referencedModel",
+    "weatherLink"
   ],
   "properties": {
     "schema": {
       "type": "string",
-      "x-semio-state": "artifact"
+      "x-semio-state": "artifact",
+      "const": "energy.model"
     },
     "model": {
       "type": "object",
-      "x-semio-state": "artifact"
-    },
-    "structure": {
-      "type": "object",
       "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.value"
-    },
-    "zones": {
-      "type": "object",
-      "x-semio-state": "artifact",
-      "x-semio-child-kind": "s.stdio.semio.table"
+      "$ref": "https://json.schemas.assets.semio-tech.com/s/energy/model/model.json"
     },
     "referencedModel": {
       "x-semio-state": "artifact",
       "x-semio-link-roles": [
         "model"
+      ],
+      "type": [
+        "object",
+        "null"
       ]
     },
     "weatherLink": {
       "x-semio-state": "artifact",
       "x-semio-link-roles": [
         "weather"
+      ],
+      "type": [
+        "object",
+        "null"
       ]
     }
   }

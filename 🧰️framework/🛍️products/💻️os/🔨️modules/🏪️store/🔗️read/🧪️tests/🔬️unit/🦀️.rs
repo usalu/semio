@@ -1,7 +1,7 @@
 //! 🏛️ The Store's history ledger retirement returns original read sources and waits for live projection leases.
 use super::ArtifactStoreHistoryLedgerRetirement;
 use semio_framework_os_vcs::ArtifactHistoryLedger;
-use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactoryAuthority,FactoryRetirement,RetirementDemand,OwnedValueRetirementFactory};
+use semio_framework_value::{ArtifactOwnedValueRetirementFactory,ErasedSnapshotRetirement,FactoryAuthority,FactoryRetirement,RetirementDemand,factory::OwnedValueRetirementFactory};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep,RetainedOwnedProjection};
 use std::sync::Arc;
 
@@ -17,7 +17,7 @@ fn close_factory(factory:Arc<dyn ArtifactOwnedValueRetirementFactory<Vec<String>
 fn original_history_store_retirement_returns_read_sources_and_waits_for_live_leases(){
  let factory:Arc<dyn ArtifactOwnedValueRetirementFactory<Vec<String>>>=Arc::new(OwnedValueRetirementFactory::<Vec<String>>::default());
  for cutoff in 0..3 {for keep_live in [false,true]{let mut ledger=ArtifactHistoryLedger::new();ledger.try_push(vec!["original-stored-forward".repeat(1024)]).unwrap();let key=ledger.retained_read_key_at(0).unwrap();for _ in 0..cutoff {let funded=grant(ledger.retained_read_demands(key).unwrap());let(step,allocated,released)=observed(||ledger.advance_retained_read(key,&factory,funded).unwrap());receipt(step.progress(),funded,allocated,released);if matches!(step,RetainedCloneStep::Complete(_)){break;}}
-  let mut projection=if keep_live&&cutoff==2{let mut parent=ledger.retain_read(key,grant(RetainedOwnedProjection::<Vec<String>>::constructor_demand())).unwrap().0;let funded=grant(RetainedOwnedProjection::<String>::constructor_demand());let child=parent.project(1,|rows|&rows[0],funded).unwrap().0;close_projection(&mut parent);Some(child)}else{None};
+  let mut projection=if keep_live&&cutoff==2{let funded=grant(RetainedOwnedProjection::<Vec<String>>::constructor_demand());let(mut root,_)=ledger.retain_read(key,funded).unwrap();let funded=grant(RetainedOwnedProjection::<String>::constructor_demand());let projection=root.project(1,|rows|&rows[0],funded).unwrap().0;while !root.terminal_is_empty(){let funded=grant(root.close_demand(4096).unwrap());root.close_step(funded).unwrap();}Some(projection)}else{None};
   let mut owner=ArtifactStoreHistoryLedgerRetirement::new(ledger,Arc::clone(&factory));let mut saw_wait=projection.is_none();let mut finished=false;
   for _ in 0..100000 {if owner.terminal_is_empty(){finished=true;break;}let demand=owner.next_demand(4096).unwrap();let funded=grant(demand);
    for axis in 0..5 {let mut denied=funded;match axis {0=>denied.maximum_items=0,1 if demand.copy_bytes>0=>denied.maximum_copy_bytes-=1,2 if demand.capacity_bytes>0=>denied.maximum_capacity_bytes-=1,3 if demand.release_bytes>0=>denied.maximum_release_bytes-=1,4 if demand.depth>0=>denied.maximum_depth-=1,_=>continue};let(result,allocated,released)=observed(||owner.close_step(denied));assert_eq!((allocated,released),(0,0));match result {Ok(step)=>assert_eq!(step.progress(),RetainedCloneProgress::default()),Err(error)=>assert_eq!(error.retained_progress(),RetainedCloneProgress::default())};assert_eq!(owner.next_demand(4096).unwrap(),demand);}

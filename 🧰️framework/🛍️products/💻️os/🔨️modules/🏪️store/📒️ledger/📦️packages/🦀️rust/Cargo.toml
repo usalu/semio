@@ -25,6 +25,7 @@ path = "../../🦀️.rs"
 hot-path-census = []
 
 [dependencies]
+semio-framework-os-store-canonical-json = { path="../../../🧵️canonical-edit/📦️packages/🦀️rust" }
 semio-framework-os-spr = { path = "../../../../📡️spr/📦️packages/🦀️rust" }
 semio-framework-artifact-reference = { workspace = true }
 semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
@@ -43,5 +44,6 @@ semio-framework-value-retirement-owner = { path = "../../../../../../../🔨️m
 semio-framework-value-snapshot-read = { path = "../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 
 [dev-dependencies]
+semio-framework-trace = { workspace = true }
 semio-framework-trace-memory-testing = { path = "../../../../../../../🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = "1.0.140"

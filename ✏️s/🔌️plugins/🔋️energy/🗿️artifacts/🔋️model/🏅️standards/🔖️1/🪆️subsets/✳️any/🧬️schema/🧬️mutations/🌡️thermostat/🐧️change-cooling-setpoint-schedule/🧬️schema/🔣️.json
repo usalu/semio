@@ -59,5 +59,55 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "row": "StateThermostat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "thermostats",
+    "field": "cooling_setpoint_schedule_id",
+    "input": "new_cooling_setpoint_schedule_id",
+    "key": "id",
+    "labels": {
+      "en": "Change thermostat: Cooling setpoint schedule",
+      "de": "Kühl-Sollwertzeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "thermostat",
+      "kind": "change-thermostat-cooling-setpoint-schedule",
+      "record": "ChangedThermostatCoolingSetpointSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Cooling setpoint schedule violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed thermostat does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced cooling setpoint schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The thermostat already carries this cooling setpoint schedule reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

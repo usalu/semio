@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "field": "flow_per_exterior_area_m3_s_m2",
+    "input": "new_flow_per_exterior_area_m3_s_m2",
+    "key": "id",
+    "labels": {
+      "en": "Change infiltration: Flow per exterior area",
+      "de": "Volumenstrom pro Außenfläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "infiltration",
+      "kind": "change-infiltration-flow-per-exterior-area",
+      "record": "ChangedInfiltrationFlowPerExteriorArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Flow per exterior area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The infiltration already carries this flow per exterior area value."
+      }
+    }
   }
 }

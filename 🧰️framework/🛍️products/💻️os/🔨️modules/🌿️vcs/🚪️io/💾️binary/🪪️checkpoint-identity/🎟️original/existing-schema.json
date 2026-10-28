@@ -1,0 +1,114 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "parent",
+    "changes",
+    "changeIds",
+    "message",
+    "authors",
+    "timestamp",
+    "pins",
+    "width",
+    "cuts",
+    "digest"
+  ],
+  "properties": {
+    "parent": {
+      "type": "string"
+    },
+    "message": {
+      "type": "string"
+    },
+    "timestamp": {
+      "type": "string"
+    },
+    "digest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "changeIds": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "authors": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "width": {
+      "const": 64
+    },
+    "cuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "changes": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "editIds",
+          "savedAt"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "editIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "savedAt": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "pins": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "kind",
+          "standard",
+          "subset",
+          "checkpoint"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "standard": {
+            "type": "string"
+          },
+          "subset": {
+            "type": "string"
+          },
+          "checkpoint": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

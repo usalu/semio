@@ -1,0 +1,1 @@
+{"$schema":"https://json-schema.org/draft/2020-12/schema","type":"object","additionalProperties":false,"required":["bytes","pattern","limits","cancelAt","expected"],"properties":{"bytes":{"const":8197},"pattern":{"const":[0,1,127,128,254,255]},"limits":{"const":{"copy":4096,"capacity":4096}},"cancelAt":{"const":["before","after"]},"expected":{"const":{"source":0,"recipient":1}}}}

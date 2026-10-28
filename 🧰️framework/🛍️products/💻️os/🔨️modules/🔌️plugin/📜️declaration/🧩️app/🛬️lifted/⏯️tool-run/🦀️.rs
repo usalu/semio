@@ -40,6 +40,7 @@ pub struct ToolRunJobRequest<'a, A: ArtifactApp> {
     pub provisional: &'a [A::Mutation],
     pub instance_owner: ArtifactInstanceOperationOwnerHandle,
     pub port: ToolRunJobPort,
+    pub host: Option<semio_framework_plugin_actor_host::Host>,
     pub trace_keys: ToolRunTraceKeys,
     pub entity_marks: &'a [(u32, u64)],
     pub children: ChildContentView,

@@ -19,6 +19,8 @@ impl pack::snapshot::ArtifactPack for GisTerrainSnapshot{
  fn decode_pack_with(bytes:&[u8],options:&store::PackDecodeOptions)->Result<Self,store::PackError>{let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;if !envelope.matches_identity(<Self as pack::snapshot::ArtifactDsl>::envelope_id(),store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "terrain native binary identity differs")))}let(record,_)=store::pack_rt::decode_document(&inner,&Terrain::__dsl_spec(),options)?;let snapshot=Terrain::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.into_snapshot();if let Some(map)=&snapshot.imported_map{map.validate().map_err(|detail| store::PackError::Refusal(store::PackRefusal::Malformed { kind: semio_framework_value::ValueRefusalKind::InvalidValue, what: "pack", offset: 0, detail }))?;}Ok(snapshot)}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for GisTerrainSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }
 

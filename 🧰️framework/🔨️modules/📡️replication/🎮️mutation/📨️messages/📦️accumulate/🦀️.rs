@@ -18,13 +18,13 @@ impl ReplayMessageAccumulator {
     pub fn rows(&self) -> &PagedList<MutationMessage, {usize::MAX}> { &self.rows }
     pub fn rows_mut(&mut self) -> &mut PagedList<MutationMessage, {usize::MAX}> { &mut self.rows }
     pub fn next_capacity_byte_demand(&self) -> Result<usize, ValueError> { if self.rows.has_reserved_slot() { Ok(0) } else { self.rows.next_allocation_bytes().map_err(ValueError::from) } }
+    /// 📏️ The original diagnostic row prices its actual reserved path or next backing page.
+    pub fn append_demands(&self)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.rows.has_reserved_slot(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<MutationMessage>(),depth:self.rows.next_push_depth_demand().map_err(ValueError::from)?,..Default::default()})}else{Ok(semio_framework_value::RetirementDemand{copy_bytes:self.rows.next_reserve_copy_byte_demand().map_err(ValueError::from)?,capacity_bytes:self.rows.next_allocation_bytes().map_err(ValueError::from)?,depth:self.rows.next_reserve_depth_demand().map_err(ValueError::from)?,..Default::default()})}}
     pub fn append(&mut self, source: &mut Option<MutationMessage>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
         let idle = RetainedCloneProgress::default();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 || source.is_none() { return Ok(idle); }
-        if !self.rows.has_reserved_slot() {
-            let progress = self.rows.reserve_one(grant.maximum_capacity_bytes).map_err(|error| ValueError::from(error.refusal()))?;
-            return Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), retained_capacity_bytes: progress.allocated_bytes, ..idle });
-        }
+        let demand=self.append_demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(idle)}
+        if !self.rows.has_reserved_slot(){return self.rows.reserve_one_funded(grant).map_err(|error|ValueError::from(error.refusal()));}
         let progress = self.rows.place_reserved(source, grant.maximum_copy_bytes).map_err(ValueError::from)?;
         Ok(RetainedCloneProgress { copied_items: usize::from(progress.progressed), copied_bytes: progress.placed_bytes, ..idle })
     }
@@ -104,9 +104,10 @@ pub struct OperationMessageDrain {
 
 impl OperationMessageDrain {
     pub fn new(outcome: MutationReplayOutcome) -> Self { let original_len = outcome.messages.len(); Self { outcome: ManuallyDrop::new(Some(outcome)), pending: None, index: 0, original_len } }
-    pub fn next_capacity_byte_demand(&self, ledger: &ReplayMessageAccumulator) -> Result<usize, ValueError> { if self.pending.is_some() { ledger.next_capacity_byte_demand() } else { Ok(0) } }
-    pub fn next_copy_byte_demand(&self, ledger: &ReplayMessageAccumulator) -> usize { if self.pending.is_some() && !ledger.rows.has_reserved_slot() { 0 } else { usize::from(self.outcome.as_ref().is_some_and(|outcome| self.index < self.original_len || !outcome.messages.is_empty()) || self.pending.is_some()) * size_of::<MutationMessage>() } }
-    pub fn next_release_byte_demand(&self) -> usize { self.outcome.as_ref().map_or(0, |outcome| if self.index == self.original_len && outcome.messages.is_empty() && self.pending.is_none() { outcome.messages.capacity() * size_of::<MutationMessage>() } else { 0 }) }
+    /// 🎟️ Every native diagnostic action forwards one exact original row/page demand.
+    pub fn next_demand(&self,ledger:&ReplayMessageAccumulator)->Result<semio_framework_value::RetirementDemand,ValueError>{if self.pending.is_some(){return ledger.append_demands()}Ok(semio_framework_value::RetirementDemand{copy_bytes:self.next_copy_byte_demand(ledger),release_bytes:self.next_release_byte_demand(),depth:1,..Default::default()})}
+    fn next_copy_byte_demand(&self, ledger: &ReplayMessageAccumulator) -> usize { if self.pending.is_some() && !ledger.rows.has_reserved_slot() { 0 } else { usize::from(self.outcome.as_ref().is_some_and(|outcome| self.index < self.original_len || !outcome.messages.is_empty()) || self.pending.is_some()) * size_of::<MutationMessage>() } }
+    fn next_release_byte_demand(&self) -> usize { self.outcome.as_ref().map_or(0, |outcome| if self.index == self.original_len && outcome.messages.is_empty() && self.pending.is_none() { outcome.messages.capacity() * size_of::<MutationMessage>() } else { 0 }) }
     pub fn step(&mut self, ledger: &mut ReplayMessageAccumulator, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
         let idle = RetainedCloneProgress::default();
         if grant.maximum_items == 0 || grant.maximum_depth == 0 || self.outcome.is_none() { return Ok(idle); }

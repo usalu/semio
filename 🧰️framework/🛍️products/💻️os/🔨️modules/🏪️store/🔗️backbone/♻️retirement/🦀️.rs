@@ -8,21 +8,26 @@ use std::mem::ManuallyDrop;
 
 type Wake = std::sync::OnceLock<Arc<dyn Fn() + Send + Sync>>;
 type Queue = Mutex<VecDeque<BackboneMessage>>;
+type PagedRetirement=semio_framework_value::retirement::controlled::ControlledRetirement<crate::original_outbox::OriginalBackboneMessageBytes>;
 
 pub struct ArtifactStoreBackboneRetirement {
+    pub outbox: ManuallyDrop<Option<crate::original_outbox::OriginalBackboneOutbox>>,
     pub backbone: ManuallyDrop<Option<Backbones>>,
     pub queue: ManuallyDrop<Option<VecDeque<BackboneMessage>>>,
     pub message: ManuallyDrop<Option<BackboneMessage>>,
     pub bytes: ManuallyDrop<Option<Vec<u8>>>,
+    pub paged:ManuallyDrop<Option<PagedRetirement>>,
     pub wake: ManuallyDrop<Option<Arc<Wake>>>,
 }
 
 impl ArtifactStoreBackboneRetirement {
-    pub fn new(backbone: Backbones) -> Self { Self { backbone: ManuallyDrop::new(Some(backbone)), queue: ManuallyDrop::new(None), message: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), wake: ManuallyDrop::new(None) } }
-    pub(super) fn from_queue(queue: VecDeque<BackboneMessage>) -> Self { Self { backbone: ManuallyDrop::new(None), queue: ManuallyDrop::new(Some(queue)), message: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), wake: ManuallyDrop::new(None) } }
+    pub fn new(backbone: Backbones) -> Self { Self { outbox:ManuallyDrop::new(None),backbone: ManuallyDrop::new(Some(backbone)), queue: ManuallyDrop::new(None), message: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), paged:ManuallyDrop::new(None), wake: ManuallyDrop::new(None) } }
+    pub(super) fn from_queue(queue: VecDeque<BackboneMessage>) -> Self { Self { outbox:ManuallyDrop::new(None),backbone: ManuallyDrop::new(None), queue: ManuallyDrop::new(Some(queue)), message: ManuallyDrop::new(None), bytes: ManuallyDrop::new(None), paged:ManuallyDrop::new(None), wake: ManuallyDrop::new(None) } }
     pub const fn constructor_capacity_bytes() -> usize { size_of::<Self>() }
     pub(super) fn admit_queue(queue: VecDeque<BackboneMessage>, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, VecDeque<BackboneMessage>)> { Self::admit_frame(queue, grant, Self::from_queue) }
     pub(super) fn admit_backbone(backbone: Backbones, grant: RetainedCloneGrant) -> Result<(Box<dyn ErasedSnapshotRetirement>, RetainedCloneProgress), (ValueError, Backbones)> { Self::admit_frame(backbone, grant, Self::new) }
+    pub fn original_outbox_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<crate::original_outbox::OriginalBackboneOutbox>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
+    pub fn admit_original_outbox(outbox:&mut crate::original_outbox::OriginalBackboneOutbox,grant:RetainedCloneGrant)->Result<(Option<Box<dyn ErasedSnapshotRetirement>>,RetainedCloneProgress),ValueError>{let d=Self::original_outbox_birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok((None,Default::default()))}let original=std::mem::take(outbox);match Self::admit_frame(original,grant,|mut original|{original.begin_close();let mut frame=Self::from_queue(VecDeque::new());*frame.queue=None;*frame.outbox=Some(original);frame}){Ok((owner,mut p))=>{p.copied_bytes+=d.copy_bytes;Ok((Some(owner),p))},Err((error,original))=>{*outbox=original;Err(error)}}}
     pub fn admit_attached(queue: &mut VecDeque<BackboneMessage>, backbone: &mut Option<Backbones>, grant: RetainedCloneGrant) -> Result<(Option<Box<dyn ErasedSnapshotRetirement>>, RetainedCloneProgress), ValueError> {
         if queue.capacity() != 0 {
             return match Self::admit_queue(std::mem::take(queue), grant) {
@@ -54,6 +59,9 @@ impl ArtifactStoreBackboneRetirement {
         }
     }
     pub fn demands(&self) -> Result<RetirementDemand, ValueError> {
+        if let Some(outbox)=self.outbox.as_ref(){return if outbox.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<crate::original_outbox::OriginalBackboneOutbox>>(),depth:1,..Default::default()})}else{outbox.close_demands(4096)}}
+        if let Some(paged)=self.paged.as_ref(){return if paged.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<PagedRetirement>>(),depth:1,..Default::default()})}else{paged.next_demand(4096)}}
+        if let Some(BackboneMessage::Mutations{envelopes})=self.message.as_ref(){return Ok(RetirementDemand{copy_bytes:if envelopes.retained_bytes().terminal_is_empty(){size_of::<Option<BackboneMessage>>()}else{size_of::<crate::original_outbox::OriginalBackboneMessageBytes>()+size_of::<Option<PagedRetirement>>()},depth:1,..Default::default()})}
         let release_bytes = if let Some(bytes) = self.bytes.as_ref() { bytes.capacity() }
         else if let Some(message) = self.message.as_ref() { Self::message_release(message) }
         else if let Some(queue) = self.queue.as_ref() { if queue.is_empty() { queue.capacity() * size_of::<BackboneMessage>() } else { 0 } }
@@ -81,18 +89,22 @@ impl ArtifactStoreBackboneRetirement {
 }
 
 impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
-    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.demands() }
+    fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { if let Some(outbox)=self.outbox.as_ref().filter(|owner|!owner.terminal_is_empty()){outbox.close_demands(body)}else if let Some(paged)=self.paged.as_ref().filter(|owner|!owner.terminal_is_empty()){paged.next_demand(body)}else{self.demands()} }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
+        if let Some(outbox)=self.outbox.as_mut(){if !outbox.terminal_is_empty(){return outbox.close_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}let demand=self.demands()?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty))}self.outbox.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}))}
+        if let Some(paged)=self.paged.as_mut(){let d=if paged.terminal_is_empty(){RetirementDemand{copy_bytes:size_of::<Option<PagedRetirement>>(),depth:1,..Default::default()}}else{paged.next_demand(grant.maximum_copy_bytes)?};if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(empty))}if !paged.terminal_is_empty(){return paged.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}self.paged.take();return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}
         let demand = self.demands()?;
+        if grant.maximum_copy_bytes<demand.copy_bytes{return Ok(RetainedCloneStep::Progress(empty))}
         if grant.maximum_depth < demand.depth || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
-        let progress = RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..empty };
+        let progress = RetainedCloneProgress { copied_items: 1, copied_bytes:demand.copy_bytes, released_bytes: demand.release_bytes, ..empty };
         if self.bytes.is_some() { drop(self.bytes.take()); }
         else if let Some(message) = self.message.as_mut() {
             match message {
-                BackboneMessage::Genesis { pack } | BackboneMessage::Mutations { envelopes: pack } if pack.capacity() != 0 => { *self.bytes = Some(std::mem::take(pack)); }
+                BackboneMessage::Genesis { pack } if pack.capacity() != 0 => { *self.bytes = Some(std::mem::take(pack)); }
+                BackboneMessage::Mutations{envelopes}=>{if envelopes.retained_bytes().terminal_is_empty(){drop(self.message.take());}else{*self.paged=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(envelopes)).map_err(|(error,_)|error)?);}}
                 BackboneMessage::Ack { op_ids } | BackboneMessage::Retract { mutation_ids: op_ids } => {
                     if let Some(id) = op_ids.pop() { *self.bytes = Some(id.into_bytes()); }
                     else if op_ids.capacity() != 0 { drop(std::mem::take(op_ids)); }
@@ -133,7 +145,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
         }
         Ok(if self.terminal_is_empty() { RetainedCloneStep::Complete(progress) } else { RetainedCloneStep::Progress(progress) })
     }
-    fn terminal_is_empty(&self) -> bool { self.backbone.is_none() && self.queue.is_none() && self.message.is_none() && self.bytes.is_none() && self.wake.is_none() }
+    fn terminal_is_empty(&self) -> bool { self.outbox.is_none() && self.paged.is_none() && self.backbone.is_none() && self.queue.is_none() && self.message.is_none() && self.bytes.is_none() && self.wake.is_none() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands()?.copy_bytes) }
     fn next_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(self.demands()?.capacity_bytes) }
     fn next_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.demands()?.release_bytes) }
@@ -143,7 +155,7 @@ impl ErasedSnapshotRetirement for ArtifactStoreBackboneRetirement {
 impl Drop for ArtifactStoreBackboneRetirement {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty(), "backbone retirement abandoned original transport ownership");
-        if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.backbone); ManuallyDrop::drop(&mut self.queue); ManuallyDrop::drop(&mut self.message); ManuallyDrop::drop(&mut self.bytes); ManuallyDrop::drop(&mut self.wake); } }
+        if self.terminal_is_empty() { unsafe { ManuallyDrop::drop(&mut self.outbox); ManuallyDrop::drop(&mut self.backbone); ManuallyDrop::drop(&mut self.queue); ManuallyDrop::drop(&mut self.message); ManuallyDrop::drop(&mut self.bytes); ManuallyDrop::drop(&mut self.paged); ManuallyDrop::drop(&mut self.wake); } }
     }
 }
 

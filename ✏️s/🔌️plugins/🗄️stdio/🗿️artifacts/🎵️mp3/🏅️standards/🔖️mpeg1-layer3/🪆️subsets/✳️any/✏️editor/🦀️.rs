@@ -259,9 +259,9 @@ impl ArtifactEditor for Mp3Editor {
         mp3_editor_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> Self::Snapshot {
+    fn reference_birth()->Option<fn()->Self::Snapshot>{Some(||{
         Mp3Snapshot::default()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(crate::standards::mpeg1_layer3::subsets::any::io::playback::app_io())

@@ -59,9 +59,9 @@ impl ArtifactViewer for LayoutViewer {
     const DIALECT: Dialect = LAYOUT_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LAYOUT_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> LayoutSnapshot {
+    fn reference_birth()->Option<fn()->LayoutSnapshot>{Some(||{
         semio_s_artifact_layout_layout_model::io::text::snapshot::snapshot_wire_codec::default_document()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `LayoutViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

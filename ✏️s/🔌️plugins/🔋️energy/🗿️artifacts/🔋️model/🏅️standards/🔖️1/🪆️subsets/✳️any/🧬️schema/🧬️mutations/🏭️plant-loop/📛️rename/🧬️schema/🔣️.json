@@ -46,6 +46,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StatePlantLoopConfig",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "plant_loops",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename plant loop",
+      "de": "Anlagenkreislauf umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "plant-loop",
+      "kind": "rename-plant-loop",
+      "record": "RenamedPlantLoop"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A plant loop name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another plant loop already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed plant loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The plant loop already has this name."
       }
     }
   }

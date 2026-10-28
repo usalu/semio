@@ -59,3 +59,7 @@ impl ArtifactReferenceText for ArtifactRef {
     }
 }
 
+
+#[path="👁️view/🦀️.rs"]
+mod uri_view;
+pub use uri_view::ArtifactReferenceUriView;

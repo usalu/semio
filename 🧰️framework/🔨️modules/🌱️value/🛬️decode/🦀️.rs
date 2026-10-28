@@ -152,11 +152,11 @@ impl<'a> NativeDecodeControl<'a> {
         output.try_reserve_exact(bytes.len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native decoding collection allocation failed"))?;
         for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);self.copy_checkpoint(output.len(),bytes.len())?;}Ok(())
     }
-    /// 🔒️ Copies intrinsic octets in cancellable64KiB spans after complete ownership admission.
-    pub fn copy_bytes(&mut self,bytes:&[u8])->Result<Vec<u8>,ValueError> {
-        self.charge(bytes.len())?;self.copy_checkpoint(0,bytes.len())?;
-        let mut output=Vec::new();output.try_reserve_exact(bytes.len()).map_err(|_| ValueError::literal(ValueRefusalKind::AllocationFailed, "native decoding collection allocation failed"))?;
-        for chunk in bytes.chunks(65536){output.extend_from_slice(chunk);self.copy_checkpoint(output.len(),bytes.len())?;}Ok(output)
+    /// 🧬️ Copies intrinsic octets in cancellable64KiB spans after complete ownership admission.
+    pub fn copy_bytes(&mut self,bytes:&(impl semio_framework_value_control_contract::ByteReadSource+?Sized))->Result<Vec<u8>,ValueError> {
+        self.charge(bytes.byte_len())?;self.copy_checkpoint(0,bytes.byte_len())?;
+        let mut output=Vec::new();output.try_reserve_exact(bytes.byte_len()).map_err(|_|ValueError::literal(ValueRefusalKind::AllocationFailed,"native decoding collection allocation failed"))?;
+        let mut fragment=[0;256];let mut offset=0;while offset<bytes.byte_len(){let count=bytes.read_bytes(offset,&mut fragment);if count==0{return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"native byte source changed"))}output.extend_from_slice(&fragment[..count]);offset+=count;self.copy_checkpoint(offset,bytes.byte_len())?;}Ok(output)
     }
 }
 

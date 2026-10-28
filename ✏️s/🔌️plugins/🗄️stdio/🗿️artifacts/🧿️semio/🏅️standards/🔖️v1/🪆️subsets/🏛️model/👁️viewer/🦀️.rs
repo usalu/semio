@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioModelViewer {
     const DIALECT: Dialect = SEMIO_MODEL_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_MODEL_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioModelSnapshot {
+    fn reference_birth()->Option<fn()->SemioModelSnapshot>{Some(||{
         SemioModelSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

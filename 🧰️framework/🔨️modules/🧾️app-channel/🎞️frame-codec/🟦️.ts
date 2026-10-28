@@ -18,6 +18,7 @@ export function encodeAppFrame(frame: AppFrameValue): Uint8Array {
     writeVarintU64(out, identity.app_instance_id);
     writeBool(out, identity.parent_document_id !== null);
     if (identity.parent_document_id !== null) writeStr(out, identity.parent_document_id);
+    writeVarintU64Exact(out, identity.base_revision);
   } else if ("MediaExportSubmitted" in frame) {
     out.push(APP_FRAME_TAGS.MediaExportSubmitted);
     writeVarintU64Exact(out, frame.MediaExportSubmitted.in_reply_to);
@@ -204,13 +205,14 @@ export function decodeAppFrame(bytes: Uint8Array): AppFrameValue {
   const pos: [number] = [1];
   switch (bytes[0]) {
     case APP_FRAME_TAGS.DocumentIdentity: {
-      if (bytes.length > 2071) throw new Error("document identity: frame capacity");
+      if (bytes.length > 2077) throw new Error("document identity: frame capacity");
       const in_reply_to = readVarintU64Exact(bytes, pos);
       const app_instance_id = readVarintU64(bytes, pos);
       const presence = readU8(bytes, pos);
       if (presence !== 0 && presence !== 1) throw new Error("document identity: invalid optional document");
       const parent_document_id = presence === 1 ? new TextDecoder("utf-8", { fatal: true }).decode(Uint8Array.from(readBytes(bytes, pos))) : null;
-      const identity = { app_instance_id, parent_document_id };
+      const base_revision = readVarintU64Exact(bytes, pos);
+      const identity = { app_instance_id, parent_document_id, base_revision };
       assertAppDocumentIdentity(identity);
       if (pos[0] !== bytes.length) throw new Error("document identity: trailing frame bytes");
       return { DocumentIdentity: { in_reply_to, identity } };

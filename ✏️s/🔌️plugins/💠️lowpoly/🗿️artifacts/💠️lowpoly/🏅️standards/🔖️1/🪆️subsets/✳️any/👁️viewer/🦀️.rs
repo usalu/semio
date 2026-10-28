@@ -88,9 +88,9 @@ impl ArtifactViewer for LowpolyViewer {
     const DIALECT: Dialect = LOWPOLY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = LOWPOLY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> LowpolySnapshot {
+    fn reference_birth()->Option<fn()->LowpolySnapshot>{Some(||{
         default_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `LowpolyViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

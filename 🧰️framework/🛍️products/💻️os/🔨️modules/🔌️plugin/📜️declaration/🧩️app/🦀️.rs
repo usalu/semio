@@ -4,6 +4,12 @@
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
 
+#[path="🌱️original/🦀️.rs"]
+pub mod original_admission;
+pub use original_admission::OriginalArtifactAppBirth;
+/// 🌱️ A genuine reference producer is optional; retained native construction uses its original source owner.
+pub type ReferenceArtifactAppBirth<P> = fn()->P;
+
 #[doc(hidden)]
 #[path = "../👷️job/🦀️.rs"]
 pub mod tool_contract;

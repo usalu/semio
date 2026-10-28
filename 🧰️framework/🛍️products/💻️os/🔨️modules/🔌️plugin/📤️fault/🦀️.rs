@@ -19,10 +19,11 @@ pub fn plugin_sdk_fault(message: impl Into<String>) -> Fault {
 }
 
 /// 🚨️ Typed failure at the plugin assembly boundary.
-#[derive(Clone, Debug, PartialEq, Eq,semio_framework_value::RetireOwned)]
+#[derive(Clone, Debug, PartialEq,semio_framework_value::RetireOwned)]
 pub struct PluginAssemblyError {
     pub code: String,
     pub message: String,
+    pub original:Option<Fault>,
 }
 
 /// 🧱️ A render keeps its native assembly source or complete already-paid original failure.
@@ -41,18 +42,22 @@ impl semio_framework_job::OriginalDomainFailure for OriginalRenderFailure{
 }
 impl semio_framework_job::OriginalDomainProjection for OriginalRenderFailure{
  fn projection_view(&self,path:&[usize])->Result<semio_framework_job::OriginalDomainView<'_>,semio_framework_value::ValueError>{
-  use semio_framework_job::OriginalDomainView as V;match(self,path){(_,[])=>Ok(V::IntrinsicObject(2)),(Self::Assembly(_),[0])=>Ok(V::Text("assembly")),(Self::Original(_),[0])=>Ok(V::Text("original")),(Self::Assembly(_),[1])=>Ok(V::IntrinsicObject(2)),(Self::Assembly(source),[1,0])=>Ok(V::Text(&source.code)),(Self::Assembly(source),[1,1])=>Ok(V::Text(&source.message)),(Self::Original(source),[1,rest @ ..])=>semio_framework_job::project_original_turn_failure(source,rest),_=>Err(render_projection_refusal())}
+  use semio_framework_job::OriginalDomainView as V;match(self,path){(_,[])=>Ok(V::IntrinsicObject(2)),(Self::Assembly(_),[0])=>Ok(V::Text("assembly")),(Self::Original(_),[0])=>Ok(V::Text("original")),(Self::Assembly(source),[1])=>Ok(V::IntrinsicObject(if source.original.is_some(){3}else{2})),(Self::Assembly(source),[1,0])=>Ok(V::Text(&source.code)),(Self::Assembly(source),[1,1])=>Ok(V::Text(&source.message)),(Self::Assembly(source),[1,2,rest @ ..])=>semio_framework_job::project_original_fault(source.original.as_ref().ok_or_else(render_projection_refusal)?,rest),(Self::Original(source),[1,rest @ ..])=>semio_framework_job::project_original_turn_failure(source,rest),_=>Err(render_projection_refusal())}
  }
- fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{match(self,path){(_,[])=>["kind","source"].get(index).copied().ok_or_else(render_projection_refusal),(Self::Assembly(_),[1])=>["code","message"].get(index).copied().ok_or_else(render_projection_refusal),(Self::Original(source),[1,rest @ ..])=>semio_framework_job::key_original_turn_failure(source,rest,index),_=>Err(render_projection_refusal())}}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,semio_framework_value::ValueError>{match(self,path){(_,[])=>["kind","source"].get(index).copied().ok_or_else(render_projection_refusal),(Self::Assembly(source),[1])=>["code","message","original"].get(index).filter(|_|index<if source.original.is_some(){3}else{2}).copied().ok_or_else(render_projection_refusal),(Self::Assembly(source),[1,2,rest @ ..])=>semio_framework_job::key_original_fault(source.original.as_ref().ok_or_else(render_projection_refusal)?,rest,index),(Self::Original(source),[1,rest @ ..])=>semio_framework_job::key_original_turn_failure(source,rest,index),_=>Err(render_projection_refusal())}}
 }
 fn render_projection_refusal()->semio_framework_value::ValueError{semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original render failure projection ordinal changed")}
 
 // 🚫️async: E1 pure error constructor consumed pervasively by sync closures
 // (`.map_err`/`.ok_or_else`) — see R9.
 impl PluginAssemblyError {
+    /// 🧬️ Keeps the complete producer diagnostic at the static assembly boundary.
+    pub fn from_fault(fault:Fault)->Self{Self{code:fault.code.0.clone(),message:fault.message.clone(),original:Some(fault)}}
+    /// 📤️ Startup receives the same original diagnostic instead of a text reconstruction.
+    pub fn into_fault(self)->Fault{self.original.unwrap_or_else(||Fault::new(FaultOrigin::Plugin,FaultCode::new(self.code),self.message))}
     /// 🏗️ Creates a codebase-owned assembly failure.
     pub fn new(code: impl Into<String>, message: impl Into<String>) -> Self {
-        Self { code: code.into(), message: message.into() }
+        Self { code: code.into(), message: message.into(),original:None }
     }
 
     /// 🚫️async: E1 pure error constructor consumed pervasively by `.map_err(PluginAssemblyError::definition)` — see R9.

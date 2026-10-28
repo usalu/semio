@@ -44,3 +44,6 @@ for (const vector of domainFixture.cases) {
   assert.equal(independent, vector.accepted, vector.name);
   assert.equal(subject, independent, vector.name);
 }
+
+const delegation=ajv.getSchema(`${document.$id}#/$defs/MutationWorkspaceSourceAuthority`)!;
+for(const vector of fixture.cases.filter((v:any)=>v.workspaceRoot!==undefined)){const declared=delegation({workspaceRoot:vector.workspaceRoot});assert.equal(declared&&vector.targetHasPair,vector.accepted,vector.name);}

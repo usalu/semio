@@ -55,5 +55,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateGlazingMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "glazing_materials",
+    "field": "thickness_m",
+    "input": "new_thickness_m",
+    "key": "id",
+    "labels": {
+      "en": "Change glazing material: Thickness",
+      "de": "Dicke ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "glazing-material",
+      "kind": "change-glazing-material-thickness",
+      "record": "ChangedGlazingMaterialThickness"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Thickness violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed glazing material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The glazing material already carries this thickness value."
+      }
+    }
   }
 }

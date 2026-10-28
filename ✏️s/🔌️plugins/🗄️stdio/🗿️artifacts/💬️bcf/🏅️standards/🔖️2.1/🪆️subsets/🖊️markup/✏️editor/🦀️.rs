@@ -292,9 +292,9 @@ impl ArtifactEditor for BcfAnyEditor {
         bcf_command_from_action(action, args)
     }
 
-    fn initial_snapshot() -> BcfSnapshot {
+    fn reference_birth()->Option<fn()->BcfSnapshot>{Some(||{
         BcfSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

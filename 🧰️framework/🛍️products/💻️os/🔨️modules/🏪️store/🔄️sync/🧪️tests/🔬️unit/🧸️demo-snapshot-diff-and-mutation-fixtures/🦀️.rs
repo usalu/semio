@@ -79,6 +79,8 @@ impl ArtifactPack for DemoSnapshot {
     }
 }
 impl semio_framework_os_store_text_io::ArtifactStoreSnapshot for DemoSnapshot {
+    fn reference_snapshot_codec()->Option<semio_framework_os_store_text_io::ArtifactReferenceSnapshotCodec<Self>>{Some(semio_framework_os_store_text_io::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec() -> Option<semio_framework_os_store_text_io::ArtifactSqliteSnapshotCodec> {
         Some(<Self as semio_framework_os_io::sqlite_snapshot_operations::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }

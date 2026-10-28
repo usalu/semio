@@ -357,7 +357,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         semio_framework_plugin_decl_registry::declarations::stamp_fault_notices::<A>(&mut app.definition);
         let definition = app.definition.clone();
         self.document_app_ids.push(definition.id.clone());
-        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition, create: factory::<A, PA>, document_schema: A::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<A>() }));
+        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition:definition.into(),registration:None,original_factory:None, create: Some(factory::<A, PA>), document_schema: A::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<A>() }));
         self.app_schema_descriptors.push(app_schema::<A>);
         self
     }
@@ -429,7 +429,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         semio_framework_plugin_decl_registry::declarations::stamp_fault_notices::<semio_framework_plugin_decl_surface::ViewerApp<V>>(&mut def);
         let app = App { definition: def.clone(), examples: Vec::new() };
-        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition: def, create: factory::<V, PA>, document_schema: V::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<semio_framework_plugin_decl_surface::ViewerApp<V>>() }));
+        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition: def.into(),registration:None,original_factory:None, create: Some(factory::<V, PA>), document_schema: V::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<semio_framework_plugin_decl_surface::ViewerApp<V>>() }));
         self.app_schema_descriptors.push(app_schema::<V>);
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App })
     }
@@ -498,7 +498,7 @@ impl<PA: PluginApp> PluginBuilder<Ready, PA> {
         }
         semio_framework_plugin_decl_registry::declarations::stamp_fault_notices::<semio_framework_plugin_decl_surface::EditorApp<E>>(&mut def);
         let app = App { definition: def.clone(), examples };
-        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition: def, create: factory::<E, PA>, document_schema: E::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<semio_framework_plugin_decl_surface::EditorApp<E>>() }));
+        self.app_defs.push((app, semio_framework_plugin_decl_registry::plugin_program::AppFactory { definition: def.into(),registration:None,original_factory:None, create: Some(factory::<E, PA>), document_schema: E::DOCUMENT_SCHEMA, codec: semio_framework_plugin_decl_surface::artifact_codec_table::<semio_framework_plugin_decl_surface::EditorApp<E>>() }));
         self.app_schema_descriptors.push(app_schema::<E>);
         self.capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Read, scope: Scope::App }).capability(CapabilityRequirement { artifact: ArtifactKind::Document, rights: Rights::Write, scope: Scope::App })
     }
@@ -642,7 +642,7 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
             return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component package identity must exactly match semio:<plugin-id> in canonical lowercase form"));
         }
         semio_framework_plugin_extension::preflight_artifact_declarations(&plugin_id, &declared_artifacts)?;
-        let declared_registration = semio_framework_plugin_decl_registry::declarations::project_artifact_declarations(&declared_artifacts);
+        let declared_registration = semio_framework_plugin_decl_registry::declarations::project_artifact_declarations(&declared_artifacts).map_err(PluginAssemblyError::from_fault)?;
         app_defs.extend(declared_registration.app_defs);
         app_schema_descriptors.extend(declared_registration.app_schema_descriptors);
         capabilities.extend(declared_registration.capabilities);
@@ -747,6 +747,7 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
         semio_framework_plugin_decl_registry::artifact_registration::host_foreign_surface_kinds(&mut plugin.manifest);
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(|error| PluginAssemblyError::new("plugin-assembly.unavailable", error.to_string()))?;
         semio_framework_plugin_decl_registry::artifact_registration::commit_artifact_registration_plan(&assembly, registry_plan)?;
+        plugin.commit_original_producers();
         let PluginDescriptorParts{activation_events,capability_requests,extension_points,execution,quotas,assets}=descriptor.into_parts();
         Ok(plugin.with_descriptor_extras(semio_framework_plugin_plugin_program::PluginDescriptorExtras { package_id, activation_events, capability_requests, extension_points, execution, quotas, assets }))
     }
@@ -758,3 +759,6 @@ pub fn asset(mut self, declaration: AssetDeclaration) -> Self {
 
 
 
+
+#[path="🌱️surfaces/🦀️.rs"]
+mod original_surfaces;

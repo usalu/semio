@@ -92,5 +92,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "class",
+    "input": "new_class",
+    "key": "id",
+    "labels": {
+      "en": "Change surface: Surface class",
+      "de": "Bauteilart ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "surface",
+      "kind": "change-surface-class",
+      "record": "ChangedSurfaceClass"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Surface class violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The surface already carries this surface class value."
+      }
+    }
   }
 }

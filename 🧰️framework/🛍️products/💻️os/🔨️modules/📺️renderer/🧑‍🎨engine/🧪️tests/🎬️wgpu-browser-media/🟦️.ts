@@ -283,10 +283,10 @@ describe("trusted app document identity", () => {
       expect(validate(vector.identity)).toBe(true);
       const seq = BigInt(vector.seq);
       const command = { ReadDocumentIdentity: { seq } };
-      const identity = { app_instance_id: vector.identity.appInstanceId, parent_document_id: vector.identity.parentDocumentId };
+      const identity = { app_instance_id: vector.identity.appInstanceId, parent_document_id: vector.identity.parentDocumentId, base_revision: BigInt(vector.identity.baseRevision) };
       const reply = { DocumentIdentity: { in_reply_to: seq, identity } };
       const document = identity.parent_document_id === null ? null : Buffer.from(identity.parent_document_id, "utf8");
-      const independent = [vectors.frameTag, ...u64(seq), ...u64(BigInt(identity.app_instance_id)), ...(document === null ? [0] : [1, ...u64(BigInt(document.length)), ...document])];
+      const independent = [vectors.frameTag, ...u64(seq), ...u64(BigInt(identity.app_instance_id)), ...(document === null ? [0] : [1, ...u64(BigInt(document.length)), ...document]), ...u64(identity.base_revision)];
       expect([vectors.commandTag, ...u64(seq)]).toEqual(vector.commandBytes);
       expect(independent).toEqual(vector.frameBytes);
       expect(Array.from(encodeAppCommand(command))).toEqual(vector.commandBytes);
@@ -296,10 +296,10 @@ describe("trusted app document identity", () => {
     }
   });
   it("rejects malformed UTF8, owner ranges, empty/oversized documents and trailing identity authority", () => {
-    for (const bytes of [[31, 1, 17, 2], [31, 1, 17, 1, 1, 255], [31, 1, 17, 1, 0], [31, 1, 17, 0, 0], [31, 1, 17]]) expect(() => decodeAppFrame(Uint8Array.from(bytes))).toThrow();
+    for (const bytes of [[31, 1, 17, 2], [31, 1, 17, 1, 1, 255], [31, 1, 17, 1, 0], [31, 1, 17, 0, 0, 0], [31, 1, 17]]) expect(() => decodeAppFrame(Uint8Array.from(bytes))).toThrow();
     expect(() => decodeAppCommand(Uint8Array.from([41, 1, 0]))).toThrow("trailing");
-    for (const identity of [{ app_instance_id: 0x1_0000_0000, parent_document_id: null }, { app_instance_id: 17, parent_document_id: "" }, { app_instance_id: 17, parent_document_id: "x".repeat(513) }]) expect(() => encodeAppFrame({ DocumentIdentity: { in_reply_to: 1n, identity } })).toThrow("invalid owner");
-    const boundary = { DocumentIdentity: { in_reply_to: 1n, identity: { app_instance_id: 17, parent_document_id: "🎬".repeat(512) } } };
+    for (const identity of [{ app_instance_id: 0x1_0000_0000, parent_document_id: null, base_revision: 0n }, { app_instance_id: 17, parent_document_id: "", base_revision: 0n }, { app_instance_id: 17, parent_document_id: "x".repeat(513), base_revision: 0n }]) expect(() => encodeAppFrame({ DocumentIdentity: { in_reply_to: 1n, identity } })).toThrow("invalid owner");
+    const boundary = { DocumentIdentity: { in_reply_to: 1n, identity: { app_instance_id: 17, parent_document_id: "🎬".repeat(512), base_revision: 0xffff_ffff_ffff_ffffn } } };
     expect(decodeAppFrame(encodeAppFrame(boundary))).toEqual(boundary);
   });
   it("queries through the real AppChannelClient and rejects ambiguous/missing/foreign replies", async () => {
@@ -310,7 +310,7 @@ describe("trusted app document identity", () => {
       try {
         const pending = client.readDocumentIdentity();
         expect(sent).toEqual([{ ReadDocumentIdentity: { seq: 1n } }]);
-        const identity = { app_instance_id: variant === "foreign" ? 18 : 17, parent_document_id: "trusted-document" };
+        const identity = { app_instance_id: variant === "foreign" ? 18 : 17, parent_document_id: "trusted-document", base_revision: 17n };
         const reply: AppFrameValue = { DocumentIdentity: { in_reply_to: 1n, identity } };
         const frames: AppFrameValue[] = variant === "missing" ? [{ Done: { in_reply_to: 1 } }] : variant === "ambiguous" ? [reply, reply] : [{ DocumentIdentity: { in_reply_to: 0xffff_ffff_ffff_ffffn, identity } }, reply];
         broadcast.push({ instanceId: 17, frames: frames.map(encodeAppFrame) });

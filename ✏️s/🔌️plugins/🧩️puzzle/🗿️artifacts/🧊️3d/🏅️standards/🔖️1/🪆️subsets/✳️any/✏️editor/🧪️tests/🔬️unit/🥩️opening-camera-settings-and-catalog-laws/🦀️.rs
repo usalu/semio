@@ -301,7 +301,7 @@ fn the_initial_snapshot_costs_only_its_document() {
         semio_framework_trace::peak_heap_bytes_on_this_thread() - before
     };
     let document = peak_of(&|| drop(Puzzle3dPlaySnapshot::new(crate::editor::puzzle3d::puzzle3d_snapshot_from_host_snapshot(&default_scene_snapshot()).expect("typed fixture admits"))));
-    let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::initial_snapshot()));
+    let snapshot = peak_of(&|| drop(<Puzzle3dPlayApp as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")()));
     assert!(document > 0, "the witness weighs the document conversion: {document}");
     assert!(snapshot <= document + 4096, "the initial snapshot peaked at {snapshot} B, its document at {document} B: it does work the document never reads");
 }

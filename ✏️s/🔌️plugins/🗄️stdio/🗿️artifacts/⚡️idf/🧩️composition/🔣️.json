@@ -1,0 +1,17 @@
+{
+  "schema": "semio.stdio.composition-contribution/v1",
+  "artifact": "idf",
+  "package": "semio-s-artifact-stdio-idf",
+  "order": 99,
+  "selections": [
+    "full"
+  ],
+  "apps": [],
+  "nativeFactories": [],
+  "openTargets": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
+  "playgrounds": [],
+  "mutationDescriptors": [],
+  "mutationCoordinates": []
+}

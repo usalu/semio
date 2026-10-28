@@ -16,8 +16,8 @@ use super::*;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreOwners<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// 🧳️ Retains an original projection from this exact issuer, including an older captured frontier, for readonly custody.
     
@@ -359,8 +359,8 @@ where
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreOwners<P, Mutation>
 where
-    P: Clone + ToValue + FromValue,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P>,
+    P: ToValue,
+    Mutation: ToValue + super::Mutation<P>,
 {
     pub fn factory_aliases_present(&self) -> bool { self.snapshot_retirement_factory.is_some() || self.initial_snapshot_retirement_factory.is_some() || self.mutation_retirement_factory.is_some() || self.one_item_preparation_factory.is_some() || self.replay_preparation_factory.is_some() || self.one_item_wire_preparation_factory.is_some() }
 }

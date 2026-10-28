@@ -3,19 +3,34 @@
 use super::*;
 use super::map_assembly_recovery_completion::recover_decision_store_owned;
 
+#[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, PartialEq, Eq, ToValue, FromValue, semio_framework_os_dsl::DslArtifact,semio_framework_value_derive::RetireOwned)]
+#[value(rename_all = "camelCase", deny_unknown_fields)]
+#[artifact(id = "store.durable-owned-three-member-decision")]
+pub struct DurableOwnedThreeMemberDecisionV1 {
+    pub schema: String,
+    pub anchor: DurableOwnedGroupAnchorV1,
+    pub anchor_sha256: String,
+    pub decision_sha256: String,
+    pub parent: DurableOwnedGroupMemberV1,
+    pub drawing: DurableOwnedGroupMemberV1,
+    pub value: DurableOwnedGroupMemberV1,
+}
+
 pub struct DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> {
     pub parent: DurableStorePreparedOwnerV1<ParentP, ParentMutation>,
     pub drawing: DurableStorePreparedOwnerV1<DrawingP, DrawingMutation>,
     pub value: DurableStorePreparedOwnerV1<ValueP, ValueMutation>,
-    pub decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
-    pub decision_pack: Option<Vec<u8>>,
-    pub binding_step: u8,
+    pub(super) decision: Option<Box<DurableOwnedThreeMemberDecisionV1>>,
+    pub(super) decision_pack: Option<Vec<u8>>,
+    pub(super) binding_step: u8,
     pub(super) decision_plan_phase: u8,
+    pub(super) decision_packet_hash: Option<semio_framework_hash::Sha256>,
     pub(super) decision_identity:planning::DurableDecisionIdentityV1,
     pub(super) issuers_captured:bool,
     pub(super) decision_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<Box<DurableOwnedThreeMemberDecisionV1>>>,
     pub(super) decision_pack_retirement:Option<semio_framework_value::retirement::controlled::ControlledRetirement<DurablePlanningOutputV1>>,
-    pub retirement_progress:semio_framework_value::RetainedCloneProgress,
+    pub(super) retirement_progress:semio_framework_value::RetainedCloneProgress,
+    #[cfg(feature = "deflate")]
     pub(super) decision_encoding: planning::DurablePackOutputV1,
 }
 
@@ -24,7 +39,7 @@ pub struct DurableOwnedThreeStoreBoundV1<ParentP, ParentMutation, DrawingP, Draw
     pub parent: DurableStoreBoundOutcomeV1<ParentP, ParentMutation>,
     pub drawing: DurableStoreBoundOutcomeV1<DrawingP, DrawingMutation>,
     pub value: DurableStoreBoundOutcomeV1<ValueP, ValueMutation>,
-    pub decision_pack: Option<Vec<u8>>,
+    pub(super) decision_pack: Option<Vec<u8>>,
 }
 
 #[expect(clippy::large_enum_variant, reason = "Recovery hands back all three exact preadmitted store outcomes without allocating at the ownership transition.")]
@@ -37,7 +52,7 @@ pub enum DurableOwnedThreeStoreRecoveryV1<ParentP, ParentMutation, DrawingP, Dra
 /// one fully verified canonical fixed-three decision Pack.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct DurableOwnedGroupJournalRecordV1 {
-    canonical_pack: Vec<u8>,
+    pub(super) canonical_pack: Vec<u8>,
     pub decision_sha256: String,
     pub anchor_sha256: String,
     pub document: semio_framework_artifact_reference::ArtifactRef,
@@ -135,12 +150,12 @@ impl DurableOwnedGroupJournalRecordV1 {
         value: ArtifactStore<ValueP, ValueMutation>,
     ) -> Result<DurableOwnedMapRecoveryStartV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>, DurableOwnedMapRecoveryRejectedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>>
     where
-        ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-        ParentMutation: ArtifactCanonicalJsonTree + StoreMutation<ParentP> + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<ParentP> + 'static,
-        DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-        DrawingMutation: ArtifactCanonicalJsonTree + StoreMutation<DrawingP> + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<DrawingP> + 'static,
-        ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + Clone + ValueToValue + ValueFromValue + Send + Sync + 'static,
-        ValueMutation: ArtifactCanonicalJsonTree + StoreMutation<ValueP> + Clone + ValueToValue + ValueFromValue + Send + semio_framework_os_spr::ColdMutation<ValueP> + 'static,
+        ParentP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+        ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue + Send + 'static,
+        DrawingP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+        DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue + Send + 'static,
+        ValueP: ArtifactPack + semio_framework_os_store_text_io::ArtifactStoreSnapshot + ValueToValue + Send + Sync + 'static,
+        ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue + Send + 'static,
     {
         let rejected = |error, parent, drawing, value| DurableOwnedMapRecoveryRejectedV1 { error, parent, drawing, value };
         let decision = match DurableOwnedThreeMemberDecisionV1::decode_canonical_pack(&self.canonical_pack) {
@@ -171,8 +186,8 @@ impl DurableOwnedGroupJournalRecordV1 {
 
 fn captured_store_snapshot<P, Mutation>(store: &ArtifactStore<P, Mutation>, visibility: Option<&Arc<semio_framework_os_vcs::ArtifactGroupVisibility>>, committed: bool) -> Result<(Arc<P>, u64, [u8; 32]), DurableOwnedGroupDecisionError>
 where
-    P: Clone + ValueToValue + ValueFromValue,
-    Mutation: StoreMutation<P> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<P>,
+    P: ValueToValue,
+    Mutation: StoreMutation<P> + ValueToValue + ValueFromValue,
 {
     match store.wire.durable_group_root.as_ref() {
         Some(root) => {
@@ -200,12 +215,12 @@ pub fn capture_store_owned_three_snapshot<ParentP, ParentMutation, DrawingP, Dra
     value_store: &ArtifactStore<ValueP, ValueMutation>,
 ) -> Result<DurableOwnedThreeStoreSnapshotV1<ParentP, DrawingP, ValueP>, DurableOwnedGroupDecisionError>
 where
-    ParentP: ValueToValue + Clone + ValueFromValue,
-    ParentMutation: StoreMutation<ParentP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ParentP>,
-    DrawingP: ValueToValue + Clone + ValueFromValue,
-    DrawingMutation: StoreMutation<DrawingP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<DrawingP>,
-    ValueP: ValueToValue + Clone + ValueFromValue,
-    ValueMutation: StoreMutation<ValueP> + ArtifactCanonicalJsonTree + ValueToValue + ValueFromValue + Clone + semio_framework_os_spr::ColdMutation<ValueP>,
+    ParentP: ValueToValue,
+    ParentMutation: StoreMutation<ParentP> + ValueToValue + ValueFromValue,
+    DrawingP: ValueToValue,
+    DrawingMutation: StoreMutation<DrawingP> + ValueToValue + ValueFromValue,
+    ValueP: ValueToValue,
+    ValueMutation: StoreMutation<ValueP> + ValueToValue + ValueFromValue,
 {
     let roots = [parent_store.wire.durable_group_root.as_ref().map(|root| &root.visibility), drawing_store.wire.durable_group_root.as_ref().map(|root| &root.visibility), value_store.wire.durable_group_root.as_ref().map(|root| &root.visibility)];
     let visibility = roots.iter().flatten().next().copied();

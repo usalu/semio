@@ -8,6 +8,7 @@ extern crate semio_s_artifact_energy_model_editor_commands as editor_commands;
 extern crate semio_s_artifact_energy_model_editor_config as editor_config;
 extern crate semio_s_artifact_energy_model_editor_edit as editor_edit;
 extern crate semio_s_artifact_energy_model_editor_interaction as editor_interaction;
+extern crate semio_s_plugin_energy_engine_air_exchange as air_exchange;
 extern crate semio_s_plugin_energy_engine_geometry as geometry;
 extern crate semio_s_plugin_energy_engine_material as material;
 extern crate semio_s_plugin_energy_engine_model as model;

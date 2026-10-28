@@ -308,9 +308,9 @@ job})}
         fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
             Some(semio_framework_plugin_decl_views::transient_retirement::no_transient_local_root_retirement_factory())
         }
-        async fn initial_snapshot() -> TestSnapshot {
+        fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
             TestSnapshot::default()
-        }
+        })}
         async fn command_id(command: &TestCommand) -> &'static str {
             TestApp::<false>::command_id(command).await
         }

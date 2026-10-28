@@ -71,9 +71,9 @@ impl ArtifactViewer for StepAnyViewer {
     const DIALECT: Dialect = STEP_ANY_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STEP_ANY_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> StepSnapshot {
+    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
         StepSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

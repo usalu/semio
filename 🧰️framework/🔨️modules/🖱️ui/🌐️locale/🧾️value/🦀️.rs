@@ -5,6 +5,19 @@ use semio_framework_value_native_owned::native_decoding::NativeDecodeControl;
 
 macro_rules! axis_value {
     ($owner:ty) => {
+        impl semio_framework_value::retained_clone::RetainedClone for $owner{
+            type Cursor=semio_framework_value::retained_clone::ScalarCursor<Self>;
+            fn retained_clone_cursor()->Self::Cursor{Default::default()}
+        }
+        impl<I:semio_framework_value_native_owned::owned::tree::NativeValueSource> semio_framework_value_native_owned::owned::tree::NativeScalarValue<I> for $owner {
+            fn read(original:&I)->Result<Self,ValueError>{let text=original.text()?;if text.len()>6{return Err(semio_framework_value_native_owned::owned::tree::invalid())}Self::parse(text).ok_or_else(semio_framework_value_native_owned::owned::tree::invalid)}
+            fn read_copy_bytes(original:&I)->Result<usize,ValueError>{let text=original.text()?;if text.len()>6{return Err(semio_framework_value_native_owned::owned::tree::invalid())}Ok(text.len()+std::mem::size_of::<Self>())}
+        }
+        impl<I:semio_framework_value_native_owned::owned::tree::NativeValueSource> semio_framework_value_native_owned::NativeReceive<I> for $owner {
+            type Receiver=semio_framework_value_native_owned::owned::tree::NativeScalarReceiver<I,Self>;
+            fn receive_birth_demand()->semio_framework_value::RetirementDemand{Self::Receiver::birth()}
+            fn begin_receive(grant:semio_framework_value::RetainedCloneGrant)->Result<(Self::Receiver,semio_framework_value::RetainedCloneProgress),ValueError>{Self::Receiver::begin(grant)}
+        }
         impl ToValue for $owner {
             fn to_value(&self) -> DslValue { DslValue::String(self.as_str().to_string()) }
             fn to_value_controlled(&self, control: &mut NativeEncodeControl<'_>) -> Result<DslValue, ValueError> { control.copy_text(self.as_str()).map(DslValue::String) }

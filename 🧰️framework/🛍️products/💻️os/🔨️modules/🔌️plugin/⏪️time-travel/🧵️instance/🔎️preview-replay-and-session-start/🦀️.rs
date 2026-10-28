@@ -47,33 +47,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         })
     }
 
-    /// 🌿️ Commits the finished replay (`commit_finished_replay`: no second replay): the session finalizes, or a stale
-    /// base or a blocking report faults the finalize, which replays again on the current base. The history row of the
-    /// commit is its `Supersede` transition, backfilled like every remote or reloaded one.
-    pub(super) async fn commit_time_travel(&mut self, finalization: store::HistoryFinalization, meta: Option<&ActionMeta>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<Vec<TimeTravelEffect>, Fault> {
-        let generation = self.time_travel.session.generation;
-        let fault = |code: &str| TimeTravelEvent::FinalizeFaulted { generation, code: code.to_string() };
-        let drafts = self.time_travel.accepted_drafts();
-        let committed = self.time_travel_commit(drafts, finalization, meta.map(|meta| meta.actor.as_str()), identity).await?;
-        let (event, authored) = match committed {
-            TimeTravelCommit::Finalized { authored } => {
-                self.history.cache = None;
-                (TimeTravelEvent::Finalized { generation }, Some(authored))
-            }
-            TimeTravelCommit::Stale => (fault(TimeTravelRefusal::Stale.code()), None),
-            TimeTravelCommit::Blocked => (fault(TimeTravelRefusal::Blocked.code()), None),
-            TimeTravelCommit::Failed => (fault(TIME_TRAVEL_COMMIT_FAILED_CODE), None),
-        };
-        let effects = self.time_travel.session.apply(event).unwrap_or_default();
-        self.note_time_travel_changed(true, true);
-        if let Some(authored) = authored {
-            self.publish_time_travel_member(authored).await?;
-        }
-        if let Some(meta) = meta.filter(|_| self.time_travel.session.stage == TimeTravelStage::Inactive) {
-            self.as_render().revalidate_interaction_on_document_change(meta, identity).await?;
-        }
-        Ok(effects)
-    }
+    /// 🌿️ The original finalize effect enters a paid typed request slot; maintenance retains and drives its genuine completed result.
+    pub(super) async fn commit_time_travel(&mut self,finalization:store::HistoryFinalization,meta:Option<&ActionMeta>,cx:&mut semio_framework_job::StepContext<'_>)->Result<Vec<TimeTravelEffect>,Fault>{let mut request=Some(finalization);self.time_travel_commit(&mut request,meta.map(|meta|meta.actor.as_str()),cx).await?;assert!(request.is_none(),"original finalize effect preflight retains enough request custody");self.note_time_travel_changed(false,true);Ok(Vec::new())}
 
     /// 🌿️ After a finalize on a composed member (design §12), once the session already finalized (a failure here never
     /// strands it): the history logs the edit under its glossary label, the parent re-derives from the replayed child — its
@@ -104,7 +79,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let session = &self.time_travel.session;
         if withdraw && session.stage == TimeTravelStage::Editing && self.time_travel.member_store().as_deref() == store && session.pending.as_ref().is_some_and(|pending| pending.target.mutation.0 == mutation) {
             let generation = time_travel_arg_generation(args).unwrap_or(session.generation);
-            return self.apply_time_travel_event(TimeTravelEvent::Withdraw { generation }, Some(meta), effects, identity).await;
+            return self.apply_time_travel_event(TimeTravelEvent::Withdraw { generation }, Some(meta), effects, identity,Some(cx)).await;
         }
         if self.shared().time_travel_busy() {
             return Ok(TimeTravelActionOutcome::Rejected(TimeTravelActionRefusal::Busy));
@@ -154,7 +129,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 self.time_travel_run(TimeTravelStoreCommand::Adopt(true),None).await?;
                 self.time_travel.replace_editor(Some(editor));
                 self.note_time_travel_changed(true, true);
-                self.perform_time_travel_effects(session_effects, Some(meta), effects, identity).await?;
+                self.perform_time_travel_effects(session_effects, Some(meta), effects, identity,Some(cx)).await?;
                 if opening {
                     self.as_dispatch().deliver_host_event_to_every_window(|window_id| HostEvent::TimeTravelFrozen { window_id }, meta, identity,cx).await?;
                 }

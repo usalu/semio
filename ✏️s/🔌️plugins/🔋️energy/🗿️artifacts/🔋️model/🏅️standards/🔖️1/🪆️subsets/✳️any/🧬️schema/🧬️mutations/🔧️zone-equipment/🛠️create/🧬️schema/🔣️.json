@@ -200,5 +200,101 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateZoneEquipmentAssignment",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "equipment_type",
+        "input": "equipment_type",
+        "storage": "sealed-copy"
+      },
+      {
+        "field": "priority",
+        "input": "priority",
+        "storage": "fixed"
+      },
+      {
+        "field": "heating_capacity_w",
+        "input": "heating_capacity_w",
+        "storage": "fixed"
+      },
+      {
+        "field": "cooling_capacity_w",
+        "input": "cooling_capacity_w",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateZoneEquipmentAssignment",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "zone_equipment",
+    "key": "id",
+    "inverse": "DeleteZoneEquipment",
+    "labels": {
+      "en": "Create zone equipment",
+      "de": "Zonengerät erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "zone-equipment",
+      "kind": "create-zone-equipment",
+      "record": "CreatedZoneEquipment"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

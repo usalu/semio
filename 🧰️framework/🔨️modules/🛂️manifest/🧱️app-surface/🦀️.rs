@@ -123,3 +123,7 @@ mod reserved_contribution_tests;
 //#endregion 🧩️ReservedContribution
 //#endregion 🔖️Manifest
 // #endregion 🛂️Manifest
+
+#[cfg(test)]
+#[test]
+fn original_registered_definition_has_typed_retirement_authority(){fn requires<T:semio_framework_value::retirement::RetireOwned>(){} requires::<AppDefinition>();}

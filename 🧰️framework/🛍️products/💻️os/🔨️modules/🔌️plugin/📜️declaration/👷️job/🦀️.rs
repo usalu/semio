@@ -1,4 +1,7 @@
 //! 👷️ The tool job contract an app declares: bounded proofs, factories and registrations, instance operation owners, owned and reserved job requests, completions and faults.
+#[path="🎮️command/🎯️action/🦀️.rs"]
+pub mod original_action_command;
+pub use original_action_command::{ArtifactOriginalCommandProducer,ArtifactOriginalCommandProducerFactory};
 use semio_framework_job_publication::{RetainedJobPublication,JobPublicationKind};
 use semio_framework_diagnostic::FaultFrom;
 use semio_framework_value_derive::{FromValue, ToValue};
@@ -74,5 +77,5 @@ mod reserved_outcome_witnesses;
 pub use reserved_outcome_witnesses::*;
 
 include!("🎟️birth/🦀️.rs");
-#[cfg(feature="reserved-producer-testing")]
+#[cfg(any(test,feature="reserved-producer-testing"))]
 pub mod original_reserved_producer_laws{include!("🎟️birth/🧪️tests/🦀️.rs");}

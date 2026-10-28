@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `CreateMechanicalVentilation` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch};
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch};
 use crate::diff_patch::{Rows};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateMechanicalVentilation, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {

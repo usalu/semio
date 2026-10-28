@@ -1,0 +1,1 @@
+{"version":1,"state":{},"configSchema":"framework.empty.config","draftSchema":"framework.empty.draft","packEnvelope":"framework.empty","rejectEmptyBytes":true,"cancelAfter":[0,1,2,8,32,128,1024],"bodyBytes":4096,"maximumPackBytes":1024}

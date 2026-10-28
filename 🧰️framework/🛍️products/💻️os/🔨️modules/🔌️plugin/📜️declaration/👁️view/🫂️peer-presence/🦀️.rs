@@ -39,6 +39,12 @@ pub struct PeerPresenceRoot {
 }
 
 impl PeerPresenceRoot {
+    /// 📏️ Quotes one actual original shared empty presence root without a process-global cache.
+    pub fn birth_demands()->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:std::mem::size_of::<Self>(),capacity_bytes:semio_framework_value::shared_retirement_allocation_bytes::<Self>(),depth:1,..Default::default()}}
+
+    /// 🌱️ Constructs the empty shared root only inside its defining original native birth quote.
+    pub fn admit_empty(grant:semio_framework_value::RetainedCloneGrant)->Result<Option<(std::sync::Arc<Self>,semio_framework_value::RetainedCloneProgress)>,semio_framework_value::ValueError>{let d=Self::birth_demands();if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(None)}Ok(Some((std::sync::Arc::new(Self::empty()),semio_framework_value::RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()})))}
+
     pub fn empty() -> Self {
         Self { entries: std::array::from_fn(|_| None), len: 0 }
     }

@@ -49,9 +49,9 @@ fn admit_job(&mut self,cx:&mut semio_framework_job::StepContext<'_>,operation:&s
         type TransientMutation = NoTransientMutation;
         type Command = TestCommand;
 
-        async fn initial_snapshot() -> TestSnapshot {
+        fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
             TestSnapshot::default()
-        }
+        })}
 
         async fn command_id(_command: &TestCommand) -> &'static str {
             "canvasPointerDown"

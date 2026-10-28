@@ -16,8 +16,8 @@ use super::*;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreCursor<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     pub fn generation(&self, store_wire: &StoreWire<P, Mutation>) -> u64 {
         store_wire.durable_group_read_root().map_or(self.generation, |root| root.generation)
@@ -87,24 +87,22 @@ where
     }
 
     /// 🧩️ Derives a provisional member projection through this Store's own operation vocabulary and merge policy.
-    pub fn derive_provisional_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError>
-    where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P>, {
+    pub fn derive_provisional_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<Option<ArtifactDerivedSnapshot<P>>, VcsError> where P: Clone, Mutation:protocol::ColdMutation<P> {
         self.admit_derived_source(store_owners, store_wire, &source.registry, source.generation, source.revision)?;
-        let outcome = <Mutation as semio_framework_os_spr::ColdMutation<P>>::diff(op, source.snapshot());
+        let outcome = <Mutation as protocol::ColdMutation<P>>::diff(op, source.snapshot());
         let applicable = outcome.is_applicable(protocol::MergePolicy::default());
         let (diff, _) = outcome.into_parts();
         let next = applicable.then(|| semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot()).ok()).flatten();
-        <<Mutation as semio_framework_os_spr::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
+        <<Mutation as protocol::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
         Ok(next.map(|owner| self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))))
     }
 
     /// ✏️ Derives one history preview input with the replay's keep-and-record application rule.
-    pub fn derive_history_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError>
-    where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P>, {
+    pub fn derive_history_snapshot(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, source: &ArtifactDerivedSnapshot<P>, op: &Mutation) -> Result<(Option<ArtifactDerivedSnapshot<P>>, Vec<protocol::MutationMessage>), VcsError> where P: Clone, Mutation:protocol::ColdMutation<P> {
         self.admit_derived_source(store_owners, store_wire, &source.registry, source.generation, source.revision)?;
-        let (diff, mut messages) = <Mutation as semio_framework_os_spr::ColdMutation<P>>::diff(op, source.snapshot()).into_parts();
+        let (diff, mut messages) = <Mutation as protocol::ColdMutation<P>>::diff(op, source.snapshot()).into_parts();
         let applied = semio_framework_os_spr::apply_diff_cold(&diff, source.snapshot());
-        <<Mutation as semio_framework_os_spr::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
+        <<Mutation as protocol::ColdMutation<P>>::ReferenceDiff as MutationDiff<P>>::retire_cold(diff);
         let next = match applied {
             Ok(owner) => Some(self.seal_derived_snapshot(store_owners, store_wire, Arc::new(owner))),
             Err(error) => {
@@ -129,15 +127,21 @@ where
     
 
     /// 🏁️ Returns a finished replay and its genuine complete projection for preview and subsequent publication.
-    pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError>
-    where P: Clone, Mutation: semio_framework_os_spr::ColdMutation<P> + OpBinary, {
-        let replay = owner.as_ref().ok_or_else(|| VcsError::ValidationFailed("derived replay owner is absent".into()))?;
-        self.admit_derived_source(store_owners, store_wire, &replay.registry, replay.generation, replay.revision)?;
-        if !replay.replay.as_ref().is_some_and(|replay|replay.is_finished()) { return Err(VcsError::ValidationFailed("derived replay has not finished".into())); }
-        let replay = owner.take().expect("admitted finished derived replay owner is present");
-        let result = replay.replay.expect("finished replay cursor").finish().expect("admitted finished replay completes without another fallible operation");
+    pub fn finish_derived_report_replay(&self, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>, owner: &mut Option<ArtifactDerivedReplay<P, Mutation>>) -> Result<(EditReplayResult<P, Mutation>, Option<ArtifactDerivedSnapshot<P>>), VcsError> {
+        let result=self.take_derived_report_result(store_owners,store_wire,owner)?;
         let head = result.state().map(|owner| self.seal_derived_snapshot(store_owners, store_wire, Arc::clone(owner)));
         Ok((result, head))
+    }
+
+    /// 🎁️ Transfers the actual completed result without issuing an unused projection alias.
+    pub fn take_derived_report_result(&self,store_owners:&StoreOwners<P,Mutation>,store_wire:&StoreWire<P,Mutation>,owner:&mut Option<ArtifactDerivedReplay<P,Mutation>>)->Result<EditReplayResult<P,Mutation>,VcsError>{
+        let replay = owner.as_ref().ok_or_else(|| VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"derived replay owner is absent")))?;
+        self.admit_derived_source(store_owners, store_wire, &replay.registry, replay.generation, replay.revision)?;
+        if !replay.replay.as_ref().is_some_and(|replay|replay.is_finished()) { return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"derived replay has not finished"))); }
+        let replay = owner.take().expect("admitted finished derived replay owner is present");
+        let mut result = replay.replay.expect("finished replay cursor").finish().expect("admitted finished replay completes without another fallible operation");
+        result.original_history=Some((replay.registry.identity(),replay.original_history_issuance));result.original_decode=replay.original_decode;result.original_selection=replay.original_selection;result.original_order=replay.original_order;
+        Ok(result)
     }
 
     pub fn revision_owner_slots(value: &CursorRevisionAccumulator) -> usize {
@@ -189,10 +193,10 @@ where
         if let Some((position, index, digest)) = root.and_then(|root| root.mutation_positions.get(mutation_id)).or_else(|| self.revision_accumulator.mutation_positions.get(mutation_id)) {
             if store_wire.applied_edit_ids(store_log).get(*position).filter(|id| CursorRevisionAccumulator::hash_record(b"edit-id", &[id.as_bytes()]) == *digest).is_some() {
                 let edit = self.applied_edit(store_log, store_wire, *position)?;
-                if semio_framework_os_spr::mutation_id_for_edit_operation::<P, Mutation>(edit, *index).as_ref() == Some(mutation_id) { return Ok((*position, *index)); }
+                if *index<edit.forwards.len()&&semio_framework_os_store_ledger::native_digest::with_operation_identity::<P,Mutation,_>(edit,*index,|id|Ok(id==mutation_id.0)).map_err(VcsError::InverseRefused)?{return Ok((*position,*index));}
             }
         }
-        Err(VcsError::ValidationFailed(format!("{} is not an applied operation", mutation_id.0)))
+        Err(VcsError::InverseRefused(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue,"requested original operation is not applied")))
     }
 
     /// 🪬️ This store's part of the unit of `mutation_id`, in operation order: every operation its edit recorded under the
@@ -234,7 +238,7 @@ where
         actor:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<semio_framework_value::SharedUtf8>>,
         mutations:&mut Vec<Mutation>, lane:HistoryLane,
         factory:Option<&Arc<dyn ArtifactStoreOneItemPreparationFactory<P,Mutation>>>,
-        transaction:&mut Option<protocol::TransactionRef>, verb:Option<&str>, outbound:bool, grant:RetainedCloneGrant,
+        transaction:&mut Option<protocol::TransactionRef>, verb:Option<&str>, group:Option<&str>, outbound:bool, grant:RetainedCloneGrant,
     )->Result<Option<(ArtifactStoreBatchPublication<P,Mutation>,RetainedCloneProgress)>,ValueError>
     where P:Sync,Mutation:Send {
         use semio_framework_value::{ValueRefusalKind,retirement::controlled::ControlledRetirement};
@@ -253,17 +257,18 @@ where
         match factory.stamped_clock(){Some(stamped)if store_log.edit_sequence==0||(stamped.physical_ms,stamped.logical)>(store_log.clock.physical_ms,store_log.clock.logical)=>next_clock=stamped,Some(_)=>return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original stamp does not follow the Store clock")),None=>{}}
         let stamped=factory.stamped_mutation_id().map(|identity|identity.0.as_str());let line=store_log.envelope.active_alternative_id.as_deref();
         if stamped.is_some_and(|text|text.is_empty()||text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES)||line.is_some_and(|text|text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES)||verb.is_some_and(|text|text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original metadata exceeds its admitted identity bound"));}
-        let text_bytes=stamped.map_or(0,str::len)+line.map_or(0,str::len)+verb.map_or(0,str::len);
+        if group.is_some_and(|text|text.is_empty()||text.len()>ARTIFACT_STORE_ONE_ITEM_ID_BYTES){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"batched publication original group exceeds its admitted identity bound"));}
+        let text_bytes=stamped.map_or(0,str::len)+line.map_or(0,str::len)+verb.map_or(0,str::len)+group.map_or(0,str::len);
         let copied_bytes=size_of::<ArtifactTypedBatchItemAuthority<P,Mutation>>()+size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+size_of::<ArtifactStoreOneItemLiveAuthority>()+size_of::<ArtifactStoreBatchPublication<P,Mutation>>()+size_of::<Vec<Mutation>>()+size_of::<Option<protocol::TransactionRef>>()+size_of_val(actor)+text_bytes;
         let retained_capacity_bytes=size_of::<ArtifactStoreBatchSourceOf<P,Mutation,ArtifactTypedBatchItemAuthority<P,Mutation>>>()+semio_framework_value::retirement::arc_custody::shared_retirement_allocation_bytes::<ArtifactStoreOneItemLiveAuthority>()+text_bytes;
         if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_capacity_bytes<retained_capacity_bytes||grant.maximum_depth==0{return Ok(None);}
         let text=|original:&str|{let mut value=String::with_capacity(original.len());value.push_str(original);value};
-        let stamped_edit_id=stamped.map(text);let line=line.map(text);let verb=verb.map(text);
+        let stamped_edit_id=stamped.map(text);let line=line.map(text);let verb=verb.map(text);let group=group.map(text);
         let admitted_items=mutations.len();
         let original_actor=actor.as_mut().unwrap().take_original().expect("observed untouched original captured actor");drop(actor.take());
         let source=ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority{preparation:Arc::clone(factory),retirement:Arc::clone(retirement)},std::mem::take(mutations),None,store_log.operation_wire);
-        let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint_for_store(store_log.mint_witness(), operation, semio_framework_job::Generation(expected_generation), expected_revision, store_log.applied_edit_ids.len(), next_sequence_number, next_clock, original_actor, line, None, stamped_edit_id));
-        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,lane_insert:None,lane_close:None};
+        let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint_for_store(store_log.mint_witness(), operation, semio_framework_job::Generation(expected_generation), expected_revision, store_log.applied_edit_ids.len(), next_sequence_number, next_clock, original_actor, line, group, stamped_edit_id));
+        let publication=ArtifactStoreBatchPublication{original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,original_origins:std::mem::ManuallyDrop::new(None),origins_retirement:Default::default(),operation,expected_generation,expected_revision,lane,footprint:ArtifactStoreOneItemFootprint{work_items:0,retained_bytes:0},source_census_completed:0,source_census_finished:false,admitted_items,authority:Some(authority),authority_retirement:None,source:Some(Box::new(source)),preparation:None,item_closing:false,stage:None,group_preparation:None,retained_checkpoint:Default::default(),receipt:None,attempts:0,published:false,cancel_requested:false,close_started:false,fault:None,refused_base:None,refused_authority:None,refused_issuers:[None,None],phase:ArtifactStoreOneItemPublicationPhase::Preparing,verb,transaction:std::mem::ManuallyDrop::new(transaction.take()),transaction_close:None,outbound,announce_from:0,announce_items:0,transaction_open:false,lane_insert:None,lane_close:None,lane_ready:lane==HistoryLane::Document};
         Ok(Some((publication,RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
     }
 
@@ -329,7 +334,7 @@ where
         };
         let Some(retirement) = store_owners.mutation_retirement_factory.as_ref() else { return Err(ArtifactStoreBatchAdmissionRejected { reason: "batched inputs require their original mutation retirement authority".into(), mutations }); };
         let source = ArtifactStoreBatchSourceOf::new(ArtifactTypedBatchItemAuthority { preparation: Arc::clone(factory), retirement: Arc::clone(retirement) }, mutations, None, store_log.operation_wire);
-        self.begin_apply_batch_owned(store_log, store_owners, store_wire, operation, expected_generation, expected_revision, actor, lane, None, source, outbound, transaction).map_err(|rejected| {
+        self.begin_apply_batch_owned(store_log, store_owners,store_wire, operation, expected_generation, expected_revision, actor, lane, None, source, outbound, transaction).map_err(|rejected| {
             let (reason, mutations) = rejected.into_owners();
             ArtifactStoreBatchAdmissionRejected { reason, mutations }
         })
@@ -342,7 +347,7 @@ where
         mutations:&mut Vec<Mutation>, transaction:&mut Option<protocol::TransactionRef>, grant:RetainedCloneGrant,
     )->Result<Option<(ArtifactStoreBatchPublication<P,Mutation>,RetainedCloneProgress)>,ValueError>
     where P:Sync,Mutation:Send {
-        self.admit_apply_batch(store_log, store_owners, store_wire, operation,expected_generation,expected_revision,actor,mutations,HistoryLane::Document,store_owners.one_item_preparation_factory.as_ref(),transaction,None,false,grant)
+        self.admit_apply_batch(store_log, store_owners, store_wire, operation,expected_generation,expected_revision,actor,mutations,HistoryLane::Document,store_owners.one_item_preparation_factory.as_ref(),transaction,None,None,false,grant)
     }
 
     /// 🧩 Uses the exact typed factory installed by the member's owner catalog.
@@ -377,7 +382,7 @@ where
     /// other Store identity answers to.
     #[allow(clippy::too_many_arguments)]
     pub fn begin_apply_batch_owned<A>(
-        &self, store_log: &StoreLog<P, Mutation>, store_owners: &StoreOwners<P, Mutation>, store_wire: &StoreWire<P, Mutation>,
+        &self, store_log: &StoreLog<P, Mutation>, store_owners:&StoreOwners<P,Mutation>,store_wire: &StoreWire<P, Mutation>,
         operation: semio_framework_job::OperationId,
         expected_generation: u64,
         expected_revision: [u8; 32],
@@ -457,7 +462,7 @@ where
         ));
         Ok(ArtifactStoreBatchPublication {
             
-            original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,
+            original_registry:std::mem::ManuallyDrop::new(Some(store_owners.snapshot_read_leases.clone())),registry_retirement:None,caller_generation:None,original_origins:std::mem::ManuallyDrop::new(None),origins_retirement:Default::default(),
 operation,
             expected_generation,
             expected_revision,
@@ -508,7 +513,7 @@ operation,
         let state = result.take_state().ok_or_else(|| VcsError::ValidationFailed("report replay lost its reached projection".into()))?;
         for (edit_id, inverse) in result.take_rebased_undo_rows() {
             match store_log.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-                Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse)),
+                Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut *edit.inverse, inverse)),
                 None => retire_scratch_operations::<P, Mutation>(inverse),
             }
         }

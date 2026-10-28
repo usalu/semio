@@ -700,9 +700,9 @@ impl ArtifactEditor for DagPlayApp {
 })())
 }
 
-    fn initial_snapshot() -> DagSnapshot {
+    fn reference_birth()->Option<fn()->DagSnapshot>{Some(||{
         crate::default_snapshot()
-    }
+    })}
 
     /// 🏷️ The manifest action id each command was declared under — supplied wholesale by
     /// `app_commands!`'s generated `command_id()`.

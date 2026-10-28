@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateFenestration",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "fenestrations",
+    "field": "divider_conductance_w_k",
+    "input": "new_divider_conductance_w_k",
+    "key": "id",
+    "labels": {
+      "en": "Change fenestration: Divider conductance",
+      "de": "Sprossen-Wärmeleitwert ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "fenestration",
+      "kind": "change-fenestration-divider-conductance",
+      "record": "ChangedFenestrationDividerConductance"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Divider conductance violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed fenestration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The fenestration already carries this divider conductance value."
+      }
+    }
   }
 }

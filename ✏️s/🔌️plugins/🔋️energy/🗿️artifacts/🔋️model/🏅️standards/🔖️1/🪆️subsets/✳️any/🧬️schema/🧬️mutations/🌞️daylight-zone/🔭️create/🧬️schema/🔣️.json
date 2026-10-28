@@ -145,5 +145,96 @@
         "order": 50
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateDaylightZoneConfig",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "illuminance_target_lux",
+        "input": "illuminance_target_lux",
+        "storage": "fixed"
+      },
+      {
+        "field": "glare_limit",
+        "input": "glare_limit",
+        "storage": "fixed"
+      },
+      {
+        "field": "window_transmittance",
+        "input": "window_transmittance",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateDaylightZoneConfig",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "daylight_zones",
+    "key": "id",
+    "inverse": "DeleteDaylightZone",
+    "labels": {
+      "en": "Create daylight zone",
+      "de": "Tageslichtzone erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "daylight-zone",
+      "kind": "create-daylight-zone",
+      "record": "CreatedDaylightZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

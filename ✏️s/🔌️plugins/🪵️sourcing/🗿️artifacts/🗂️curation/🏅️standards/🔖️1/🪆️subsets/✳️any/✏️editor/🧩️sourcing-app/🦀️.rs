@@ -94,9 +94,9 @@ impl ArtifactEditor for SourcingCurationApp {
         Some(crate::editor::sourcing::config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> CurationSnapshot {
+    fn reference_birth()->Option<fn()->CurationSnapshot>{Some(||{
         crate::standards::v1::subsets::any::io::text::snapshot::default_document()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(sourcing_curation_io())

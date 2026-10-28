@@ -112,6 +112,13 @@ fn unwrap_option(ty: &Type) -> &Type {
     }
 }
 
+fn unwrap_composition_source(ty:&Type)->&Type{
+    let Type::Path(path)=ty else{return ty};let Some(segment)=path.path.segments.last()else{return ty};
+    if segment.ident!="SealedShared"&&segment.ident!="Option"{return ty;}
+    let PathArguments::AngleBracketed(arguments)=&segment.arguments else{return ty};
+    match arguments.args.first(){Some(GenericArgument::Type(inner))=>unwrap_composition_source(inner),_=>ty}
+}
+
 fn last_segment_ident(ty: &Type) -> Option<&syn::Ident> {
     let Type::Path(type_path) = ty else { return None };
     type_path.path.segments.last().map(|segment| &segment.ident)
@@ -131,9 +138,9 @@ fn vec_element_type(ty: &Type) -> Option<&Type> {
 }
 
 fn classify_composition_field(ty: &Type) -> CompositionFieldKind {
-    let ty = unwrap_option(ty);
+    let ty = unwrap_composition_source(ty);
     if let Some(element) = vec_element_type(ty) {
-        let element = unwrap_option(element);
+        let element = unwrap_composition_source(element);
         return match last_segment_ident(element).map(|ident| ident.to_string()).as_deref() {
             Some("ArtifactChild") => CompositionFieldKind::Child,
             Some("ArtifactLink") => CompositionFieldKind::Link { many: true },

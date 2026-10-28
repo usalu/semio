@@ -30,7 +30,7 @@ fn layer(material: &str, thickness: f64) -> Layer {
 
 /// 🏠️ Storeys `st-ground` (3 m) and `st-first` (2.8 m), wall type `wt-300`, and a type of every other family; no element yet.
 pub fn model() -> ModelSnapshot {
-    let mut snapshot = BimModelApp::initial_snapshot();
+    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")();
     snapshot.walls.clear();
     let color = Rgb { r: 0.5, g: 0.5, b: 0.5 };
     for (id, category) in [("m-glass", MaterialCategory::Glass), ("m-steel", MaterialCategory::Metal), ("m-concrete", MaterialCategory::Concrete)] {
@@ -49,7 +49,7 @@ pub fn model() -> ModelSnapshot {
 
 /// 🧱️ [`model`] with the four walls of the demo room (8 by 6 metres) on the ground storey.
 pub fn room() -> ModelSnapshot {
-    let mut snapshot = BimModelApp::initial_snapshot();
+    let mut snapshot = BimModelApp::reference_birth().expect("explicit reference snapshot producer")();
     let extras = model();
     snapshot.materials = extras.materials;
     snapshot.slab_types = extras.slab_types;
@@ -344,7 +344,7 @@ pub mod support {
     use semio_framework_plugin::HistoryView;
 
     pub fn demo() -> ModelSnapshot {
-        BimModelApp::initial_snapshot()
+        BimModelApp::reference_birth().expect("explicit reference snapshot producer")()
     }
 
     pub fn english() -> ViewModel {

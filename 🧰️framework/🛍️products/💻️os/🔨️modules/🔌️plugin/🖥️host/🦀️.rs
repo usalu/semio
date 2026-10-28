@@ -128,7 +128,7 @@ impl SessionLanePack {
             self.pending_binary_ops = ops;
             return;
         }
-        match (codec.apply_ops_binary)(&self.pack, &self.spr, &ops,identity).await {
+        match (codec.reference().map_err(|error|error.into_fault())?.apply_ops_binary)(&self.pack, &self.spr, &ops,identity).await {
             Ok((pack, spr, ops_text)) => {
                 self.pack = pack;
                 self.spr = spr;

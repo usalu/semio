@@ -43,13 +43,15 @@ pub struct ArtifactEphemeralOneItemPreparationRequest<P, Mutation> {
 }
 
 pub trait ArtifactEphemeralOneItemPreparation<P, Mutation>: Send {
-    fn advance(&mut self, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
+    fn advance(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ValueError>;
     fn checkpoint(&self) -> ArtifactStoreOneItemCheckpoint;
     fn prepared(&self) -> Option<&ArtifactEphemeralOneItemPrepared<P>>;
     fn take_prepared(&mut self) -> Option<ArtifactEphemeralOneItemPrepared<P>>;
     fn cancel(&mut self);
     fn begin_close(&mut self);
     fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError>;
+    fn close_step_controlled(&mut self, grant: ArtifactStoreOneItemGrant, _control: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> { self.close_step(grant) }
+    fn requires_original_control(&self) -> bool { false }
     fn next_close_copy_byte_demand(&self) -> Result<usize, ValueError>;
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, ValueError>;
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError>;
@@ -155,10 +157,10 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
     /// 🚫️ Borrows the one original refusal and its actual consumed physical currencies.
     pub fn preparation_refusal(&self) -> Option<&ValueError> { self.fault.as_ref() }
 
-    pub fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemAdvance> {
+    pub(super) fn advance_preparation(&mut self, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemAdvance> {
         let result = self.preparation.as_mut().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"ephemeral publication lost its preparation owner")).and_then(|owner| {
             let grant=ArtifactStoreOneItemGrant { maximum_items: grant.maximum_items.min(1), ..grant };
-            let step=owner.advance(grant, receiving)?;
+            let step=owner.advance(grant,receiving)?;
             validate_original_preparation_step(step,grant,owner.prepared().is_some())
         });
         match result {
@@ -218,7 +220,10 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
     }
 
     /// ♻️ Closes one original child or its separately admitted physical frame.
-    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> where P: Send + Sync + 'static {
+    pub fn requires_original_control(&self)->bool { self.preparation.as_ref().is_some_and(|owner|owner.requires_original_control()) }
+    pub fn close_step_controlled(&mut self, grant: ArtifactStoreOneItemGrant, control: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> where P: Send + Sync + 'static { self.close_original(grant,Some(control)) }
+    pub fn close_step(&mut self, grant: ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> where P: Send + Sync + 'static { self.close_original(grant,None) }
+    fn close_original(&mut self, grant: ArtifactStoreOneItemGrant, mut control: Option<&mut dyn semio_framework_value::OriginalRetirementControl>) -> Result<RetainedCloneStep, ValueError> where P: Send + Sync + 'static {
         let grant = grant.retained_grant();let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -229,7 +234,7 @@ impl<P, Mutation> ArtifactEphemeralOneItemPublication<P, Mutation> {
         if let Some(owner) = self.preparation.as_mut() {
             if owner.terminal_is_empty() { self.retained_checkpoint = owner.checkpoint();let bytes = size_of_val(owner.as_ref());drop(self.preparation.take());return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: bytes, ..empty })); }
             let child = ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: grant.maximum_copy_bytes, maximum_capacity_bytes: grant.maximum_capacity_bytes, maximum_release_bytes: grant.maximum_release_bytes, maximum_depth: grant.maximum_depth - 1 };
-            let step = owner.close_step(child)?;let step = semio_framework_value::retained_clone::admit_retained_clone_close(child.retained_grant(), step, owner.terminal_is_empty(), "ephemeral original preparation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
+            let step = match control.as_mut(){Some(control)=>owner.close_step_controlled(child,*control)?,None=>owner.close_step(child)?};let step = semio_framework_value::retained_clone::admit_retained_clone_close(child.retained_grant(), step, owner.terminal_is_empty(), "ephemeral original preparation")?;return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.returned_read_retirement.is_some() || self.returned_read_registry.as_ref().is_some_and(|registry| registry.has_returned()) {
             let registry = self.returned_read_registry.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "returned ephemeral child lost its registry"))?;let factory = self.owned_retirement_factory.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "returned ephemeral child lost its issuer"))?;
@@ -268,3 +273,8 @@ impl<P, Mutation> Drop for ArtifactEphemeralOneItemPublication<P, Mutation> {
     }
 }
 //#endregion 📬️EphemeralOneItemPublication
+
+impl<P:Send+Sync+'static,M> ArtifactEphemeralOneItemPublication<P,M>{
+    /// 🎟️ Prices the original root handoff and exact displaced-owner frame before publication.
+    pub fn commit_demand(&self)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{copy_bytes:size_of::<ArtifactEphemeralOneItemPrepared<P>>()+size_of::<Arc<P>>()+size_of::<LaneItemReceipt>(),capacity_bytes:if self.owned_retirement_factory.is_some(){ReturnedSnapshotReadRetirement::<P>::constructor_capacity_bytes()}else{size_of::<ArtifactStoreDisplacedSnapshotRetirement<P>>()},depth:1,..Default::default()}}
+}

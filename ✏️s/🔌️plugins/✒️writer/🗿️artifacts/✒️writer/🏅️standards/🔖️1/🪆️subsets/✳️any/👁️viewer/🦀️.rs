@@ -76,9 +76,9 @@ impl ArtifactViewer for WriterViewer {
 })())
 }
 
-    fn initial_snapshot() -> WriterSnapshot {
+    fn reference_birth()->Option<fn()->WriterSnapshot>{Some(||{
         schema::empty_writer_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `WriterViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

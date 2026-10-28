@@ -14,7 +14,7 @@ impl<M:RetireOwned> NativeEditMetadata<M>{
     pub fn constructor_demand()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+size_of::<Box<Self>>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
     pub fn admit(authority:&ArtifactStoreOneItemLiveAuthority,grant:RetainedCloneGrant)->Result<(Box<Self>,RetainedCloneProgress),ValueError>{
         let d=Self::constructor_demand();if !permits(d,grant){return Err(ValueError::literal(ValueRefusalKind::OwnershipLimit,"native metadata frame exceeds original caller grant"));}
-        let edit=Edit{id:String::new(),actor:None,line:None,forwards:Vec::new(),inverse:PagedList::default(),mutation_meta:Vec::new(),verb:None,sequence_number:authority.next_sequence_number(),started_at:String::new(),finished_at:None};
+        let edit=Edit{id:String::new(),actor:None,line:None,forwards:Vec::new(),inverse:Default::default(),mutation_meta:Vec::new(),verb:None,sequence_number:authority.next_sequence_number(),started_at:String::new(),finished_at:None};
         let meta=MutationMeta{mutation_id:None,dependencies:Vec::new(),base_version:authority.base_applied_edit_count()as u64,author_id:None,timestamp:authority.next_clock(),undo_policy:UndoPolicy::ExactBaseOnly,payload_hash:None,semantic_kind:None,label:None,group_id:None,origin:Default::default(),transaction:None};
         Ok((Box::new(Self{hasher:Hasher::new(),actor_offset:0,phase:if authority.stamped_edit_id().is_some(){3}else{0},edit:std::mem::ManuallyDrop::new(Some(edit)),meta:std::mem::ManuallyDrop::new(Some(meta)),inverse_pending:std::mem::ManuallyDrop::new(None)}),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,released_bytes:0}))
     }

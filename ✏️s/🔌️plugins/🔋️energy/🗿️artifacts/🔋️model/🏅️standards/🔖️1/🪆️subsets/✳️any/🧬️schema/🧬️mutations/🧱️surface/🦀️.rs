@@ -12,14 +12,16 @@ extern crate semio_s_artifact_energy_model_mut_fenestration as fenestration_muta
 extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod rename_surface {
     #[path = "🏳️rename/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🏳️rename/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🏳️rename/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🏳️rename/↩️inverse/🦀️.rs"]
@@ -31,6 +33,8 @@ pub mod change_surface_multiplier {
     #[path = "🔁️change-multiplier/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔁️change-multiplier/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔁️change-multiplier/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔁️change-multiplier/↩️inverse/🦀️.rs"]
@@ -42,6 +46,8 @@ pub mod replace_surface_vertices {
     #[path = "🔺️replace-vertices/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔺️replace-vertices/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔺️replace-vertices/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔺️replace-vertices/↩️inverse/🦀️.rs"]
@@ -53,6 +59,8 @@ pub mod change_surface_zone {
     #[path = "🗜️change-zone/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🗜️change-zone/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🗜️change-zone/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🗜️change-zone/↩️inverse/🦀️.rs"]
@@ -64,6 +72,8 @@ pub mod create_surface {
     #[path = "🟫️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🟫️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🟫️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🟫️create/↩️inverse/🦀️.rs"]
@@ -75,6 +85,8 @@ pub mod change_surface_class {
     #[path = "🧩️change-class/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧩️change-class/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧩️change-class/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧩️change-class/↩️inverse/🦀️.rs"]
@@ -86,6 +98,8 @@ pub mod change_surface_construction {
     #[path = "🧰️change-construction/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧰️change-construction/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧰️change-construction/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧰️change-construction/↩️inverse/🦀️.rs"]
@@ -97,6 +111,8 @@ pub mod delete_surface {
     #[path = "🪚️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🪚️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🪚️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🪚️delete/↩️inverse/🦀️.rs"]
@@ -111,3 +127,6 @@ pub use create_surface::{create_surface, CreateSurface};
 pub use change_surface_class::{change_surface_class, ChangeSurfaceClass};
 pub use change_surface_construction::{change_surface_construction, ChangeSurfaceConstruction};
 pub use delete_surface::{delete_surface, DeleteSurface};
+
+pub use fenestration_mutations::{CreateFenestration,ReplaceFenestrationVertices};
+pub use boundary_mutations::ConnectSurfaces;

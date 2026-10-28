@@ -41,7 +41,7 @@ pub struct ConfigApplyCursor<S, M: ConfigApplyMutation<S>> {
 impl<S, M> RetainedCloneEdit<S, M> for ConfigApplyEdit<S, M>
 where S: RetainedClone, M: ConfigApplyMutation<S> {
     type Cursor = ConfigApplyCursor<S, M>;
-    fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M, lane: HistoryLane) -> Result<ArtifactStoreOneItemFootprint, &'static str> {
         if !mutation.admits_lane(lane) || !mutation.admissible() { return Err("config apply mutation has invalid lane or record authority".into()); }
         let retained_bytes = mutation.payload_bytes().checked_mul(4).and_then(|bytes| bytes.checked_add(CONFIG_EDIT_RETAINED_BASELINE_BYTES)).filter(|bytes| *bytes <= ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).ok_or("config apply payload exceeds the one-item retained footprint")?;
         Ok(ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes })

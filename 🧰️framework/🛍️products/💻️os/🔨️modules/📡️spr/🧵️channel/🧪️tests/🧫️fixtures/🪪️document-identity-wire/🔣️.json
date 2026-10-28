@@ -8,7 +8,8 @@
       "seq": "7",
       "identity": {
         "appInstanceId": 17,
-        "parentDocumentId": "document-7"
+        "parentDocumentId": "document-7",
+        "baseRevision": "17"
       },
       "commandBytes": [
         41,
@@ -29,7 +30,8 @@
         110,
         116,
         45,
-        55
+        55,
+        17
       ]
     },
     {
@@ -37,7 +39,8 @@
       "seq": "8",
       "identity": {
         "appInstanceId": 18,
-        "parentDocumentId": null
+        "parentDocumentId": null,
+        "baseRevision": "0"
       },
       "commandBytes": [
         41,
@@ -47,6 +50,7 @@
         31,
         8,
         18,
+        0,
         0
       ]
     },
@@ -55,7 +59,8 @@
       "seq": "18446744073709551615",
       "identity": {
         "appInstanceId": 4294967295,
-        "parentDocumentId": "Dokument-🎬"
+        "parentDocumentId": "Dokument-🎬",
+        "baseRevision": "18446744073709551615"
       },
       "commandBytes": [
         41,
@@ -101,7 +106,17 @@
         240,
         159,
         142,
-        172
+        172,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        255,
+        1
       ]
     }
   ]

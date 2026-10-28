@@ -1,6 +1,6 @@
 //! 🛬️ Explicit Energy native record construction under cumulative input and output controls.
-use crate::EnergyModelSnapshot;
-use crate::binary::EnergyModelPackRecord;
+use crate::reference::EnergyModelSnapshot;
+use crate::reference::binary::EnergyModelPackRecord;
 use semio_framework_value::{FromValue,ToValue};
 use store::sqlite_snapshot::{SqliteSnapshotControl,SnapshotEncoding};
 use semio_framework_dsl_record::DslField;

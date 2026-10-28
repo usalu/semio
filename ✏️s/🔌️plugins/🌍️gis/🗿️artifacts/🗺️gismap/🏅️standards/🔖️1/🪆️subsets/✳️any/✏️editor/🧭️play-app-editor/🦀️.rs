@@ -138,9 +138,9 @@ impl ArtifactEditor for Gis2dPlayApp {
         map_config::register(registry)
     }
 
-    fn initial_snapshot() -> GisMapSnapshot {
+    fn reference_birth()->Option<fn()->GisMapSnapshot>{Some(||{
         crate::standards::v1::subsets::any::io::text::snapshot::default_document()
-    }
+    })}
 
     fn child_restore_projection(snapshot: &Self::Snapshot) -> Result<semio_framework_composition_admission::ChildRestoreProjection<'_>, Fault> {
         semio_framework_composition_admission::ChildRestoreProjection::from_snapshot(snapshot).map_err(|error| Fault::from(format!("gis map child projection failed: {error}")))

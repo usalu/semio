@@ -142,5 +142,112 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateElectricalLoadCenter",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "name",
+        "input": "name",
+        "storage": "sealed"
+      },
+      {
+        "field": "generator_ids",
+        "input": "generator_ids",
+        "storage": "sealed"
+      },
+      {
+        "field": "pv_ids",
+        "input": "pv_ids",
+        "storage": "sealed"
+      },
+      {
+        "field": "battery_ids",
+        "input": "battery_ids",
+        "storage": "sealed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateElectricalLoadCenter",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "electrical_load_centers",
+    "key": "id",
+    "inverse": "DeleteElectricalLoadCenter",
+    "labels": {
+      "en": "Create Electrical Load Center at index",
+      "de": "Stromverteiler an Index erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "electrical-load-center",
+      "kind": "create-electrical-load-center",
+      "record": "CreatedElectricalLoadCenter"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": false,
+    "rules": [
+      {
+        "input": "generator_ids",
+        "kind": "native-identifiers"
+      },
+      {
+        "input": "pv_ids",
+        "kind": "reference",
+        "storage": "array",
+        "collections": [
+          "PvSystems"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "battery_ids",
+        "kind": "reference",
+        "storage": "array",
+        "collections": [
+          "Batteries"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "explicit",
+    "scalarOrder": "before-rules",
+    "name": "name",
+    "nameValidation": "verbatim",
+    "unique": false
   }
 }

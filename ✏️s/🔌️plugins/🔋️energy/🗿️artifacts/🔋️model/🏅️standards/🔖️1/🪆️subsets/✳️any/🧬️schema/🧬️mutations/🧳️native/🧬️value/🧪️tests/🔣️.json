@@ -1,0 +1,1 @@
+{"cases":[{"before":[1,2],"value":[3,4],"outcome":"changed"},{"before":[1,2],"value":[1,2],"outcome":"no-op"},{"before":[1],"value":[],"outcome":"invalid"},{"before":[1],"value":[1,2,3],"nonfiniteAt":2,"outcome":"invalid"},{"before":[1],"repeat":1200,"outcome":"changed"}],"cancelAt":[0,1,2,4,8,16,24,32,48,64,80,96,128,160,200,256,320]}

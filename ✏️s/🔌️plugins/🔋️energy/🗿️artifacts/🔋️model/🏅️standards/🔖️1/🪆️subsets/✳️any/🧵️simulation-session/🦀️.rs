@@ -21,10 +21,8 @@ extern crate semio_s_artifact_energy_model_examples as examples;
 
 use crate::kernel::{SimulationConfig};
 use crate::model::{Model};
-use crate::sim::{EnergyAdmissionRejected, EnergyJob};
-use crate::sim_retirement::{EnergyModelCloseCursor};
 use crate::sim_wire::{EnergyJobCursor, EnergyJobStage, EnergyNumericalBounds, EnergyQualityTier};
-use crate::snapshot::{EnergyModelSnapshot};
+use crate::snapshot::original::EnergyModelSnapshot;
 use semio_framework_job_payload::RetainedPayloadBuilder;
 use semio_framework_job_payload::JobPayloadStagedSource;
 use semio_framework_job_payload::JobPayloadAdmissionFault;
@@ -127,10 +125,14 @@ pub enum EnergySimulationRunCounter {
     TiersPublished,
     FacilityElectricityWh,
     InputIdentityBytes,
+    HeatingWh,
+    CoolingWh,
+    WeatherSourceBytes,
+    WeatherRecords,
 }
 
 impl EnergySimulationRunCounter {
-    pub const ALL: [Self; 5] = [Self::WarmupTimesteps, Self::RunTimesteps, Self::TiersPublished, Self::FacilityElectricityWh, Self::InputIdentityBytes];
+    pub const ALL: [Self; 9] = [Self::WarmupTimesteps, Self::RunTimesteps, Self::TiersPublished, Self::FacilityElectricityWh, Self::InputIdentityBytes, Self::HeatingWh, Self::CoolingWh, Self::WeatherSourceBytes, Self::WeatherRecords];
 
     pub fn index(self) -> u16 {
         self as u16
@@ -143,6 +145,10 @@ impl EnergySimulationRunCounter {
             Self::TiersPublished => "tiersPublished",
             Self::FacilityElectricityWh => "facilityElectricityWh",
             Self::InputIdentityBytes => "energy.input-identity-bytes",
+            Self::HeatingWh => "heatingWh",
+            Self::CoolingWh => "coolingWh",
+            Self::WeatherSourceBytes => "weatherSourceBytes",
+            Self::WeatherRecords => "weatherRecords",
         }
     }
 
@@ -153,6 +159,10 @@ impl EnergySimulationRunCounter {
             Self::TiersPublished => LocalizedLabel::native("Quality tiers published", "Veröffentlichte Qualitätsstufen"),
             Self::FacilityElectricityWh => LocalizedLabel::native("Facility electricity (Wh)", "Anlagenelektrizität (Wh)"),
             Self::InputIdentityBytes => LocalizedLabel::native("Input bytes verified", "Geprüfte Eingabebytes"),
+            Self::HeatingWh => LocalizedLabel::native("Heating energy (Wh)", "Heizenergie (Wh)"),
+            Self::CoolingWh => LocalizedLabel::native("Cooling energy (Wh)", "Kühlenergie (Wh)"),
+            Self::WeatherSourceBytes => LocalizedLabel::native("Weather source bytes verified", "Geprüfte Wetterquellbytes"),
+            Self::WeatherRecords => LocalizedLabel::native("Weather hours prepared", "Vorbereitete Wetterstunden"),
         }
     }
 }
@@ -303,7 +313,8 @@ pub fn encode_surface_energy_payload(rows: impl Iterator<Item = crate::results::
 //#region 🔖️ContractHelpers
 
 /// ⚙️ Folds the captured model's persisted run period and schedule tables into the settings template.
-pub fn simulation_config_for(template: &SimulationConfig, model: &Model) -> SimulationConfig {
+#[cfg(test)]
+fn simulation_config_for(template: &SimulationConfig, model: &Model) -> SimulationConfig {
     SimulationConfig {
         run_period_year: model.run_period.year,
         run_period_start_month: model.run_period.start_month,
@@ -323,6 +334,9 @@ use retained_input::{CaptureCensus, ModelCapture};
 #[path="📮️publication/🦀️.rs"]
 mod publication;
 use publication::EnergyTickPublication;
+
+#[path = "🌦️weather/🦀️.rs"]
+mod weather;
 
 #[path = "🧵️run-job/🦀️.rs"]
 mod run_job;

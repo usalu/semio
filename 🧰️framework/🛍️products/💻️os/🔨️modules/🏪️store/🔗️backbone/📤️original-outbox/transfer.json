@@ -1,0 +1,1 @@
+{"bytes":8197,"pattern":[0,1,127,128,254,255],"limits":{"copy":4096,"capacity":4096},"cancelAt":["before","after"],"expected":{"source":0,"recipient":1}}

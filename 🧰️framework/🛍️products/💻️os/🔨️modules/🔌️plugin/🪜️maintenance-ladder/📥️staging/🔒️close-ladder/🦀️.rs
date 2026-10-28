@@ -176,6 +176,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         if !self.tools.registry.terminal_is_empty() {
             return self.tools.registry.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|fault| fault);
         }
+        if !self.tools.tool_jobs.original_terminal_is_empty(){return Ok(RetainedCloneStep::Progress(self.tools.tool_jobs.original_close_step(child).progress()))}
+        if let Some(owner)=self.tools.declared_tools.as_mut(){if owner.terminal_is_empty(){self.tools.declared_tools.take();return done(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<Option<semio_framework_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),..Default::default()})}return owner.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(|error|plugin_sdk_fault(error.to_string()))}
         if self.tools.bounded_tool_proofs.pop_first().is_some() {
             return done(handoff());
         }
@@ -196,6 +198,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             drop(std::mem::take(&mut self.tools.tool_job_controller_id));
             return done(released(capacity));
         }
+        if !self.ingest.envelope_field_decoders.custody_is_closed(){return self.ingest.envelope_field_decoders.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(ValueError::into_fault)}
+        if !self.ingest.envelope_completed_records.custody_is_closed(){return self.ingest.envelope_completed_records.close_step(child).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(ValueError::into_fault)}
         Ok(RetainedCloneStep::Complete(idle))
     }
 }
@@ -256,12 +260,16 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
         if !self.tools.registry.terminal_is_empty() {
             return nested(self.tools.registry.retirement_demands());
         }
+        if !self.tools.tool_jobs.original_terminal_is_empty(){return nested(self.tools.tool_jobs.original_close_demands())}
+        if let Some(owner)=self.tools.declared_tools.as_ref(){return nested(if owner.terminal_is_empty(){RetirementDemand{copy_bytes:std::mem::size_of::<Option<semio_framework_plugin_instance_jobs::jobs_components::DeclaredToolCatalogAlias>>(),depth:1,..Default::default()}}else{owner.close_demands(body)?})}
         if !self.tools.bounded_tool_proofs.is_empty() || !self.tools.bounded_tool_contracts.is_empty() || !self.tools.framework_tool_registrations.is_empty() || !self.tools.app_tool_registrations.is_empty() {
             return Ok(handoff_demand());
         }
         if self.tools.tool_job_controller_id.capacity() != 0 {
             return Ok(release_demand(self.tools.tool_job_controller_id.capacity()));
         }
+        if !self.ingest.envelope_field_decoders.custody_is_closed(){return nested(self.ingest.envelope_field_decoders.close_demands()?)}
+        if !self.ingest.envelope_completed_records.custody_is_closed(){return nested(self.ingest.envelope_completed_records.close_demands()?)}
         Ok(Default::default())
     }
 }
@@ -288,11 +296,15 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X: I
             && self.tools.typed_completion_outbox.len() == 0
             && self.tools.typed_composed_outbox.len() == 0
             && self.tools.registry.terminal_is_empty()
+            && self.tools.declared_tools.is_none()
+            && self.tools.tool_jobs.original_terminal_is_empty()
             && self.tools.bounded_tool_proofs.is_empty()
             && self.tools.bounded_tool_contracts.is_empty()
             && self.tools.framework_tool_registrations.is_empty()
             && self.tools.app_tool_registrations.is_empty()
             && self.tools.tool_job_controller_id.is_empty()
+            && self.ingest.envelope_field_decoders.custody_is_closed()
+            && self.ingest.envelope_completed_records.custody_is_closed()
     }
 }
 
@@ -401,22 +413,24 @@ impl<P: Send + Sync + 'static> ClosingOwner for store::os_store::presence::Prese
 
 impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static, X: InstanceExtension> LadderCtx<'ctx, A, M, X> {
     pub fn close_typed_operation_unit(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
-        let grant=cx.retained_grant();let demand=self.tools.close_typed_operation_demands(&*self.child_composition, grant.maximum_copy_bytes)?;
+        let grant=cx.retained_grant();let demand=self.tools.close_typed_operation_demands(&*self.child_composition, &*self.stores, grant.maximum_copy_bytes)?;
         semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_step(cx,grant,demand,|same,actual|self.close_typed_operation_granted(same,actual).map(|step|(step,false)))
     }
 
     fn close_typed_operation_granted(&mut self,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
+        if let Some(source)=self.tools.original_emission_admission.as_mut(){
+            if source.terminal_is_empty(){let bytes=std::mem::size_of_val(&**source);drop(self.tools.original_emission_admission.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:std::mem::size_of::<usize>(),released_bytes:bytes,..Default::default()}))}
+            let before=cx.retained_progress();source.close_step(&self.tools.tool_cancellations,cx)?;let after=cx.retained_progress();return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:after.copied_items-before.copied_items,copied_bytes:after.copied_bytes-before.copied_bytes,retained_capacity_bytes:after.retained_capacity_bytes-before.retained_capacity_bytes,released_bytes:after.released_bytes-before.released_bytes}))
+        }
+        if self.tools.original_emission_receipt.is_some(){self.tools.original_emission_receipt=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<Option<semio_framework_plugin_job::original_emission::OriginalEmissionReceipt>>(),..Default::default()}))}
         let Some((_, operation_id)) = self.tools.tool_operations.next_id_from(0) else { return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress::default())) };
         let operation = self.tools.tool_operations.get_mut(operation_id).ok_or_else(|| plugin_sdk_fault("typed operation owner changed during bounded close"))?;
+        if operation.pending_stream_abort.is_some(){let before=cx.retained_progress();cx.with_original_retirement(|cx|operation.close_stream_abort(&mut self.stores.store,cx))?;return Ok(PluginLifecycleStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}
         if operation.stage == MountedTypedCommandFullOperationStage::Retiring { return self.as_typed().retire_typed_operation_unit(operation_id,cx); }
         let step = operation.close_step(cx)?;
         let PluginLifecycleStep::Complete(progress) = step else { return Ok(step) };
         if !operation.terminal_is_empty() { return Err(plugin_sdk_fault("typed operation close reported Complete without exact terminal emptiness").into()); }
-        let operation = self.tools.tool_operations.remove(operation_id).ok_or_else(|| plugin_sdk_fault("terminal typed operation changed before exact removal"))?;
-        self.tools.operation_progress_retired |= operation.progress.is_some();
-        drop(operation);
-        self.tools.typed_inline_interaction_verbs.retain(|(operation, _)| *operation != operation_id);
-        Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: progress.copied_items.max(1), ..progress }))
+        Ok(PluginLifecycleStep::Progress(progress))
     }
 
     pub fn detach_child_root_step(&mut self) -> Result<RetainedCloneStep, Fault> {
@@ -482,7 +496,6 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         if self.tools.live_runtime_instance_id.is_some_and(|instance_id| !A::mounted_jobs_terminal_is_empty(instance_id)) { return CloseRung::MountedJobs; }
         if !self.tools.latest_wins_keys.terminal_is_empty() { return CloseRung::LatestWinsKeys; }
         if self.tools.latest_wins_order.items.front().is_some() { return CloseRung::LatestWinsCommands; }
-        if !self.tools.tool_operations.is_empty() { return CloseRung::TypedOperations; }
         if !self.close.close_instance_operation_owner_drained||!self.tools.instance_operation_owner.inference_is_empty(){return CloseRung::InstanceOwner;}
         if self.tools.agent_lane_preview.is_some(){return CloseRung::AgentPreview;}
         if !self.pending.configuration_failure_terminal_is_empty(){return CloseRung::ConfigurationFailure;}

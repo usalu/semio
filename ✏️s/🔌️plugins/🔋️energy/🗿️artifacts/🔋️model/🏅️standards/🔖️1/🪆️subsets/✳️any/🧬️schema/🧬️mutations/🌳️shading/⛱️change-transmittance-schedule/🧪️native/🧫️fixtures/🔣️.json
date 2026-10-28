@@ -1,0 +1,123 @@
+{
+  "contract": "semio.energy.original-optional-reference/v1",
+  "collection": "shading_surfaces",
+  "field": "transmittance_schedule_id",
+  "original": {
+    "id": 7,
+    "name": "Original shade",
+    "vertices_m": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ],
+    "transmittance_schedule_id": 1
+  },
+  "model": {
+    "schedules": {
+      "constants": [
+        {
+          "id": 1,
+          "value": 1
+        }
+      ],
+      "daily": [
+        {
+          "id": 2,
+          "hourly_values": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+          ],
+          "interpolation": "Continuous",
+          "limits": null
+        }
+      ],
+      "weekly": [],
+      "annual": [],
+      "time_series": []
+    }
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newTransmittanceScheduleId": 1
+      },
+      "outcome": "no-op",
+      "after": 1
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newTransmittanceScheduleId": null
+      },
+      "outcome": "changed",
+      "after": null
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newTransmittanceScheduleId": 99
+      },
+      "outcome": "invalid-reference",
+      "after": 99
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newTransmittanceScheduleId": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "branch": "geometry"
+}

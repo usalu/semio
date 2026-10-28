@@ -72,7 +72,7 @@ fn drive(command: &BmpEditCommand, snapshot: &BmpSnapshot, tool_id: &'static str
 
 #[test]
 fn initial_bitmap_is_immediately_paintable_and_reopens() {
-    let snapshot = <BmpEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <BmpEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let layout = crate::standards::v_v3::subsets::any::io::bmp_layout(&snapshot).expect("initial BMP layout");
     assert_eq!((layout.width, layout.height, layout.profile), (1, 1, crate::standards::v_v3::subsets::any::schema::snapshot::BmpProfile::DirectRgb24));
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&snapshot).unwrap(), [255, 255, 255, 255]);
@@ -84,14 +84,14 @@ fn natural_file_route_preserves_bmp_v3_bytes_and_opens_a_fresh_snapshot_event() 
     let codec = <BmpEditor as ArtifactEditor>::natural_file_codec().expect("BMP natural codec");
     assert_eq!((codec.format_kind, codec.extension, codec.media_type, codec.binary), ("s.stdio.bmp@v3", ".bmp", "image/bmp", true));
     let source = include_bytes!("../../../🧪️tests/🧫️fixtures/🧬️canonical-byte-authority/direct-rgb24-padding-gap-trailer.bmp");
-    let current = <BmpEditor as ArtifactEditor>::initial_snapshot();
+    let current = <BmpEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     let imported = <BmpEditor as ArtifactEditor>::decode_natural_file(source).expect("BMP natural import");
     let exported = <BmpEditor as ArtifactEditor>::encode_natural_file(&imported).expect("BMP natural export");
     assert_eq!(crate::standards::v_v3::subsets::any::io::decode_bmp(&exported).unwrap(),imported,"precise BMP samples and metadata remain owned exactly");
     let independent = semio_s_artifact_stdio_bmp_test_oracle::standards::v_v3::subsets::any::oracle_identity_round_trip(&exported).expect("image crate reopens BMP export");
     let independent = crate::standards::v_v3::subsets::any::io::decode_bmp(&independent).expect("independent BMP output reopens");
     assert_eq!(crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&independent).unwrap(), crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&imported).unwrap());
-    assert_eq!(current, <BmpEditor as ArtifactEditor>::initial_snapshot(), "opening does not replace the selected owner before publication");
+    assert_eq!(current, <BmpEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")(), "opening does not replace the selected owner before publication");
 }
 
 #[semio_framework_async_macros::async_test]

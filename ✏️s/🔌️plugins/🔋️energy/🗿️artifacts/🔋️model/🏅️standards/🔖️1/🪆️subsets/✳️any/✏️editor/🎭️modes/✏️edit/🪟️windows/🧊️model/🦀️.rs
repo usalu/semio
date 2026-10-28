@@ -18,7 +18,7 @@
 pub mod config;
 
 use crate::editor_interaction::{EnergyModelInteractionSnapshot, ENERGY_GRANULARITY_SURFACE, ENERGY_MODEL_INTERACTION_DOMAIN};
-use crate::scene::{energy_model_scene, EnergySceneStyle};
+use crate::scene::{energy_model_scene, EnergySceneStyle,EnergySceneColors};
 use semio_framework_plugin::plugin_app_close_prelude::column;
 use semio_framework_plugin::plugin_app_close_prelude::image;
 use semio_framework_plugin::plugin_app_close_prelude::row;
@@ -35,7 +35,7 @@ use semio_framework_plugin::ActionDefinition;
 use semio_framework_plugin::ActionKind;
 use semio_framework_plugin::BuiltNode;
 use semio_framework_plugin::InteractiveJobClassification;
-use semio_framework_ui_locale::LocalizedLabel;
+use semio_framework_ui_locale::{LocalizedLabel,Locale};
 use semio_framework_plugin::PluginAssemblyError;
 use semio_framework_plugin::SurfaceKind;
 use semio_framework_plugin::UiAssemblyResult;
@@ -135,8 +135,9 @@ pub fn legend_swatch_src(hex: &str) -> String {
 /// 🎨️ The ramp strip: `min` · eight swatches low→high · `max`. The colours come from
 /// `crate::editor::model::results::legend_bands()`, which is the SAME array `band_color` indexes to
 /// paint the meshes, so the strip can never describe a ramp the scene is not using.
-fn legend_strip(minimum: f64, maximum: f64) -> UiAssemblyResult<BuiltNode> {
+fn legend_strip(minimum: f64, maximum: f64,locale:Locale) -> UiAssemblyResult<BuiltNode> {
     let (low, high) = crate::editor_results::legend_bounds_labels(minimum, maximum);
+    let (low,high)=match locale{Locale::En=>(low,high),Locale::De=>(low.replace('.',","),high.replace('.',","))};
     let cell = |id: &str, value: String| -> UiAssemblyResult<BuiltNode> {
         let label = SemanticLabel::try_from(value).map_err(|_| caption_error("a legend bound exceeds its UI label bound"))?;
         text(label).try_id(id).map_err(|_| caption_error("a legend bound node id was refused"))?.try_build().map_err(|_| caption_error("a legend bound node was refused"))
@@ -157,7 +158,7 @@ fn legend_strip(minimum: f64, maximum: f64) -> UiAssemblyResult<BuiltNode> {
     row()
         .try_id(LEGEND_STRIP_NODE_ID)
         .map_err(|_| caption_error("the legend strip node id was refused"))?
-        .try_label("Result scale, low to high")
+        .try_label(match locale{Locale::En=>"Result scale, low to high",Locale::De=>"Ergebnisskala, niedrig bis hoch"})
         .map_err(|_| caption_error("the legend strip label was refused"))?
         .try_children(children)
         .map_err(|_| caption_error("the legend strip children were refused"))?
@@ -169,7 +170,7 @@ fn legend_strip(minimum: f64, maximum: f64) -> UiAssemblyResult<BuiltNode> {
 /// shape, plus the explicit sibling ids that shape is missing, plus the ramp strip when the render
 /// knows the bounds the ramp was normalized over. `bounds` is `None` for a caption that names no
 /// numeric scale, and the whole legend is absent when there is no overlay at all.
-fn with_caption(scene: BuiltNode, caption: &str, bounds: Option<(f64, f64)>) -> UiAssemblyResult<BuiltNode> {
+fn with_caption(scene: BuiltNode, caption: &str, bounds: Option<(f64, f64)>,locale:Locale) -> UiAssemblyResult<BuiltNode> {
     let caption = SemanticLabel::try_from(caption.to_string()).map_err(|_| caption_error("the scene caption exceeds its UI label bound"))?;
     let label = text(caption)
         .try_id(CAPTION_NODE_ID)
@@ -178,7 +179,7 @@ fn with_caption(scene: BuiltNode, caption: &str, bounds: Option<(f64, f64)>) -> 
         .map_err(|_| caption_error("the caption node was refused"))?;
     let mut legend = column().try_id(LEGEND_NODE_ID).map_err(|_| caption_error("the legend node id was refused"))?.try_child(label).map_err(|_| caption_error("the caption child was refused"))?;
     if let Some((minimum, maximum)) = bounds {
-        legend = legend.try_child(legend_strip(minimum, maximum)?).map_err(|_| caption_error("the legend strip child was refused"))?;
+        legend = legend.try_child(legend_strip(minimum, maximum,locale)?).map_err(|_| caption_error("the legend strip child was refused"))?;
     }
     let legend = legend.try_build().map_err(|_| caption_error("the legend node was refused"))?;
     let scene_stack = column()
@@ -200,8 +201,8 @@ fn with_caption(scene: BuiltNode, caption: &str, bounds: Option<(f64, f64)>) -> 
 /// ✏️ Real `Model -> World3d surface`. `overlay` maps a raw entity id to an rgb triple that REPLACES
 /// that entity's family swatch (the results colouring lane); `caption` is the legend line drawn above
 /// the viewport. Both `None` is the plain model view the edit-mode layout renders.
-pub fn render(model: &crate::model::Model, interaction: &EnergyModelInteractionSnapshot, overlay: Option<&HashMap<u32, [f64; 3]>>, caption: Option<&str>) -> UiAssemblyResult<BuiltNode> {
-    render_with_camera(model, interaction, overlay, caption, None)
+pub fn render(model: &impl crate::scene::EnergySceneModel, interaction: &EnergyModelInteractionSnapshot, overlay: Option<&dyn EnergySceneColors>, caption: Option<&str>,locale:Locale) -> UiAssemblyResult<BuiltNode> {
+    render_with_camera(model, interaction, overlay, caption, None,locale)
 }
 
 /// 🎥️ The same render, plus the addressed window's RETAINED orbit pose when it has one
@@ -210,13 +211,14 @@ pub fn render(model: &crate::model::Model, interaction: &EnergyModelInteractionS
 /// `shouldReattachWorldViewportCamera` recognizes as its own echo and therefore does NOT reattach —
 /// so a re-render never yanks a camera the user just moved.
 pub fn render_with_camera(
-    model: &crate::model::Model,
+    model: &impl crate::scene::EnergySceneModel,
     interaction: &EnergyModelInteractionSnapshot,
-    overlay: Option<&HashMap<u32, [f64; 3]>>,
+    overlay: Option<&dyn EnergySceneColors>,
     caption: Option<&str>,
     camera: Option<&config::EnergyModelWindowConfig>,
+    locale:Locale,
 ) -> UiAssemblyResult<BuiltNode> {
-    render_with_legend(model, interaction, overlay, caption, None, camera)
+    render_with_legend(model, interaction, overlay, caption, None, camera,locale)
 }
 
 /// 🎨️ The same render again, plus the `(min, max)` the results ramp was normalized over. With
@@ -224,12 +226,13 @@ pub fn render_with_camera(
 /// caption that names no scale) only the caption line is drawn. `bounds` is ignored when there is no
 /// caption at all — no overlay, no legend, exactly the bare viewport the edit layout renders.
 pub fn render_with_legend(
-    model: &crate::model::Model,
+    model: &impl crate::scene::EnergySceneModel,
     interaction: &EnergyModelInteractionSnapshot,
-    overlay: Option<&HashMap<u32, [f64; 3]>>,
+    overlay: Option<&dyn EnergySceneColors>,
     caption: Option<&str>,
     bounds: Option<(f64, f64)>,
     camera: Option<&config::EnergyModelWindowConfig>,
+    locale:Locale,
 ) -> UiAssemblyResult<BuiltNode> {
     let style = EnergySceneStyle { selected_ids: &interaction.selected_ids, hovered_ids: &interaction.hovered_ids, overlay };
     let mut scene = energy_model_scene(model, &style, Some((ENERGY_MODEL_INTERACTION_DOMAIN, ENERGY_GRANULARITY_SURFACE)));
@@ -238,9 +241,16 @@ pub fn render_with_legend(
     }
     let node = semio_framework_plugin::scene_surface(BODY_KEY, SemanticSurfaceKind::World3d, &scene)?;
     match caption {
-        Some(caption) => with_caption(node, caption, bounds),
+        Some(caption) => with_caption(node, caption, bounds,locale),
         None => Ok(node),
     }
+}
+/// 🔎️ Paints each surface directly from bounded reads of the retained original result publication.
+pub fn render_indexed<S:crate::editor_results::indexed::EnergyResultSource>(model:&impl crate::scene::EnergySceneModel,interaction:&EnergyModelInteractionSnapshot,results:Option<&crate::editor_results::indexed::IndexedEnergyResults<S>>,field:crate::editor_results::ResultField,locale:semio_framework_ui_locale::Locale,camera:Option<&config::EnergyModelWindowConfig>)->UiAssemblyResult<BuiltNode>{
+ struct Colors<'a,S:crate::editor_results::indexed::EnergyResultSource>{results:&'a crate::editor_results::indexed::IndexedEnergyResults<S>,field:crate::editor_results::ResultField}
+ impl<S:crate::editor_results::indexed::EnergyResultSource> EnergySceneColors for Colors<'_,S>{fn color(&self,id:u32)->Option<[f64;3]>{self.results.color(id,self.field)}}
+ let colors=results.map(|results|Colors{results,field});let caption=results.map(|results|results.caption(field,locale));let bounds=results.map(|results|{let[low,high]=results.bounds(field);(low,high)});
+ render_with_legend(model,interaction,colors.as_ref().map(|colors|colors as &dyn EnergySceneColors),caption.as_deref(),bounds,camera,locale)
 }
 //#endregion 🔖️Render
 

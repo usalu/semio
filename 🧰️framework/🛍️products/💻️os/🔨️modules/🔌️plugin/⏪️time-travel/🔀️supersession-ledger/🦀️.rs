@@ -51,8 +51,8 @@ pub struct SupersedeLedger {
 impl SupersedeLedger {
     /// 🔄️ Rebuilds from `transitions` when they changed since the last build; `originals` answers the original input,
     /// encoded like a supersede replacement, of every operation a supersession names.
-    pub fn refresh(&mut self, transitions: &[store::os_spr::MutationEnvelope], originals: impl FnOnce(&BTreeSet<MutationId>) -> HashMap<MutationId, protocol::InputReplacement>) {
-        let key = (transitions.len(), transitions.last().map(|envelope| envelope.mutation_id.0.clone()));
+    pub fn refresh<'a,I:ExactSizeIterator<Item=&'a store::os_spr::MutationEnvelope>+DoubleEndedIterator+Clone>(&mut self,transitions:I, originals: impl FnOnce(&BTreeSet<MutationId>) -> HashMap<MutationId, protocol::InputReplacement>) {
+        let key = (transitions.len(), transitions.clone().next_back().map(|envelope| envelope.mutation_id.0.clone()));
         if key == self.key {
             return;
         }

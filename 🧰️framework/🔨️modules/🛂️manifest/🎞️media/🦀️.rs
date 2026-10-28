@@ -31,7 +31,7 @@ use std::fmt::Formatter;
 /// what used to be duplicated verbatim in `framework/plugin/rs` and `framework/product/os/core/rs`; both
 /// now re-export this definition instead of declaring their own.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum OsMediaCapability {
@@ -48,7 +48,7 @@ pub enum OsMediaCapability {
 /// — see `crate::media_types_compatible`. `OsArtifactDescriptor` (`framework/product/os/core`) threads
 /// `media_type` through so registry lookups return it alongside the rest of the descriptor.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactKindSpec {
@@ -238,7 +238,7 @@ pub async fn media_types_compatible(produced: &MediaType, accepted: &MediaType) 
 /// `import_formats` lists without duplicating `ArtifactKindSpec`'s full shape (which stays alive
 /// unchanged for now; later waves retire it onto `AppIo`).
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct ArtifactPresentation {
@@ -254,7 +254,7 @@ pub struct ArtifactPresentation {
 /// surface (`AppDefinition.io`); apps don't populate this yet — later waves migrate `media_inputs`/
 /// `media_outputs`/`artifact_kinds` onto it.
 // 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct AppIo {

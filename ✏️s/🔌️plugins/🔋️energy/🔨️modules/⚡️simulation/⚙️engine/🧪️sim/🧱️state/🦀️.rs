@@ -260,6 +260,8 @@ impl Default for ResultBuildWork {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) enum AggregateZoneStage {
     Temperature,
+    HeatingPower,
+    CoolingPower,
     Heating,
     Cooling,
     Fan,
@@ -267,7 +269,7 @@ pub(super) enum AggregateZoneStage {
 }
 
 #[cfg(any(test, feature = "testkit"))]
-pub const P7C1_AGGREGATE_STAGES: [AggregateZoneStage; 5] = [AggregateZoneStage::Temperature, AggregateZoneStage::Heating, AggregateZoneStage::Cooling, AggregateZoneStage::Fan, AggregateZoneStage::Complete];
+pub const P7C1_AGGREGATE_STAGES: [AggregateZoneStage; 7] = [AggregateZoneStage::Temperature, AggregateZoneStage::HeatingPower, AggregateZoneStage::CoolingPower, AggregateZoneStage::Heating, AggregateZoneStage::Cooling, AggregateZoneStage::Fan, AggregateZoneStage::Complete];
 
 #[derive(Clone, Debug, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned)]
 pub(super) struct AggregateZoneWork {
@@ -392,11 +394,8 @@ pub struct EnergyJobAuthority {
     pub model: Model,
     pub(super) config: SimulationConfig,
     pub(super) numerical_census: EnergyNumericalCensus,
-    pub input_identity_bytes: usize,
-    pub input_identity_ready: bool,
     pub stage: EnergyJobStage,
     pub tier: EnergyQualityTier,
-    pub weather: FixedTable<usize, WeatherRecord>,
     pub weather_cursor: usize,
     pub weather_target: usize,
     pub precompute: Option<PrecomputeBuilder>,
@@ -461,8 +460,8 @@ pub struct EnergyJobAuthority {
     pub(super) started: Instant,
     pub(super) closing: bool,
     pub(super) close_string_owner: String,
-    closing_tail:Option<semio_framework_value::retirement::controlled::ControlledRetirement<EnergyAuthorityRetirement>>,
-    tail_moved:bool,
+    pub(crate) closing_tail:Option<semio_framework_value::retirement::controlled::ControlledRetirement<EnergyAuthorityRetirement>>,
+    pub(crate) tail_moved:bool,
 }
 
 pub const ENERGY_ABANDONMENT_SLOTS: usize = 64;
@@ -477,7 +476,7 @@ static ENERGY_ABANDONMENT_REGISTRY: Mutex<[EnergyAbandonmentSlot; ENERGY_ABANDON
 
 pub struct EnergyJob {
     pub(super) authority: Option<Box<EnergyJobAuthority>>,
-    abandonment_slot: usize,
+    pub(crate) abandonment_slot: usize,
 }
 
 impl std::fmt::Debug for EnergyJob {
@@ -521,7 +520,7 @@ fn claim_energy_abandonment_slot(operation: Operation) -> Option<usize> {
     Some(index)
 }
 
-fn release_energy_abandonment_slot(index: usize) {
+pub(crate) fn release_energy_abandonment_slot(index: usize) {
     let mut registry = ENERGY_ABANDONMENT_REGISTRY.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
     registry[index] = EnergyAbandonmentSlot::Vacant;
 }
@@ -540,14 +539,13 @@ impl EnergyJob {
         if let Some(dimension) = census.first_exceeded(bounds.0) {
             return Err(EnergyAdmissionRejected { operation, model, config, census, dimension });
         }
+        Self::from_observed(operation,model,config,census)
+    }
+
+    pub(super) fn from_observed(operation:Operation,model:Model,config:SimulationConfig,census:EnergyNumericalCensus)->Result<Self,EnergyAdmissionRejected>{
         let Some(abandonment_slot) = claim_energy_abandonment_slot(operation) else {
             return Err(EnergyAdmissionRejected { operation, model, config, census, dimension: EnergyNumericalDimension::ProcessJobs });
         };
-        let mut weather = FixedTable::default();
-        if weather.admit(census.weather_records).is_err() {
-            release_energy_abandonment_slot(abandonment_slot);
-            return Err(EnergyAdmissionRejected { operation, model, config, census, dimension: EnergyNumericalDimension::WeatherRecords });
-        }
         let weather_target = weather_copy_target(&config);
         Ok(Self {
             authority: Some(Box::new(EnergyJobAuthority {
@@ -558,7 +556,6 @@ impl EnergyJob {
                 numerical_census: census,
                 stage: EnergyJobStage::Validate,
                 tier: EnergyQualityTier::SteadyStateEstimate,
-                weather,
                 weather_cursor: 0,
                 weather_target,
                 precompute: None,

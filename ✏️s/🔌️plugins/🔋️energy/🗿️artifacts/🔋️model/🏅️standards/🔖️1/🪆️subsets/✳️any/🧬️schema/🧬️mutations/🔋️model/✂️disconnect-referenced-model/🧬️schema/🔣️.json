@@ -11,5 +11,39 @@
     "mutation": {
       "const": "disconnectReferencedModel"
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "root-link",
+    "field": "referenced_model",
+    "intent": "detach",
+    "attach": "ConnectReferencedModel",
+    "detach": "DisconnectReferencedModel",
+    "labels": {
+      "en": "Disconnect referenced model",
+      "de": "Referenziertes Modell lösen"
+    },
+    "semantics": {
+      "verb": "disconnect",
+      "entity": "referenced-model",
+      "kind": "disconnect-referenced-model",
+      "record": "DisconnectedReferencedModel"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The complete original artifact link must retain valid target, pin and role identities."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This original link slot already carries the requested target, pin and role."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original link slot is empty."
+      }
+    }
   }
 }

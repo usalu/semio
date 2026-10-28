@@ -129,9 +129,9 @@ impl ArtifactEditor for Block3dPlayApp {
     /// 🚀️ Boots on the `hexagonal-cut-concrete-forest-left` fixture instead of the empty document —
     /// the `World3d` window renders `representations[].mesh_url`, so an empty boot document painted an
     /// empty scene until a client dispatched `setActiveExample`. See `dsl::block3d_boot_snapshot`.
-    fn initial_snapshot() -> Block3dSnapshot {
+    fn reference_birth()->Option<fn()->Block3dSnapshot>{Some(||{
         semio_s_artifact_block_3d_io::text::snapshot::block3d_boot_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(block3d_io())

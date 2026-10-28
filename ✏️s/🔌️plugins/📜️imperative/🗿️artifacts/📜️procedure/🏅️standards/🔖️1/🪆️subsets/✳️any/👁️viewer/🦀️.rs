@@ -71,9 +71,9 @@ impl ArtifactViewer for ImperativeViewer {
     }
     const DOCUMENT_SCHEMA: &'static str = PROCEDURE_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> ProcedureSnapshot {
+    fn reference_birth()->Option<fn()->ProcedureSnapshot>{Some(||{
         default_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `ImperativeViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no

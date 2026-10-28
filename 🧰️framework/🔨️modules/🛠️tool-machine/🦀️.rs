@@ -485,3 +485,11 @@ where T::Input:semio_framework_value::retirement::RetireOwned,Snapshot<T>:semio_
  fn retirement_birth_bytes(&self)->Option<usize>{use semio_framework_value::retirement::{sequence_birth_bytes,deferred_birth_bytes_for};sequence_birth_bytes(&[deferred_birth_bytes_for(&self.host),deferred_birth_bytes_for(&self.tool),deferred_birth_bytes_for(&self.actor),deferred_birth_bytes_for(&self.input),deferred_birth_bytes_for(&self.snapshot),deferred_birth_bytes_for(&self.transaction)])}
  fn controlled_retirement_supported()->bool{H::controlled_retirement_supported()&&T::Input::controlled_retirement_supported()&&<Snapshot<T> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()&&<ToolTransaction<T::Mutation> as semio_framework_value::retirement::RetireOwned>::controlled_retirement_supported()}
 }
+
+#[cfg(test)]
+#[path="🔗️read/🧪️tests/🦀️.rs"]
+mod original_ledger_read_tests;
+
+#[path="🔗️read/📤️transfer/🦀️.rs"]
+mod original_ledger_transfer;
+pub use original_ledger_transfer::OriginalToolLedgerSource;

@@ -1,0 +1,120 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "required": [
+    "contract",
+    "bodyBytes",
+    "cancelAt",
+    "wideRuleCount",
+    "rules",
+    "holidays",
+    "days",
+    "cases",
+    "wideSourceAdmission"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "contract": {
+      "const": "semio.energy.original-schedule-intents.v1"
+    },
+    "bodyBytes": {
+      "const": 4096
+    },
+    "cancelAt": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "wideRuleCount": {
+      "const": 1200
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "holidays": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "days": {
+      "type": "array",
+      "minItems": 7,
+      "maxItems": 7
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 33,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "action",
+          "payload",
+          "outcome",
+          "field",
+          "before",
+          "after",
+          "inverse"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "action": {
+            "enum": [
+              "insert-rule",
+              "remove-rule",
+              "reorder-rules",
+              "add-holiday",
+              "remove-holiday",
+              "change-day"
+            ]
+          },
+          "payload": {
+            "type": "object"
+          },
+          "outcome": {
+            "enum": [
+              "changed",
+              "no-op",
+              "invalid",
+              "missing",
+              "invalid-reference"
+            ]
+          },
+          "field": {
+            "enum": [
+              "rules",
+              "holiday_dates",
+              "daily_schedule_ids"
+            ]
+          },
+          "before": {
+            "type": "array"
+          },
+          "after": {
+            "type": "array"
+          },
+          "inverse": {
+            "type": [
+              "object",
+              "null"
+            ]
+          },
+          "retainedSource": {
+            "type": "boolean"
+          }
+        }
+      }
+    },
+    "wideSourceAdmission": {
+      "const": "original-retained-turns"
+    }
+  }
+}

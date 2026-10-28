@@ -1,0 +1,160 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Original Wire Value Key Order",
+  "type": "object",
+  "required": [
+    "cases",
+    "maximumComparisonBytes",
+    "cancelAfter"
+  ],
+  "properties": {
+    "cases": {
+      "type": "array"
+    },
+    "maximumComparisonBytes": {
+      "const": 64
+    },
+    "cancelAfter": {
+      "type": "array"
+    }
+  },
+  "maximumComparisonBytes": 64,
+  "cancelAfter": [
+    0,
+    1,
+    3,
+    11,
+    32
+  ],
+  "cases": [
+    null,
+    true,
+    [
+      {
+        "z": 1,
+        "a": [
+          {
+            "é": 2,
+            "a": 3
+          }
+        ]
+      }
+    ],
+    {
+      "z": 1,
+      "a": 2,
+      "b": 3
+    },
+    {
+      "ab": 1,
+      "a": 2,
+      "aa": 3
+    }
+  ],
+  "expectedOrders": [
+    [
+      "scalar",
+      null
+    ],
+    [
+      "scalar",
+      true
+    ],
+    [
+      "array",
+      [
+        [
+          "object",
+          [
+            [
+              "a",
+              [
+                "array",
+                [
+                  [
+                    "object",
+                    [
+                      [
+                        "a",
+                        [
+                          "scalar",
+                          3
+                        ]
+                      ],
+                      [
+                        "é",
+                        [
+                          "scalar",
+                          2
+                        ]
+                      ]
+                    ]
+                  ]
+                ]
+              ]
+            ],
+            [
+              "z",
+              [
+                "scalar",
+                1
+              ]
+            ]
+          ]
+        ]
+      ]
+    ],
+    [
+      "object",
+      [
+        [
+          "a",
+          [
+            "scalar",
+            2
+          ]
+        ],
+        [
+          "b",
+          [
+            "scalar",
+            3
+          ]
+        ],
+        [
+          "z",
+          [
+            "scalar",
+            1
+          ]
+        ]
+      ]
+    ],
+    [
+      "object",
+      [
+        [
+          "a",
+          [
+            "scalar",
+            2
+          ]
+        ],
+        [
+          "aa",
+          [
+            "scalar",
+            3
+          ]
+        ],
+        [
+          "ab",
+          [
+            "scalar",
+            1
+          ]
+        ]
+      ]
+    ]
+  ]
+}

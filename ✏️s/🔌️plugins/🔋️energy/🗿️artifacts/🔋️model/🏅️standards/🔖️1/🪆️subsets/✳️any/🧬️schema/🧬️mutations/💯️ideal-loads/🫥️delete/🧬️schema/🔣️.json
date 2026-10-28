@@ -35,5 +35,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "key": "id",
+    "inverse": "CreateIdealLoadsSystem",
+    "restriction": {
+      "kind": "references",
+      "row": "StateFaultDefinition",
+      "branch": "generation",
+      "collection": "faults",
+      "field": "target_equipment_id",
+      "storage": "direct"
+    },
+    "labels": {
+      "en": "Delete ideal loads system",
+      "de": "Ideallastsystem löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "ideal-loads-system",
+      "kind": "delete-ideal-loads-system",
+      "record": "DeletedIdealLoadsSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed ideal loads system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

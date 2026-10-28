@@ -78,9 +78,9 @@ impl ArtifactViewer for SequenceViewer {
 })())
 }
 
-    fn initial_snapshot() -> SequenceSnapshot {
+    fn reference_birth()->Option<fn()->SequenceSnapshot>{Some(||{
         crate::snapshot::schema::default_persisted_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `SequenceViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

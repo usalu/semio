@@ -1,0 +1,2 @@
+import{test,expect}from"bun:test";import Ajv from"ajv/dist/2020.js";import{Database}from"bun:sqlite";import schema from"./🧬️.json";import fixture from"./🔣️.json";
+test("run group identity matches original full unsigned decimal",()=>{expect(new Ajv({strict:true}).compile(schema)(fixture)).toBe(true);const db=new Database(":memory:");try{for(const row of fixture.cases){const result=db.query("SELECT 'toolRun:' || ?1 AS value").get(row.run)as{value:string};expect(result.value).toBe(row.group)}}finally{db.close()}});

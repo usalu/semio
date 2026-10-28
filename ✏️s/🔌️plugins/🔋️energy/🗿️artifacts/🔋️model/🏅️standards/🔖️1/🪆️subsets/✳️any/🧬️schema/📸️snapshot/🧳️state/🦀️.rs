@@ -612,4 +612,11 @@ pub struct EnergyModelState{
  #[value(flatten)]pub generation:SealedShared<ModelGenerationState>,
  #[value(flatten)]pub outputs:SealedShared<ModelOutputState>,
 }
-#[cfg(test)]#[path="🧪️tests/🦀️.rs"]mod tests;
+#[cfg(test)]#[path="🧪️tests/🦀️.rs"]pub(crate) mod tests;
+
+#[path="👁️read/🦀️.rs"]pub mod read;
+pub use read::EnergyModelView;
+
+#[path="🪡️fields/🦀️.rs"]pub mod fields;
+
+pub use crate::calendar::RunPeriod;

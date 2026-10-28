@@ -72,7 +72,8 @@
         "precision": 2,
         "group": "geometry",
         "order": 30
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "efficiency": {
       "type": "number",
@@ -91,7 +92,9 @@
         "softMax": 1,
         "group": "efficiency",
         "order": 40
-      }
+      },
+      "exclusiveMinimum": 0,
+      "maximum": 1
     },
     "storageVolumeM3": {
       "type": "number",
@@ -109,7 +112,8 @@
         "precision": 0,
         "group": "capacity",
         "order": 50
-      }
+      },
+      "exclusiveMinimum": 0
     },
     "tiltDeg": {
       "type": "number",
@@ -140,7 +144,9 @@
         ],
         "group": "orientation",
         "order": 60
-      }
+      },
+      "minimum": 0,
+      "maximum": 90
     },
     "azimuthDeg": {
       "type": "number",
@@ -169,7 +175,88 @@
         ],
         "group": "orientation",
         "order": 70
-      }
+      },
+      "minimum": 0,
+      "maximum": 360
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateSolarThermalConfig",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "collector_area_m2",
+        "input": "collector_area_m2",
+        "storage": "fixed"
+      },
+      {
+        "field": "efficiency",
+        "input": "efficiency",
+        "storage": "fixed"
+      },
+      {
+        "field": "storage_volume_m3",
+        "input": "storage_volume_m3",
+        "storage": "fixed"
+      },
+      {
+        "field": "tilt_deg",
+        "input": "tilt_deg",
+        "storage": "fixed"
+      },
+      {
+        "field": "azimuth_deg",
+        "input": "azimuth_deg",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateSolarThermalConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "solar_thermal_systems",
+    "key": "id",
+    "inverse": "DeleteSolarThermalSystem",
+    "labels": {
+      "en": "Create solar thermal system",
+      "de": "Solarthermieanlage erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "solar-thermal-system",
+      "kind": "create-solar-thermal-system",
+      "record": "CreatedSolarThermalSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit"
   }
 }

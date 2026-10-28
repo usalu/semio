@@ -19,6 +19,8 @@ impl OriginalJobDecodeOwner{
   let receipt=self.receipt.take().ok_or_else(||ValueError::literal(ValueRefusalKind::InvariantViolated,"original Job retirement requires its existing decoder receipt"))?;let mut continuation=match receipt.bind(&mut self.recipient){Ok(bound)=>bound,Err((error,receipt))=>{self.receipt=Some(receipt);return Err(error);}};
   let result=continuation.retire(grant,callback,operation);let(detached,_)=continuation.detach();self.receipt=Some(detached);result
  }
+ /// 🪪️ Borrows only an existing original decoder receipt and its exact retirement recipient.
+ pub fn receiving_identity(&self)->Option<(u64,u64)>{self.receipt.as_ref().map(NativeDetachedRetirementDecodeContinuation::identity)}
  /// 📊️ Reads cumulative original receiving allocation without granting another credit.
  pub fn owned_bytes(&self)->usize{self.receipt.as_ref().map_or(0,NativeDetachedRetirementDecodeContinuation::owned_bytes)}
  /// 📏️ Quotes actual recipient closure before separately removing its scalar continuation.

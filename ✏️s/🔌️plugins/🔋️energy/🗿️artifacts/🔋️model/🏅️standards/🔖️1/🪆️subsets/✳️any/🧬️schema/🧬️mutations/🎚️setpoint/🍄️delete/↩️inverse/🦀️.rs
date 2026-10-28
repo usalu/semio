@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteSetpointManager` — always computed from BASE, never by inverting the delta.
 
 use crate as vocabulary;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
@@ -15,10 +15,10 @@ where
             item.id,
             item.name.clone(),
             match &item.kind {
-                crate::model::SetpointManagerKind::OutdoorAirReset { .. } => "OutdoorAirReset".to_string(),
-                crate::model::SetpointManagerKind::WarmestZone => "WarmestZone".to_string(),
-                crate::model::SetpointManagerKind::ColdestZone => "ColdestZone".to_string(),
-                crate::model::SetpointManagerKind::Scheduled => "Scheduled".to_string(),
+                crate::model::SetpointManagerKind::OutdoorAirReset { .. } => crate::model::SetpointManagerKindTag::OutdoorAirReset,
+                crate::model::SetpointManagerKind::WarmestZone => crate::model::SetpointManagerKindTag::WarmestZone,
+                crate::model::SetpointManagerKind::ColdestZone => crate::model::SetpointManagerKindTag::ColdestZone,
+                crate::model::SetpointManagerKind::Scheduled => crate::model::SetpointManagerKindTag::Scheduled,
             },
             match &item.kind {
                 crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c, .. } => *low_outdoor_c,

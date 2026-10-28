@@ -15,7 +15,8 @@
     "fuel",
     "clock",
     "deadline",
-    "physicalRetirement"
+    "physicalRetirement",
+    "pagedBytes"
   ],
   "properties": {
     "source": {
@@ -114,6 +115,29 @@
     },
     "physicalRetirement": {
       "const": true
+    },
+    "pagedBytes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "length",
+        "pattern"
+      ],
+      "properties": {
+        "length": {
+          "const": 8197
+        },
+        "pattern": {
+          "const": [
+            0,
+            1,
+            127,
+            128,
+            254,
+            255
+          ]
+        }
+      }
     }
   }
 }

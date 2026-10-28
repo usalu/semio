@@ -1,0 +1,21 @@
+//! ⚠️ Original typed diagnostics project directly into canonical intrinsic wire fields without a DslValue diagnostic mirror.
+use super::*;
+use semio_framework_diagnostic::{Diagnostic,ExpectedSet,FaultScope,Severity,TextSpan};
+use semio_framework_value::Number;
+/// 🔎️ The actual diagnostic vector remains owned by the result source until its native wire cursor closes.
+pub struct BorrowedDiagnosticsWireValue<'a>{value:&'a Vec<Diagnostic>}
+impl<'a> BorrowedDiagnosticsWireValue<'a>{pub fn new(value:&'a Vec<Diagnostic>)->Self{Self{value}}pub const RECORD:BorrowedRecordSpec=BorrowedWireValue::RECORD;}
+fn diagnostic_key(value:&Diagnostic,index:usize)->Option<&'static str>{[Some("code"),value.expected.as_ref().map(|_|"expected"),Some("message"),Some("scope"),Some("severity"),Some("span")].into_iter().flatten().nth(index)}
+fn scope_fields(value:&FaultScope)->[(&'static str,Option<&str>);5]{[("appId",value.app_id.as_deref()),("bodyKey",value.body_key.as_deref()),("instanceId",value.instance_id.as_deref()),("module",value.module.as_deref()),("pluginId",value.plugin_id.as_deref())]}
+fn text<'a>(value:&'a str,path:&[usize])->Result<FieldProjectionView<'a>,ValueError>{if !path.is_empty(){return Err(invalid())}Ok(FieldProjectionView::IntrinsicText(value))}
+fn scope_view<'a>(value:&'a FaultScope,path:&[usize])->Result<FieldProjectionView<'a>,ValueError>{let fields=scope_fields(value);if path.is_empty(){return Ok(FieldProjectionView::IntrinsicObject(fields.into_iter().filter(|(_,value)|value.is_some()).count()))}let(_,value)=fields.into_iter().filter_map(|(key,value)|value.map(|value|(key,value))).nth(path[0]).ok_or_else(invalid)?;text(value,&path[1..])}
+fn expected_view<'a>(value:&'a ExpectedSet,path:&[usize])->Result<FieldProjectionView<'a>,ValueError>{if path.is_empty(){return Ok(FieldProjectionView::IntrinsicObject(3))}let rows=match path[0]{0=>&value.keys,1=>&value.keywords,2=>&value.tokens,_=>return Err(invalid())};if path.len()==1{return Ok(FieldProjectionView::IntrinsicArray(rows.len()))}text(rows.get(path[1]).ok_or_else(invalid)?,&path[2..])}
+fn span_view(value:&TextSpan,path:&[usize])->Result<FieldProjectionView<'static>,ValueError>{if path.is_empty(){return Ok(FieldProjectionView::IntrinsicObject(3))}if path.len()!=1{return Err(invalid())}let value=match path[0]{0=>value.column,1=>value.length,2=>value.line,_=>return Err(invalid())};Ok(FieldProjectionView::IntrinsicNumber(Number::UInt(u64::from(value))))}
+fn diagnostic_view<'a>(value:&'a Diagnostic,path:&[usize])->Result<FieldProjectionView<'a>,ValueError>{if path.is_empty(){return Ok(FieldProjectionView::IntrinsicObject(5+usize::from(value.expected.is_some())))}let tail=&path[1..];match diagnostic_key(value,path[0]).ok_or_else(invalid)?{"code"=>text(&value.code.0,tail),"message"=>text(&value.message,tail),"expected"=>expected_view(value.expected.as_ref().ok_or_else(invalid)?,tail),"scope"=>scope_view(&value.scope,tail),"span"=>span_view(&value.span,tail),"severity"=>text(match value.severity{Severity::Info=>"info",Severity::Warning=>"warning",Severity::Error=>"error",Severity::Fatal=>"fatal"},tail),_=>Err(invalid())}}
+impl FieldProjectionSource for BorrowedDiagnosticsWireValue<'_>{
+ fn projection_identity(&self)->usize{self.value as*const _ as usize}
+ fn projection_view(&self,path:&[usize])->Result<FieldProjectionView<'_>,ValueError>{if path.is_empty(){return Ok(FieldProjectionView::Record(&[1]))}if path[0]!=0{return Err(invalid())}if path.len()==1{return Ok(FieldProjectionView::IntrinsicArray(self.value.len()))}diagnostic_view(self.value.get(path[1]).ok_or_else(invalid)?,&path[2..])}
+ fn projection_key(&self,path:&[usize],index:usize)->Result<&str,ValueError>{if path.len()<2||path[0]!=0{return Err(invalid())}let value=self.value.get(path[1]).ok_or_else(invalid)?;if path.len()==2{return diagnostic_key(value,index).ok_or_else(invalid)}if path.len()!=3{return Err(invalid())}match diagnostic_key(value,path[2]).ok_or_else(invalid)?{"scope"=>scope_fields(&value.scope).into_iter().filter(|(_,value)|value.is_some()).nth(index).map(|(key,_)|key).ok_or_else(invalid),"expected"=>["keys","keywords","tokens"].get(index).copied().ok_or_else(invalid),"span"=>["column","length","line"].get(index).copied().ok_or_else(invalid),_=>Err(invalid())}}
+}
+
+#[cfg(test)]#[path="🧪️.rs"]mod tests;

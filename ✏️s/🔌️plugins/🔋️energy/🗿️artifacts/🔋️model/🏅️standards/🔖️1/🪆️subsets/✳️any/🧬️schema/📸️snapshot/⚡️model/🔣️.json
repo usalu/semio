@@ -1,0 +1,2126 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "name",
+    "version",
+    "site",
+    "zones",
+    "spaces",
+    "surfaces",
+    "fenestrations",
+    "materials",
+    "glazing_materials",
+    "gas_materials",
+    "constructions",
+    "people",
+    "lighting",
+    "equipment",
+    "thermostats",
+    "humidistats",
+    "setpoint_managers",
+    "ideal_loads",
+    "zone_equipment",
+    "air_loops",
+    "plant_loops",
+    "outdoor_air_systems",
+    "infiltrations",
+    "mechanical_ventilations",
+    "shading_surfaces",
+    "space_lists",
+    "thermal_enclosures",
+    "adjacency_pairs",
+    "airflow_network",
+    "electrical_load_centers",
+    "pv_systems",
+    "battery_storage",
+    "shw_systems",
+    "solar_thermal_systems",
+    "refrigeration_systems",
+    "water_systems",
+    "faults",
+    "output_variables",
+    "sizing_objects",
+    "daylight_zones",
+    "room_air_models",
+    "ground_temperature",
+    "run_period",
+    "schedules"
+  ],
+  "properties": {
+    "name": {
+      "type": "string"
+    },
+    "version": {
+      "type": "string"
+    },
+    "site": {
+      "$ref": "#/$defs/Site"
+    },
+    "zones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Zone"
+      }
+    },
+    "spaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Space"
+      }
+    },
+    "surfaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Surface"
+      }
+    },
+    "fenestrations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Fenestration"
+      }
+    },
+    "materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Material"
+      }
+    },
+    "glazing_materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GlazingMaterial"
+      }
+    },
+    "gas_materials": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/GasMaterial"
+      }
+    },
+    "constructions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Construction"
+      }
+    },
+    "people": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PeopleGain"
+      }
+    },
+    "lighting": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/LightingGain"
+      }
+    },
+    "equipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/EquipmentGain"
+      }
+    },
+    "thermostats": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Thermostat"
+      }
+    },
+    "humidistats": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Humidistat"
+      }
+    },
+    "setpoint_managers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SetpointManager"
+      }
+    },
+    "ideal_loads": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/IdealLoadsSystem"
+      }
+    },
+    "zone_equipment": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ZoneEquipmentAssignment"
+      }
+    },
+    "air_loops": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ModelAirLoop"
+      }
+    },
+    "plant_loops": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PlantLoopConfig"
+      }
+    },
+    "outdoor_air_systems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OutdoorAirSystem"
+      }
+    },
+    "infiltrations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/Infiltration"
+      }
+    },
+    "mechanical_ventilations": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/MechanicalVentilation"
+      }
+    },
+    "shading_surfaces": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ShadingSurface"
+      }
+    },
+    "space_lists": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SpaceList"
+      }
+    },
+    "thermal_enclosures": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ThermalEnclosure"
+      }
+    },
+    "adjacency_pairs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/AdjacencyPair"
+      }
+    },
+    "airflow_network": {
+      "anyOf": [
+        {
+          "$ref": "#/$defs/AirflowNetworkDefinition"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "electrical_load_centers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ElectricalLoadCenter"
+      }
+    },
+    "pv_systems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/PvSystemAssignment"
+      }
+    },
+    "battery_storage": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/BatteryAssignment"
+      }
+    },
+    "shw_systems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/ShwSystemConfig"
+      }
+    },
+    "solar_thermal_systems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SolarThermalConfig"
+      }
+    },
+    "refrigeration_systems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RefrigerationConfig"
+      }
+    },
+    "water_systems": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/WaterSystemConfig"
+      }
+    },
+    "faults": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/FaultDefinition"
+      }
+    },
+    "output_variables": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/OutputVariableSpec"
+      }
+    },
+    "sizing_objects": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/SizingObject"
+      }
+    },
+    "daylight_zones": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/DaylightZoneConfig"
+      }
+    },
+    "room_air_models": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/RoomAirModelAssignment"
+      }
+    },
+    "ground_temperature": {
+      "$ref": "#/$defs/GroundTemperatureConfig"
+    },
+    "run_period": {
+      "$ref": "#/$defs/RunPeriod"
+    },
+    "schedules": {
+      "$ref": "#/$defs/ScheduleSet"
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/energy/model/model.json",
+  "title": "EnergyModel",
+  "$defs": {
+    "ScheduleSet": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "constants",
+        "daily",
+        "weekly",
+        "annual",
+        "time_series"
+      ],
+      "properties": {
+        "constants": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/ConstantSchedule"
+          }
+        },
+        "daily": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/DailySchedule"
+          }
+        },
+        "weekly": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/WeeklySchedule"
+          }
+        },
+        "annual": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/AnnualSchedule"
+          }
+        },
+        "time_series": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/TimeSeriesSchedule"
+          }
+        }
+      }
+    },
+    "TimeSeriesSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "values",
+        "timestep_seconds"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          }
+        },
+        "timestep_seconds": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "AnnualSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "rules",
+        "default_daily_schedule_id",
+        "holiday_daily_schedule_id",
+        "holiday_dates"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "rules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/CompactScheduleRule"
+          }
+        },
+        "default_daily_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "holiday_daily_schedule_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "holiday_dates": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "CompactScheduleRule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_month",
+        "start_day",
+        "end_month",
+        "end_day",
+        "daily_schedule_id"
+      ],
+      "properties": {
+        "start_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "start_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "daily_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "WeeklySchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "daily_schedule_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "daily_schedule_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "minItems": 7,
+          "maxItems": 7
+        }
+      }
+    },
+    "DailySchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "hourly_values",
+        "interpolation",
+        "limits"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hourly_values": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 24,
+          "maxItems": 24
+        },
+        "interpolation": {
+          "enum": [
+            "Continuous",
+            "Discrete"
+          ]
+        },
+        "limits": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ScheduleLimits"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "ScheduleLimits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "min",
+        "max"
+      ],
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        }
+      }
+    },
+    "ConstantSchedule": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "value"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "value": {
+          "type": "number"
+        }
+      }
+    },
+    "RunPeriod": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "start_month",
+        "start_day",
+        "end_month",
+        "end_day",
+        "year"
+      ],
+      "properties": {
+        "start_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "start_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_month": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "end_day": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "year": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "GroundTemperatureConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "building_surface_c",
+        "shallow_c",
+        "deep_c"
+      ],
+      "properties": {
+        "building_surface_c": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12
+        },
+        "shallow_c": {
+          "type": "array",
+          "items": {
+            "type": "number"
+          },
+          "minItems": 12,
+          "maxItems": 12
+        },
+        "deep_c": {
+          "type": "number"
+        }
+      }
+    },
+    "RoomAirModelAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_id",
+        "model"
+      ],
+      "properties": {
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "model": {
+          "enum": [
+            "WellMixed",
+            "OneNodeDisplacement",
+            "TwoNodeBuoyancy",
+            "UnderFloorAirDistribution"
+          ]
+        }
+      }
+    },
+    "DaylightZoneConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "illuminance_target_lux",
+        "glare_limit",
+        "window_transmittance"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "illuminance_target_lux": {
+          "type": "number"
+        },
+        "glare_limit": {
+          "type": "number"
+        },
+        "window_transmittance": {
+          "type": "number"
+        }
+      }
+    },
+    "SizingObject": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "sizing_type",
+        "design_day_type"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "sizing_type": {
+          "enum": [
+            "Heating",
+            "Cooling",
+            "OutdoorAir"
+          ]
+        },
+        "design_day_type": {
+          "enum": [
+            "Heating",
+            "Cooling"
+          ]
+        }
+      }
+    },
+    "OutputVariableSpec": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "key",
+        "reporting_frequency"
+      ],
+      "properties": {
+        "name": {
+          "type": "string"
+        },
+        "key": {
+          "type": "string"
+        },
+        "reporting_frequency": {
+          "enum": [
+            "Timestep",
+            "Hourly",
+            "Daily",
+            "Monthly",
+            "RunPeriod"
+          ]
+        }
+      }
+    },
+    "FaultDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "target_equipment_id",
+        "fault_type",
+        "severity",
+        "start_schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "target_equipment_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fault_type": {
+          "enum": [
+            "SensorBias",
+            "CoilFouling",
+            "DamperStuck",
+            "ChillerFouling",
+            "BoilerEfficiencyDegradation"
+          ]
+        },
+        "severity": {
+          "type": "number"
+        },
+        "start_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "WaterSystemConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "fixture_count",
+        "peak_flow_l_s",
+        "schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "fixture_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peak_flow_l_s": {
+          "type": "number"
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "RefrigerationConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "case_count",
+        "design_load_w",
+        "defrost_schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "case_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_load_w": {
+          "type": "number"
+        },
+        "defrost_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "SolarThermalConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "collector_area_m2",
+        "efficiency",
+        "storage_volume_m3",
+        "tilt_deg",
+        "azimuth_deg"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "collector_area_m2": {
+          "type": "number"
+        },
+        "efficiency": {
+          "type": "number"
+        },
+        "storage_volume_m3": {
+          "type": "number"
+        },
+        "tilt_deg": {
+          "type": "number"
+        },
+        "azimuth_deg": {
+          "type": "number"
+        }
+      }
+    },
+    "ShwSystemConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "heater_capacity_w",
+        "storage_volume_m3",
+        "setpoint_c",
+        "schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heater_capacity_w": {
+          "type": "number"
+        },
+        "storage_volume_m3": {
+          "type": "number"
+        },
+        "setpoint_c": {
+          "type": "number"
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "BatteryAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "capacity_kwh",
+        "max_charge_w",
+        "max_discharge_w",
+        "round_trip_efficiency"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "capacity_kwh": {
+          "type": "number"
+        },
+        "max_charge_w": {
+          "type": "number"
+        },
+        "max_discharge_w": {
+          "type": "number"
+        },
+        "round_trip_efficiency": {
+          "type": "number"
+        }
+      }
+    },
+    "PvSystemAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "dc_capacity_w",
+        "area_m2",
+        "tilt_deg",
+        "azimuth_deg",
+        "module_efficiency",
+        "inverter_efficiency",
+        "temperature_coefficient",
+        "faiman_heat_loss_constant_w_m2k",
+        "faiman_heat_loss_wind_w_s_m3k",
+        "mounting"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dc_capacity_w": {
+          "type": "number"
+        },
+        "area_m2": {
+          "type": "number"
+        },
+        "tilt_deg": {
+          "type": "number"
+        },
+        "azimuth_deg": {
+          "type": "number"
+        },
+        "module_efficiency": {
+          "type": "number"
+        },
+        "inverter_efficiency": {
+          "type": "number"
+        },
+        "temperature_coefficient": {
+          "type": "number"
+        },
+        "faiman_heat_loss_constant_w_m2k": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "faiman_heat_loss_wind_w_s_m3k": {
+          "type": "number",
+          "minimum": 0
+        },
+        "mounting": {
+          "type": "string",
+          "enum": [
+            "OpenRack",
+            "CloseRoof",
+            "InsulatedBack"
+          ]
+        }
+      }
+    },
+    "ElectricalLoadCenter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "generator_ids",
+        "pv_ids",
+        "battery_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "generator_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "pv_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "battery_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "AirflowNetworkDefinition": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "zone_node_ids",
+        "outdoor_node_id",
+        "link_ids"
+      ],
+      "properties": {
+        "zone_node_ids": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "prefixItems": [
+              {
+                "type": "integer",
+                "minimum": 0
+              },
+              {
+                "type": "integer",
+                "minimum": 0
+              }
+            ],
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "outdoor_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "link_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "AdjacencyPair": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "surface_a_id",
+        "surface_b_id"
+      ],
+      "properties": {
+        "surface_a_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "surface_b_id": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "ThermalEnclosure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "zone_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "SpaceList": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "space_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "space_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "ShadingSurface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "vertices_m",
+        "transmittance_schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "transmittance_schedule_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "MechanicalVentilation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "design_flow_m3_s",
+        "fan_total_efficiency",
+        "fan_delta_pressure_pa"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_flow_m3_s": {
+          "type": "number"
+        },
+        "fan_total_efficiency": {
+          "type": "number"
+        },
+        "fan_delta_pressure_pa": {
+          "type": "number"
+        }
+      }
+    },
+    "Infiltration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "method",
+        "design_flow_ach",
+        "flow_per_exterior_area_m3_s_m2",
+        "effective_leakage_area_m2",
+        "discharge_coefficient",
+        "stack_height_m",
+        "constant_term_coefficient",
+        "temperature_term_coefficient",
+        "velocity_term_coefficient",
+        "velocity_squared_term_coefficient"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "method": {
+          "enum": [
+            "ScheduledAch",
+            "PerExteriorArea",
+            "EffectiveLeakageArea",
+            "WindAndStack"
+          ]
+        },
+        "design_flow_ach": {
+          "type": "number"
+        },
+        "flow_per_exterior_area_m3_s_m2": {
+          "type": "number"
+        },
+        "effective_leakage_area_m2": {
+          "type": "number"
+        },
+        "discharge_coefficient": {
+          "type": "number"
+        },
+        "stack_height_m": {
+          "type": "number"
+        },
+        "constant_term_coefficient": {
+          "type": "number"
+        },
+        "temperature_term_coefficient": {
+          "type": "number"
+        },
+        "velocity_term_coefficient": {
+          "type": "number"
+        },
+        "velocity_squared_term_coefficient": {
+          "type": "number"
+        }
+      }
+    },
+    "OutdoorAirSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "air_loop_id",
+        "min_oa_flow_m3_s",
+        "economizer_enabled"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "air_loop_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "min_oa_flow_m3_s": {
+          "type": "number"
+        },
+        "economizer_enabled": {
+          "type": "boolean"
+        }
+      }
+    },
+    "PlantLoopConfig": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "loop_type",
+        "supply_temperature_c",
+        "return_temperature_c",
+        "design_flow_kg_s",
+        "equipment_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "loop_type": {
+          "enum": [
+            "Heating",
+            "Cooling",
+            "Condenser"
+          ]
+        },
+        "supply_temperature_c": {
+          "type": "number"
+        },
+        "return_temperature_c": {
+          "type": "number"
+        },
+        "design_flow_kg_s": {
+          "type": "number"
+        },
+        "equipment_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "ModelAirLoop": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "supply_node_id",
+        "return_node_id",
+        "design_supply_air_flow_m3_s",
+        "terminal_zone_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "supply_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "return_node_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "design_supply_air_flow_m3_s": {
+          "type": "number"
+        },
+        "terminal_zone_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "ZoneEquipmentAssignment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "equipment_type",
+        "priority",
+        "heating_capacity_w",
+        "cooling_capacity_w"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "equipment_type": {
+          "enum": [
+            "Baseboard",
+            "Radiant",
+            "FanCoil",
+            "Ptac",
+            "VrfTerminal",
+            "Erv",
+            "UnitHeater",
+            "WaterToAirHp"
+          ]
+        },
+        "priority": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_capacity_w": {
+          "type": "number"
+        },
+        "cooling_capacity_w": {
+          "type": "number"
+        }
+      }
+    },
+    "IdealLoadsSystem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "max_heating_supply_air_temp_c",
+        "min_cooling_supply_air_temp_c",
+        "max_heating_capacity_w",
+        "max_cooling_capacity_w",
+        "outdoor_air_per_person_m3_s",
+        "outdoor_air_per_area_m3_s_m2"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "max_heating_supply_air_temp_c": {
+          "type": "number"
+        },
+        "min_cooling_supply_air_temp_c": {
+          "type": "number"
+        },
+        "max_heating_capacity_w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "max_cooling_capacity_w": {
+          "anyOf": [
+            {
+              "type": "number"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "outdoor_air_per_person_m3_s": {
+          "type": "number"
+        },
+        "outdoor_air_per_area_m3_s_m2": {
+          "type": "number"
+        }
+      }
+    },
+    "SetpointManager": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "kind",
+        "schedule_id"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "kind": {},
+        "schedule_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "Humidistat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "humidifying_setpoint_schedule_id",
+        "dehumidifying_setpoint_schedule_id",
+        "humidifying_throttle_range",
+        "dehumidifying_throttle_range"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "humidifying_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "dehumidifying_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "humidifying_throttle_range": {
+          "type": "number"
+        },
+        "dehumidifying_throttle_range": {
+          "type": "number"
+        }
+      }
+    },
+    "Thermostat": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "heating_setpoint_schedule_id",
+        "cooling_setpoint_schedule_id",
+        "heating_throttle_range_k",
+        "cooling_throttle_range_k"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cooling_setpoint_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "heating_throttle_range_k": {
+          "type": "number"
+        },
+        "cooling_throttle_range_k": {
+          "type": "number"
+        }
+      }
+    },
+    "EquipmentGain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "watts_per_area",
+        "radiant_fraction",
+        "latent_fraction"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watts_per_area": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        },
+        "latent_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "LightingGain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "watts_per_area",
+        "radiant_fraction",
+        "visible_fraction",
+        "return_air_fraction"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "watts_per_area": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        },
+        "visible_fraction": {
+          "type": "number"
+        },
+        "return_air_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "PeopleGain": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "zone_id",
+        "schedule_id",
+        "activity_schedule_id",
+        "people_per_area",
+        "sensible_fraction",
+        "latent_fraction",
+        "radiant_fraction"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "activity_schedule_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "people_per_area": {
+          "type": "number"
+        },
+        "sensible_fraction": {
+          "type": "number"
+        },
+        "latent_fraction": {
+          "type": "number"
+        },
+        "radiant_fraction": {
+          "type": "number"
+        }
+      }
+    },
+    "Construction": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "layer_material_ids"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "layer_material_ids": {
+          "type": "array",
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "GasMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "thickness_m",
+        "gas"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "gas": {
+          "enum": [
+            "Air",
+            "Argon",
+            "Krypton",
+            "Xenon"
+          ]
+        }
+      }
+    },
+    "GlazingMaterial": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "thickness_m",
+        "conductivity_w_m_k",
+        "solar_transmittance",
+        "solar_reflectance_front",
+        "solar_reflectance_back",
+        "visible_transmittance",
+        "visible_reflectance_front",
+        "visible_reflectance_back",
+        "infrared_transmittance",
+        "infrared_emissivity_front",
+        "infrared_emissivity_back"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "conductivity_w_m_k": {
+          "type": "number"
+        },
+        "solar_transmittance": {
+          "type": "number"
+        },
+        "solar_reflectance_front": {
+          "type": "number"
+        },
+        "solar_reflectance_back": {
+          "type": "number"
+        },
+        "visible_transmittance": {
+          "type": "number"
+        },
+        "visible_reflectance_front": {
+          "type": "number"
+        },
+        "visible_reflectance_back": {
+          "type": "number"
+        },
+        "infrared_transmittance": {
+          "type": "number"
+        },
+        "infrared_emissivity_front": {
+          "type": "number"
+        },
+        "infrared_emissivity_back": {
+          "type": "number"
+        }
+      }
+    },
+    "Material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "roughness",
+        "thickness_m",
+        "conductivity_w_m_k",
+        "density_kg_m3",
+        "specific_heat_j_kg_k",
+        "thermal_absorptance",
+        "solar_absorptance",
+        "visible_absorptance"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "roughness": {
+          "enum": [
+            "VeryRough",
+            "Rough",
+            "MediumRough",
+            "MediumSmooth",
+            "Smooth",
+            "VerySmooth"
+          ]
+        },
+        "thickness_m": {
+          "type": "number"
+        },
+        "conductivity_w_m_k": {
+          "type": "number"
+        },
+        "density_kg_m3": {
+          "type": "number"
+        },
+        "specific_heat_j_kg_k": {
+          "type": "number"
+        },
+        "thermal_absorptance": {
+          "type": "number"
+        },
+        "solar_absorptance": {
+          "type": "number"
+        },
+        "visible_absorptance": {
+          "type": "number"
+        }
+      }
+    },
+    "Fenestration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "surface_id",
+        "u_value_w_m2k",
+        "shgc",
+        "vlt",
+        "area_m2",
+        "height_m",
+        "sill_height_m",
+        "frame_conductance_w_k",
+        "divider_conductance_w_k",
+        "overhang_depth_m",
+        "overhang_offset_m",
+        "fin_depth_m",
+        "fin_offset_m",
+        "glazing_construction_id",
+        "vertices_m"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "surface_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "u_value_w_m2k": {
+          "type": "number"
+        },
+        "shgc": {
+          "type": "number"
+        },
+        "vlt": {
+          "type": "number"
+        },
+        "area_m2": {
+          "type": "number"
+        },
+        "height_m": {
+          "type": "number"
+        },
+        "sill_height_m": {
+          "type": "number"
+        },
+        "frame_conductance_w_k": {
+          "type": "number"
+        },
+        "divider_conductance_w_k": {
+          "type": "number"
+        },
+        "overhang_depth_m": {
+          "type": "number"
+        },
+        "overhang_offset_m": {
+          "type": "number"
+        },
+        "fin_depth_m": {
+          "type": "number"
+        },
+        "fin_offset_m": {
+          "type": "number"
+        },
+        "glazing_construction_id": {
+          "anyOf": [
+            {
+              "type": "integer",
+              "minimum": 0
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "Surface": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "zone_id",
+        "class",
+        "vertices_m",
+        "construction_id",
+        "outside_boundary_condition",
+        "sun_exposed",
+        "wind_exposed",
+        "multiplier"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "class": {
+          "enum": [
+            "ExteriorWall",
+            "InteriorWall",
+            "Roof",
+            "Ceiling",
+            "Floor",
+            "Interzone",
+            "Adiabatic",
+            "Ground"
+          ]
+        },
+        "vertices_m": {
+          "type": "array",
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 3,
+            "maxItems": 3
+          }
+        },
+        "construction_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "outside_boundary_condition": {},
+        "sun_exposed": {
+          "type": "boolean"
+        },
+        "wind_exposed": {
+          "type": "boolean"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "Space": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "zone_id",
+        "floor_area_m2"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "zone_id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "floor_area_m2": {
+          "type": "number"
+        }
+      }
+    },
+    "Zone": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "volume_m3",
+        "multiplier",
+        "conditioned",
+        "part_of_total_floor_area"
+      ],
+      "properties": {
+        "id": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "name": {
+          "type": "string"
+        },
+        "volume_m3": {
+          "type": "number"
+        },
+        "multiplier": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "conditioned": {
+          "type": "boolean"
+        },
+        "part_of_total_floor_area": {
+          "type": "boolean"
+        }
+      }
+    },
+    "Site": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "latitude_deg",
+        "longitude_deg",
+        "elevation_m",
+        "time_zone_hours",
+        "north_axis_deg"
+      ],
+      "properties": {
+        "latitude_deg": {
+          "type": "number"
+        },
+        "longitude_deg": {
+          "type": "number"
+        },
+        "elevation_m": {
+          "type": "number"
+        },
+        "time_zone_hours": {
+          "type": "number"
+        },
+        "north_axis_deg": {
+          "type": "number"
+        }
+      }
+    }
+  }
+}

@@ -59,5 +59,36 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "slot-field",
+    "scope": "ground_temperature",
+    "field": "building_surface_c",
+    "input": "new_temperature_c",
+    "index": "month",
+    "slotCount": 12,
+    "slotBase": 1,
+    "labels": {
+      "en": "Change monthly ground temperature",
+      "de": "Monatliche Bodentemperatur unter dem Gebäude ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "ground-temperature",
+      "kind": "change-month",
+      "record": "ChangedMonthlyGroundTemperature"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The original month and finite ground temperature must satisfy their authored limits."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This original month already carries the requested ground temperature."
+      }
+    }
   }
 }

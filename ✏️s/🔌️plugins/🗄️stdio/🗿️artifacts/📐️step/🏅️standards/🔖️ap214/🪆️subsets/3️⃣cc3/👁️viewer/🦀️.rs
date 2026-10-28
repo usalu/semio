@@ -71,9 +71,9 @@ impl ArtifactViewer for StepCc3Viewer {
     const DIALECT: Dialect = STEP_CC3_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STEP_CC3_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> StepSnapshot {
+    fn reference_birth()->Option<fn()->StepSnapshot>{Some(||{
         <semio_s_artifact_stdio_step_cc3::standards::v_ap214::subsets::cc3::io::StepCc3BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::build(<semio_s_artifact_stdio_step_cc3::standards::v_ap214::subsets::cc3::io::StepCc3BuilderConstruction as semio_framework_plugin::ArtifactBuilder>::from_snapshot(semio_s_artifact_stdio_step_snapshot::standards::v_ap214::subsets::base::schema::snapshot::initial_ap214_snapshot())).expect("valid authored AP214 cc3 initial owner")
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

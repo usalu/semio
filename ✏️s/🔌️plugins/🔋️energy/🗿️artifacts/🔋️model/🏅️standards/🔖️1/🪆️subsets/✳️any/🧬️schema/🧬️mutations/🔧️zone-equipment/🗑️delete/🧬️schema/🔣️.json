@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateZoneEquipmentAssignment",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "zone_equipment",
+    "key": "id",
+    "inverse": "CreateZoneEquipment",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete zone equipment",
+      "de": "Zonengerät löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "zone-equipment",
+      "kind": "delete-zone-equipment",
+      "record": "DeletedZoneEquipment"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed zone-equipment does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

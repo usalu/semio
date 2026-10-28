@@ -103,31 +103,8 @@ pub(super) fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &
 /// 🧱️ Encodes a `Bytes64` payload direct (`TAG_BYTES`) or, once it reaches
 /// `options.chunk_threshold`, split into `options.chunk_size`-sized chunks written through the
 /// live `PackWriter` (`TAG_BYTES_CHUNKED` + the resulting `ChunkId`s).
-fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackRefusal> {
-    if (bytes.len() as u64) >= ctx.options.chunk_threshold {
-        let chunk_size = ctx.options.chunk_size.max(1) as usize;
-        let mut ids = Vec::new();
-        for piece in bytes.chunks(chunk_size) {
-            let mut chunk = ::semio_framework_async::poll::resolve_ready(ctx.writer.begin_identity_chunk(piece.len()))?;
-            for fragment in piece.chunks(4096) {
-                if let Err(error) = ::semio_framework_async::poll::resolve_ready(chunk.write_fragment(fragment)) {
-                    chunk.close();
-                    return Err(error);
-                }
-            }
-            ids.push(::semio_framework_async::poll::resolve_ready(chunk.finish())?);
-        }
-        out.push(TAG_BYTES_CHUNKED);
-        write_varint_u64(out, ids.len() as u64);
-        for id in ids {
-            write_varint_u64(out, id.0 as u64);
-        }
-    } else {
-        out.push(TAG_BYTES);
-        write_varint_u64(out, bytes.len() as u64);
-        out.extend_from_slice(bytes);
-    }
-    Ok(())
+fn encode_bytes(ctx:&mut EncCtx<'_>,bytes:&(impl semio_framework_value::ByteReadSource+?Sized),out:&mut Vec<u8>)->Result<(),PackRefusal>{
+    let mut fragment=[0;4096];if bytes.byte_len()as u64>=ctx.options.chunk_threshold{let size=ctx.options.chunk_size.max(1)as usize;let count=bytes.byte_len().div_ceil(size);out.push(TAG_BYTES_CHUNKED);write_varint_u64(out,count as u64);let mut offset=0;while offset<bytes.byte_len(){let length=size.min(bytes.byte_len()-offset);let mut chunk=::semio_framework_async::poll::resolve_ready(ctx.writer.begin_identity_chunk(length))?;let mut copied=0;while copied<length{let count=bytes.read_bytes(offset+copied,&mut fragment[..4096.min(length-copied)]);if count==0{chunk.close();return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Pack chunk source changed").into())}if let Err(error)=::semio_framework_async::poll::resolve_ready(chunk.write_fragment(&fragment[..count])){chunk.close();return Err(error)}copied+=count;}let id=::semio_framework_async::poll::resolve_ready(chunk.finish())?;write_varint_u64(out,id.0 as u64);offset+=length;}}else{out.push(TAG_BYTES);write_varint_u64(out,bytes.byte_len()as u64);let mut offset=0;while offset<bytes.byte_len(){let count=bytes.read_bytes(offset,&mut fragment);if count==0{return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"Pack inline byte source changed").into())}out.extend_from_slice(&fragment[..count]);offset+=count;}}Ok(())
 }
 
 /// 📚️ Encodes a `Tuple`/`List` sequence: the mandatory packed `0x15`/`0x16` form when

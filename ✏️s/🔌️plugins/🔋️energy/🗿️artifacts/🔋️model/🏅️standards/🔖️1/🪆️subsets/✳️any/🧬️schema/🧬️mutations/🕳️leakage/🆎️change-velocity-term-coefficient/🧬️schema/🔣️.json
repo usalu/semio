@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateInfiltration",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "infiltrations",
+    "field": "velocity_term_coefficient",
+    "input": "new_velocity_term_coefficient",
+    "key": "id",
+    "labels": {
+      "en": "Change infiltration: Wind velocity term coefficient C",
+      "de": "Linearer Windkoeffizient C ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "infiltration",
+      "kind": "change-infiltration-velocity-term-coefficient",
+      "record": "ChangedInfiltrationVelocityTermCoefficient"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Wind velocity term coefficient C violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed infiltration does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The infiltration already carries this wind velocity term coefficient c value."
+      }
+    }
   }
 }

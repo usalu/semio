@@ -207,12 +207,22 @@ impl std::ops::Deref for ToolCancellationLease{type Target=ToolCancellationLease
 impl std::ops::DerefMut for ToolCancellationLease{fn deref_mut(&mut self)->&mut Self::Target{&mut self.original}}
 
 impl ToolCancellationLease {
+    /// 🪪️ Borrows the actual issuer key retained by this unique original publication lease.
+    pub fn original_key(&self)->&ToolOperationKey{&self.original.key}
+    /// 🏛️ Verifies the actual issuer allocation without creating a cancellation alias.
+    pub fn issued_by(&self,canonical:&ToolCancellationHandle)->bool{std::sync::Arc::ptr_eq(&self.handle.state,&canonical.state)}
     #[doc(hidden)]
     pub async fn is_cancelled(&self) -> bool {
         self.token.is_cancelled().await
     }
 
     #[doc(hidden)]
+    /// 🎟️ Borrows the original publication claim for mounted authoring effects.
+    pub fn publication_claim(&self) -> &PublicationClaimHandle { &self.publication_claim }
+    /// 🛑️ Reads the original scope, document, operation and token cancellation roots together.
+    pub fn publication_is_cancelled(&self)->bool{self.handle.publication_scope.is_cancelled()||self.document_claim.as_ref().is_some_and(|claim|claim.is_cancelled())||self.publication_claim.is_cancelled()||self.token.is_cancelled_now()}
+
+
     pub fn cancel_token(&self) -> &semio_framework_job::CancelToken {
         &self.token
     }

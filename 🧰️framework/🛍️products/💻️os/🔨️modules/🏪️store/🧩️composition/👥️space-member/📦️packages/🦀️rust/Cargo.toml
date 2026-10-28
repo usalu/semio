@@ -54,4 +54,7 @@ semio-framework-schema-composition = { path = "../../../../../../../../🔨️mo
 semio-framework-value = { path = "../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust", features = ["testkit"] }
 semio-framework-value-snapshot-read = { path = "../../../../../../../../🔨️modules/🌱️value/📸️snapshot/👁️read/📦️packages/🦀️rust" }
 
+semio-framework-value-native-owned = { workspace = true }
+
 [dev-dependencies]
+serde_json = { workspace = true }

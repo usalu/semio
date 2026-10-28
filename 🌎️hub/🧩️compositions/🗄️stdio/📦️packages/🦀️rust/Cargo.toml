@@ -178,6 +178,7 @@ semio-s-artifact-stdio-avi = { workspace = true }
 semio-s-artifact-stdio-mp3 = { workspace = true }
 semio-s-artifact-stdio-wav = { workspace = true }
 semio-s-artifact-stdio-epw = { workspace = true }
+semio-s-artifact-stdio-idf = { workspace = true }
 # /🧩️ Composition Test Dependencies
 
 [[test]]

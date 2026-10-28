@@ -16,10 +16,10 @@ fn change_to_json_string_matches_serde_json_byte_for_byte() {
 
 /// 🔬️ `pending_change_ref_json`'s hand-built wire shape, byte-for-byte against an
 /// independent `serde_json` oracle (a local `#[derive(Serialize)]` twin reproducing
-/// `PendingChangeRef`'s pre-conversion shape) — the direct proof this ticket's own
+/// the canonical `Change` shape) — the direct proof this ticket's own
 /// `float-format-parity.md` calls for, that converting `content_addressed_checkpoint_id_core`
 /// off `serde_json` changed zero bytes. Both branches (`description` present and absent, since
-/// unlike `Change` this type has no `skip_serializing_if`) are checked.
+/// both canonical records omit an absent description) are checked.
 #[test]
 fn pending_change_ref_json_matches_serde_json_oracle() {
     #[derive(serde::Serialize)]
@@ -27,6 +27,7 @@ fn pending_change_ref_json_matches_serde_json_oracle() {
     struct Oracle<'a> {
         id: &'a str,
         edit_ids: &'a [String],
+        #[serde(skip_serializing_if="Option::is_none")]
         description: Option<&'a str>,
         saved_at: &'a str,
     }

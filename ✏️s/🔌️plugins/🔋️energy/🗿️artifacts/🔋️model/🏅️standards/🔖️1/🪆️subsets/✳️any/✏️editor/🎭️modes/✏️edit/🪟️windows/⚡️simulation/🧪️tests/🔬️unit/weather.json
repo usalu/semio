@@ -1,0 +1,1 @@
+{"schema":"semio.energy.weather-controls/1","target":"denver!s.stdio.epw@energyplus/*","role":"weather","selectAction":"select-weather-file","clearAction":"clear-weather-file","locales":["en","de"]}

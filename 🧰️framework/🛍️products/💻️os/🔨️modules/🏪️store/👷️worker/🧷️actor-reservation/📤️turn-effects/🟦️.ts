@@ -16,7 +16,7 @@ declare module "../🧩️hub/🟦️.ts" {
 /** 📤️ Routes the WIT effects of one guest turn to the backbone port, the typed-operation and publication decoders and the job driver. */
 export class ReservationTurnEffects {
   private readonly session: ReservationSession;
-  constructor(hub: ReservationHub) { this.session = hub.session; }
+  constructor(private readonly hub: ReservationHub) { this.session = hub.session; }
 
   /** 🧭️ Routes one guest turn's WIT effects: backbone messages to the hub port, Shell messages to the typed-operation and
    * publication decoders, spawned jobs to the job driver, and only the closed host-intent set to the Shell. A
@@ -26,7 +26,7 @@ export class ReservationTurnEffects {
    * `unsupported host effect publish-event`, hub 7800, ticket 26/09/23 C10). An app command's invocation projects the
    * OPERATION envelopes it sent; history transitions (undo, redo, checkpoint commit — `HISTORY_TRANSITION_DIFF_SCHEMA`)
    * are framework records no invocation projects, so a checkpoint's transition is routed without a projection. */
-  async routeTurnEffects(value: BrowserActorChildValue, mode: "ordinary" | "control" | BrowserActorActionPublication = "ordinary"): Promise<Readonly<{ receipts: readonly Uint8Array[]; mutations: number; publications: number; refusals: readonly string[]; hostEffects: readonly (readonly number[])[]; historyPatches: readonly (readonly number[])[]; jobs: readonly BrowserActorSpawnedJob[]; acknowledgements: readonly BrowserActorChildValue[] }>> {
+  async routeTurnEffects(value: BrowserActorChildValue, mode: "ordinary" | "control" | BrowserActorActionPublication = "ordinary", receiveReply?: (payload: Uint8Array) => boolean): Promise<Readonly<{ receipts: readonly Uint8Array[]; mutations: number; publications: number; refusals: readonly string[]; hostEffects: readonly (readonly number[])[]; historyPatches: readonly (readonly number[])[]; jobs: readonly BrowserActorSpawnedJob[]; acknowledgements: readonly BrowserActorChildValue[] }>> {
     const result = browserActorTurnResult(value),
       effects = result.effects;
     if (effects !== undefined && !Array.isArray(effects)) throw new Error("document browser actor: invalid effects");
@@ -46,6 +46,7 @@ export class ReservationTurnEffects {
     for (const raw of (effects ?? []) as BrowserActorChildValue[]) {
       const effect = browserActorRecord(raw, "document browser actor: invalid effect");
       if (effect.tag === "publish-event") continue;
+      if (effect.tag === "link-resolve") { this.hub.links.schedule(effect.val); continue; }
       if (effect.tag === "spawn-job" && mode !== "control") {
         const { job, kind, input } = wireSpawnJob({ tag: effect.tag, val: effect.val }).spawnJob;
         jobs.push({ job, kind, input: input.slice() });
@@ -61,6 +62,7 @@ export class ReservationTurnEffects {
         payload = browserActorBytes(body.payload, "document browser actor: invalid message payload");
       if (target.tag === "shell") {
         if (target.val !== 0) throw new Error("document browser actor: foreign shell effect");
+        if (receiveReply?.(payload)) continue;
         const page = mode === "control" ? null : typedOperationResult({ tag: "send-message", val: { target: { tag: "shell", val: target.val }, payload } });
         if (page !== null) {
           const answer = typedOperationPageAnswerV1(page);

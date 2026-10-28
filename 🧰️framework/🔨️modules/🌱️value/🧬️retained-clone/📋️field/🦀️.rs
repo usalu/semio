@@ -31,6 +31,7 @@ impl<T: RetainedClone> RetainedCloneCursor<T> for RetainedFieldCursor<T> {
     }
     fn take(&mut self) -> Option<T> { if !self.output_ready(){return None;}self.child.as_mut().and_then(|child| child.take()) }
     fn begin_close(&mut self) -> bool { if self.closing { return false; } self.closing = true; true }
+    fn close_started(&self)->bool{self.closing}
     
     fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError> {
         if !self.closing { return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"typed field must begin close before granted retirement")); }

@@ -33,5 +33,47 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateSizingObject",
+    "branchType": "ModelOutputState",
+    "branch": "outputs",
+    "collection": "sizing_objects",
+    "key": "id",
+    "inverse": "CreateSizingObject",
+    "restriction": "none",
+    "labels": {
+      "en": "Delete sizing object",
+      "de": "Auslegungsobjekt löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "sizing-object",
+      "kind": "delete-sizing-object",
+      "record": "DeletedSizingObject"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed sizing-object does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

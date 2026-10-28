@@ -32,7 +32,7 @@ fn document_backbone_envelope(id: &str, document_id: &str) -> MutationEnvelope {
 }
 
 fn document_backbone_message(envelopes: &[MutationEnvelope]) -> Vec<u8> {
-    BackboneMessage::Mutations { envelopes: encode_envelopes(envelopes) }.encode_op().expect("canonical document backbone message")
+    BackboneMessage::from_envelopes(envelopes).encode_op().expect("canonical document backbone message")
 }
 
 fn document_backbone_event_envelopes(event: &ArtifactEvent) -> Option<Vec<MutationEnvelope>> {

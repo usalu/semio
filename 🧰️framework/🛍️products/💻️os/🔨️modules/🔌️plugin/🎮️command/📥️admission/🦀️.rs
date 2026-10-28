@@ -24,6 +24,9 @@ use semio_framework_plugin_job::TYPED_OPERATION_RESULT_PAGE_BYTES;
 #[path="../🗝️latest/🦀️.rs"]
 pub mod original_latest_key;
 
+#[path="../🎟️typed/🦀️.rs"]
+pub mod original_typed_command;
+
 use crate::command_admission::original_latest_key::ToolLatestWinsKeyCopy;
 
 pub struct ToolLatestWinsScope {
@@ -75,7 +78,7 @@ impl ToolLatestWinsRegistry {
         let capacity=semio_framework_value_ordered::ordered::SharedOwner::<ToolLatestWinsScope>::allocation_bytes();
         if !self.can_begin()||grant.maximum_items==0||grant.maximum_depth==0||grant.maximum_capacity_bytes<capacity{return Ok(None);}
         if self.map.as_ref().expect("live original key map").len()>=ARTIFACT_LIVE_OUTPUT_SLOTS{match self.admission_scan{None=>{self.admission_scan=Some(ARTIFACT_LIVE_OUTPUT_SLOTS);return Ok(Some(RetainedCloneProgress{copied_items:1,..Default::default()}));},Some(0)=>{},Some(_)=>return Ok(None)}}
-        let scope=ToolLatestWinsScope{key:key.clone(),operation,token:lease.token.clone(),claim:lease.publication_claim.clone()};
+        let scope=ToolLatestWinsScope{key:key.clone(),operation,token:lease.cancel_token().clone(),claim:lease.publication_claim().clone()};
         let(scope,progress)=match semio_framework_value_ordered::ordered::SharedOwner::admit(scope,grant){Ok(value)=>value,Err((error,original))=>{*self.pending_scope=Some(original);return Err(semio_framework_plugin_decl_emission::retirement_refusal_fault(&error));}};
         self.update=Some(self.map.as_ref().expect("original live key map").begin_set_shared(key.clone(),scope));self.active_operation=Some(operation);self.update_closing=false;Ok(Some(progress))
     }
@@ -170,6 +173,8 @@ impl ToolLatestWinsRegistry {
 }
 
 #[doc(hidden)]
+#[derive(semio_framework_value::RetireOwned)]
+#[value(send_only)]
 pub struct AdmittedToolCommand {
     pub verb: String,
     pub proof: QualifiedToolProof,
@@ -181,13 +186,22 @@ pub struct AdmittedToolCommand {
 #[doc(hidden)]
 pub struct PendingLatestWinsCommand<A: ArtifactApp> {
     pub command: ManuallyDrop<Option<Box<A::Command>>>,
-    pub disposer: Box<dyn ArtifactOwnedDisposer<A::Command>>,
+    pub command_retirement:semio_framework_value::retained_clone::RetainedCloneClose,
     pub admission: Option<AdmittedToolCommand>,
-    pub meta: ActionMeta,
+    pub meta: ManuallyDrop<Option<ActionMeta>>,
+    pub original_caller:ManuallyDrop<Option<semio_framework_job::OriginalCallerSourceLoan>>,
+    pub original_body:usize,
+    pub original_decoder:(u64,u64),
+    pub metadata_retirement:semio_framework_value::retained_clone::RetainedCloneClose,
+    pub metadata_copy:ManuallyDrop<Option<Box<semio_framework_plugin_decl_emission::OriginalActionMetaCopy>>>,
+    pub context_metadata:ManuallyDrop<Option<ActionMeta>>,
+    pub context_view:ManuallyDrop<Option<semio_framework::ViewModel>>,
+    pub context_phase:u8,
     pub operation: semio_framework_job::Operation,
     pub source_identity:semio_framework_job::OriginalSourceBinding,
     pub revision: [u8; 32],
     pub lease: Option<ToolCancellationLease>,
+    pub cancellation_retirement:Option<Box<semio_framework_plugin_operation::ToolCancellationLeaseRetirement>>,
     pub key_copy: Option<ToolLatestWinsKeyCopy>,
     pub key: Option<semio_framework_value_ordered::ordered::SharedOwner<String>>,
     pub retired_key: Option<String>,
@@ -201,10 +215,26 @@ pub struct PendingLatestWinsCommand<A: ArtifactApp> {
 }
 
 impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
+    pub fn metadata(&self)->Result<&ActionMeta,ValueError>{self.meta.as_ref().ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command lost its original metadata"))}
+    pub fn validate_original(&self,cx:&semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{if !self.source_identity.matches(cx)||cx.native_receiving_identity()!=Some(self.original_decoder){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"pending command requires its original receiving continuation").into())}if let Some(caller)=self.original_caller.as_ref(){caller.validate_retirement_context(cx)?}Ok(())}
+    pub fn prepare_context_metadata(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_original(cx)?;match self.context_phase{
+        0=>{if semio_framework_plugin_decl_emission::OriginalActionMetaCopy::admit(cx,&mut self.metadata_copy)?{self.context_phase=1}},
+        1=>{let copy=self.metadata_copy.as_mut().unwrap();if !copy.advance(&mut self.meta,cx)?{return Ok(false)}if copy.take_into(&mut self.context_metadata,cx)?{self.context_phase=2}},
+        2=>{let d=semio_framework_plugin_decl_emission::OriginalActionMetaCopy::release_demand();semio_framework_job::close_original_retained_step(cx,d,|_|{self.metadata_copy.take();self.context_phase=3;Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()}))})?;},
+        3=>{let bytes=2*size_of::<Option<semio_framework::ViewModel>>()+size_of::<u8>();let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{*self.context_view=self.context_metadata.as_mut().unwrap().view_state.take();self.context_phase=4;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:bytes,..Default::default()}))})?;},
+        4=>{if !self.metadata_retirement.is_empty(){let selected=self.metadata_retirement.select(self.original_body)?;let d=selected.demands();semio_framework_job::close_original_retained_step(cx,d,|g|selected.step(g))?;}else if self.context_metadata.is_some(){let d=self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)?;semio_framework_job::close_original_retained_step(cx,d,|g|Ok(self.metadata_retirement.begin_granted(&mut self.context_metadata,g)?.unwrap_or(RetainedCloneStep::Progress(Default::default()))))?;}else{let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:size_of::<u8>(),capacity_bytes:0,release_bytes:0,depth:1},|_|{self.context_phase=5;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<u8>(),..Default::default()}))})?;}},
+        5=>return Ok(true),_=>return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original command metadata phase changed").into())}Ok(self.context_phase==5)}
+    pub fn metadata_copy_is_empty(&self)->bool{self.metadata_copy.is_none()&&self.context_metadata.is_none()&&self.context_view.is_none()&&self.metadata_retirement.is_empty()}
+    pub fn metadata_copy_close_demands(&self)->Result<RetirementDemand,ValueError>{if let Some(copy)=self.metadata_copy.as_ref(){return if copy.terminal_is_empty(){Ok(semio_framework_plugin_decl_emission::OriginalActionMetaCopy::release_demand())}else{copy.close_demands()}}if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.context_metadata.is_some(){return self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)}if self.context_view.is_some(){return self.metadata_retirement.next_owner_demands::<semio_framework::ViewModel>(true,&None,self.original_body)}Ok(Default::default())}
+    pub fn close_metadata_copy(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_original(cx)?;if let Some(copy)=self.metadata_copy.as_mut(){if !copy.terminal_is_empty(){copy.close_step(&mut self.meta,cx)?;return Ok(false)}let d=semio_framework_plugin_decl_emission::OriginalActionMetaCopy::release_demand();semio_framework_job::close_original_retained_step(cx,d,|_|{self.metadata_copy.take();Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:d.release_bytes,..Default::default()}))})?;return Ok(false)}let d=self.metadata_copy_close_demands()?;if self.metadata_copy_is_empty(){return Ok(true)}semio_framework_job::close_original_retained_step(cx,d,|g|{if !self.metadata_retirement.is_empty(){return self.metadata_retirement.select(self.original_body)?.step(g)}if self.context_metadata.is_some(){return Ok(self.metadata_retirement.begin_granted(&mut self.context_metadata,g)?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}Ok(self.metadata_retirement.begin_granted(&mut self.context_view,g)?.unwrap_or(RetainedCloneStep::Progress(Default::default())))})?;Ok(false)}
+    pub fn metadata_close_demands(&self)->Result<RetirementDemand,ValueError>{if !self.metadata_copy_is_empty(){return self.metadata_copy_close_demands()}if !self.metadata_retirement.is_empty(){return self.metadata_retirement.demands(self.original_body)}if self.meta.is_some(){return self.metadata_retirement.next_owner_demands::<ActionMeta>(true,&None,self.original_body)}if let Some(caller)=self.original_caller.as_ref(){return Ok(caller.retirement_demands())}Ok(Default::default())}
+    pub fn close_metadata(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{self.validate_original(cx)?;if !self.metadata_copy_is_empty(){self.close_metadata_copy(cx)?;return Ok(false)}if self.meta.is_none()&&self.metadata_retirement.is_empty(){if let Some(caller)=self.original_caller.as_mut(){caller.close_step(cx.original_source_parent()?,cx)?;if caller.terminal_is_empty(){self.original_caller.take();}return Ok(false)}return Ok(true)}let d=self.metadata_close_demands()?;semio_framework_job::close_original_retained_step(cx,d,|g|{if self.meta.is_some(){return Ok(self.metadata_retirement.begin_granted(&mut self.meta,g)?.unwrap_or(RetainedCloneStep::Progress(Default::default())))}self.metadata_retirement.select(self.original_body)?.step(g)})?;Ok(false)}
+    pub fn metadata_is_empty(&self)->bool{self.metadata_copy_is_empty()&&self.meta.is_none()&&self.metadata_retirement.is_empty()&&self.original_caller.is_none()}
+
     pub fn admit_original_lease(&mut self,issuer:&mut semio_framework_plugin_operation::ToolCancellationIssuer,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{
         if self.closing||self.lease.is_some(){return Ok(self.lease.is_some())}
         if !self.source_identity.matches(cx){return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted pending lease requires its original command caller").into())}
-        let key=semio_framework_plugin_operation::ToolOperationKey{app_instance_id:self.meta.instance_id,document:semio_framework_plugin_operation::ArtifactDocumentAuthority(self.meta.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
+        let key=semio_framework_plugin_operation::ToolOperationKey{app_instance_id:self.metadata()?.instance_id,document:semio_framework_plugin_operation::ArtifactDocumentAuthority(self.metadata()?.instance_id),operation_id:self.operation.operation,base_revision:self.operation.base_revision,generation:self.operation.generation};
         self.lease=issuer.begin_keyed(&key,cx)?;
         Ok(self.lease.is_some())
     }
@@ -222,12 +252,10 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(owner)=self.fault_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?})}
         if self.fault.is_some(){return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<PluginLifecycleFailure>(),depth:1,..Default::default()})}
-        if let Some(command)=self.command.as_ref(){
-            if self.disposer.terminal_is_empty(command){return Ok(RetirementDemand{release_bytes:size_of_val(command.as_ref()),depth:1,..Default::default()});}
-            let mut demand=self.disposer.retirement_demands(command,body)?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"latest-wins command child depth overflow"))?;return Ok(demand);
-        }
+        if !self.command_retirement.is_empty(){return self.command_retirement.demands(self.original_body)}
+        if self.command.is_some(){return self.command_retirement.next_owner_demands::<Box<A::Command>>(true,&None,self.original_body)}
         if self.key_copy.is_some()||self.key.is_some()||self.retired_key.is_some(){return self.key_demands();}
-        if let Some(admission)=self.admission.as_ref(){if !admission.raw_wire.terminal_is_empty(){return Ok(RetirementDemand{copy_bytes:admission.raw_wire.next_close_copy_byte_demand()?,capacity_bytes:admission.raw_wire.next_close_capacity_byte_demand(body)?,release_bytes:admission.raw_wire.next_close_release_byte_demand()?,depth:admission.raw_wire.next_close_depth_demand()?.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"latest-wins original wire depth overflow"))?});}}
+        if self.admission.is_some(){return self.command_retirement.next_owner_demands::<AdmittedToolCommand>(true,&None,self.original_body)}
         Ok(Default::default())
     }
     pub fn permits(grant:RetainedCloneGrant,demand:RetirementDemand)->bool{grant.maximum_items>0&&grant.maximum_copy_bytes>=demand.copy_bytes&&grant.maximum_capacity_bytes>=demand.capacity_bytes&&grant.maximum_release_bytes>=demand.release_bytes&&grant.maximum_depth>=demand.depth}
@@ -236,15 +264,10 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
         if !Self::permits(grant,demand){return Ok(PluginLifecycleStep::Progress(idle))}
         if let Some(owner)=self.fault_retirement.as_mut(){let step=owner.close_step(grant)?;if owner.terminal_is_empty(){self.fault_retirement.take();}return Ok(PluginLifecycleStep::Progress(step.progress()))}
         if let Some(original)=self.fault.take(){return match semio_framework_value::retirement::admit_owned_retirement(original,grant){Ok((owner,progress))=>{self.fault_retirement=Some(owner);Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{*self.fault=Some(original);Err(error.into())}}}
-        if let Some(command)=self.command.as_mut(){
-            if self.disposer.terminal_is_empty(command){drop(self.command.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}))}
-            let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=self.disposer.close_step(command,child)?;let progress=step.progress().unwrap_or_default();
-            semio_framework_value::retained_clone::admit_retained_clone_progress(child,progress,"original latest command disposer")?;
-            if matches!(step,PluginLifecycleStep::Complete(_))&&!self.disposer.terminal_is_empty(command){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"latest-wins command disposer reported a false terminal").with_retained_progress(progress).into())}
-            return Ok(match step{PluginLifecycleStep::Complete(progress)=>PluginLifecycleStep::Progress(progress),step=>step})
-        }
+        if !self.command_retirement.is_empty(){return Ok(PluginLifecycleStep::Progress(self.command_retirement.select(self.original_body)?.step(grant)?.progress()))}
+        if self.command.is_some(){let step=self.command_retirement.begin_granted(&mut self.command,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default()));return Ok(PluginLifecycleStep::Progress(step.progress()))}
         if self.key_copy.is_some()||self.key.is_some()||self.retired_key.is_some(){return self.close_key_step(grant)}
-        if let Some(admission)=self.admission.as_mut(){if !admission.raw_wire.terminal_is_empty(){let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};let step=admission.raw_wire.close_step(child)?.admit(child,admission.raw_wire.terminal_is_empty())?;return Ok(match step{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::AwaitingInput{reason:"latest-wins original raw input awaits handback"}})}}
+        if self.admission.is_some(){let step=self.command_retirement.begin_granted(&mut self.admission,grant)?.unwrap_or(RetainedCloneStep::Progress(Default::default()));return Ok(PluginLifecycleStep::Progress(step.progress()))}
         Ok(PluginLifecycleStep::AwaitingInput{reason:"latest-wins original metadata and cancellation await their native retirement issuer"})
     }
     pub fn close_key_step(&mut self,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,PluginLifecycleFailure>{
@@ -254,13 +277,13 @@ impl<A: ArtifactApp> PendingLatestWinsCommand<A> {
         if let Some(key)=self.retired_key.as_ref(){let released_bytes=key.capacity();drop(self.retired_key.take());return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes,..idle}))}
         Ok(PluginLifecycleStep::Complete(idle))
     }
-    pub fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.retired_key.is_none()&&self.fault.is_none()&&self.fault_retirement.is_none()}
+    pub fn command_owners_are_empty(&self)->bool{self.command.is_none()&&self.command_retirement.is_empty()&&self.admission.is_none()&&self.key_copy.is_none()&&self.key.is_none()&&self.retired_key.is_none()&&self.fault.is_none()&&self.fault_retirement.is_none()}
 }
 
 impl<A: ArtifactApp> Drop for PendingLatestWinsCommand<A> {
     fn drop(&mut self) {
         if !std::thread::panicking() {
-            assert!(std::thread::panicking() || self.command_owners_are_empty(), "latest-wins admission must transfer or cursor-retire its exact command/key/raw owners");
+            assert!(std::thread::panicking() || self.command_owners_are_empty()&&self.metadata_is_empty(), "latest-wins admission must transfer or cursor-retire its exact command/key/raw owners");
         }
     }
 }

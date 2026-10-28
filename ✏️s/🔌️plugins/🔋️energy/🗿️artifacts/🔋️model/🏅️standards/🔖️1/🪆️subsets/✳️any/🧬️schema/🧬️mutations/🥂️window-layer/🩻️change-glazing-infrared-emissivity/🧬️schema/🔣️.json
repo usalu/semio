@@ -83,5 +83,45 @@
         "order": 30
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "fixed-pair",
+    "row": "StateGlazingMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "glazing_materials",
+    "field": "infrared_emissivity_front",
+    "pairedField": "infrared_emissivity_back",
+    "input": "new_infrared_emissivity_front",
+    "upper": "new_infrared_emissivity_back",
+    "key": "id",
+    "labels": {
+      "en": "Change glazing infrared emissivities",
+      "de": "Infrarot-Emissionsgrade der Verglasung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "glazing-optical-facet",
+      "kind": "change-infrared-emissivity",
+      "record": "ChangedGlazingInfraredEmissivities"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Both finite infrared emissivities lie between zero and one."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed glazing material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This glazing already carries both infrared emissivities."
+      }
+    }
   }
 }

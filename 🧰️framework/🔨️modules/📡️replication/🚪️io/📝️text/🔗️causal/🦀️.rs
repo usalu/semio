@@ -80,7 +80,7 @@ impl semio_framework_value::FromValue for MutationEnvelope {
 
 impl semio_framework_value::ToValue for ArtifactDiff {
     fn to_value(&self) -> semio_framework_value::DslValue {
-        semio_framework_value::DslValue::object(vec![("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)), ("payload".to_string(), semio_framework_value::ToValue::to_value(&self.payload))])
+        semio_framework_value::DslValue::object(vec![("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)), ("payload".to_string(), semio_framework_value::DslValue::Array(self.payload.iter().map(|byte|semio_framework_value::ToValue::to_value(&byte)).collect()))])
     }
 }
 
@@ -94,7 +94,7 @@ impl semio_framework_value::FromValue for ArtifactDiff {
         for (key, entry) in fields {
             match key.as_str() {
                 "schema" => schema = Some(<semio_framework_replication_ids::SchemaId as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
-                "payload" => payload = Some(<Vec<u8> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                "payload" => payload = Some(<crate::CausalPayload as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
                 _ => {}
             }
         }
@@ -104,7 +104,7 @@ impl semio_framework_value::FromValue for ArtifactDiff {
 
 impl semio_framework_value::ToValue for InverseMutation {
     fn to_value(&self) -> semio_framework_value::DslValue {
-        semio_framework_value::DslValue::object(vec![("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)), ("payload".to_string(), semio_framework_value::ToValue::to_value(&self.payload))])
+        semio_framework_value::DslValue::object(vec![("schema".to_string(), semio_framework_value::ToValue::to_value(&self.schema)), ("payload".to_string(), semio_framework_value::DslValue::Array(self.payload.iter().map(|byte|semio_framework_value::ToValue::to_value(&byte)).collect()))])
     }
 }
 
@@ -118,7 +118,7 @@ impl semio_framework_value::FromValue for InverseMutation {
         for (key, entry) in fields {
             match key.as_str() {
                 "schema" => schema = Some(<semio_framework_replication_ids::SchemaId as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("schema"))?),
-                "payload" => payload = Some(<Vec<u8> as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
+                "payload" => payload = Some(<crate::CausalPayload as semio_framework_value::FromValue>::from_value(entry).map_err(|e| e.under("payload"))?),
                 _ => {}
             }
         }

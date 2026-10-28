@@ -61,5 +61,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateLightingGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "lighting",
+    "field": "return_air_fraction",
+    "input": "new_return_air_fraction",
+    "key": "id",
+    "labels": {
+      "en": "Change lighting gain: Return-air fraction",
+      "de": "Rückluftanteil ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "lighting-gain",
+      "kind": "change-lighting-gain-return-air-fraction",
+      "record": "ChangedLightingGainReturnAirFraction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Return-air fraction violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed lighting gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The lighting gain already carries this return-air fraction value."
+      }
+    }
   }
 }

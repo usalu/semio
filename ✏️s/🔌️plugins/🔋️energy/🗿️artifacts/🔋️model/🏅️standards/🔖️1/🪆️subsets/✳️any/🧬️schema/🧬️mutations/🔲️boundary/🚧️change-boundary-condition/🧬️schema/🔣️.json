@@ -132,5 +132,53 @@
         }
       }
     }
-  ]
+  ],
+  "x-semio-energy-operation": {
+    "category": "facet-row",
+    "facet": "surface-boundary",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "outside_boundary_condition",
+    "input": "new_boundary",
+    "partner": "new_interzone_surface_id",
+    "key": "id",
+    "references": [
+      "Surfaces"
+    ],
+    "referenceTarget": "key",
+    "labels": {
+      "en": "Change surface boundary condition",
+      "de": "Oberflächenrandbedingung ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "surface",
+      "kind": "change-boundary-condition",
+      "record": "ChangedSurfaceBoundaryCondition"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Only an interzone boundary carries exactly one partner surface."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "An interzone partner must be another existing surface."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This surface already carries the boundary condition."
+      }
+    }
+  }
 }

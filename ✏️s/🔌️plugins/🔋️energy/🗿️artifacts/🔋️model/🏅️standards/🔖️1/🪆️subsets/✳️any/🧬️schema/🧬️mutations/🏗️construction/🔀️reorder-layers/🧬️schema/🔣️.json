@@ -65,5 +65,48 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "owned-row",
+    "row": "StateConstruction",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "constructions",
+    "field": "layer_material_ids",
+    "input": "new_layer_material_ids",
+    "key": "id",
+    "validation": "permutation",
+    "labels": {
+      "en": "Reorder construction layers",
+      "de": "Bauteilschichten umordnen"
+    },
+    "semantics": {
+      "verb": "reorder",
+      "entity": "construction-layer",
+      "kind": "reorder-layers",
+      "record": "ReorderedConstructionLayers"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored layer order is not valid."
+      },
+      "context": {
+        "level": "error",
+        "code": "mutation.target-mismatch",
+        "message": "Layers can be reordered while preserving the exact original material multiset."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed construction does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "This construction already holds its layers in that order."
+      }
+    }
   }
 }

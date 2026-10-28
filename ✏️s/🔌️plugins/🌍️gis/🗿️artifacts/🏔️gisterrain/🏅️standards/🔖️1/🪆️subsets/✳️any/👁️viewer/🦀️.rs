@@ -53,9 +53,9 @@ impl ArtifactViewer for GisTerrainViewer {
         Some(semio_framework_plugin::no_transient_local_root_retirement_factory())
     }
 
-    fn initial_snapshot() -> GisTerrainSnapshot {
+    fn reference_birth()->Option<fn()->GisTerrainSnapshot>{Some(||{
         default_terrain_document()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `GisTerrainViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no

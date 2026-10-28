@@ -495,8 +495,9 @@ impl ActionFactory {
 /// into {@link VcsArtifactApp} at registration time so the wrapper can enforce the actions contract
 /// (default materialization, required-arg validation, kind discipline) without the plugin re-checking.
 /// An empty registry is a store-only construction path; command dispatch rejects every key.
-#[derive(Clone, Default)]
+#[derive(Default)]
 pub struct AppActionRegistry {
+    native:Option<original_registry::NativeRegistry>,
     #[doc(hidden)]
     pub actions: HashMap<String, ActionDefinition>,
     window_actions: HashMap<String, HashMap<String, ActionDefinition>>,
@@ -537,6 +538,14 @@ pub fn validate_ui_dispatch_classification(owner: &str, id: &str, classification
 }
 
 impl AppActionRegistry {
+    /// 🎟️ Captures only a genuine shared source supplied by this registered native declaration.
+    pub fn original_birth_demands()->RetirementDemand{let mut d=original_registry::NativeRegistry::birth_demands();d.copy_bytes+=2*std::mem::size_of::<Self>();d}
+    pub fn admit_original(source:RegisteredDefinitionSource<'_>,grant:RetainedCloneGrant)->Result<Option<(Self,RetainedCloneProgress)>,semio_framework_value::ValueError>{Ok(original_registry::NativeRegistry::admit(source,grant)?.map(|(native,mut p)|{p.copied_bytes+=2*std::mem::size_of::<Self>();(Self{native:Some(native),..Default::default()},p)}))}
+    pub fn original_index_demands(&self)->Result<RetirementDemand,semio_framework_value::ValueError>{self.native.as_ref().expect("original registry").demands()}
+    pub fn advance_original_index(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,semio_framework_value::ValueError>{self.native.as_mut().expect("original registry").advance(grant)}
+    pub fn original_index_ready(&self)->bool{self.native.as_ref().is_some_and(|native|native.ready)}
+    pub fn controller_id(&self)->&str{self.native.as_ref().map_or(self.controller_id.as_str(),|native|native.definition().controller_id.as_str())}
+
     #[cfg(any(test, feature = "artifact-app-testing"))]
     #[doc(hidden)]
     pub fn test_with_controller_id(controller_id: String) -> Self {
@@ -577,6 +586,7 @@ impl AppActionRegistry {
         let interaction_window_bodies = semio_framework::interaction_window_bodies_by_domain(definition);
         let panel_body_keys = semio_framework::panel_leaf_body_keys(definition);
         Self {
+            native:None,
             actions,
             window_actions,
             app_commands,
@@ -594,6 +604,7 @@ impl AppActionRegistry {
     /// 📏️ Quotes the next catalog close turn: releasing the newest detached identifier allocation whole, or detaching one row.
     #[doc(hidden)]
     pub fn retirement_demands(&self) -> RetirementDemand {
+        if let Some(native)=self.native.as_ref(){return native.close_demands(4096).expect("native registry declares its exact original close")}
         if self.terminal_is_empty() {
             return RetirementDemand::default();
         }
@@ -605,6 +616,7 @@ impl AppActionRegistry {
     /// release demand yields instead of refusing the row for ever.
     #[doc(hidden)]
     pub fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+        if let Some(native)=self.native.as_mut(){return native.close_step(grant).map_err(|error|plugin_sdk_fault(error.to_string()))}
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
         }
@@ -671,7 +683,7 @@ impl AppActionRegistry {
     /// 🧺 Proves that every catalog row and nested catalog owner was retired.
     #[doc(hidden)]
     pub fn terminal_is_empty(&self) -> bool {
-        self.actions.is_empty()
+        self.native.as_ref().is_none_or(|native|native.terminal_is_empty()) && self.actions.is_empty()
             && self.window_actions.is_empty()
             && self.app_commands.is_empty()
             && self.mode_commands.is_empty()
@@ -687,6 +699,7 @@ impl AppActionRegistry {
     /// 🪟️ The body key of a declared window kind.
     #[doc(hidden)]
     pub fn window_body_key(&self, window_kind_id: &str) -> Option<&str> {
+        if let Some(native)=self.native.as_ref(){return native.definition().window_kinds.iter().find(|w|w.id==window_kind_id).map(|w|w.body_key.as_str())}
         self.window_body_keys.get(window_kind_id).map(String::as_str)
     }
 
@@ -695,42 +708,50 @@ impl AppActionRegistry {
     /// keep its widest `UiDirtyScope::Full`.
     #[doc(hidden)]
     pub fn interaction_declared_refresh_scope(&self, verb: InteractionVerb, domains: &[&str]) -> Option<UiDirtyScope> {
+        if let Some(native)=self.native.as_ref(){let definition=native.definition();let mut windows=Vec::<String>::new();for window in definition.window_kinds.iter(){if window.interactions.iter().any(|i|domains.contains(&i.as_str()))&&!windows.iter().any(|body|body==&window.body_key){windows.push(window.body_key.clone())}}return (!windows.is_empty()).then(||semio_framework::interaction_verb_surface_scope(verb,&windows,&semio_framework::panel_leaf_body_keys(definition)))}
         semio_framework::interaction_declared_refresh_scope(verb, domains, &self.interaction_window_bodies, &self.panel_body_keys)
     }
 
     /// ⏯️ The declared label and `ToolRunDefinition` of one tool or utility.
     #[doc(hidden)]
-    pub fn tool_run(&self, id: &str) -> Option<&(LocalizedLabel, semio_framework_tool_run::ToolRunDefinition)> {
-        self.tool_runs.get(id)
+    pub fn tool_run(&self, id: &str) -> Option<(&LocalizedLabel, &semio_framework_tool_run::ToolRunDefinition)> {
+        if let Some(native)=self.native.as_ref(){return native.tool_run(id)}
+        self.tool_runs.get(id).map(|(label,run)|(label,run))
     }
 
     #[doc(hidden)]
     pub fn get(&self, id: &str) -> Option<&ActionDefinition> {
+        if let Some(native)=self.native.as_ref(){return native.action(id)}
         self.actions.get(id)
     }
 
     #[doc(hidden)]
     pub async fn window_action(&self, window_kind_id: &str, action_id: &str) -> Option<&ActionDefinition> {
+        if let Some(native)=self.native.as_ref(){return native.window_action(window_kind_id,action_id)}
         self.window_actions.get(window_kind_id)?.get(action_id)
     }
 
     #[doc(hidden)]
     pub async fn has_mode(&self, mode_id: &str) -> bool {
+        if let Some(native)=self.native.as_ref(){return native.definition().modes.iter().any(|m|m.id==mode_id)}
         self.mode_commands.contains_key(mode_id)
     }
 
     #[doc(hidden)]
     pub fn get_command(&self, id: &str) -> Option<&CommandDefinition> {
+        if let Some(native)=self.native.as_ref(){return native.command(id)}
         self.app_commands.get(id).or_else(|| self.mode_commands.values().find_map(|commands| commands.get(id)))
     }
 
     #[doc(hidden)]
     pub async fn app_command(&self, id: &str) -> Option<&CommandDefinition> {
+        if let Some(native)=self.native.as_ref(){return native.definition().commands.iter().find(|c|c.id==id)}
         self.app_commands.get(id)
     }
 
     #[doc(hidden)]
     pub async fn mode_command(&self, mode_id: &str, id: &str) -> Option<&CommandDefinition> {
+        if let Some(native)=self.native.as_ref(){return native.definition().modes.iter().find(|m|m.id==mode_id)?.commands.iter().find(|c|c.id==id)}
         self.mode_commands.get(mode_id)?.get(id)
     }
 
@@ -739,12 +760,13 @@ impl AppActionRegistry {
     /// tool to any factory and every dispatch through it fails closed at its own key lookup.
     #[doc(hidden)]
     pub fn is_registry_less(&self) -> bool {
-        self.controller_id.is_empty() && self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty()
+        self.native.is_none() && self.controller_id.is_empty() && self.actions.is_empty() && self.window_actions.is_empty() && self.app_commands.is_empty() && self.mode_commands.is_empty()
     }
 
     #[doc(hidden)]
     pub fn migrated_tool_ids(&self) -> BTreeSet<String> {
         let mut ids = BTreeSet::new();
+        if let Some(native)=self.native.as_ref(){let d=native.definition();ids.extend(d.actions.iter().chain(d.window_kinds.iter().flat_map(|w|w.actions.iter())).filter(|r|r.semantics.execution.interactive_job==semio_framework::InteractiveJobClassification::Migrated).map(|r|r.id.clone()));ids.extend(d.commands.iter().chain(d.modes.iter().flat_map(|m|m.commands.iter())).filter(|r|r.semantics.execution.interactive_job==semio_framework::InteractiveJobClassification::Migrated).map(|r|r.id.clone()));return ids}
         ids.extend(self.actions.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
         ids.extend(self.app_commands.iter().filter(|(_, definition)| definition.semantics.execution.interactive_job == semio_framework::InteractiveJobClassification::Migrated).map(|(id, _)| id.clone()));
         for commands in self.mode_commands.values() {
@@ -778,6 +800,7 @@ impl AppActionRegistry {
     /// 🕹️ `domain_id`'s declared `InteractionDefinition`, `None` when undeclared.
     #[doc(hidden)]
     pub async fn interaction(&self, domain_id: &str) -> Option<&InteractionDefinition> {
+        if let Some(native)=self.native.as_ref(){return native.definition().interactions.iter().find(|i|i.id==domain_id)}
         self.interactions.get(domain_id)
     }
 
@@ -785,7 +808,7 @@ impl AppActionRegistry {
     /// (which carry no `domainId` arg, applying to every declared domain at once) iterate this.
     #[doc(hidden)]
     pub async fn interactions(&self) -> impl Iterator<Item = &InteractionDefinition> {
-        self.interactions.values()
+        self.interactions.values().chain(self.native.as_ref().into_iter().flat_map(|native|native.definition().interactions.iter()))
     }
 
     /// 🗂️ Ribbon-parent-taxonomy category (a `ui_wgpu::wgpu::RIBBON_PARENT_CATEGORIES` id) for a declared
@@ -795,7 +818,7 @@ impl AppActionRegistry {
     /// 🚫️async: E1-adjacent pure lookup consumed by `organize_context_menu`'s sync `Fn(&str) ->
     /// Option<String>` category closure — see R9.
     pub fn category_of(&self, id: &str) -> Option<String> {
-        self.actions.get(id).and_then(|action| action.category.clone())
+        self.get(id).and_then(|action| action.category.clone())
     }
 }
 
@@ -813,3 +836,7 @@ pub mod image_kit;
 pub mod mesh_kit;
 #[path = "🌍️world3d/☀️sun/🦀️.rs"]
 pub mod world3d_sun;
+
+#[path="📇️registry/🌱️original/🦀️.rs"]
+mod original_registry;
+pub use original_registry::{RegisteredAppDefinition,OriginalAppDefinition,RegisteredDefinitionSource};

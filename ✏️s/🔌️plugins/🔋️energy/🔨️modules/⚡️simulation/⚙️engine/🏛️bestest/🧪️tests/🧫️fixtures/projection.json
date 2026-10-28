@@ -1,0 +1,6 @@
+{
+  "zone": "Zone",
+  "temperatureC": [20.0, 22.0],
+  "heatingW": [0.0, 1500.0],
+  "coolingW": [300.0, 0.0]
+}

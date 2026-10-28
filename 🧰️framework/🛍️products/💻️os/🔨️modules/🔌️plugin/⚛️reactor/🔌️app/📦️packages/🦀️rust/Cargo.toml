@@ -53,6 +53,8 @@ semio-framework-plugin-interaction = { path = "../../../../🕹️interaction/�
 semio-framework-async = { workspace = true }
 semio-framework-pack = { workspace = true }
 
+semio-framework-plugin-window-kits = { path = "../../../../🪟️window-kits/📦️packages/🦀️rust" }
+
 [dev-dependencies]
 semio-framework-pack-json = { path = "../../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 

@@ -71,9 +71,9 @@ impl ArtifactViewer for SemioVideoViewer {
     const DIALECT: Dialect = SEMIO_VIDEO_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = SEMIO_VIDEO_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> SemioVideoSnapshot {
+    fn reference_birth()->Option<fn()->SemioVideoSnapshot>{Some(||{
         SemioVideoSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

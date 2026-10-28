@@ -1,12 +1,16 @@
 //! 🔏️ Pack, authority and publication of the window config: the pack, the authority, the erased publication trait and the typed publication with its drop. See [`super`].
 
 use super::*;
+#[path="📦️source/🦀️.rs"]
+mod pack_source;
+pub use pack_source::WindowConfigPackSource;
 
 /// 💾 Persisted envelope for one exact window config partition.
+#[derive(semio_framework_value::RetireOwned)]
 pub struct WindowConfigPack {
     pub window_id: String,
     pub window_kind_id: String,
-    pub files: store::os_store::serialization::ArtifactPackFiles,
+    pub source:WindowConfigPackSource,
 }
 
 #[derive(semio_framework_value::RetireOwned)]

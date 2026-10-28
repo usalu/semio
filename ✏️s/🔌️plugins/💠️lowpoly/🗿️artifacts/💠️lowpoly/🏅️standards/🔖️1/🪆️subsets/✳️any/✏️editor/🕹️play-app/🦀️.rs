@@ -235,9 +235,9 @@ impl ArtifactEditor for LowpolyPlayApp {
         Some(semio_s_artifact_lowpoly_lowpoly_config::schema::app_schema_descriptor())
     }
 
-    fn initial_snapshot() -> LowpolySnapshot {
+    fn reference_birth()->Option<fn()->LowpolySnapshot>{Some(||{
         semio_s_artifact_lowpoly_lowpoly_model::standards::v1::subsets::any::io::text::snapshot::default_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(lowpoly_io())

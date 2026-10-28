@@ -1,14 +1,13 @@
 //! 💠️ Energy model mutation — `ChangeMechanicalVentilationFanTotalEfficiency`: Sets fan total efficiency on one mechanical ventilation, addressed by id.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// 💠️ `change-mechanical-ventilation-fan-total-efficiency` payload. Sets fan total efficiency on one mechanical ventilation, addressed by id.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[value(rename_all = "camelCase")]
 #[dsl(keyword = "change-mechanical-ventilation-fan-total-efficiency")]
 pub struct ChangeMechanicalVentilationFanTotalEfficiency {
@@ -19,37 +18,5 @@ pub struct ChangeMechanicalVentilationFanTotalEfficiency {
 /// 🏗️ Builder — wraps the payload in whichever dispatch aggregate the caller names.
 pub fn change_mechanical_ventilation_fan_total_efficiency<Op: From<ChangeMechanicalVentilationFanTotalEfficiency>>(id: crate::model::EntityId, new_fan_total_efficiency: f64) -> Op {
     ChangeMechanicalVentilationFanTotalEfficiency { id, new_fan_total_efficiency }.into()
-}
-
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for ChangeMechanicalVentilationFanTotalEfficiency
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<ChangeMechanicalVentilationFanTotalEfficiency>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "change", entity: "mechanical-ventilation", kind: "change-mechanical-ventilation-fan-total-efficiency", record: "ChangedMechanicalVentilationFanTotalEfficiency" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Change Mechanical Ventilation Fan Total Efficiency of mechanical ventilation {}", self.id.0), &format!("Ventilatorgesamtwirkungsgrad von mechanischer Lüftung {} ändern", self.id.0))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for ChangeMechanicalVentilationFanTotalEfficiency
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<ChangeMechanicalVentilationFanTotalEfficiency>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
 }
 //#endregion 🔖️Mutation

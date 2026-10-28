@@ -12,14 +12,16 @@ extern crate semio_s_plugin_energy_engine_model as model;
 extern crate semio_s_plugin_energy_engine_schedule as schedule;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_infiltration_schedule {
     #[path = "⏳️change-schedule/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⏳️change-schedule/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⏳️change-schedule/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⏳️change-schedule/↩️inverse/🦀️.rs"]
@@ -31,6 +33,8 @@ pub mod change_infiltration_zone {
     #[path = "🌀️change-zone/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌀️change-zone/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌀️change-zone/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌀️change-zone/↩️inverse/🦀️.rs"]
@@ -42,6 +46,8 @@ pub mod change_infiltration_flow_per_exterior_area {
     #[path = "🌫️change-flow-per-exterior-area/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌫️change-flow-per-exterior-area/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌫️change-flow-per-exterior-area/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌫️change-flow-per-exterior-area/↩️inverse/🦀️.rs"]
@@ -53,6 +59,8 @@ pub mod create_infiltration {
     #[path = "💨️create/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "💨️create/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "💨️create/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "💨️create/↩️inverse/🦀️.rs"]
@@ -64,6 +72,8 @@ pub mod change_infiltration_design_flow_ach {
     #[path = "🔄️change-design-flow-ach/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔄️change-design-flow-ach/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔄️change-design-flow-ach/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔄️change-design-flow-ach/↩️inverse/🦀️.rs"]
@@ -75,6 +85,8 @@ pub mod change_infiltration_method {
     #[path = "🔬️change-method/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔬️change-method/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔬️change-method/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔬️change-method/↩️inverse/🦀️.rs"]
@@ -86,6 +98,8 @@ pub mod delete_infiltration {
     #[path = "🧽️delete/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🧽️delete/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🧽️delete/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🧽️delete/↩️inverse/🦀️.rs"]

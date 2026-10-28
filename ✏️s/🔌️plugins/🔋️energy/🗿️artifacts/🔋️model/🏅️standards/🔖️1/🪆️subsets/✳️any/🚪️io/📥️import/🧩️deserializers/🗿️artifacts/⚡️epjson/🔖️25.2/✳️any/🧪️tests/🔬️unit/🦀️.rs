@@ -82,3 +82,33 @@ async fn an_unknown_object_type_is_reported_not_merged() {
 async fn a_document_without_a_building_is_refused() {
     assert!(decode_model(&Value::Object(Object::new())).is_err(), "EnergyPlus itself requires a Building object");
 }
+
+#[semio_framework_async_macros::async_test]
+async fn reference_names_follow_energyplus_case_insensitive_identity() {
+    let law = semio_framework_pack_json::parse(include_str!("reference-case.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
+    let model = crate::bestest::model(law.get("case").unwrap().as_str().unwrap()).unwrap();
+    let keys = law.get("referenceKeys").unwrap().as_array().unwrap();
+    let prefixes = law.get("referencePrefixes").unwrap().as_array().unwrap();
+    let mut document = encode_model(&model);
+    let original = decode_model(&document).unwrap();
+    let Value::Object(root) = &mut document else { unreachable!() };
+    for (_, group) in root.iter_mut() {
+        let Value::Object(objects) = group else { continue };
+        for (_, object) in objects.iter_mut() {
+            let Value::Object(fields) = object else { continue };
+            for (key, value) in fields.iter_mut() {
+                if keys.iter().any(|value| value.as_str() == Some(key)) || prefixes.iter().any(|value| key.starts_with(value.as_str().unwrap())) {
+                    if let Value::String(name) = value { *name = name.to_ascii_uppercase(); }
+                }
+            }
+        }
+    }
+    let imported = decode_model(&document).unwrap();
+    for (key, count) in [("zones", imported.model.zones.len()), ("surfaces", imported.model.surfaces.len()), ("fenestrations", imported.model.fenestrations.len())] {
+        assert_eq!(Some(count as u64), law.get("expected").unwrap().get(key).and_then(Value::as_u64));
+    }
+    assert_eq!(imported.diagnostics, original.diagnostics);
+    assert_eq!(imported.model.surfaces, original.model.surfaces);
+    assert_eq!(imported.model.fenestrations, original.model.fenestrations);
+    assert_eq!(imported.model.constructions, original.model.constructions);
+}

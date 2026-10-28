@@ -51,5 +51,43 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateConstantSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "constants",
+    "field": "value",
+    "input": "new_value",
+    "key": "id",
+    "labels": {
+      "en": "Constant schedule value",
+      "de": "Konstanter Zeitplan ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "constant-schedule",
+      "kind": "change-constant-schedule-value",
+      "record": "ChangedConstantScheduleValue"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Constant schedule requires a valid value."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed constant schedule does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "Constant schedule already has this value."
+      }
+    }
   }
 }

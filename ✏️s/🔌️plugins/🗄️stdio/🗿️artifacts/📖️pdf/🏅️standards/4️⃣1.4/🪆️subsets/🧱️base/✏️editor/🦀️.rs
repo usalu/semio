@@ -142,9 +142,9 @@ impl ArtifactEditor for Pdf14Editor {
         })
     }
 
-    fn initial_snapshot() -> PdfSnapshot {
+    fn reference_birth()->Option<fn()->PdfSnapshot>{Some(||{
         PdfSnapshot::default()
-    }
+    })}
 
     /// ✏️ Applies own page mutations after addressed text revision admission.
     fn handle(

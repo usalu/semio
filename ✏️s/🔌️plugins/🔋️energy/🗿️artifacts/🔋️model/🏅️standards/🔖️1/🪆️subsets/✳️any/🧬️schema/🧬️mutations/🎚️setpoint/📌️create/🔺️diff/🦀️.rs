@@ -1,9 +1,9 @@
 //! 🔺️ Sparse diff builder for `CreateSetpointManager` — the artifact's delta is built straight from the
 //! payload and BASE, never by applying and capturing.
 
-use crate::diff::{EnergyModelDiff, ModelPatch};
+use crate::diff::{ReferenceEnergyModelDiff as EnergyModelDiff, ModelPatch};
 use crate::diff_patch::{Rows};
-use crate::snapshot::EnergyModelSnapshot;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 //#region 🔖️Diff
 pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
@@ -16,15 +16,7 @@ pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) 
     if base.model.setpoint_managers.iter().any(|item| item.name == payload.name) {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Another setpoint manager is already named {:?}.", payload.name), [payload.id.0.to_string()]);
     }
-    if !matches!(payload.kind.as_str(), "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone") {
-        return protocol::MutationOutcome::fatal("mutation.invariant", format!("{:?} is not a setpoint manager kind.", payload.kind), [payload.id.0.to_string()]);
-    }
-    if payload.kind != "OutdoorAirReset" && !(payload.low_outdoor_c == 0.0 && payload.high_outdoor_c == 0.0 && payload.low_setpoint_c == 0.0 && payload.high_setpoint_c == 0.0) {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "Only an OutdoorAirReset setpoint manager carries reset limits.".to_string(), [payload.id.0.to_string()]);
-    }
-    if payload.kind == "OutdoorAirReset" && payload.high_outdoor_c <= payload.low_outdoor_c {
-        return protocol::MutationOutcome::fatal("mutation.invariant", "An outdoor air reset needs a high outdoor temperature above its low one.".to_string(), [payload.id.0.to_string()]);
-    }
+    let Some(kind)=crate::model::SetpointManagerKind::from_parts(payload.kind,[payload.low_outdoor_c,payload.high_outdoor_c,payload.low_setpoint_c,payload.high_setpoint_c])else{return protocol::MutationOutcome::fatal("mutation.invariant","Only a finite ordered outdoor reset carries nonzero limits.",[payload.id.0.to_string()]);};
     if !payload.schedule_present && payload.schedule_id.0 != 0 {
         return protocol::MutationOutcome::fatal("mutation.invariant", "An absent setpoint manager schedule carries the id zero.".to_string(), [payload.id.0.to_string()]);
     }
@@ -37,15 +29,6 @@ pub fn diff(payload: &super::CreateSetpointManager, base: &EnergyModelSnapshot) 
     {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Schedule {} is not defined by this model.", payload.schedule_id.0), [payload.schedule_id.0.to_string()]);
     }
-    let kind = if payload.kind == "OutdoorAirReset" {
-        crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c: payload.low_outdoor_c, high_outdoor_c: payload.high_outdoor_c, low_setpoint_c: payload.low_setpoint_c, high_setpoint_c: payload.high_setpoint_c }
-    } else if payload.kind == "WarmestZone" {
-        crate::model::SetpointManagerKind::WarmestZone
-    } else if payload.kind == "ColdestZone" {
-        crate::model::SetpointManagerKind::ColdestZone
-    } else {
-        crate::model::SetpointManagerKind::Scheduled
-    };
     let position = payload.index.map_or(base.model.setpoint_managers.len(), |index| index as usize);
     if position > base.model.setpoint_managers.len() {
         return protocol::MutationOutcome::error("mutation.target-missing", format!("Index {} is past the end of the model's {} setpoint_managers.", position, base.model.setpoint_managers.len()), [payload.id.0.to_string()]);

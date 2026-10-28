@@ -1,0 +1,65 @@
+{
+  "contract": "semio.energy.original-deletezone/v1",
+  "collection": "zones",
+  "existingRows": [
+    {
+      "id": 1,
+      "name": "A",
+      "volume_m3": 100,
+      "multiplier": 1,
+      "conditioned": true,
+      "part_of_total_floor_area": true
+    },
+    {
+      "id": 4,
+      "name": "Second zone",
+      "volume_m3": 100,
+      "multiplier": 1,
+      "conditioned": true,
+      "part_of_total_floor_area": true
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 1
+      },
+      "outcome": "changed",
+      "after": [
+        4
+      ]
+    },
+    {
+      "payload": {
+        "id": 4
+      },
+      "outcome": "changed",
+      "after": [
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ]
+}

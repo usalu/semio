@@ -1,0 +1,15 @@
+[package]
+workspace = "../.."
+name = "semio-s-artifact-stdio-idf"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-contract = { path = "../../../../📇️registry/🧬️contract/📦️packages/🦀️rust" }
+
+[package.metadata.semio.composition]
+manifest = "../../🧩️composition/🔣️.json"

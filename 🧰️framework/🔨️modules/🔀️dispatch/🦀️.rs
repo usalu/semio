@@ -223,16 +223,89 @@ fn classify_return(method_name: &Ident, sig: &Signature) -> syn::Result<ReturnSh
 /// is instead baked into the captured macro as a `compile_error!`, so it surfaces exactly where someone
 /// tries to CLOSE an enum over the trait, not merely because the trait was annotated.
 pub fn expand_dyn_enum_attribute(attr: TokenStream, item: TokenStream) -> syn::Result<TokenStream> {
-    if !attr.is_empty() {
-        return Err(syn::Error::new_spanned(attr, "dyn_enum: the attribute takes no arguments"));
+    let delegation = !attr.is_empty();
+    if delegation && !syn::parse2::<Ident>(attr.clone()).is_ok_and(|name| name == "delegate") {
+        return Err(syn::Error::new_spanned(attr, "dyn_enum: the attribute takes no arguments or the explicit `delegate` capability"));
     }
     let item_trait: ItemTrait = syn::parse2(item)?;
     let dispatch_macro = build_dispatch_macro(&item_trait);
+    let delegate = if delegation { build_typed_delegation(&item_trait)? } else { TokenStream::new() };
     Ok(quote! {
         #item_trait
         #dispatch_macro
+        #delegate
     })
 }
+
+/// 🎟️ A typed owner can customize lifecycle methods while forwarding the original borrowed contract.
+fn build_typed_delegation(item: &ItemTrait) -> syn::Result<TokenStream> {
+    if !item.generics.params.is_empty() || item.generics.where_clause.is_some() {
+        return Err(syn::Error::new_spanned(&item.generics, "dyn_enum delegate: place generic parameters on the concrete target; the delegated contract must be monomorphic"));
+    }
+    let name = &item.ident;
+    let delegate = format_ident!("{}Delegate", name);
+    let visibility = &item.vis;
+    let supertraits = &item.supertraits;
+    let bounds = if supertraits.is_empty() { quote!{Sized} } else { quote!{#supertraits + Sized} };
+    let mut defaults = Vec::new();
+    let mut forwarding = Vec::new();
+    for entry in &item.items {
+        let TraitItem::Fn(method) = entry else {
+            return Err(syn::Error::new_spanned(entry, "dyn_enum delegate: only borrowed methods can delegate to one original target"));
+        };
+        let sig = &method.sig;
+        let method_name = &sig.ident;
+        let typed = sig.inputs.iter().filter_map(|input|match input{FnArg::Typed(input)=>Some(&input.ty),_=>None});
+        let output = &sig.output;
+        let generics = &sig.generics;
+        if contains_self_type(quote!{#(#typed)* #output #generics}) || sig.unsafety.is_some() || sig.abi.is_some() || sig.variadic.is_some() {
+            return Err(syn::Error::new_spanned(sig, "dyn_enum delegate: the target must expose safe borrowed Rust methods without Self-valued inputs or outputs"));
+        }
+        let receiver = match classify_receiver(method_name, sig)? {
+            ReceiverKind::ByRef => quote!{#delegate::delegate_ref(self)},
+            ReceiverKind::ByMutRef => quote!{#delegate::delegate_mut(self)},
+            _ => return Err(syn::Error::new_spanned(sig, "dyn_enum delegate: ownership stays with the concrete delegate; only &self and &mut self receivers are supported")),
+        };
+        let (args, inputs) = simple_ident_params(method_name, sig)?;
+        let generics = &sig.generics;
+        let where_clause = &sig.generics.where_clause;
+        let attributes = &method.attrs;
+        let declared_output = &sig.output;
+        let (asyncness, output) = match classify_return(method_name, sig)? {
+            ReturnShape::Plain => (sig.asyncness.map(|token| quote!{#token}), quote!{#declared_output}),
+            ReturnShape::FutureOutput(ty) => (Some(quote!{async}), quote!{-> #ty}),
+        };
+        let await_result = asyncness.as_ref().map(|_|quote!{.await});
+        defaults.push(quote!{
+            #(#attributes)*
+            #asyncness fn #method_name #generics (#inputs) #output #where_clause {
+                #name::#method_name(#receiver #(, #args)*) #await_result
+            }
+        });
+        forwarding.push(quote!{
+            #(#attributes)*
+            #asyncness fn #method_name #generics (#inputs) #output #where_clause {
+                #delegate::#method_name(self #(, #args)*) #await_result
+            }
+        });
+    }
+    Ok(quote!{
+        #[doc = "🎟️ Explicit typed delegation retains the actual target and permits authored lifecycle overrides."]
+        #[allow(async_fn_in_trait)]
+        #visibility trait #delegate: #bounds {
+            type Target: #name;
+            fn delegate_ref(&self) -> &Self::Target;
+            fn delegate_mut(&mut self) -> &mut Self::Target;
+            #(#defaults)*
+        }
+        impl<__SemioDelegate: #delegate> #name for __SemioDelegate {
+            #(#forwarding)*
+        }
+    })
+}
+
+/// 🔎️ Target identity cannot silently become the distinct owner's Self type.
+fn contains_self_type(tokens:TokenStream)->bool{tokens.into_iter().any(|token|match token{proc_macro2::TokenTree::Ident(name)=>name=="Self",proc_macro2::TokenTree::Group(group)=>contains_self_type(group.stream()),_=>false})}
 
 /// 🏗️ Builds the whole `#[macro_export] macro_rules! __semio_dispatch_<Name> { .. }` item.
 fn build_dispatch_macro(item_trait: &ItemTrait) -> TokenStream {

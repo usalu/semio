@@ -1,0 +1,1 @@
+{"operation":3501,"generation":29,"maximumTurns":262144,"cancelAt":[0,1,2,7,63,255,511],"deniedAxes":["items","copy","capacity","release","depth"],"expectedZoom":2.75,"requirements":["original-framed-entry-pointer","registered-native-source","private-before-ready","zero-birth-on-denial","original-caller-cancel","terminal-command-source"]}

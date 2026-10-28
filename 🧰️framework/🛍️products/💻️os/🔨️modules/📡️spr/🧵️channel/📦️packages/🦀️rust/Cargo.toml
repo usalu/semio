@@ -34,3 +34,7 @@ semio-framework-io-sqlite-snapshot = { path = "../../../../../../../🔨️modul
 semio-framework-io-control = { path = "../../../../../../../🔨️modules/🚪️io/⏱️control/📦️packages/🦀️rust" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
+
+[dev-dependencies]
+semio-framework-trace={path="../../../../../../../🔨️modules/⏱️trace/📦️packages/🦀️rust"}
+semio-framework-async={path="../../../../../../../🔨️modules/⏳️async/📦️packages/🦀️rust"}

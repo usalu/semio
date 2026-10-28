@@ -5,6 +5,8 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProg
 use protocol::mutation::MutationMessageLedgerRetirement as ArtifactStoreMessageLedgerRetirement;
 use protocol::mutation::ArtifactMessageSource;
 use semio_framework_value_retirement_owner::{retirement_owner_demands,retirement_owner_close};
+#[path="removal.rs"]mod removal;
+pub use removal::OriginalEditMessageRemoval;
 pub const ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY: usize = 8_192;
 
 pub const ARTIFACT_EDIT_MESSAGE_ID_BYTES: usize = 256;
@@ -107,6 +109,18 @@ pub struct ArtifactEditMessageLedgerRetirement {
 
 impl ArtifactEditMessageLedgerRetirement {
     pub fn new(original: ArtifactEditMessageLedger) -> Self { Self { original: std::mem::ManuallyDrop::new(original), active: None } }
+    /// 📏️ Fresh placement writes one actual message retirement header before any original ledger transfers.
+    pub fn boxed_birth_demands() -> semio_framework_value::RetirementDemand { semio_framework_value::RetirementDemand { copy_bytes: size_of::<Self>() + 2 * size_of::<Box<Self>>(), capacity_bytes: size_of::<Self>(), depth: 1, ..Default::default() } }
+    /// 📥️ The original ledger stays in its slot until the real boxed retirement frame is funded.
+    pub fn admit_boxed(original: &mut Option<ArtifactEditMessageLedger>, output: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
+        if original.is_none() || output.is_some() { return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "message retirement requires its original ledger and empty destination")); }
+        let demand = Self::boxed_birth_demands();
+        if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant, demand) { return Ok(Default::default()); }
+        let storage = Box::<Self>::new_uninit();
+        *output = Some(Box::write(storage, Self { original: std::mem::ManuallyDrop::new(original.take().unwrap()), active: None }));
+        Ok(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, retained_capacity_bytes: demand.capacity_bytes, ..Default::default() })
+    }
+
     pub fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.active.is_some() { return retirement_owner_demands(&self.active, body); }
         if self.original.len != 0 { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<protocol::EditMessages>(), depth: 1, ..Default::default() }); }
@@ -399,15 +413,24 @@ impl ArtifactEditMessageLedger {
         self.push_reserved(entry)
     }
 
-    /// 📏️ Whether a premeasured entry of this identity and extent can be admitted: it fits the fixed bounds and either replaces its edit's earlier entry or takes a free slot.
+    /// 📏️ Checks the fixed identity slot against an entry measured by its retained preparation.
     pub fn admits_measured(&self, id: &str, bytes: usize) -> bool {
-        id.len() <= ARTIFACT_EDIT_MESSAGE_ID_BYTES && bytes <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES && self.admission_is_complete() && (self.find_ticket(id).is_some() || self.free_len != 0)
+        self.admission_is_complete() && id.len() <= ARTIFACT_EDIT_MESSAGE_ID_BYTES && bytes <= ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES && (self.find_ticket(id).is_some() || self.free_len > 0 && self.generations[usize::from(self.free[self.free_len - 1])] < u64::MAX)
     }
 
     /// 🔐️ Admits one entry the diagnostic stage measured and bounded before any ownership moved: an entry of the same edit replaces the earlier one in place and hands it back for its funded retirement.
     pub fn admit_prepared(&mut self, entry: protocol::EditMessages) -> Result<Option<protocol::EditMessages>, protocol::EditMessages> {
         if let Some(existing) = self.get_mut_by_id(&entry.edit_id) { return Ok(Some(std::mem::replace(existing, entry))); }
         self.try_push(entry).map(|_| None)
+    }
+
+    /// 📨️ Transfers a premeasured original and returns any displaced diagnostic owner.
+    pub fn admit_measured(&mut self, entry: protocol::EditMessages, bytes: usize) -> Result<Option<protocol::EditMessages>, protocol::EditMessages> {
+        if !self.admits_measured(&entry.edit_id, bytes) { return Err(entry); }
+        if let Some(ticket) = self.find_ticket(&entry.edit_id) {
+            return Ok(Some(std::mem::replace(self.get_mut(ticket).expect("validated original diagnostic ticket"), entry)));
+        }
+        self.push_reserved(entry).map(|_| None)
     }
 
     pub fn admit(&mut self, entry: protocol::EditMessages) -> Result<(), protocol::EditMessages> {
@@ -450,6 +473,13 @@ impl ArtifactEditMessageLedger {
         self.get(ticket)?;
         let slot = usize::from(ticket.slot);
         let identity_bucket = self.reserved_identity_bucket(ticket.slot, &unsafe { self.slots[slot].assume_init_ref() }.edit_id).expect("artifact edit-message identity remains reserved while its slot is live");
+        self.remove_at_bucket(ticket,identity_bucket)
+    }
+
+    fn remove_at_bucket(&mut self,ticket:ArtifactEditMessageTicket,identity_bucket:usize)->Option<protocol::EditMessages>{
+        self.get(ticket)?;
+        if self.buckets.get(identity_bucket).copied()!=Some(ticket.slot){return None}
+        let slot=usize::from(ticket.slot);
         let previous = self.previous[slot];
         let next = self.next[slot];
         if previous == ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE {
@@ -555,3 +585,9 @@ mod tests;
 #[cfg(test)]
 #[global_allocator]
 static TEST_ALLOCATION_OBSERVER:semio_framework_trace_memory_testing::RequestedAllocator=semio_framework_trace_memory_testing::RequestedAllocator;
+#[cfg(test)]
+#[path="🔁️replay/🧪️tests/🦀️.rs"]
+mod replay_tests;
+#[path="🔁️replay/🦀️.rs"]
+mod replay;
+pub use replay::OriginalReplayDiagnostics;

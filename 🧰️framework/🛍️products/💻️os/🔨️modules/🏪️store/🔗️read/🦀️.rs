@@ -53,14 +53,18 @@ use semio_framework_os_store_projection::retire_shared_projection;
 #[path = "📖️derived-snapshots-replays-and-history-read-plan/🦀️.rs"]
 mod derived_snapshots_replays_and_history_read_plan;
 pub use derived_snapshots_replays_and_history_read_plan::{
-    retain_completed_history_plan, ArtifactDerivedHistoryPreview, ArtifactDerivedReplay,
+    retain_completed_history_plan, ArtifactCheckpointSelection, ArtifactCheckpointReadSource, ArtifactDerivedHistoryPreview, ArtifactDerivedReplay,
     ArtifactDerivedSnapshot, ArtifactHistoryReadRetirement, HistoryReadPlan,
 };
+
+#[path="📸️snapshot-alias/🦀️.rs"]
+mod snapshot_alias;
+pub use snapshot_alias::{admit_original_snapshot_alias,original_snapshot_alias_retirement_demand};
 
 #[path = "🧮️cursor-ledger-and-vcs-retirements/🦀️.rs"]
 mod cursor_ledger_and_vcs_retirements;
 pub use cursor_ledger_and_vcs_retirements::{
-    admit_original_snapshot_alias, artifact_history_ledger_birth, artifact_history_ledger_handoff,
+    artifact_history_ledger_birth, artifact_history_ledger_handoff,
     retire_document_envelope, retire_document_envelope_birth_bytes,
     ArtifactStoreAlternativeRetirementFactory, ArtifactStoreCheckpointRetirementFactory,
     ArtifactStoreCursorRetirement, ArtifactStoreHistoryLedgerRetirement,

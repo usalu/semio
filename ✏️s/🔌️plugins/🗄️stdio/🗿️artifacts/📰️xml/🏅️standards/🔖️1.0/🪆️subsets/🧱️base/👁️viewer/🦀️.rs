@@ -66,9 +66,9 @@ impl ArtifactViewer for XmlAnyViewer {
     const DIALECT: Dialect = XML_VIEWER_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = STDIO_XML_DOCUMENT_SCHEMA;
 
-    fn initial_snapshot() -> XmlSnapshot {
+    fn reference_birth()->Option<fn()->XmlSnapshot>{Some(||{
         XmlSnapshot::with_empty_root()
-    }
+    })}
 
     fn handle(
         _command: &Self::Command,

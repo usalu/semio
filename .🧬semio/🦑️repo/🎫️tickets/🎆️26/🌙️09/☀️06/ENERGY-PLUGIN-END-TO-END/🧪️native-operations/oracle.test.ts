@@ -1,0 +1,6 @@
+import {test,expect} from "bun:test";
+import {Database} from "bun:sqlite";
+import Ajv from "ajv/dist/2020";
+import law from "./🔣️.json";
+import schema from "./schema.json";
+test("original ToolRun append, retract and replacement agree with SQLite event interpretation",()=>{expect(new Ajv().compile(schema)(law)).toBe(true);const db=new Database(":memory:");db.run("create table ops(rank integer primary key, value real not null)");const insert=db.prepare("insert into ops values (?, ?)");const output:number[]=[];for(const value of law.append){insert.run(Number(db.query("select count(*) as n from ops").get()?.n),value);output.push(Number(db.query("select value from ops order by rank desc limit 1").get()?.value));}db.run("delete from ops where rank >= ?",[law.retractTo]);output.push(Number(db.query("select value from ops order by rank desc limit 1").get()?.value));for(const value of law.replacement){insert.run(Number(db.query("select count(*) as n from ops").get()?.n),value);output.push(Number(db.query("select value from ops order by rank desc limit 1").get()?.value));}expect(output).toEqual(law.expected);expect(db.query("select value from ops order by rank").all().map((row:any)=>row.value)).toEqual([law.append[0],law.replacement[0]]);db.close();});

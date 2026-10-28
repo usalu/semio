@@ -17,9 +17,15 @@ pub use retained_fold::*;
 
 #[path = "📝️drafts/🦀️.rs"]
 mod input_drafts;
+#[path = "📤️wire/🦀️.rs"]
+mod original_wire;
+pub use original_wire::{HistoryTransitionWireCursor,HistoryTransitionBorrowedIdentity,HistoryTransitionCommitView,HistoryTransitionBranchView,HistoryTransitionEditMode,HistoryTransitionEditsView,HistoryTransitionPinSource,HistoryTransitionRepinView};
 pub use input_drafts::HistoryInputDrafts;
 
 use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestamp, MutationId, SchemaId};
+
+#[path = "author.rs"]
+mod author;
 
 //#region 🔖️Vocabulary
 /// 🧬️ `diff.schema` of every transition envelope. Operation envelopes carry their
@@ -27,10 +33,12 @@ use semio_framework_replication_ids::{ActorId, ArtifactId, HybridLogicalTimestam
 pub const HISTORY_TRANSITION_SCHEMA: &str = "semio.history.transition";
 
 /// 🧑‍🎨️ Author stamped on a committed checkpoint.
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub struct TransitionAuthor {
+#[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
+#[value(rename_all = "camelCase")]
+pub struct Author {
     pub id: String,
     pub name: String,
+    #[value(skip_serializing_if = "Option::is_none")]
     pub avatar: Option<String>,
 }
 
@@ -44,7 +52,7 @@ pub struct TransitionCheckpoint {
     pub mutation_ids: Vec<MutationId>,
     pub description: Option<String>,
     pub saved_at: String,
-    pub authors: Vec<TransitionAuthor>,
+    pub authors: Vec<Author>,
     pub message: Option<String>,
     pub timestamp: String,
     /// 🌿️ The alternative this checkpoint grows. `None` and the trunk id grow the trunk.
@@ -407,8 +415,8 @@ pub fn encode_history_transition(transition: &HistoryTransition) -> Vec<u8> {
     out
 }
 
-/// ↩️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
-pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, semio_framework_replication_error::ProtocolError> {
+/// 🎯️ Inverse of [`encode_history_transition`]; refuses trailing bytes.
+pub fn decode_history_transition(bytes: &(impl semio_framework_value::ByteReadSource+?Sized)) -> Result<HistoryTransition, semio_framework_replication_error::ProtocolError> {
     HistoryFoldJob::new(|control| async move { decode_history_transition_controlled(bytes, &control).await }).finish_cold()
 }
 //#endregion 🔖️Codec
@@ -418,8 +426,8 @@ pub fn decode_history_transition(bytes: &[u8]) -> Result<HistoryTransition, semi
 /// hlc.logical varint | payload bytes))}`. The HLC already carries the author's numeric replica actor; the
 /// envelope's free-form actor string is authentication metadata the hub rebinds to the socket subject, so it
 /// never enters the address and every replica re-derives the same id from the authored `(hlc, payload)`.
-pub fn history_transition_id(timestamp: &HybridLogicalTimestamp, payload: &[u8]) -> MutationId {
-    let mut material = Vec::with_capacity(payload.len() + 32);
+pub fn history_transition_id(timestamp: &HybridLogicalTimestamp, payload: &(impl semio_framework_value::ByteReadSource+?Sized)) -> MutationId {
+    let mut material = Vec::with_capacity(payload.byte_len() + 32);
     semio_framework_replication_wire_core::write_varint_u64(&mut material, timestamp.actor);
     semio_framework_replication_wire_core::write_varint_u64(&mut material, timestamp.physical_ms);
     semio_framework_replication_wire_core::write_varint_u64(&mut material, timestamp.logical);
@@ -464,8 +472,8 @@ pub fn history_transition_envelope(transition: &HistoryTransition, document_id: 
         dependencies,
         observed: None,
         target: Vec::new(),
-        diff: semio_framework_replication_causal::ArtifactDiff { schema: schema.clone(), payload },
-        inverse: semio_framework_replication_causal::InverseMutation { schema, payload: Vec::new() },
+        diff: semio_framework_replication_causal::ArtifactDiff { schema: schema.clone(), payload:semio_framework_replication_causal::CausalPayload::try_from_slice(&payload).expect("bounded transition payload") },
+        inverse: semio_framework_replication_causal::InverseMutation { schema, payload: Default::default() },
         timestamp,
         transaction: None, verb: None, line: None,
     }
@@ -513,7 +521,7 @@ pub struct FoldCheckpoint {
     pub id: String,
     pub change_ids: Vec<String>,
     pub parent_id: Option<String>,
-    pub authors: Vec<TransitionAuthor>,
+    pub authors: Vec<Author>,
     pub message: Option<String>,
     pub timestamp: String,
     pub pins: Vec<TransitionPin>,
@@ -571,7 +579,12 @@ impl ViewerHead {
 /// 🪢️ Folds `edits` and the transition envelopes in `transitions` in `(hlc, id)` order into the
 /// canonical trunk projection: the trunk at its tip. A pure function of the event set plus that head.
 /// See [`fold_history_for`].
-pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
+pub trait HistoryTransitionEvents:Send+Sync{fn event_count(&self)->usize;fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>;}
+impl HistoryTransitionEvents for [semio_framework_replication_causal::MutationEnvelope]{fn event_count(&self)->usize{self.len()}fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>{self.get(index)}}
+impl HistoryTransitionEvents for Vec<semio_framework_replication_causal::MutationEnvelope>{fn event_count(&self)->usize{self.len()}fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>{self.get(index)}}
+impl<const N:usize> HistoryTransitionEvents for [semio_framework_replication_causal::MutationEnvelope;N]{fn event_count(&self)->usize{N}fn event_at(&self,index:usize)->Option<&semio_framework_replication_causal::MutationEnvelope>{self.get(index)}}
+
+pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &(impl HistoryTransitionEvents+?Sized), excluded: &std::collections::HashSet<String>) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     fold_history_for(document_id, edits, transitions, excluded, &ViewerHead::canonical_trunk(document_id))
 }
 
@@ -581,7 +594,7 @@ pub fn fold_history(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &
 /// changes nothing. A `Branch` registers the alternative and does not select the head. An uncommitted
 /// edit is visible only at the tip of the line it is tagged to (`FoldEdit::line` absent or the trunk id
 /// means the trunk).
-pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &[semio_framework_replication_causal::MutationEnvelope], excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
+pub fn fold_history_for(document_id: &ArtifactId, edits: &[FoldEdit], transitions: &(impl HistoryTransitionEvents+?Sized), excluded: &std::collections::HashSet<String>, head: &ViewerHead) -> Result<HistoryFold, semio_framework_replication_error::ProtocolError> {
     HistoryFoldJob::new(|control| async move {
         let mut ignored=control.track(HistoryFoldIndex::<String,()>::new()).unwrap_or_else(|_|unreachable!("cold fold exclusions declare controlled ownership")).await;
         for id in excluded {control.insert_text(&mut ignored,copy_history_text(id,&control).await?,()).await?;}
@@ -603,7 +616,7 @@ mod owned_retirement {
     semio_framework_value::artifact_retire_struct!(FoldChange { id, edit_ids, description, saved_at });
     semio_framework_value::artifact_retire_struct!(FoldCheckpoint { id, change_ids, parent_id, authors, message, timestamp, pins });
     semio_framework_value::artifact_retire_struct!(FoldAlternative { id, name, checkpoint_ids });
-    semio_framework_value::artifact_retire_struct!(TransitionAuthor { id, name, avatar });
+    semio_framework_value::artifact_retire_struct!(Author { id, name, avatar });
     semio_framework_value::artifact_retire_struct!(TransitionPin { child_uri, checkpoint_id });
     impl RetireOwned for InputReplacement {
         fn retirement(self) -> Box<dyn RetirementCursor> {

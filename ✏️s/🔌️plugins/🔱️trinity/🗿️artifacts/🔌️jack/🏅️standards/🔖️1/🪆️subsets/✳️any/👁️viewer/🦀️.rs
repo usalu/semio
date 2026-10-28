@@ -73,9 +73,9 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         C::genesis_child_pack(snapshot, slot, child_id)
     }
 
-    fn initial_snapshot() -> JackSnapshot {
+    fn reference_birth()->Option<fn()->JackSnapshot>{Some(||{
         C::initial_viewer_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `TrinityJackViewCommand::Noop` variant never carries a
     /// config change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no

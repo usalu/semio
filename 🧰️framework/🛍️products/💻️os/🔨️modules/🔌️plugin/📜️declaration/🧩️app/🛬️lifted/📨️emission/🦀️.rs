@@ -12,7 +12,7 @@ use crate::ArtifactApp;
 ///
 /// Apps opt in by overriding {@link ArtifactApp::ephemeral}; the default emits nothing, so an
 /// app with no shareable or UI-local state writes no code at all.
-#[derive(Debug)]
+#[derive(Debug,semio_framework_value::RetireOwned)]
 pub struct EphemeralEmit<A: ArtifactApp> {
     /// 👥️ Ephemeral SHARED — broadcast to peers, never persisted.
     pub presence: Vec<A::PresenceMutation>,

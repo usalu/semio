@@ -20,7 +20,7 @@ type TaxonomyFileKind = { emoji?: unknown; extensionChains?: unknown };
 
 /** 🧬️ Projects the repository taxonomy onto the exact facts the mutation derive macros need, validated against
  * `MutationSourceAuthorityProjectionV1`, in the taxonomy's own order so the macros expand exactly as they did from the taxonomy. */
-function mutationAuthorityProjection(repoRoot: string): string {
+export function mutationAuthorityProjection(repoRoot: string): string {
   const project = JSON.parse(readFileSync(join(repoRoot, "📋️project.json"), "utf8"));
   const taxonomy = JSON.parse(readFileSync(join(repoRoot, project.metadata.semio.taxonomy), "utf8"));
   const filename = (kindId: unknown): string => {

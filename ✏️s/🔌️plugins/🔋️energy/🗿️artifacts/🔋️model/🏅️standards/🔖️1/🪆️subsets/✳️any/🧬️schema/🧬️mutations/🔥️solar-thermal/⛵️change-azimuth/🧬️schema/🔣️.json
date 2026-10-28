@@ -65,5 +65,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateSolarThermalConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "solar_thermal_systems",
+    "field": "azimuth_deg",
+    "input": "new_azimuth_deg",
+    "key": "id",
+    "labels": {
+      "en": "Change solar thermal system: Azimuth",
+      "de": "Azimut ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "solar-thermal-system",
+      "kind": "change-solar-thermal-system-azimuth",
+      "record": "ChangedSolarThermalSystemAzimuth"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Azimuth violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed solar thermal system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The solar thermal system already carries this azimuth value."
+      }
+    }
   }
 }

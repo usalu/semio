@@ -1,6 +1,6 @@
 //! 🪪️ Complete original Model and Config authority is hashed before checkpoint publication or restore.
 use super::{energy_grant_covers, Model, SimulationConfig};
-use semio_framework_os_kernel::os_store::{ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
+use semio_framework_os_store_canonical_json::{ArtifactCanonicalTreeSource,ArtifactCanonicalJson};
 use semio_framework_os_store_canonical_json::ArtifactCanonicalSourceIdentityCursor as Cursor;
 use semio_framework_os_store_canonical_json::ArtifactCanonicalSourceIdentityBirth as Birth;
 use semio_framework_value::{RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind};

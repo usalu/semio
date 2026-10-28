@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateGlazingMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "glazing_materials",
+    "field": "conductivity_w_m_k",
+    "input": "new_conductivity_w_m_k",
+    "key": "id",
+    "labels": {
+      "en": "Change glazing material: Thermal conductivity",
+      "de": "Wärmeleitfähigkeit ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "glazing-material",
+      "kind": "change-glazing-material-conductivity",
+      "record": "ChangedGlazingMaterialConductivity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Thermal conductivity violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed glazing material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The glazing material already carries this thermal conductivity value."
+      }
+    }
   }
 }

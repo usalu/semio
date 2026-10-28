@@ -1,60 +1,6 @@
-//! ↩️ Inverse for `ReplaceSetpointManagerKind` — always computed from BASE, never by inverting the delta.
-
-use crate as vocabulary;
-use crate::snapshot::EnergyModelSnapshot;
-
-//#region 🔖️Inverse
-/// ↩️ A refused or no-op forward step has nothing to undo, so it answers with no steps at all.
-pub fn inverse<Op>(payload: &super::ReplaceSetpointManagerKind, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError>
-where
-    Op: From<super::ReplaceSetpointManagerKind>,
-{
-    Ok((|| {
-    let kind = if payload.new_kind == "OutdoorAirReset" {
-        crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c: payload.new_low_outdoor_c, high_outdoor_c: payload.new_high_outdoor_c, low_setpoint_c: payload.new_low_setpoint_c, high_setpoint_c: payload.new_high_setpoint_c }
-    } else if payload.new_kind == "WarmestZone" {
-        crate::model::SetpointManagerKind::WarmestZone
-    } else if payload.new_kind == "ColdestZone" {
-        crate::model::SetpointManagerKind::ColdestZone
-    } else {
-        crate::model::SetpointManagerKind::Scheduled
-    };
-    match base.model.setpoint_managers.iter().find(|item| item.id == payload.id) {
-        Some(item)
-            if item.kind != kind
-                && !((!matches!(payload.new_kind.as_str(), "Scheduled" | "OutdoorAirReset" | "WarmestZone" | "ColdestZone"))
-                    || (payload.new_kind != "OutdoorAirReset" && !(payload.new_low_outdoor_c == 0.0 && payload.new_high_outdoor_c == 0.0 && payload.new_low_setpoint_c == 0.0 && payload.new_high_setpoint_c == 0.0))
-                    || (payload.new_kind == "OutdoorAirReset" && payload.new_high_outdoor_c <= payload.new_low_outdoor_c)) =>
-        {
-            vec![vocabulary::replace_setpoint_manager_kind(
-                payload.id,
-                match &item.kind {
-                    crate::model::SetpointManagerKind::OutdoorAirReset { .. } => "OutdoorAirReset".to_string(),
-                    crate::model::SetpointManagerKind::WarmestZone => "WarmestZone".to_string(),
-                    crate::model::SetpointManagerKind::ColdestZone => "ColdestZone".to_string(),
-                    crate::model::SetpointManagerKind::Scheduled => "Scheduled".to_string(),
-                },
-                match &item.kind {
-                    crate::model::SetpointManagerKind::OutdoorAirReset { low_outdoor_c, .. } => *low_outdoor_c,
-                    _ => 0.0,
-                },
-                match &item.kind {
-                    crate::model::SetpointManagerKind::OutdoorAirReset { high_outdoor_c, .. } => *high_outdoor_c,
-                    _ => 0.0,
-                },
-                match &item.kind {
-                    crate::model::SetpointManagerKind::OutdoorAirReset { low_setpoint_c, .. } => *low_setpoint_c,
-                    _ => 0.0,
-                },
-                match &item.kind {
-                    crate::model::SetpointManagerKind::OutdoorAirReset { high_setpoint_c, .. } => *high_setpoint_c,
-                    _ => 0.0,
-                },
-            )]
-        }
-        _ => Vec::new(),
-    }
-
-    })())
+//! ↩️ The inverse preserves the original control law as copied discriminator and four fixed limits.
+use crate::snapshot::reference::EnergyModelSnapshot;
+pub fn inverse<Op:From<super::ReplaceSetpointManagerKind>>(p:&super::ReplaceSetpointManagerKind,b:&EnergyModelSnapshot)->Result<Vec<Op>,semio_framework_value::ValueError>{
+ let Some(kind)=crate::model::SetpointManagerKind::from_parts(p.new_kind,[p.new_low_outdoor_c,p.new_high_outdoor_c,p.new_low_setpoint_c,p.new_high_setpoint_c])else{return Ok(Vec::new());};
+ Ok(match b.model.setpoint_managers.iter().find(|r|r.id==p.id){Some(r)if r.kind!=kind=>{let(tag,[low,high,low_setpoint,high_setpoint])=r.kind.parts();vec![super::ReplaceSetpointManagerKind{id:p.id,new_kind:tag,new_low_outdoor_c:low,new_high_outdoor_c:high,new_low_setpoint_c:low_setpoint,new_high_setpoint_c:high_setpoint}.into()]},_=>Vec::new()})
 }
-//#endregion 🔖️Inverse

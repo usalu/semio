@@ -153,5 +153,34 @@
         "de": "Zonen und Zonenknoten sind paarweise zugeordnet: beide Listen sind gleich lang."
       }
     }
-  ]
+  ],
+  "x-semio-energy-operation": {
+    "category": "network-singleton",
+    "row": "StateAirflowNetworkDefinition",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "field": "airflow_network",
+    "labels": {
+      "en": "Replace airflow network",
+      "de": "Luftströmungsnetz ersetzen"
+    },
+    "semantics": {
+      "verb": "replace",
+      "entity": "model",
+      "kind": "replace-airflow-network",
+      "record": "ReplacedAirflowNetwork"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "An airflow network pairs one node per zone and a detached network carries no nodes or links."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The airflow network already has this value."
+      }
+    }
+  }
 }

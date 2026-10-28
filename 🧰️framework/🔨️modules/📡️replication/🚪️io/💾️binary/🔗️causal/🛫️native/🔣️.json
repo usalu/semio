@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "quantum": 4096,
+  "fragmentSizes": [
+    1,
+    7,
+    64
+  ],
+  "deniedAxes": [
+    "items",
+    "copy",
+    "depth"
+  ],
+  "cancelAt": [
+    0,
+    1,
+    3,
+    17,
+    63,
+    127
+  ],
+  "rows": [
+    {
+      "mutationId": "operation-α#0",
+      "documentId": "energy-case",
+      "actor": "author",
+      "dependencies": [
+        "older#3",
+        "older#4"
+      ],
+      "observed": "foreign#7",
+      "target": [
+        "zones",
+        "18446744073709551615"
+      ],
+      "schema": "energy-model@1",
+      "payloadHex": "6f7022cebbf09f8cbf22",
+      "inverseHex": "6f702222",
+      "timestamp": [
+        "17",
+        "18446744073709551615",
+        "128"
+      ],
+      "transaction": {
+        "id": "tx-0000000000000001",
+        "tool": "energy#edit"
+      },
+      "verb": "zone.rename",
+      "line": "alternative-β"
+    },
+    {
+      "mutationId": "operation-α#1",
+      "documentId": "energy-case",
+      "actor": "author",
+      "dependencies": [],
+      "observed": null,
+      "target": [],
+      "schema": "energy-model@1",
+      "payloadHex": "00ff80",
+      "inverseHex": "",
+      "timestamp": [
+        "0",
+        "1",
+        "0"
+      ],
+      "transaction": null,
+      "verb": null,
+      "line": null
+    }
+  ],
+  "source": {
+    "payloadBytes": 8197,
+    "pattern": [
+      0,
+      1,
+      127,
+      128,
+      254,
+      255
+    ],
+    "maximumFragment": 256,
+    "wireBytes": 8474,
+    "wireSha256": "7de8508e21043aac1fca77d5c36d7059110f449e3882dca1361deb33b8a5e9d8"
+  }
+}

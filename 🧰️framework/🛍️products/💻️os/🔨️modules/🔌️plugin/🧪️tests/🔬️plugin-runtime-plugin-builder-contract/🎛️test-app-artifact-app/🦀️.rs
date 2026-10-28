@@ -113,9 +113,9 @@
             Some(semio_framework_plugin_ownership::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::factory::OwnedValueRetirementFactory::<PublicationTransient>::default())))
         }
 
-        async fn initial_snapshot() -> TestSnapshot {
+        fn reference_birth()->Option<fn()->TestSnapshot>{Some(||{
             TestSnapshot::default()
-        }
+        })}
 
         async fn ephemeral(
             command: &TestCommand,

@@ -9,9 +9,11 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// replay slice, one authoring slice and one deferred-reprojection slice, all against ONE wall deadline taken when the
     /// turn begins on the ledger's turn clock (audit W2A-3) — a slow operation ends the turn, never an operation count; a
     /// session change prepares the history patch that rides the next unsolicited UI progress frame.
-    pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), Fault> {
+    pub(crate) async fn drive_time_travel_turn(&mut self, grant: RetainedCloneGrant, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>, cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         if grant.maximum_items==0{return Ok(());}
-        if let TimeTravelStoreOutput::OriginalProgress(progress)=self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources{grant},None).await?{if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));return Ok(())}}
+        if let TimeTravelStoreOutput::OriginalProgress(progress)=self.time_travel_run(TimeTravelStoreCommand::CloseOriginalSources{grant},Some(cx)).await?{if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));return Ok(())}}
+        if self.time_travel.finalize_outcome.is_some(){self.drive_time_travel_finalize_outcome(cx)?;return Ok(())}
+        if self.time_travel.owners().any(TimeTravelOwners::finalizing){match self.time_travel_run(TimeTravelStoreCommand::StepCommit,Some(cx)).await?{TimeTravelStoreOutput::Committed(outcome)=>if outcome!=TimeTravelCommit::Pending{self.time_travel.finalize_outcome=Some(outcome);},TimeTravelStoreOutput::CommitRefused(failure)=>return Err(failure.into()),_=>unreachable!("original finalize command output")};return Ok(())}
         if self.drive_original_discard_command(grant)?{return Ok(())}
         if self.drive_original_review_children(grant)?{return Ok(())}
         let deadline_us = self.shared().time_travel_turn_deadline();
@@ -20,22 +22,22 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
         self.prepare_time_travel_patch().await?;
         self.flush_time_travel_ui_dirty();
-        if self.time_travel_retire_step(grant)?.is_some() {
+        if self.time_travel_retire_step_context(grant,cx)?.is_some() {
             return Ok(());
         }
         let moved = self.watch_time_travel_base(identity).await?;
         if !moved && self.time_travel.session.stage == TimeTravelStage::Editing && self.time_travel.preview_progress().is_some() {
-            let preview_command = TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock,grant };
-            if let TimeTravelStoreOutput::Previewed(step) = cx.with_native_receiving_ready(async |receiving| self.time_travel_run(preview_command,Some(receiving)).await).map_err(ValueError::into_fault)?? {
+            if let TimeTravelStoreOutput::Previewed(step) = self.time_travel_run(TimeTravelStoreCommand::StepPreview { deadline_us, clock: self.time_travel.turn_clock,grant },Some(cx)).await? {
                 self.adopt_time_travel_preview_step(step,Some(grant)).await?;
             }
         }
         if !moved && self.time_travel.session.stage == TimeTravelStage::Replaying && self.time_travel.replaying() {
-            cx.with_native_receiving_ready(async |receiving| self.step_time_travel_replay(grant,deadline_us, identity,receiving).await).map_err(ValueError::into_fault)??;
+            self.step_time_travel_replay(grant,deadline_us, identity,cx).await?;
         }
-        if self.time_travel.authoring.is_some() && cx.with_native_receiving_ready(async |receiving| self.step_supersede_authoring(grant,deadline_us, identity,receiving).await).map_err(ValueError::into_fault)?? != SupersedeAuthored::Pending {
+        if self.time_travel.authoring.is_some() && self.step_supersede_authoring(grant,deadline_us, identity,cx).await? != SupersedeAuthored::Pending {
             self.note_time_travel_changed(true, true);
         }
+        if self.time_travel.has_command_receipt(){return Ok(())}
         if self.shared().reprojection_drives() {
             self.step_reprojection_turn(deadline_us, identity, cx).await?;
         }
@@ -107,9 +109,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     /// ⏭️ Steps the replay of the store the session edits until the turn deadline: progress ticks refresh the history body
     /// at most every [`TIME_TRAVEL_PROGRESS_REFRESH_MS`]; completion hands the report to the session and swaps the
     /// preview to the replayed head; a store refusal faults the replay.
-    async fn step_time_travel_replay(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    async fn step_time_travel_replay(&mut self,grant:RetainedCloneGrant, deadline_us: u64, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure> {
         let generation = self.time_travel.session.generation;
-        let stepped = match self.time_travel_run(TimeTravelStoreCommand::StepReplay { deadline_us, clock: self.time_travel.turn_clock,grant },Some(receiving)).await? {
+        let stepped = match self.time_travel_run(TimeTravelStoreCommand::StepReplay { deadline_us, clock: self.time_travel.turn_clock,grant },Some(cx)).await? {
             TimeTravelStoreOutput::Stepped(stepped) => stepped,
             _ => TimeTravelReplayStep::Faulted,
         };
@@ -126,12 +128,23 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 return Ok(());
             }
-            TimeTravelReplayStep::Completed(report) => TimeTravelEvent::ReplayCompleted { generation, report },
+            TimeTravelReplayStep::Completed(report,ownership) => {if ownership!=Default::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,ownership));}TimeTravelEvent::ReplayCompleted { generation, report }},
             TimeTravelReplayStep::Refused(error)=>{let progress=error.retained_progress();if progress!=RetainedCloneProgress::default(){assert!(self.time_travel.command_receipt.is_none());self.time_travel.command_receipt=Some((grant,progress));}return Err(error.into_fault())},
             TimeTravelReplayStep::Faulted => TimeTravelEvent::ReplayFaulted { generation, code: TIME_TRAVEL_REPLAY_FAULTED_CODE.to_string() },
         };
         let mut dialogs = Vec::new();
-        self.apply_time_travel_event(event, None, &mut dialogs, identity).await?;
+        self.apply_time_travel_event(event, None, &mut dialogs, identity,Some(cx)).await?;
         Ok(())
     }
+}
+
+impl<'ctx,A:ArtifactApp,M:SpaceMember+MemberFactory+'static,X:InstanceExtension> TimeTravelCtx<'ctx,A,M,X>{
+ /// 🧾️ Session completion retains the original accepted payloads in paid retirement before publishing its empty local state.
+ fn drive_time_travel_finalize_outcome(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
+  use semio_framework_value::retirement::controlled::ControlledRetirement;
+  let Some(outcome)=self.time_travel.finalize_outcome else{return Ok(())};if self.time_travel.authoring_finalization{let d=RetirementDemand{copy_bytes:size_of::<TimeTravelCommit>()+size_of::<bool>(),depth:1,..Default::default()};let mut done=None;semio_framework_job::admit_original_construction(cx,&mut done,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:0,release_bytes:0,depth:1},|_|{self.time_travel.finalize_outcome=None;self.time_travel.authoring_finalization=false;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))})?;if done.is_some(){self.history.cache=None;self.note_time_travel_changed(matches!(outcome,TimeTravelCommit::Finalized{..}),true);}return Ok(())}let success=matches!(outcome,TimeTravelCommit::Finalized{..});let code=match outcome{TimeTravelCommit::Stale=>TimeTravelRefusal::Stale.code(),TimeTravelCommit::Blocked=>TimeTravelRefusal::Blocked.code(),_=>TIME_TRAVEL_COMMIT_FAILED_CODE};
+  let d=RetirementDemand{copy_bytes:2*size_of::<TimeTravelSession>()+size_of::<ControlledRetirement<TimeTravelSession>>()+size_of::<TimeTravelCommit>()+if success{0}else{code.len()},capacity_bytes:if success{0}else{code.len()},depth:1,..Default::default()};
+  let mut performed=None;semio_framework_job::admit_original_construction(cx,&mut performed,semio_framework_job::OriginalConstructionDemand{items:1,copy_bytes:d.copy_bytes,capacity_bytes:d.capacity_bytes,release_bytes:0,depth:1},|_|{if success{if self.time_travel.session_retirement.is_some(){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"completed time-travel Session retirement slot is occupied"))}let generation=self.time_travel.session.generation.wrapping_add(1);let base=self.time_travel.session.base;let original=std::mem::take(&mut self.time_travel.session);match ControlledRetirement::new(original){Ok(owner)=>self.time_travel.session_retirement=Some(owner),Err((error,original))=>{self.time_travel.session=original;return Err(error)}}self.time_travel.session.generation=generation;self.time_travel.session.base=base;}else{let generation=self.time_travel.session.generation;self.time_travel.session.apply(TimeTravelEvent::FinalizeFaulted{generation,code:code.to_owned()}).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original finalization result lost its matching Session stage"))?;}self.time_travel.finalize_outcome=None;Ok(((),RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,retained_capacity_bytes:d.capacity_bytes,..Default::default()}))})?;
+  if performed.is_some(){self.history.cache=None;self.note_time_travel_changed(success,true);}Ok(())
+ }
 }

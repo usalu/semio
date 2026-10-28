@@ -284,7 +284,7 @@ export async function registerTransactionCoordinatorTests(vitest: PluginRuntimeV
         subscribeOperationProgress: () => () => {},
           readWindowConfigPacks: async () => [],
           loadWindowConfigPack: async () => {},
-          readAppDocumentIdentity: async (instanceId) => ({ app_instance_id: instanceId, parent_document_id: `fake-document-${instanceId}` }),
+          readAppDocumentIdentity: async (instanceId) => ({ app_instance_id: instanceId, parent_document_id: `fake-document-${instanceId}`, base_revision: 0n }),
           documentPack: () => ({ pack: new Uint8Array([1]), spr: new Uint8Array([2]) }),
           transactionPrepare: async (instanceId) => {
             calls.push(`chain:${instanceId}:prepare`);

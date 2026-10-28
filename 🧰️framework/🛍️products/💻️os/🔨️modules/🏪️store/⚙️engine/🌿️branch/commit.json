@@ -1,0 +1,19 @@
+{
+  "message": "Energy Checkpoint λ",
+  "suffix": "λ\"",
+  "repeat": 16384,
+  "author": {
+    "id": "engineer-1",
+    "name": "Energy Engineer",
+    "avatar": null
+  },
+  "cuts": [
+    0,
+    1,
+    8,
+    32,
+    128,
+    512,
+    4096
+  ]
+}

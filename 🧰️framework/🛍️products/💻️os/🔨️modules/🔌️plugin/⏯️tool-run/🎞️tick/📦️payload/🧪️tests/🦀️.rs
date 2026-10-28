@@ -7,7 +7,7 @@ use semio_framework_value::RetainedCloneGrant as Grant;
 
 struct OriginalBytes<'a>(&'a[u8]);
 impl ToolRunTickPayloadSource for OriginalBytes<'_>{
- fn update(&self)->ToolRunPayloadUpdate{ToolRunPayloadUpdate::Replace}
+ fn update(&self)->semio_framework_tool_run::ToolRunPayloadUpdate{semio_framework_tool_run::ToolRunPayloadUpdate::Replace}
  fn original_identity(&self)->usize{self.0.as_ptr()as usize}
  fn byte_len(&self)->usize{self.0.len()}
  fn range_demands(&self,offset:usize,count:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{assert!(offset+count<=self.0.len());Ok(semio_framework_value::RetirementDemand{copy_bytes:count*2,depth:1,..Default::default()})}

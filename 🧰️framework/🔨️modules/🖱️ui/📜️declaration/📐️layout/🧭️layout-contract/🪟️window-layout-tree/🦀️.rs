@@ -15,7 +15,7 @@ fn kind_stack() -> String {
 }
 
 /// 🧭️ Corner of a window stack where a tab chip docks.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub enum WindowStackCorner {
@@ -26,7 +26,7 @@ pub enum WindowStackCorner {
     BottomRight,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowLayoutWindowNode {
@@ -48,7 +48,7 @@ pub struct WindowLayoutWindowNode {
     pub corner: Option<WindowStackCorner>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowLayoutStackNode {
@@ -64,7 +64,7 @@ pub struct WindowLayoutStackNode {
     pub children: Vec<WindowLayoutWindowNode>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowLayoutAxisNode {
@@ -75,7 +75,7 @@ pub struct WindowLayoutAxisNode {
     pub children: Vec<WindowLayoutChild>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::RetireOwned)]
 #[serde(untagged)]
 pub enum WindowLayoutChild {
     Axis(WindowLayoutAxisNode),
@@ -115,7 +115,7 @@ impl FromValue for WindowLayoutChild {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, semio_framework_value::RetireOwned)]
 #[serde(untagged)]
 pub enum WindowLayoutRoot {
     Axis(WindowLayoutAxisNode),
@@ -171,14 +171,14 @@ fn window_layout_kind_is_stack(kind: &str) -> Result<bool, String> {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct WindowLayout {
     pub root: WindowLayoutRoot,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 #[value(rename_all = "camelCase")]
 pub struct NamedLayout {

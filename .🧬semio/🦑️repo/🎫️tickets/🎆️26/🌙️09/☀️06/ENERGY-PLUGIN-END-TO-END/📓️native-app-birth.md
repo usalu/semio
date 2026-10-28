@@ -1,0 +1,25 @@
+# Native App Birth Capability
+
+The mandatory unmanaged `initial_snapshot` method prevented a native-only Snapshot from implementing App, Editor and Viewer honestly. These base contracts now expose an optional typed `ReferenceArtifactAppBirth<P>` producer. Genuine reference surfaces explicitly supply their original constructor callbacks; native surfaces leave it absent and use `OriginalArtifactEditorBirth` / `OriginalArtifactViewerBirth` with `OriginalStoreInitialSource`.
+
+The producer is a pure first-party typed function port. All 329 inspected authored initial bodies were synchronous; no body awaited work. Existing real reference bodies were preserved in explicit callbacks, together with cold reference callers. No native Snapshot gains Default, Clone or FromValue. The actual native Window fixture also has no reference producer, so its retained construction must stand on the original source. This is a capability split, not a second native initialization or compatibility fallback.
+
+Energy editor/viewer original-source wiring and the native mounted source regression are the next validation steps. No full mounted completion claim is made yet.
+
+## Native Energy Source and Mounted Routing
+
+The public Energy Snapshot has no reference birth callback. Its editor and viewer now implement explicit native birth declarations. The document producer retains the actual twenty-stage EnergyModelInitialBirth under the initiating Job and native decoder, with separate original source-frame, handoff and cancellation closure. The document catalog installs one genuine paged semantic issuer into publication and replay, with the authored aggregate targets, original receiving and original Edit writer.
+
+Config creation declares its finite default String birth and original record receiver. Its publication and replay share the existing genuine RetainedClonePreparationFactory and ConfigApplyEdit, preserving exact original config exchange/inverse behavior. The admission predicate now validates the three fixed settings without constructing an unrelated default String. Empty config/draft lanes retain their actual absence of a semantic issuer.
+
+The actual Energy composition now calls native_editor/native_viewer and retains OriginalVcsApp fleet variants. These builder methods commit a genuine shared declaration/registration producer once, then expose only its original retained mounted constructor. The original Window registration retains its actual model-window owner and declared tool source. No native instance is created at declaration time.
+
+The new language-neutral native genesis law is validated by Ajv and independently checks its calendar and nullable links with SQLite: one test, five assertions pass. The actual Job source, catalog and full Store tests are authored with physical allocation/release receipts, denied currencies, foreign decoder rejection, token cancellation and complete closure; their compilation currently traverses the shared SDK dispatch/metadata changes being completed by the parent and lifecycle owners. This is not a passing mounted Energy proof yet.
+
+The 319 updated genuine reference producer implementations were each parsed with the actual Rust formatter, with no parse failures. All of those source paths satisfy the 256-character path bound. This syntax census does not substitute for full compilation of their unrelated applications.
+
+Actual source Job validation now passes two tests in `energy-original-source-isolated.log`: every positive quote currency denied by one, eight cancellation prefixes, same-payload foreign decoder refusal, persistent model handoff, and full physical source/model/decoder/caller closure. The production source is referenced directly from the source harness. These tests do not include the complete native Energy catalog/App assembly. Shared fixed and full Store genesis sources now also capture the actual native decoder identity, because payload/clock binding alone cannot distinguish a different decoder under the same caller.
+
+Actual Config genesis validation now passes one test covering success and token cancellation at native stages 0, 3 and 6 (`energy-original-config-source4.log`, 1.57 seconds runtime). It constructs the actual native Pack source, original initializer and Store; checks reference defaults with first-party ToValue and third-party serde_json; verifies Config history shape and pointer identity of the publication/replay concrete issuer; rejects a different native decoder under the same caller; and physically closes source, Store, decoder and caller. The actual Config crate compiles. The independent genesis/config SQLite/Ajv suite passes two tests with seven expectations.
+
+The whole actual Energy editor check in `energy-native-birth-editor-check.log` reaches only the shared original transaction-abort frontier: the old close_streamed_transaction_unit calls cold abort_open_transaction at line 129. The parent owns its native continuation. This check has not yet reached or validated the complete native Energy App assembly.

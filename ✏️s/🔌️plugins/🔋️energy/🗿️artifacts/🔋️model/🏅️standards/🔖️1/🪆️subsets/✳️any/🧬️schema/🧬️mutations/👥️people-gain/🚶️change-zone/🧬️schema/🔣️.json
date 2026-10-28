@@ -59,5 +59,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "Zones"
+    ],
+    "row": "StatePeopleGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "people",
+    "field": "zone_id",
+    "input": "new_zone_id",
+    "key": "id",
+    "labels": {
+      "en": "Change people gain: Zone",
+      "de": "Zone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "people-gain",
+      "kind": "change-people-gain-zone",
+      "record": "ChangedPeopleGainZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Zone violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed people gain does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The people gain already carries this zone reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

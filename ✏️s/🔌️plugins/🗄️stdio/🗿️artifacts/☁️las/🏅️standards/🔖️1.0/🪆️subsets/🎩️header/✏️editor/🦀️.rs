@@ -220,9 +220,9 @@ impl ArtifactEditor for LasAnyEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); las_any_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> LasSnapshot {
+    fn reference_birth()->Option<fn()->LasSnapshot>{Some(||{
         LasSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

@@ -1,0 +1,30 @@
+{
+  "schema": "semio.energy.original-field-sealing/v1",
+  "bodyBytes": 4096,
+  "strings": [
+    "",
+    "β",
+    "Original material thermal conductivity"
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    8,
+    16,
+    32
+  ],
+  "laws": [
+    "originalSourceRetained",
+    "deniedAxesHaveNoEffect",
+    "actualCapacityAndReleaseReceipts",
+    "newSealedValueHasDistinctOriginalStorage",
+    "everyPrefixCloses"
+  ],
+  "largeText": {
+    "pattern": "β🙂",
+    "repetitions": 2048
+  }
+}

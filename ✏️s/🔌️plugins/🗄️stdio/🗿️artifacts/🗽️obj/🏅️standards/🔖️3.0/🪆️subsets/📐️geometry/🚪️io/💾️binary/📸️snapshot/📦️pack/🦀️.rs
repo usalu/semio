@@ -28,5 +28,7 @@ impl pack::snapshot::ArtifactPack for ObjSnapshot{
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(ObjSnapshot::__dsl_spec())}
 }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for ObjSnapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())}
 }

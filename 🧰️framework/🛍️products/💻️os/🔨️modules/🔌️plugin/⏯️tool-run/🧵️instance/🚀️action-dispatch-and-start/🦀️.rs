@@ -139,7 +139,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         self.tool_runs.next_run = run.wrapping_add(1);
         for index in replaced.into_iter().rev() {
             let previous = self.tool_runs.entries.remove(index);
-            self.tool_runs.retire_entry(*previous);
+            self.tool_runs.retire_entry(previous);
         }
         self.as_render().refresh_cache().await?;
         let (base, _, _) = self.history.command_cache_inputs();
@@ -149,6 +149,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         let settings_values = self.stores.tool_run_settings_values(&definition.settings, window.as_ref());
         let window_bodies = definition.windows.iter().filter_map(|window_kind_id| self.tools.registry.window_body_key(window_kind_id).map(str::to_string)).collect();
         self.tool_runs.entries.push(Box::new(ToolRunEntry {
+            operations:Default::default(),
+            retired_next:None,
+            native:semio_framework_plugin_tool_run::original_native_tick::OriginalToolRunNativeState::empty(),
             tool_id,
             actor: meta.actor.clone(),
             settings_values,

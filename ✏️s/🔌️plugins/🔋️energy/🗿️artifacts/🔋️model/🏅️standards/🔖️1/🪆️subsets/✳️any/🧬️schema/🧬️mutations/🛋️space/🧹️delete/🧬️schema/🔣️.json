@@ -35,5 +35,54 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "delete-row",
+    "row": "StateSpace",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "spaces",
+    "key": "id",
+    "inverse": "CreateSpace",
+    "restriction": {
+      "row": "StateSpaceList",
+      "branch": "geometry",
+      "collection": "space_lists",
+      "field": "space_ids",
+      "storage": "shared-array",
+      "kind": "references"
+    },
+    "labels": {
+      "en": "Delete space",
+      "de": "Raum löschen"
+    },
+    "semantics": {
+      "verb": "delete",
+      "entity": "space",
+      "kind": "delete-space",
+      "record": "DeletedSpace"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored removal violates its declared row invariant."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed space does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The removal makes no change."
+      },
+      "referenced": {
+        "level": "error",
+        "code": "mutation.target-referenced",
+        "message": "The addressed row is still referenced."
+      }
+    }
   }
 }

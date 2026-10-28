@@ -114,7 +114,7 @@ pub(super) async fn arm_read_document_identity<PA: PluginApp>(
     let protocol::AppCommand::ReadDocumentIdentity { seq } = command else { unreachable!("arm_read_document_identity is dispatched only for its own command") };
     let read = with_instances_mut(runtime, |list| {
         let instance = find_instance(list, instance_id)?;
-        Ok(protocol::AppDocumentIdentity { app_instance_id: instance_id, parent_document_id: instance.app.document_identity() })
+        Ok(protocol::AppDocumentIdentity { app_instance_id: instance_id, parent_document_id: instance.app.document_identity(), base_revision: instance.app.document_base_revision()? })
     });
     match read.await {
         Ok(identity) => frames.push(protocol::AppFrame::DocumentIdentity { in_reply_to: seq, identity }),

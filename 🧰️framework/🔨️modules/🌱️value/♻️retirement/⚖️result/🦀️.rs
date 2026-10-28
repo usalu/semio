@@ -24,7 +24,7 @@ impl<T:RetireOwned,E:RetireOwned> OriginalResult<T,E>{
 impl<T:RetireOwned,E:RetireOwned> RetireOwned for Result<T,E>{
  fn retirement(self)->Box<dyn RetirementCursor>{Box::new(OriginalResult{original:ManuallyDrop::new(Some(self)),active:ManuallyDrop::new(None)})}
  fn retirement_birth_bytes(&self)->Option<usize>{Some(size_of::<OriginalResult<T,E>>())}
- fn controlled_retirement_supported()->bool{T::controlled_retirement_supported()&&E::controlled_retirement_supported()}
+ fn controlled_retirement_supported()->bool{crate::retirement::support::controlled_retirement_supported::<Self>()}fn controlled_retirement_supported_in(path:&crate::retirement::RetirementSupport<'_>)->bool{path.supports::<T>()&&path.supports::<E>()}
 }
 impl<T:RetireOwned,E:RetireOwned> RetirementCursor for OriginalResult<T,E>{
  fn next_demand(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.demand(body)}

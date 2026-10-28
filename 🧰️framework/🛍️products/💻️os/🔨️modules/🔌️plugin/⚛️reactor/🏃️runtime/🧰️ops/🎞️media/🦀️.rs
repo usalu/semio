@@ -32,10 +32,10 @@ pub async fn plugin_consume_media<PA: PluginApp>(runtime: &PluginRuntime<PA>, in
     .await
 }
 /// 🎬️ Interactive workflow entry: submits without waiting for the exporter to finish.
-pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, expected_parent_document_id: &str, expected_base_revision: u64,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
+pub async fn plugin_submit_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, port_id: &str, expected_parent_document_id: &str, expected_base_revision: u64,checkpoint_id:Option<&str>,receiver:&mut Option<ArtifactMediaExportHandle>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {
     let cell = runtime_instance_cell(runtime, instance_id)?;
     let mut instance = cell.host_instance().ok_or_else(|| plugin_internal_fault("media export original instance is busy or poisoned"))?;
-    instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision,receiver,cx).await
+    instance.app.submit_media_export_checked(port_id, expected_parent_document_id, expected_base_revision,checkpoint_id,receiver,cx).await
 }
 /// 📡️ Interactive workflow entry receives the actual initiating context and its complete failure.
 pub async fn plugin_poll_media_export<PA: PluginApp>(runtime: &PluginRuntime<PA>, instance_id: u32, handle: semio_framework_plugin_decl_views::media_contract::ArtifactMediaExportHandleLoan<'_>,receiver:&mut Option<ArtifactMediaExportPoll>,cx:&mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_job::OriginalTurnFailure> {

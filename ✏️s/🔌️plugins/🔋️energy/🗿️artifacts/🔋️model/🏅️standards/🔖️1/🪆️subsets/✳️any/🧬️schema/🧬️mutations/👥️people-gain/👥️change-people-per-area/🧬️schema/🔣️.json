@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePeopleGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "people",
+    "field": "people_per_area",
+    "input": "new_people_per_area",
+    "key": "id",
+    "labels": {
+      "en": "Change people gain: People per area",
+      "de": "Personen pro Fläche ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "people-gain",
+      "kind": "change-people-gain-people-per-area",
+      "record": "ChangedPeopleGainPeoplePerArea"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "People per area violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed people gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The people gain already carries this people per area value."
+      }
+    }
   }
 }

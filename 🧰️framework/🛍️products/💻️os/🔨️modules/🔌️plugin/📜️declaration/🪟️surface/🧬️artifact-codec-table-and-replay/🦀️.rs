@@ -17,7 +17,8 @@ pub async fn artifact_app_genesis_pair<A: ArtifactApp>(document_id: &str) -> Res
     if !is_server_minted_artifact_document_id_v1(document_id) {
         return Err(store::VcsError::ValidationFailed("artifact genesis identity is not a server-minted artifact id".into()));
     }
-    let mut envelope = create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, document_id, A::initial_snapshot().await, None, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).into_owners();
+    let codec=<A::Snapshot as store::os_store::serialization::ArtifactStoreSnapshot>::reference_snapshot_codec().ok_or_else(||store::VcsError::NativeEncoding(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"native genesis requires the original retained constructor")))?;
+    let mut envelope = create_document_envelope::<A::Snapshot,A::Mutation>(A::DOCUMENT_SCHEMA,document_id,A::reference_birth().ok_or_else(||store::VcsError::NativeEncoding(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"genesis requires its explicit reference producer or retained native source")))?(),None,&codec).into_owners();
     envelope.dialect = Some(dialect.clone());
     let zero_cursor = envelope.cursor.as_ref().is_some_and(|cursor| cursor.applied_edit_ids.is_empty() && cursor.redo_edit_ids.is_empty() && cursor.checkpoint_id.is_none());
     if envelope.id != document_id
@@ -115,18 +116,16 @@ pub struct ArtifactCodecTableV1 {
 /// 🧬️ The [`ArtifactCodecTableV1`] of every app built on `A`.
 pub fn artifact_codec_table<A: ArtifactApp>() -> ArtifactCodecTableV1 {
     fn pack_schema_hash<A: ArtifactApp>() -> Option<[u8; 32]> {
-        <A::Snapshot as ArtifactPack>::record_spec().map(|spec| pack::record::schema_hash(&spec))
+        <A::Snapshot as pack::snapshot::ArtifactPackMetadata>::native_record_spec_producer().map(|_|<A::Snapshot as pack::snapshot::ArtifactPackMetadata>::native_pack_schema_hash())
     }
     fn genesis<A: ArtifactApp>(document_id: &str) -> ArtifactCodecFuture<'_, store::os_store::serialization::ArtifactPackFiles> {
         Box::pin(async move { artifact_app_genesis_pair::<A>(document_id).await.map_err(|error| error.into_fault()) })
     }
     fn print_mirror<'a, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8]) -> ArtifactCodecFuture<'a, store::os_store::text_format::ArtifactTextFiles> {
         Box::pin(async move {
-            let parsed: store::os_store::text_format::ParsedDocumentText<A::Snapshot, A::Mutation> = store::os_store::text_format::parse_document_pack(pack, spr, &::semio_framework_os_kernel::os_vcs::io::binary::genesis::ArtifactPackGenesisProducer).await.map_err(|error| error.into_fault())?;
-            let envelope = parsed.into_envelope();
-            let mirror = store::os_store::text_format::print_document_text(&envelope).await;
-            envelope.retire_unadopted();
-            mirror.map_err(|error| error.into_fault())
+            let descriptor=store::os_store::native_artifact_codec::<A::Snapshot>(A::DOCUMENT_SCHEMA);
+            let reference=descriptor.reference().map_err(store::VcsError::into_fault)?;
+            (reference.print_mirror)(pack,spr).await.map_err(store::VcsError::into_fault)
         })
     }
     fn apply_ops<'a, 'b, A: ArtifactApp>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8], identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> ArtifactCodecFuture<'a, store::os_store::serialization::ArtifactPackFiles> {

@@ -1,0 +1,11 @@
+{
+  "parent": "ck-parent",
+  "pendingId": "change-pending",
+  "savedAt": "2026-10-21T08:00:00Z",
+  "timestamp": "2026-10-21T08:00:01Z",
+  "pattern": "λ\"\n\\",
+  "repeat": 1700,
+  "digest": "9d642df94603b90d7345971ee369df3807774e6dfcc7b3a0887ce4e943784fd4",
+  "changeIdentity": "change-0a5e79f054b6abc2",
+  "alternativeIdentity": "alternative-51d34174cf568a99"
+}

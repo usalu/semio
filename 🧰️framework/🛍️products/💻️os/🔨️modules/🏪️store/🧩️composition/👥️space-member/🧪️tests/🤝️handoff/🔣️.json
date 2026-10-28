@@ -1,0 +1,1 @@
+{"version":1,"input":{"zoom":1.25},"operation":{"zoom":7.5},"decisions":["commit","abort"],"expected":{"commit":7.5,"abort":1.25},"closeOriginalCallerBeforeDecision":true,"maximumTurns":262144,"origin":{"kind":"contributed","pluginId":"original-plugin","mutationId":"original-schema","payloadHash":[7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7]}}

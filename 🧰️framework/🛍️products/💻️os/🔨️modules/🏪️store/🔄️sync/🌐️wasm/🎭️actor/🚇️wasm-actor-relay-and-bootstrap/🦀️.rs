@@ -257,7 +257,7 @@ impl WasmActor {
         let events = spr_events(&pair.spr, &self.document_id, &self.schema,self.actor_identity_grant).await.map_err(|error| format!("artifact bootstrap SPR failed: {error}"))?;
         self.remote.push(BackboneMessage::Genesis { pack: pair.pack.clone() }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
         if !events.is_empty() {
-            self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&events) }).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
+            self.remote.push(BackboneMessage::from_envelopes(&events)).await.map_err(|error| format!("artifact bootstrap event delivery failed: {error}"))?;
         }
         let archive = semio_framework_os_spr::DocumentArchivePack { parent_pack: pair.pack, parent_spr: pair.spr, members: Vec::new() };
         let archive = semio_framework_os_spr::encode_document_archive_bytes(&archive).map_err(|error| format!("artifact bootstrap archive failed: {error}"))?;
@@ -265,7 +265,7 @@ impl WasmActor {
         self.server_frontier = Some(pending.baseline_frontier);
         self.pending_resume_token = Some(pending.resume_token);
         self.required_tail_frontier = Some(pending.required_tail_frontier);
-        if !self.outbox.is_empty() && self.remote.push(BackboneMessage::Mutations { envelopes: encode_envelopes(&self.outbox) }).await.is_err() {
+        if !self.outbox.is_empty() && self.remote.push(BackboneMessage::from_envelopes(&self.outbox)).await.is_err() {
             let _ = self.events.send(ArtifactEvent::Conflict(MutationMessage {
                 level: semio_framework_diagnostic::Severity::Error,
                 code: semio_framework_diagnostic::FaultCode::new("artifactBootstrapLocalReplay"),

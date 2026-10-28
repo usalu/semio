@@ -61,5 +61,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePeopleGain",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "people",
+    "field": "latent_fraction",
+    "input": "new_latent_fraction",
+    "key": "id",
+    "labels": {
+      "en": "Change people gain: Latent fraction",
+      "de": "Latenter Anteil ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "people-gain",
+      "kind": "change-people-gain-latent-fraction",
+      "record": "ChangedPeopleGainLatentFraction"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Latent fraction violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed people gain does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The people gain already carries this latent fraction value."
+      }
+    }
   }
 }

@@ -42,13 +42,24 @@ pub struct Humidistat {
 }
 
 /// 🎛️ Setpoint manager type.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum SetpointManagerKind {
     Scheduled,
     OutdoorAirReset { low_outdoor_c: f64, high_outdoor_c: f64, low_setpoint_c: f64, high_setpoint_c: f64 },
     WarmestZone,
     ColdestZone,
+}
+
+/// 🎚️ The scalar wire discriminator preserves the four authored setpoint control laws.
+#[derive(Clone,Copy,Debug,PartialEq,Eq,Serialize,Deserialize,ToValueDerive,FromValueDerive,semio_framework_dsl_record_derive::DslScalar,semio_framework_value::RetireOwned,semio_framework_value::CanonicalJsonTree,semio_framework_value_derive::NativeReceive)]
+#[canonical_json(owner=semio_framework_pack_json)]
+pub enum SetpointManagerKindTag{Scheduled,OutdoorAirReset,WarmestZone,ColdestZone}
+impl SetpointManagerKind{
+ /// 🎚️ The original control law decomposes into fixed copied fields for a typed semantic inverse.
+ pub fn parts(self)->(SetpointManagerKindTag,[f64;4]){match self{Self::Scheduled=>(SetpointManagerKindTag::Scheduled,[0.0;4]),Self::WarmestZone=>(SetpointManagerKindTag::WarmestZone,[0.0;4]),Self::ColdestZone=>(SetpointManagerKindTag::ColdestZone,[0.0;4]),Self::OutdoorAirReset{low_outdoor_c,high_outdoor_c,low_setpoint_c,high_setpoint_c}=>(SetpointManagerKindTag::OutdoorAirReset,[low_outdoor_c,high_outdoor_c,low_setpoint_c,high_setpoint_c])}}
+ /// 🎚️ Only a finite ordered outdoor reset carries limit values; every other law carries zero limits.
+ pub fn from_parts(tag:SetpointManagerKindTag,limits:[f64;4])->Option<Self>{if !limits.iter().all(|v|v.is_finite()){return None;}match tag{SetpointManagerKindTag::OutdoorAirReset if limits[0]<limits[1]=>Some(Self::OutdoorAirReset{low_outdoor_c:limits[0],high_outdoor_c:limits[1],low_setpoint_c:limits[2],high_setpoint_c:limits[3]}),SetpointManagerKindTag::OutdoorAirReset=>None,_ if limits!=[0.0;4]=>None,SetpointManagerKindTag::Scheduled=>Some(Self::Scheduled),SetpointManagerKindTag::WarmestZone=>Some(Self::WarmestZone),SetpointManagerKindTag::ColdestZone=>Some(Self::ColdestZone)}}
 }
 
 /// 🎛️ Setpoint manager for air/plant loops.
@@ -74,7 +85,7 @@ pub struct ZoneEquipmentAssignment {
 }
 
 /// 🏠️ Zone equipment catalog reference.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslScalar, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value_derive::NativeReceive)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub enum ZoneEquipmentType {
     Baseboard,

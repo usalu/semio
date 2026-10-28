@@ -339,9 +339,9 @@ impl ArtifactEditor for BinaryEditor {
         })
     }
 
-    fn initial_snapshot() -> BinarySnapshot {
+    fn reference_birth()->Option<fn()->BinarySnapshot>{Some(||{
         BinarySnapshot::default()
-    }
+    })}
 
     /// ✏️ Parses the hex text and, if well-formed, replaces exactly the bytes it changed via ONE
     /// `BinaryMutation::ReplaceByteRange` (the shared prefix and suffix stay; nothing when unchanged). Malformed

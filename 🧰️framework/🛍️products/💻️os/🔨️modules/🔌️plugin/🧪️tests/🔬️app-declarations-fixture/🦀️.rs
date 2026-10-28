@@ -130,6 +130,8 @@ pub const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fi
                 }
             }
 impl ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot for $snapshot {
+    fn reference_snapshot_codec()->Option<::semio_framework_os_kernel::os_store::serialization::ArtifactReferenceSnapshotCodec<Self>>{Some(::semio_framework_os_kernel::os_store::serialization::reference_snapshot_codec::<Self>())}
+
 fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
         Some(<Self as store::os_store::ArtifactSqliteSnapshotOperations>::sqlite_codec())
     }
@@ -289,7 +291,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1AnyCommand;
-        fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
+        fn reference_birth()->Option<fn()->Std1AnySnapshot>{Some(||{ Std1AnySnapshot::default() })}
         fn handle(_command: &Std1AnyCommand, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1AnyMutation> {
             Ok(Emit { artifact_mutations: vec![Std1AnyMutation::SetValue(crate::declaration_fixture_mutations::std1_any::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
@@ -312,7 +314,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1AnyCommand;
-        fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
+        fn reference_birth()->Option<fn()->Std1AnySnapshot>{Some(||{ Std1AnySnapshot::default() })}
         fn handle(_command: &Std1AnyCommand, _doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
@@ -337,7 +339,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1StrictCommand;
-        fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
+        fn reference_birth()->Option<fn()->Std1StrictSnapshot>{Some(||{ Std1StrictSnapshot::default() })}
         fn handle(_command: &Std1StrictCommand, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1StrictMutation> {
             Ok(Emit { artifact_mutations: vec![Std1StrictMutation::SetValue(crate::declaration_fixture_mutations::std1_strict::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
@@ -360,7 +362,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std1StrictCommand;
-        fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
+        fn reference_birth()->Option<fn()->Std1StrictSnapshot>{Some(||{ Std1StrictSnapshot::default() })}
         fn handle(_command: &Std1StrictCommand, _doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
@@ -385,7 +387,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std2AnyCommand;
-        fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
+        fn reference_birth()->Option<fn()->Std2AnySnapshot>{Some(||{ Std2AnySnapshot::default() })}
         fn handle(_command: &Std2AnyCommand, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std2AnyMutation> {
             Ok(Emit { artifact_mutations: vec![Std2AnyMutation::SetValue(crate::declaration_fixture_mutations::std2_any::set_value::SetValue { value: doc.snapshot.value })], ..Default::default() })
         }
@@ -408,7 +410,7 @@ fn from_sqlite_database(database: &store::sqlite_snapshot::SqliteDatabase, contr
         type Transient = semio_framework_plugin_decl_views::NoTransient;
         type TransientMutation = semio_framework_plugin_decl_views::NoTransientMutation;
         type Command = Std2AnyCommand;
-        fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
+        fn reference_birth()->Option<fn()->Std2AnySnapshot>{Some(||{ Std2AnySnapshot::default() })}
         fn handle(_command: &Std2AnyCommand, _doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
             Ok(ViewEmit::default())
         }
@@ -626,7 +628,7 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
 
     #[test]
     fn every_declared_surface_names_the_schema_it_opens() {
-        let projected = project_artifact_declarations(&[build_declaration()]);
+        let projected = project_artifact_declarations(&[build_declaration()]).unwrap();
         let opened: Vec<(AppRole, &str)> = projected.app_defs.iter().map(|(app, _)| (app.definition.role, app.definition.io.artifact_schema.as_str())).collect();
         let expected: Vec<(AppRole, &str)> = ["semio.testkit.w1c-fixture.std1-any/v1", "semio.testkit.w1c-fixture.std1-strict/v1", "semio.testkit.w1c-fixture.std2-any/v1"].into_iter().flat_map(|schema| [(AppRole::Editor, schema), (AppRole::Viewer, schema)]).collect();
         assert_eq!(opened, expected);
@@ -637,7 +639,7 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
         let mut declaration = build_declaration();
         let leaked: &'static [ExampleSource] = Box::leak(vec![ExampleSource::new("demo", LocalizedLabel::data("Demo"), "semio fixture.dsl v1", "file")].into_boxed_slice());
         declaration.standards[0].subsets[0].examples = leaked;
-        let projected = project_artifact_declarations(std::slice::from_ref(&declaration));
+        let projected = project_artifact_declarations(std::slice::from_ref(&declaration)).unwrap();
         let (app, _) = projected.app_defs.iter().find(|(app, _)| app.definition.role == AppRole::Editor && app.examples.iter().any(|example| example.id() == "demo")).expect("editor row");
         assert_eq!(app.examples[0].document(), "semio fixture.dsl v1");
         let body = EditorApp::<Std1AnyEditor>::catalogue_example_document("demo").expect("catalogue").expect("body");
@@ -654,11 +656,11 @@ pub fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
         fn refuse_construction(_definition: &AppDefinition, _actor: protocol::ActorId, _policy: semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, _identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> FixtureApps {
             panic!("a codec call constructed an app")
         }
-        let projected = project_artifact_declarations(&[build_declaration()]);
+        let projected = project_artifact_declarations(&[build_declaration()]).unwrap();
         let mut plugin = semio_framework_plugin_plugin_program::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
         for (app, mut factory) in projected.app_defs {
             assert_eq!(factory.document_schema, app.definition.io.artifact_schema, "{}", app.definition.id);
-            factory.create = refuse_construction;
+            factory.create = Some(refuse_construction);
             plugin = plugin.register_app_factory(app, factory);
         }
         let owners: Vec<(String, &'static str)> = plugin.manifest.apps.iter().map(|definition| (definition.id.clone(), plugin.app_document_schema(&definition.id).expect("recorded schema"))).collect();

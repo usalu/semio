@@ -53,5 +53,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateMaterial",
+    "branchType": "ModelMaterialState",
+    "branch": "materials",
+    "collection": "materials",
+    "field": "specific_heat_j_kg_k",
+    "input": "new_specific_heat_j_kg_k",
+    "key": "id",
+    "labels": {
+      "en": "Change material: Specific heat capacity",
+      "de": "Spezifische Wärmekapazität ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "material",
+      "kind": "change-material-specific-heat",
+      "record": "ChangedMaterialSpecificHeat"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Specific heat capacity violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed material does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The material already carries this specific heat capacity value."
+      }
+    }
   }
 }

@@ -121,7 +121,7 @@ async fn every_locally_authored_operation_is_announced_exactly_once() {
                     next_value += 1;
                     let mut envelope = mutation_envelope_at("peer", &arriving.id, DemoMutation::SetN(SetN { n: next_value }), HybridLogicalTimestamp { actor: 7, physical_ms: 4_000_000_000_000 + index as u64, logical: 0 }, Vec::new());
                     envelope.observed = arriving.observed.clone().map(MutationId);
-                    remote.push(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&[envelope]) }).await.expect("push the remote operation");
+                    remote.push(BackboneMessage::from_envelopes(&[envelope])).await.expect("push the remote operation");
                     store.tick().await.expect("ingest the remote operation");
                     assert!(store.envelope().vcs.edits.iter().any(|edit| edit.id == arriving.id), "{} step {index}: a remote operation is applied at once, whatever it observed", vector.id);
                     foreign.push(arriving.id.clone());

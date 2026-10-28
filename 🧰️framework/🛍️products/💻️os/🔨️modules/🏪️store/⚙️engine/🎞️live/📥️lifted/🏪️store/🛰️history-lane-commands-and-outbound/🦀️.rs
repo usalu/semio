@@ -17,13 +17,13 @@ use semio_framework_os_spr::ColdMutation;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreReplay<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     //#region 🔖️HistoryLane
     /// 👁 Moves this replica onto `alternative_id` at its tip. Registration stays the shared log;
     /// no checkout event is authored, so every other replica keeps its own head.
-    pub async fn switch_local_alternative(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, alternative_id: String) -> Result<(), VcsError> {
+    pub async fn switch_local_alternative(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, alternative_id: String) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let trunk = store_log.trunk_alternative_id();
         if alternative_id != trunk {
             let alternative = store_log.envelope.vcs.alternatives.iter().find(|alternative| alternative.id == alternative_id).ok_or_else(|| VcsError::UnknownAlternative(alternative_id.clone()))?;
@@ -39,7 +39,7 @@ where
 
     /// 👁 Looks at `checkpoint_id` on this replica only. The line stays the current one when that
     /// checkpoint is on it; otherwise it is the first registered alternative whose chain contains it.
-    pub async fn checkout_local_checkpoint(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, checkpoint_id: String) -> Result<(), VcsError> {
+    pub async fn checkout_local_checkpoint(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, checkpoint_id: String) -> Result<(), VcsError> where P: Clone, Mutation: ColdMutation<P> {
         if !store_log.envelope.vcs.checkpoints.iter().any(|checkpoint| checkpoint.id == checkpoint_id) {
             return Err(VcsError::UnknownChange(checkpoint_id));
         }
@@ -185,7 +185,8 @@ where
     /// never rewritten.
     pub async fn resolve_conflict(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_wire: &mut StoreWire<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, conflict_id: &str, resolution: semio_framework_os_spr::ConflictResolution) -> Result<semio_framework_os_spr::MergeReport, VcsError>
     where
-        P: Sync,
+        P: Clone + Sync,
+        Mutation: ColdMutation<P>,
     {
         store_wire.ensure_durable_group_idle()?;
         let index = store_log.envelope.conflicts.iter().position(|conflict| conflict.id.0 == conflict_id && conflict.status == semio_framework_os_spr::ConflictStatus::Open).ok_or_else(|| VcsError::UnknownConflict(conflict_id.to_string()))?;
@@ -222,7 +223,7 @@ where
     async fn accept_quarantined_events(&mut self, store_log: &mut StoreLog<P, Mutation>, store_owners: &mut StoreOwners<P, Mutation>, store_cursor: &mut StoreCursor<P, Mutation>, store_live: &mut StoreLive<P, Mutation>, index: usize, conflict_id: semio_framework_os_spr::ConflictId, envelopes: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<semio_framework_os_spr::MergeReport, VcsError> where P: Clone, Mutation: ColdMutation<P> {
         let mut admitted: Vec<Edit<Mutation>> = Vec::with_capacity(envelopes.len());
         for envelope in &envelopes {
-            let mut edit = edit_from_operation_envelope::<Mutation>(envelope).await?;
+            let mut edit = edit_from_operation_envelope_cold::<Mutation>(envelope).await?;
             edit.actor = Some(envelope.actor.0.clone());
             stamp_edit_semantics::<P, Mutation>(&mut edit, &store_log.envelope.schema);
             if !store_log.envelope.vcs.edits.iter().any(|known| known.id == edit.id) && !admitted.iter().any(|known| known.id == edit.id) {
@@ -272,7 +273,7 @@ where
         let admitted_ids: Vec<String> = admitted.iter().map(|edit| edit.id.clone()).collect();
         for mut edit in admitted {
             if let Some(inverse) = rebased_inverse.remove(&edit.id) {
-                retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse));
+                retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut *edit.inverse, inverse));
             }
             let reservation = store_owners.reserve_edit_history_slot(store_log)?;
             store_live.insert_reserved_edit_history(store_log, store_owners, reservation, edit)?;
@@ -310,7 +311,7 @@ where
         };
         let mut result = Ok(());
         for batch in document_backbone_batches(self.pending_report.take_outbound()) {
-            result = backbone.send(BackboneMessage::Mutations { envelopes: semio_framework_os_spr::encode_envelopes(&batch) }).await;
+            result = backbone.send(BackboneMessage::from_envelopes(&batch)).await;
             if result.is_err() {
                 break;
             }

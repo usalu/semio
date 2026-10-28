@@ -25,11 +25,12 @@ fn close_operation_retirement<P, M>(owner: &mut crate::replay_preparation::Artif
 
 impl<P, M: Mutation<P>> EditReplay<P, M> {
     pub fn begin_retirement(&mut self) { self.retiring = true; }
+    pub fn requires_original_control(&self)->bool{self.original.operation_preparation.is_some()||self.original.operation_retirement.is_some()||self.raw_retirement.as_ref().is_some_and(|owner|owner.requires_original_control())}
     pub fn cold_authority(&self) -> bool { self.original.operation_preparation_factory.is_none() && self.original.replay_retirement_factory.is_none() }
     pub fn cancel(&mut self) { self.begin_retirement(); }
     fn originals_empty(&self) -> bool {
         let s = &*self.original;
-        s.order.capacity() == 0 && s.schema.capacity() == 0 && s.supersessions.terminal_is_empty() && s.state.is_none() && s.candidate.is_none() && s.edit_messages.terminal_is_empty() && s.edit_inverse.terminal_is_empty() && s.message_settlement.is_none() && s.committed.capacity() == 0 && s.quarantined.capacity() == 0 && s.rebased_inverse.capacity() == 0 && s.replayed.capacity() == 0 && s.outcomes.capacity() == 0 && s.unit_flags.terminal_is_empty() && s.operation_preparation_factory.is_none() && s.operation_preparation.is_none() && s.prepared_operation.is_none() && s.operation_retirement.is_none() && s.operation_message_settlement.is_none() && s.replay_retirement_factory.is_none() && s.replay_retirement.is_none() && s.prefix_message_retirement.is_none() && s.convergence.is_none() && s.recorded.capacity() == 0 && s.drafts.terminal_is_empty() && self.raw_retirement.is_none() && self.raw_factory.is_none()
+        s.conflict_target.capacity()==0&&s.order.capacity() == 0 && s.schema.capacity() == 0 && s.supersessions.terminal_is_empty() && s.state.is_none() && s.candidate.is_none() && s.edit_messages.terminal_is_empty() && s.edit_inverse.terminal_is_empty() && s.message_settlement.is_none() && s.committed.capacity() == 0 && s.quarantined.capacity() == 0 && s.rebased_inverse.capacity() == 0 && s.replayed.capacity() == 0 && s.outcomes.capacity() == 0 && s.unit_flags.terminal_is_empty() && s.operation_preparation_factory.is_none() && s.operation_preparation.is_none() && s.prepared_operation.is_none() &&s.operation_identity.is_none()&& s.operation_retirement.is_none() && s.operation_message_settlement.is_none() && s.replay_retirement_factory.is_none() && s.replay_retirement.is_none() && s.prefix_message_retirement.is_none() && s.convergence.is_none() && s.recorded.capacity() == 0 && s.drafts.terminal_is_empty() && self.raw_retirement.is_none() && self.raw_factory.is_none()
     }
 }
 
@@ -61,6 +62,8 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         if let Some(owner) = s.prepared_operation.as_ref() { return if prepared::terminal(owner) { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(prepared::demands(owner, s.replay_retirement_factory.as_deref())?) }; }
         if s.state.is_some() || s.candidate.is_some() || !s.recorded.is_empty() || s.convergence.as_ref().is_some_and(|owner| !owner.checkpoints.is_empty()) { return Ok(RetirementDemand { capacity_bytes: s.replay_retirement_factory.as_ref().map_or(0, |factory| factory.snapshot_birth_bytes()), depth: 2, ..Default::default() }); }
         if !s.edit_inverse.terminal_is_empty() { return Ok(RetirementDemand { capacity_bytes: s.replay_retirement_factory.as_ref().map_or(0, |factory| factory.mutations_birth_bytes()), depth: 2, ..Default::default() }); }
+        if s.conflict_target.capacity()!=0{return typed_birth::<Vec<String>>();}
+        if s.operation_identity.is_some(){return typed_birth::<Option<(semio_framework_os_spr::MutationId,String)>>();}
         if s.schema.capacity() != 0 { return typed_birth::<String>(); }
         if !s.rebased_inverse.is_empty() || !s.outcomes.is_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
         if s.committed.capacity() != 0 || s.quarantined.capacity() != 0 { return typed_birth::<Vec<String>>(); }
@@ -78,21 +81,25 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
         Ok(Default::default())
     }
 
-    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.close_original_inner(grant,None) }
+    pub fn close_original_step_controlled(&mut self, grant: RetainedCloneGrant, control: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> { self.close_original_inner(grant,Some(control)) }
+    fn close_original_inner(&mut self, grant: RetainedCloneGrant, control: Option<&mut dyn semio_framework_value::OriginalRetirementControl>) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if !self.retiring || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(idle)); }
         if self.originals_empty() { return Ok(RetainedCloneStep::Complete(idle)); }
         let demand = self.retirement_demands(grant.maximum_copy_bytes)?;
         if grant.maximum_depth < demand.depth || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(idle)); }
+        if self.requires_original_control()&&control.is_none(){return Err(unsupported("raw semantic retirement requires its original decoding custody"));}
+        if let (Some(task),Some(control))=(self.original.operation_preparation.as_ref(),control.as_ref()){task.validate_retirement_control(&**control)?;}
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
-        if self.raw_retirement.is_some() { let step = artifact_retirement_box_close_step(&mut self.raw_retirement, child)?; return Ok(RetainedCloneStep::Progress(step.progress())); }
+        if self.raw_retirement.is_some() { let step = match control{Some(control)=>semio_framework_value::close_factory_ticket_controlled(&mut self.raw_retirement,child,control)?,None=>artifact_retirement_box_close_step(&mut self.raw_retirement, child)?}; return Ok(RetainedCloneStep::Progress(step.progress())); }
         if let Some(owner) = self.raw_factory.as_mut() { let step = owner.step(child)?; semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.terminal_is_empty(), "raw replay original factory")?; if owner.terminal_is_empty() { self.raw_factory.take(); } return Ok(RetainedCloneStep::Progress(step.progress())); }
         let s = &mut *self.original;
         macro_rules! close_child { ($slot:expr, $call:expr) => {{ let step = $call?; let terminal = $slot.as_ref().is_some_and(|owner| owner.terminal_is_empty()); semio_framework_value::retained_clone::admit_retained_clone_close(child, step, terminal, "raw replay retained child")?; if terminal { $slot = None; } return Ok(RetainedCloneStep::Progress(step.progress())); }}; }
         if let Some(owner) = s.replay_retirement.as_mut() { close_child!(s.replay_retirement, owner.close_step(child)); }
         if let Some(owner) = s.prefix_message_retirement.as_mut() { close_child!(s.prefix_message_retirement, owner.close_step(child)); }
         if let Some(owner) = s.operation_preparation.take() { s.operation_retirement = Some(owner.into_retirement()); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); }
-        if let Some(owner) = s.operation_retirement.as_mut() { close_child!(s.operation_retirement, close_operation_retirement(owner, child)); }
+        if let Some(owner) = s.operation_retirement.as_mut() { let control=control.ok_or_else(||unsupported("raw semantic retirement requires its original decoding custody"))?;close_child!(s.operation_retirement, owner.close_step(child,control)); }
         if let Some(owner) = s.message_settlement.as_mut() { owner.begin_close(); close_child!(s.message_settlement, owner.close_step(child)); }
         if let Some(owner) = s.operation_message_settlement.as_mut() { owner.begin_close(); close_child!(s.operation_message_settlement, owner.close_step(child)); }
         if !s.edit_messages.terminal_is_empty() { return Ok(RetainedCloneStep::Progress(s.edit_messages.close_step(child)?)); }
@@ -117,6 +124,8 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplay<P, M> {
                 Err((error, original)) => { s.edit_inverse = original; return Err(error); }
             }
         }
+        if s.conflict_target.capacity()!=0{return admit_typed(&mut s.conflict_target,&mut self.raw_retirement,child).map(RetainedCloneStep::Progress);}
+        if s.operation_identity.is_some(){return admit_typed(&mut s.operation_identity,&mut self.raw_retirement,child).map(RetainedCloneStep::Progress);}
         if s.schema.capacity() != 0 { return admit_typed(&mut s.schema, &mut self.raw_retirement, child).map(RetainedCloneStep::Progress); }
         if let Some((id, inverse)) = s.rebased_inverse.pop() { s.schema = id; s.edit_inverse = inverse; return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); }
         if let Some(outcome) = s.outcomes.pop() { s.prefix_message_retirement = Some(ArtifactStoreMessageLedgerRetirement::from_replay_outcome(outcome)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); }
@@ -153,8 +162,10 @@ impl<P, M: Mutation<P>> EditReplay<P, M> {
 }
 
 impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRetirement for EditReplay<P, M> {
+    fn requires_original_control(&self)->bool{EditReplay::requires_original_control(self)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.close_original_step(grant) }
+    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.close_original_step_controlled(grant,control)}
     fn terminal_is_empty(&self) -> bool { self.originals_empty() }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(copy)?.capacity_bytes) }
@@ -165,21 +176,24 @@ impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRe
 impl<P, M: Mutation<P>> EditReplayResult<P, M> {
     fn outputs_empty(&self) -> bool {
         let s = &*self.original;
-        s.order.capacity() == 0 && s.supersessions.terminal_is_empty() && s.drafts.terminal_is_empty() && s.state.is_none()
+        s.conflict_target.capacity()==0&&s.order.capacity() == 0 && s.supersessions.terminal_is_empty() && s.drafts.terminal_is_empty() && s.state.is_none()
             && s.committed.capacity() == 0 && s.quarantined.capacity() == 0 && s.rebased_inverse.capacity() == 0
             && s.replayed.capacity() == 0 && s.recorded.capacity() == 0 && s.report.outcomes.capacity() == 0 && s.unit_flags.terminal_is_empty()
     }
     pub fn begin_retirement(&mut self) { if let Some(owner) = self.residual.as_mut() { owner.begin_retirement(); } }
+    pub fn requires_original_control(&self)->bool{self.residual.as_ref().is_some_and(|owner|owner.requires_original_control())}
     pub fn cold_authority(&self) -> bool { self.residual.as_ref().is_none_or(|owner| owner.cold_authority()) }
     pub fn terminal_is_empty(&self) -> bool { self.outputs_empty() && self.residual.is_none() }
 }
 
 impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
     pub fn retirement_demands(&self, copy: usize) -> Result<RetirementDemand, ValueError> {
-        if !self.outputs_empty() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
+        if !self.outputs_empty() { return Ok(RetirementDemand { copy_bytes:std::mem::size_of::<super::ReplayResultOwnedState<P,M>>(),depth: 1, ..Default::default() }); }
         self.residual.as_ref().map_or(Ok(Default::default()), |owner| if owner.originals_empty() { Ok(RetirementDemand { depth: 1, ..Default::default() }) } else { nested(owner.retirement_demands(copy)?) })
     }
-    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    pub fn close_original_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.close_original_inner(grant,None) }
+    pub fn close_original_step_controlled(&mut self, grant: RetainedCloneGrant, control: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> { self.close_original_inner(grant,Some(control)) }
+    fn close_original_inner(&mut self, grant: RetainedCloneGrant, control: Option<&mut dyn semio_framework_value::OriginalRetirementControl>) -> Result<RetainedCloneStep, ValueError> {
         let idle = RetainedCloneProgress::default();
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(idle)); }
         let Some(owner) = self.residual.as_mut() else { return Err(unsupported("finished replay preserves untaken outputs without its original residual")); };
@@ -189,11 +203,12 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
         if !self.outputs_empty() {
             let s = &mut *self.original;
             let r = &mut *self.residual.as_mut().unwrap().original;
-            if r.order.capacity() != 0 || !r.supersessions.terminal_is_empty() || !r.drafts.terminal_is_empty() || r.state.is_some()
+            if r.conflict_target.capacity()!=0||r.order.capacity() != 0 || !r.supersessions.terminal_is_empty() || !r.drafts.terminal_is_empty() || r.state.is_some()
                 || r.committed.capacity() != 0 || r.quarantined.capacity() != 0 || r.rebased_inverse.capacity() != 0
                 || r.replayed.capacity() != 0 || r.recorded.capacity() != 0 || r.outcomes.capacity() != 0 || !r.unit_flags.terminal_is_empty() {
                 return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "finished replay original output slots must stay empty until residual handoff"));
             }
+            r.conflict_target=std::mem::take(&mut s.conflict_target);
             r.order = std::mem::replace(&mut s.order, semio_framework_os_vcs::HistoryPageStack::empty());
             r.supersessions = std::mem::take(&mut s.supersessions);
             r.drafts = std::mem::take(&mut s.drafts);
@@ -205,20 +220,22 @@ impl<P: 'static, M: Mutation<P> + 'static> EditReplayResult<P, M> {
             r.recorded = std::mem::take(&mut s.recorded);
             r.outcomes = std::mem::take(&mut s.report.outcomes);
             r.unit_flags = std::mem::take(&mut s.unit_flags);
-            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle }));
+            return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1,copied_bytes:demand.copy_bytes, ..idle }));
         }
         let owner = self.residual.as_mut().unwrap();
         if owner.originals_empty() { self.residual.take(); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..idle })); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = owner.close_original_step(child)?;
+        let step = owner.close_original_inner(child,control)?;
         semio_framework_value::retained_clone::admit_retained_clone_close(child, step, owner.originals_empty(), "finished replay original residual")?;
         Ok(RetainedCloneStep::Progress(step.progress()))
     }
 }
 
 impl<P: Send + Sync + 'static, M: Mutation<P> + Send + 'static> ErasedSnapshotRetirement for EditReplayResult<P, M> {
+    fn requires_original_control(&self)->bool{EditReplayResult::requires_original_control(self)}
     fn next_demand(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { self.retirement_demands(body) }
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> { self.close_original_step(grant) }
+    fn close_step_controlled(&mut self,grant:RetainedCloneGrant,control:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{self.close_original_step_controlled(grant,control)}
     fn terminal_is_empty(&self) -> bool { EditReplayResult::terminal_is_empty(self) }
     fn next_copy_byte_demand(&self) -> Result<usize, ValueError> { Ok(self.retirement_demands(0)?.copy_bytes) }
     fn next_capacity_byte_demand(&self, copy: usize) -> Result<usize, ValueError> { Ok(self.retirement_demands(copy)?.capacity_bytes) }

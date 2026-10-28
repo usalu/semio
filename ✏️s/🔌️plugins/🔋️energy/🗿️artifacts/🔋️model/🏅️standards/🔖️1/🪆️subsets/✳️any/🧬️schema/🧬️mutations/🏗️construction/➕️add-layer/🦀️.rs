@@ -1,12 +1,11 @@
 //! ➕️ Energy model mutation — `AddConstructionLayer`: Inserts one material layer into a construction at a stated position, outside-to-inside. Layer order is physically load-bearing — the same layers in a different order are a different wall — so the position is payload data, not an append.
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
 
 //#region 🔖️Mutation
 /// ➕️ `add-construction-layer` payload. Inserts one material layer into a construction at a stated position, outside-to-inside. Layer order is physically load-bearing — the same layers in a different order are a different wall — so the position is payload data, not an append.
-#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[derive(Clone, Debug, PartialEq, ToValueDerive, FromValueDerive, semio_framework_dsl_record_derive::DslRecord, dsl::MutationLeaf, semio_framework_value::NativeReceive, semio_s_artifact_energy_model_native_derive::EnergyNativeMutation, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
+#[energy_native(schema="🧬️schema/🔣️.json")]
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
@@ -22,39 +21,6 @@ pub fn add_construction_layer<Op: From<AddConstructionLayer>>(id: crate::model::
     AddConstructionLayer { id, index, material_id }.into()
 }
 
-impl<Op> protocol::MutationKind<EnergyModelSnapshot, Op> for AddConstructionLayer
-where
-    Op: protocol::Mutation<EnergyModelSnapshot, Diff = EnergyModelDiff> + From<AddConstructionLayer> + From<crate::RemoveConstructionLayer>,
-{
-    const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "add", entity: "construction-layer", kind: "add-construction-layer", record: "AddedConstructionLayer" };
-
-
-    fn label(&self) -> semio_framework_ui_locale::LocalizedLabel {
-        semio_framework_ui_locale::LocalizedLabel::native(&format!("Add layer {} to construction {} at index {}", self.material_id.0, self.id.0, self.index), &format!("Schicht {} zu Konstruktion {} an Index {} hinzufügen", self.material_id.0, self.id.0, self.index))
-    }
-
-    fn target(&self) -> Vec<String> {
-        vec![self.id.0.to_string()]
-    }
-}
-
-impl<Op> protocol::ColdMutationKind<EnergyModelSnapshot, Op> for AddConstructionLayer
-where
-    Op: protocol::ColdMutation<EnergyModelSnapshot, ReferenceDiff = EnergyModelDiff> + From<AddConstructionLayer> + From<crate::RemoveConstructionLayer>,
-{
-    fn diff(&self, base: &EnergyModelSnapshot) -> protocol::MutationOutcome<EnergyModelDiff> {
-        super::diff::diff(self, base)
-    }
-
-
-
-
-
-    fn inverse(&self, base: &EnergyModelSnapshot) -> Result<Vec<Op>, semio_framework_value::ValueError> {
-    Ok({
-        super::inverse::inverse(self, base)?
-    
-    })
-}
-}
 //#endregion 🔖️Mutation
+
+#[cfg(test)]#[path="🧪️native/🦀️.rs"]mod native_tests;

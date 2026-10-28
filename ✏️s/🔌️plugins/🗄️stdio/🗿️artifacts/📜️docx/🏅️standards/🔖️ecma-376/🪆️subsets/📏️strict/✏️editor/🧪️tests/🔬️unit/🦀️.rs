@@ -38,7 +38,7 @@ async fn create_docx_strict_editor_builds_a_definition_for_the_editor_role() {
 
 #[test]
 fn initial_strict_document_is_conformant_and_renders_one_empty_paragraph_target() {
-    let snapshot = <DocxStrictEditor as ArtifactEditor>::initial_snapshot();
+    let snapshot = <DocxStrictEditor as ArtifactEditor>::reference_birth().expect("explicit reference snapshot producer")();
     assert!(semio_s_artifact_stdio_docx_strict_mutations::standards::v_ecma_376::subsets::strict::schema::conformance::check_strict_conformance(&snapshot)
         .iter()
         .all(|diagnostic| !matches!(diagnostic.severity, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)));

@@ -1,0 +1,147 @@
+{
+  "contract": "semio.energy.original-monthly-ground/v1",
+  "field": "building_surface_c",
+  "ground": {
+    "building_surface_c": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "shallow_c": [
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24
+    ],
+    "deep_c": 18
+  },
+  "cases": [
+    {
+      "payload": {
+        "month": 7,
+        "newTemperatureC": 42
+      },
+      "outcome": "changed",
+      "after": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        42,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "inverse": 7
+    },
+    {
+      "payload": {
+        "month": 1,
+        "newTemperatureC": -273.15
+      },
+      "outcome": "changed",
+      "after": [
+        -273.15,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        12
+      ],
+      "inverse": 1
+    },
+    {
+      "payload": {
+        "month": 12,
+        "newTemperatureC": 20
+      },
+      "outcome": "changed",
+      "after": [
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+        9,
+        10,
+        11,
+        20
+      ],
+      "inverse": 12
+    },
+    {
+      "payload": {
+        "month": 7,
+        "newTemperatureC": 7
+      },
+      "outcome": "no-op"
+    },
+    {
+      "payload": {
+        "month": 0,
+        "newTemperatureC": 20
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "month": 13,
+        "newTemperatureC": 20
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "month": 7,
+        "newTemperatureC": -273.150001
+      },
+      "outcome": "invalid"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

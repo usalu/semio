@@ -20,7 +20,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> Envelope
         self.envelope_decode_jobs.is_empty()
             && self.envelope_field_decoder_retirements.is_empty()
             && self.envelope_completed_record_retirements.is_empty()
-            && self.envelope_field_decoders.terminal_is_empty()
-            && self.envelope_completed_records.terminal_is_empty()
+            && self.envelope_field_decoders.get().is_none_or(|owner|owner.terminal_is_empty())
+            && self.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())
     }
 }

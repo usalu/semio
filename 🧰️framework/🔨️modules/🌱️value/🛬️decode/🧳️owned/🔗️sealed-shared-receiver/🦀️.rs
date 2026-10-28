@@ -35,7 +35,7 @@ impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> NativeReceiver<I,Seale
   match self.phase{
    Phase::Bind=>Ok(fixed(original.binding_copy_bytes()+m)),
    Phase::Birth=>{let mut d=nested(T::receive_birth_demand(),size_of::<T::Receiver>()+size_of::<Option<Box<T::Receiver>>>()*2+m)?;d.capacity_bytes=d.capacity_bytes.checked_add(size_of::<T::Receiver>()).ok_or_else(invalid)?;Ok(d)},
-   Phase::Receive=>nested(self.child()?.demands(original,body)?,m),
+   Phase::Receive=>nested(self.child()?.demands(original,body.saturating_sub(m))?,m),
    Phase::Take=>nested(self.child()?.take_demand()?,size_of::<Option<T>>()*2+m),
    Phase::Close=>nested(self.child()?.close_demands(body.saturating_sub(m))?,m),
    Phase::Release=>Ok(RetirementDemand{copy_bytes:size_of::<Option<Box<T::Receiver>>>()*2+m,release_bytes:size_of::<T::Receiver>(),depth:1,..Default::default()}),
@@ -48,7 +48,7 @@ impl<I:Sync+'static,T:NativeReceive<I>+Send+Sync+'static> NativeReceiver<I,Seale
   let p=match self.phase{
    Phase::Bind=>{let p=original.bind(&mut self.binding,RetainedCloneGrant{maximum_copy_bytes:g.maximum_copy_bytes-m,..g})?.ok_or_else(invalid)?;self.phase=Phase::Birth;add(p,m)?},
    Phase::Birth=>{let extra=size_of::<T::Receiver>()+size_of::<Option<Box<T::Receiver>>>()*2+m;control.charge(d.capacity_bytes)?;let(child,mut p)=if self.subset{T::begin_record_subset(child_grant(g,extra))?}else{T::begin_receive(child_grant(g,extra))?};*self.child=Some(Box::new(child));self.phase=Phase::Receive;p.copied_bytes=p.copied_bytes.checked_add(extra).ok_or_else(invalid)?;p.retained_capacity_bytes=p.retained_capacity_bytes.checked_add(size_of::<T::Receiver>()).ok_or_else(invalid)?;p},
-   Phase::Receive=>{let child=self.child.as_mut().ok_or_else(invalid)?;let p=child.advance(original,control,body,child_grant(g,m)).map_err(|e|{let p=e.retained_progress();e.with_retained_progress(add(p,m).unwrap_or(p))})?.progress();if child.output_ready(){self.phase=Phase::Take;}add(p,m)?},
+   Phase::Receive=>{let child=self.child.as_mut().ok_or_else(invalid)?;let p=child.advance(original,control,body.saturating_sub(m),child_grant(g,m)).map_err(|e|{let p=e.retained_progress();e.with_retained_progress(add(p,m).unwrap_or(p))})?.progress();if child.output_ready(){self.phase=Phase::Take;}add(p,m)?},
    Phase::Take=>{let extra=size_of::<Option<T>>()*2+m;control.charge(d.capacity_bytes)?;let child=self.child.as_mut().ok_or_else(invalid)?;let(value,p)=child.take(child_grant(g,extra))?.ok_or_else(invalid)?;*self.raw=Some(value);child.begin_close();self.phase=if child.terminal_is_empty(){Phase::Release}else{Phase::Close};add(p,extra)?},
    Phase::Close=>{control.charge(d.capacity_bytes)?;let child=self.child.as_mut().ok_or_else(invalid)?;let p=child.close_step(child_grant(g,m))?.progress();if child.terminal_is_empty(){self.phase=Phase::Release;}add(p,m)?},
    Phase::Release=>{self.child.take();self.phase=Phase::Seal;receipt(d)},

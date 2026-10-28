@@ -70,9 +70,16 @@ pub trait RetainedCloneCursor<T: RetainedClone>: Send {
 #[derive(Default)]
 pub struct RetainedCloneClose {pub(super) retirement:ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>}
 
+/// 🎯️ The retained clone owner uses the same exclusive original ticket selection as typed cursors.
+pub use crate::RetirementSelection as RetainedCloseSelection;
+
 impl RetainedCloneClose {
     /// 🪑️ Seats one already admitted original retirement so custody laws can quote and fund its close without a typed owner.
     #[doc(hidden)] pub fn from_admitted_original(retirement:Box<dyn ErasedSnapshotRetirement>)->Self{Self{retirement:ManuallyDrop::new(Some(retirement))}}
+    /// 📏️ Selects all currencies from the same actual body request forwarded to the retained child.
+    pub fn demands(&self,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{self.retirement.as_ref().map_or(Ok(Default::default()),|owner|crate::factory_ticket_demands(owner,body))}
+    /// 🧷️ Loans the actual owner exclusively so the selected body cannot change before its grant is checked.
+    pub fn select(&mut self,body:usize)->Result<RetainedCloseSelection<'_>,crate::ValueError>{crate::select_factory_ticket(&mut self.retirement,body)}
     pub fn next_owner_demands<T:RetireOwned>(&self,present:bool,binding:&Option<RetainedCloneBinding>,body:usize)->Result<crate::RetirementDemand,crate::ValueError>{if let Some(owner)=self.retirement.as_ref(){return crate::factory_ticket_demands(owner,body);}if present{if !T::controlled_retirement_supported(){return Err(crate::ValueError::literal(crate::ValueRefusalKind::UnsupportedOwner,"typed clone owner lacks controlled close authority"));}return Ok(crate::RetirementDemand{capacity_bytes:crate::owned_retirement_birth_bytes::<T>(),depth:1,..Default::default()});}RetainedCloneBinding::close_demand(binding,body)}
     pub fn next_owner_depth_with_binding(&self,present:bool,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if !self.is_empty(){self.next_depth_demand()}else if present{Ok(1)}else{RetainedCloneBinding::depth_demand(binding)}}
     pub fn next_copy_with_binding(&self,binding:&Option<RetainedCloneBinding>)->Result<usize,crate::ValueError>{if self.is_empty(){RetainedCloneBinding::copy_demand(binding)}else{self.next_copy_byte_demand()}}
@@ -90,7 +97,7 @@ impl RetainedCloneClose {
     pub fn begin_granted<T:RetireOwned>(&mut self,value:&mut Option<T>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,crate::ValueError> {
         if !self.is_empty()||value.is_none(){return Ok(None);}
         let bytes=crate::owned_retirement_birth_bytes::<T>();
-        if grant.maximum_items==0||bytes>grant.maximum_capacity_bytes{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        if grant.maximum_items==0||grant.maximum_depth==0||bytes>grant.maximum_capacity_bytes{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         match crate::admit_owned_retirement(value.take().unwrap(),grant) {
             Ok((owner,progress))=>{*self.retirement=Some(owner);Ok(Some(RetainedCloneStep::Progress(progress)))},
             Err((error,owner))=>{*value=Some(owner);Err(error)},
@@ -99,13 +106,14 @@ impl RetainedCloneClose {
     pub fn begin_default_granted<T:RetireOwned+Default>(&mut self,value:&mut T,grant:RetainedCloneGrant)->Result<Option<RetainedCloneStep>,crate::ValueError> {
         if !self.is_empty(){return Ok(None);}
         let bytes=crate::owned_retirement_birth_bytes::<T>();
-        if grant.maximum_items==0||bytes>grant.maximum_capacity_bytes{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
+        if grant.maximum_items==0||grant.maximum_depth==0||bytes>grant.maximum_capacity_bytes{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
         let mut owner=Some(std::mem::take(value));
         let step=self.begin_granted(&mut owner,grant);
         if let Some(owner)=owner{*value=owner;}
         step
     }
     pub fn step_granted(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,crate::ValueError> {
+        if let Some(owner)=self.retirement.as_ref(){let demand=crate::factory_ticket_demands(owner,grant.maximum_copy_bytes)?;if !crate::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(Default::default()));}}
         let step=crate::close_factory_ticket(&mut self.retirement,grant)?;
         if !step.progress().fits(grant){return Err(crate::ValueError::literal(crate::ValueRefusalKind::InvariantViolated,"clone retirement exceeded admitted full grant"));}
         Ok(step)

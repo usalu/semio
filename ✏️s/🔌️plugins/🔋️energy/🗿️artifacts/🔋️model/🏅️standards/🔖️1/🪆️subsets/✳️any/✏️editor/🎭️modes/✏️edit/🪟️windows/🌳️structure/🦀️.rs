@@ -80,7 +80,7 @@ pub fn definition() -> WindowKindDefinition {
 /// derives for both surfaces, grouped so no node exceeds the kit's 32-sibling ceiling (the 33rd
 /// sibling faults `tree-window.siblings` and the window would render empty).
 pub fn render(document: &EnergyModelSnapshot) -> UiAssemblyResult<BuiltNode> {
-    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&crate::snapshot::energy_model(document)))
+    TreeWindowKit::render(&crate::snapshot::energy_structure_tree(&document.model.read()))
 }
 //#endregion 🔖️Render
 

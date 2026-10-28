@@ -35,3 +35,5 @@ serde = { version = "1.0.219", features = ["derive"] }
 semio-framework-mutation-diff = { path = "../../../🎮️mutation/🔺️diff/📦️packages/🦀️rust" }
 semio-framework-trace-memory-testing = { path = "../../../../⏱️trace/🧮️memory/🧪️testing/📥️requests/📦️packages/🦀️rust" }
 serde_json = "1.0.140"
+
+sha2 = "0.10"

@@ -97,19 +97,47 @@
       "description": "The generated $id index a MutationLeaf derive reads instead of walking directories, so rustc tracks one file and a new schema document changes that file.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["schema", "roots"],
+      "required": [
+        "schema",
+        "roots"
+      ],
       "properties": {
-        "schema": { "const": "semio.dsl.mutation-schema-document-index/v1" },
+        "schema": {
+          "const": "semio.dsl.mutation-schema-document-index/v1"
+        },
         "roots": {
           "type": "object",
-          "propertyNames": { "type": "string", "minLength": 1 },
+          "propertyNames": {
+            "type": "string",
+            "minLength": 1
+          },
           "additionalProperties": {
             "type": "object",
-            "propertyNames": { "type": "string", "minLength": 1 },
-            "additionalProperties": { "type": "string", "minLength": 1 }
+            "propertyNames": {
+              "type": "string",
+              "minLength": 1
+            },
+            "additionalProperties": {
+              "type": "string",
+              "minLength": 1
+            }
           }
         }
       }
+    },
+    "MutationWorkspaceSourceAuthority": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "workspaceRoot"
+      ],
+      "properties": {
+        "workspaceRoot": {
+          "type": "string",
+          "pattern": "^\\.\\.(?:/\\.\\.)*$"
+        }
+      },
+      "description": "An explicit source authority delegation names only an exact ancestor directory containing the genuine workspace package/project pair. The original mutation authority projection and no-follow ownership checks remain authoritative."
     }
   },
   "$ref": "#/$defs/MutationSourceAuthorityProjectionV1"

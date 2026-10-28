@@ -1,0 +1,22 @@
+{
+  "toolId": "originalReadonlyPreview",
+  "completed": 8760,
+  "counters": [
+    0,
+    8760,
+    2,
+    0,
+    0,
+    4358948,
+    6067258,
+    1600000,
+    8760
+  ],
+  "payload": [
+    17,
+    23,
+    41,
+    67
+  ],
+  "mutating": false
+}

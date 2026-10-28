@@ -52,10 +52,12 @@ pub fn observed_identifier_bytes(model: &Model, config: &SimulationConfig) -> Op
     }
     for zone in &model.zones {
         let temperature = "Zone Air Temperature [".len().checked_add(zone.name.len())?.checked_add(1)?;
+        let heating_power = "Zone Heating Power [".len().checked_add(zone.name.len())?.checked_add(1)?;
+        let cooling_power = "Zone Cooling Power [".len().checked_add(zone.name.len())?.checked_add(1)?;
         let heating = zone.name.len().checked_add(" Heating".len())?;
         let cooling = zone.name.len().checked_add(" Cooling".len())?;
         let fans = zone.name.len().checked_add(" Fans".len())?;
-        bytes = bytes.checked_add(temperature.checked_mul(3)?)?;
+        bytes = bytes.checked_add(temperature.checked_add(heating_power)?.checked_add(cooling_power)?.checked_mul(3)?)?;
         bytes = bytes.checked_add(heating.checked_add(cooling)?.checked_add(fans)?.checked_mul(3)?)?;
     }
     bytes = bytes.checked_add(("Facility Heating".len() + "Facility PV".len()).checked_mul(3)?)?;

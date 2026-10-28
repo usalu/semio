@@ -159,13 +159,13 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
         let presence = reader.read_u8()?;
         let dense = presence == 0;
         let bitmap = if dense { None } else { Some(reader.read_span(row_count.div_ceil(8))?) };
-        let present = |index: usize| bitmap.is_none_or(|bitmap| bitmap[index / 8] & (1 << (index % 8)) != 0);
+        let present = |index:usize|->Result<bool,PackRefusal>{match bitmap{None=>Ok(true),Some(bitmap)=>bitmap.get(index/8).map(|byte|byte&(1<<(index%8))!=0).ok_or(PackRefusal::Truncated((index/8)as u64))}};
         let elem_tag = reader.read_u8()?;
         match elem_tag {
             ELEM_F64 => {
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
+                    if present(i)? {
                         let f = reader.read_f64_le()?;
                         rows[i].fields.insert(field_id, FieldValue::Float(f));
                     }
@@ -174,7 +174,7 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
             ELEM_INT => {
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
+                    if present(i)? {
                         let v = reader.read_varint_i64()?;
                         rows[i].fields.insert(field_id, FieldValue::Int(v));
                     }
@@ -183,7 +183,7 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
             ELEM_UINT => {
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
+                    if present(i)? {
                         let v = reader.read_varint_u64()?;
                         rows[i].fields.insert(field_id, FieldValue::UInt(v));
                     }
@@ -192,7 +192,7 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
             ELEM_ENUM => {
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
+                    if present(i)? {
                         let v = reader.read_varint_u64()?;
                         rows[i].fields.insert(field_id, FieldValue::Enum(v as u32));
                     }
@@ -202,8 +202,8 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
                 let bitmap = reader.read_span(row_count.div_ceil(8))?;
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
-                        let b = bitmap[i / 8] & (1 << (i % 8)) != 0;
+                    if present(i)? {
+                        let b = bitmap.get(i/8).ok_or(PackRefusal::Truncated((i/8)as u64))? & (1 << (i % 8)) != 0;
                         rows[i].fields.insert(field_id, FieldValue::Bool(b));
                     }
                 }
@@ -211,7 +211,7 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
             ELEM_STR => {
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
+                    if present(i)? {
                         let symref = reader.read_varint_u64()?;
                         let s = resolve_symref(ctx, symref)?;
                         rows[i].fields.insert(field_id, FieldValue::Text(s));
@@ -222,7 +222,7 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
                 let field_shape = element_spec.as_ref().and_then(|s| s.fields.iter().find(|f| f.id == field_id)).map(|f| &f.shape);
                 for i in 0..row_count {
                     ctx.materialization.step()?;
-                    if present(i) {
+                    if present(i)? {
                         let v = decode_value(reader, field_shape, ctx, depth + 1)?;
                         rows[i].fields.insert(field_id, v);
                     }
@@ -231,7 +231,7 @@ pub(super) fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<Reco
         }
         for i in 0..row_count {
                     ctx.materialization.step()?;
-            if !present(i) {
+            if !present(i)? {
                 if !rows[i].fields.contains_key(&field_id){rows[i].fields.insert(field_id,FieldValue::Absent);}
             }
         }

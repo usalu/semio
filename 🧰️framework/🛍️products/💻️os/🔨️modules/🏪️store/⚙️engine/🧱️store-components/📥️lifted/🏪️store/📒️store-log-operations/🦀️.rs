@@ -16,8 +16,8 @@ use super::*;
 //#region 🔖️ArtifactStore
 impl<P, Mutation> StoreLog<P, Mutation>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + super::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     /// ⏰️ Reads this Store's hybrid logical clock without suspension, so a server that mints a
     /// stamped publication clock can make it strictly after the document's own last edit instead of
@@ -69,7 +69,7 @@ where
     /// Used right after `dispatch(Apply{..})`/`AppendTransaction` to build a `KernelMutation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.inverse`.
     pub fn edit_mutations(&self) -> Option<(&[Mutation], &semio_framework_value_persistent::list::PagedList<Mutation, {usize::MAX}>, &[MutationMeta])> {
-        self.envelope.vcs.edits.last().map(|edit| (edit.forwards.as_slice(), &edit.inverse, edit.mutation_meta.as_slice()))
+        self.envelope.vcs.edits.last().map(|edit| (edit.forwards.as_slice(), &*edit.inverse, edit.mutation_meta.as_slice()))
     }
 
     /// 📜️ Ancestor-graph rows for this store's checkpoint history. See {@link build_history_columns}.
@@ -382,7 +382,7 @@ where
 
     /// 🧐️ [`Self::prospective_fold`] for `head` instead of this replica's head.
     pub fn prospective_fold_at(&self, candidates: &[semio_framework_os_spr::MutationEnvelope], head: &semio_framework_os_spr::ViewerHead) -> Result<semio_framework_os_spr::HistoryFold, VcsError> {
-        let mut transitions = self.envelope.transitions.clone();
+        let mut transitions:Vec<_> = self.envelope.transitions.iter().cloned().collect();
         transitions.extend(candidates.iter().cloned());
         fold_event_log::<P, Mutation>(&self.envelope.id, &self.envelope.vcs.edits.iter().collect::<Vec<_>>(), &transitions, &self.envelope.conflicts, head)
     }
@@ -436,7 +436,7 @@ where
         let mut dependencies = mutation_ids.clone();
         dependencies.extend(parent_id.as_deref().and_then(|parent_id| self.checkpoint_origin(parent_id)));
         dependencies.extend(self.envelope.active_alternative_id.as_deref().and_then(|line_id| self.alternative_origin(line_id)));
-        let authors = authors.into_iter().map(|author| semio_framework_os_spr::TransitionAuthor { id: author.id, name: author.name, avatar: author.avatar }).collect();
+        let authors = authors.into_iter().map(|author| semio_framework_os_spr::Author { id: author.id, name: author.name, avatar: author.avatar }).collect();
         let checkpoint =
             semio_framework_os_spr::TransitionCheckpoint { checkpoint_id: checkpoint_id.clone(), parent_id, change_id, mutation_ids, description: message.clone(), saved_at, authors, message, timestamp, line_id: self.envelope.active_alternative_id.clone() };
         Ok((semio_framework_os_spr::HistoryTransition::Commit(checkpoint), dependencies, checkpoint_id))

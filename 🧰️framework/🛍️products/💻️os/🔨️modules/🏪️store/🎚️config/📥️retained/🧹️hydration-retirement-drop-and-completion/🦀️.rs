@@ -23,6 +23,7 @@ where
         if let Some(owner) = self.active.as_ref() { return semio_framework_os_store_read::artifact_retirement_box_demands(owner, copy); }
         if let Some(owner) = self.fold_job.as_ref() { return child(owner.next_demand(copy)?); }
         if let Some(value) = self.normalized_transitions.as_ref() { return controlled(value); }
+        if let Some(value)=self.transition_ledger.as_ref(){return controlled(value);}
         if let Some(value) = self.fold.as_ref() { return controlled(value); }
         if let Some(value) = self.fold_auxiliary.as_ref() { return controlled(value); }
         if let Some(value) = self.source_edits.as_ref() { return child(value.demands(copy)?); }
@@ -102,6 +103,7 @@ where
             };
         }
         controlled!(normalized_transitions);
+        controlled!(transition_ledger);
         controlled!(fold);
         controlled!(fold_auxiliary);
         if let Some(owner) = self.source_edits.as_mut() {
@@ -261,7 +263,7 @@ where
             && self.history.is_none()
             && self.fold_job.is_none()
             && self.fold.is_none()
-            && self.normalized_transitions.is_none()
+            && self.normalized_transitions.is_none()&&self.transition_ledger.is_none()
             && self.fold_auxiliary.is_none()
             && self.source_edits.is_none()
             && self.source_forwards.is_none()
@@ -289,7 +291,7 @@ where
 impl<P, M> Drop for RetainedConfigStoreHydration<P, M>
 where
     P: Clone + ToValue + FromValue,
-    M: Clone + ToValue + FromValue + Mutation<P>,
+    M: ToValue + FromValue + Mutation<P>,
 {
     fn drop(&mut self) {
         assert!(std::thread::panicking() || self.terminal_is_empty_unbounded(), "retained config hydration reached Drop before exact handoff or bounded retirement");
@@ -310,7 +312,7 @@ where
             && self.history.is_none()
             && self.fold_job.is_none()
             && self.fold.is_none()
-            && self.normalized_transitions.is_none()
+            && self.normalized_transitions.is_none()&&self.transition_ledger.is_none()
             && self.fold_auxiliary.is_none()
             && self.source_edits.is_none()
             && self.source_forwards.is_none()

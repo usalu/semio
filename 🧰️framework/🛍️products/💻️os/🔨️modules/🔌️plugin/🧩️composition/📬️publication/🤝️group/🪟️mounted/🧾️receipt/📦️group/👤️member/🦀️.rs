@@ -27,7 +27,7 @@ use crate::mounted_child_group_receipt::MOUNTED_RECEIPT_MAXIMUM_BYTES;
 use crate::mounted_child_group_receipt::MountedKernelMutationReceipt;
 use crate::mounted_child_group_receipt::MountedPreparedOperationBytes;
 use crate::mounted_child_group_receipt::MountedPreparedOperationsBytes;
-use crate::mounted_child_group_receipt::MountedReceiptBytes;
+use crate::mounted_child_group_receipt::{MountedReceiptBytes,MountedCausalPayload,payload_demands,payload_close};
 use crate::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
 use std::collections::VecDeque;
 
@@ -102,6 +102,7 @@ impl MountedMemberReceipt {
         if self.index < self.operation_count { source.kernel(self.index, &self.inverse)?; }
         Ok(())
     }
+    pub fn next_minimum_copy_bytes(&self)->usize{match self.phase{2=>self.inverse_encoder.as_ref().unwrap().next_minimum_copy_bytes(),3=>self.forward.as_ref().unwrap().next_minimum_copy_bytes(),_=>1}}
     /// 🔢️ Exposes the current original forward ordinal so its exact schema can be borrowed per turn.
     pub fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
     pub fn next_capacity_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
@@ -168,6 +169,7 @@ impl MountedMemberReceipt {
         if !self.edit.terminal_is_empty() { return Ok(self.edit.next_close_byte_demand()); }
         Ok(self.triples.back().map_or(self.triples.capacity() * size_of::<MemberMutationTriple>(), |triple| match self.close_field { 0..=9 => MountedGroupReceipt::mutation_demand(&triple.0, self.close_field), 10 => triple.1.0.capacity(), 11..=14 => MountedGroupReceipt::inverse_demand(&triple.2, self.close_field - 11), _ => 0 }))
     }
+    fn selected_payload(&self)->Option<&MountedCausalPayload>{let triple=self.triples.back()?;match self.close_field{0..=9=>MountedGroupReceipt::mutation_payload(&triple.0,self.close_field),11..=14=>MountedGroupReceipt::inverse_payload(&triple.2,self.close_field-11),_=>None}}
     /// 📏️ Prices retained encoder paths separately from fixed causal release fields.
     pub fn retirement_demands(&self) -> Result<RetirementDemand, ValueError> {
         if self.terminal_is_empty() { return Ok(Default::default()); }
@@ -176,6 +178,7 @@ impl MountedMemberReceipt {
         if let Some(owner) = self.inverse_encoder.as_ref() { return mounted_nested_retirement_demand(owner.retirement_demands()?, 1); }
         if self.inverse.capacity() > 0 { return Ok(RetirementDemand { release_bytes: self.inverse.capacity(), depth: 1, ..Default::default() }); }
         if !self.edit.terminal_is_empty() { return mounted_nested_retirement_demand(self.edit.retirement_demands()?, 1); }
+        if let Some(payload)=self.selected_payload(){return mounted_nested_retirement_demand(payload_demands(payload)?,2)}
         let depth = if self.triples.back().is_some() { match self.close_field { 7 | 8 | 14 => 4, _ => 3 } } else { 1 };
         Ok(RetirementDemand { release_bytes: self.next_close_byte_demand()?, depth, ..Default::default() })
     }
@@ -192,6 +195,8 @@ impl MountedMemberReceipt {
         if self.inverse.capacity() > 0 { drop(std::mem::take(&mut *self.inverse)); return Ok(Self::progress(0, bytes)); }
         if !self.edit.terminal_is_empty() { return Ok(self.edit.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })); }
         if let Some(triple) = self.triples.back_mut() {
+            if self.close_field==9{let step=MountedGroupReceipt::close_shared(&mut triple.0.author.0,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant})?;self.close_field+=1;return Ok(step);}
+            let payload=match self.close_field{0..=9=>MountedGroupReceipt::mutation_payload_mut(&mut triple.0,self.close_field),11..=14=>MountedGroupReceipt::inverse_payload_mut(&mut triple.2,self.close_field-11),_=>None};if let Some(payload)=payload{let step=payload_close(payload,RetainedCloneGrant{maximum_depth:grant.maximum_depth-2,..grant})?;if payload.retained_bytes().terminal_is_empty(){self.close_field+=1;}return Ok(RetainedCloneStep::Progress(step.progress()));}
             let ready = match self.close_field { 0..=9 => MountedGroupReceipt::clear_mutation(&mut triple.0, self.close_field), 10 => { MountedGroupReceipt::clear_text(&mut triple.1.0); true }, 11..=14 => MountedGroupReceipt::clear_inverse(&mut triple.2, self.close_field - 11), _ => { self.triples.pop_back(); self.close_field = 0; return Ok(Self::progress(0, 0)); } };
             if ready { self.close_field += 1; }
         } else { drop(std::mem::take(&mut *self.triples)); }

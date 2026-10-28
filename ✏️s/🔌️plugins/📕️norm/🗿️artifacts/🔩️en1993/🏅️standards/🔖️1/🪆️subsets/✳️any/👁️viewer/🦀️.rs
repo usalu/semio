@@ -63,9 +63,9 @@ impl ArtifactViewer for En1993Viewer {
 
     semio_s_plugin_norm_app_surface::norm_exact_viewer_store_ownership!();
 
-    fn initial_snapshot() -> En1993Snapshot {
+    fn reference_birth()->Option<fn()->En1993Snapshot>{Some(||{
         En1993Snapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `En1993ViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit`. Kept as a real dispatch (not

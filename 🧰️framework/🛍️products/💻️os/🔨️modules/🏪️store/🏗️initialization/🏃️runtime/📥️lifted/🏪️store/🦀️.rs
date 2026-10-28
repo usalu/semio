@@ -79,51 +79,41 @@ impl ArtifactStoreInitializationDigest {
 /// 🗂️ The edit ids of an envelope a retained initializer validates, admitted one edit per job step ([`Self::admit`]) and
 /// found in O(1) ([`Self::position`]): the one mechanism that keeps every store initializer's duplicate check and its
 /// applied and redo lookups linear in the history.
-#[derive(Debug, Default)]
+#[derive(Default)]
 pub struct ArtifactStoreInitializationEditIndex {
-    positions: HashMap<String, usize>,
+    positions: protocol::HistoryFoldIndex<String,usize>,
+    close: Option<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::HistoryFoldIndex<String,usize>>>,
 }
 
-/// 🪜️ What admitting one edit to an [`ArtifactStoreInitializationEditIndex`] found.
+/// 🪜️ One admitted original edit identity, its reserved page, or the terminal ledger boundary.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum ArtifactStoreInitializationEditAdmission {
-    Admitted,
-    Complete,
-    Oversized,
-    Duplicate,
-}
-
+pub enum ArtifactStoreInitializationEditAdmission { Pending, Admitted, Complete, Oversized, Duplicate }
 impl ArtifactStoreInitializationEditIndex {
-    /// ➕️ Admits the edit at `position` of `edits`: `Complete` once no edit is left, `Oversized` when its id is longer than
-    /// `max_id_bytes`, `Duplicate` when it repeats an admitted edit's id.
-    pub fn admit<Mutation>(&mut self, edits: &ArtifactHistoryLedger<Edit<Mutation>>, position: usize, max_id_bytes: usize) -> ArtifactStoreInitializationEditAdmission {
-        match edits.get(position) {
-            None => ArtifactStoreInitializationEditAdmission::Complete,
-            Some(edit) if edit.id.len() > max_id_bytes => ArtifactStoreInitializationEditAdmission::Oversized,
-            Some(edit) if self.positions.insert(edit.id.clone(), position).is_some() => ArtifactStoreInitializationEditAdmission::Duplicate,
-            Some(_) => ArtifactStoreInitializationEditAdmission::Admitted,
-        }
+    pub fn admission_demands<Mutation>(&self,edits:&ArtifactHistoryLedger<Edit<Mutation>>,position:usize,max_id_bytes:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        let Some(edit)=edits.get(position)else{return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})};if edit.id.len()>max_id_bytes||self.positions.contains_key(edit.id.as_str()){return Ok(semio_framework_value::RetirementDemand{depth:1,..Default::default()})}
+        let capacity_bytes=self.positions.next_insert_capacity_byte_demand(&edit.id,0)?;Ok(semio_framework_value::RetirementDemand{copy_bytes:if capacity_bytes==0{edit.id.len()+size_of::<(String,usize)>()}else{0},capacity_bytes:if capacity_bytes==0{edit.id.len()}else{capacity_bytes},depth:self.positions.next_insert_depth_demand(&edit.id)?,release_bytes:0})
     }
-
-    /// 🔎️ The ledger position of the admitted edit `edit_id`.
-    pub fn position(&self, edit_id: &str) -> Option<usize> {
-        self.positions.get(edit_id).copied()
+    pub fn admit<Mutation>(&mut self,edits:&ArtifactHistoryLedger<Edit<Mutation>>,position:usize,max_id_bytes:usize,grant:RetainedCloneGrant)->Result<(ArtifactStoreInitializationEditAdmission,RetainedCloneProgress),ValueError>{
+        use ArtifactStoreInitializationEditAdmission as A;
+        let Some(edit)=edits.get(position)else{return Ok((A::Complete,Default::default()))};
+        if edit.id.len()>max_id_bytes{return Ok((A::Oversized,Default::default()))}
+        if self.positions.contains_key(edit.id.as_str()){return Ok((A::Duplicate,Default::default()))}
+        let depth=self.positions.next_insert_depth_demand(&edit.id)?;let capacity=self.positions.next_insert_capacity_byte_demand(&edit.id,grant.maximum_copy_bytes)?;
+        if grant.maximum_items==0||grant.maximum_depth<depth{return Ok((A::Pending,Default::default()))}
+        if capacity>0{if grant.maximum_capacity_bytes<capacity{return Ok((A::Pending,Default::default()))}return self.positions.reserve_insert_step(&edit.id,grant).map(|progress|(A::Pending,progress)).map_err(|(error,progress)|error.with_retained_progress(progress))}
+        let copy=edit.id.len()+size_of::<(String,usize)>();if grant.maximum_copy_bytes<copy||grant.maximum_capacity_bytes<edit.id.len(){return Ok((A::Pending,Default::default()))}
+        let key=edit.id.clone();self.positions.insert_reserved(key,position,grant).unwrap_or_else(|_|unreachable!("original index backing and depth were admitted"));
+        Ok((A::Admitted,RetainedCloneProgress{copied_items:1,copied_bytes:copy,retained_capacity_bytes:edit.id.len(),..Default::default()}))
     }
-
-    /// 🧹️ Forgets every admitted id once the applied and redo lookups are done.
-    pub fn clear(&mut self) {
-        self.positions = HashMap::new();
+    pub fn position(&self,id:&str)->Option<usize>{self.positions.get(id).copied()}
+    pub fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,ValueError>{
+        if let Some(close)=self.close.as_ref(){return if close.terminal_is_empty(){Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<Option<semio_framework_value::retirement::controlled::ControlledRetirement<protocol::HistoryFoldIndex<String,usize>>>>(),depth:1,..Default::default()})}else{close.next_demand(body)}}
+        if self.positions.terminal_is_empty(){return Ok(Default::default())}Ok(semio_framework_value::RetirementDemand{copy_bytes:size_of::<protocol::HistoryFoldIndex<String,usize>>(),depth:1,..Default::default()})
     }
-
-    /// 🧹️ Forgets at most `maximum` admitted ids once the applied and redo lookups are done — one bounded slice per job
-    /// step, never the whole index at once — and answers whether none is left (its table released).
-    pub fn retire_step(&mut self, maximum: usize) -> bool {
-        self.positions.extract_if(|_, _| true).take(maximum).for_each(drop);
-        if !self.positions.is_empty() {
-            return false;
-        }
-        self.positions = HashMap::new();
-        true
+    pub fn retire_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+        let d=self.retirement_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,d){return Ok(RetainedCloneStep::Progress(Default::default()))}
+        if let Some(close)=self.close.as_mut(){if close.terminal_is_empty(){self.close.take();return Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))}return close.step(grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
+        if self.positions.terminal_is_empty(){return Ok(RetainedCloneStep::Complete(Default::default()))}self.close=Some(semio_framework_value::retirement::controlled::ControlledRetirement::new(std::mem::take(&mut self.positions)).unwrap_or_else(|_|unreachable!("native index declares original retirement")));Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
     }
 }
 
@@ -200,6 +190,7 @@ impl ArtifactStoreInitializationOwnerCatalog {
 }
 
 pub struct ArtifactStoreInitializationRuntime<P> {
+    pub read_registry: std::mem::ManuallyDrop<SnapshotReadLeaseRegistryOwner>,
     pub current: std::mem::ManuallyDrop<Option<Arc<P>>>,
     pub applied_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
     pub redo_edit_ids: std::mem::ManuallyDrop<semio_framework_os_vcs::HistoryPageStack<String>>,
@@ -216,6 +207,9 @@ pub struct ArtifactStoreInitializationRuntime<P> {
     pub supersessions: std::mem::ManuallyDrop<EffectiveSupersessions>,
     pub read_registry: std::mem::ManuallyDrop<SnapshotReadLeaseRegistryOwner>,
     pub(crate) close_phase: u8,
+    pub commit_stage:u8,
+    pub commit_operation:usize,
+    pub commit_source:Option<(usize,semio_framework_os_vcs::ArtifactHistoryKey,[u8;32],bool)>,
     taken: bool,
 }
 
@@ -226,32 +220,13 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     pub fn new_with_owner_catalog(artifact_id: &str, schema: &str, current: Arc<P>, initial_digest: [u8; 32], actor: ActorId, catalog: ArtifactStoreInitializationOwnerCatalog) -> Self {
-        Self::new_with_registry(artifact_id, schema, current, initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new())
-    }
+        Self::new_with_registry(artifact_id, schema, current,initial_digest, actor, catalog, SnapshotReadLeaseRegistryOwner::new(),semio_framework_os_spr::MutationDag::new()) }
 
-    /// 🧷️ Seats the runtime on the exact lease registry that later transfers to the Store, so every issued read stays returnable.
-    pub fn new_with_registry(artifact_id: &str, schema: &str, current: Arc<P>, initial_digest: [u8; 32], actor: ActorId, catalog: ArtifactStoreInitializationOwnerCatalog, registry: SnapshotReadLeaseRegistryOwner) -> Self {
-        let identity_digest = CursorRevisionAccumulator::hash_record(b"initial", &[artifact_id.as_bytes(), schema.as_bytes(), &initial_digest]);
-        let ArtifactStoreInitializationOwnerCatalog { applied_edit_ids, redo_edit_ids, cursor_applied_edit_ids, cursor_redo_edit_ids, applied_revision, redo_revision } = catalog;
-        Self {
-            current: std::mem::ManuallyDrop::new(Some(current)),
-            applied_edit_ids: std::mem::ManuallyDrop::new(applied_edit_ids),
-            redo_edit_ids: std::mem::ManuallyDrop::new(redo_edit_ids),
-            cursor_applied_edit_ids: std::mem::ManuallyDrop::new(cursor_applied_edit_ids),
-            cursor_redo_edit_ids: std::mem::ManuallyDrop::new(cursor_redo_edit_ids),
-            current_checkpoint_id: std::mem::ManuallyDrop::new(None),
-            local_actor_id: std::mem::ManuallyDrop::new(actor),
-            dag: std::mem::ManuallyDrop::new(Some(semio_framework_os_spr::MutationDag::new())),
-            edit_sequence: 0,
-            clock: fresh_replica_clock(),
-            initial_digest,
-            revision: std::mem::ManuallyDrop::new(CursorRevisionAccumulator { identity_digest, applied: applied_revision, redo: redo_revision, applied_tail_chains: None, mutation_positions: protocol::HistoryFoldIndex::new(), indexed_edits: protocol::HistoryFoldIndex::new(), unit_flags: protocol::HistoryFoldIndex::new() }),
-            close_active: std::mem::ManuallyDrop::new(None),
-            supersessions: std::mem::ManuallyDrop::new(EffectiveSupersessions::new()),
-            read_registry: std::mem::ManuallyDrop::new(registry),
-            close_phase: 0,
-            taken: false,
-        }
+    /// 🧷️ Moves the admitted current, catalog and exact original read registry into one initializer.
+    pub fn new_with_registry(artifact_id:&str,schema:&str,current:Arc<P>,initial_digest:[u8;32],actor:ActorId,catalog:ArtifactStoreInitializationOwnerCatalog,registry:SnapshotReadLeaseRegistryOwner,dag:semio_framework_os_spr::MutationDag)->Self{
+        let ArtifactStoreInitializationOwnerCatalog{applied_edit_ids,redo_edit_ids,cursor_applied_edit_ids,cursor_redo_edit_ids,applied_revision,redo_revision}=catalog;
+        let identity_digest=CursorRevisionAccumulator::hash_record(b"initial",&[artifact_id.as_bytes(),schema.as_bytes(),&initial_digest]);
+        Self{read_registry:std::mem::ManuallyDrop::new(registry),current:std::mem::ManuallyDrop::new(Some(current)),applied_edit_ids:std::mem::ManuallyDrop::new(applied_edit_ids),redo_edit_ids:std::mem::ManuallyDrop::new(redo_edit_ids),cursor_applied_edit_ids:std::mem::ManuallyDrop::new(cursor_applied_edit_ids),cursor_redo_edit_ids:std::mem::ManuallyDrop::new(cursor_redo_edit_ids),current_checkpoint_id:std::mem::ManuallyDrop::new(None),local_actor_id:std::mem::ManuallyDrop::new(actor),dag:std::mem::ManuallyDrop::new(Some(dag)),edit_sequence:0,clock:fresh_replica_clock(),initial_digest,revision:std::mem::ManuallyDrop::new(CursorRevisionAccumulator{identity_digest,applied:applied_revision,redo:redo_revision,applied_tail_chains:None,mutation_positions:protocol::HistoryFoldIndex::new(),indexed_edits:protocol::HistoryFoldIndex::new(),unit_flags:protocol::HistoryFoldIndex::new()}),close_active:std::mem::ManuallyDrop::new(None),supersessions:std::mem::ManuallyDrop::new(EffectiveSupersessions::new()),close_phase:0,commit_stage:0,commit_operation:0,commit_source:None,taken:false}
     }
 
     pub fn current_mut(&mut self) -> Option<&mut P> {
@@ -355,7 +330,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
         Mutation: self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary,
     {
         let original = edit.forwards.get(index)?;
-        let mutation_id = edit.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id()).unwrap_or_else(|| MutationId(format!("{}#{index}", edit.id)));
+        let mutation_id = edit.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| original.mutation_id().cloned()).unwrap_or_else(|| MutationId(format!("{}#{index}", edit.id)));
         Some(effective_operation::<P, Mutation>(original, index as u32, mutation_id, schema, &self.supersessions))
     }
 
@@ -370,7 +345,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     {
         if let Some(original) = edit.forwards.get(index).filter(|op| op.may_emit_foreign_steps()) {
             let digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[edit.id.as_bytes()]);
-            self.revision.unit_flags.insert((digest, index), <Mutation as self::Mutation<P>>::foreign_step_source(original, self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, 0).map_err(|_| "artifact store original foreign source refused")?.is_some());
+            self.revision.unit_flags.insert((digest, index), <Mutation as semio_framework_os_spr::ColdMutation<P>>::foreign_step_source(original,self.current.as_deref().ok_or("artifact store initialization lost its current projection")?, 0).map_err(|_| "artifact store original foreign source refused")?.is_some());
         }
         let Some(effective) = self.effective_forward(edit, index, schema) else { return Ok(ArtifactStoreInitializationForward::Exhausted) };
         let Some(operation) = effective.operation() else { return Ok(ArtifactStoreInitializationForward::Folded { displaced: None, fuel: 1 }) };
@@ -440,7 +415,7 @@ impl<P> ArtifactStoreInitializationRuntime<P> {
     }
 
     /// 🌱️ Seeds operation `id` of history entry `entry_id` into the causal owner. An edit a replica folded from a peer is
-    /// named after its only operation (`edit_from_operation_envelope`), so an operation id equal to its own entry id is the node
+    /// named after its only operation (`edit_from_operation_envelope_cold`), so an operation id equal to its own entry id is the node
     /// the entry already seeded — one node, never two; a repeat across entries still refuses as a duplicate.
     pub fn seed_edit_operation(&mut self, entry_id: &str, id: MutationId) -> Result<(), String> {
         if id.0 == entry_id {

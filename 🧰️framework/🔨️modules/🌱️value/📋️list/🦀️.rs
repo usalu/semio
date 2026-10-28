@@ -319,6 +319,9 @@ impl<T, const N: usize> PagedList<T, N> {
         self.leaf(index)?.get(index % self.page_items())
     }
 
+    /// 📖️ Borrows only the original occupied suffix of the physical page containing this logical position.
+    pub fn contiguous_at(&self,index:usize)->Option<&[T]>{if index>=self.length{return None}let leaf=self.leaf(index)?;let offset=index%self.page_items();let count=(self.length-index).min(leaf.len().checked_sub(offset)?);Some(&leaf[offset..offset+count])}
+
     pub fn get_mut(&mut self, index: usize) -> Option<&mut T> {
         if index >= self.length {
             return None;

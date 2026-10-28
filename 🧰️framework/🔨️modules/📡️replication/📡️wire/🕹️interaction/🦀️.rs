@@ -13,7 +13,7 @@ use std::collections::{BTreeMap,HashMap,HashSet};
 // below instead of redefining it — see that module's own header comment. Every wave-0 test covering
 // this code moved with it, verbatim except `validate_state`'s fixtures (see `InteractionOutline`).
 /// 🐁️ One domain's hover behavior — see `semio_framework::InteractionDefinition::hover`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 pub struct HoverSpec {
     #[serde(default = "default_true")]
@@ -76,7 +76,7 @@ fn default_true() -> bool {
 }
 
 /// 🖱️ One domain's selection behavior — see `semio_framework::InteractionDefinition::selection`.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 pub struct SelectionSpec {
     /// 🪜️ Non-empty; the first entry is the domain's default mode.
@@ -136,7 +136,7 @@ impl semio_framework_value::FromValue for SelectionSpec {
 
 /// 🌳️ Where a domain's target ids come from, and thus what `DomainTopology` (if any) is available for
 /// range selection and transitive hover/select closures.
-#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+#[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 #[serde(tag = "kind", rename_all = "camelCase", rename_all_fields = "camelCase")]
 pub enum HierarchyProvider {
     /// 🪨️ No parent/child structure — range and transitive closures degrade to the single target.
@@ -206,8 +206,8 @@ impl semio_framework_value::retirement::RetireOwned for SelectionMode {
     fn controlled_retirement_supported()->bool{true}
 }
 
-/// 🧲️ How a surface gathers targets for one `interactionSelect` dispatch.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+/// 🎯️ How a surface gathers targets for one `interactionSelect` dispatch.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, serde::Serialize, serde::Deserialize, semio_framework_value::RetireOwned)]
 #[serde(rename_all = "camelCase")]
 pub enum SelectionMethod {
     Pick,

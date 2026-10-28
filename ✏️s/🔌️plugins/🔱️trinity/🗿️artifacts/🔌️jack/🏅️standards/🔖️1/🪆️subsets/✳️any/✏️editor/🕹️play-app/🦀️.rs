@@ -181,9 +181,9 @@ impl<C:crate::standards::v1::subsets::any::schema::composition::JackComposition>
         C::genesis_child_pack(snapshot, slot, child_id)
     }
 
-    fn initial_snapshot() -> JackSnapshot {
+    fn reference_birth()->Option<fn()->JackSnapshot>{Some(||{
         C::initial_snapshot()
-    }
+    })}
 
     fn io() -> Option<semio_framework_plugin::AppIo> {
         Some(jack_io())

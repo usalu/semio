@@ -23,8 +23,8 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn is_empty(&self)->bool { self.root.is_none() }
     /// 🪹️ Clears the logical root while retaining every original slot for explicit retirement.
     pub fn clear(&mut self){self.root=None;self.mark_mutation();}
-    /// 🪫️ Physical emptiness includes every retained arena and displaced original key backing.
-    pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.nodes.capacity()==0&&self.displaced_keys.capacity()==0}
+    /// 🪹️ Physical emptiness includes every retained arena and displaced original key backing.
+    pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.nodes.terminal_is_empty()&&self.displaced_keys.terminal_is_empty()}
     /// 🪪️ Original occupied replacement, insertion and removal invalidate borrowed row continuations.
     pub fn mutation_epoch(&self)->u64{self.mutation_epoch}
     fn mark_mutation(&mut self){self.mutation_epoch=self.mutation_epoch.checked_add(1).expect("original index mutation epoch overflow");}
@@ -51,13 +51,13 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     /// 🪙️ Arena growth transfers ownership without copying original payload bytes.
     pub fn next_insert_copy_byte_demand(&self,_key:&K)->Result<usize,ValueError>{Ok(0)}
     /// 🏗️ Quotes one actual original metadata or payload backing allocation.
-    pub fn next_insert_capacity_byte_demand(&self,key:&K,_copy:usize)->Result<usize,ValueError>{if self.contains_key(key){self.displaced_keys.next_allocation_bytes()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_allocation_bytes()}.map_err(|error|index_page_refusal(error.kind,error.reason))}
-    /// 📰️ Normal insertion retains every previously admitted original page.
+    pub fn next_insert_capacity_byte_demand<Q:Ord+?Sized>(&self,key:&Q,_copy:usize)->Result<usize,ValueError> where K:Borrow<Q>{if self.contains_key(key){self.displaced_keys.next_allocation_bytes()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_allocation_bytes()}.map_err(|error|index_page_refusal(error.kind,error.reason))}
+    /// 🍂️ Normal insertion retains every previously admitted original page.
     pub fn next_insert_release_byte_demand(&self,_key:&K)->Result<usize,ValueError>{Ok(0)}
     /// 📐️ Covers the actual AVL path and prospective original page ownership path.
-    pub fn next_insert_depth_demand(&self,key:&K)->Result<usize,ValueError>{let page=if self.contains_key(key){self.displaced_keys.next_reserve_depth_demand()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_reserve_depth_demand()}.map_err(|error|index_page_refusal(error.kind,error.reason))?;self.height(self.root).checked_add(2).and_then(|tree|page.checked_add(1).map(|page|tree.max(page))).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"index insertion depth overflow"))}
+    pub fn next_insert_depth_demand<Q:Ord+?Sized>(&self,key:&Q)->Result<usize,ValueError> where K:Borrow<Q>{let page=if self.contains_key(key){self.displaced_keys.next_reserve_depth_demand()}else if self.free_head.is_some(){Ok(0)}else{self.nodes.next_reserve_depth_demand()}.map_err(|error|index_page_refusal(error.kind,error.reason))?;self.height(self.root).checked_add(2).and_then(|tree|page.checked_add(1).map(|page|tree.max(page))).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"index insertion depth overflow"))}
     /// 🎫️ Admits one backing page while every original key and value remains in place.
-    pub fn reserve_insert_step(&mut self,key:&K,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)>{
+    pub fn reserve_insert_step<Q:Ord+?Sized>(&mut self,key:&Q,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)> where K:Borrow<Q>{
         let empty=RetainedCloneProgress::default();
         let bytes=self.next_insert_capacity_byte_demand(key,grant.maximum_copy_bytes).map_err(|error|(error,empty))?;
         if bytes==0{return Ok(empty)}
@@ -132,7 +132,8 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn pop_first(&mut self)->Option<(K,V)> {let(root,index)=self.detach_first(self.root?);self.root=root;self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
     /// 🪵️ Transfers the original greatest-key row while retaining its native arena slot.
     pub fn pop_last(&mut self)->Option<(K,V)> {let(root,index)=self.detach_last(self.root?);self.root=root;self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
-    fn ranked(&self,mut rank:usize)->Option<(&K,&V)> {let mut root=self.root;while let Some(index)=root{let left=self.count(self.nodes[index].left);if rank<left{root=self.nodes[index].left;}else if rank==left{let(key,value)=self.nodes[index].entry.as_ref().unwrap();return Some((key,value));}else{rank-=left+1;root=self.nodes[index].right;}}None}
+    /// 🔎️ Borrows the existing rank path without copying preceding keys or manufacturing a source loan.
+    pub fn ranked(&self,mut rank:usize)->Option<(&K,&V)> {let mut root=self.root;while let Some(index)=root{let left=self.count(self.nodes[index].left);if rank<left{root=self.nodes[index].left;}else if rank==left{let(key,value)=self.nodes[index].entry.as_ref().unwrap();return Some((key,value));}else{rank-=left+1;root=self.nodes[index].right;}}None}
     /// 🔎️ Borrows the next strictly greater key without allocating a range cursor.
     pub fn first_entry_after<Q:Ord+?Sized>(&self,key:&Q)->Option<(&K,&V)> where K:Borrow<Q> {let mut root=self.root;let mut candidate=None;while let Some(index)=root{let(entry,_)=self.nodes[index].entry.as_ref().unwrap();if entry.borrow()>key{candidate=Some(index);root=self.nodes[index].left;}else{root=self.nodes[index].right;}}candidate.map(|index|{let(key,value)=self.nodes[index].entry.as_ref().unwrap();(key,value)})}
     pub fn iter(&self)->HistoryFoldIndexIter<'_,K,V> { HistoryFoldIndexIter { owner:self, ranks:0..self.len() } }
@@ -228,11 +229,11 @@ impl<K:Ord> HistoryFoldSet<K>{
     pub fn next_insert_capacity_byte_demand(&self,key:&K,copy:usize)->Result<usize,ValueError>{self.0.next_insert_capacity_byte_demand(key,copy)}
     /// 🍂️ Preserves every old membership backing during insertion.
     pub fn next_insert_release_byte_demand(&self,key:&K)->Result<usize,ValueError>{self.0.next_insert_release_byte_demand(key)}
-    /// 📃️ Carries the same live tree and admitted page depth requirement.
-    pub fn next_insert_depth_demand(&self,key:&K)->Result<usize,ValueError>{self.0.next_insert_depth_demand(key)}
-    /// 🪜️ Admits one original membership page under the unchanged supplied wallet.
-    pub fn reserve_insert_step(&mut self,key:&K,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)>{self.0.reserve_insert_step(key,grant)}
-    /// 📨️ Places the exact incoming key in the original funded slot or returns it unchanged.
+    /// 📐️ Carries the same live tree and admitted page depth requirement.
+    pub fn next_insert_depth_demand<Q:Ord+?Sized>(&self,key:&Q)->Result<usize,ValueError> where K:Borrow<Q>{self.0.next_insert_depth_demand(key)}
+    /// 🎟️ Admits one original membership page under the unchanged supplied wallet.
+    pub fn reserve_insert_step<Q:Ord+?Sized>(&mut self,key:&Q,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,(ValueError,RetainedCloneProgress)> where K:Borrow<Q>{self.0.reserve_insert_step(key,grant)}
+    /// 🪴️ Places the exact incoming key in the original funded slot or returns it unchanged.
     pub fn insert_reserved(&mut self,key:K,grant:RetainedCloneGrant)->Result<(bool,RetainedCloneProgress),(ValueError,K)>{self.0.insert_reserved(key,(),grant).map(|(previous,receipt)|(previous.is_none(),receipt)).map_err(|(error,key,())|(error,key))}
 
     pub fn contains<Q:Ord+?Sized>(&self,key:&Q)->bool where K:Borrow<Q>{self.0.contains_key(key)}

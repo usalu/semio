@@ -9,14 +9,16 @@ extern crate semio_s_artifact_energy_model_diff as diff;
 extern crate semio_s_artifact_energy_model_diff_patch as diff_patch;
 extern crate semio_s_artifact_energy_model_snapshot as snapshot;
 
-use crate::diff::EnergyModelDiff;
-use crate::snapshot::EnergyModelSnapshot;
+use crate::diff::ReferenceEnergyModelDiff as EnergyModelDiff;
+use crate::snapshot::reference::EnergyModelSnapshot;
 
 #[path = "."]
 pub mod change_ground_deep {
     #[path = "⛏️change-ground-deep/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⛏️change-ground-deep/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⛏️change-ground-deep/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⛏️change-ground-deep/↩️inverse/🦀️.rs"]
@@ -28,6 +30,8 @@ pub mod change_site_elevation {
     #[path = "⛰️change-elevation/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "⛰️change-elevation/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "⛰️change-elevation/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "⛰️change-elevation/↩️inverse/🦀️.rs"]
@@ -39,6 +43,8 @@ pub mod change_site_latitude {
     #[path = "🌍️change-latitude/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌍️change-latitude/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌍️change-latitude/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌍️change-latitude/↩️inverse/🦀️.rs"]
@@ -50,6 +56,8 @@ pub mod change_site_longitude {
     #[path = "🌏️change-longitude/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌏️change-longitude/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌏️change-longitude/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌏️change-longitude/↩️inverse/🦀️.rs"]
@@ -61,6 +69,8 @@ pub mod change_ground_building {
     #[path = "🌡️change-ground-building/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌡️change-ground-building/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌡️change-ground-building/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌡️change-ground-building/↩️inverse/🦀️.rs"]
@@ -72,6 +82,8 @@ pub mod change_ground_shallow {
     #[path = "🌱️change-ground-shallow/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🌱️change-ground-shallow/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🌱️change-ground-shallow/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🌱️change-ground-shallow/↩️inverse/🦀️.rs"]
@@ -83,6 +95,8 @@ pub mod change_site_north_axis {
     #[path = "🔝️change-north-axis/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🔝️change-north-axis/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🔝️change-north-axis/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🔝️change-north-axis/↩️inverse/🦀️.rs"]
@@ -94,6 +108,8 @@ pub mod change_site_time_zone {
     #[path = "🕰️change-time-zone/🦀️.rs"]
     mod component;
     pub use component::*;
+    #[path = "🕰️change-time-zone/🧊️reference/🦀️.rs"]
+    mod reference;
     #[path = "🕰️change-time-zone/🔺️diff/🦀️.rs"]
     pub mod diff;
     #[path = "🕰️change-time-zone/↩️inverse/🦀️.rs"]

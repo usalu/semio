@@ -347,7 +347,8 @@ async fn media_export_wire_matches_the_language_neutral_fixture_above_number_saf
         generation: u64::MAX,
     };
     let commands = [
-        ("submit", AppCommand::SubmitMediaExport { seq: 9_007_199_254_740_993, port: "playback:out".into(), expected_parent_document_id: "doc-α".into(), expected_base_revision: 9_007_199_254_740_993 }),
+        ("submit", AppCommand::SubmitMediaExport { seq: 9_007_199_254_740_993, port: "playback:out".into(), expected_parent_document_id: "doc-α".into(), expected_base_revision: 9_007_199_254_740_993,checkpoint_id:None }),
+        ("submitCheckpoint",AppCommand::SubmitMediaExport{seq:9_007_199_254_740_993,port:"semio.snapshot.pack".into(),expected_parent_document_id:"doc-α".into(),expected_base_revision:9_007_199_254_740_993,checkpoint_id:Some("checkpoint-港".into())}),
         ("poll", AppCommand::PollMediaExport { seq: 9_007_199_254_740_994, handle: handle.clone() }),
         ("cancel", AppCommand::CancelMediaExport { seq: 9_007_199_254_740_995, handle: handle.clone() }),
         ("takeChunk", AppCommand::TakeMediaExportChunk { seq: 9_007_199_254_740_996, handle: handle.clone() }),
@@ -408,6 +409,9 @@ async fn document_identity_wire_matches_the_language_neutral_fixture() {
     for bytes in [vec![31, 0, 0, 2], vec![31, 0, 0, 1, 0], vec![31, 0, 255, 255, 255, 255, 31, 0]] {
         assert!(decode_app_frame(&bytes).await.is_err());
     }
-    let oversized = AppFrame::DocumentIdentity { in_reply_to: 0, identity: AppDocumentIdentity { app_instance_id: 0, parent_document_id: Some("x".repeat(513)) } };
+    let boundary = AppFrame::DocumentIdentity { in_reply_to:u64::MAX,identity:AppDocumentIdentity{app_instance_id:u32::MAX,parent_document_id:Some("🎬".repeat(512)),base_revision:u64::MAX} };
+    let boundary_bytes=encode_app_frame(&boundary).await;assert_eq!(boundary_bytes.len(),2077);assert_eq!(decode_app_frame(&boundary_bytes).await.unwrap(),boundary);
+    for revision in ["00","+1","-1","18446744073709551616"]{assert!(serde_json::from_value::<AppDocumentIdentity>(serde_json::json!({"appInstanceId":17,"parentDocumentId":"document","baseRevision":revision})).is_err());}
+    let oversized = AppFrame::DocumentIdentity { in_reply_to: 0, identity: AppDocumentIdentity { app_instance_id: 0, parent_document_id: Some("x".repeat(513)), base_revision: u64::MAX } };
     assert!(decode_app_frame(&encode_app_frame(&oversized).await).await.is_err());
 }

@@ -1,11 +1,17 @@
 {
   "mutation": "bindWeatherFile",
-  "target": {
-    "artifactId": "hannover",
-    "dialect": {
-      "artifactKind": "s.stdio.semio",
-      "standard": "v1",
-      "subset": "epw"
-    }
+  "link": {
+    "target": {
+      "artifactId": "hannover",
+      "dialect": {
+        "artifactKind": "s.stdio.semio",
+        "standard": "v1",
+        "subset": "epw"
+      }
+    },
+    "pin": {
+      "kind": "head"
+    },
+    "role": "weather"
   }
 }

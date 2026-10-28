@@ -64,11 +64,12 @@ pub struct PrivateOwnedPublicationLane {
         pub metadata: Option<PrivatePublicationMetadata>,
         pub phase: PrivateOwnedPublicationPhase,
         pub grouped: bool,
+        pub origins_assigned:bool,
     }
 
     impl PrivateOwnedPublicationLane {
         /// 🪪️ Retains one original typed source and its independently admitted metadata.
-        pub fn new(request: store::MemberStoreOwnedBatchRequest) -> Self { Self { request: ManuallyDrop::new(Some(request)), publication: ManuallyDrop::new(None), metadata: None, phase: PrivateOwnedPublicationPhase::Admission, grouped: false } }
+        pub fn new(request: store::MemberStoreOwnedBatchRequest) -> Self { Self { request: ManuallyDrop::new(Some(request)), publication: ManuallyDrop::new(None), metadata: None, phase: PrivateOwnedPublicationPhase::Admission, grouped: false,origins_assigned:false } }
         pub fn request(&self) -> Option<&store::MemberStoreOwnedBatchRequest> { self.request.as_ref() }
         pub fn publication_mut(&mut self) -> Option<&mut (dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication + 'static)> { self.publication.as_deref_mut() }
         pub fn staged(&self) -> bool { self.phase == PrivateOwnedPublicationPhase::Staged }
@@ -82,16 +83,22 @@ pub struct PrivateOwnedPublicationLane {
             if self.phase == PrivateOwnedPublicationPhase::Admission { return member.owned_publication_birth_bytes(self.request.as_ref().expect("private admission retains its original request")); }
             Ok(self.publication.as_ref().map_or(0, |publication| publication.next_group_byte_demand()))
         }
+        /// 🧬️ Moves this member's actual provenance rows before the first semantic preparation turn.
+        pub fn advance_original_origins(&mut self,origins:&mut Option<std::collections::VecDeque<protocol::MutationOrigin>>,grant:RetainedCloneGrant)->Result<Option<RetainedCloneProgress>,ValueError>{
+            if self.origins_assigned||self.publication.is_none(){return Ok(None)}
+            if self.phase!=PrivateOwnedPublicationPhase::Preparation{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"original group provenance must precede semantic preparation"))}
+            let overhead=size_of::<bool>();if grant.maximum_items==0||grant.maximum_copy_bytes<overhead||grant.maximum_depth==0{return Ok(Some(Default::default()))}
+            let step=self.publication.as_mut().unwrap().admit_original_origins(origins,RetainedCloneGrant{maximum_copy_bytes:grant.maximum_copy_bytes-overhead,..grant})?;let mut progress=step.progress();if matches!(step,RetainedCloneStep::Complete(_)){self.origins_assigned=true;progress.copied_bytes+=overhead;}Ok(Some(progress))
+        }
         /// 🪜️ Advances only one retained lane phase; staging never changes live authority.
-        pub fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, body:usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving:&mut store::os_store::NativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, store::VcsError> {
+        pub fn advance(&mut self, member: &mut impl SpaceMember, visibility: &Arc<vcs::ArtifactGroupVisibility>, body: usize, grant: store::os_store::one_item::ArtifactStoreOneItemGrant, receiving: &mut store::MemberNativeDecodeControl<'_>) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, String> {
             if grant.maximum_items == 0 { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             match self.phase {
                 PrivateOwnedPublicationPhase::Admission => {
-                    let birth_bytes = member.owned_publication_birth_bytes(self.request.as_ref().expect("private admission retains its original request")).map_err(store::VcsError::ValidationFailed)?;
-                    let Some(publication) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant).map_err(store::VcsError::ValidationFailed)? else { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); };
+                    let Some((publication,progress)) = member.begin_one_item_owned_publication(self.request.as_mut().expect("private source retained until admission"), grant)? else { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); };
                     *self.publication = Some(publication);
                     self.phase = PrivateOwnedPublicationPhase::Preparation;
-                    Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), RetainedCloneProgress { copied_items: 1, retained_capacity_bytes: birth_bytes, ..Default::default() }))
+                    Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.progress(), progress))
                 }
                 PrivateOwnedPublicationPhase::Preparation => {
                     let step = member.prepare_one_item_publication(self.publication_mut().unwrap(), body, grant, receiving)?;

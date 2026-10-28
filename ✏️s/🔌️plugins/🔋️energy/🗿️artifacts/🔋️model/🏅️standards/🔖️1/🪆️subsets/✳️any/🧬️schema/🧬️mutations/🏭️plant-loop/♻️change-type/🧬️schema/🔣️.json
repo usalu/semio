@@ -65,5 +65,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "enum-row",
+    "row": "StatePlantLoopConfig",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "plant_loops",
+    "field": "loop_type",
+    "input": "new_loop_type",
+    "key": "id",
+    "labels": {
+      "en": "Change plant loop: Loop type",
+      "de": "Kreislauftyp ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "plant-loop",
+      "kind": "change-plant-loop-type",
+      "record": "ChangedPlantLoopType"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Loop type violates its authored choices."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed plant loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The plant loop already carries this loop type value."
+      }
+    }
   }
 }

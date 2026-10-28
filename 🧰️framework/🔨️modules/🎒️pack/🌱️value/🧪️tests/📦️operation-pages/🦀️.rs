@@ -14,7 +14,7 @@ fn record_operation_pages_emit_exact_canonical_words_and_keep_canceled_prefix_ow
     let spec = RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "bytes", Shape::Bytes64), FieldSpec::new(2, "numbers", Shape::Value)]);
     let mut record = RecordValue::default();
     let payload: Vec<u8> = (0..fixture["payloadBytes"].as_u64().unwrap()).map(|index| (index % 251) as u8).collect();
-    record.fields.insert(1, FieldValue::Bytes64(payload.clone()));
+    record.fields.insert(1, FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload.clone()).unwrap()));
     record.fields.insert(2, FieldValue::Value(DslValue::Array(vec![DslValue::uint(u64::MAX), DslValue::int(i64::MIN), DslValue::float(-0.0)])));
     record.fields.insert(99, FieldValue::UInt(7));
     for preserve_unknown in [true, false] {
@@ -62,7 +62,7 @@ fn record_operation_pages_emit_exact_canonical_words_and_keep_canceled_prefix_ow
         assert_eq!(refusal.kind.as_str(), fixture["canceledKind"].as_str().unwrap());
         assert!(output.len() >= 256 && output.len() < expected.len());
         assert!(output.iter().eq(expected[..output.len()].iter().copied()));
-        assert_eq!(record.fields.get(&1), Some(&FieldValue::Bytes64(payload.clone())));
+        assert_eq!(record.fields.get(&1), Some(&FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload.clone()).unwrap())));
         finish(&mut output);
     }
 }
@@ -76,7 +76,7 @@ fn record_operation_pages_decode_cross_page_bytes_and_utf8_without_flattening_th
     let text=case["utf8Word"].as_str().unwrap().repeat(case["utf8Repetitions"].as_u64().unwrap()as usize);
     let spec=RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(1,"bytes",Shape::Bytes64),FieldSpec::new(2,"text",Shape::Text)]);
     let mut record=RecordValue::default();
-    record.fields.insert(1,FieldValue::Bytes64(payload.clone()));
+    record.fields.insert(1,FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload.clone()).unwrap()));
     record.fields.insert(2,FieldValue::Text(text.clone()));
     let mut source=OwnedOperationBytes::try_new(32768,131072).unwrap();
     let mut allow=|_|true;
@@ -146,7 +146,7 @@ fn record_operation_pages_real_core_sink_uses_step_funded_backing_and_same_contr
     let mut expected:Vec<u8>=case["prefix"].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect();
     expected.extend_from_slice(&payload);
     let spec=RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(1,"bytes",Shape::Bytes64)]);
-    let mut record=RecordValue::default();record.fields.insert(1,FieldValue::Bytes64(payload));
+    let mut record=RecordValue::default();record.fields.insert(1,FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&payload).unwrap()));
     let mut options=EncodeOptions::default();options.limits.max_file_len=expected.len()as u64;
     let mut prepared=OperationBytePreparation::try_new(expected.len(),65536).unwrap();
     let mut allow=|_|true;let control=semio_framework_value::NativeEncodeControl::new(65536,&mut allow);
@@ -185,7 +185,7 @@ fn record_operation_pages_borrowed_source_excludes_large_payload_mirrors_and_kee
     let case=&fixture["borrowedSource"];
     let source=Source{bytes:(0..fixture["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect(),text:case["textUnit"].as_str().unwrap().repeat(fixture["payloadBytes"].as_u64().unwrap()as usize)};
     let spec=RecordSpec::new(None,RecordLayout::Inline,vec![FieldSpec::new(1,"bytes",Shape::Bytes64),FieldSpec::new(2,"text",Shape::Text)]);
-    let mut record=RecordValue::default();record.fields.insert(1,FieldValue::Bytes64(source.bytes.clone()));record.fields.insert(2,FieldValue::Text(source.text.clone()));
+    let mut record=RecordValue::default();record.fields.insert(1,FieldValue::Bytes64(semio_framework_dsl_record::RecordBytes::try_from_slice(&source.bytes.clone()).unwrap()));record.fields.insert(2,FieldValue::Text(source.text.clone()));
     let literal=|key:&str|case[key].as_array().unwrap().iter().map(|byte|byte.as_u64().unwrap()as u8).collect::<Vec<_>>();
     let mut expected=literal("prefix");expected.extend_from_slice(&source.bytes);expected.extend(literal("textHeader"));expected.extend_from_slice(source.text.as_bytes());
     let mut options=EncodeOptions::default();options.limits.max_file_len=expected.len()as u64;

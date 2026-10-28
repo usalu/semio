@@ -28,10 +28,10 @@ impl DocumentCodecSpec {
         where
             A::Mutation: Sync,
         {
-            store::bare_artifact_codec::<A::Snapshot, A::Mutation>(schema)
+            store::native_artifact_codec::<A::Snapshot>(schema)
         }
         let app = A::default();
-        DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), dialect: A::DIALECT, extension: <A::Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id: app.instance_id().await.to_string(), foreign: false }
+        DocumentCodecSpec { schema: A::DOCUMENT_SCHEMA.to_string(), dialect: A::DIALECT, extension: <A::Snapshot as pack::snapshot::ArtifactPackMetadata>::EXTENSION, codec: codec::<A>, app_id: app.instance_id().await.to_string(), foreign: false }
     }
 
     pub fn foreign<A: ArtifactApp>(schema: impl Into<String>) -> Self
@@ -42,11 +42,11 @@ impl DocumentCodecSpec {
         where
             A::Mutation: Sync,
         {
-            store::bare_artifact_codec::<A::Snapshot, A::Mutation>(schema)
+            store::native_artifact_codec::<A::Snapshot>(schema)
         }
         let app = A::default();
         let app_id = ::semio_framework_async::poll::resolve_ready(app.instance_id()).to_string();
-        DocumentCodecSpec { schema: schema.into(), dialect: A::DIALECT, extension: <A::Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<A>, app_id, foreign: true }
+        DocumentCodecSpec { schema: schema.into(), dialect: A::DIALECT, extension: <A::Snapshot as pack::snapshot::ArtifactPackMetadata>::EXTENSION, codec: codec::<A>, app_id, foreign: true }
     }
 
     /// 🗂️ `of::<A>()`'s app-less sibling — see `.document_codec_bare()`'s own doc for why this
@@ -54,15 +54,15 @@ impl DocumentCodecSpec {
     /// `register_document_codec_for_app`'s `A::` indirection since there is no `A` to name.
     pub fn bare<Snapshot, Mutation>(schema: impl Into<String>, dialect: Dialect) -> Self
     where
-        Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-        Mutation: Clone + ::protocol::ColdMutation<Snapshot> + ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
+        Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
+        Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
     {
         fn codec<Snapshot, Mutation>(schema: String) -> store::os_store::serialization::ArtifactCodec
         where
-            Snapshot: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
-            Mutation: Clone + ::protocol::ColdMutation<Snapshot> + ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
+            Snapshot: PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + pack::snapshot::ArtifactDsl + ArtifactPack + ::semio_framework_os_kernel::os_store::serialization::ArtifactStoreSnapshot + 'static,
+            Mutation: ::protocol::Mutation<Snapshot> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + ::protocol::OpText + ::protocol::OpBinary + 'static + store::ArtifactCanonicalJsonTree,
         {
-            store::bare_artifact_codec::<Snapshot, Mutation>(schema)
+            store::native_artifact_codec::<Snapshot>(schema)
         }
         DocumentCodecSpec { schema: schema.into(), dialect, extension: <Snapshot as pack::snapshot::ArtifactDsl>::EXTENSION, codec: codec::<Snapshot, Mutation>, app_id: String::new(), foreign: false }
     }

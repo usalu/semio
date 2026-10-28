@@ -115,7 +115,8 @@ pub struct SchemaDeclaration {
 pub struct SurfaceDeclaration<PA: PluginApp = NoPluginApp> {
     pub definition: AppDefinition,
     /// 🚫️async: E4 fn-pointer slot
-    pub factory: for<'a, 'b> fn(&AppDefinition, ActorId, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> PA,
+    pub original_factory:Option<semio_framework_plugin_reactor_app::OriginalPluginAppFactory<PA>>,
+    pub factory: Option<for<'a, 'b> fn(&AppDefinition, ActorId, semio_framework_plugin_mounted_owner::MountedOwnerPolicyV1, &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> PA>,
     /// 🚫️async: E4 fn-pointer slot
     pub app_schema: fn() -> Option<::semio_framework_schema_registry::AppSchemaDescriptor>,
     pub document_schema: &'static str,
@@ -304,22 +305,26 @@ pub fn register_boot_scope_schema_exports() {
 /// 📚️ The subset's examples are registered ONCE — through the editor row —
 /// and stamped with the subset's dialect there, which is what makes them
 /// resolve for the viewer surface too (`manifest::examples_for_app`).
-pub fn project_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> DeclaredRegistration<PA> {
+pub fn project_artifact_declarations<PA: PluginApp>(declarations: &[ArtifactDeclaration<PA>]) -> Result<DeclaredRegistration<PA>,semio_framework::Fault> {
     let mut result = DeclaredRegistration { app_defs: Vec::new(), app_schema_descriptors: Vec::new(), capabilities: Vec::new() };
     for artifact in declarations {
         for standard in &artifact.standards {
             for subset in &standard.subsets {
                 remember_subset_examples(subset.dialect, subset.examples);
                 for surface in [&subset.editor, &subset.viewer] {
-                    let definition = surface.definition.clone();
+                    let mut definition = surface.definition.clone();
+                    semio_framework_plugin_job::reserved_jobs::join_framework_shared_action_dispositions(&mut definition);
                     let examples = if surface.definition.role == AppRole::Editor { subset.examples.to_vec() } else { Vec::new() };
-                    result.app_defs.push((App { definition: definition.clone(), examples }, AppFactory { definition, create: surface.factory, document_schema: surface.document_schema, codec: surface.codec }));
+                    let app=App{definition:definition.clone(),examples};
+                    let definition=semio_framework_plugin_window_kits::RegisteredAppDefinition::declared(definition,surface.original_factory.is_some());
+                    let registration=surface.original_factory.map(|factory|(factory.registration)(definition.original_source().expect("native definition producer is original"))).transpose()?;
+                    result.app_defs.push((app,AppFactory{definition,registration,create:surface.factory,original_factory:surface.original_factory,document_schema:surface.document_schema,codec:surface.codec}));
                     result.app_schema_descriptors.push(surface.app_schema);
                     result.capabilities.extend(capability_rows_for(surface));
                 }
             }
         }
     }
-    result
+    Ok(result)
 }
 

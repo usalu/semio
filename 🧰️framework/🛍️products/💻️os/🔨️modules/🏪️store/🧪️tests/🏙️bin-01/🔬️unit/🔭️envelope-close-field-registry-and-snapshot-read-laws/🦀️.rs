@@ -318,7 +318,7 @@ async fn member_owned_batch_admission_keeps_exact_source_on_wrong_type_stale_rev
     for (index, mutation) in request.mutations.mutations::<DemoMutation>().unwrap().iter().enumerate() {
         match mutation { DemoMutation::SetN(row) => assert_eq!(row.n as i64, fixture["values"][index].as_i64().unwrap()), _ => panic!("exact mutation variant/order changed") }
     }
-    let mut publication = member.begin_one_item_owned_publication(&mut request, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() }).expect("same original owner admits after exact authority restoration").expect("funded publication birth");
+    let (mut publication,_) = member.begin_one_item_owned_publication(&mut request, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() }).expect("same original owner admits after exact authority restoration").expect("funded publication birth");
     assert!(request.mutations.mutations::<DemoMutation>().is_none());
     assert_eq!(member.snapshot_ref().n, Some(0));
     close_erased_member_publication(&mut *publication, ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, ..one_item_test_policy() });

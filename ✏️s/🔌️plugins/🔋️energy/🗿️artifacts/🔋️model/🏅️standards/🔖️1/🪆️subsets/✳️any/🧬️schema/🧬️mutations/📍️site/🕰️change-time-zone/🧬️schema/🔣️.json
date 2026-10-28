@@ -36,5 +36,33 @@
         "order": 10
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-field",
+    "scope": "site",
+    "field": "time_zone_hours",
+    "input": "new_time_zone_hours",
+    "labels": {
+      "en": "Change time zone hours",
+      "de": "Zeitzone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "site",
+      "kind": "change-site-time-zone",
+      "record": "ChangedSiteTimeZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored time zone hours is outside its admissible range."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The time zone hours is unchanged."
+      }
+    }
   }
 }

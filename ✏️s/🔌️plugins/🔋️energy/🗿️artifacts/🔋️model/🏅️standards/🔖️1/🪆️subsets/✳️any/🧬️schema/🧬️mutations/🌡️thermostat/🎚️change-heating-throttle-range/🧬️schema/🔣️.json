@@ -57,5 +57,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateThermostat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "thermostats",
+    "field": "heating_throttle_range_k",
+    "input": "new_heating_throttle_range_k",
+    "key": "id",
+    "labels": {
+      "en": "Change thermostat: Heating throttle range",
+      "de": "Heiz-Proportionalbereich ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "thermostat",
+      "kind": "change-thermostat-heating-throttle-range",
+      "record": "ChangedThermostatHeatingThrottleRange"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Heating throttle range violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed thermostat does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The thermostat already carries this heating throttle range value."
+      }
+    }
   }
 }

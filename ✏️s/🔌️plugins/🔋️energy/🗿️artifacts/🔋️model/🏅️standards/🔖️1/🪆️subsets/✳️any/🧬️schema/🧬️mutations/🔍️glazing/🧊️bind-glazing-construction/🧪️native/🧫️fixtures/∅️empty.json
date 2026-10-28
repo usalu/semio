@@ -1,0 +1,146 @@
+{
+  "contract": "semio.energy.original-glazing-facet/v1",
+  "branch": "geometry",
+  "collection": "fenestrations",
+  "field": "glazing_construction_id",
+  "original": {
+    "id": 7,
+    "name": "Original window",
+    "surface_id": 1,
+    "u_value_w_m2k": 1.2,
+    "shgc": 0.5,
+    "vlt": 0.6,
+    "area_m2": 2,
+    "height_m": 1,
+    "sill_height_m": 0.5,
+    "frame_conductance_w_k": 0,
+    "divider_conductance_w_k": 0,
+    "overhang_depth_m": 0,
+    "overhang_offset_m": 0,
+    "fin_depth_m": 0,
+    "fin_offset_m": 0,
+    "glazing_construction_id": null,
+    "vertices_m": [
+      [
+        0,
+        0,
+        0
+      ],
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ]
+    ]
+  },
+  "existingRows": [
+    {
+      "id": 7,
+      "name": "Original window",
+      "surface_id": 1,
+      "u_value_w_m2k": 1.2,
+      "shgc": 0.5,
+      "vlt": 0.6,
+      "area_m2": 2,
+      "height_m": 1,
+      "sill_height_m": 0.5,
+      "frame_conductance_w_k": 0,
+      "divider_conductance_w_k": 0,
+      "overhang_depth_m": 0,
+      "overhang_offset_m": 0,
+      "fin_depth_m": 0,
+      "fin_offset_m": 0,
+      "glazing_construction_id": null,
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ]
+    }
+  ],
+  "model": {
+    "constructions": [
+      {
+        "id": 1,
+        "name": "Original glazing",
+        "layer_material_ids": []
+      },
+      {
+        "id": 2,
+        "name": "New glazing",
+        "layer_material_ids": []
+      }
+    ]
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "constructionId": 2
+      },
+      "outcome": "changed",
+      "after": [
+        7
+      ],
+      "afterValue": 2
+    },
+    {
+      "payload": {
+        "id": 7,
+        "constructionId": 1
+      },
+      "outcome": "changed",
+      "after": [
+        7
+      ],
+      "afterValue": 1
+    },
+    {
+      "payload": {
+        "id": 7,
+        "constructionId": 99
+      },
+      "outcome": "invalid-reference"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "constructionId": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

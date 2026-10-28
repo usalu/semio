@@ -94,9 +94,9 @@ impl ArtifactViewer for Puzzle2dViewer {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn initial_snapshot() -> Puzzle2dSnapshot {
+    fn reference_birth()->Option<fn()->Puzzle2dSnapshot>{Some(||{
         Puzzle2dSnapshot::default()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Puzzle2dViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

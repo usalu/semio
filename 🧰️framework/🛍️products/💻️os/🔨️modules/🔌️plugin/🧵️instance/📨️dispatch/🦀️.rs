@@ -19,3 +19,6 @@ pub mod dispatch_typed_command;
 pub mod dispatch_group_history;
 #[path = "📥️staging/🧺️bundle/🦀️.rs"]
 pub mod dispatch_bundle;
+
+#[path="📥️staging/📤️emit/🎟️original/🦀️.rs"]
+pub mod original_emission;

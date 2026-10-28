@@ -75,7 +75,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
     pub(crate) fn close_ladder_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         let fault = |fault: Fault| ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, fault.message);
         match self.ladder_ref().close_rung() {
-            CloseRung::Begin | CloseRung::PendingReserved | CloseRung::ReservedCommit | CloseRung::ReservedOutcome | CloseRung::DetachChildRoot | CloseRung::DetachChildren | CloseRung::PeerRosterOutcomes | CloseRung::DetachPeerPresence => Ok(handoff_demand()),
+            CloseRung::Begin | CloseRung::PendingReserved | CloseRung::ReservedOutcome | CloseRung::DetachChildRoot | CloseRung::DetachChildren | CloseRung::PeerRosterOutcomes | CloseRung::DetachPeerPresence => Ok(handoff_demand()),
+            CloseRung::ReservedCommit=>{if let Some(commit)=self.pending.reserved_commits.front(){if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Repin{pins,publication,retirement,closing,..}=&commit.stage{if pins.is_some()||publication.is_some()||!retirement.is_empty(){return self.stores.checkpoint_composition_pins_close_demands(pins,publication,retirement,*closing,4096)}}if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command:Some(command),..}=&commit.stage{return if command.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()})}else{self.stores.store.native_vcs_command_close_demands(command,body)}}}Ok(handoff_demand())},
             CloseRung::CancellationSlots => {let mut demand=self.tools.tool_cancellations.cancellation_cleanup_demands(self.close.close_cancellation_cursor,body,false)?;demand.copy_bytes=demand.copy_bytes.checked_add(size_of::<usize>()).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"original cancellation cursor quote overflow"))?;Ok(demand)},
             CloseRung::DirectIngress => self.stores.window_config_store.direct_ingress_demands(body),
             CloseRung::CommandPrune => self.history.command_prune_demands(true, body),
@@ -90,12 +91,12 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::MountedJobs => self.tools.live_runtime_instance_id.map_or(Ok(Default::default()), |instance_id| A::mounted_job_close_demands(instance_id, body)),
             CloseRung::LatestWinsKeys => self.tools.latest_wins_keys.advance_demands(),
             CloseRung::LatestWinsCommands => self.tools.latest_wins_order.items.front().copied().map_or(Ok(Default::default()), |operation_id| self.tools.close_latest_wins_command_demands(operation_id, body)),
-            CloseRung::TypedOperations => self.tools.close_typed_operation_demands(&self.child_composition, body).map_err(fault),
+            CloseRung::TypedOperations => if self.original_typed_command.pending(){self.original_typed_command.close_demands()}else if self.original_emission.pending(){self.original_emission.close_demands()}else{self.tools.close_typed_operation_demands(&self.child_composition, &self.stores, body).map_err(fault)},
             CloseRung::InstanceOwner=>if self.close.close_instance_operation_owner_drained{self.tools.instance_operation_owner.inference_retirement_demands(body)}else{self.tools.instance_operation_owner.retirement_demands(body).map(|demand|if demand==Default::default(){handoff_demand()}else{demand})},
             CloseRung::AgentPreview=>self.tools.agent_lane_preview.as_ref().map_or(Ok(Default::default()),|state|state.retirement_demands(body,self.tools.tool_cancellations.handle())),
             CloseRung::ConfigurationFailure=>self.pending.configuration_failure_demands(body),
             CloseRung::RenderFailure=>self.pending.render_failure_demands(body),
-            CloseRung::MediaRefusal => self.media.media_submission_refusal_demands(&self.tools, body),
+            CloseRung::MediaRefusal => self.media.media_submission_refusal_demands(&self.stores,&self.tools, body),
             CloseRung::ActionIngress=>self.ingress.action_ingress_sources_demands(body, true),
             CloseRung::MediaExports => self.tools.close_media_demands(&self.media.media_exports, body),
             CloseRung::MediaClosures => self.tools.close_media_demands(&self.media.media_closures, body),
@@ -135,11 +136,18 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::GrantedMounted=>self.ladder_ctx().granted_mounted_retirement_step(cx),
             CloseRung::PrivateChildGroups=>Ok(match self.child_composition.close_private_child_group_step(&mut self.stores, cx, grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>RetainedCloneStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>RetainedCloneStep::Progress(idle)}),
             CloseRung::PendingReserved=>{if let Some((_,id))=self.pending.pending_reserved.next_id_from(0){if let Some(pending)=self.pending.pending_reserved.remove(id){pending.permit.finish()}}Ok(RetainedCloneStep::Progress(handoff()))}
-            CloseRung::ReservedCommit=>{if let Some(commit)=self.pending.reserved_commits.pop_front(){commit.permit.finish()}Ok(RetainedCloneStep::Progress(handoff()))}
+            CloseRung::ReservedCommit=>{
+                if let Some(commit)=self.pending.reserved_commits.front_mut(){if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Repin{pins,publication,retirement,closing,..}=&mut commit.stage{if pins.is_some()||publication.is_some()||!retirement.is_empty(){let before=cx.retained_progress();let complete=self.stores.checkpoint_composition_pins_unit(pins,publication,retirement,closing,false,4096,cx)?;let p=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;if !complete||p!=RetainedCloneProgress::default(){return Ok(RetainedCloneStep::Progress(p))}}}}
+                if let Some(commit)=self.pending.reserved_commits.front_mut(){if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command:Some(command),..}=&mut commit.stage{
+                    if !command.terminal_is_empty(){let before=cx.retained_progress();cx.with_original_retirement(|cx|self.stores.store.close_native_vcs_command(command,cx))?;let p=semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?;return Ok(RetainedCloneStep::Progress(p))}
+                    if let semio_framework_plugin_job::reserved_jobs::FrameworkReservedCommitStage::Revert{command,..}=&mut commit.stage{*command=None;}let d=RetirementDemand{copy_bytes:size_of::<Option<store::os_store::ArtifactNativeVcsCommand<A::Snapshot,A::Mutation>>>(),depth:1,..Default::default()};return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+                }}
+                if let Some(commit)=self.pending.reserved_commits.pop_front(){commit.permit.finish()}Ok(RetainedCloneStep::Progress(handoff()))
+            }
             CloseRung::ReservedOutcome=>{drop(self.pending.reserved_commit_outcome.take());Ok(RetainedCloneStep::Progress(handoff()))}
             CloseRung::ToolRuns=>self.tool_run_ctx().tool_run_close_step(cx).map_err(PluginLifecycleFailure::from),
-            CloseRung::TimeTravel=>self.time_travel_ctx().time_travel_close_step(grant).map_err(PluginLifecycleFailure::from),
-            CloseRung::ToolOverlay=>{let mut render=self.render_ctx();render.abandon_window_preview();render.tool_overlay_retirement_step(grant).map_err(PluginLifecycleFailure::from)},
+            CloseRung::TimeTravel=>self.time_travel_ctx().time_travel_close_step_context(grant,cx).map_err(PluginLifecycleFailure::from),
+            CloseRung::ToolOverlay=>self.render_ctx().tool_overlay_retirement_step(grant).map_err(PluginLifecycleFailure::from),
             CloseRung::LocalQuery=>{let Some(query)=self.interaction.local_interaction_query.as_mut()else{return Ok(RetainedCloneStep::Progress(idle))};if !query.is_closing(){query.begin_close();return Ok(RetainedCloneStep::Progress(handoff()))}let step=query.close_step(child)?;if query.terminal_is_empty(){drop(self.take_local_interaction_query_reply());self.interaction.local_interaction_query=None}Ok(RetainedCloneStep::Progress(step.progress()))}
             CloseRung::SnapshotReturns=>{if let Some(stage)=self.ingest.next_snapshot_read_return_stage(&self.stores, &self.interaction){self.interaction.snapshot_read_return_stage=stage}self.ingest.advance_snapshot_read_returns_one(&mut self.stores, &mut self.interaction, grant).map(|step|RetainedCloneStep::Progress(step.progress())).map_err(PluginLifecycleFailure::from)}
             CloseRung::PresenceLocalReads=>self.stores.presence_store.maintenance_local_reads_step(grant).map_err(PluginLifecycleFailure::from),
@@ -154,8 +162,8 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
                 Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))
             },
             CloseRung::LatestWinsKeys=>Ok(RetainedCloneStep::Progress(self.tools.latest_wins_keys.advance(grant)?.progress())),
-            CloseRung::LatestWinsCommands=>{let Some(operation_id)=self.tools.latest_wins_order.items.front().copied()else{return Ok(RetainedCloneStep::Progress(idle))};self.tools.close_latest_wins_command_step(operation_id, grant).map(|step|RetainedCloneStep::Progress(step.progress()))}
-            CloseRung::TypedOperations=>self.ladder_ctx().close_typed_operation_unit(cx).map(ToolOperations::<A>::lifecycle_retained),
+            CloseRung::LatestWinsCommands=>{let Some(operation_id)=self.tools.latest_wins_order.items.front().copied()else{return Ok(RetainedCloneStep::Progress(idle))};self.tools.close_latest_wins_command_step(operation_id, grant,cx).map(|step|RetainedCloneStep::Progress(step.progress()))}
+            CloseRung::TypedOperations=>{if self.original_typed_command.pending(){let before=cx.retained_progress();self.original_typed_command.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else if self.original_emission.pending(){let before=cx.retained_progress();self.original_emission.close_step(cx)?;Ok(RetainedCloneStep::Progress(semio_framework_plugin_ownership::bounded_ownership::original_lifecycle_delta(before,cx.retained_progress())?))}else{self.ladder_ctx().close_typed_operation_unit(cx).map(ToolOperations::<A>::lifecycle_retained)}},
             CloseRung::InstanceOwner=>{
                 if self.close.close_instance_operation_owner_drained{return self.tools.instance_operation_owner.close_inference_step(cx,grant).map(ToolOperations::<A>::lifecycle_retained)}
                 let step=self.tools.instance_operation_owner.close_step(cx,grant)?;let mut progress=step.progress().unwrap_or_default();
@@ -165,7 +173,7 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'static> V
             CloseRung::AgentPreview=>self.tools.close_agent_lane_preview(cx, grant).map(ToolOperations::<A>::lifecycle_retained),
             CloseRung::ConfigurationFailure=>self.tools.close_configuration_failure(&mut self.pending, cx, grant).map(ToolOperations::<A>::lifecycle_retained),
             CloseRung::RenderFailure=>self.pending.close_render_failure(cx, grant).map(ToolOperations::<A>::lifecycle_retained),
-            CloseRung::MediaRefusal=>self.media.close_media_submission_refusal(&mut self.tools, cx, grant).map(ToolOperations::<A>::lifecycle_retained),
+            CloseRung::MediaRefusal=>self.media.close_media_submission_refusal(&mut self.stores,&mut self.tools, cx, grant).map(ToolOperations::<A>::lifecycle_retained),
             CloseRung::ActionIngress=>self.ingress.close_action_ingress_sources(cx, grant, true).map(ToolOperations::<A>::lifecycle_retained),
             CloseRung::MediaExports=>self.media.close_media_step(&mut self.tools, false, cx, grant),
             CloseRung::MediaClosures=>self.media.close_media_step(&mut self.tools, true, cx, grant),

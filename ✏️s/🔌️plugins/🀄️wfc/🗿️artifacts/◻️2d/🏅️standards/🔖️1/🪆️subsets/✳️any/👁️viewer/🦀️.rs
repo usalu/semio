@@ -94,9 +94,9 @@ impl ArtifactViewer for Wfc2dViewer {
 
     /// 👁️ The viewer boots the SAME committed example the editor does, so opening one board in both
     /// roles shows one scene (`📓️explore-build-verify-playground-pipeline.md` pitfall 5).
-    fn initial_snapshot() -> Wfc2dSnapshot {
+    fn reference_birth()->Option<fn()->Wfc2dSnapshot>{Some(||{
         crate::examples::two_room_corridor::document()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Noop` variant never carries a config change.
     fn handle(

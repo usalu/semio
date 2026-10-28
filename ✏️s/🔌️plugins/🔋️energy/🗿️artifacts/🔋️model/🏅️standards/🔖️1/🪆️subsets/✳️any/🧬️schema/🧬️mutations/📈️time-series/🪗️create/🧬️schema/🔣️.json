@@ -96,5 +96,84 @@
         "order": 40
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateTimeSeriesSchedule",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "values",
+        "input": "values",
+        "storage": "sealed"
+      },
+      {
+        "field": "timestep_seconds",
+        "input": "timestep_seconds",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateTimeSeriesSchedule",
+    "branchType": "StateScheduleSet",
+    "branch": "outputs",
+    "nested": "schedules",
+    "collection": "time_series",
+    "key": "id",
+    "inverse": "DeleteTimeSeriesSchedule",
+    "labels": {
+      "en": "Create schedule",
+      "de": "Zeitplan erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "schedule",
+      "kind": "create-time-series-schedule",
+      "record": "CreatedTimeSeriesSchedule"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The schedule requires finite values and a positive timestep."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "A schedule with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The insertion rank is past the end of this schedule collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The schedule creation makes no change."
+      }
+    },
+    "validationBeforeRank": false,
+    "defaultRank": "explicit",
+    "identityCollections": [
+      "ConstantSchedules",
+      "DailySchedules",
+      "WeeklySchedules",
+      "AnnualSchedules",
+      "TimeSeriesSchedules"
+    ],
+    "rules": [
+      {
+        "input": "values",
+        "kind": "finite-values"
+      }
+    ],
+    "scalarOrder": "before-rules"
   }
 }

@@ -67,13 +67,11 @@ use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedClonePro
 use semio_framework_plugin_decl_app::ArtifactCompletionFault;
 use std::mem::ManuallyDrop;
 use semio_framework_value::retirement::controlled::ControlledRetirement;
-#[cfg(test)]
-use semio_framework_plugin_app_builder::App;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_ownership::bounded_ownership::plugin_demand_grant;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_operation::ToolOperationKey;
-#[cfg(test)]
+#[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_ownership::store_lifecycle::ArtifactOwnedDisposer;
 #[cfg(any(test, feature = "artifact-app-testing"))]
 use semio_framework_plugin_interaction::interaction_topology::INTERACTION_ACTION_IDS;
@@ -902,3 +900,21 @@ pub mod reserved_jobs;
 pub mod lifted_job;
 #[path = "🛬️lifted/🔄️full-operation/🦀️.rs"]
 pub mod lifted_full_operation_job;
+
+#[path="📨️emission/🎟️capture/🦀️.rs"]
+pub mod original_emission;
+
+#[path="🛬️receiving/⚠️failure.rs"]
+pub mod original_pack_failure;
+
+#[path="🛬️receiving/🦀️.rs"]
+pub mod original_pack_receiving;
+
+#[path="🛬️receiving/🧾️copies/🦀️.rs"]
+pub mod original_value_copies;
+
+#[path="🏛️registration/🦀️.rs"]
+pub mod original_declared_tools;
+
+#[path="🛬️receiving/🔀️transaction/🦀️.rs"]
+pub mod original_transaction_prepare;

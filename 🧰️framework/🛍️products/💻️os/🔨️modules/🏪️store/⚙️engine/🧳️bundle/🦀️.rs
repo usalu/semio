@@ -21,7 +21,7 @@ use semio_framework_os_store_ledger::ArtifactStoreHistoryCommitReservation;
 use semio_framework_os_store_ledger::CursorRevisionAccumulator;
 use semio_framework_os_store_ledger::CursorRevisionRecord;
 use semio_framework_os_store_ledger::PendingCommandReport;
-use semio_framework_os_store_ledger::edit_from_operation_envelope;
+use semio_framework_os_store_ledger::edit_from_operation_envelope_cold;
 use semio_framework_os_store_ledger::retire_scratch_edits;
 use semio_framework_os_store_ledger::retire_scratch_operations;
 use semio_framework_os_store_ledger::stamp_edit_semantics;
@@ -70,6 +70,13 @@ use std::mem::size_of;
 use semio_framework_os_store_replay::original_ingress::{OriginalReplayEdits, original_edits_for_ids};
 use semio_framework_os_store_engine_live::lifted_store::publish_prepared_diagnostics;
 use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAuthority;
+#[path="📤️message/🦀️.rs"]
+mod original_message;
+#[path="📚️metadata/🦀️.rs"]
+mod commit_metadata;
+#[path="📬️commit/🦀️.rs"]
+mod original_commit;
+pub use commit_metadata::{advance_batch_metadata,BatchCommitMetadataStep};
 
 //#region 📬️OneItemPublication
 /// ⏭️ Advances at most one preparation, fold, cursor, preflight, or atomic move-publication
@@ -77,8 +84,8 @@ use semio_framework_os_store_one_item_publication::ArtifactStoreOneItemLiveAutho
 /// post-snapshot each item produced is an already-built `Arc` and is moved into the stage.
 pub fn advance_apply_batch<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, body: usize, grant: ArtifactStoreOneItemGrant, receiving: &mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     if !publication.original_registry.as_ref().is_some_and(|registry|registry.ptr_eq(&store.owners.snapshot_read_leases)){return Err(VcsError::InverseRefused(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"batched publication requires its original Store issuer")));}
     ensure_durable_group_idle(store)?;
@@ -138,8 +145,8 @@ where
                 }
                 let refused = |error: ValueError| VcsError::ValidationFailed(error.into_message());
                 let demand = publication.source.as_ref().expect("validated batched publication item source").next_begin_demand(publication.lane).map_err(refused)?;
-                if demand.admit(item_grant.retained_grant()).is_err() { {return Ok(ArtifactStoreOneItemAdvance::Blocked)}; }
-                let original_issuer_copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+SnapshotRead::<P>::capture_copy_byte_demand();
+                if demand.admit(item_grant.retained_grant()).is_err() { return Ok(ArtifactStoreOneItemAdvance::Blocked); }
+                let original_issuer_copy=size_of::<Arc<dyn ArtifactOwnedValueRetirementFactory<Mutation>>>()+size_of::<Arc<dyn SnapshotRetirementFactory<P>>>()+size_of::<Arc<ArtifactStoreOneItemLiveAuthority>>()+size_of::<SnapshotRead<P>>() + size_of::<Arc<P>>();
                 let copy=publication.source.as_ref().expect("validated original preparation copy source").next_begin_copy_byte_demand(publication.lane).map_err(refused)?.checked_add(original_issuer_copy).ok_or_else(||VcsError::ValidationFailed("batched preparation original header extent overflow".into()))?;
                 if item_grant.maximum_copy_bytes<copy{{return Ok(ArtifactStoreOneItemAdvance::Blocked)};}
                 let mutation_retirement=store.owners.mutation_retirement_factory.as_ref().ok_or_else(||VcsError::ValidationFailed("batched preparation lost its installed mutation issuer".into()))?;
@@ -267,6 +274,7 @@ where
             Ok(ArtifactStoreOneItemAdvance::PreparationProgress(publication.progress(),RetainedCloneProgress{copied_items:1,copied_bytes:copy,..Default::default()}))
         }
         ArtifactStoreOneItemPublicationPhase::Publishing => {
+            if publication.outbound&&!publication.transaction_open&&batch_amend_target_ref(store,publication.transaction.as_ref()).is_none()&&store.log.operation_wire.as_ref().is_some_and(|wire|wire.original_message_admission.is_some()){return original_commit::advance_original_commit(store,publication,body,grant)}
 
             let refusal=|error:ValueError|VcsError::ValidationFailed(error.into_message());
             let staged=publication.stage.as_mut().ok_or_else(||VcsError::ValidationFailed("diagnostic publication lost its original batch stage".into()))?;
@@ -406,8 +414,8 @@ where
 /// 🧹️ Preserves the original preparation receipt before admitting its final owned Box frame.
 fn spend_item_close_grant<P, Mutation>(owner: &mut Option<Box<dyn ArtifactStoreOneItemPreparation<P, Mutation>>>, grant: ArtifactStoreOneItemGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<RetainedCloneStep, ValueError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 {
     use semio_framework_value::retained_clone::{RetainedCloneStep, RetainedCloneProgress};
     let Some(current) = owner.as_mut() else { return Ok(RetainedCloneStep::Complete(Default::default())); };
@@ -552,7 +560,7 @@ where
             ready_transitions.push(ready_envelope);
             continue;
         }
-        let admitted = match edit_from_operation_envelope::<Mutation>(&ready_envelope).await {
+        let admitted = match edit_from_operation_envelope_cold::<Mutation>(&ready_envelope).await {
             Ok(mut edit) => {
                 edit.actor = Some(ready_envelope.actor.0.clone());
                 stamp_edit_semantics::<P, Mutation>(&mut edit, &store.log.envelope.schema);
@@ -758,7 +766,7 @@ where
     }
     for (edit_id, inverse) in rebased_inverse {
         match store.log.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-            Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut edit.inverse, inverse)),
+            Some(edit) => retire_scratch_operations::<P, Mutation>(std::mem::replace(&mut *edit.inverse, inverse)),
             None => retire_scratch_operations::<P, Mutation>(inverse),
         }
     }
@@ -812,161 +820,176 @@ pub fn edits_for_ids<Mutation: Clone>(ids: &[String], edits: &HashMap<String, Ed
 async fn admit_remote_transitions<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, transitions: Vec<semio_framework_os_spr::MutationEnvelope>) -> Result<Vec<semio_framework_os_spr::EditMessages>, VcsError>
 where
     P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static + semio_framework_os_spr::ColdMutation<P>,
+
 { store.replay.admit_remote_transitions(&mut *store.log, &mut *store.owners, &mut *store.wire, &mut *store.cursor, &mut *store.live, transitions).await }
 
 #[inline]
 fn assert_equivalent_remote_envelope<P, Mutation>(store: &StoreParts<'_, P, Mutation>, existing: &Edit<Mutation>, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.log.assert_equivalent_remote_envelope(existing, incoming) }
 
 #[inline]
 fn assert_equivalent_remote_mutation<P, Mutation>(store: &StoreParts<'_, P, Mutation>, incoming: &semio_framework_os_spr::MutationEnvelope) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.log.assert_equivalent_remote_mutation(incoming) }
 
 #[inline]
 fn batch_amend_target<P, Mutation>(store: &StoreParts<'_, P, Mutation>, transaction: Option<&protocol::TransactionRef>) -> Option<String>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.log.batch_amend_target(transaction) }
 
 #[inline]
 fn batch_amend_target_ref<'s, P, Mutation>(store: &'s StoreParts<'_, P, Mutation>, transaction: Option<&protocol::TransactionRef>) -> Option<&'s str>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.log.batch_amend_target_ref(transaction) }
 
 #[inline]
 fn batch_item_base<P, Mutation>(store: &StoreParts<'_, P, Mutation>, staged_root: Option<&Arc<P>>) -> Result<SnapshotRead<P>, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.live.batch_item_base(&*store.owners, &*store.wire, &*store.cursor, staged_root) }
 
 #[inline]
 fn bump<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.replay.bump(&mut *store.log, &mut *store.owners, &mut *store.cursor, &mut *store.live) }
 
 #[inline]
 fn continue_pending_replay_across_append<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, before: [u8; 32], edit_id: &str, appended: usize)
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.replay.continue_pending_replay_across_append(&mut *store.cursor, before, edit_id, appended) }
 
 #[inline]
 fn ensure_durable_group_idle<P, Mutation>(store: &StoreParts<'_, P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.wire.ensure_durable_group_idle() }
 
 #[inline]
 fn ensure_open_conflict_capacity<P, Mutation>(store: &StoreParts<'_, P, Mutation>, additional_open: usize) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.log.ensure_open_conflict_capacity(additional_open) }
 
 #[inline]
 fn fold_batch_item<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, publication: &mut ArtifactStoreBatchPublication<P, Mutation>, grant: ArtifactStoreOneItemGrant) -> Result<ArtifactStoreOneItemAdvance, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.fold_batch_item(&mut *store.log, publication, grant) }
 
 #[inline]
 fn insert_reserved_edit_history<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, reservation: ArtifactStoreHistoryCommitReservation, edit: Edit<Mutation>) -> Result<ArtifactHistoryKey, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.live.insert_reserved_edit_history(&mut *store.log, &mut *store.owners, reservation, edit) }
 
 #[inline]
 fn prune_resolved_conflicts<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.prune_resolved_conflicts(&mut *store.log) }
 
 #[inline]
 fn refuse_with_candidate_dag<T, P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, candidate_dag: semio_framework_os_spr::MutationDag, error: VcsError) -> Result<T, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.refuse_with_candidate_dag::<T>(candidate_dag, error) }
 
 #[inline]
 fn replace_applied_edit_ids_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Vec<String>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.live.replace_applied_edit_ids_retained(&mut *store.log, &mut *store.owners, &mut *store.cursor, next) }
 
 #[inline]
 fn replace_causal_dag_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: semio_framework_os_spr::MutationDag) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.replace_causal_dag_retained(&mut *store.log, next) }
 
 #[inline]
 fn replace_current_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Arc<P>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.live.replace_current_retained(&mut *store.log, &mut *store.owners, next) }
 
 #[inline]
 fn replace_edit_messages<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, edit_id: &str, messages: Vec<semio_framework_os_spr::MutationMessage>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.replace_edit_messages(&mut *store.log, edit_id, messages) }
 
 #[inline]
 fn replace_pending_report_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: PendingCommandReport) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.replay.replace_pending_report_retained(&mut *store.owners, next) }
 
 #[inline]
 fn replace_redo_edit_ids_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Vec<String>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.live.replace_redo_edit_ids_retained(&mut *store.log, &mut *store.owners, &mut *store.cursor, next) }
 
 #[inline]
 fn replace_tail_undo_cache_retained<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, next: Option<(String, Arc<P>)>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.live.replace_tail_undo_cache_retained(&mut *store.log, &mut *store.owners, next) }
 
 #[inline]
 fn reserve_edit_history_slot<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>) -> Result<ArtifactStoreHistoryCommitReservation, VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.reserve_edit_history_slot(&mut *store.log) }
 
 #[inline]
 fn retire_replay_result<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, result: EditReplayResult<P, Mutation>) -> Result<(), VcsError>
 where
-    P: Clone + ToValue + FromValue + Send + Sync + 'static,
-    Mutation: Clone + ToValue + FromValue + self::Mutation<P> + semio_framework_os_spr::ColdMutation<P> + OpBinary + OpText + Send + 'static,
+    P: ToValue + Send + Sync + 'static,
+    Mutation: ToValue + FromValue + self::Mutation<P> + OpBinary + OpText + Send + 'static,
 { store.owners.retire_replay_result(result) }
 //#endregion 🪞️BundleHelpers
 
+/// 📨️ Publishes the preflighted original diagnostic owner through the current Store component borrows.
+pub fn publish_prepared_diagnostics<P, Mutation>(store: &mut StoreParts<'_, P, Mutation>, diagnostics: &mut ArtifactStoreDiagnosticStage, grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, VcsError>
+where
+    P: ToValue,
+    Mutation: ToValue + self::Mutation<P>,
+{
+        if diagnostics.row_count()==0{return Ok(Default::default());}
+        let Some((entry,messages,worst,receipt))=diagnostics.take(grant).map_err(|error|VcsError::ValidationFailed(error.into_message()))?else{return Err(VcsError::ValidationFailed("preflighted diagnostic transfer lost its exact grant".into()));};
+        let bytes=entry.bytes();
+        let previous=store.log.envelope.edit_messages.admit_measured(entry.into_entry(),bytes).unwrap_or_else(|_|panic!("unchanged premeasured diagnostic ledger must admit its exact original"));
+        if let Some(previous)=previous{let mut owner=diagnostics.displaced.take().expect("preborn exact displaced diagnostic owner");*owner=ArtifactStoreMessageLedgerRetirement::new(previous.edit_id,previous.messages);store.owners.displaced_retirements.push_reserved(owner);}
+        store.replay.pending_report.record_replay(messages,worst);Ok(receipt)
+    
+}

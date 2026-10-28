@@ -120,3 +120,6 @@ pub mod test_observer;
 pub mod testkit {
     pub use super::{fixed_list::*, fixed_map_and_bytes::*, collection_arena::*, ui_list::*, ui_map::*, retirement::*};
 }
+
+#[path="🌱️original/🦀️.rs"]mod original;
+pub use original::{OriginalUiValueConversion,OriginalUiArgumentsMerge,OriginalUiArguments};

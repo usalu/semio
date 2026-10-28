@@ -7,8 +7,15 @@ use super::malformed;
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct AppDocumentIdentity {
     pub app_instance_id: u32,
+    #[serde(with = "identity_revision")]
+    pub base_revision: u64,
     #[serde(deserialize_with = "deserialize_identity_document_id")]
     pub parent_document_id: Option<String>,
+}
+
+mod identity_revision {
+    pub fn serialize<S:serde::Serializer>(revision:&u64,serializer:S)->Result<S::Ok,S::Error>{serializer.serialize_str(&revision.to_string())}
+    pub fn deserialize<'de,D:serde::Deserializer<'de>>(deserializer:D)->Result<u64,D::Error>{let value=<String as serde::Deserialize>::deserialize(deserializer)?;let revision=value.parse::<u64>().map_err(serde::de::Error::custom)?;if revision.to_string()!=value{return Err(serde::de::Error::custom("document revision must be canonical u64 decimal"))}Ok(revision)}
 }
 
 fn deserialize_identity_document_id<'de, D: serde::Deserializer<'de>>(deserializer: D) -> Result<Option<String>, D::Error> {

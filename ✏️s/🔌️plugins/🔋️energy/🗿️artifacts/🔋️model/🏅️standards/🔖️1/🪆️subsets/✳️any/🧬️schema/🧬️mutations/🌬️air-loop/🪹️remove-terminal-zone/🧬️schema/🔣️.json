@@ -57,5 +57,64 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "membership-row",
+    "membership": "remove-value",
+    "row": "StateModelAirLoop",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "air_loops",
+    "field": "terminal_zone_ids",
+    "input": "zone_id",
+    "key": "id",
+    "memberKind": "EntityId",
+    "indexMode": "absent",
+    "duplicate": "allow",
+    "rankBeforeDuplicate": false,
+    "positiveMember": false,
+    "inverse": "AddAirLoopTerminalZone",
+    "inverseMember": "zone_id",
+    "labels": {
+      "en": "Remove TerminalZone",
+      "de": "Zone entfernen"
+    },
+    "semantics": {
+      "verb": "remove",
+      "entity": "AirLoop",
+      "kind": "RemoveAirLoopTerminalZone",
+      "record": "RemoveAirLoopTerminalZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored member identity must be valid."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed row, membership or insertion rank does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced member does not exist in its authored collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The original row already contains this member."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "The original row already contains this member."
+      }
+    },
+    "member": "zone_id",
+    "inverseIndex": "index",
+    "inverseOptionalIndex": true,
+    "memberReference": null
   }
 }

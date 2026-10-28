@@ -32,36 +32,55 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
         }
     }
 
-    /// 🦶️ Drives the current job until the turn deadline, a pause, a single step or a terminal outcome.
-    pub(super) fn step_tool_run_job(&mut self,deadline:u64,grant:RetainedCloneGrant)->Result<(),Fault>{
-        if semio_framework_job::default_now_us().is_none_or(|now|now>=deadline){return Ok(())}
-        if self.tool_runs.has_original_receipt(){return Ok(())}
-        if grant.maximum_items==0||grant.maximum_depth==0{return Ok(())}
+    /// 🦶️ The mounted caller lends the same original source, decoder and page ledger to native tick receiving.
+    pub(super) fn step_tool_run_job(&mut self,cx:&mut semio_framework_job::StepContext<'_>)->Result<(),semio_framework_job::OriginalTurnFailure>{
+        if cx.should_yield(){return Ok(())}
         let Some(entry)=selected_entry_mut!(self.tool_runs)else{return Ok(())};
-        let (run,generation)=(entry.slot.run,entry.slot.generation);let single=entry.slot.state==ToolRunState::Paused;
+        if !entry.native.initialize(&entry.tool_id,entry.identity,entry.slot.state,cx)?{return Ok(())}
+        let(run,generation)=(entry.slot.run,entry.slot.generation);
+        let single=entry.slot.state==ToolRunState::Paused;
         let Some(job)=entry.job.as_mut()else{return Ok(())};
-        if job.cancel.is_none(){if let Some((cancel,progress))=semio_framework_job::CancelToken::admit_root(grant).map_err(FaultFrom::into_fault)?{job.cancel=Some(cancel);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
-        if job.authority.is_none(){if let Some((authority,progress))=semio_framework_job_payload::JobPayloadAuthority::admit(job.operation,job.generation,grant).map_err(FaultFrom::into_fault)?{job.authority=Some(authority);self.tool_runs.retain_original_receipt(grant,progress)?}return Ok(())}
         if job.original_failure.is_some(){return Ok(())}
-        if let Some(descriptor)=job.outcome.as_mut(){
-            if job.outcome_received{if !descriptor.is_acknowledged(){let step=descriptor.acknowledge(grant);self.tool_runs.retain_original_receipt(grant,step.progress())?;return Ok(())}drop(job.outcome.take());job.outcome_received=false;self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(())}
+        if let Some(descriptor)=job.outcome.as_ref(){
+            if job.outcome_received{
+                let d=RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::JobOutcomeDescriptor>>(),depth:1,..Default::default()};
+                semio_framework_job::close_original_retained_step(cx,d,|grant|{
+                    let descriptor=job.outcome.as_mut().unwrap();
+                    if !descriptor.is_acknowledged(){return Ok(RetainedCloneStep::Progress(descriptor.acknowledge(grant).progress()))}
+                    job.outcome=None;job.outcome_received=false;
+                    Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()}))
+                })?;return Ok(())
+            }
             let kind=descriptor.kind();
-            let view=job.borrow_outcome().map_err(FaultFrom::into_fault)?;
-            match view{Some(semio_framework_job::JobOutcomeView::PreviewReady{..}|semio_framework_job::JobOutcomeView::CheckpointReady{..}|semio_framework_job::JobOutcomeView::Fault{..})=>return Ok(()),Some(semio_framework_job::JobOutcomeView::Complete{state,output,..})if state.is_some()||output.is_some()=>return Ok(()),Some(_)=>{},None=>return Ok(())}
-            job.outcome_received=true;let purpose=job.purpose;
-            self.tool_runs.retain_original_receipt(grant,RetainedCloneProgress{copied_items:1,..Default::default()})?;
-            match kind{semio_framework_job::JobOutcomeKind::Complete=>{selected_entry_mut!(self.tool_runs).unwrap().settle_refold();if purpose==ToolRunJobPurpose::Revalidate{self.complete_tool_run_revalidation()}else{self.complete_tool_run_job(run,generation)}},semio_framework_job::JobOutcomeKind::Cancelled|semio_framework_job::JobOutcomeKind::Fault=>self.fault_tool_run(run,generation),_=>{}}
+            let interactive:&dyn semio_framework_job::InteractiveJob=match &job.job{ToolRunJobHandle::Plain(job)=>job.as_ref(),ToolRunJobHandle::Retargetable(job)=>job.as_ref()};
+            match interactive.borrow_outcome(descriptor)?{
+                semio_framework_job::JobOutcomeView::PreviewReady{payload,..}=>{
+                    let source=semio_framework_plugin_tool_run::original_native_tick::OriginalPreviewPages(payload);
+                    if entry.native.receive_with_domain(&source,entry.identity,entry.slot.state,|tick,cx|{if entry.operations.ingest(tick,&self.stores.store,&mut entry.overlay,cx)?{Ok(Some(entry.operations.len()as u32))}else{Ok(None)}},cx)?{
+                        let d=RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()};
+                        if cx.retained_work_can_enter(d){job.outcome_received=true;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,..Default::default()})?;cx.consume_fuel(1);self.mark_tool_run_ui_dirty();}
+                    }
+                    return Ok(())
+                }
+                semio_framework_job::JobOutcomeView::CheckpointReady{..}=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original checkpoint requires its retained checkpoint publication owner").into()),
+                semio_framework_job::JobOutcomeView::Fault{..}=>return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"original fault requires its retained diagnostic receiving owner").into()),
+                semio_framework_job::JobOutcomeView::Complete{state,output,..}if state.is_some()||output.is_some()=>{},
+                _=>{},
+            }
+            if !cx.retained_work_can_enter(RetirementDemand{copy_bytes:size_of::<bool>(),depth:1,..Default::default()}){return Ok(())}
+            job.outcome_received=true;let purpose=job.purpose;cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:size_of::<bool>(),..Default::default()})?;cx.consume_fuel(1);
+            match kind{semio_framework_job::JobOutcomeKind::Complete=>{if purpose==ToolRunJobPurpose::Revalidate{self.complete_tool_run_revalidation()}else{self.complete_tool_run_job(run,generation)}},semio_framework_job::JobOutcomeKind::Cancelled|semio_framework_job::JobOutcomeKind::Fault=>self.fault_tool_run(run,generation),_=>{}}
             return Ok(())
         }
-        let fuel=if single{1}else{semio_framework_job::INTERACTIVE_LANE_FUEL};let budget=semio_framework_job::StepBudget::new(fuel,deadline,grant);
-        let mut ownership=Default::default();let mut verdict=None;
+        let fuel=if single{1}else{semio_framework_job::INTERACTIVE_LANE_FUEL};let deadline=cx.deadline_us();let mut verdict=None;
         let interactive:&mut dyn semio_framework_job::InteractiveJob=match &mut job.job{ToolRunJobHandle::Plain(job)=>job.as_mut(),ToolRunJobHandle::Retargetable(job)=>job.as_mut()};
-        let mut context=semio_framework_job::StepContext::with_payload_authority(job.operation,job.generation,budget,job.cancel.as_ref().unwrap(),semio_framework_job::default_now_us,&mut job.preview_sequence,&mut ownership,job.authority.as_ref().unwrap()).map_err(FaultFrom::into_fault)?;
-        let stepped=semio_framework_job::drive_step(interactive,&mut context,TOOL_RUN_JOB_SITE,semio_framework_job::InteractiveStage::InteractiveStep,&mut verdict).map(|loan|loan.map(semio_framework_job::JobOutcomeBorrow::into_descriptor));
-        drop(context);
-        let failed=match stepped{Ok(descriptor)=>{if single&&descriptor.as_ref().is_some_and(|descriptor|!matches!(descriptor.kind(),semio_framework_job::JobOutcomeKind::Yield|semio_framework_job::JobOutcomeKind::CheckpointReady{..})){entry.pending_step=false}job.outcome=descriptor;false},Err(original)=>{*job.original_failure=Some(original);true}};
-        self.tool_runs.retain_original_receipt(grant,ownership)?;
-        if failed{self.fault_tool_run(run,generation)}
+        let stepped=cx.with_original_work_loan(fuel,deadline,|cx|{
+            let outcome=semio_framework_job::drive_step(interactive,cx,TOOL_RUN_JOB_SITE,semio_framework_job::InteractiveStage::InteractiveStep,&mut verdict)?;
+            if let Some(outcome)=outcome{job.outcome=Some(outcome.into_descriptor());}
+            Ok(())
+        });
+        if single&&job.outcome.as_ref().is_some_and(|outcome|!matches!(outcome.kind(),semio_framework_job::JobOutcomeKind::Yield|semio_framework_job::JobOutcomeKind::CheckpointReady{..})){entry.pending_step=false;}
+        if let Err(failure)=stepped{*job.original_failure=Some(failure);self.fault_tool_run(run,generation);}
         Ok(())
     }
 
@@ -120,7 +139,8 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
     }
 
     /// 🏁️ Finalize (§2.7.4): freshness refold on the head, optional revalidate job, one outbound batched `Edit`.
-    pub(super)  async fn finalize_tool_run_turn(&mut self, deadline: u64,grant:RetainedCloneGrant,identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeDecodeControl<'_>) -> Result<(), Fault> {
+    pub(super)  async fn finalize_tool_run_turn(&mut self,cx:&mut semio_framework_job::StepContext<'_>) -> Result<(), semio_framework_job::OriginalTurnFailure> {
+        let grant=cx.retained_grant();
         let store_generation = self.stores.store.generation();
         let member_generation = self.shared().tool_run_member_generation();
         let entry = selected_entry_mut!(self.tool_runs).expect("finalizing slot");
@@ -149,7 +169,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
             self.tool_runs.close_current_job();
             return Ok(());
         }
-        if self.refold_tool_run(deadline) {
+        if self.refold_tool_run(cx)? {
             return Ok(());
         }
         match phase {
@@ -160,13 +180,15 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 let entry = selected_entry!(self.tool_runs).expect("finalizing slot");
                 let (run, generation) = (entry.slot.run, entry.slot.generation);
+                let entry=selected_entry_mut!(self.tool_runs).expect("finalizing original slot");
+                if entry.member.is_none()&&!entry.operations.prepare_finalization(&self.stores.store,&mut entry.provisional,cx)?{return Ok(())}
                 let next = if entry.definition.revalidate_job.is_some() && !(entry.provisional.is_empty() && entry.member.as_ref().is_none_or(|member| member.ops.is_empty())) {
                     match self.tools.build_tool_run_job_slot(&*self.stores, &*self.child_composition, entry, ToolRunJobPurpose::Revalidate) {
                         Ok(Some(job)) => {
                             selected_entry_mut!(self.tool_runs).expect("finalizing slot").job = Some(job);
                             ToolRunFinalizePhase::Revalidating
                         }
-                        Ok(None) | Err(_) => return self.reject_tool_run_publication(run, generation),
+                        Ok(None) | Err(_) => return self.reject_tool_run_publication(run, generation).map_err(Into::into),
                     }
                 } else {
                     ToolRunFinalizePhase::Publishing
@@ -176,9 +198,9 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static, X:
                 }
                 Ok(())
             }
-            ToolRunFinalizePhase::Revalidating => self.step_tool_run_job(deadline,grant),
-            ToolRunFinalizePhase::Publishing => self.publish_tool_run(deadline,grant,identity,receiving).await,
-            ToolRunFinalizePhase::Closing => self.close_tool_run_publication(grant),
+            ToolRunFinalizePhase::Revalidating => self.step_tool_run_job(cx),
+            ToolRunFinalizePhase::Publishing => self.publish_tool_run(cx).await,
+            ToolRunFinalizePhase::Closing => {let entry=selected_entry_mut!(self.tool_runs).expect("closing original slot");if !entry.operations.terminal_is_empty(){entry.operations.close_step(&self.stores.store,cx)?;return Ok(())}self.close_tool_run_publication(grant).map_err(Into::into)},
         }
     }
 

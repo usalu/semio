@@ -110,7 +110,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
     pub fn maintenance_unit_step(&mut self,unit:MaintenanceUnit,cx:&mut semio_framework_job::StepContext<'_>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,semio_framework_plugin_ownership::bounded_ownership::PluginLifecycleFailure>{
         match unit{
             MaintenanceUnit::AgentPreview=>self.tools.close_agent_lane_preview(cx, grant),
-            MaintenanceUnit::MediaRefusal=>self.media.close_media_submission_refusal(&mut *self.tools, cx, grant),
+            MaintenanceUnit::MediaRefusal=>self.media.close_media_submission_refusal(&mut *self.stores,&mut *self.tools, cx, grant),
             MaintenanceUnit::ActionIngress=>self.ingress.close_action_ingress_sources(cx, grant, false),
             MaintenanceUnit::CommandPrune=>self.history.advance_command_prune_step(&mut *self.stores, grant, false).map_err(Into::into),
             MaintenanceUnit::PrivateChildGroup(operation)=>Ok(match self.child_composition.close_private_child_group_operation_step(&mut *self.stores, operation, cx, grant)?{semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress}=>PluginLifecycleStep::Progress(progress),semio_framework_job::InteractiveJobCloseStep::Blocked=>PluginLifecycleStep::Blocked{reason:"original private child group awaits custody"}}),
@@ -118,7 +118,7 @@ impl<'ctx, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'sta
             MaintenanceUnit::GrantedMounted=>self.granted_mounted_retirement_step(cx).map(progressed),
             MaintenanceUnit::ToolOverlay=>self.as_render().tool_overlay_retirement_step(grant).map(progressed).map_err(Into::into),
             MaintenanceUnit::ToolRuns=>Ok(self.as_tool_run().tool_run_retire_step(cx)?.map_or_else(idle,progressed)),
-            MaintenanceUnit::TimeTravel=>Ok(self.as_time_travel().time_travel_retire_step(grant)?.map_or_else(idle,progressed)),
+            MaintenanceUnit::TimeTravel=>Ok(self.as_time_travel().time_travel_retire_step_context(grant,cx)?.map_or_else(idle,progressed)),
             MaintenanceUnit::Pressure(stage)|MaintenanceUnit::Stage(stage)=>self.maintenance_stage_step(stage,cx,grant),
         }
     }
@@ -580,6 +580,8 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             && self.history.command_log.pruned_terminal_is_empty()
             && self.child_composition.private_child_groups_terminal_is_empty()
             && self.tools.tool_operations.is_empty()
+            && self.tools.original_emission_admission.is_none()
+            && self.tools.original_emission_receipt.is_none()
             && self.tools.tool_cancellations.active_operation_count() == 0
             && self.tools.latest_wins_commands.is_empty()
             && self.tools.latest_wins_keys.map.as_ref().is_some_and(|map| map.is_empty())
@@ -600,9 +602,9 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             && self.ingest.store_replacement_jobs.is_empty()
             && self.ingest.document_archive_loads.is_empty()
             && self.ingest.envelope_field_decoder_retirements.is_empty()
-            && self.ingest.envelope_field_decoders.next_returned_ticket().is_none()
+            && self.ingest.envelope_field_decoders.get().is_none_or(|owner|owner.next_returned_ticket().is_none())
             && self.ingest.envelope_completed_record_retirements.is_empty()
-            && self.ingest.envelope_completed_records.terminal_is_empty()
+            && self.ingest.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())
             && self.stores.store.maintenance_retirements_terminal_is_empty()
             && self.stores.config_store.maintenance_retirements_terminal_is_empty()
             && self.stores.draft_store.maintenance_retirements_terminal_is_empty()
@@ -640,7 +642,7 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
         let present = |demand: RetirementDemand| (demand != RetirementDemand::default()).then_some(demand);
         Ok(match unit {
             MaintenanceUnit::AgentPreview=>self.tools.agent_lane_preview.as_ref().map(|state|state.retirement_demands(body,self.tools.tool_cancellations.handle())).transpose()?,
-            MaintenanceUnit::MediaRefusal => Some(self.media.media_submission_refusal_demands(&*self.tools, body)?),
+            MaintenanceUnit::MediaRefusal => Some(self.media.media_submission_refusal_demands(&*self.stores,&*self.tools, body)?),
             MaintenanceUnit::ActionIngress=>Some(self.ingress.action_ingress_sources_demands(body, false)?),
             MaintenanceUnit::CommandPrune => Some(self.history.command_prune_demands(false, body)?),
             MaintenanceUnit::PrivateChildGroup(operation) => Some(self.child_composition.private_child_group_operation_close_demands(operation, body)?),
@@ -724,8 +726,8 @@ impl<'v, A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + Send + 'stati
             MAINTENANCE_DOCUMENT_DISPLACED_STAGE => (!self.stores.store.maintenance_retirements_terminal_is_empty()).then(|| self.stores.store.maintenance_retirements_demands(body)).transpose()?,
             10 => self.envelope_ingress_target(false).map(|_| self.envelope_ingress_demands(false, body)).transpose()?,
             11 => (!self.ingest.envelope_decode_jobs.is_empty()).then(|| self.envelope_decode_jobs_demands(false, body)).transpose()?,
-            12 => (!self.ingest.envelope_field_decoder_retirements.is_empty() || self.ingest.envelope_field_decoders.next_returned_ticket().is_some()).then(|| self.envelope_field_decoder_returns_demands(false, body)).transpose()?,
-            13 => (!self.ingest.envelope_completed_record_retirements.is_empty() || !self.ingest.envelope_completed_records.terminal_is_empty()).then(|| self.envelope_completed_record_returns_demands(false, body)).transpose()?,
+            12 => (!self.ingest.envelope_field_decoder_retirements.is_empty() || self.ingest.envelope_field_decoders.get().is_some_and(|owner|owner.next_returned_ticket().is_some())).then(|| self.envelope_field_decoder_returns_demands(false, body)).transpose()?,
+            13 => (!self.ingest.envelope_completed_record_retirements.is_empty() || !self.ingest.envelope_completed_records.get().is_none_or(|owner|owner.terminal_is_empty())).then(|| self.envelope_completed_record_returns_demands(false, body)).transpose()?,
             14 => self.store_replacement_target(false).map(|_| self.store_replacement_demands(false, body)).transpose()?,
             15 => match self.tools.live_runtime_instance_id {
                 Some(instance_id) if !A::mounted_jobs_terminal_is_empty(instance_id) => Some(A::mounted_job_maintenance_demands(instance_id, body)?),

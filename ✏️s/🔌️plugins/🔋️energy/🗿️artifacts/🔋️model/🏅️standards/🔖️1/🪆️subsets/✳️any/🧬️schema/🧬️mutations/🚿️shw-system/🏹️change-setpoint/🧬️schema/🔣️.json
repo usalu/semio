@@ -52,5 +52,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateShwSystemConfig",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "shw_systems",
+    "field": "setpoint_c",
+    "input": "new_setpoint_c",
+    "key": "id",
+    "labels": {
+      "en": "Change service hot water system: Tank setpoint",
+      "de": "Speichersolltemperatur ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "service-hot-water-system",
+      "kind": "change-shw-system-setpoint",
+      "record": "ChangedShwSystemSetpoint"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Tank setpoint violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed service hot water system does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The service hot water system already carries this tank setpoint value."
+      }
+    }
   }
 }

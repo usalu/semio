@@ -79,9 +79,9 @@ impl ArtifactViewer for AnimatePresentationViewer {
 })())
 }
 
-    fn initial_snapshot() -> PresentationSnapshot {
+    fn reference_birth()->Option<fn()->PresentationSnapshot>{Some(||{
         default_presentation_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `AnimateViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

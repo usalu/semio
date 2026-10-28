@@ -51,5 +51,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateBatteryAssignment",
+    "branchType": "ModelGenerationState",
+    "branch": "generation",
+    "collection": "battery_storage",
+    "field": "capacity_kwh",
+    "input": "new_capacity_kwh",
+    "key": "id",
+    "labels": {
+      "en": "Change battery: Storage capacity",
+      "de": "Speicherkapazität ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "battery",
+      "kind": "change-battery-capacity",
+      "record": "ChangedBatteryCapacity"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Storage capacity violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed battery does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The battery already carries this storage capacity value."
+      }
+    }
   }
 }

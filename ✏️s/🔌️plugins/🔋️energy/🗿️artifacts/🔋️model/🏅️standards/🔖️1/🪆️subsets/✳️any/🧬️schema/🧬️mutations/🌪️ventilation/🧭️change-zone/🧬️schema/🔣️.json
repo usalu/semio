@@ -57,5 +57,51 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "reference-row",
+    "references": [
+      "Zones"
+    ],
+    "row": "StateMechanicalVentilation",
+    "branchType": "ModelLoadState",
+    "branch": "loads",
+    "collection": "mechanical_ventilations",
+    "field": "zone_id",
+    "input": "new_zone_id",
+    "key": "id",
+    "labels": {
+      "en": "Change mechanical ventilation: Zone",
+      "de": "Zone ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "mechanical-ventilation",
+      "kind": "change-mechanical-ventilation-zone",
+      "record": "ChangedMechanicalVentilationZone"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Zone violates its authored identifier bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed mechanical ventilation does not exist."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The mechanical ventilation already carries this zone reference."
+      }
+    },
+    "referenceTarget": "input"
   }
 }

@@ -49,5 +49,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StateSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "surfaces",
+    "field": "sun_exposed",
+    "input": "new_sun_exposed",
+    "key": "id",
+    "labels": {
+      "en": "Change surface: Sun exposed",
+      "de": "Besonnt ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "surface",
+      "kind": "change-surface-sun-exposed",
+      "record": "ChangedSurfaceSunExposed"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Sun exposed violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The surface already carries this sun exposed value."
+      }
+    }
   }
 }

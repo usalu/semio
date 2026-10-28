@@ -40,3 +40,7 @@ pub use observation_and_decode::*;
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+#[path="🔎️census/🦀️.rs"]
+mod census;
+pub use census::EnergyNumericalCensusCursor;

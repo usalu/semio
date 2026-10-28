@@ -1,0 +1,1 @@
+{"changeId":"change-new","checkpointId":"ck-new","alternativeId":"alternative-new","name":"Alternative λ","savedAt":"1780000000000","timestamp":"1780000000001","parent":{"id":"ck-parent","changeIds":["change-old","change-other"]},"pending":["edit-new","edit-next"]}

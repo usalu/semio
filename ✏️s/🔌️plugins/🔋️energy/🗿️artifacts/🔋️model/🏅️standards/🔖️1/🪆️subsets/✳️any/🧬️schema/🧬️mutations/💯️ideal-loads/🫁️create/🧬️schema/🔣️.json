@@ -296,5 +296,123 @@
         }
       }
     }
-  ]
+  ],
+  "x-semio-energy-row-birth": {
+    "row": "StateIdealLoadsSystem",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "max_heating_supply_air_temp_c",
+        "input": "max_heating_supply_air_temp_c",
+        "storage": "fixed"
+      },
+      {
+        "field": "min_cooling_supply_air_temp_c",
+        "input": "min_cooling_supply_air_temp_c",
+        "storage": "fixed"
+      },
+      {
+        "field": "max_heating_capacity_w",
+        "input": "max_heating_capacity_w",
+        "storage": "optional-number",
+        "presence": "max_heating_capacity_present"
+      },
+      {
+        "field": "max_cooling_capacity_w",
+        "input": "max_cooling_capacity_w",
+        "storage": "optional-number",
+        "presence": "max_cooling_capacity_present"
+      },
+      {
+        "field": "outdoor_air_per_person_m3_s",
+        "input": "outdoor_air_per_person_m3_s",
+        "storage": "fixed"
+      },
+      {
+        "field": "outdoor_air_per_area_m3_s_m2",
+        "input": "outdoor_air_per_area_m3_s_m2",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateIdealLoadsSystem",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "ideal_loads",
+    "key": "id",
+    "inverse": "DeleteIdealLoadsSystem",
+    "labels": {
+      "en": "Create ideal loads system",
+      "de": "Ideallastsystem erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "ideal-loads-system",
+      "kind": "create-ideal-loads-system",
+      "record": "CreatedIdealLoadsSystem"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The supply temperatures, air rates and optional capacities must lie in their authored ranges."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An ideal loads system with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The insertion rank is past the end of the ideal loads collection."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The referenced zone does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The ideal loads creation makes no change."
+      }
+    },
+    "validationBeforeRank": true,
+    "defaultRank": "append",
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "max_heating_capacity_w",
+        "presence": "max_heating_capacity_present",
+        "kind": "optional-positive-number"
+      },
+      {
+        "input": "max_cooling_capacity_w",
+        "presence": "max_cooling_capacity_present",
+        "kind": "optional-positive-number"
+      }
+    ],
+    "scalarOrder": "after-rules"
+  }
 }

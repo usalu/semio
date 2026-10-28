@@ -139,3 +139,68 @@ fn a_late_model_field_refusal_preserves_every_original_field_and_link() {
     assert_eq!(base.model.zones.as_ptr(), zones);
     eprintln!("[DEBUG] Energy late field refusal leaves the original projection and links unchanged");
 }
+
+#[test]
+fn duplicate_inserted_entity_keys_are_refused_atomically() {
+    let mut base = snapshot(vec![zone(1, "A"), zone(2, "B")]);
+    let original = base.clone();
+    let zones = base.model.zones.as_ptr();
+    let mut diff = rename(2, "Rejected");
+    diff.absorb(zones_of(Rows::inserting(2, zone(1, "Duplicate"))));
+    assert!(protocol::apply_diff_cold_into(&diff, &mut base).is_err());
+    assert_eq!(base, original);
+    let mut repeated = zones_of(Rows::inserting(2, zone(3, "C")));
+    repeated.absorb(zones_of(Rows::inserting(3, zone(3, "Duplicate"))));
+    assert!(protocol::apply_diff_cold_into(&repeated, &mut base).is_err());
+    assert_eq!(base, original);
+    assert_eq!(base.model.zones.as_ptr(), zones);
+}
+
+#[test]
+fn replacing_an_entity_with_the_same_key_still_inverts_exactly() {
+    let base = snapshot(vec![zone(1, "A"), zone(2, "B")]);
+    let mut diff = zones_of(Rows::removing(&base.model.zones, &EntityId(1)));
+    diff.absorb(zones_of(Rows::inserting(1, zone(1, "Replacement"))));
+    let after = protocol::apply_diff_cold(&diff, &base).expect("replacement keeps keys unique");
+    assert_eq!(after.model.zones, [zone(2, "B"), zone(1, "Replacement")]);
+    assert_eq!(protocol::apply_diff_cold(&diff.inverse(&base), &after).expect("replacement inverse"), base);
+}
+
+#[test]
+fn language_neutral_row_identity_cases_apply_and_invert() {
+    let cases: Vec<semio_framework_value::DslValue> = semio_framework_pack_json::from_json_str(include_str!("identity.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("identity fixtures");
+    for case in cases {
+        let name = String::from_value(case["name"].clone()).expect("case name");
+        let ids = Vec::<u32>::from_value(case["base"].clone()).expect("base keys");
+        let removed = Vec::<u32>::from_value(case["removed"].clone()).expect("removed keys");
+        let inserted = Vec::<Vec<u32>>::from_value(case["inserted"].clone()).expect("insertions");
+        let accepted = bool::from_value(case["accepted"].clone()).expect("expected outcome");
+        let base = snapshot(ids.iter().map(|id| zone(*id, &format!("Zone {id}"))).collect());
+        let mut rows = Rows::<ZonePatch>::removing_where(&base.model.zones, |row| removed.contains(&row.id.0));
+        for insertion in inserted {
+            rows.absorb(Rows::inserting(insertion[0] as usize, zone(insertion[1], &format!("Inserted {}", insertion[1]))));
+        }
+        let diff = zones_of(rows);
+        let mut after = base.clone();
+        let outcome = protocol::apply_diff_cold_into(&diff, &mut after);
+        assert_eq!(outcome.is_ok(), accepted, "{name}");
+        if accepted {
+            let expected = Vec::<u32>::from_value(case["expected"].clone()).expect("expected keys");
+            assert_eq!(after.model.zones.iter().map(|row| row.id.0).collect::<Vec<_>>(), expected, "{name}");
+            assert_eq!(protocol::apply_diff_cold(&diff.inverse(&base), &after).expect("inverse applies"), base, "{name}");
+        } else {
+            assert_eq!(after, base, "{name}");
+        }
+    }
+}
+
+#[test]
+fn decoded_unordered_array_slots_respect_later_assignments() {
+    let case: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(include_str!("slots.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("slot fixture");
+    let mut decoded = Slots::<f64, 3>::from_value(case["earlier"].clone()).expect("decodes slots");
+    decoded.absorb(Slots::from_value(case["later"].clone()).expect("later slots"));
+    let mut values = [0.0; 3];
+    decoded.commit_onto(&mut values).expect("valid slots");
+    assert_eq!(values.to_vec(), Vec::<f64>::from_value(case["expected"].clone()).expect("expected slots"));
+    assert_eq!(decoded.0.iter().map(|slot| slot.index).collect::<Vec<_>>(), [0, 2]);
+}

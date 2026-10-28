@@ -1,0 +1,85 @@
+{
+  "contract": "semio.energy.original-deletesolarthermalsystem/v1",
+  "collection": "solar_thermal_systems",
+  "existingRows": [
+    {
+      "id": 1,
+      "collector_area_m2": 3,
+      "efficiency": 0.7,
+      "storage_volume_m3": 0.2,
+      "tilt_deg": 30,
+      "azimuth_deg": 0
+    },
+    {
+      "id": 4,
+      "collector_area_m2": 3,
+      "efficiency": 0.8,
+      "storage_volume_m3": 0.2,
+      "tilt_deg": 30,
+      "azimuth_deg": 0
+    }
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 1
+      },
+      "outcome": "changed",
+      "after": [
+        4
+      ]
+    },
+    {
+      "payload": {
+        "id": 4
+      },
+      "outcome": "changed",
+      "after": [
+        1
+      ]
+    },
+    {
+      "payload": {
+        "id": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    13,
+    21,
+    34,
+    55,
+    89,
+    144,
+    233,
+    377,
+    610
+  ],
+  "inverses": {
+    "1": {
+      "id": 1,
+      "collectorAreaM2": 3.0,
+      "efficiency": 0.7,
+      "storageVolumeM3": 0.2,
+      "tiltDeg": 30.0,
+      "azimuthDeg": 0.0,
+      "index": 0
+    },
+    "4": {
+      "id": 4,
+      "collectorAreaM2": 3.0,
+      "efficiency": 0.8,
+      "storageVolumeM3": 0.2,
+      "tiltDeg": 30.0,
+      "azimuthDeg": 0.0,
+      "index": 1
+    }
+  }
+}

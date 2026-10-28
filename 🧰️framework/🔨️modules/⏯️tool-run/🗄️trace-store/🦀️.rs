@@ -76,8 +76,8 @@ impl ToolRunTracePage {
         Ok(bytes)
     }
 
-    pub fn decode(bytes: &[u8]) -> Result<Self, ToolRunCodecError> {
-        if bytes.len() > TOOL_RUN_TRACE_PAGE_BYTES_MAX {
+    pub fn decode<S:semio_framework_value::ByteReadSource+?Sized>(bytes:&S) -> Result<Self, ToolRunCodecError> {
+        if bytes.byte_len() > TOOL_RUN_TRACE_PAGE_BYTES_MAX {
             return Err(ToolRunCodecError::Limit("trace page bytes"));
         }
         page_from_record(&decode_body(page_spec(), bytes)?)
@@ -96,24 +96,24 @@ pub struct ToolRunTraceDelta {
 impl ToolRunTraceDelta {
     pub fn encode(&self) -> Result<Vec<u8>, ToolRunCodecError> {
         let mut record = RecordValue::default();
-        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)));
+        record.fields.insert(1, FieldValue::Record(identity_record(&self.identity)?));
         record.fields.insert(2, FieldValue::Bool(self.clear));
         record.fields.insert(3, FieldValue::UInt(u64::from(self.next)));
         if !self.pages.is_empty() {
-            record.fields.insert(4, FieldValue::List(self.pages.iter().map(|page| page.encode().map(FieldValue::Bytes64)).collect::<Result<_, _>>()?));
+            record.fields.insert(4, FieldValue::List(self.pages.iter().map(|page| page.encode().and_then(|bytes|record_octets(&bytes))).collect::<Result<_, _>>()?));
         }
         encode_body(delta_spec(), &record)
     }
 
-    pub fn decode(bytes: &[u8]) -> Result<Self, ToolRunCodecError> {
+    pub fn decode<S:semio_framework_value::ByteReadSource+?Sized>(bytes:&S) -> Result<Self, ToolRunCodecError> {
         let record = decode_body(delta_spec(), bytes)?;
-        let pages = list(&record, 4)?.iter().map(|item| ToolRunTracePage::decode(item_bytes(item)?)).collect::<Result<_, _>>()?;
+        let pages = list(&record, 4)?.iter().map(|item| ToolRunTracePage::decode(&item_bytes(item)?)).collect::<Result<_, _>>()?;
         Ok(Self { identity: identity_from_field(&record, 1)?, clear: boolean(&record, 2)?, next: narrow(uint(&record, 3)?, "next")?, pages })
     }
 }
 
 /// 🧭️ Echoed by a renderer in its window instance view state; `page` is the next page it expects.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value::NativeReceive)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct ToolRunTraceCursor {
@@ -122,7 +122,7 @@ pub struct ToolRunTraceCursor {
 }
 
 /// 🗂️ One resident trace record.
-#[derive(Clone, Copy, Debug, PartialEq)]
+#[derive(Clone, Copy, Debug, PartialEq, semio_framework_value::RetireOwned)]
 pub struct ToolRunTraceRecord {
     pub verdict: ToolRunVerdict,
     pub reason: u16,
@@ -139,14 +139,14 @@ pub struct ToolRunTraceApply {
     pub compacted: bool,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 struct ToolRunTraceLogPage {
     pub(crate) ops: Vec<ToolRunTraceOp>,
     pub(crate) bytes: usize,
 }
 
 /// 🗃️ Resident trace records plus the page log windows read through cursors (§3.2).
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, semio_framework_value::RetireOwned)]
 pub struct ToolRunTraceStore {
     pub(crate) identity: ToolRunIdentity,
     pub(crate) capacity: usize,

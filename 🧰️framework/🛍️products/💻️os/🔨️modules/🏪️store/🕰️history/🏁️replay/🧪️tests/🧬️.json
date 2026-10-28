@@ -1,0 +1,75 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "genesis",
+    "authored",
+    "replacement",
+    "target",
+    "cancelCuts",
+    "deniedAxes",
+    "preparedVisible",
+    "publishedVisible",
+    "modes"
+  ],
+  "properties": {
+    "genesis": {
+      "type": "number"
+    },
+    "authored": {
+      "type": "number"
+    },
+    "replacement": {
+      "type": "number"
+    },
+    "target": {
+      "type": "string"
+    },
+    "cancelCuts": {
+      "type": "array",
+      "items": {
+        "type": "integer",
+        "minimum": 0
+      }
+    },
+    "deniedAxes": {
+      "type": "array",
+      "items": {
+        "enum": [
+          "items",
+          "copy",
+          "capacity",
+          "release",
+          "depth"
+        ]
+      }
+    },
+    "preparedVisible": {
+      "type": "number"
+    },
+    "publishedVisible": {
+      "type": "number"
+    },
+    "modes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "overwrite",
+        "scope",
+        "alternative"
+      ],
+      "properties": {
+        "overwrite": {
+          "const": 1
+        },
+        "scope": {
+          "const": 1
+        },
+        "alternative": {
+          "const": 3
+        }
+      }
+    }
+  }
+}

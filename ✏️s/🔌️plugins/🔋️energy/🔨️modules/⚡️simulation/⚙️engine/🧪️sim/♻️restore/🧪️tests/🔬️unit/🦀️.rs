@@ -33,7 +33,7 @@ fn seen_step(job: &mut EnergyJob, context: &mut StepContext<'_>) -> Result<Seen,
 
 use crate::sim::testing::OriginalEnergyCaller;
 fn prepare_input_identity(job:&mut EnergyJob,caller:&mut OriginalEnergyCaller){for _ in 0..1_000_000{if caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|Ok(job.step_input_identity(cx))).unwrap().expect("original complete input identity"){return}}panic!("original input identity remained pending")}
-fn build_checkpoint_packet(job:&mut EnergyJob,caller:&mut OriginalEnergyCaller)->EnergyWirePacket{prepare_input_identity(job,caller);job.start_wire(EnergyWireKind::Checkpoint,job.hour_index as u64,JobPayloadStream::CheckpointState).expect("checkpoint preflight");for _ in 0..1_000_000{if caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|Ok(job.step_wire_build(cx))).unwrap().expect("original checkpoint fragment"){return job.wire_ready.take().expect("sealed original checkpoint")}}panic!("original checkpoint did not seal")}
+fn build_checkpoint_packet(job:&mut EnergyJob,caller:&mut OriginalEnergyCaller)->EnergyWirePacket{prepare_input_identity(job,caller);let hour_index = job.hour_index as u64;job.start_wire(EnergyWireKind::Checkpoint,hour_index,JobPayloadStream::CheckpointState).expect("checkpoint preflight");for _ in 0..1_000_000{if caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|Ok(job.step_wire_build(cx))).unwrap().expect("original checkpoint fragment"){return job.wire_ready.take().expect("sealed original checkpoint")}}panic!("original checkpoint did not seal")}
 fn retained_test_packet(_operation:Operation,identity:EnergyWireIdentity,bytes:&[u8],caller:&mut OriginalEnergyCaller)->EnergyWirePacket{
  let mut writer=Some(semio_framework_job_payload::RetainedJobPayloadWriter::new(JobPayloadStream::CheckpointState));let mut preborn=Some(semio_framework_job_payload::JobPayloadPageSource::new());let mut output=None;let copied_bytes=bytes.len()+std::mem::size_of::<EnergyWirePacket>()+std::mem::size_of::<Option<semio_framework_job_payload::RetainedJobPayloadWriter>>();
  caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_copy_bytes<copied_bytes||grant.maximum_depth==0{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"native original checkpoint source requires its quoted copy loan").into())}let source=preborn.take().unwrap();match cx.admit_payload_page(writer.as_mut().unwrap(),source){Ok(mut page)=>{page.write(bytes).expect("authored bounded native source");page.commit();},Err(rejected)=>{preborn=Some(rejected.into_source());return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit,"native checkpoint source remains original on page refusal").into())}}match writer.take().unwrap().finish(){Ok(payload)=>output=Some(EnergyWirePacket{kind:EnergyWireKind::Checkpoint,identity,payload,preview:None,reservation:None}),Err(original)=>{writer=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"native packet keeps the original refused writer").into())}}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes,..Default::default()})?;Ok(())}).expect("same original checkpoint page binding and retained sealed candidate");assert!(preborn.is_none());output.unwrap()
@@ -166,8 +166,10 @@ fn p7c2_restored_commit_bytes_match_one_and_four_fuel_chronology() {
     let config = SimulationConfig { warmup_days: 0, run_period_end_month: 1, run_period_end_day: 1, environment: SimulationEnvironment::HeatingDesignDay, ..Default::default() };
     let operation = Operation::new(allocate_operation_id(), RevisionId(93), Generation(9), 777);let mut caller=OriginalEnergyCaller::new(operation.operation,operation.generation);
     let mut original = EnergyJob::new(operation, model.clone(), config.clone()).expect("original admission");
+    let mut checkpoint_turns = 0usize;
     let packet = loop {
-
+        checkpoint_turns += 1;
+        if checkpoint_turns > 100_000 { caller.close_job(&mut original); caller.finish(); panic!("one-fuel checkpoint must make finite progress"); }
         match caller.turn(ENERGY_BATCH_GRANT,1,u64::MAX,|cx|seen_step(&mut original,cx)).expect("same original replay numerical turn") {
             Seen::Preview => {
                 let mut packet = original.take_preview_packet(operation.generation).expect("fresh preview").expect("preview packet");
@@ -209,3 +211,6 @@ fn weather_checkpoint_rejects_foreign_config_and_preserves_same_model_authority(
  let packet=retained_test_packet(operation,identity,&baseline,&mut caller);let mut same=EnergyRestoreJob::admit(operation,model.clone(),config.clone(),packet,EnergyNumericalBounds::default()).unwrap();let mut sequence=0;let mut ready=false;for _ in 0..1_000_000{let mut receipt=RetainedCloneProgress::default();if step_restore(&mut same,&mut caller).unwrap(){ready=true;break;}}assert!(ready,"equal-valued independently admitted original roots must restore");close_restore(&mut same,&mut caller);
  caller.close_job(&mut original);eprintln!("[DEBUG] Energy checkpoint full Model+Config SHA256 foreign authority refused3 equal-value readmission1 and originals closed");
 caller.finish();}
+
+#[global_allocator]
+static ENERGY_HEAP_WITNESS: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;

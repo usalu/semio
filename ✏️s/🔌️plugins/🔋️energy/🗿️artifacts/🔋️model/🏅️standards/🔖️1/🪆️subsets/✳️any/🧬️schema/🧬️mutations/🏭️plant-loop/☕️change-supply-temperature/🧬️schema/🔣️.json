@@ -52,5 +52,42 @@
         "order": 20
       }
     }
+  },
+  "x-semio-energy-operation": {
+    "category": "scalar-row",
+    "row": "StatePlantLoopConfig",
+    "branchType": "ModelSystemState",
+    "branch": "systems",
+    "collection": "plant_loops",
+    "field": "supply_temperature_c",
+    "input": "new_supply_temperature_c",
+    "key": "id",
+    "labels": {
+      "en": "Change plant loop: Supply temperature",
+      "de": "Vorlauftemperatur ändern"
+    },
+    "semantics": {
+      "verb": "change",
+      "entity": "plant-loop",
+      "kind": "change-plant-loop-supply-temperature",
+      "record": "ChangedPlantLoopSupplyTemperature"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "Supply temperature violates its authored bounds."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed plant loop does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The plant loop already carries this supply temperature value."
+      }
+    }
   }
 }

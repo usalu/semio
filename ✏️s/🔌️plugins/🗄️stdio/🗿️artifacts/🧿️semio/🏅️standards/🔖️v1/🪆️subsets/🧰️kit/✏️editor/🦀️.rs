@@ -220,9 +220,9 @@ impl ArtifactEditor for SemioKitEditor {
         if let Some(fault) = original_fault.take() { return Err(fault); }
         let args = args.as_ref(); semio_kit_editor_command_from_action(action, args) }
 
-    fn initial_snapshot() -> SemioKitSnapshot {
+    fn reference_birth()->Option<fn()->SemioKitSnapshot>{Some(||{
         SemioKitSnapshot::default()
-    }
+    })}
 
     fn handle(
         command: &Self::Command,

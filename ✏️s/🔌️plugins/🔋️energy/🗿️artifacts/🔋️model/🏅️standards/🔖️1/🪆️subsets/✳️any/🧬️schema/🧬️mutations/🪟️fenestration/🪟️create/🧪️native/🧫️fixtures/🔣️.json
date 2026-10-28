@@ -1,0 +1,307 @@
+{
+  "contract": "semio.energy.original-create-fenestration/v1",
+  "collection": "fenestrations",
+  "existingRows": [
+    {
+      "id": 100,
+      "name": "Original window",
+      "surface_id": 1,
+      "u_value_w_m2k": 1.2,
+      "shgc": 0.5,
+      "vlt": 0.6,
+      "area_m2": 2,
+      "height_m": 1,
+      "sill_height_m": 0.5,
+      "frame_conductance_w_k": 0,
+      "divider_conductance_w_k": 0,
+      "overhang_depth_m": 0,
+      "overhang_offset_m": 0,
+      "fin_depth_m": 0,
+      "fin_offset_m": 0,
+      "glazing_construction_id": null,
+      "vertices_m": [
+        [
+          0,
+          0,
+          0
+        ],
+        [
+          1,
+          0,
+          0
+        ],
+        [
+          0,
+          1,
+          0
+        ]
+      ]
+    }
+  ],
+  "model": {
+    "surfaces": [
+      {
+        "id": 1,
+        "name": "Host wall",
+        "zone_id": 1,
+        "class": "ExteriorWall",
+        "vertices_m": [
+          [
+            0,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ]
+        ],
+        "construction_id": 1,
+        "outside_boundary_condition": "OutdoorAir",
+        "sun_exposed": true,
+        "wind_exposed": true,
+        "multiplier": 1
+      }
+    ],
+    "constructions": [
+      {
+        "id": 1,
+        "name": "Existing construction",
+        "layer_material_ids": []
+      }
+    ]
+  },
+  "cases": [
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": null
+      },
+      "outcome": "changed",
+      "after": [
+        3,
+        100
+      ]
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": 1,
+        "index": 1
+      },
+      "outcome": "changed",
+      "after": [
+        100,
+        3
+      ]
+    },
+    {
+      "payload": {
+        "id": 100,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": null
+      },
+      "outcome": "duplicate"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 99,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 0,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 3
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": 99,
+        "index": null
+      },
+      "outcome": "reference",
+      "target": 3
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 0,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 2,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "　 \t",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": null
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 3,
+        "name": "Äther 🔋",
+        "surfaceId": 1,
+        "uValueWM2k": 1.2,
+        "shgc": 0.5,
+        "vlt": 0.6,
+        "areaM2": 2,
+        "heightM": 1,
+        "sillHeightM": 0.5,
+        "frameConductanceWK": 0,
+        "dividerConductanceWK": 0,
+        "overhangDepthM": 0,
+        "overhangOffsetM": 0,
+        "finDepthM": 0,
+        "finOffsetM": 0,
+        "glazingConstructionId": null,
+        "index": 99
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    4,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ],
+  "receivingMaximumBytes": 67108864
+}

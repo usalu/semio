@@ -1,0 +1,8 @@
+use super::*;
+#[path="../../../🧳️native/🌱️construction/🧪️tests/🧰️leaf/🦀️.rs"]mod laws;
+use crate::snapshot::original::EnergyModelSnapshot;
+#[derive(Debug,semio_framework_value::ToValue,semio_framework_value::FromValue,semio_framework_value::RetireOwned)]enum Operation{Create(CreateAnnualSchedule),Delete(crate::DeleteAnnualSchedule)}
+impl From<CreateAnnualSchedule> for Operation{fn from(p:CreateAnnualSchedule)->Self{Self::Create(p)}}impl From<crate::DeleteAnnualSchedule> for Operation{fn from(p:crate::DeleteAnnualSchedule)->Self{Self::Delete(p)}}
+impl protocol::Mutation<EnergyModelSnapshot> for Operation{type Diff=crate::diff::original::EnergyModelDiff;const DESCRIPTORS:&'static[protocol::MutationLeafDescriptor]=&[<CreateAnnualSchedule as protocol::MutationLeaf>::DESCRIPTOR,<crate::DeleteAnnualSchedule as protocol::MutationLeaf>::DESCRIPTOR];fn descriptor(&self)->&'static protocol::MutationLeafDescriptor{match self{Self::Create(_)=>&<CreateAnnualSchedule as protocol::MutationLeaf>::DESCRIPTOR,Self::Delete(_)=>&<crate::DeleteAnnualSchedule as protocol::MutationLeaf>::DESCRIPTOR}}}
+#[test]
+fn original_annual_creation_preserves_empty_rule_and_holiday_sources_without_lossy_recreation(){laws::run::<CreateAnnualSchedule,Operation>(include_str!("🧫️fixtures/🔣️.json"),|post|{let rows=&post.model.outputs.get().schedules.get().annual;(0..rows.len()).map(|i|{let row=rows.get(i).unwrap();if row.id.0==3{assert!(row.rules.get().is_empty());assert!(row.holiday_dates.get().is_empty());assert_eq!(row.default_daily_schedule_id.0,200);}else{assert_eq!(row.rules.get().len(),1);assert_eq!(row.holiday_dates.get().len(),1);}row.id.0}).collect()},|operation|match operation{Operation::Delete(row)=>row.id.0,_=>panic!("creation must retain its original delete inverse")});}

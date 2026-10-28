@@ -52,6 +52,9 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub meta: ActionMeta,
     pub operation: semio_framework_job::Operation,
     pub source_identity:semio_framework_job::OriginalSourceBinding,
+    pub original_emission_caller:Option<semio_framework_job::OriginalCallerSourceLoan>,
+    pub original_emission_decoder:Option<(u64,u64)>,
+    pub original_emission_body:Option<usize>,
     pub canonical_revision: [u8; 32],
     pub artifact_generation: u64,
     pub config_generation: u64,
@@ -85,6 +88,8 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
     pub worker_resume_pending: bool,
     pub publication: Option<ArtifactToolCompletionValue<A>>,
     pub pending_artifact_publication: Option<PendingArtifactStorePublication<A>>,
+    pub pending_stream_abort:Option<Box<store::original_replay_publication::abort::OriginalStreamAbort<A::Snapshot,A::Mutation>>>,
+    pub stream_abort_completed:bool,
     pub pending_publication_outcome:PendingPublicationOutcome,
     pub pending_window_config_receipt:Option<store::os_store::presence::LaneItemReceipt>,
     pub cancellation_retirement:Option<Box<ToolCancellationLeaseRetirement>>,
@@ -131,7 +136,15 @@ pub struct MountedTypedCommandFullOperation<A: ArtifactApp> {
 }
 
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
- pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
+ /// 🪃️ Original streamed aborts need their real Store while returning retained replay reads.
+ pub fn stream_abort_close_demands(&self,store:&store::ConfigStore<A::Snapshot,A::Mutation>,body:usize)->Result<RetirementDemand,ValueError>{let Some(owner)=self.pending_stream_abort.as_ref()else{return Ok(Default::default())};if owner.terminal_is_empty(){Ok(store::original_replay_publication::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands())}else{owner.close_demands(store,body)}}
+ /// ♻️ Contextual retirement drains the actual abort before the mounted generic frame can close.
+ pub fn close_stream_abort(&mut self,store:&mut store::ConfigStore<A::Snapshot,A::Mutation>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_job::OriginalTurnFailure>{let Some(owner)=self.pending_stream_abort.as_mut()else{return Ok(true)};if !owner.terminal_is_empty(){owner.close_step(store,cx)?;return Ok(false)}let d=store::original_replay_publication::abort::OriginalStreamAbort::<A::Snapshot,A::Mutation>::boxed_release_demands();semio_framework_job::close_original_retained_step(cx,d,|_|{self.pending_stream_abort=None;Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,copied_bytes:d.copy_bytes,released_bytes:d.release_bytes,..Default::default()}))})?;Ok(self.pending_stream_abort.is_none())}
+ /// 📏️ Quotes the actual fixed mounted header and original input transfers before admission.
+ pub fn original_frame_release_demands(&self)->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Box<Self>>(),release_bytes:size_of::<Self>(),depth:1,..Default::default()}}
+ /// 📐️ Fresh boxed placement writes the fixed header once and moves original field headers.
+ pub fn original_emission_birth_demands()->RetirementDemand{RetirementDemand{copy_bytes:size_of::<Self>()+2*size_of::<semio_framework_plugin_job::original_emission::OriginalEmissionInput<A>>()+size_of::<semio_framework_job::OriginalCallerSourceLoan>()+size_of::<semio_framework_job::OriginalSourceBinding>()+2*size_of::<Box<Self>>()+size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<Self>(),depth:1,..Default::default()}}
+ pub fn lease_retirement_ready(&self)->bool{self.stage==MountedTypedCommandFullOperationStage::Retiring&&self.session.is_none()&&self.producer_request.is_none()&&self.producer_request_retirement.is_none()&&self.session_rejected.is_none()&&!self.worker_semantic_pending&&!self.worker_outcome_pending&&self.worker_fault_capture.is_none()&&self.publication.is_none()&&self.publication_retirement.is_none()&&self.pending_artifact_publication.is_none()&&self.pending_stream_abort.is_none()&&!self.pending_publication_outcome.pending()&&self.pending_child_publication.is_none()&&self.owned_child_group.is_none()&&self.captured_child_content.is_none()&&self.result_page.is_none()&&self.pending_window_config_receipt.is_none()&&self.raw_input.is_none()&&self.output_chunks.is_none()&&self.output_retirement.is_none()&&self.reserved_producer.is_none()&&self.completion.is_none()&&self.completion_retirement.is_none()&&self.meta.view_state.is_none()&&self.original_emission_caller.is_none()&&self.window_config_authority.is_none()&&self.window_transient_authority.is_none()&&self.actor_capture.is_none()&&self.verb.capacity()==0&&!self.meta.actor.has_owner()&&self.retained_close_fault.is_none()&&(self.cancellation_lease.is_some()||self.cancellation_retirement.is_some())}
  pub fn lease_retirement_demands(&self,canonical:&ToolCancellationHandle,body:usize)->Result<RetirementDemand,ValueError>{if let Some(owner)=self.cancellation_retirement.as_ref(){return if owner.terminal_is_empty(){Ok(RetirementDemand{release_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}else{owner.retirement_demands(canonical,body)};}Ok(RetirementDemand{copy_bytes:size_of::<ToolCancellationLease>(),capacity_bytes:size_of::<ToolCancellationLeaseRetirement>(),depth:1,..Default::default()})}
  pub fn lease_retirement_step(&mut self,canonical:&ToolCancellationHandle,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.lease_retirement_demands(canonical,grant.maximum_copy_bytes)?;if !plugin_grant_funds(demand,grant)||grant.maximum_items==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -146,7 +159,7 @@ include!("../🪟️mounted/♻️frontier/🦀️.rs");
 /// 🪢️ Returns the worker's original cancellation ancestor alias against the lease root the operation still owns, since that root can never become unique while the operation retains it.
 fn return_session_cancel_alias(session: &semio_framework_job_worker::MountedWorkerJobSession<semio_framework::ErasedToolJob>, lease: &Option<ToolCancellationLease>, grant: RetainedCloneGrant) -> Option<Result<PluginLifecycleStep, semio_framework_job::OriginalTurnFailure>> {
     let lease = lease.as_ref()?;
-    matches!(session.has_original_cancel_alias_witness(&lease.token), Ok(true)).then(|| match session.return_original_cancel_alias_step(&lease.token, grant) {
+    matches!(session.has_original_cancel_alias_witness(lease.cancel_token()), Ok(true)).then(|| match session.return_original_cancel_alias_step(lease.cancel_token(), grant) {
         Ok(Some(step)) => Ok(PluginLifecycleStep::Progress(step.progress())),
         Ok(None) | Err(semio_framework_job_worker::WorkerJobDemandError::Contention(_)) => Ok(PluginLifecycleStep::AwaitingInput { reason: "typed operation original cancellation alias awaits its issuing root" }),
         Err(semio_framework_job_worker::WorkerJobDemandError::Refused(error)) => Err(error.into()),
@@ -331,7 +344,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             return Ok(false);
         }
         let lease = self.cancellation_lease.as_ref().ok_or_else(|| plugin_sdk_fault("typed-operation publication lacks its exact cancellation lease"))?;
-        if !lease.handle.publication_scope.is_cancelled() && !lease.document_claim.as_ref().is_some_and(|claim| claim.is_cancelled()) && !lease.publication_claim.is_cancelled() && !lease.token.is_cancelled_now() {
+        if !lease.publication_is_cancelled() {
             return Ok(false);
         }
         if self.publication.is_none() {
@@ -540,10 +553,11 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             if self.window_config_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.window_config_authority); }
             if self.window_transient_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.window_transient_authority); }
         }
-        if self.captured_child_content.is_some() { return Ok(item); }
+        if self.captured_child_content.is_some() { return Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::arc_custody::shared_retirement_birth_bytes::<ChildContentView>(),..item}); }
         if self.pending_publication_outcome.pending() || self.pending_publication_outcome.report.is_some() { return Ok(RetirementDemand { copy_bytes: self.pending_publication_outcome.copy_demand(), ..item }); }
         if self.verb.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.verb.capacity(), ..item }); }
         if self.meta.actor.has_owner() { return Ok(RetirementDemand { release_bytes: self.meta.actor.original_allocation_bytes(), ..item }); }
+        if let Some(caller)=self.original_emission_caller.as_ref(){return if caller.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<semio_framework_job::OriginalCallerSourceLoan>>()+size_of::<Option<(u64,u64)>>()+size_of::<Option<usize>>(),..item})}else{Ok(caller.retirement_demands())}}
         Ok(Default::default())
     }
 
@@ -574,7 +588,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             if self.window_config_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_config_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
             if self.window_transient_authority.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.window_transient_authority, &mut self.publication_retirement, grant).map(|step| PluginLifecycleStep::Progress(step.progress())).map_err(semio_framework_job::OriginalTurnFailure::from); }
         }
-        if self.captured_child_content.take().is_some() { return Ok(PluginLifecycleStep::Progress(item)); }
+        if let Some(original)=self.captured_child_content.take(){match semio_framework_value::retirement::arc_custody::admit_shared_retirement(original,grant,true){Ok((owner,progress))=>{self.publication_retirement=Some(owner);return Ok(PluginLifecycleStep::Progress(progress))},Err((error,original))=>{self.captured_child_content=Some(original);return Err(error.into())}}}
         if self.pending_publication_outcome.pending() || self.pending_publication_outcome.report.is_some() {
             let bytes = self.pending_publication_outcome.copy_demand();
             self.pending_publication_outcome = PendingPublicationOutcome::new();
@@ -587,6 +601,10 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
                 Ok((text, progress)) => { let released = text.as_ref().map_or(0, String::capacity); drop(text); Ok(PluginLifecycleStep::Progress(RetainedCloneProgress { released_bytes: progress.released_bytes + released, ..progress })) }
                 Err((error, original)) => { self.meta.actor = original; Err(error.into()) }
             };
+        }
+        if let Some(caller)=self.original_emission_caller.as_mut(){
+            if caller.terminal_is_empty(){self.original_emission_caller.take();self.original_emission_decoder=None;self.original_emission_body=None;return Ok(PluginLifecycleStep::Progress(RetainedCloneProgress{copied_bytes:demand.copy_bytes,..item}))}
+            let step=caller.close_step(cx.original_source_parent()?,cx)?;return Ok(PluginLifecycleStep::Progress(step.progress()))
         }
         if !self.terminal_is_empty() { return Ok(PluginLifecycleStep::Blocked { reason: "original mounted authority awaits its typed retirement issuer" }); }
         Ok(PluginLifecycleStep::Complete(empty))
@@ -625,6 +643,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
     pub fn terminal_is_empty(&self) -> bool {
         self.stage == MountedTypedCommandFullOperationStage::Retiring
             && self.session.is_none()
+            && self.original_emission_caller.is_none() && self.original_emission_decoder.is_none() && self.original_emission_body.is_none()
             && self.producer_request.is_none()
             && self.producer_request_retirement.is_none()
             && self.session_rejected.is_none()
@@ -633,6 +652,7 @@ impl<A: ArtifactApp> MountedTypedCommandFullOperation<A> {
             && self.worker_fault_capture.is_none()
             && self.publication.is_none()
             && self.pending_artifact_publication.is_none()
+            && self.pending_stream_abort.is_none()
             && !self.pending_publication_outcome.pending() && self.pending_publication_outcome.report.is_none()
             && self.pending_child_publication.is_none()
             && self.owned_child_group.is_none()
@@ -711,3 +731,6 @@ pub fn bounded_json_items(value: Option<&DslValue>, maximum: usize) -> Result<us
 pub use semio_framework_plugin_job::lifted_full_operation_job::*;
 
 include!("🏭️producer/🦀️.rs");
+
+#[path="📥️emission/🦀️.rs"]
+pub mod original_emission;

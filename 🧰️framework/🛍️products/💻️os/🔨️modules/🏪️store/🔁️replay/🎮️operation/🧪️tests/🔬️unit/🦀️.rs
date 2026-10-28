@@ -121,7 +121,7 @@ impl ArtifactReplayPreparation<String, TextInput> for TextPreparation {
     fn next_close_capacity_byte_demand(&self, bytes:usize) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.active.as_ref(){return owner.next_capacity_byte_demand(bytes);} if let Some(owner)=self.shared.as_ref(){return owner.next_capacity_byte_demand(bytes);} self.inverse_list.as_ref().map_or(Ok(0),|owner|owner.next_capacity_byte_demand(bytes)) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_release_byte_demand();} if let Some(owner)=self.shared.as_ref(){return owner.next_release_byte_demand();} self.inverse_list.as_ref().map_or(Ok(0),ControlledRetirement::next_release_byte_demand) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { if let Some(owner)=self.input_close.as_ref(){return owner.next_depth_demand();} if let Some(owner)=self.active.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} if let Some(owner)=self.shared.as_ref(){return owner.next_depth_demand().map(|depth|depth.max(1));} self.inverse_list.as_ref().map_or(Ok(1),|owner|owner.next_depth_demand().map(|depth|depth.max(1))) }
-    fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>)->Result<RetainedCloneStep,ValueError>{
+    fn close_step(&mut self,grant:RetainedCloneGrant,receiving:&mut dyn semio_framework_value::OriginalRetirementControl)->Result<RetainedCloneStep,ValueError>{
         let empty=RetainedCloneProgress::default();
         if !self.closing||grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(empty));}
         let demand=self.close_demands(grant.maximum_copy_bytes)?;if !semio_framework_value::retained_clone::retained_clone_grant_admits(grant,demand){return Ok(RetainedCloneStep::Progress(empty));}if demand.capacity_bytes!=0{receiving.charge(demand.capacity_bytes)?;}
@@ -168,6 +168,7 @@ fn cooperative_history_operation_obeys_the_neutral_law() {
     let context = ArtifactReplayPreparationContext { mode: ArtifactReplayPreparationMode::Report, operation_index: 0, generation: 7, base_revision: [9; 32] };
     for case in law["cases"].as_array().unwrap() {
         for bytes in law["grants"].as_array().unwrap().iter().map(|value| value.as_u64().unwrap() as usize) {
+            let mut callback=|_:semio_framework_value_native_owned::native_decoding::NativeDecodeProgress|true;let mut recipient=semio_framework_value_native_owned::native_decoding::NativeDecodeRetirementRecipient::new();let mut control=semio_framework_value_native_owned::native_decoding::NativeDecodeControl::new_retained(&mut callback);control.install_retirement_recipient(&mut recipient).unwrap();
             let base = Arc::new(case["base"].as_str().unwrap().to_string());
             let input = Arc::new(TextInput { text: case["input"].as_str().unwrap().to_string(), inverse_refused: case["inverseRefused"].as_bool().unwrap(), apply_refused: case["applyRefused"].as_bool().unwrap() });
             let calls = Arc::new(AtomicUsize::new(0));
@@ -226,7 +227,7 @@ impl ArtifactReplayPreparation<(), ()> for EmptyPreparation {
     fn next_close_capacity_byte_demand(&self, _: usize) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_release_byte_demand(&self) -> Result<usize, ValueError> { Ok(0) }
     fn next_close_depth_demand(&self) -> Result<usize, ValueError> { Ok(0) }
-    fn close_step(&mut self, _: RetainedCloneGrant, _: &mut semio_framework_value_native_owned::native_decoding::NativeRetirementDecodeControl<'_, '_>) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
+    fn close_step(&mut self, _: RetainedCloneGrant, _: &mut dyn semio_framework_value::OriginalRetirementControl) -> Result<RetainedCloneStep, ValueError> { Ok(RetainedCloneStep::Complete(Default::default())) }
     fn terminal_is_empty(&self) -> bool { self.closing }
 }
 
@@ -274,8 +275,8 @@ fn cooperative_history_preparation_retirement_releases_the_actual_cursor_frame()
     assert_eq!(owner.next_depth_demand().unwrap(), 1);
     let full = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: bytes, maximum_depth: 1 };
     for short in [RetainedCloneGrant::default(), RetainedCloneGrant { maximum_release_bytes: bytes - 1, ..full }, RetainedCloneGrant { maximum_depth: 0, ..full }] {
-        let (result, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(short,|receiving|owner.close_step(short,receiving)));
-        if short.maximum_items == 0 || short.maximum_depth == 0 { assert!(result.is_err(), "an unpaid original turn is refused before any cleanup"); } else { assert_eq!(result.unwrap().progress(), Default::default()); }
+        let (step, heap) = observe_heap_allocations_on_this_thread(|| control.with_retirement(full,|receiving|owner.close_step(short,receiving)).unwrap());
+        assert_eq!(step.progress(), Default::default());
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert!(!owner.terminal_is_empty());
     }

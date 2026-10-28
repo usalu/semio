@@ -48,6 +48,50 @@
         },
         "group": "identity",
         "order": 20
+      },
+      "minLength": 1
+    }
+  },
+  "x-semio-energy-operation": {
+    "category": "name-row",
+    "row": "StateShadingSurface",
+    "branchType": "ModelGeometryState",
+    "branch": "geometry",
+    "collection": "shading_surfaces",
+    "field": "name",
+    "input": "new_name",
+    "key": "id",
+    "unique": true,
+    "labels": {
+      "en": "Rename shading surface",
+      "de": "Verschattungsfläche umbenennen"
+    },
+    "semantics": {
+      "verb": "rename",
+      "entity": "shading-surface",
+      "kind": "rename-shading-surface",
+      "record": "RenamedShadingSurface"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "A shading surface name must not be blank."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "Another shading surface already has this name."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The addressed shading surface does not exist."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The shading surface already has this name."
       }
     }
   }

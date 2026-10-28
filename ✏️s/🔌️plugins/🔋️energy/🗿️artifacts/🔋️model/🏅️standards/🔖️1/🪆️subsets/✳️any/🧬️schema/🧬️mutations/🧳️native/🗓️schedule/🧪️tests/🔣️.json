@@ -1,0 +1,1661 @@
+{
+  "contract": "semio.energy.original-schedule-intents.v1",
+  "bodyBytes": 4096,
+  "cancelAt": [
+    0,
+    1,
+    3,
+    7,
+    13,
+    29,
+    61,
+    127
+  ],
+  "wideRuleCount": 1200,
+  "rules": [
+    {
+      "start_month": 1,
+      "start_day": 1,
+      "end_month": 3,
+      "end_day": 31,
+      "daily_schedule_id": 1
+    },
+    {
+      "start_month": 4,
+      "start_day": 1,
+      "end_month": 6,
+      "end_day": 31,
+      "daily_schedule_id": 2
+    },
+    {
+      "start_month": 7,
+      "start_day": 1,
+      "end_month": 12,
+      "end_day": 31,
+      "daily_schedule_id": 3
+    }
+  ],
+  "holidays": [
+    [
+      2025,
+      1,
+      1
+    ],
+    [
+      2025,
+      12,
+      25
+    ]
+  ],
+  "days": [
+    1,
+    1,
+    1,
+    1,
+    1,
+    1,
+    1
+  ],
+  "cases": [
+    {
+      "id": "insert-rule-0",
+      "action": "insert-rule",
+      "payload": {
+        "id": 10,
+        "index": 1,
+        "startMonth": 2,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 2
+      },
+      "outcome": "changed",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 2,
+          "start_day": 1,
+          "end_month": 11,
+          "end_day": 30,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": {
+        "mutation": "removeAnnualScheduleRule",
+        "id": 10,
+        "index": 1
+      }
+    },
+    {
+      "id": "insert-rule-1",
+      "action": "insert-rule",
+      "payload": {
+        "id": 10,
+        "index": 3,
+        "startMonth": 2,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 2
+      },
+      "outcome": "changed",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        },
+        {
+          "start_month": 2,
+          "start_day": 1,
+          "end_month": 11,
+          "end_day": 30,
+          "daily_schedule_id": 2
+        }
+      ],
+      "inverse": {
+        "mutation": "removeAnnualScheduleRule",
+        "id": 10,
+        "index": 3
+      }
+    },
+    {
+      "id": "insert-rule-2",
+      "action": "insert-rule",
+      "payload": {
+        "id": 99,
+        "index": 1,
+        "startMonth": 2,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 2
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "insert-rule-3",
+      "action": "insert-rule",
+      "payload": {
+        "id": 10,
+        "index": 4,
+        "startMonth": 2,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 2
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "insert-rule-4",
+      "action": "insert-rule",
+      "payload": {
+        "id": 10,
+        "index": 1,
+        "startMonth": 0,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 2
+      },
+      "outcome": "invalid",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "insert-rule-5",
+      "action": "insert-rule",
+      "payload": {
+        "id": 10,
+        "index": 1,
+        "startMonth": 2,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 99
+      },
+      "outcome": "invalid-reference",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "insert-rule-6",
+      "action": "insert-rule",
+      "payload": {
+        "id": 10,
+        "index": 4,
+        "startMonth": 0,
+        "startDay": 1,
+        "endMonth": 11,
+        "endDay": 30,
+        "dailyScheduleId": 99
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "remove-rule-7",
+      "action": "remove-rule",
+      "payload": {
+        "id": 10,
+        "index": 0
+      },
+      "outcome": "changed",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": {
+        "mutation": "insertAnnualScheduleRule",
+        "id": 10,
+        "index": 0,
+        "startMonth": 1,
+        "startDay": 1,
+        "endMonth": 3,
+        "endDay": 31,
+        "dailyScheduleId": 1
+      }
+    },
+    {
+      "id": "remove-rule-8",
+      "action": "remove-rule",
+      "payload": {
+        "id": 10,
+        "index": 2
+      },
+      "outcome": "changed",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        }
+      ],
+      "inverse": {
+        "mutation": "insertAnnualScheduleRule",
+        "id": 10,
+        "index": 2,
+        "startMonth": 7,
+        "startDay": 1,
+        "endMonth": 12,
+        "endDay": 31,
+        "dailyScheduleId": 3
+      }
+    },
+    {
+      "id": "remove-rule-9",
+      "action": "remove-rule",
+      "payload": {
+        "id": 10,
+        "index": 3
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "remove-rule-10",
+      "action": "remove-rule",
+      "payload": {
+        "id": 99,
+        "index": 0
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "reorder-rules-11",
+      "action": "reorder-rules",
+      "payload": {
+        "id": 10,
+        "from": 0,
+        "to": 2
+      },
+      "outcome": "changed",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        },
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        }
+      ],
+      "inverse": {
+        "mutation": "reorderAnnualScheduleRules",
+        "id": 10,
+        "from": 2,
+        "to": 0
+      }
+    },
+    {
+      "id": "reorder-rules-12",
+      "action": "reorder-rules",
+      "payload": {
+        "id": 10,
+        "from": 2,
+        "to": 0
+      },
+      "outcome": "changed",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        },
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        }
+      ],
+      "inverse": {
+        "mutation": "reorderAnnualScheduleRules",
+        "id": 10,
+        "from": 0,
+        "to": 2
+      }
+    },
+    {
+      "id": "reorder-rules-13",
+      "action": "reorder-rules",
+      "payload": {
+        "id": 10,
+        "from": 1,
+        "to": 1
+      },
+      "outcome": "no-op",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "reorder-rules-14",
+      "action": "reorder-rules",
+      "payload": {
+        "id": 10,
+        "from": 3,
+        "to": 0
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "reorder-rules-15",
+      "action": "reorder-rules",
+      "payload": {
+        "id": 10,
+        "from": 0,
+        "to": 3
+      },
+      "outcome": "missing",
+      "field": "rules",
+      "before": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "after": [
+        {
+          "start_month": 1,
+          "start_day": 1,
+          "end_month": 3,
+          "end_day": 31,
+          "daily_schedule_id": 1
+        },
+        {
+          "start_month": 4,
+          "start_day": 1,
+          "end_month": 6,
+          "end_day": 31,
+          "daily_schedule_id": 2
+        },
+        {
+          "start_month": 7,
+          "start_day": 1,
+          "end_month": 12,
+          "end_day": 31,
+          "daily_schedule_id": 3
+        }
+      ],
+      "inverse": null
+    },
+    {
+      "id": "add-holiday-16",
+      "action": "add-holiday",
+      "payload": {
+        "id": 10,
+        "index": 1,
+        "year": 2025,
+        "month": 5,
+        "day": 1
+      },
+      "outcome": "changed",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          5,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": {
+        "mutation": "removeAnnualScheduleHoliday",
+        "id": 10,
+        "year": 2025,
+        "month": 5,
+        "day": 1
+      }
+    },
+    {
+      "id": "add-holiday-17",
+      "action": "add-holiday",
+      "payload": {
+        "id": 10,
+        "index": 1,
+        "year": 2025,
+        "month": 1,
+        "day": 1
+      },
+      "outcome": "no-op",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "add-holiday-18",
+      "action": "add-holiday",
+      "payload": {
+        "id": 10,
+        "index": 3,
+        "year": 2025,
+        "month": 1,
+        "day": 1
+      },
+      "outcome": "missing",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "add-holiday-19",
+      "action": "add-holiday",
+      "payload": {
+        "id": 10,
+        "index": 1,
+        "year": 2025,
+        "month": 0,
+        "day": 1
+      },
+      "outcome": "invalid",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "add-holiday-20",
+      "action": "add-holiday",
+      "payload": {
+        "id": 10,
+        "index": 3,
+        "year": 2025,
+        "month": 0,
+        "day": 1
+      },
+      "outcome": "invalid",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "add-holiday-21",
+      "action": "add-holiday",
+      "payload": {
+        "id": 99,
+        "index": 1,
+        "year": 2025,
+        "month": 5,
+        "day": 1
+      },
+      "outcome": "missing",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "remove-holiday-22",
+      "action": "remove-holiday",
+      "payload": {
+        "id": 10,
+        "year": 2025,
+        "month": 1,
+        "day": 1
+      },
+      "outcome": "changed",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": {
+        "mutation": "addAnnualScheduleHoliday",
+        "id": 10,
+        "index": 0,
+        "year": 2025,
+        "month": 1,
+        "day": 1
+      }
+    },
+    {
+      "id": "remove-holiday-23",
+      "action": "remove-holiday",
+      "payload": {
+        "id": 10,
+        "year": 2025,
+        "month": 12,
+        "day": 25
+      },
+      "outcome": "changed",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ]
+      ],
+      "inverse": {
+        "mutation": "addAnnualScheduleHoliday",
+        "id": 10,
+        "index": 1,
+        "year": 2025,
+        "month": 12,
+        "day": 25
+      }
+    },
+    {
+      "id": "remove-holiday-24",
+      "action": "remove-holiday",
+      "payload": {
+        "id": 10,
+        "year": 2025,
+        "month": 0,
+        "day": 1
+      },
+      "outcome": "missing",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "remove-holiday-25",
+      "action": "remove-holiday",
+      "payload": {
+        "id": 99,
+        "year": 2025,
+        "month": 1,
+        "day": 1
+      },
+      "outcome": "missing",
+      "field": "holiday_dates",
+      "before": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "after": [
+        [
+          2025,
+          1,
+          1
+        ],
+        [
+          2025,
+          12,
+          25
+        ]
+      ],
+      "inverse": null
+    },
+    {
+      "id": "change-day-26",
+      "action": "change-day",
+      "payload": {
+        "id": 20,
+        "dayIndex": 0,
+        "newDailyScheduleId": 2
+      },
+      "outcome": "changed",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        2,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "inverse": {
+        "mutation": "changeWeeklyScheduleDay",
+        "id": 20,
+        "dayIndex": 0,
+        "newDailyScheduleId": 1
+      }
+    },
+    {
+      "id": "change-day-27",
+      "action": "change-day",
+      "payload": {
+        "id": 20,
+        "dayIndex": 6,
+        "newDailyScheduleId": 2
+      },
+      "outcome": "changed",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        2
+      ],
+      "inverse": {
+        "mutation": "changeWeeklyScheduleDay",
+        "id": 20,
+        "dayIndex": 6,
+        "newDailyScheduleId": 1
+      }
+    },
+    {
+      "id": "change-day-28",
+      "action": "change-day",
+      "payload": {
+        "id": 20,
+        "dayIndex": 1,
+        "newDailyScheduleId": 1
+      },
+      "outcome": "no-op",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "inverse": null
+    },
+    {
+      "id": "change-day-29",
+      "action": "change-day",
+      "payload": {
+        "id": 20,
+        "dayIndex": 7,
+        "newDailyScheduleId": 2
+      },
+      "outcome": "invalid",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "inverse": null
+    },
+    {
+      "id": "change-day-30",
+      "action": "change-day",
+      "payload": {
+        "id": 20,
+        "dayIndex": 7,
+        "newDailyScheduleId": 99
+      },
+      "outcome": "invalid",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "inverse": null
+    },
+    {
+      "id": "change-day-31",
+      "action": "change-day",
+      "payload": {
+        "id": 20,
+        "dayIndex": 0,
+        "newDailyScheduleId": 99
+      },
+      "outcome": "invalid-reference",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "inverse": null
+    },
+    {
+      "id": "change-day-32",
+      "action": "change-day",
+      "payload": {
+        "id": 99,
+        "dayIndex": 7,
+        "newDailyScheduleId": 99
+      },
+      "outcome": "missing",
+      "field": "daily_schedule_ids",
+      "before": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "after": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ],
+      "inverse": null
+    }
+  ],
+  "wideSourceAdmission": "original-retained-turns"
+}

@@ -21,12 +21,17 @@ use crate::VcsArtifactApp;
 use semio_framework_plugin_window_transient::window_transient::WindowTransientSnapshot;
 use semio_framework_ui_contract::*;
 
-impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
+impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📸️ Materializes and returns the current snapshot — the typed counterpart to
     /// `render`'s `UiNode` output, for callers (host code, downstream plugin crates' own tests) that
     /// need direct structural access to document state instead of a rendered node.
     pub fn snapshot(&self) -> Result<A::Snapshot, Fault> {
         self.stores.snapshot()
+    }
+
+    /// 📸️ Borrows the current persisted read root without copying its state.
+    pub fn snapshot_ref(&self) -> &A::Snapshot {
+        self.stores.snapshot_ref()
     }
 
     /// 🧪️ Returns the fixed store revision that a host render or admitted command observes.
@@ -38,16 +43,6 @@ impl<A: ArtifactApp, M: ReferenceSpaceMember + MemberFactory + 'static> VcsArtif
     /// 🔗️ The store's current backbone descriptor, `None` when unattached (the default).
     pub fn backbone_ref(&self) -> Option<&store::os_store::store_schema::ArtifactBackboneRef> {
         self.stores.backbone_ref()
-    }
-
-    /// 🔍️ Pure dry run (§C9): folds `ops` over the CURRENT persisted document snapshot via
-    /// `SpaceMember::preview_wire` — never applies anything, never touches `self.dispatch_report` —
-    /// and packages the resulting messages under the store's active `MergePolicy` as a
-    /// `DispatchReport`. This is the single predicate a host/UI consults to grey out an action or
-    /// context-menu item BEFORE a real dispatch is even attempted, so the "alone ⇒ illegal actions
-    /// are prevented up front" half of the ticket holds without a round trip through `dispatch_emit`.
-    pub async fn preview(&self, ops: &[A::Mutation]) -> protocol::DispatchReport {
-        self.stores.preview(ops).await
     }
 
     /// 🕹️ Combines the persisted-local `interaction_store` snapshot with the ephemeral

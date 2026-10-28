@@ -174,5 +174,127 @@
         "order": 60
       }
     }
+  },
+  "x-semio-energy-row-birth": {
+    "row": "StateHumidistat",
+    "fields": [
+      {
+        "field": "id",
+        "input": "id",
+        "storage": "fixed"
+      },
+      {
+        "field": "zone_id",
+        "input": "zone_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "humidifying_setpoint_schedule_id",
+        "input": "humidifying_setpoint_schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "dehumidifying_setpoint_schedule_id",
+        "input": "dehumidifying_setpoint_schedule_id",
+        "storage": "fixed"
+      },
+      {
+        "field": "humidifying_throttle_range",
+        "input": "humidifying_throttle_range",
+        "storage": "fixed"
+      },
+      {
+        "field": "dehumidifying_throttle_range",
+        "input": "dehumidifying_throttle_range",
+        "storage": "fixed"
+      }
+    ],
+    "recreation": "exact"
+  },
+  "x-semio-energy-operation": {
+    "category": "create-row",
+    "row": "StateHumidistat",
+    "branchType": "ModelControlState",
+    "branch": "controls",
+    "collection": "humidistats",
+    "key": "id",
+    "inverse": "DeleteHumidistat",
+    "labels": {
+      "en": "Create humidistat",
+      "de": "Feuchteregler erstellen"
+    },
+    "semantics": {
+      "verb": "create",
+      "entity": "humidistat",
+      "kind": "create-humidistat",
+      "record": "CreatedHumidistat"
+    },
+    "diagnostics": {
+      "invalid": {
+        "level": "fatal",
+        "code": "mutation.invariant",
+        "message": "The authored row violates its declared field bounds."
+      },
+      "duplicate": {
+        "level": "fatal",
+        "code": "mutation.duplicate-id",
+        "message": "An object with this identity already exists."
+      },
+      "missing": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The authored insertion rank is past the end of the collection."
+      },
+      "unchanged": {
+        "level": "warning",
+        "code": "mutation.no-op",
+        "message": "The creation makes no change."
+      },
+      "reference": {
+        "level": "error",
+        "code": "mutation.target-missing",
+        "message": "The original referenced entity does not exist."
+      }
+    },
+    "validationBeforeRank": true,
+    "rules": [
+      {
+        "input": "zone_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "Zones"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "humidifying_setpoint_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      },
+      {
+        "input": "dehumidifying_setpoint_schedule_id",
+        "kind": "reference",
+        "storage": "direct",
+        "collections": [
+          "ConstantSchedules",
+          "DailySchedules",
+          "WeeklySchedules",
+          "AnnualSchedules",
+          "TimeSeriesSchedules"
+        ],
+        "target": "input"
+      }
+    ],
+    "defaultRank": "append",
+    "scalarOrder": "after-rules"
   }
 }

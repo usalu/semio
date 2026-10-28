@@ -108,9 +108,9 @@ impl ArtifactViewer for Block5dViewer {
     /// mesh window renders a real representation instead of the fallback mesh kind — the
     /// artifact-side `default_block5d_snapshot` the editor boots on too (no editor import: this is
     /// `crate::standards::v1::subsets::any::schema`).
-    fn initial_snapshot() -> Block5dSnapshot {
+    fn reference_birth()->Option<fn()->Block5dSnapshot>{Some(||{
         semio_s_artifact_block_5d_io::text::snapshot::default_block5d_snapshot()
-    }
+    })}
 
     /// 👁️ Structurally read-only: the sole `Block5dViewCommand::Noop` variant never carries a config
     /// change, so this always returns the empty `ViewEmit` — no config mutation, no effect, no dirty

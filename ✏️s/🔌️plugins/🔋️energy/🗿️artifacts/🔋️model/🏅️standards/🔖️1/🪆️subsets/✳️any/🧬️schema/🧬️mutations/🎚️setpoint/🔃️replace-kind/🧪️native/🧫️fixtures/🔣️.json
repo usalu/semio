@@ -1,0 +1,180 @@
+{
+  "contract": "semio.energy.original-setpoint-kind/v1",
+  "collection": "setpoint_managers",
+  "field": "kind",
+  "branch": "controls",
+  "original": {
+    "id": 7,
+    "name": "supply",
+    "kind": {
+      "OutdoorAirReset": {
+        "low_outdoor_c": -15,
+        "high_outdoor_c": 25,
+        "low_setpoint_c": 19,
+        "high_setpoint_c": 11
+      }
+    },
+    "schedule_id": null
+  },
+  "originalValue": [
+    "OutdoorAirReset",
+    [
+      -15,
+      25,
+      19,
+      11
+    ]
+  ],
+  "cases": [
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "Scheduled",
+        "newLowOutdoorC": 0,
+        "newHighOutdoorC": 0,
+        "newLowSetpointC": 0,
+        "newHighSetpointC": 0
+      },
+      "outcome": "changed",
+      "after": [
+        "Scheduled",
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "WarmestZone",
+        "newLowOutdoorC": 0,
+        "newHighOutdoorC": 0,
+        "newLowSetpointC": 0,
+        "newHighSetpointC": 0
+      },
+      "outcome": "changed",
+      "after": [
+        "WarmestZone",
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "ColdestZone",
+        "newLowOutdoorC": 0,
+        "newHighOutdoorC": 0,
+        "newLowSetpointC": 0,
+        "newHighSetpointC": 0
+      },
+      "outcome": "changed",
+      "after": [
+        "ColdestZone",
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "OutdoorAirReset",
+        "newLowOutdoorC": -10,
+        "newHighOutdoorC": 20,
+        "newLowSetpointC": 16,
+        "newHighSetpointC": 12
+      },
+      "outcome": "changed",
+      "after": [
+        "OutdoorAirReset",
+        [
+          -10,
+          20,
+          16,
+          12
+        ]
+      ]
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "OutdoorAirReset",
+        "newLowOutdoorC": -15,
+        "newHighOutdoorC": 25,
+        "newLowSetpointC": 19,
+        "newHighSetpointC": 11
+      },
+      "outcome": "no-op"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "Scheduled",
+        "newLowOutdoorC": 1,
+        "newHighOutdoorC": 0,
+        "newLowSetpointC": 0,
+        "newHighSetpointC": 0
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "OutdoorAirReset",
+        "newLowOutdoorC": 20,
+        "newHighOutdoorC": 20,
+        "newLowSetpointC": 16,
+        "newHighSetpointC": 12
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 7,
+        "newKind": "OutdoorAirReset",
+        "newLowOutdoorC": 25,
+        "newHighOutdoorC": 20,
+        "newLowSetpointC": 16,
+        "newHighSetpointC": 12
+      },
+      "outcome": "invalid"
+    },
+    {
+      "payload": {
+        "id": 99,
+        "newKind": "Scheduled",
+        "newLowOutdoorC": 1,
+        "newHighOutdoorC": 0,
+        "newLowSetpointC": 0,
+        "newHighSetpointC": 0
+      },
+      "outcome": "missing"
+    }
+  ],
+  "cancelAt": [
+    0,
+    1,
+    2,
+    3,
+    5,
+    8,
+    16,
+    32,
+    64,
+    128,
+    256,
+    512,
+    1000
+  ]
+}

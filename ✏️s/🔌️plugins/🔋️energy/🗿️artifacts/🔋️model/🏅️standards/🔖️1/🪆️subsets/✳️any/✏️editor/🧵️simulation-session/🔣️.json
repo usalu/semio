@@ -82,6 +82,31 @@
         "id": "facilityElectricityWh",
         "en": "Facility electricity (Wh)",
         "de": "Anlagenelektrizität (Wh)"
+      },
+      {
+        "id": "energy.input-identity-bytes",
+        "en": "Input bytes verified",
+        "de": "Geprüfte Eingabebytes"
+      },
+      {
+        "id": "heatingWh",
+        "en": "Heating energy (Wh)",
+        "de": "Heizenergie (Wh)"
+      },
+      {
+        "id": "coolingWh",
+        "en": "Cooling energy (Wh)",
+        "de": "Kühlenergie (Wh)"
+      },
+      {
+        "id": "weatherSourceBytes",
+        "en": "Weather source bytes verified",
+        "de": "Geprüfte Wetterquellbytes"
+      },
+      {
+        "id": "weatherRecords",
+        "en": "Weather hours prepared",
+        "de": "Vorbereitete Wetterstunden"
       }
     ],
     "reasons": [

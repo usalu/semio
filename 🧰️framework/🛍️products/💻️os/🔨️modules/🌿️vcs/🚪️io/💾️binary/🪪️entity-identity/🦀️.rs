@@ -1,6 +1,8 @@
 //! 🆔️ Controlled canonical commitments for event and version-graph identities.
 #[path="🎛️control/🦀️.rs"]
 pub mod control;
+#[path="🎟️original/🦀️.rs"]
+pub mod original;
 use semio_framework_hash::Hasher;
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};
 

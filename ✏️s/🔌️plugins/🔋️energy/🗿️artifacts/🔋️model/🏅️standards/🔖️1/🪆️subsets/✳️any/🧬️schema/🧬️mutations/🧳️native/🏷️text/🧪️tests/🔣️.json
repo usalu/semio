@@ -1,0 +1,11 @@
+{
+ "cases": [
+  {"id":1,"before":"Office","value":"Living room","outcome":"changed","after":"Living room"},
+  {"id":1,"before":"Office","value":"Office","outcome":"no-op","after":"Office"},
+  {"id":1,"before":"Office","value":" \t\r\n　","outcome":"invalid","after":"Office"},
+  {"id":1,"before":"Office","value":"Existing","other":"Existing","outcome":"duplicate","after":"Office"},
+  {"id":1,"before":"Office","value":"Äther 🔋","outcome":"changed","after":"Äther 🔋"},
+  {"id":999,"before":"Office","value":"Living room","outcome":"missing","after":"Office"}
+ ],
+ "cancelAt":[0,1,2,3,4,8,12,16,24,32,48,64,96,128,160,240]
+}
