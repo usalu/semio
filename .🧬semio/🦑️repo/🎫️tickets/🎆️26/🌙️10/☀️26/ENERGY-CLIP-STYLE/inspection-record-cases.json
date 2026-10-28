@@ -1,0 +1,22 @@
+{
+  "version": 1,
+  "attempts": 50,
+  "delay_seconds": 0.01,
+  "transient_failures": 3,
+  "reader_hold_seconds": 0.12,
+  "writers": 4,
+  "updates_per_writer": 12,
+  "initial": {
+    "old": {
+      "state": "completed"
+    }
+  },
+  "laws": [
+    "temporary_lock_releases_before_bound",
+    "permanent_denial_preserves_old_json",
+    "permanent_denial_is_terminal",
+    "concurrent_readers_observe_complete_json",
+    "per_video_updates_are_serialized",
+    "terminal_record_failure_cancels_peer_before_join"
+  ]
+}

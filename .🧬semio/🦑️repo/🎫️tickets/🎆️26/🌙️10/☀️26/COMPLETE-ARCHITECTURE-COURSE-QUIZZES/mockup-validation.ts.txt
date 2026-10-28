@@ -1,0 +1,96 @@
+/** 🖥️ Strict, bounded workspace data and references, without grading fields. */
+function mockup(value: unknown, path: string, report: Report): void {
+  const bounded = (entry: unknown, pointer: string, min: number, max: number, each: (entry: unknown, pointer: string) => void): readonly unknown[] | undefined => {
+    const entries = array(entry, pointer, report, min, each);
+    if (entries && entries.length > max) report(pointer, "value-invalid");
+    return entries;
+  };
+  const cell = (entry: unknown, pointer: string): void => {
+    const json = object(entry, pointer, report, ["en", "de"]);
+    if (json) for (const language of ["en", "de"]) if (Object.hasOwn(json, language)) string(json[language], at(pointer, language), report, 0, 256);
+  };
+  const index = (entry: unknown, pointer: string): void => {
+    if (integer(entry, pointer, report, 0) && (entry as number) > 31) report(pointer, "value-invalid");
+  };
+  if (!isObject(value)) return void report(path, "type-invalid");
+  if (value.kind === "excel") {
+    const json = object(value, path, report, ["kind", "caption", "workbook", "sheets", "activeSheet", "columns", "rows", "selection", "formula", "target"]);
+    if (!json) return;
+    text(json.caption, at(path, "caption"), report);
+    text(json.workbook, at(path, "workbook"), report);
+    const sheets = bounded(json.sheets, at(path, "sheets"), 1, 8, (entry, pointer) => text(entry, pointer, report));
+    index(json.activeSheet, at(path, "activeSheet"));
+    const columns = bounded(json.columns, at(path, "columns"), 1, 16, (entry, pointer) => {
+      if (string(entry, pointer, report, 1, 2) && !/^[A-Z]{1,2}$/.test(entry as string)) report(pointer, "value-invalid");
+    });
+    const rows = bounded(json.rows, at(path, "rows"), 1, 32, (entry, pointer) => {
+      const row = bounded(entry, pointer, 1, 16, cell);
+      if (row && columns && row.length !== columns.length) report(pointer, "value-invalid");
+    });
+    const selection = object(json.selection, at(path, "selection"), report, ["row", "column"], ["rowEnd", "columnEnd"]);
+    if (selection) {
+      for (const key of ["row", "column", "rowEnd", "columnEnd"]) if (Object.hasOwn(selection, key)) index(selection[key], at(at(path, "selection"), key));
+      for (const [key, size] of [["row", rows?.length], ["rowEnd", rows?.length], ["column", columns?.length], ["columnEnd", columns?.length]] as const) {
+        if (typeof selection[key] === "number" && size !== undefined && (selection[key] as number) >= size) report(at(at(path, "selection"), key), "value-invalid");
+      }
+      if (typeof selection.rowEnd === "number" && typeof selection.row === "number" && selection.rowEnd < selection.row) report(at(at(path, "selection"), "rowEnd"), "value-invalid");
+      if (typeof selection.columnEnd === "number" && typeof selection.column === "number" && selection.columnEnd < selection.column) report(at(at(path, "selection"), "columnEnd"), "value-invalid");
+    }
+    if (typeof json.activeSheet === "number" && sheets && json.activeSheet >= sheets.length) report(at(path, "activeSheet"), "value-invalid");
+    cell(json.formula, at(path, "formula"));
+    literal(json.target, at(path, "target"), report, ["cell", "range", "row", "column", "worksheet", "workbook", "formula", "name-box"]);
+    return;
+  }
+  if (value.kind !== "grasshopper") return void report(at(path, "kind"), "value-invalid");
+  const json = object(value, path, report, ["kind", "caption", "nodes", "wires", "tree", "target"]);
+  if (!json) return;
+  text(json.caption, at(path, "caption"), report);
+  const nodes = bounded(json.nodes, at(path, "nodes"), 1, 8, (entry, pointer) => {
+    const node = object(entry, pointer, report, ["id", "label", "inputs", "outputs"]);
+    if (!node) return;
+    slug(node.id, at(pointer, "id"), report);
+    text(node.label, at(pointer, "label"), report);
+    for (const side of ["inputs", "outputs"]) {
+      const ports = bounded(node[side], at(pointer, side), 0, 12, (entry, pointer) => {
+        const port = object(entry, pointer, report, ["id", "label"]);
+        if (port) { slug(port.id, at(pointer, "id"), report); text(port.label, at(pointer, "label"), report); }
+      });
+      uniqueIds(ports, at(pointer, side), report);
+    }
+  });
+  uniqueIds(nodes, at(path, "nodes"), report);
+  const endpoint = (entry: unknown, pointer: string, side: "inputs" | "outputs"): void => {
+    const endpoint = object(entry, pointer, report, ["node", "port"]);
+    if (!endpoint) return;
+    slug(endpoint.node, at(pointer, "node"), report);
+    slug(endpoint.port, at(pointer, "port"), report);
+    const node = nodes?.find((candidate) => isObject(candidate) && candidate.id === endpoint.node);
+    const ports = isObject(node) && Array.isArray(node[side]) ? node[side] : [];
+    if (!ports.some((port: unknown) => isObject(port) && port.id === endpoint.port)) report(pointer, "value-invalid");
+  };
+  const wires = bounded(json.wires, at(path, "wires"), 0, 24, (entry, pointer) => {
+    const wire = object(entry, pointer, report, ["from", "to"]);
+    if (wire) { endpoint(wire.from, at(pointer, "from"), "outputs"); endpoint(wire.to, at(pointer, "to"), "inputs"); }
+  });
+  const tree = bounded(json.tree, at(path, "tree"), 0, 12, (entry, pointer) => {
+    const branch = object(entry, pointer, report, ["path", "values"]);
+    if (!branch) return;
+    if (string(branch.path, at(pointer, "path"), report, 1, 64) && !/^\{[0-9]+(?:;[0-9]+)*\}$/.test(branch.path as string)) report(at(pointer, "path"), "value-invalid");
+    bounded(branch.values, at(pointer, "values"), 0, 16, cell);
+  });
+  const targetPath = at(path, "target");
+  const target = object(json.target, targetPath, report, ["kind", "index"], ["node", "port"]);
+  if (!target) return;
+  literal(target.kind, at(targetPath, "kind"), report, ["node", "input", "output", "wire", "tree", "branch", "item"]);
+  index(target.index, at(targetPath, "index"));
+  for (const key of ["node", "port"]) if (Object.hasOwn(target, key)) slug(target[key], at(targetPath, key), report);
+  if (["node", "input", "output"].includes(target.kind as string)) {
+    const node = nodes?.find((candidate) => isObject(candidate) && candidate.id === target.node);
+    if (!isObject(node)) report(at(targetPath, "node"), "value-invalid");
+    else if (target.kind !== "node") endpoint({ node: target.node, port: target.port }, targetPath, target.kind === "input" ? "inputs" : "outputs");
+  } else {
+    const first = tree?.[0];
+    const count = target.kind === "wire" ? wires?.length : target.kind === "branch" ? tree?.length : target.kind === "item" && isObject(first) && Array.isArray(first.values) ? first.values.length : undefined;
+    if (typeof target.index === "number" && count !== undefined && target.index >= count) report(at(targetPath, "index"), "value-invalid");
+  }
+}

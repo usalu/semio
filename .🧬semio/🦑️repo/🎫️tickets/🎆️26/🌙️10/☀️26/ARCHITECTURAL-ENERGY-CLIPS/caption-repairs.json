@@ -1,0 +1,338 @@
+[
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py",
+    "scene": "Beat3_LatenteLast",
+    "key": "r",
+    "language": "de",
+    "previous": "Der Phasenwechsel braucht Energie: r beträgt etwa 2450 Kilojoule je Kilogramm — beim Kondensieren wird sie frei und muss abgeführt werden.",
+    "text": "Der Phasenwechsel benötigt r ≈ 2450 kJ/kg. Kondensation setzt diese Energie frei; sie muss abgeführt werden."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat1_Fensterregeln",
+    "key": "winter",
+    "language": "en",
+    "previous": "In winter the outdoor air is always colder. Open wide, but only briefly: every minute carries heat out, so the duration counts as much as the width.",
+    "text": "Winter air is colder. Open wide but briefly: each minute loses heat, so duration matters as much as opening width."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat1_Fensterregeln",
+    "key": "rule",
+    "language": "en",
+    "previous": "So the rule is the same in both seasons: set the window for the people inside, judged against the outdoor temperature and the time it stays open.",
+    "text": "In both seasons, set window opening and duration for the occupants and the outdoor temperature."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat2_StossOderKipp",
+    "key": "summer",
+    "language": "en",
+    "previous": "In summer radiator and reveal drop out: at six kelvin the air alone is only about 100 watt-hours, yet a tilted window still exchanges little air. The rule stays: wide and short, in the cool hours.",
+    "text": "Summer: ≈100 Wh of air heat at 6 K, no radiator or reveal. Tilt moves little air: open wide, briefly, in cool hours."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat3_Querlueftung",
+    "key": "limit",
+    "language": "en",
+    "previous": "Because the two act in series, the smaller one dominates. Shrink the outlet and the whole cross flow collapses, no matter how wide the inlet stays.",
+    "text": "The smaller series opening governs. Shrinking the outlet chokes cross flow even with the inlet wide open."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat3_Querlueftung",
+    "key": "winter",
+    "language": "en",
+    "previous": "In winter the same wind pressure pulls cold air through the room. The cross flow costs heat quickly, so use it briefly and close the openings afterwards.",
+    "text": "Winter wind pressure draws cold air through and quickly loses heat: ventilate briefly, then close the openings."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat4_Auftrieb",
+    "key": "rho",
+    "language": "en",
+    "previous": "The density difference comes straight out of the temperature difference: on a summer night 18 outside against 26 inside. The warmer the room air, the lighter it is, and the harder it is pushed up.",
+    "text": "Summer night: 18 °C outside, 26 °C inside. Warmer indoor air is less dense, so it rises more strongly."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat4_Auftrieb",
+    "key": "winter",
+    "language": "en",
+    "previous": "In winter the temperature difference is 20 instead of 8 kelvin. The same shaft now builds almost three times the pressure: the stack effect is strongest when it is cold.",
+    "text": "Winter: 20 K instead of 8 K gives the same shaft almost three times the pressure. Buoyancy is strongest in cold weather."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat4_Auftrieb",
+    "key": "winter",
+    "language": "de",
+    "previous": "Im Winter beträgt die Temperaturdifferenz 20 statt 8 K — derselbe Schacht\nerzeugt fast dreimal so viel Druck: im Kalten wirkt der Auftrieb am stärksten.",
+    "text": "Im Winter: 20 statt 8 K, im selben Schacht fast dreifacher Druck. Bei Kälte wirkt der Auftrieb am stärksten."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat5_Nachtlueftung",
+    "key": "night",
+    "language": "en",
+    "previous": "After sunset the outdoor air falls below the room temperature. That is the window of opportunity: open wide and let cool air sweep the thermal mass.",
+    "text": "After sunset, cooler outdoor air opens the opportunity: open wide and flush the thermal mass with cool air."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat5_Nachtlueftung",
+    "key": "winter",
+    "language": "en",
+    "previous": "In winter the schedule reverses. The mass holds the warmth of the day, so the windows stay shut at night and the room is aired only briefly by day.",
+    "text": "Winter reverses the schedule: thermal mass retains daytime warmth. Close windows at night and air briefly by day."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat6_GrenzenDerFreienLueftung",
+    "key": "intro",
+    "language": "en",
+    "previous": "Everything so far rested on one assumption: that the outdoor air is usable. Free ventilation has no answer for the hours when it is not, in summer or in winter.",
+    "text": "Free ventilation assumes usable outdoor air. When that fails, it has no answer in summer or winter."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat6_GrenzenDerFreienLueftung",
+    "key": "control",
+    "language": "en",
+    "previous": "And the flow follows the weather, not the design. Wind and buoyancy change all day, so this volume flow can never be sized against a heating or cooling load.",
+    "text": "Wind and buoyancy vary all day: weather sets this flow, so it cannot be sized for a heating or cooling load."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat6_GrenzenDerFreienLueftung",
+    "key": "recovery",
+    "language": "en",
+    "previous": "Finally, all the energy in the air leaving the room simply disappears through the opening. With η equal to zero nothing is recovered: in winter the full 1500 watts of ventilation heat loss.",
+    "text": "At η = 0, exhaust energy escapes through the opening. No heat is recovered: winter ventilation loses all 1500 W."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat6_GrenzenDerFreienLueftung",
+    "key": "recovery",
+    "language": "de",
+    "previous": "Die gesamte Energie der abströmenden Luft verschwindet durch die Öffnung:\nη = 0, im Winter gehen die vollen 1500 W Lüftungswärmeverlust verloren.",
+    "text": "Bei η = 0 entweicht die Abluftenergie durch die Öffnung. Keine Rückgewinnung: im Winter gehen volle 1500 W verloren."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat6_GrenzenDerFreienLueftung",
+    "key": "handover",
+    "language": "en",
+    "previous": "Closing those four gaps is exactly what fan-assisted ventilation is for, with heat recovery: the next chapter. Heating and Cooling will build on both.",
+    "text": "Fan-assisted ventilation with heat recovery closes these four gaps. The next chapter underpins Heating and Cooling."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py",
+    "scene": "Beat6_GrenzenDerFreienLueftung",
+    "key": "handover",
+    "language": "de",
+    "previous": "Diese vier Lücken schließt die mechanische Lüftung mit\nWärmerückgewinnung — nächstes Kapitel, Basis für Heizung und Kühlung.",
+    "text": "Mechanische Lüftung mit WRG schließt diese vier Lücken. Das nächste Kapitel legt die Basis für Heizung und Kühlung."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat1_Grundtypen",
+    "key": "exhaust",
+    "language": "en",
+    "previous": "The exhaust-only system extracts air mechanically. Fresh air seeps in unfiltered through passive wall vents, and the room sits at a slight negative pressure.",
+    "text": "Exhaust-only: a fan extracts air; fresh air enters unfiltered through passive wall vents, with slight room suction."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat1_Grundtypen",
+    "key": "verdict",
+    "language": "en",
+    "previous": "Only that third type has both streams under control, and only then do filtering, humidity control and heat recovery become possible, in winter as in summer.",
+    "text": "Only the third type controls both air streams, enabling filtering, humidity control and heat recovery in both seasons."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat2_Waermerueckgewinnung",
+    "key": "formula",
+    "language": "en",
+    "previous": "The temperature change ratio eta is the warming the supply air actually gained, divided by the difference that was available between exhaust and outdoor air.",
+    "text": "η divides the achieved supply-air warming by the available exhaust-to-outdoor temperature difference."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat2_Waermerueckgewinnung",
+    "key": "summer",
+    "language": "en",
+    "previous": "In summer the same definition holds: outdoor air at thirty-two degrees, exhaust at twenty-six. About five of six kelvin are gained, so heat recovery becomes cold recovery.",
+    "text": "Summer: 32 °C outdoors, 26 °C exhaust; about 5 of 6 K recovered. The same ratio turns heat recovery into cold recovery."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat3_Anlagenvergleich",
+    "key": "outro",
+    "language": "en",
+    "previous": "DIN 1946-6: mechanical recovery can cut the ventilation heat loss by up to ninety percent in winter, and in summer the same technology recovers cold.",
+    "text": "DIN 1946-6: recovery cuts winter ventilation heat loss by up to 90%. In summer the same unit recovers cold."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat3_Anlagenvergleich",
+    "key": "outro",
+    "language": "de",
+    "previous": "DIN 1946-6: mechanische WRG senkt den Lüftungswärmeverlust im Winter\num bis zu 90 % — im Sommer gewinnt sie dieselbe Kälte zurück.",
+    "text": "DIN 1946-6: WRG senkt den Winter-Lüftungswärmeverlust um bis zu 90 %. Im Sommer gewinnt dieselbe Technik Kälte zurück."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat3_Anlagenvergleich",
+    "key": "passivhaus",
+    "language": "en",
+    "previous": "An open window recovers nothing. That is why the Passivhaus ducts its air through a heat recovery unit and gives up window ventilation as the main air path.",
+    "text": "Open windows recover nothing. The Passivhaus uses ducts and a heat-recovery unit as its main ventilation path."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py",
+    "scene": "Beat4_Kanalquerschnitt",
+    "key": "area",
+    "language": "en",
+    "previous": "A larger area slows the same flow down. At two point five metres per second the area is the flow divided by the velocity: about 0.0244 square metres.",
+    "text": "For the same flow, more area means less speed. At 2.5 m/s, area = flow ÷ speed ≈ 0.0244 m²."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+    "scene": "Beat7_Waermedurchlasswiderstand",
+    "key": "gradient",
+    "language": "en",
+    "previous": "For a single layer the drop from twenty to zero is always the same distance. A poorly insulating material lets more heat through that same drop.",
+    "text": "For one layer, the drop from 20 to 0 is unchanged. Poorer insulation passes more heat through that same drop."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py",
+    "scene": "Beat9_WaermestromFormel",
+    "key": "power",
+    "language": "de",
+    "previous": "U ist der Haupt-Hebel am Aufbau. Kompaktheit und Innentemperatur zählen auch — aber Dämmung ist der Faktor, den man in der Wand selbst wählt.",
+    "text": "U ist der Haupthebel im Aufbau. Auch Kompaktheit und Raumtemperatur zählen; Dämmung wählt man in der Wand."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+    "scene": "Beat3_LueftungslastImSommer",
+    "key": "intro",
+    "language": "en",
+    "previous": "The opaque envelope delivers about 680 watts here: 68 watts per kelvin times 10 kelvin. In summer the air adds a second load, explained in the ventilation video.",
+    "text": "Opaque envelope: 68 W/K × 10 K ≈ 680 W. Summer airflow adds another load, covered in the ventilation video."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+    "scene": "Beat3_LueftungslastImSommer",
+    "key": "sens",
+    "language": "en",
+    "previous": "A short reminder from the ventilation video: 220 cubic metres per hour at 6 kelvin bring about 450 watts of sensible heat in through the reversed openings.",
+    "text": "From ventilation: 220 m³/h at 6 K adds about 450 W of sensible heat through the now-reversed openings."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+    "scene": "Beat1_SolarIrradiance",
+    "key": "chart",
+    "language": "en",
+    "previous": "Watch the sun travel from east over south to west above the house: each facade lights up in turn and draws its own power curve — east in the morning, south at noon, west in the afternoon, north stays low.",
+    "text": "Sun: east–south–west. Facade power peaks east in the morning, south at noon, west in the afternoon; north stays low."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+    "scene": "Beat5_SolarCoolingLoad",
+    "key": "intro",
+    "language": "en",
+    "previous": "By multiplying the raw solar irradiance by our building's gross area, and then applying our three dimensionless reduction filters, the frame factor, the shading factor, and the glass transmittance, we arrive at our answer.",
+    "text": "Solar load: irradiance × gross area × three dimensionless factors—frame, shading, glass transmittance."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+    "scene": "Beat2_VolumeFlowEquation",
+    "key": "formula",
+    "language": "en",
+    "previous": "Q-dot V equals air density times specific heat capacity times the temperature difference between cool supply air and the warm room, times q v R—the required room airflow volume.",
+    "text": "Q-dot V = air density × specific heat capacity × Δθ (room − supply) × required airflow q v R."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+    "scene": "Beat3_IsolateAirflow",
+    "key": "substitute",
+    "language": "en",
+    "previous": "Because Q-dot V equals Q-dot S,tr, we replace the left side and rearrange: q v R moves alone to the left, and the load sits over density, heat capacity and Delta theta.",
+    "text": "Q-dot V = Q-dot S,tr: replace the left side, then isolate q v R. Divide the load by density × heat capacity × Δθ."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+    "scene": "Beat3_IsolateAirflow",
+    "key": "qvr",
+    "language": "en",
+    "previous": "On the left stands the unknown we are solving for: the required volume flow, in cubic metres per second — the same q v R that sat on the right of the first equation.",
+    "text": "The unknown on the left is required airflow q v R in m³/s, previously on the first equation’s right side."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+    "scene": "Beat3_IsolateAirflow",
+    "key": "load",
+    "language": "en",
+    "previous": "From part 4 we know the load: 30 square metres of glazing times 0.49 times 0.15 times 0.60 times 800 watts per square metre give about 1060 watts.",
+    "text": "Part 4: 30 m² of glazing × 0.49 × 0.15 × 0.60 × 800 W/m² ≈ 1060 W."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py",
+    "scene": "Beat3_IsolateAirflow",
+    "key": "compare",
+    "language": "de",
+    "previous": "Dafür braucht es 0,126 m³/s — gut doppelt so viel wie der Hygieneluftstrom\nvon 0,061 m³/s aus dem Lüftungsvideo.",
+    "text": "Nötig sind 0,126 m³/s: gut doppelt so viel wie 0,061 m³/s Hygieneluftstrom aus dem Lüftungsvideo."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "scene": "Beat1_LastZuerstSenken",
+    "key": "reserve",
+    "language": "en",
+    "previous": "Only the remainder goes to supply and exhaust with heat recovery from chapter 5. An open window recovers nothing, so the Passivhaus does not use it as the main air path.",
+    "text": "Chapter 5: balanced recovery handles the rest. Passivhaus uses ducts as its main path: windows recover nothing."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "scene": "Beat2_SorptionsKuehlung",
+    "key": "intro",
+    "language": "de",
+    "previous": "Mit Stoffeigenschaften lässt sich ohne Kältemaschine kühlen: die sorptions-\ngestützte Kühlung verkettet Trocknen, Wärmetausch und Verdunstung.",
+    "text": "Sorptionskühlung nutzt Stoffeigenschaften statt einer Kältemaschine: Trocknen, Wärmetausch, Verdunstung."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "scene": "Beat2_SorptionsKuehlung",
+    "key": "nachteil",
+    "language": "en",
+    "previous": "The drawback is microbial. Harsh swings of temperature and humidity put the germs under pressure. They mutate, and the harmful ones are the ones that survive.",
+    "text": "Sharp temperature and humidity swings stress germs, causing mutations; harmful strains preferentially survive."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "scene": "Beat2_SorptionsKuehlung",
+    "key": "nachteil",
+    "language": "de",
+    "previous": "Nachteil: krasse Temperatur- und Feuchtewechsel setzen Keime unter Druck.\nSie mutieren — es überleben bevorzugt die schädlichen.",
+    "text": "Starke Temperatur- und Feuchtewechsel stressen Keime. Sie mutieren; bevorzugt überleben die schädlichen."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "scene": "Beat3_KomfortStrategie",
+    "key": "yes",
+    "language": "en",
+    "previous": "If it is, ventilate naturally as in chapter 4 of the ventilation video. Set the opening, pick the cross or the stack path, and let outdoor air carry the heat away for free.",
+    "text": "Usable outdoor air? As in ventilation chapter 4, set openings for cross or stack flow to carry heat away freely."
+  },
+  {
+    "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py",
+    "scene": "Beat3_KomfortStrategie",
+    "key": "reserve",
+    "language": "en",
+    "previous": "Only what these steps cannot cover goes to the balanced supply and exhaust system with heat recovery from chapter 5: the small remainder from the very first beat.",
+    "text": "Only the small remainder uses chapter 5’s balanced supply/exhaust with heat recovery, as in the first beat."
+  }
+]

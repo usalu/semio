@@ -11,10 +11,12 @@ from pathlib import Path
 
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SPEECH_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = next(parent for parent in BASE_DIR.parents if (parent / "🧰️framework").is_dir())
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
+
+_output = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
+SPEECH_DIR = _output.speech_root(BASE_DIR)
 
 _speech = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔊️speech.🐍️")
 synthesize_narration = _speech.synthesize_narration

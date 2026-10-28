@@ -1,0 +1,2015 @@
+[
+  {
+    "id": "excel",
+    "mockup": {
+      "kind": "excel",
+      "caption": {
+        "en": "Reference cells",
+        "de": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          },
+          {
+            "en": "Factor",
+            "de": "Factor"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 1,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "formula"
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "grasshopper",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ]
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "missing-language",
+    "mockup": {
+      "kind": "excel",
+      "caption": {
+        "en": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          },
+          {
+            "en": "Factor",
+            "de": "Factor"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 1,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "formula"
+    },
+    "valid": false,
+    "schemaValid": false
+  },
+  {
+    "id": "unknown-kind",
+    "mockup": {
+      "kind": "browser",
+      "caption": {
+        "en": "Reference cells",
+        "de": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          },
+          {
+            "en": "Factor",
+            "de": "Factor"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 1,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "formula"
+    },
+    "valid": false,
+    "schemaValid": false
+  },
+  {
+    "id": "solution-key",
+    "mockup": {
+      "kind": "excel",
+      "caption": {
+        "en": "Reference cells",
+        "de": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          },
+          {
+            "en": "Factor",
+            "de": "Factor"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 1,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "formula",
+      "expected": 24
+    },
+    "valid": false,
+    "schemaValid": false
+  },
+  {
+    "id": "unknown-target",
+    "mockup": {
+      "kind": "excel",
+      "caption": {
+        "en": "Reference cells",
+        "de": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          },
+          {
+            "en": "Factor",
+            "de": "Factor"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 1,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "ribbon"
+    },
+    "valid": false,
+    "schemaValid": false
+  },
+  {
+    "id": "selection-outside-grid",
+    "mockup": {
+      "kind": "excel",
+      "caption": {
+        "en": "Reference cells",
+        "de": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          },
+          {
+            "en": "Factor",
+            "de": "Factor"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 10,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "formula"
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "nonrectangular-grid",
+    "mockup": {
+      "kind": "excel",
+      "caption": {
+        "en": "Reference cells",
+        "de": "Reference cells"
+      },
+      "workbook": {
+        "en": "Studio.xlsx",
+        "de": "Studio.xlsx"
+      },
+      "sheets": [
+        {
+          "en": "Areas",
+          "de": "Areas"
+        },
+        {
+          "en": "Costs",
+          "de": "Costs"
+        }
+      ],
+      "activeSheet": 0,
+      "columns": [
+        "A",
+        "B",
+        "C"
+      ],
+      "rows": [
+        [
+          {
+            "en": "Room",
+            "de": "Room"
+          },
+          {
+            "en": "Area",
+            "de": "Area"
+          }
+        ],
+        [
+          {
+            "en": "Hall",
+            "de": "Hall"
+          },
+          {
+            "en": "12",
+            "de": "12"
+          },
+          {
+            "en": "2",
+            "de": "2"
+          }
+        ],
+        [
+          {
+            "en": "Office",
+            "de": "Office"
+          },
+          {
+            "en": "8",
+            "de": "8"
+          },
+          {
+            "en": "3",
+            "de": "3"
+          }
+        ]
+      ],
+      "selection": {
+        "row": 1,
+        "column": 2
+      },
+      "formula": {
+        "en": "=B2*2",
+        "de": "=B2*2"
+      },
+      "target": "formula"
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "unknown-wire-port",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ]
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "missing"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "unknown-target-node",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ]
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "node",
+        "index": 0,
+        "node": "missing"
+      }
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "duplicate-nodes",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ]
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        },
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "invalid-tree-path",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ]
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "0:1",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": false
+  },
+  {
+    "id": "widget-parameter",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "parameter"
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "node",
+        "node": "source",
+        "index": 0
+      }
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "widget-component",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "component"
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "node",
+        "node": "source",
+        "index": 0
+      }
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "widget-slider",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "slider",
+            "min": -2,
+            "max": 8,
+            "value": 3
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "node",
+        "node": "source",
+        "index": 0
+      }
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "widget-panel",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "panel",
+            "lines": [
+              {
+                "en": "12",
+                "de": "12"
+              },
+              {
+                "en": "24",
+                "de": "24"
+              }
+            ]
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "node",
+        "node": "source",
+        "index": 0
+      }
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "widget-plugin",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "plugin",
+            "label": {
+              "en": "Solver",
+              "de": "Solver"
+            }
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "node",
+        "node": "source",
+        "index": 0
+      }
+    },
+    "valid": true,
+    "schemaValid": true
+  },
+  {
+    "id": "slider-range",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "slider",
+            "min": 2,
+            "max": 2,
+            "value": 2
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "slider-value",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "slider",
+            "min": 0,
+            "max": 1,
+            "value": 2
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": true
+  },
+  {
+    "id": "panel-language",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "panel",
+            "lines": [
+              {
+                "en": "12"
+              }
+            ]
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": false
+  },
+  {
+    "id": "widget-kind",
+    "mockup": {
+      "kind": "grasshopper",
+      "caption": {
+        "en": "Given source tree",
+        "de": "Given source tree"
+      },
+      "nodes": [
+        {
+          "id": "source",
+          "label": {
+            "en": "Numbers",
+            "de": "Numbers"
+          },
+          "inputs": [],
+          "outputs": [
+            {
+              "id": "numbers",
+              "label": {
+                "en": "N",
+                "de": "N"
+              }
+            }
+          ],
+          "widget": {
+            "kind": "browser"
+          }
+        },
+        {
+          "id": "operation",
+          "label": {
+            "en": "Operation",
+            "de": "Operation"
+          },
+          "inputs": [
+            {
+              "id": "data",
+              "label": {
+                "en": "D",
+                "de": "D"
+              }
+            }
+          ],
+          "outputs": [
+            {
+              "id": "result",
+              "label": {
+                "en": "R",
+                "de": "R"
+              }
+            }
+          ]
+        }
+      ],
+      "wires": [
+        {
+          "from": {
+            "node": "source",
+            "port": "numbers"
+          },
+          "to": {
+            "node": "operation",
+            "port": "data"
+          }
+        }
+      ],
+      "tree": [
+        {
+          "path": "{0;0}",
+          "values": [
+            {
+              "en": "1",
+              "de": "1"
+            },
+            {
+              "en": "2",
+              "de": "2"
+            }
+          ]
+        },
+        {
+          "path": "{0;1}",
+          "values": [
+            {
+              "en": "3",
+              "de": "3"
+            }
+          ]
+        }
+      ],
+      "target": {
+        "kind": "wire",
+        "index": 0
+      }
+    },
+    "valid": false,
+    "schemaValid": false
+  }
+]

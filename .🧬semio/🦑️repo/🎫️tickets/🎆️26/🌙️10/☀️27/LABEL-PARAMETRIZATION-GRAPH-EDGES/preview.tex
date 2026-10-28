@@ -1,0 +1,17 @@
+\documentclass{article}
+\usepackage[a4paper,margin=20mm]{geometry}
+\usepackage{tikz,fontspec}
+\setmainfont{Anta-Regular.ttf}
+\definecolor{semio-chrome-foreground}{RGB}{20,20,20}
+\definecolor{semio-chrome-canvas}{RGB}{255,255,255}
+\newcommand{\AssignmentContrastImage}[2][]{\includegraphics[#1]{#2}}
+\input{parametrization-geometry.tex}
+\renewcommand{\small}{\fontsize{10}{12}\selectfont}
+\pagestyle{empty}
+\begin{document}
+\AssignmentWorkedExampleGraph
+\AssignmentWorkedExampleLedger{}{}{}{}{}{}
+\clearpage
+\AssignmentCompleteGraph
+\AssignmentSelectedLedger
+\end{document}

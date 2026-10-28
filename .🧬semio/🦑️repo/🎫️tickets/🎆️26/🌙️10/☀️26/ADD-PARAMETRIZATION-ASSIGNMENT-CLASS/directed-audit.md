@@ -1,0 +1,15 @@
+# Directed Parametrization Audit
+
+The v8 language-neutral schema and fixture require directed K16 with 240 nonreflexive ordered arcs, 128 cross-table arcs, fifteen incoming and outgoing arcs per vertex, and exactly twenty selected single directions. Selection names remain lower-to-higher, including 1→16. The six K3 transitions preserve positive continuous dimensions, categorical replacements, inverse numeric changes, the zero-sum consistent cycle, the deliberately inconsistent cycle and the one-hot minimality counterexample.
+
+The TypeScript verifier passed using Bun. Its independent d3-array Cartesian oracle constructs all ordered pairs; mathjs computes n*(n-1), numeric differences and cycle sums. The existing 81-cell Cartesian matrix, SVG hashes, resource bindings, native primitives, explicit languages and heading checks remain active. Schema mutations reject invalid domain, graph, matrix, selection and language cases.
+
+Retained `verify-directed-pdf.py` independently parses PDF native cubic paths and arrowhead polygons with pdfplumber, obtains transformed canonical icon bounds with pypdf, and checks path source/target associations, antiparallel separation, all endpoint and arrowhead clearances, ordered selection and ledger arrows. The older undirected 120-straight-edge validator is superseded and is not reported as passing.
+
+`verify-mixed-pdf.py` preserves the independent four-row matrix and native projected primitive checks while requiring six directed curves and six localized Form labels instead of three straight edges and a separate ledger.
+
+Final DE, EN and DE dark PDFs passed all three independent PDF validators. Each contains 240 faint ordered cubic arcs, twenty dark ordered overlays, six K3 arcs, and 266 native arrowhead polygons. Each source and target is associated in source order with its actual transformed icon/node rectangle. Every curve endpoint and every arrowhead polygon vertex lies outside every icon bound; every reverse path has distinct control points. The sixteen graph vertices retain a 32 mm vertical radius and a 170 mm text-width envelope. The twenty ledger arrows match the exact selected ordered arcs, have no selected reverse, and satisfy a minimum 2 mm gutter assertion (the separately measured actual minimum is 4.08 mm).
+
+The unchanged matrix PDF validator passed both 9×9 grids in all three variants, with 6.14 mm rows and maximum icon centering error 0.031 mm. The updated mixed PDF validator passed all three variants, including all four filled rows, independent projected native box/pyramid/elliptical-cylinder dimensions, six edge-local Form labels, and the consistent and inconsistent cycle examples. Sloped PDF text is read in native content-stream character order for label counts; spatial text extraction interleaves rotated glyphs.
+
+The v8 semantic verifier passed after the final source edits. The independent lxml oracle verified all sixteen original canonical SVG resources. All audit commands have completed; no verification processes remain. The old undirected graph validator was not used as evidence.

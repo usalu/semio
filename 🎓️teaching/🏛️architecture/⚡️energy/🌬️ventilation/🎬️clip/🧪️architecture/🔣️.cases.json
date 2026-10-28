@@ -1,0 +1,105 @@
+{
+  "rooms": [
+    {
+      "chapter": "🪟️natural",
+      "center": [
+        0.4,
+        0.2,
+        0
+      ],
+      "width": 4.8,
+      "height": 2.5,
+      "thickness": 0.16,
+      "window_y": 0.5,
+      "window_height": 1.15,
+      "occupant_ratio": 0.7
+    },
+    {
+      "chapter": "❓️need",
+      "center": [
+        0.4,
+        0.2,
+        0
+      ],
+      "width": 4.8,
+      "height": 2.5,
+      "thickness": 0.16,
+      "window_y": 0.5,
+      "window_height": 1.15,
+      "occupant_ratio": 0.7
+    },
+    {
+      "chapter": "⚙️mechanical",
+      "center": [
+        0.4,
+        0.2,
+        0
+      ],
+      "width": 4.8,
+      "height": 2.5,
+      "thickness": 0.16,
+      "window_y": 0.5,
+      "window_height": 1.15,
+      "occupant_ratio": 0.7
+    },
+    {
+      "chapter": "📦️volume",
+      "center": [
+        0.4,
+        0.2,
+        0
+      ],
+      "width": 4.8,
+      "height": 2.5,
+      "thickness": 0.16,
+      "window_y": 0.5,
+      "window_height": 1.15,
+      "occupant_ratio": 0.7
+    }
+  ],
+  "house": {
+    "origin": [
+      -2,
+      -1,
+      0
+    ],
+    "scale": 0.45,
+    "window_width_ratio": 0.8,
+    "window_storeys": [
+      [
+        1.2,
+        2.5
+      ],
+      [
+        4.1,
+        5.3
+      ]
+    ]
+  },
+  "radiator": {
+    "chapter": "🪟️natural",
+    "origin_x": -4,
+    "floor_y": -1,
+    "units_per_m": 0.8,
+    "width_m": 1.1,
+    "height_m": 0.6,
+    "floor_clearance_m": 0.12
+  },
+  "material": {
+    "fill_opacity": 1,
+    "stroke_width": 0,
+    "stroke_opacity": 0
+  },
+  "raster": {
+    "pixel_width": 640,
+    "pixel_height": 400,
+    "frame_width": 6.4,
+    "frame_height": 4.0,
+    "background": "#000000",
+    "window_fractions": [
+      -0.3,
+      0,
+      0.3
+    ]
+  }
+}

@@ -1,0 +1,248 @@
+{
+  "schema": "semio-teaching-hierarchy-cases/v1",
+  "topics": [
+    {
+      "id": "energy",
+      "cell": {
+        "column": 0,
+        "row": 0
+      },
+      "videos": [
+        "physical_fundamentals",
+        "ventilation",
+        "heating",
+        "cooling",
+        "energy_balance"
+      ]
+    },
+    {
+      "id": "parametric",
+      "cell": {
+        "column": 1,
+        "row": 0
+      },
+      "videos": []
+    },
+    {
+      "id": "bim",
+      "cell": {
+        "column": 2,
+        "row": 0
+      },
+      "videos": [
+        "bim_information",
+        "bim_objects",
+        "bim_representations",
+        "bim_models",
+        "bim_exchange",
+        "bim_consistency"
+      ]
+    },
+    {
+      "id": "grasshopper",
+      "cell": {
+        "column": 0,
+        "row": 1
+      },
+      "videos": []
+    },
+    {
+      "id": "excel",
+      "cell": {
+        "column": 1,
+        "row": 1
+      },
+      "videos": []
+    },
+    {
+      "id": "optimization",
+      "cell": {
+        "column": 2,
+        "row": 1
+      },
+      "videos": [
+        "optimization_extrema",
+        "optimization_sampling",
+        "optimization_experiments",
+        "optimization_index",
+        "optimization_pareto",
+        "optimization_algorithms"
+      ]
+    }
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "openChip": {
+    "en": "View",
+    "de": "Ansehen"
+  },
+  "commits": {
+    "stepStages": [
+      "topicTravel",
+      "topicReveal",
+      "topicPress",
+      "topicHold"
+    ],
+    "parkStage": "focusHold",
+    "paths": {
+      "focus": [
+        "architecture",
+        "energy",
+        "physical_fundamentals",
+        "PhysicalFundamentals_FullSection"
+      ],
+      "restore": [
+        "architecture",
+        "optimization",
+        "optimization_algorithms",
+        "Optimization_Algorithms"
+      ]
+    },
+    "controls": {
+      "open": {
+        "architecture": [
+          20,
+          40
+        ],
+        "energy": [
+          100,
+          100
+        ],
+        "physical_fundamentals": [
+          180,
+          160
+        ],
+        "PhysicalFundamentals_FullSection": [
+          260,
+          220
+        ],
+        "optimization": [
+          340,
+          280
+        ],
+        "optimization_algorithms": [
+          420,
+          340
+        ],
+        "Optimization_Algorithms": [
+          500,
+          400
+        ]
+      },
+      "close": {
+        "architecture": [
+          20,
+          40
+        ],
+        "energy": [
+          100,
+          100
+        ],
+        "physical_fundamentals": [
+          180,
+          160
+        ],
+        "PhysicalFundamentals_FullSection": [
+          260,
+          220
+        ],
+        "optimization": [
+          340,
+          280
+        ],
+        "optimization_algorithms": [
+          420,
+          340
+        ],
+        "Optimization_Algorithms": [
+          500,
+          400
+        ]
+      },
+      "preview": {
+        "architecture": [
+          20,
+          40
+        ],
+        "energy": [
+          100,
+          100
+        ],
+        "physical_fundamentals": [
+          180,
+          160
+        ],
+        "PhysicalFundamentals_FullSection": [
+          260,
+          220
+        ],
+        "optimization": [
+          340,
+          280
+        ],
+        "optimization_algorithms": [
+          420,
+          340
+        ],
+        "Optimization_Algorithms": [
+          500,
+          400
+        ]
+      }
+    },
+    "focus": [
+      "course.open",
+      "topic.open",
+      "clip.open",
+      "chapter.open"
+    ],
+    "restore": [
+      "chapter.close",
+      "clip.close",
+      "topic.close",
+      "course.close"
+    ]
+  },
+  "contentCamera": {
+    "duration": 0.6,
+    "focus": [
+      [
+        0,
+        0
+      ],
+      [
+        5.8,
+        0
+      ],
+      [
+        6.1,
+        0.5
+      ],
+      [
+        6.4,
+        1
+      ]
+    ],
+    "restore": [
+      [
+        0,
+        1
+      ],
+      [
+        0.3,
+        0.5
+      ],
+      [
+        0.6,
+        0
+      ],
+      [
+        5.3,
+        0
+      ]
+    ]
+  },
+  "course": "architecture"
+}

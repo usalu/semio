@@ -1,0 +1,17 @@
+const fs=require("fs"),path=require("path"),assert=require("assert/strict");
+const fixture=JSON.parse(fs.readFileSync(path.join(__dirname,"directed-geometry.fixture.json"),"utf8"));
+const source=fs.readFileSync("🧰️framework/🛍️products/📓️print/🧾️template/📝️assignment/parametrization-geometry.tex","utf8");
+const block=(name)=>{const start=source.indexOf("\\newcommand{\\"+name+"}");assert.notEqual(start,-1,name+" must exist");const end=source.indexOf("\\newcommand",start+12);return source.slice(start,end<0?undefined:end);};
+const directions=(name)=>Array.from(block(name).matchAll(/#1\{(\d+)\}\{(\d+)\}/g),m=>[+m[1],+m[2]]);
+const actual=directions("AssignmentDirectedEdges");assert.equal(actual.length,fixture.directedEdges);assert.equal(new Set(actual.map(p=>p.join(","))).size,fixture.directedEdges);
+for(let a=1;a<=fixture.vertices;a++)for(let b=1;b<=fixture.vertices;b++)if(a!==b)assert(actual.some(p=>p[0]===a&&p[1]===b),a+" to "+b);
+assert.deepEqual(directions("AssignmentSelectedEdges"),fixture.selectedDirections);
+assert(block("AssignmentWorkedExampleGraph").includes("[6]"));
+assert(!source.includes("AssignmentWorkedExampleLedger"));
+assert(source.includes("arrows.meta"));
+assert(source.includes("begin{pgfonlayer}{assignmentbackground}"));
+assert(block("AssignmentGraphVertex").includes("(v\\theassignmentvertex)"));
+assert(block("AssignmentWorkedExampleGraphVertex").includes("(v#1)"));
+assert(source.includes("bend left="));
+assert(source.includes("\\fontsize{8.5}{10}"));
+console.log("Directed geometry contract passed: 240 ordered arcs, 20 selections, six worked-example labels.");

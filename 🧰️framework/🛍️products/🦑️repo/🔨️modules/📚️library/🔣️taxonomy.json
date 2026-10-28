@@ -6742,6 +6742,79 @@
         "teaching-energy"
       ]
     },
+    "teaching-parametric": {
+      "emoji": "📐️",
+      "slugPattern": "^parametric$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-grasshopper": {
+      "emoji": "🦗️",
+      "slugPattern": "^grasshopper$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-excel": {
+      "emoji": "📊️",
+      "slugPattern": "^excel$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-bim": {
+      "emoji": "🏗️",
+      "slugPattern": "^bim$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "teaching-optimization": {
+      "emoji": "🎯️",
+      "slugPattern": "^optimization$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "teaching-architecture"
+      ]
+    },
+    "course-curriculum": {
+      "emoji": "🧩️",
+      "slugPattern": "^curriculum$",
+      "allowEmojiOnly": false
+    },
+    "course-react-styles": {
+      "emoji": "🎨️",
+      "slugPattern": "^styles$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "react-target"
+      ]
+    },
+    "course-mockups": {
+      "emoji": "🖥️",
+      "slugPattern": "^mockups$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "schema",
+        "tests",
+        "fixtures",
+        "members-of-modules",
+        "course-react-styles"
+      ]
+    },
+    "course-mockup": {
+      "emoji": "🖥️",
+      "slugPattern": "^mockup$",
+      "allowEmojiOnly": false,
+      "parentKindIds": [
+        "modules"
+      ]
+    },
     "teaching-quiz": {
       "emoji": "❓️",
       "slugPattern": "^quiz$",
@@ -6751,7 +6824,12 @@
         "teaching-heating",
         "teaching-cooling",
         "teaching-demand",
-        "teaching-ventilation"
+        "teaching-ventilation",
+        "teaching-parametric",
+        "teaching-grasshopper",
+        "teaching-excel",
+        "teaching-bim",
+        "teaching-optimization"
       ]
     },
     "deploy": {
@@ -11911,7 +11989,9 @@
         "🎯️point-publication",
         "🎯️selection",
         "🚪️svg",
-        "🛠️gestures"
+        "🛠️gestures",
+        "🧩️curriculum",
+        "🖥️mockups"
       ],
       "source": "registry"
     },
@@ -13428,7 +13508,8 @@
         "🎯️server",
         "📮️http-transport",
         "🪄️capability-tools",
-        "🗒️core-capabilities"
+        "🗒️core-capabilities",
+        "🖥️mockups"
       ],
       "source": "registry"
     },
@@ -13600,7 +13681,12 @@
       ],
       "memberNames": [
         "📚️course",
-        "⚡️energy"
+        "⚡️energy",
+        "📐️parametric",
+        "🦗️grasshopper",
+        "📊️excel",
+        "🏗️bim",
+        "🎯️optimization"
       ],
       "source": "registry"
     },
@@ -13626,7 +13712,12 @@
         "teaching-heating",
         "teaching-cooling",
         "teaching-demand",
-        "teaching-ventilation"
+        "teaching-ventilation",
+        "teaching-parametric",
+        "teaching-grasshopper",
+        "teaching-excel",
+        "teaching-bim",
+        "teaching-optimization"
       ],
       "memberNames": [
         "❓️quiz",
@@ -13867,7 +13958,8 @@
         "🧾️app-channel",
         "📞️directory-client",
         "🗄️storage-port",
-        "🐳️dock-skeleton"
+        "🐳️dock-skeleton",
+        "🖥️mockup"
       ],
       "source": "registry"
     },
@@ -14125,7 +14217,8 @@
         "🪢️synapses",
         "🎲️generations",
         "📄️document",
-        "🧭️transforms"
+        "🧭️transforms",
+        "🖥️mockups"
       ],
       "source": "registry"
     },
@@ -15781,7 +15874,9 @@
         "🧵️history-session",
         "🧾️report",
         "🪜️document-catch-up",
-        "🪪️identity-config-facet"
+        "🪪️identity-config-facet",
+        "🧩️curriculum",
+        "🖥️mockups"
       ],
       "memberSlugPattern": "^[a-z0-9]+(-[a-z0-9]+)*$",
       "source": "registry"
@@ -16006,6 +16101,15 @@
       ],
       "source": "registry"
     },
+    "members-of-course-react-styles": {
+      "ownerKindIds": [
+        "course-react-styles"
+      ],
+      "memberNames": [
+        "🖥️mockups"
+      ],
+      "source": "registry"
+    },
     "members-of-react-target": {
       "ownerKindIds": [
         "react-target"
@@ -16014,7 +16118,8 @@
         "🎠️runtime",
         "🖌️render",
         "🛠️build-tooling",
-        "🌓️appearance"
+        "🌓️appearance",
+        "🎨️styles"
       ],
       "source": "registry"
     },
@@ -17655,7 +17760,13 @@
         "🪧️logo",
         "🚀️readiness",
         "🚛️bundle",
-        "🛑️cancellation"
+        "🛑️cancellation",
+        "📐️parametric",
+        "🦗️grasshopper",
+        "📊️excel",
+        "🏗️bim",
+        "🎯️optimization",
+        "🧩️curriculum"
       ],
       "source": "registry"
     },

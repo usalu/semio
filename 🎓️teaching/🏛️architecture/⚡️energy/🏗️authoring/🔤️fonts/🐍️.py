@@ -1,53 +1,68 @@
-"""🔤 Resolve a real serif face for Manim ``Text`` across macOS, Windows, and Linux.
-
-CSS generics like ``\"Serif\"`` appear in Pango's font list but are not installed
-faces — glyph coverage and metrics become machine-dependent. Prefer a concrete
-family that ships with the OS or common free font packs.
-
-Also owns the one fixed type scale (title/subtitle/body/label/formula sizes)
-and the one-call scene style setup — every scene draws sizes from here instead
-of picking numbers by eye, per the standardized-template rules in
-the teaching scene template.
-"""
+"""🔤 Render semio typography from bundled faces with consistent glyph coverage and spacing."""
 
 from __future__ import annotations
 
 import importlib
 import sys
+import struct
 from pathlib import Path
+from threading import RLock
 
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
-import os as _os
 from functools import lru_cache as _cache
-from pathlib import Path as _Path
 
-#region Candidates
-# Prefer readable book serifs first; Liberation/DejaVu cover Linux CI/devcontainers.
-_SERIF_CANDIDATES: tuple[str, ...] = (
-    "Georgia",
-    "PT Serif",
-    "Times New Roman",
-    "Liberation Serif",
-    "DejaVu Serif",
-    "STIX Two Text",
-    "Nimbus Roman",
-    "FreeSerif",
-    "Palatino",
-)
+_theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").configure_manim()
+_REGISTERED_FONTS: set[Path] = set()
 
-# manimpango.list_fonts() asks fontconfig to enumerate every installed font.
-# On a cold fontconfig cache (fresh devcontainer, fresh clone, right after
-# installing a font) that first enumeration can hang for minutes — the
-# process sits nearly idle, not crashed, so it looks like a broken render.
-# Every scene calls apply_body_font() at import time, so every scene paid
-# that cost. Cache the resolved name on disk: only the very first render
-# after a cold cache ever waits: every one after just reads a one-line file.
-_CACHE_ROOT = _Path(_os.environ.get("SEMIO_TEACHING_CACHE_DIR") or _os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT") or (_WORKSPACE_ROOT / ".🧬semio/🎓️teaching/⚡️cache/fonts"))
-_FONT_CACHE_PATH = _CACHE_ROOT / "font.txt"
-#endregion
+
+_PANGO_FONT_LOCK = RLock()
+_PANGO_ATTACHED_FONTS: set[str] = set()
+_PANGO_TEXT_RENDERER = None
+
+
+def _render_pango_text(*args, **kwargs):
+    """🔤 Attach each native Windows face once to Pango's shared rendering map."""
+    import manimpango
+
+    with _PANGO_FONT_LOCK:
+        registered = manimpango.registered_fonts
+        pending = {font for font in registered if font.type == "win32"}
+        redundant = {font for font in pending if font.path in _PANGO_ATTACHED_FONTS}
+        registered.difference_update(redundant)
+        try:
+            result = _PANGO_TEXT_RENDERER(*args, **kwargs)
+            _PANGO_ATTACHED_FONTS.update(font.path for font in pending)
+            return result
+        finally:
+            registered.update(redundant)
+
+
+def _install_pango_font_reuse() -> None:
+    """🪟 Keep repeated Windows font attachment within the typography interface."""
+    global _PANGO_TEXT_RENDERER
+    if sys.platform != "win32" or _PANGO_TEXT_RENDERER is not None:
+        return
+    import manimpango
+
+    _PANGO_TEXT_RENDERER = manimpango.text2svg
+    manimpango.text2svg = _render_pango_text
+
+
+def register_fonts(font: str | None = None) -> None:
+    """📦 Register requested bundled outlines through the existing Pango interface."""
+    import manimpango
+
+    with _PANGO_FONT_LOCK:
+        for path in _theme.font_sources()[font or _theme.FONT_SANS]:
+            if path in _REGISTERED_FONTS:
+                continue
+            if not path.is_file() or not manimpango.register_font(str(path)):
+                raise RuntimeError(f"Cannot register bundled semio font: {path}")
+            _REGISTERED_FONTS.add(path)
 
 
 #region Text glyph coverage and kerning (ManimCommunity/manim#2844)
@@ -67,29 +82,69 @@ _FONT_CACHE_PATH = _CACHE_ROOT / "font.txt"
 # and ``6_final_calculation/scene_6.py``. A scene that sizes a
 # ``Text`` by an explicit ``width=``/``height=`` box is left untouched (scaling
 # it afterwards would fight that box).
-_SYMBOL_CANDIDATES: tuple[str, ...] = (
-    "Cambria Math", "DejaVu Math TeX Gyre", "STIX Two Math", "STIXGeneral",
-    "Noto Sans Math", "Apple Symbols", "Segoe UI Symbol", "DejaVu Serif", "FreeSerif",
-)
+_SYMBOL_CANDIDATES: tuple[str, ...] = (_theme.FONT_MATH, _theme.FONT_SANS, _theme.FONT_SERIF, _theme.FONT_MONO, "Noto Emoji")
+
+
+@_cache(maxsize=1)
+def _font_digest() -> str:
+    """🧾 Invalidate text SVGs when typography code or bundled outlines change."""
+    from hashlib import sha256
+
+    digest = sha256()
+    for path in (Path(__file__), *_theme.source_files()):
+        digest.update(path.relative_to(_WORKSPACE_ROOT).as_posix().encode())
+        digest.update(path.read_bytes())
+    return digest.hexdigest()
+
+
+@_cache(maxsize=None)
+def _font_cmaps(path: Path) -> tuple[bytes, tuple[int, ...]]:
+    """🗺️ Read Unicode cmap records directly from a bundled OpenType outline."""
+    data = path.read_bytes()
+    tables = struct.unpack_from(">H", data, 4)[0]
+    offset = next(struct.unpack_from(">I", data, record + 8)[0] for record in range(12, 12 + tables * 16, 16) if data[record:record + 4] == b"cmap")
+    count = struct.unpack_from(">H", data, offset + 2)[0]
+    records = [struct.unpack_from(">HHI", data, offset + 4 + index * 8) for index in range(count)]
+    return data, tuple(dict.fromkeys(offset + subtable for platform, encoding, subtable in records if platform == 0 or (platform == 3 and encoding in (1, 10))))
+
+
+def _cmap_supports(path: Path, codepoint: int) -> bool:
+    """🧮 Resolve format 4 and 12 glyph indices without system fallback fonts."""
+    data, offsets = _font_cmaps(path)
+    for offset in offsets:
+        format_id = struct.unpack_from(">H", data, offset)[0]
+        if format_id == 12:
+            count = struct.unpack_from(">I", data, offset + 12)[0]
+            for index in range(count):
+                first, last, glyph = struct.unpack_from(">III", data, offset + 16 + index * 12)
+                if first <= codepoint <= last and glyph + codepoint - first:
+                    return True
+        elif format_id == 4 and codepoint <= 0xFFFF:
+            count = struct.unpack_from(">H", data, offset + 6)[0] // 2
+            for index in range(count):
+                last = struct.unpack_from(">H", data, offset + 14 + index * 2)[0]
+                first = struct.unpack_from(">H", data, offset + 16 + count * 2 + index * 2)[0]
+                if not first <= codepoint <= last:
+                    continue
+                delta = struct.unpack_from(">h", data, offset + 16 + count * 4 + index * 2)[0]
+                address = offset + 16 + count * 6 + index * 2
+                distance = struct.unpack_from(">H", data, address)[0]
+                glyph = struct.unpack_from(">H", data, address + distance + (codepoint - first) * 2)[0] if distance else codepoint
+                if (not distance or glyph) and (glyph + delta) & 0xFFFF:
+                    return True
+    return False
 
 
 @_cache(maxsize=None)
 def _font_supports(font: str, character: str) -> bool:
-    """🔎 Query native Cairo glyph indices without introducing a font-library dependency."""
-    import cairo
-
-    scaled = cairo.ScaledFont(cairo.ToyFontFace(font), cairo.Matrix(xx=60, yy=60), cairo.Matrix(), cairo.FontOptions())
-    glyphs = scaled.text_to_glyphs(0, 0, character, False)
-    return bool(glyphs) and all(glyph[0] != 0 for glyph in glyphs)
+    """🔎 Query the requested bundled family instead of a fallback-aware system face."""
+    return any(_cmap_supports(path, ord(character)) for path in _theme.font_sources().get(font, ()))
 
 
 @_cache(maxsize=1)
 def _symbol_fonts() -> tuple[str, ...]:
-    """∑ Resolve installed mathematical families through the existing Pango interface."""
-    import manimpango
-
-    available = set(manimpango.list_fonts())
-    return tuple(font for font in _SYMBOL_CANDIDATES if font in available)
+    """∑ Use the registered bundled families without host-dependent font enumeration."""
+    return _SYMBOL_CANDIDATES
 
 
 def _glyph_fallbacks(font: str, text: str) -> dict[str, str]:
@@ -100,7 +155,8 @@ def _glyph_fallbacks(font: str, text: str) -> dict[str, str]:
             continue
         fallback = next((candidate for candidate in _symbol_fonts() if _font_supports(candidate, character)), None)
         if fallback is None:
-            raise RuntimeError(f"No installed mathematical font covers U+{ord(character):04X} for {font}")
+            raise RuntimeError(f"No bundled semio font covers U+{ord(character):04X} for {font}")
+        register_fonts(fallback)
         result[character] = fallback
     return result
 
@@ -108,12 +164,17 @@ def _glyph_fallbacks(font: str, text: str) -> dict[str, str]:
 _KERNING_SAFE_FONT_SIZE: float = 60.0
 _TEXT_CANVAS_MIN_SIZE: tuple[int, int] = (854, 480)
 _TEXT_KERNING_PATCHED: bool = False
+_TEXT_KERNING_INIT = None
 
 
 def install_text_kerning_fix() -> None:
     """🔧 Preserve supported faces, supply missing glyphs, and rasterise small text at a safe size."""
-    global _TEXT_KERNING_PATCHED
+    global _TEXT_KERNING_PATCHED, _TEXT_KERNING_INIT
+    from manim import Text
+
     if _TEXT_KERNING_PATCHED:
+        if Text.__init__ is Text._original__init__:
+            Text.__init__ = _TEXT_KERNING_INIT
         return
 
     from contextlib import nullcontext
@@ -125,10 +186,18 @@ def install_text_kerning_fix() -> None:
 
     def _canvas_hash(self, color):
         size = getattr(self, "_semio_text_canvas_size", None)
-        key = _original_hash(self, color)
+        key = sha256(f"{_original_hash(self, color)}|semio-fonts:{_font_digest()}".encode()).hexdigest()[:16]
         return sha256(f"{key}|text-canvas:{size[0]}x{size[1]}".encode()).hexdigest()[:16] if size else key
 
     def _kerned_init(self, *args, font_size: float | None = None, **kwargs):
+        kwargs.setdefault("warn_missing_font", False)
+        requested = kwargs.get("font") or _theme.FONT_SANS
+        kwargs["font"] = requested
+        if requested in _theme.font_sources():
+            register_fonts(requested)
+        for override in (kwargs.get("text2font") or kwargs.get("t2f") or {}).values():
+            if override in _theme.font_sources():
+                register_fonts(override)
         target = float(DEFAULT_FONT_SIZE if font_size is None else font_size)
         boxed = kwargs.get("height") is not None or kwargs.get("width") is not None
         render = target if (boxed or target >= _KERNING_SAFE_FONT_SIZE) else _KERNING_SAFE_FONT_SIZE
@@ -140,7 +209,7 @@ def install_text_kerning_fix() -> None:
             for start, end in self._find_indexes(key, text):
                 protected.update(range(start, end))
         needed = "".join(character for index, character in enumerate(text) if index not in protected)
-        fallbacks = _glyph_fallbacks(kwargs.get("font") or "sans", needed)
+        fallbacks = _glyph_fallbacks(requested, needed)
         if fallbacks:
             automatic = {f"[{index}:{index + 1}]": fallbacks[character] for index, character in enumerate(text)
                          if index not in protected and character in fallbacks} if protected else fallbacks
@@ -155,61 +224,39 @@ def install_text_kerning_fix() -> None:
 
     Text._text2hash = _canvas_hash
     Text.__init__ = _kerned_init
+    _TEXT_KERNING_INIT = _kerned_init
     _TEXT_KERNING_PATCHED = True
 
 
+_install_pango_font_reuse()
 install_text_kerning_fix()
 #endregion
 
 
 #region Resolve
-def resolve_serif_font() -> str:
-    """📚 Pick the first installed candidate; never return the CSS generic ``Serif``."""
-    try:
-        cached = _FONT_CACHE_PATH.read_text().strip()
-    except OSError:
-        cached = ""
-    if cached:
-        return cached
-
-    try:
-        import manimpango
-
-        available = set(manimpango.list_fonts())
-    except Exception:
-        available = set()
-    resolved = "Georgia"
-    for name in _SERIF_CANDIDATES:
-        if not available or name in available:
-            resolved = name
-            break
-
-    try:
-        _FONT_CACHE_PATH.parent.mkdir(parents=True, exist_ok=True)
-        _FONT_CACHE_PATH.write_text(resolved)
-    except OSError:
-        pass
-    return resolved
+def resolve_body_font() -> str:
+    """🚀 Select semio's bundled sans face on every supported host."""
+    register_fonts()
+    return _theme.FONT_SANS
 
 
-BODY_FONT: str = resolve_serif_font()
+BODY_FONT: str = resolve_body_font()
 #endregion
 
 
 #region Scene helper
-# Manim's default line_spacing scale (0.3) crowds Georgia/serif multi-line
-# Text — captions and labels look glued together until each scene hand-tunes
-# a different value and the next revision forgets. One shared scale + one
-# center-aligned multi-line builder keep Heating/Cooling consistent.
-#
-# ``disable_ligatures=True`` is mandatory: Pango ligatures on Georgia/PT Serif
-# collapse German clusters (``ss``, ``ch``, ``ämm``) into overlapping or
-# unevenly spaced glyphs. It is the companion to the render-large-then-scale
-# kerning fix above (ManimCommunity/manim#2844): ligatures off removes the bad
-# clusters, large rasterisation removes the uneven gaps between the rest. Every
-# body ``Text`` goes through ``body_text`` / these defaults.
 BODY_LINE_SPACING: float = 0.75
-BODY_LINE_BUFF: float = 0.10
+BODY_LINE_BUFF: float = _theme.UI_SPACING
+
+
+def text_context() -> tuple:
+    """🧬 Snapshot the active typography and canvas using the process-captured asset identity."""
+    from manim import Text, config
+
+    return (_font_digest(), BODY_FONT, BODY_FONT_SIZE, BODY_LINE_SPACING, _SYMBOL_CANDIDATES,
+            _KERNING_SAFE_FONT_SIZE, _TEXT_CANVAS_MIN_SIZE, _TEXT_KERNING_PATCHED,
+            config.pixel_width, config.pixel_height, config.frame_width, config.frame_height, str(config.renderer),
+            id(vars(Text).get("__init__")), id(vars(Text).get("_text2hash")))
 
 
 def apply_body_font() -> str:
@@ -221,17 +268,13 @@ def apply_body_font() -> str:
         font=BODY_FONT,
         line_spacing=BODY_LINE_SPACING,
         disable_ligatures=True,
+        warn_missing_font=False,
     )
     return BODY_FONT
 
 
 def apply_scene_style(scene) -> str:
-    """🎬 One call, first line of every ``construct()``: dark background + resolved body font.
-
-    Replaces the two hand-typed steps (``self.camera.background_color = P_DEEP_DARK``
-    then ``apply_body_font()``) that drifted apart across topic folders — see
-    the standardized-template rules in the ``generate-manim-tutorial`` skill.
-    """
+    """🎬 Apply the shared semio background and bundled typography to a scene."""
     _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
     P_DEEP_DARK = _manim_module.P_DEEP_DARK
 
@@ -264,7 +307,7 @@ def wrap_body_lines(text: str, *, font_size: float, max_width: float) -> list[st
         current = words[0]
         for word in words[1:]:
             trial = f"{current} {word}"
-            if body_text(trial, font_size=font_size, color="#FFFFFF").width <= max_width:
+            if body_text(trial, font_size=font_size, color=_theme.CHROME_FOREGROUND).width <= max_width:
                 current = trial
             else:
                 wrapped.append(current)
@@ -305,68 +348,39 @@ def centered_body_text(
 
 
 #region Type scale
-# The one fixed set of sizes every scene draws from — never a bespoke literal.
-#
-# Sized against the 8-unit frame height, not by eye: a Text's cap height is
-# ≈ 0.0126 × font_size units, so the percentages below are what a viewer
-# actually sees. The previous scale put labels at 2.2 % and body at 2.5 % of
-# frame height, which read as too small in the finished videos; anything a
-# viewer has to read while a diagram moves wants ≈ 3 % or more.
-TITLE_FONT_SIZE: float = 34      # 5.3 % — top-center chapter/topic heading
-# Nudged up again on the small end (label 17→19, body 20→22, subtitle 21→22,
-# caption 23→24) once the render-large-then-scale kerning fix above landed: with
-# glyphs finally spaced evenly the small labels no longer read as "ragged", so
-# the remaining complaint was plain size. Everything here still clears ~3 % of
-# frame height and the layout bands in manim_visuals absorb the extra width via
-# fit_band()/next_to()/arrange().
-SUBTITLE_FONT_SIZE: float = 22   # 3.5 % — beat subtitle under the heading
-BODY_FONT_SIZE: float = 22       # 3.5 % — standard on-screen label
-LABEL_FONT_SIZE: float = 19      # 3.0 % — small callouts, unit tags, legend rows
-FORMULA_FONT_SIZE: float = 31    # 4.9 % — the dedicated formula panel
-CAPTION_FONT_SIZE: float = 24    # 3.8 % — bottom-edge German subtitle bar
+TITLE_FONT_SIZE: float = _theme.font_size("text2xlPx")
+SUBTITLE_FONT_SIZE: float = _theme.font_size("textBasePx")
+BODY_FONT_SIZE: float = _theme.font_size("textBasePx")
+LABEL_FONT_SIZE: float = _theme.font_size("textSmPx")
+FORMULA_FONT_SIZE: float = _theme.font_size("text2xlPx")
+CAPTION_FONT_SIZE: float = _theme.font_size("textLgPx")
 #endregion
 
 
 #region Scene title
-# One look for the top-middle chapter header of every tutorial scene.
-TITLE_COLOR: str = "#FFFFFF"
-TITLE_EDGE_BUFF: float = 0.35
-TITLE_RUN_TIME: float = 1.4
+# Compact chapter tabs belong to the lesson window rather than a centered title screen.
+TITLE_COLOR: str = _theme.CHROME_FOREGROUND
 
 
-def scene_title(text: str):
-    """🏔️ Top-middle chapter header — same face, size, colour and placement everywhere."""
-    from manim import UP
+def section_heading(text: str):
+    """📑 Place a standalone instructional heading in the first content row."""
+    from manim import LEFT, UP
 
-    title = centered_body_text(text, font_size=TITLE_FONT_SIZE, color=TITLE_COLOR)
-    title.to_edge(UP, buff=TITLE_EDGE_BUFF)
-    title.set_x(0)
-    return title
+    visuals = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+    label = centered_body_text(text, font_size=LABEL_FONT_SIZE, color=visuals.P_PRIMARY, max_width=13.0)
+    heading = visuals.window_chip(label, color=visuals.P_PRIMARY)
+    heading.to_edge(UP, buff=_theme.UI_SPACING * 2)
+    heading.to_edge(LEFT, buff=_theme.UI_SPACING * 3)
+    return heading
 
 
-def play_scene_title(scene, title, run_time: float = TITLE_RUN_TIME) -> None:
-    """✍️ The single intro animation for a chapter header."""
-    from manim import Write
-
-    scene.play(Write(title), run_time=run_time)
 #endregion
 
 
 #region Beat subtitle
-# Same teal line under the module title on every Heating/Cooling beat —
+# Same primary accent under the module title on every Heating/Cooling beat —
 # font, size, colour, gap and x-centering must not drift per file.
-BEAT_SUBTITLE_BUFF: float = 0.22
 BEAT_SUBTITLE_FADE: float = 0.3
 
 
-def beat_subtitle(text: str, title):
-    """📎 Per-beat subtitle centered under the persistent module title."""
-    from manim import DOWN
-    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
-    P_TEAL = _manim_module.P_TEAL
-
-    sub = centered_body_text(text, font_size=SUBTITLE_FONT_SIZE, color=P_TEAL)
-    sub.next_to(title, DOWN, buff=BEAT_SUBTITLE_BUFF)
-    sub.set_x(0)
-    return sub
 #endregion

@@ -1,0 +1,474 @@
+{
+  "quiz": "excel-workbook",
+  "tasks": [
+    {
+      "id": "workbook-terminology",
+      "kind": "classification"
+    },
+    {
+      "id": "spreadsheet-commands",
+      "kind": "classification"
+    },
+    {
+      "id": "copying-references",
+      "kind": "classification"
+    }
+  ],
+  "terminology": {
+    "workbook-file": "workbook",
+    "worksheet-tab": "worksheet",
+    "cell-c4": "cell",
+    "range-b2-d4": "range",
+    "formula-product": "formula",
+    "reference-b7": "reference",
+    "row-seven": "row",
+    "column-c": "column"
+  },
+  "commands": {
+    "command-sum": "sum",
+    "command-average": "average",
+    "command-count": "count",
+    "command-minimum": "minimum",
+    "command-maximum": "maximum",
+    "command-sort": "sort",
+    "command-filter": "filter",
+    "command-transpose": "transpose",
+    "command-values": "values",
+    "command-format": "format"
+  },
+  "references": {
+    "copy-relative": "relative",
+    "copy-absolute": "absolute",
+    "copy-column": "column-fixed",
+    "copy-row": "row-fixed"
+  },
+  "cases": [
+    {
+      "id": "sum",
+      "cells": {
+        "B2": 12,
+        "B3": 18,
+        "B4": 30
+      },
+      "formula": "=SUM(B2:B4)",
+      "expected": 60
+    },
+    {
+      "id": "average",
+      "cells": {
+        "B2": 12,
+        "B3": 18,
+        "B4": 30
+      },
+      "formula": "=AVERAGE(B2:B4)",
+      "expected": 20
+    },
+    {
+      "id": "count",
+      "cells": {
+        "B2": 12,
+        "B3": "Wall",
+        "B4": 30
+      },
+      "formula": "=COUNT(B2:B4)",
+      "expected": 2
+    },
+    {
+      "id": "relative",
+      "source": "C2",
+      "target": "D4",
+      "formula": "=A1",
+      "expected": "=B3"
+    },
+    {
+      "id": "absolute",
+      "source": "C2",
+      "target": "D4",
+      "formula": "=$A$1",
+      "expected": "=$A$1"
+    },
+    {
+      "id": "column-fixed",
+      "source": "C2",
+      "target": "D4",
+      "formula": "=$A1",
+      "expected": "=$A3"
+    },
+    {
+      "id": "row-fixed",
+      "source": "C2",
+      "target": "D4",
+      "formula": "=A$1",
+      "expected": "=B$1"
+    },
+    {
+      "id": "sort",
+      "rows": [
+        [
+          "West",
+          30
+        ],
+        [
+          "North",
+          10
+        ],
+        [
+          "East",
+          20
+        ]
+      ],
+      "expected": [
+        [
+          "North",
+          10
+        ],
+        [
+          "East",
+          20
+        ],
+        [
+          "West",
+          30
+        ]
+      ]
+    },
+    {
+      "id": "filter",
+      "rows": [
+        [
+          "West",
+          30
+        ],
+        [
+          "North",
+          10
+        ],
+        [
+          "East",
+          20
+        ]
+      ],
+      "threshold": 20,
+      "expected": [
+        [
+          "West",
+          30
+        ],
+        [
+          "East",
+          20
+        ]
+      ]
+    },
+    {
+      "id": "transpose",
+      "input": [
+        [
+          12,
+          18,
+          30
+        ]
+      ],
+      "expected": [
+        [
+          12
+        ],
+        [
+          18
+        ],
+        [
+          30
+        ]
+      ]
+    },
+    {
+      "id": "paste-values",
+      "formula": "=B2*2",
+      "result": 24,
+      "expected": {
+        "value": 24,
+        "formula": null
+      }
+    },
+    {
+      "id": "format",
+      "value": 0.25,
+      "numberFormat": "0%",
+      "expected": {
+        "display": "25%",
+        "value": 0.25
+      }
+    },
+    {
+      "id": "absolute-non-circular",
+      "source": "C2",
+      "target": "D4",
+      "formula": "=$D$3",
+      "expected": "=$D$3"
+    }
+  ],
+  "classifications": {
+    "workbook-terminology": {
+      "workbook-file": "workbook",
+      "workbook-budget": "workbook",
+      "workbook-model": "workbook",
+      "workbook-survey": "workbook",
+      "workbook-schedule": "workbook",
+      "worksheet-tab": "worksheet",
+      "worksheet-areas": "worksheet",
+      "worksheet-materials": "worksheet",
+      "worksheet-cost-grid": "worksheet",
+      "worksheet-area-grid": "worksheet",
+      "cell-c4": "cell",
+      "cell-b2": "cell",
+      "cell-d3": "cell",
+      "cell-a4": "cell",
+      "cell-c2": "cell",
+      "range-b2-d4": "range",
+      "range-b2-b4": "range",
+      "range-b2-c3": "range",
+      "range-a2-d2": "range",
+      "range-c2-d4": "range",
+      "formula-product": "formula",
+      "formula-total": "formula",
+      "formula-average": "formula",
+      "formula-difference": "formula",
+      "formula-ratio": "formula",
+      "reference-b7": "reference",
+      "reference-b2": "reference",
+      "reference-c3": "reference",
+      "reference-range": "reference",
+      "reference-fixed": "reference",
+      "row-seven": "row",
+      "row-two": "row",
+      "row-three": "row",
+      "row-four": "row",
+      "row-one": "row",
+      "column-c": "column",
+      "column-a": "column",
+      "column-b": "column",
+      "column-d": "column",
+      "column-cost": "column"
+    },
+    "spreadsheet-commands": {
+      "command-sum": "sum",
+      "command-sum-2": "sum",
+      "command-sum-3": "sum",
+      "command-sum-4": "sum",
+      "command-sum-5": "sum",
+      "command-average": "average",
+      "command-average-2": "average",
+      "command-average-3": "average",
+      "command-average-4": "average",
+      "command-average-5": "average",
+      "command-count": "count",
+      "command-count-2": "count",
+      "command-count-3": "count",
+      "command-count-4": "count",
+      "command-count-5": "count",
+      "command-minimum": "minimum",
+      "command-minimum-2": "minimum",
+      "command-minimum-3": "minimum",
+      "command-minimum-4": "minimum",
+      "command-minimum-5": "minimum",
+      "command-maximum": "maximum",
+      "command-maximum-2": "maximum",
+      "command-maximum-3": "maximum",
+      "command-maximum-4": "maximum",
+      "command-maximum-5": "maximum",
+      "command-sort": "sort",
+      "command-sort-2": "sort",
+      "command-sort-3": "sort",
+      "command-sort-4": "sort",
+      "command-sort-5": "sort",
+      "command-filter": "filter",
+      "command-filter-2": "filter",
+      "command-filter-3": "filter",
+      "command-filter-4": "filter",
+      "command-filter-5": "filter",
+      "command-transpose": "transpose",
+      "command-transpose-2": "transpose",
+      "command-transpose-3": "transpose",
+      "command-transpose-4": "transpose",
+      "command-transpose-5": "transpose",
+      "command-values": "values",
+      "command-values-2": "values",
+      "command-values-3": "values",
+      "command-values-4": "values",
+      "command-values-5": "values",
+      "command-format": "format",
+      "command-format-2": "format",
+      "command-format-3": "format",
+      "command-format-4": "format",
+      "command-format-5": "format"
+    },
+    "copying-references": {
+      "copy-relative": "relative",
+      "copy-relative-2": "relative",
+      "copy-relative-3": "relative",
+      "copy-relative-4": "relative",
+      "copy-relative-5": "relative",
+      "copy-absolute": "absolute",
+      "copy-absolute-2": "absolute",
+      "copy-absolute-3": "absolute",
+      "copy-absolute-4": "absolute",
+      "copy-absolute-5": "absolute",
+      "copy-column": "column-fixed",
+      "copy-column-2": "column-fixed",
+      "copy-column-3": "column-fixed",
+      "copy-column-4": "column-fixed",
+      "copy-column-5": "column-fixed",
+      "copy-row": "row-fixed",
+      "copy-row-2": "row-fixed",
+      "copy-row-3": "row-fixed",
+      "copy-row-4": "row-fixed",
+      "copy-row-5": "row-fixed"
+    }
+  },
+  "presentation": {
+    "formulaCells": [
+      {
+        "item": "formula-product",
+        "active": "D2",
+        "formula": "=B2*C2",
+        "result": 24,
+        "inputs": {
+          "B2": 12,
+          "C2": 2
+        }
+      },
+      {
+        "item": "formula-total",
+        "active": "D2",
+        "formula": "=SUM(B2:B4)",
+        "result": 60,
+        "inputs": {
+          "B2": 12,
+          "B3": 18,
+          "B4": 30
+        }
+      },
+      {
+        "item": "formula-average",
+        "active": "D2",
+        "formula": "=AVERAGE(B2:B4)",
+        "result": 20,
+        "inputs": {
+          "B2": 12,
+          "B3": 18,
+          "B4": 30
+        }
+      },
+      {
+        "item": "formula-difference",
+        "active": "D2",
+        "formula": "=B4-B2",
+        "result": 18,
+        "inputs": {
+          "B4": 30,
+          "B2": 12
+        }
+      },
+      {
+        "item": "formula-ratio",
+        "active": "D2",
+        "formula": "=B3/B2",
+        "result": 1.5,
+        "inputs": {
+          "B3": 18,
+          "B2": 12
+        }
+      },
+      {
+        "item": "reference-b7",
+        "active": "D2",
+        "formula": "=B7*2",
+        "result": 28,
+        "inputs": {
+          "B7": 14
+        }
+      },
+      {
+        "item": "reference-b2",
+        "active": "D2",
+        "formula": "=B2*C2",
+        "result": 24,
+        "inputs": {
+          "B2": 12,
+          "C2": 2
+        }
+      },
+      {
+        "item": "reference-c3",
+        "active": "D2",
+        "formula": "=C3*2",
+        "result": 6,
+        "inputs": {
+          "C3": 3
+        }
+      },
+      {
+        "item": "reference-range",
+        "active": "D2",
+        "formula": "=SUM(B2:B4)",
+        "result": 60,
+        "inputs": {
+          "B2": 12,
+          "B3": 18,
+          "B4": 30
+        }
+      },
+      {
+        "item": "reference-fixed",
+        "active": "D2",
+        "formula": "=$B$2*2",
+        "result": 24,
+        "inputs": {
+          "B2": 12
+        }
+      }
+    ],
+    "valueBarTasks": [
+      "workbook-terminology",
+      "spreadsheet-commands"
+    ],
+    "valueBarExceptions": [
+      "formula",
+      "reference",
+      "values"
+    ],
+    "sourceFormulaTask": "copying-references",
+    "pasteValueCells": [
+      {
+        "item": "command-values",
+        "active": "C1",
+        "formula": "=B1*2",
+        "result": 24
+      },
+      {
+        "item": "command-values-2",
+        "active": "C1",
+        "formula": "=B1+B2",
+        "result": 24
+      },
+      {
+        "item": "command-values-3",
+        "active": "C1",
+        "formula": "=B1*B2",
+        "result": 24
+      },
+      {
+        "item": "command-values-4",
+        "active": "C1",
+        "formula": "=B1-B2",
+        "result": 24
+      },
+      {
+        "item": "command-values-5",
+        "active": "C1",
+        "formula": "=B1/B2",
+        "result": 24
+      }
+    ]
+  }
+}

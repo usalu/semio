@@ -685,7 +685,7 @@
       "json": {
         "queryId": "q-course",
         "kind": "course.course",
-        "version": 8,
+        "version": 9,
         "scope": "architecture",
         "principal": { "kind": "anonymous" },
         "arguments": [123, 34, 116, 121, 112, 101, 34, 58, 34, 99, 111, 117, 114, 115, 101, 34, 125],

@@ -54,7 +54,7 @@ test("each nested grid pans under glass, reveals crisp screen-sized previews and
     await expect(veil).toBeVisible();
     expect(await veil.evaluate((glass) => getComputedStyle(glass).backdropFilter)).toContain("blur(");
     await expect.poll(() => strip.getAttribute("style")).not.toBe(before);
-    const id = scope.pages[1]!;
+    const id = scope.id === "quizzes" ? "energy" : scope.pages[1]!;
     await card(learner.page, id).locator("[data-layered-zoom]").hover();
     await expect(card(learner.page, id)).toHaveAttribute("data-revealed", "");
     await expect.poll(() => displacement(learner, id)).toBeLessThan(0.5);
@@ -98,7 +98,7 @@ test("nested addresses preserve parents; Escape and up ascend one level and the 
   await expect(way(learner.page, "up")).toHaveAttribute("aria-disabled", "true");
 });
 
-test("keyboard enters each level and empty topic placeholders speak both languages without starting a quiz", { tag: "@hierarchy" }, async ({ device }) => {
+test("keyboard enters Energy and locked topic previews speak both languages without opening", { tag: "@hierarchy" }, async ({ device }) => {
   const learner = await device("de");
   await enter(learner, { kind: "anonymous" }, true);
   const quizzes = card(learner.page, "quizzes").getByRole("link");
@@ -120,20 +120,41 @@ test("keyboard enters each level and empty topic placeholders speak both languag
   await expect.poll(() => new URL(learner.page.url()).hash).toBe("#energy");
   await learner.page.keyboard.press("Escape");
   await expect.poll(() => new URL(learner.page.url()).hash).toBe("#quizzes");
-  for (const topic of COURSE.topics.filter((topic) => topic.quizzes.length === 0)) {
-    await card(learner.page, topic.id).getByRole("link").click();
+  for (const topic of COURSE.topics.filter((topic) => topic.id !== "energy")) {
+    const locked = card(learner.page, topic.id);
+    await expect(locked.getByRole("link")).toHaveCount(0);
+    await expect(locked.locator(".course-access-preview[inert]")).toHaveCount(1);
+    await expect(locked.getByRole("status")).toContainText("Noch nicht freigeschaltet");
+    await locked.locator(".course-access-tint").click();
     const placeholder = pane(learner.page, topic.id);
-    await expect(placeholder).toHaveAttribute("data-opened", "");
+    await expect(placeholder).not.toHaveAttribute("data-opened", "");
     await expect(placeholder).toContainText(topic.title.de);
-    await expect(placeholder).toContainText("Quizze zu diesem Thema folgen bald.");
-    await expect(placeholder.locator('[data-overview-card-action="primary"]')).toHaveCount(0);
+    for (const id of topic.quizzes) await expect(placeholder).toContainText(QUIZZES.find(quiz => quiz.id === id)!.title.de);
+
     await learner.page.locator('header button[lang="en"]').click();
+    await expect(locked.getByRole("status")).toContainText("Not available yet");
     await expect(placeholder).toContainText(topic.title.en);
-    await expect(placeholder).toContainText("Quizzes for this topic are coming soon.");
+    for (const id of topic.quizzes) await expect(placeholder).toContainText(QUIZZES.find(quiz => quiz.id === id)!.title.en);
     await learner.page.locator('header button[lang="de"]').click();
-    await learner.page.keyboard.press("Escape");
     await expect.poll(() => new URL(learner.page.url()).hash).toBe("#quizzes");
   }
+});
+
+test("locked topic addresses require the hidden author preview argument", { tag: "@hierarchy" }, async ({ device }) => {
+  const learner = await device("en");
+  await enter(learner, { kind: "anonymous" }, true);
+  await openGrid(learner, "quizzes");
+  await learner.page.evaluate(() => { location.hash = "parametric"; });
+  await expect(pane(learner.page, "parametric")).not.toHaveAttribute("data-opened", "");
+  await expect(learner.page.locator('[data-course-grid="quizzes"][data-grid-active]')).toBeVisible();
+  const url = new URL(learner.page.url());
+  url.searchParams.set("preview", "1");
+  await learner.page.goto(url.href);
+  await expect(pane(learner.page, "parametric")).toHaveAttribute("data-opened", "");
+  await expect(pane(learner.page, "parametric").locator("[data-course-locked]")).toHaveCount(0);
+  url.searchParams.delete("preview");
+  await learner.page.goto(url.href);
+  await expect(pane(learner.page, "parametric")).not.toHaveAttribute("data-opened", "");
 });
 
 test("navbar keeps ordered ways and reaches the containing quiz from a run", { tag: "@hierarchy" }, async ({ device }) => {

@@ -1,0 +1,19 @@
+{
+  "cases": [
+    {
+      "language": "en",
+      "audience": "spectator"
+    },
+    {
+      "language": "de",
+      "audience": "spectator"
+    }
+  ],
+  "scene": "Beat3_FactorialExperiments",
+  "profile": {
+    "width": 480,
+    "height": 270,
+    "fps": 4
+  },
+  "expected": "construct-completes-with-native-animation-cleanup"
+}

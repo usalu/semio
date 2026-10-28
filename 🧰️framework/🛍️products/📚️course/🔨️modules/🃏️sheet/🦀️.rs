@@ -18,7 +18,7 @@
 
 use crate::challenge::{challenge_rules, task_seconds, ChallengeRules};
 use crate::randomness::{fnv1a32, shuffle, Mt19937};
-use crate::schema::{Axis, Category, Challenge, Icon, MatchingTask, Quiz, Sheet, SheetAxis, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, TaskKind, Text};
+use crate::schema::{Axis, Category, Challenge, Icon, Mockup, MatchingTask, Quiz, Sheet, SheetAxis, SheetClassificationTask, SheetDimension, SheetItem, SheetMatchingTask, SheetSortingTask, SheetTask, SortingItem, Task, TaskKind, Text};
 use std::cmp::Ordering;
 
 /// 🎰️ Present `quiz` for `seed` at `challenge`. Expects a quiz free of
@@ -57,7 +57,7 @@ fn present(random: &mut Mt19937, task: &Task, rules: ChallengeRules, seed: u32) 
                 icon: task.icon.clone(),
                 axes: task.axes.as_ref().map(|axes| axes.iter().map(|axis| sheet_axis(axis, rules.keys)).collect()),
                 categories: shuffle(random, &task.categories).into_iter().map(|category| sheet_category(category, axes, rules.keys)).collect(),
-                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].short.as_ref(), task.items[index].icon.as_ref())).collect(),
+                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].short.as_ref(), task.items[index].icon.as_ref(), task.items[index].mockup.as_ref())).collect(),
                 seconds: seconds(TaskKind::Classification, items.len(), 1),
             })
         }
@@ -74,7 +74,7 @@ fn present(random: &mut Mt19937, task: &Task, rules: ChallengeRules, seed: u32) 
                 icon: task.icon.clone(),
                 quantity: task.quantity.clone(),
                 keys,
-                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].short.as_ref(), task.items[index].icon.as_ref())).collect(),
+                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].short.as_ref(), task.items[index].icon.as_ref(), task.items[index].mockup.as_ref())).collect(),
                 seconds: seconds(TaskKind::Sorting, items.len(), 1),
             })
         }
@@ -93,7 +93,7 @@ fn present(random: &mut Mt19937, task: &Task, rules: ChallengeRules, seed: u32) 
                         SheetDimension { id: dimension.id.clone(), quantity: dimension.quantity.clone(), icon: dimension.icon.clone(), cards: rules.keys.then_some(cards) }
                     })
                     .collect(),
-                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].short.as_ref(), task.items[index].icon.as_ref())).collect(),
+                items: items.iter().map(|&index| sheet_item(&task.items[index].id, &task.items[index].label, task.items[index].short.as_ref(), task.items[index].icon.as_ref(), task.items[index].mockup.as_ref())).collect(),
                 seconds: seconds(TaskKind::Matching, items.len(), task.dimensions.len()),
             })
         }
@@ -148,7 +148,7 @@ fn values(task: &MatchingTask, items: &[usize], dimension: &str) -> Vec<f64> {
     items.iter().map(|&index| task.items[index].values.get(dimension).copied().unwrap_or(f64::NAN)).collect()
 }
 
-fn sheet_item(id: &str, label: &Text, short: Option<&Text>, icon: Option<&Icon>) -> SheetItem {
-    SheetItem { id: id.to_string(), label: label.clone(), short: short.cloned(), icon: icon.cloned() }
+fn sheet_item(id: &str, label: &Text, short: Option<&Text>, icon: Option<&Icon>, mockup: Option<&Mockup>) -> SheetItem {
+    SheetItem { mockup: mockup.cloned(), id: id.to_string(), label: label.clone(), short: short.cloned(), icon: icon.cloned() }
 }
 

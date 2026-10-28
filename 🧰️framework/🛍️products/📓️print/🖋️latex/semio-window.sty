@@ -85,6 +85,7 @@
 \ExplSyntaxOn
 
 \tl_new:N \l_semio_window_kind_title_tl
+\bool_new:N \l_semio_window_title_set_bool
 \tl_new:N \l_semio_window_number_tl
 \tl_new:N \l_semio_window_register_number_tl
 \tl_new:N \l_semio_window_key_tl
@@ -941,7 +942,10 @@
 \semio_window_define_tier:n { structural }
 
 \keys_define:nn { semio / window / kind } {
-  title .tl_set:N = \l_semio_window_kind_title_tl,
+  title .code:n = {
+    \tl_set:Nn \l_semio_window_kind_title_tl {#1}
+    \bool_set_true:N \l_semio_window_title_set_bool
+  },
   key .tl_set:N = \l_semio_window_key_tl,
   hierarchy .bool_set:N = \l_semio_window_hierarchy_bool,
   hierarchy .default:n = true,
@@ -979,6 +983,7 @@
 }
 
 \cs_new_protected:Npn \semio_window_content_state_reset: {
+  \bool_set_false:N \l_semio_window_title_set_bool
   \tl_set:Nn \l_semio_window_valign_tl { top }
   \tl_set:Nn \l_semio_window_halign_tl { left }
   \bool_set_false:N \l_semio_window_height_set_bool
@@ -1361,7 +1366,7 @@
   \semio_window_content_validate:
   \use:c { semio@window@enter }
   \bool_if:NTF \l_semio_register_list_bool {
-    \tl_if_empty:NT \l_semio_window_kind_title_tl {
+    \bool_if:NF \l_semio_window_title_set_bool {
       \tl_set:Nn \l_semio_window_kind_title_tl {
         \semio_kind_label:n { \use:c { semio@window@#1@kind } }
       }
@@ -1373,21 +1378,21 @@
   } {
     \bool_if:NTF \l_semio_window_hierarchy_bool {
       \refstepcounter {#1}
-      \tl_if_empty:NTF \l_semio_window_kind_title_tl {
+      \bool_if:NF \l_semio_window_title_set_bool {
         \tl_set:Nn \l_semio_window_kind_title_tl {
           \semio_kind_label:n { \use:c { semio@window@#1@kind } }
         }
-      } { }
+      }
       \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
       \semio_window_kind_number_set:n {#1}
       \semio_window_register_write:nn {#1} { \use:c { semio@window@#1@kind } }
       \semio_window_break_suffix_apply:
     } {
-      \tl_if_empty:NTF \l_semio_window_kind_title_tl {
+      \bool_if:NF \l_semio_window_title_set_bool {
         \tl_set:Nn \l_semio_window_kind_title_tl {
           \semio_kind_label:n { \use:c { semio@window@#1@kind } }
         }
-      } { }
+      }
       \tl_set:Nx \l_semio_window_kind_title_tl { \tl_use:N \l_semio_window_kind_title_tl }
       \tl_clear:N \l_semio_window_number_tl
       \tl_gclear:N \g_semio_window_current_regnum_tl
@@ -1457,6 +1462,8 @@
 \semio_window_kind_define:nnnnn { semioimage } { image } { Image } { visual } { images }
 \semio_window_kind_define:nnnnn { semiophoto } { photo } { Photo } { visual } { photos }
 \semio_window_kind_define:nnnnn { semiofigure } { figure } { Figure } { visual } { figures }
+\semio_window_kind_define:nnnnn { semiodiagram } { diagram } { Diagram } { visual } { diagrams }
+\semio_window_kind_define:nnnnn { semiotransitions } { transitions } { Transitions } { logical } { transitions }
 \semio_window_kind_define:nnnnn { semiotable } { table } { Table } { logical } { tables }
 \semio_window_kind_define:nnnnn { semiolisting } { listing } { Listing } { logical } { listings }
 \semio_window_kind_define:nnnnn { semiopseudocode } { pseudocode } { Pseudocode } { logical } { pseudocodes }
@@ -3250,7 +3257,12 @@
 }
 
 \newcommand{\semio@window@header@muted@core}[2]{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted@open{\textcolor{semio-chrome-foreground}{#2}}}%
+  \protected@edef\semio@window@header@titleval{#2}%
+  \if\relax\detokenize\expandafter{\semio@window@header@titleval}\relax
+    \sbox{\semio@window@tab@box}{}%
+  \else
+    \sbox{\semio@window@tab@box}{\semio@heading@cap@muted@open{\textcolor{semio-chrome-foreground}{#2}}}%
+  \fi
   \edef\semio@window@header@numval{#1}%
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
     \ifsemio@window@header@flush
@@ -3545,6 +3557,7 @@
 \newlength{\semio@chrome@icon@height}
 \newlength{\semio@chrome@icon@height@footer}
 
+\newif\ifsemio@chrome@navbar@authored
 \ExplSyntaxOn
 \tl_new:N \l_semio_navbar_project_tl
 \tl_new:N \l_semio_navbar_center_tl
@@ -3591,11 +3604,31 @@
   \semio@chrome@emblem@rebuild
 }
 
+\newif\ifsemio@chrome@footer
+\newsavebox{\semio@chrome@chip@body}
+\newcommand{\semio@chrome@chip@rule}{%
+  \semio@window@stroke@h{semio-chrome-border-normal}{\wd\semio@chrome@chip@body}%
+}
 \newcommand{\semio@chrome@chip}[1]{%
   \begingroup
   \setlength{\fboxsep}{\semio@chrome@padding}%
-  \setlength{\fboxrule}{\semio@stroke@hairline}%
-  \fcolorbox{semio-chrome-border-normal}{semio-chrome-base}{#1}%
+  \sbox{\semio@chrome@chip@body}{\colorbox{semio-chrome-base}{#1}}%
+  \hbox{%
+    \semio@window@stroke@v@to{semio-chrome-border-normal}{\dimexpr\ht\semio@chrome@chip@body+\dp\semio@chrome@chip@body+\semio@stroke@hairline\relax}%
+    \vbox{%
+      \ifsemio@chrome@footer\else
+        \hbox{\semio@chrome@chip@rule}%
+        \nointerlineskip
+      \fi
+      \hbox{\usebox{\semio@chrome@chip@body}}%
+      \ifsemio@chrome@footer
+        \nointerlineskip
+        \hbox{\semio@chrome@chip@rule}%
+      \fi
+      \kern0pt
+    }%
+    \semio@window@stroke@v@to{semio-chrome-border-normal}{\dimexpr\ht\semio@chrome@chip@body+\dp\semio@chrome@chip@body+\semio@stroke@hairline\relax}%
+  }%
   \endgroup
 }
 
@@ -3635,9 +3668,15 @@
 \cs_new_eq:NN \SemioFooterLogoChips \semio_footer_logo_chips:
 
 \cs_new_protected:Npn \semio_chrome_navbar_project_chip: {
-  \tl_if_empty:NF \l_semio_navbar_project_tl {
-    \hspace{\semio@chrome@padding}
-    \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\tl_use:N \l_semio_navbar_project_tl}
+  \semio@chrome@chip {
+    \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}
+    \tl_if_empty:NF \l_semio_navbar_project_tl {
+      \hspace{\semio@chrome@padding}
+      \semio@chrome@vcenter{\semio@chrome@row@height}{
+        {\SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont
+         \tl_use:N \l_semio_navbar_project_tl}
+      }
+    }
   }
 }
 \cs_new_protected:Npn \semio_chrome_navbar_center_chip: {
@@ -3648,70 +3687,70 @@
 \cs_new_eq:NN \SemioChromeNavbarProjectChip \semio_chrome_navbar_project_chip:
 \cs_new_eq:NN \SemioChromeNavbarCenterChip \semio_chrome_navbar_center_chip:
 
+\tl_new:N \l_semio_header_left_tl
+\tl_new:N \l_semio_header_center_tl
+\tl_new:N \l_semio_header_right_tl
+\keys_define:nn { semio / header } {
+  left .tl_set:N = \l_semio_header_left_tl,
+  center .tl_set:N = \l_semio_header_center_tl,
+  right .tl_set:N = \l_semio_header_right_tl,
+}
+\NewDocumentCommand \SemioHeaderSetup { m } {
+  \keys_set:nn { semio / header } {#1}
+  \semio@chrome@navbar@authoredtrue
+  \semio_chrome_navbar_labels_compute:
+}
+\cs_new:Npn \SemioChromeNavbarRightLabel { \tl_use:N \l_semio_header_right_tl }
+
 \cs_new_protected:Npn \semio_chrome_navbar_labels_compute: {
-  \tl_clear:N \l_semio_navbar_project_tl
-  \tl_clear:N \l_semio_navbar_center_tl
-  \makeatletter
-  \tl_set:Nx \l_tmpa_tl { \@title }
-  \makeatother
-  \tl_trim_spaces:N \l_tmpa_tl
-  \seq_set_split:Nnn \l_semio_navbar_title_seq { --- } { \l_tmpa_tl }
-  \int_compare:nNnTF { \seq_count:N \l_semio_navbar_title_seq } > 1 {
-    \tl_set:Nx \l_semio_navbar_center_tl { \seq_item:Nn \l_semio_navbar_title_seq { 1 } }
-    \tl_trim_spaces:N \l_semio_navbar_center_tl
-    \tl_set:Nx \l_semio_navbar_project_tl { \seq_item:Nn \l_semio_navbar_title_seq { 2 } }
-    \tl_trim_spaces:N \l_semio_navbar_project_tl
-  } {
-    \tl_set_eq:NN \l_semio_navbar_project_tl \l_tmpa_tl
-    \cs_if_exist:cTF { zukunftbau@type } {
-      \str_case:VnF \zukunftbau@type {
-        { zwischenbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Zwischenbericht } }
-        { forschungsbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Forschungsbericht } }
-        { kompaktbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Kompaktbericht } }
+  \ifsemio@chrome@navbar@authored
+    \tl_set_eq:NN \l_semio_navbar_project_tl \l_semio_header_left_tl
+    \tl_set_eq:NN \l_semio_navbar_center_tl \l_semio_header_center_tl
+  \else
+    \tl_clear:N \l_semio_navbar_project_tl
+    \tl_clear:N \l_semio_navbar_center_tl
+    \makeatletter
+    \tl_set:Nx \l_tmpa_tl { \@title }
+    \makeatother
+    \tl_trim_spaces:N \l_tmpa_tl
+    \seq_set_split:Nnn \l_semio_navbar_title_seq { --- } { \l_tmpa_tl }
+    \int_compare:nNnTF { \seq_count:N \l_semio_navbar_title_seq } > 1 {
+      \tl_set:Nx \l_semio_navbar_center_tl { \seq_item:Nn \l_semio_navbar_title_seq { 1 } }
+      \tl_trim_spaces:N \l_semio_navbar_center_tl
+      \tl_set:Nx \l_semio_navbar_project_tl { \seq_item:Nn \l_semio_navbar_title_seq { 2 } }
+      \tl_trim_spaces:N \l_semio_navbar_project_tl
+    } {
+      \tl_set_eq:NN \l_semio_navbar_project_tl \l_tmpa_tl
+      \cs_if_exist:cTF { zukunftbau@type } {
+        \str_case:VnF \zukunftbau@type {
+          { zwischenbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Zwischenbericht } }
+          { forschungsbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Forschungsbericht } }
+          { kompaktbericht } { \tl_set:Nn \l_semio_navbar_center_tl { Kompaktbericht } }
+        } { }
       } { }
-    } { }
-  }
+    }
+  \fi
 }
 \cs_new_eq:NN \SemioChromeNavbarLabelsCompute \semio_chrome_navbar_labels_compute:
 \ExplSyntaxOff
 
 \newcommand{\semio@chrome@navbar@bar}[1]{%
-  \vbox{%
+  \vbox to \semio@chrome@navbar@height{%
+    \semio@chrome@footerfalse
+    \vfil
+    \hbox to \headwidth{#1}%
     \nointerlineskip
-    \hbox to \headwidth{%
-      \setlength{\fboxsep}{0pt}%
-      \colorbox{semio-chrome-base}{%
-        \vbox to \semio@chrome@navbar@height{%
-          \vfil
-          \hbox to \headwidth{#1}%
-          \vskip\semio@spacing@single
-        }%
-      }%
-    }%
-    \nointerlineskip
-    \hbox to \headwidth{%
-      \color{semio-chrome-border-normal}\rule{\headwidth}{\semio@stroke@hairline}%
-    }%
+    \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\headwidth}}%
   }%
 }
 
 \newcommand{\semio@chrome@footer@bar}[1]{%
-  \vbox{%
+  \vbox to \semio@chrome@footer@height{%
+    \semio@chrome@footertrue
+    \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\headwidth}}%
     \nointerlineskip
-    \hbox to \headwidth{%
-      \color{semio-chrome-border-normal}\rule{\headwidth}{\semio@stroke@hairline}%
-    }%
-    \nointerlineskip
-    \hbox to \headwidth{%
-      \setlength{\fboxsep}{0pt}%
-      \colorbox{semio-chrome-base}{%
-        \vbox to \semio@chrome@footer@height{%
-          \vskip\semio@spacing@single
-          \hbox to \headwidth{#1}%
-          \vfil
-        }%
-      }%
-    }%
+    \hbox to \headwidth{#1}%
+    \vfil
   }%
 }
 
@@ -3767,7 +3806,7 @@
 
 \newcommand{\semio@chrome@bar@threezone}[4]{%
   \sbox\semio@chrome@bar@edge@box{%
-    \vbox to #1{%
+    \vbox to \dimexpr#1-\semio@stroke@hairline\relax{%
       \vfil
       \hbox to \headwidth{%
         \Ifsemiochromemirrored{#4\hfil#2}{#2\hfil#4}%
@@ -3776,7 +3815,7 @@
     }%
   }%
   \sbox\semio@chrome@bar@center@box{%
-    \vbox to #1{%
+    \vbox to \dimexpr#1-\semio@stroke@hairline\relax{%
       \vfil
       \hbox to \headwidth{%
         \hfil
@@ -3793,10 +3832,7 @@
   }%
 }
 
-% LR-2.9: bound a running-header field to a maximum width, shrinking to fit only
-% when it would otherwise overflow, so a long running-section title cannot reach
-% back to the centred report-type chip (the three navbar zones are overlaid
-% full-width boxes with no gutter). Footer/threezone untouched.
+% 📏 Fits only running-label content so chip borders retain their full height.
 \newsavebox\semio@chrome@fit@box
 \newcommand{\semio@chrome@fit@width}[2]{%
   \sbox\semio@chrome@fit@box{#2}%
@@ -3808,40 +3844,40 @@
 }
 
 \newcommand{\SemioChromeNavbarHead}{%
+  \begingroup
+  \ifsemio@chrome@navbar@authored
+    \let\Ifsemiochromemirrored\@secondoftwo
+  \fi
   \semio@chrome@navbar@bar{%
     \semio@chrome@bar@threezone{\semio@chrome@zone@height}{%
-      \semio@chrome@chip{%
-        \semio@chrome@vcenter{\semio@chrome@row@height}{\usebox{\semio@chrome@navbar@emblem@box}}%
-      }%
       \SemioChromeNavbarProjectChip
     }{%
       \SemioChromeNavbarCenterChip
     }{%
-      % LR-2.8: read the heading in effect on THIS page from the mark, not the
-      % read-ahead \gdef. \protected@edef keeps robust tokens (e.g. \& in project
-      % names) unexpanded.
-      \protected@edef\semio@chrome@heading@now{\rightmark}%
-      % LR-hdrfix: \rightmark is empty on pages that start no new heading —
-      % continuation pages and the register/bibliography sections, which issue no
-      % heading mark — leaving those pages with a blank header slot. Fall back to
-      % the persistent \gdef global (last heading set), which never empties, so
-      % every page carries a section label.
-      \ifx\semio@chrome@heading@now\@empty
-        \protected@edef\semio@chrome@heading@now{\semio@chrome@heading}%
+      \ifsemio@chrome@navbar@authored
+        \protected@edef\semio@chrome@heading@now{\SemioChromeNavbarRightLabel}%
+      \else
+        \protected@edef\semio@chrome@heading@now{\rightmark}%
+        \ifx\semio@chrome@heading@now\@empty
+          \protected@edef\semio@chrome@heading@now{\semio@chrome@heading}%
+        \fi
       \fi
       \ifx\semio@chrome@heading@now\@empty
       \else
         % LR-2.9: cap the running-heading chip below half the free width so it
         % cannot reach the centred report-type chip; long titles scale down.
-        \semio@chrome@fit@width{0.34\headwidth}{%
-          \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading@now}%
+        \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{%
+          \semio@chrome@fit@width{\dimexpr0.34\headwidth-\semio@chrome@padding-\semio@chrome@padding-\semio@stroke@hairline-\semio@stroke@hairline\relax}{\semio@chrome@heading@now}%
         }%
       \fi
     }%
   }%
+  \endgroup
 }
 
 \newcommand{\SemioChromeFooterHead}{%
+  \begingroup
+  \let\Ifsemiochromemirrored\@secondoftwo
   \semio@chrome@footer@bar{%
     \semio@chrome@bar@threezone{\semio@chrome@zone@height@footer}{%
       \SemioFooterLogoChips
@@ -3855,6 +3891,7 @@
       }%
     }%
   }%
+  \endgroup
 }
 
 \newcommand{\SemioChromeIconSize}[1]{%

@@ -1,0 +1,398 @@
+# Current Completion Matrix
+
+Checkpoint: 2026-10-27T20:33:17.214Z. The independent watcher currently accepts 26 of38 chapter windows and 7 of17 full lessons. Seven complete point-in-time previews are retained in [the playable list](inspection-progress.md). The complete55-movie delivery is still in progress.
+
+Current stable frame-loss gate: strict watcher69474 stopped on EB07(1304 actual/1336expected). A separate actual-varied-UI replay also fails1287/1336. Final collection acceptance and retention remain held pending the real encoder fix and fresh verification; earlier partial counts are historical checkpoint evidence.
+
+| Requirement | Evidence | Remaining gate |
+| --- | --- | --- |
+| Course → topic → clip → chapter | Actual shared UI, bilingual four-grid DOM, hover/click, ancestor and parallax tests pass. | Current final visual audit of38 chapters. |
+| No persistent old body title | Native title APIs/callers removed; actual bilingual geometry and native bodies pass. | All117 current source certificates and final media. |
+| Semio typography, tint, primary color and chips | Shared semio components and native font/style ports; current physical navigation/body visual PASS. | Current-SHA coverage for remaining chapters. |
+| Zoom into chromeless body | Affected native camera tests GREEN144.713s; strict exact body check on every accepted chapter. | 12 current chapter media checks. |
+|38 chapter exports | 26 independently accepted; finite clocks/cursor/audio and current sources verified. | Full38 current acceptance. |
+| Exact adjacent boundaries | Immutable first-paint assets, cross-process native endpoint and corruption/race tests GREEN. 22 joins measured so far. | All37 adjacent joins plus outer wrap. |
+|17 complete ordered lessons | 7 strict current full-decode passes; every frame compared with ordered chapter movies. | Remaining10 lessons, normal source refreshes. |
+| Current loaded owners and source closure | Main36299 holds guarded current loaded-code owner; normal source churn invalidates/retries leaf media. | Final stable17/117/38/38export marker and independent provenance proof. |
+| BIM footer layout | Native bilingual measured-slot test and visual snapshots GREEN; only model leaf changed. | Refreshed actual models movie and current footer audit. |
+| Retained playable collection | Guarded retainer prepared for55 movies,93 sidecars,114 images. | Production/strict/visual/provenance/BIMclosure gates, then copy and digest proof. |
+
+The historical4089/4120 physical mismatch was rejected. The fresh current physical4118-frame movie passes complete decode, exact body alignment, source and ordered-chapter verification; no speculative encoder patch was made.
+
+## Inspected Current Production And Test Scope
+
+This inventory identifies paths directly documented or reviewed in the current work. Filesystem timestamps do not establish author ownership; concurrent unrelated work is not attributed to root. Canonical header owner list is retained in inspection-body-title-removal.md (34 authored/shared paths plus font/style tests and registration).
+
+- 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🎨️semio-style/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/💾️handoff/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟦️.tsx
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟨️render.mjs
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🏁️handoff/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/💾️persisted/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/💾️persisted/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/📚️closure/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/📚️closure/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🟨️.mjs
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🥞️layered/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧪️tests/🥞️layered/🟨️.mjs
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🧰️tools.mjs
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🎨️surface/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧪️tests/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧪️tests/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📐️geometry/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📚️collection/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📚️collection/🔣️.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/📚️collection/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🔣️.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🔤️typography/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🔤️typography/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🎬️scene/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🎬️scene/🔣️.schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🔣️.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🖌️render/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🧪️tests/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🧪️tests/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🖱️interaction/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🖌️render/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🐍️process.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🧩️chapters/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🔣️.cases.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧬️schema.json
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/📑️heading/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🧪️tests/📑️heading/🔣️.json
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py
+- 🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py
+- 🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/⚖️index/🐍️.py
+- 🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🎨️visuals/🐍️.py
+- 🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py
+- 🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🧪️experiments/🐍️.py
+- 🎓️teaching/🏛️architecture/🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py
+- 🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🐍️.py
+- 🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py
+- 🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧬️objects/🐍️.py
+
+## Retained Ticket Inputs And Reports
+
+Complete current ticket-root input/report inventory (includes earlier retained work; no claim that every file was created in this resumed turn). Preserve these during generated-output cleanup.
+- accent-audit.md
+- accent-media-check.py
+- accent-plan.md
+- accent-preview.py
+- accent-render-issue.md
+- accent-render.md
+- accent-review.md
+- accent-scenes.md
+- accent-summary.md
+- accent-tests.md
+- audit-native-evidence.py
+- browser-ui-implementation.md
+- cache-audit.md
+- content-camera-audit.md
+- content-camera-files.md
+- content-camera-implementation.md
+- content-camera-plan.md
+- content-camera-preview.md
+- content-camera-summary.md
+- content-camera-tests.md
+- content-camera-verification.md
+- content-frame-count-fixture.md
+- content-frame-count.md
+- coverage-audit.md
+- cursor-demo-events.md
+- cursor-demo.py
+- cursor-final-audit.md
+- cursor-implementation.md
+- cursor-physics-check.md
+- cursor-physics-check.py
+- cursor-plan.md
+- cursor-render.md
+- cursor-runtime.md
+- cursor-summary.md
+- cursor-tests.md
+- cursor-ui-audit.md
+- energy-audit.md
+- exact-browser-oracle.mjs
+- exact-ui-audit.md
+- exact-ui-demo.py
+- exact-ui-events.md
+- exact-ui-final-audit.md
+- exact-ui-geometry.md
+- exact-ui-plan.md
+- exact-ui-port-audit.md
+- exact-ui-probe.py
+- exact-ui-render.md
+- exact-ui-render.py
+- exact-ui-summary.md
+- exact-ui-tests.md
+- final-artifact-audit.md
+- final-audit.md
+- final-snapshot-audit.md
+- final-style-review.md
+- finish-content-camera.py
+- fix-decoded-frame-count.py
+- font-collision.py
+- font-performance.md
+- font-review.md
+- full-physical-cache-audit.md
+- full-physical-decode.py
+- full-physical-deliver.mjs
+- full-physical-files.md
+- full-physical-plan.md
+- full-physical-progress.py
+- full-physical-render-report.py
+- full-physical-render.md
+- full-physical-render.ps1
+- full-physical-source-audit.md
+- full-physical-source-audit.py
+- full-physical-summary.md
+- full-physical-verification.md
+- full-physical-verification.py
+- full-physical-visual-audit.md
+- glyph-preview.py
+- implement-content-camera.py
+- inspect-native-processes.py
+- inspection-bim-closure.py
+- inspection-bim-context.md
+- inspection-bim-currentness.md
+- inspection-bim-dispatch-fix.md
+- inspection-bim-exchange-audit.md
+- inspection-bim-fix-test.md
+- inspection-bim-mixin-audit.md
+- inspection-bim-native.py
+- inspection-bim-schema.md
+- inspection-bim-schema.py
+- inspection-bim-sequence.md
+- inspection-bim-test-writes.md
+- inspection-body-title-audit.md
+- inspection-body-title-removal-review.md
+- inspection-body-title-removal.md
+- inspection-boundary-asset-review.md
+- inspection-boundary-assets.md
+- inspection-boundary-process.py
+- inspection-browser-hierarchy.md
+- inspection-cache.md
+- inspection-changed-paths.md
+- inspection-chapter-clock-count.md
+- inspection-chapter-compositor-audit.md
+- inspection-chapter-contract.md
+- inspection-chapter-count.py
+- inspection-chapter-frame-alignment.md
+- inspection-chapter-hierarchy-audit.md
+- inspection-chapter-implementation.md
+- inspection-chapter-metadata-audit.md
+- inspection-chapter-native-clock.md
+- inspection-chapter-native-clock.py
+- inspection-chapter-plan.md
+- inspection-chapter-preview.py
+- inspection-chapter-range.py
+- inspection-chapter-real-ui-encoder.py
+- inspection-chapter-sources.py
+- inspection-chapter-verification.md
+- inspection-chapter-verify.py
+- inspection-churn-current.md
+- inspection-cooling-fix-test.md
+- inspection-cooling-fix-test.py
+- inspection-cooling-fix.md
+- inspection-coordination.md
+- inspection-current-source-triage.md
+- inspection-duration-probe.md
+- inspection-endpoint-paint-audit.md
+- inspection-energy.md
+- inspection-experiments-fix.md
+- inspection-final-sheets.md
+- inspection-final-sheets.py
+- inspection-index.py
+- inspection-math-bench.json
+- inspection-math-bench.md
+- inspection-math-bench.py
+- inspection-math-cache.md
+- inspection-model-layout.md
+- inspection-model-layout.py
+- inspection-models-beats.md
+- inspection-opt-prewarm.md
+- inspection-opt-prewarm.py
+- inspection-optimization-provenance.md
+- inspection-owner-cases.json
+- inspection-owner-test.py
+- inspection-path-audit.md
+- inspection-performance.md
+- inspection-plan.md
+- inspection-preflight.md
+- inspection-preflight.py
+- inspection-preview.md
+- inspection-publication-audit.md
+- inspection-publish.py
+- inspection-remaining-sources.md
+- inspection-render-fix-test.md
+- inspection-render-fix-test.py
+- inspection-render-fix.md
+- inspection-render.md
+- inspection-render.py
+- inspection-repair-plan.py
+- inspection-retain-energy.mjs
+- inspection-retain.mjs
+- inspection-retention-review.md
+- inspection-roof-link.md
+- inspection-roof-link.py
+- inspection-source-files-performance.md
+- inspection-source-files-profile.py
+- inspection-source-progress.md
+- inspection-source-samples.md
+- inspection-source-samples.py
+- inspection-source-sheet.py
+- inspection-split-sheet.py
+- inspection-state.md
+- inspection-sun-fix-test.md
+- inspection-sun-test.py
+- inspection-test-write-audit.md
+- inspection-trace-samples.py
+- inspection-ui-path-check.py
+- inspection-uncached-raster.py
+- inspection-verification.md
+- inspection-verifier-cases.json
+- inspection-verifier-test.md
+- inspection-verifier-test.py
+- inspection-verify.py
+- inspection-visual-audit.md
+- intro-preview.py
+- layer-ui-audit.md
+- layered-files.md
+- layered-final-code-audit.md
+- layered-navigation-events.md
+- layered-preview-verification.md
+- layered-ui-implementation.md
+- layered-ui-plan.md
+- layered-ui-summary.md
+- layered-ui-tests.md
+- layered-visual-audit.md
+- pango-debug.md
+- pango-debug.py
+- physical-preview.md
+- plan.md
+- preview.py
+- probe-content-count.py
+- probe-layered-raster.mjs
+- render-cache.md
+- render-caption-audit.md
+- render-content-camera-preview.py
+- render-env.md
+- render-final-audit.md
+- render-layered-navigation.py
+- render-layered-physical.py
+- render-plan.md
+- render-results.md
+- render-right-chip.py
+- render-title-chip-preview.py
+- render-visual-review.md
+- review-clips.py
+- right-chip-audit.md
+- right-chip-files.md
+- right-chip-implementation.md
+- right-chip-plan.md
+- right-chip-summary.md
+- right-chip-tests.md
+- right-chip-verification.md
+- run-accent-tests.py
+- run-browser-cold-smoke.mjs
+- run-content-camera-tests.py
+- run-cursor-tests.py
+- run-exact-ui-tests.py
+- run-final-layered-tests.py
+- run-layered-contract-tests.py
+- run-layered-tests.py
+- run-virtual-ui-tests.py
+- show-physical.py
+- stop-native-processes.py
+- style-audit.md
+- style-implementation.md
+- summary.md
+- tests.md
+- title-chip-audit.md
+- title-chip-files.md
+- title-chip-implementation.md
+- title-chip-plan.md
+- title-chip-preview.md
+- title-chip-summary.md
+- title-chip-tests.md
+- title-chip-ticket-io.md
+- title-chip-verification.md
+- typography-code-audit.md
+- validate-accent-imports.py
+- validate-final.py
+- verify-content-camera-hierarchy.py
+- verify-content-camera-locales.py
+- verify-content-camera-preview.py
+- verify-content-frame-count.py
+- verify-cursor-ui.py
+- verify-exact-ui.py
+- verify-layered-preview.py
+- verify-physical.py
+- verify-publication-catalog.py
+- verify-right-chip.py
+- verify-title-chip-preview.py
+- verify-virtual-ui.py
+- virtual-ui-audit.md
+- virtual-ui-continuity-audit.md
+- virtual-ui-demo.py
+- virtual-ui-implementation.md
+- virtual-ui-plan.md
+- virtual-ui-render.md
+- virtual-ui-summary.md
+- virtual-ui-tests.md
+- visual-review.md
+- 🎫️ticket.json
+
+## Owned Generated Scopes Before Cleanup
+
+- 🗑️generated/i/: 23 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/ib/: 160 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/is/: 4 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/iv/: 43 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/icb/: 11 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/ih/: 5 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/inspection-cache/: 1 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+- 🗑️generated/io/: 0 immediate entries; generated media, logs, measurements or fixture outputs; root owns cleanup after retention.
+
+Do not delete retained early inspection media or ticket inputs/reports as part of generated cleanup. This scout has made no production changes.

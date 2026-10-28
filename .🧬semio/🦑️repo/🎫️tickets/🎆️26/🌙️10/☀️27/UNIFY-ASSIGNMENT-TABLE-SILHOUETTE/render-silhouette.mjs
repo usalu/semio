@@ -1,0 +1,17 @@
+import { createRequire } from "node:module";
+import { readFile, writeFile } from "node:fs/promises";
+import { pathToFileURL } from "node:url";
+import path from "node:path";
+const require=createRequire(path.join(process.cwd(),"package.json"));
+const canvas=require("@napi-rs/canvas");
+for(const key of ["DOMMatrix","ImageData","Path2D"])globalThis[key]??=canvas[key];
+const {getDocument}=await import(pathToFileURL(require.resolve("pdfjs-dist/legacy/build/pdf.mjs")).href);
+const fontRoot=path.join(path.dirname(require.resolve("pdfjs-dist/package.json")),"standard_fonts").replaceAll(path.sep,"/")+"/";
+const pdf=await getDocument({data:new Uint8Array(await readFile(process.argv[2])),standardFontDataUrl:fontRoot}).promise;
+if(pdf.numPages!==1)throw Error("Expected one table preview page");
+const page=await pdf.getPage(1),viewport=page.getViewport({scale:2});
+const surface=canvas.createCanvas(Math.ceil(viewport.width),Math.ceil(viewport.height));
+await page.render({canvasContext:surface.getContext("2d"),viewport}).promise;
+await writeFile(process.argv[3],surface.toBuffer("image/png"));
+console.log(JSON.stringify({pages:pdf.numPages,png:process.argv[3]}));
+await pdf.destroy();

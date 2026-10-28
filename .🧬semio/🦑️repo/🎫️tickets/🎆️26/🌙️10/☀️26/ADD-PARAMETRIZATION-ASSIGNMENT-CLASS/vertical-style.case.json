@@ -1,0 +1,29 @@
+{
+  "feature": "Filled assignment matrix cell vertical alignment",
+  "cases": [
+    {
+      "name": "Filled row label uses measured glyph center",
+      "cell": "label",
+      "alignment": "center",
+      "preserveRowHeightMm": 6.14,
+      "maxInkCenterOffsetMm": 0.25
+    },
+    {
+      "name": "Filled row value uses measured glyph center",
+      "cell": "value",
+      "alignment": "center",
+      "preserveRowHeightMm": 6.14,
+      "maxInkCenterOffsetMm": 0.25
+    },
+    {
+      "name": "Blank writing rows keep symmetric writing strut",
+      "cell": "blank",
+      "preserveRowHeightMm": 6.14
+    },
+    {
+      "name": "Header artwork and title retain existing layout",
+      "cell": "header",
+      "preserveHeaderHeightMm": 16
+    }
+  ]
+}

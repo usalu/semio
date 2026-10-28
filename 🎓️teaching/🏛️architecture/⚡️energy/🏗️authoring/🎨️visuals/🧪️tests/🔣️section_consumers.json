@@ -1,0 +1,13 @@
+{
+  "material": {"fill_opacity": 1, "stroke_width": 0, "stroke_opacity": 0},
+  "ventilation": ["❓️need", "⚙️mechanical", "📦️volume", "🪟️natural"],
+  "scales": [0.6, 1.0, 1.4],
+  "construction_keys": ["floor", "ceiling", "wall_lo", "wall_hi", "walls", "roof", "wall_right"],
+  "construction_variables": ["room", "big", "small", "h", "hs", "house", "section", "house2"],
+  "magnifier": {"scale": 0.8, "radius": 1.5, "air_particles_per_side": 7, "solid_color": "dark-5-7", "bond_color": "gray-600", "bond_width": 1.6, "bond_opacity": 0.55},
+  "ast_cases": [
+    {"module": "📊️demand.🎬️clip.♨️system-losses", "function": "_plant", "assignments": ["room", "under_slab", "cellar_h", "cellar_walls"], "result": "cellar_walls"},
+    {"module": "🔥️heating.🎬️clip.☀️solar-gains", "function": "Beat5_Verschattung.construct", "assignments": ["glass_out", "wall_top", "lintel", "sill", "masonry"], "result": "masonry"},
+    {"module": "🧲️physics.🎬️clip.🧲️fundamentals", "function": "Beat7_SensibelLatent.construct", "assignments": ["wt", "wall_parts"], "result": "wall_parts"}
+  ]
+}

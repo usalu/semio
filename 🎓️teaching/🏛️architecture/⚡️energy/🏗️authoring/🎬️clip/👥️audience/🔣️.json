@@ -1,0 +1,7 @@
+{
+  "$schema": "🧬️schema.json",
+  "variants": [
+    {"id": "speaker", "subtitles": "overlay"},
+    {"id": "spectator", "subtitles": "hidden"}
+  ]
+}

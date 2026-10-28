@@ -1,0 +1,173 @@
+{
+  "schema": "semio.architecture.optimization/v2",
+  "languages": ["en", "de"],
+  "title": {"en": "Seminar Room Design Study", "de": "Entwurfsstudie Seminarraum"},
+  "note": {
+    "en": "One simplified annual teaching model of an 8 m × 6 m × 3 m seminar room with a single glazed façade in a Zurich-like climate. No measured data.",
+    "de": "Ein vereinfachtes Jahres-Lehrmodell eines Seminarraums (8 m × 6 m × 3 m) mit einer verglasten Fassade im Klima von Zürich. Keine Messdaten."
+  },
+  "parameters": {
+    "room": {
+      "width": {"value": 8, "unit": "m", "note": {"en": "Room and façade width.", "de": "Raum- und Fassadenbreite."}},
+      "depth": {"value": 6, "unit": "m", "note": {"en": "Room depth behind the façade.", "de": "Raumtiefe hinter der Fassade."}},
+      "height": {"value": 3, "unit": "m", "note": {"en": "Room and façade height.", "de": "Raum- und Fassadenhöhe."}},
+      "head": {"value": 2.7, "unit": "m", "note": {"en": "Window head height above the floor; the overhang slab sits on top of the wall, so 0.3 m of wall stay above the window.", "de": "Höhe der Fensteroberkante über dem Boden; die Vordachplatte sitzt auf der Wandoberkante, über dem Fenster bleiben also 0,3 m Wand."}}
+    },
+    "climate": {
+      "heating_degree_hours": {"value": 70000, "unit": "Kh/a", "note": {"en": "Indoor-outdoor temperature difference summed over the heated, occupied hours.", "de": "Temperaturdifferenz innen-aussen, summiert über die beheizten Nutzungsstunden."}},
+      "cooling_degree_hours": {"value": 8000, "unit": "Kh/a", "note": {"en": "Same for the hours when heat can be rejected through the envelope in summer.", "de": "Dasselbe für die Sommerstunden, in denen Wärme über die Hülle abgegeben werden kann."}},
+      "winter_irradiance_mean": {"value": 177.5, "unit": "kWh/(m²·a)", "note": {"en": "Heating season, occupied hours: mean vertical solar irradiation over all bearings.", "de": "Heizperiode, Nutzungszeit: mittlere Vertikaleinstrahlung über alle Himmelsrichtungen."}},
+      "winter_irradiance_cos1": {"value": 135, "unit": "kWh/(m²·a)", "note": {"en": "Winter: extra on the south façade, less on the north façade (low sun).", "de": "Winter: Plus an der Südfassade, Minus an der Nordfassade (tiefe Sonne)."}},
+      "winter_irradiance_cos2": {"value": 27.5, "unit": "kWh/(m²·a)", "note": {"en": "Winter: south and north receive a bit more than east and west.", "de": "Winter: Süd und Nord erhalten etwas mehr als Ost und West."}},
+      "summer_irradiance_mean": {"value": 222.5, "unit": "kWh/(m²·a)", "note": {"en": "Cooling season, occupied hours: mean vertical solar irradiation over all bearings.", "de": "Kühlperiode, Nutzungszeit: mittlere Vertikaleinstrahlung über alle Himmelsrichtungen."}},
+      "summer_irradiance_cos1": {"value": 20, "unit": "kWh/(m²·a)", "note": {"en": "Summer: south still gets more than north.", "de": "Sommer: Süd erhält weiterhin mehr als Nord."}},
+      "summer_irradiance_cos2": {"value": -72.5, "unit": "kWh/(m²·a)", "note": {"en": "Summer: east and west get the most (low morning and evening sun).", "de": "Sommer: Ost und West erhalten am meisten (tiefe Morgen- und Abendsonne)."}},
+      "direct_share_winter": {"value": 0.5, "unit": "1", "note": {"en": "Share of the winter irradiation that arrives as direct beam; only this share can be shaded, the diffuse rest always enters.", "de": "Anteil der Winter-Einstrahlung, der als direkte Strahlung ankommt; nur dieser Anteil lässt sich verschatten, der diffuse Rest tritt immer ein."}},
+      "direct_share_summer": {"value": 0.6, "unit": "1", "note": {"en": "Same for summer: the clear summer sky is more direct.", "de": "Dasselbe für den Sommer: Der klare Sommerhimmel ist direkter."}},
+      "beam_reference": {"value": 0.5, "unit": "1", "note": {"en": "Beam weight (sum of cos altitude × cos incidence over the solstice hours) a façade must receive before its direct share counts in full; with less beam the direct share fades in proportion, so a façade the sun merely grazes has almost no direct gain to shade and the shading never jumps.", "de": "Strahlungsgewicht (Summe aus cos Höhe × cos Einfallswinkel über die Sonnenwend-Stunden), das eine Fassade erhalten muss, damit ihr Direktanteil voll zählt; bei weniger Strahlung schwindet der Direktanteil proportional, eine nur gestreifte Fassade hat also kaum Direktgewinn zu verschatten und die Verschattung springt nie."}},
+      "internal_gains_winter": {"value": 300, "unit": "kWh/a", "note": {"en": "People, laptops and lamps in the heating season.", "de": "Personen, Laptops und Lampen in der Heizperiode."}},
+      "internal_gains_summer": {"value": 500, "unit": "kWh/a", "note": {"en": "People, laptops and lamps in the cooling season.", "de": "Personen, Laptops und Lampen in der Kühlperiode."}},
+      "utilization_exponent_heating": {"value": 4, "unit": "1", "note": {"en": "Thermal inertia: how well free heat is used (EN ISO 13790 style, tau about 45 h).", "de": "Trägheit: wie gut freie Wärme genutzt wird (EN ISO 13790, tau etwa 45 h)."}},
+      "utilization_exponent_cooling": {"value": 4, "unit": "1", "note": {"en": "Thermal inertia when losses are used to remove summer heat.", "de": "Trägheit, wenn Verluste Sommerwärme abführen."}}
+    },
+    "envelope": {
+      "r_si": {"value": 0.13, "unit": "m²·K/W", "note": {"en": "Inner surface resistance.", "de": "Innerer Übergangswiderstand."}},
+      "r_se": {"value": 0.04, "unit": "m²·K/W", "note": {"en": "Outer surface resistance.", "de": "Äußerer Übergangswiderstand."}},
+      "r_masonry": {"value": 0.45, "unit": "m²·K/W", "note": {"en": "Load-bearing wall without insulation.", "de": "Tragende Wand ohne Dämmung."}},
+      "conductivity_insulation": {"value": 0.035, "unit": "W/(m·K)", "note": {"en": "Mineral wool insulation.", "de": "Mineralwolle-Dämmung."}},
+      "u_window": {"value": 0.9, "unit": "W/(m²·K)", "note": {"en": "Triple glazing including frame.", "de": "Dreifachverglasung inklusive Rahmen."}},
+      "h_other": {"value": 12, "unit": "W/K", "note": {"en": "Roof, floor and ventilation losses with heat recovery, fixed.", "de": "Verluste über Dach, Boden und Lüftung mit Wärmerückgewinnung, fest."}},
+      "g_value": {"value": 0.5, "unit": "1", "note": {"en": "Share of solar energy that passes the glazing (frame and dirt included).", "de": "Anteil der Sonnenenergie, der durch die Verglasung gelangt (inklusive Rahmen und Schmutz)."}}
+    },
+    "daylight": {
+      "transmittance": {"value": 0.6, "unit": "1", "note": {"en": "Visible light transmittance including frame and dirt.", "de": "Lichttransmission inklusive Rahmen und Schmutz."}},
+      "sky_angle": {"value": 75, "unit": "°", "note": {"en": "Visible sky angle seen from the window without overhang.", "de": "Sichtbarer Himmelswinkel am Fenster ohne Vordach."}},
+      "sky_angle_loss": {"value": 0.5, "unit": "1", "note": {"en": "Largest share of the sky angle a very deep overhang can hide.", "de": "Größter Anteil des Himmelswinkels, den ein sehr tiefes Vordach verdeckt."}},
+      "overhang_half_depth": {"value": 0.6, "unit": "m", "note": {"en": "Overhang depth that hides half of that largest share.", "de": "Vordachtiefe, die die Hälfte dieses Anteils verdeckt."}},
+      "surface_area": {"value": 180, "unit": "m²", "note": {"en": "All interior surfaces of the room.", "de": "Alle Innenflächen des Raums."}},
+      "reflectance": {"value": 0.5, "unit": "1", "note": {"en": "Mean interior reflectance.", "de": "Mittlerer Reflexionsgrad der Innenflächen."}},
+      "reference_factor": {"value": 2, "unit": "%", "note": {"en": "Daylight factor at which about two thirds of the maximum autonomy is reached.", "de": "Tageslichtquotient, bei dem etwa zwei Drittel der maximalen Autonomie erreicht sind."}},
+      "max_autonomy": {"value": 0.85, "unit": "1", "note": {"en": "Largest share of lighting hours that daylight can cover.", "de": "Größter Anteil der Beleuchtungsstunden, den Tageslicht decken kann."}},
+      "orientation_gain": {"value": 0.12, "unit": "1", "note": {"en": "Sun-facing bearings give slightly more usable daylight.", "de": "Sonnenzugewandte Fassaden liefern etwas mehr nutzbares Tageslicht."}}
+    },
+    "systems": {
+      "cop": {"value": 3.5, "unit": "1", "note": {"en": "Seasonal coefficient of performance of the heat pump.", "de": "Jahresarbeitszahl der Wärmepumpe."}},
+      "eer": {"value": 3, "unit": "1", "note": {"en": "Seasonal energy efficiency ratio of the chiller.", "de": "Jahreskälteleistungszahl der Kältemaschine."}}
+    },
+    "lighting": {
+      "power_density": {"value": 9, "unit": "W/m²", "note": {"en": "Installed lighting power per floor area.", "de": "Installierte Beleuchtungsleistung pro Bodenfläche."}},
+      "hours": {"value": 1500, "unit": "h/a", "note": {"en": "Hours per year in which the room needs light.", "de": "Stunden pro Jahr, in denen der Raum Licht braucht."}}
+    },
+    "prices": {
+      "fixed": {"value": 9000, "unit": "CHF", "note": {"en": "Fixed façade items independent of the design: structure, scaffolding, finishes.", "de": "Feste Fassadenpositionen unabhängig vom Entwurf: Tragwerk, Gerüst, Oberflächen."}},
+      "wall": {"value": 300, "unit": "CHF/m²", "note": {"en": "Opaque wall without insulation.", "de": "Opake Wand ohne Dämmung."}},
+      "window": {"value": 550, "unit": "CHF/m²", "note": {"en": "Triple-glazed window with frame.", "de": "Dreifachverglastes Fenster mit Rahmen."}},
+      "insulation_per_cm": {"value": 6, "unit": "CHF/(m²·cm)", "note": {"en": "Insulation per square metre of opaque wall and centimetre of thickness.", "de": "Dämmung pro Quadratmeter opake Wand und Zentimeter Dicke."}},
+      "overhang": {"value": 40, "unit": "CHF/m²", "note": {"en": "Projecting concrete slab per square metre.", "de": "Auskragende Betonplatte pro Quadratmeter."}}
+    },
+    "economics": {
+      "tariff": {"value": 0.25, "unit": "CHF/kWh", "note": {"en": "Electricity price today.", "de": "Strompreis heute."}},
+      "tariff_hi": {"value": 0.4, "unit": "CHF/kWh", "note": {"en": "Electricity price in a high-price scenario.", "de": "Strompreis in einem Szenario mit hohen Preisen."}},
+      "service_life": {"value": 30, "unit": "a", "note": {"en": "Years a façade is expected to serve before it is replaced.", "de": "Jahre, die eine Fassade voraussichtlich genutzt wird."}}
+    },
+    "carbon": {
+      "wall": {"value": 60, "unit": "kg CO₂e/m²", "note": {"en": "Opaque wall without insulation.", "de": "Opake Wand ohne Dämmung."}},
+      "window": {"value": 120, "unit": "kg CO₂e/m²", "note": {"en": "Triple-glazed window with frame.", "de": "Dreifachverglastes Fenster mit Rahmen."}},
+      "insulation_per_cm": {"value": 2.5, "unit": "kg CO₂e/(m²·cm)", "note": {"en": "Insulation per square metre and centimetre.", "de": "Dämmung pro Quadratmeter und Zentimeter."}},
+      "overhang": {"value": 250, "unit": "kg CO₂e/m²", "note": {"en": "Projecting concrete slab per square metre.", "de": "Auskragende Betonplatte pro Quadratmeter."}}
+    }
+  },
+  "ranges": {
+    "orientation": {"min": 90, "max": 450, "unit": "°", "title": {"en": "Façade bearing", "de": "Fassadenausrichtung"}},
+    "wwr": {"min": 0.1, "max": 0.8, "unit": "%", "title": {"en": "Window-to-wall ratio", "de": "Fensteranteil"}},
+    "overhang": {"min": 0, "max": 1.2, "unit": "m", "title": {"en": "Overhang depth", "de": "Vordachtiefe"}},
+    "insulation": {"min": 0.1, "max": 0.3, "unit": "m", "title": {"en": "Insulation thickness", "de": "Dämmstärke"}}
+  },
+  "sun": {
+    "latitude": 47.4,
+    "declination": 23.44,
+    "minimum_altitude": 3,
+    "hours": 4,
+    "winter_altitude": 19.16,
+    "summer_altitude": 66.04,
+    "low_summer_altitude": 30,
+    "winter_azimuth": [130.2, 229.8],
+    "summer_azimuth": [58, 302],
+    "note": {"en": "Sun path on the solstices at 47.4° latitude: noon altitudes, typical low summer sun in the morning and evening, and the compass bearings between which the sun is above 3° (180° is south). The overhang is judged over the hourly sun positions that shine on the façade (hours: noon ± 4 h), each weighted by the beam it delivers (cos altitude × cos incidence, so grazing hours count almost nothing and none at 90°). The shaded share is that weighted sum over the larger of the delivered beam and the climate beam_reference, so it falls to 0 smoothly when the sun leaves the façade.", "de": "Sonnenbahn zu den Sonnenwenden auf 47,4° Breite: Mittagshöhen, typische tiefe Sommersonne morgens und abends und die Kompasswinkel, zwischen denen die Sonne über 3° steht (180° ist Süd). Das Vordach wird über die stündlichen Sonnenstände beurteilt, die auf die Fassade scheinen (Stunden: Mittag ± 4 h), jeweils gewichtet mit der Strahlung, die sie liefern (cos Höhe × cos Einfallswinkel, streifende Stunden zählen also fast nichts und bei 90° gar nichts). Der verschattete Anteil ist diese gewichtete Summe geteilt durch das Größere aus gelieferter Strahlung und dem Klima-Wert beam_reference; er fällt so stetig auf 0, wenn die Sonne die Fassade verlässt."}
+  },
+  "baseline": {"orientation": 180, "wwr": 0.45, "overhang": 0.6, "insulation": 0.16},
+  "orientation": {
+    "note": {"en": "Bearing sweep for a 60 % glazed façade without overhang; 180 degrees is south, 360 degrees is north.", "de": "Ausrichtungs-Sweep für eine zu 60 % verglaste Fassade ohne Vordach; 180° ist Süd, 360° ist Nord."},
+    "range": [90, 450],
+    "design": {"wwr": 0.6, "overhang": 0, "insulation": 0.16},
+    "constraint": [270, 450],
+    "reference": 90,
+    "start": 315,
+    "neighbour_step": 5
+  },
+  "surface": {
+    "note": {"en": "South façade, 16 cm insulation: window-to-wall ratio against overhang depth.", "de": "Südfassade, 16 cm Dämmung: Fensteranteil gegen Vordachtiefe."},
+    "design": {"orientation": 180, "wwr": 0.45, "overhang": 0.6, "insulation": 0.16},
+    "wwr": [0.1, 0.8],
+    "overhang": [0, 1.2]
+  },
+  "sampling": {
+    "levels": {"wwr": [0.1, 0.45, 0.8], "overhang": [0, 0.6, 1.2], "orientation": [90, 180, 270, 360], "insulation": [0.1, 0.2, 0.3]},
+    "random": [[0.057, 0.792], [0.186, 0.25], [0.329, 0.6], [0.357, 0.65], [0.529, 0.1], [0.686, 0.125], [0.857, 0.517], [0.957, 0.25], [0.114, 0.067]],
+    "latin_permutation": [5, 1, 8, 6, 2, 3, 0, 7, 4]
+  },
+  "factorial": {
+    "note": {"en": "Two factors at two levels on the south façade; response is the cooling electricity. The third factor is only used by the half fraction.", "de": "Zwei Faktoren auf zwei Stufen an der Südfassade; Zielgröße ist der Kühlstrom. Der dritte Faktor wird nur im halben Versuchsplan genutzt."},
+    "design": {"orientation": 180, "wwr": 0.45, "overhang": 0.6, "insulation": 0.16},
+    "response": "cooling",
+    "factors": [
+      {"id": "wwr", "levels": [0.3, 0.7], "unit": "%", "title": {"en": "Window-to-wall ratio", "de": "Fensteranteil"}},
+      {"id": "overhang", "levels": [0, 1], "unit": "m", "title": {"en": "Overhang depth", "de": "Vordachtiefe"}}
+    ],
+    "third": {"id": "insulation", "levels": [0.1, 0.3], "unit": "m", "title": {"en": "Insulation thickness", "de": "Dämmstärke"}}
+  },
+  "weights": {
+    "balanced": {"electricity": 0.4, "cost": 0.3, "daylight": 0.2, "carbon": 0.1},
+    "cost_heavy": {"electricity": 0.22857142857142856, "cost": 0.6, "daylight": 0.11428571428571428, "carbon": 0.05714285714285714}
+  },
+  "brief": {
+    "budget_chf": 21000,
+    "note": {"en": "Client budget for this façade: a mandatory limit that filters the variants before any weights apply.", "de": "Budget des Bauherrn für diese Fassade: eine zwingende Grenze, die die Varianten vor jeder Gewichtung filtert."}
+  },
+  "criteria": [
+    {"id": "electricity", "key": "intensity", "direction": "min", "unit": "kWh/(m²·a)", "title": {"en": "Electricity", "de": "Strombedarf"}},
+    {"id": "cost", "key": "cost", "direction": "min", "unit": "CHF", "title": {"en": "Façade cost", "de": "Fassadenkosten"}},
+    {"id": "daylight", "key": "daylight", "direction": "max", "unit": "%", "title": {"en": "Daylight factor", "de": "Tageslichtquotient"}},
+    {"id": "carbon", "key": "carbon", "direction": "min", "unit": "kg CO₂e", "title": {"en": "Embodied carbon", "de": "Graue Emissionen"}}
+  ],
+  "variants": [
+    {"id": "punched", "title": {"en": "Punched windows", "de": "Lochfassade"}, "design": {"orientation": 180, "wwr": 0.25, "overhang": 0, "insulation": 0.16}},
+    {"id": "ribbon", "title": {"en": "Ribbon window", "de": "Fensterband"}, "design": {"orientation": 180, "wwr": 0.5, "overhang": 0.6, "insulation": 0.16}},
+    {"id": "glass_shaded", "title": {"en": "Shaded glass wall", "de": "Verschattete Glaswand"}, "design": {"orientation": 180, "wwr": 0.7, "overhang": 1.2, "insulation": 0.16}},
+    {"id": "punched_insulated", "title": {"en": "Super-insulated punched windows", "de": "Hochgedämmte Lochfassade"}, "design": {"orientation": 180, "wwr": 0.25, "overhang": 0, "insulation": 0.3}},
+    {"id": "glass_bare", "title": {"en": "Bare glass wall", "de": "Unverschattete Glaswand"}, "design": {"orientation": 180, "wwr": 0.7, "overhang": 0, "insulation": 0.16}},
+    {"id": "glass_premium", "extra": true, "title": {"en": "Premium glass wall", "de": "Premium-Glaswand"}, "design": {"orientation": 180, "wwr": 0.7, "overhang": 1.2, "insulation": 0.3}}
+  ],
+  "pareto": {
+    "note": {"en": "South façade grid: 6 window ratios, 3 insulation thicknesses, 2 overhang depths.", "de": "Südfassaden-Raster: 6 Fensteranteile, 3 Dämmstärken, 2 Vordachtiefen."},
+    "design": {"orientation": 180, "wwr": 0.45, "overhang": 0.6, "insulation": 0.16},
+    "wwr": [0.3, 0.4, 0.5, 0.6, 0.7, 0.8],
+    "insulation": [0.12, 0.2, 0.3],
+    "overhang": [0, 0.6],
+    "weights": [0, 0.25, 0.5, 0.75, 1],
+    "dominated_example": {"winner": "w30-t12-d0", "loser": "w70-t30-d0"},
+    "step": {"from": "w30-t12-d0", "to": "w30-t12-d60"},
+    "refinement": {"member": "w50-t30-d60"}
+  },
+  "algorithms": {
+    "budget": 50,
+    "start": {"wwr": 0.75, "overhang": 0.1},
+    "gradient": {"difference": 0.01, "learning_rate": 0.0008, "iterations": 10},
+    "pattern": {"step": {"wwr": 0.2, "overhang": 0.3}, "contraction": 0.5, "tolerance": 0.001, "iterations": 12},
+    "genetic": {
+      "population": 8, "generations": 7, "elite": 2, "tournament": 2,
+      "mutation": {"probability": 0.5, "wwr": 0.1, "overhang": 0.2},
+      "lcg": {"seed": 313, "multiplier": 48271, "increment": 0, "modulus": 2147483647, "note": {"en": "Park-Miller generator: state = (48271 × state) mod (2^31 - 1), draw = state / (2^31 - 1).", "de": "Park-Miller-Generator: Zustand = (48271 × Zustand) mod (2^31 - 1), Zufallszahl = Zustand / (2^31 - 1)."}}
+    }
+  }
+}

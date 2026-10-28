@@ -11,6 +11,7 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 import argparse
+import math
 import os
 
 sys.dont_write_bytecode = True
@@ -18,6 +19,7 @@ sys.dont_write_bytecode = True
 _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 compose_videos = _video_module.compose_videos
 load_manifest = _video_module.load_manifest
+_audience = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.👥️audience.🐍️")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -25,9 +27,12 @@ def main(argv: list[str] | None = None) -> int:
     for stream in (sys.stdout, sys.stderr):
         if hasattr(stream, "reconfigure"):
             stream.reconfigure(encoding="utf-8")
-    videos = load_manifest()
+    videos = load_manifest(source_ids=[])
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--language", choices=("en", "de"), required=True, help="Explicit virtual UI language")
+    parser.add_argument("--audience", action="append", choices=_audience.audiences(), help="Video variant; omitted renders Speaker and Spectator")
     parser.add_argument("--video", action="append", choices=[video["id"] for video in videos])
+    parser.add_argument("--chapter", action="append", choices=[chapter["scene"] for video in videos for chapter in video["chapters"]], help="Render selected chapters with the same source selections")
     parser.add_argument("--output-root", type=Path)
     parser.add_argument("--jobs", type=int, default=max(1, min(4, (os.cpu_count() or 2) - 1)), help="Global concurrent segment limit")
     parser.add_argument("--log-output", action="store_true", help="Save immutable per-segment attempt logs")
@@ -43,22 +48,26 @@ def main(argv: list[str] | None = None) -> int:
         parser.error("--force and --concat-only cannot be combined")
     if args.jobs < 1:
         parser.error("--jobs must be positive")
-    if args.fps is not None and args.fps <= 0:
+    if args.fps is not None and (not math.isfinite(args.fps) or args.fps <= 0):
         parser.error("--fps must be positive")
     if args.resolution:
         dimensions = args.resolution.split(",")
         if len(dimensions) != 2 or not all(value.isdigit() and int(value) > 0 and int(value) % 2 == 0 for value in dimensions):
             parser.error("--resolution requires two positive even dimensions: width,height")
+        if abs(int(dimensions[0]) / int(dimensions[1]) - 16 / 9) > 0.01:
+            parser.error("--resolution requires a 16:9 virtual UI canvas")
     if args.output_root:
         os.environ["SEMIO_TEACHING_OUTPUT_ROOT"] = str(args.output_root.resolve())
     try:
-        compose_videos(args.video, output_root=args.output_root, quality_flag="-q" + args.quality,
-                       play=args.play and not args.no_play, force=args.force, concat_only=args.concat_only,
-                       resolution=args.resolution, fps=args.fps, jobs=args.jobs, log_output=args.log_output)
+        for audience in dict.fromkeys(args.audience or _audience.audiences()):
+            print(f"[audience] Rendering {audience}", flush=True)
+            compose_videos(args.video, language=args.language, audience=audience, output_root=args.output_root, quality_flag="-q" + args.quality,
+                           play=args.play and not args.no_play, force=args.force, concat_only=args.concat_only,
+                           resolution=args.resolution, fps=args.fps, jobs=args.jobs, log_output=args.log_output, chapter_scenes=args.chapter)
     except KeyboardInterrupt:
         print("Render cancelled; completed segments and chapters can be reused.", flush=True)
         return 130
-    except RuntimeError as error:
+    except (RuntimeError, ValueError) as error:
         print(str(error), file=sys.stderr, flush=True)
         return 1
     return 0

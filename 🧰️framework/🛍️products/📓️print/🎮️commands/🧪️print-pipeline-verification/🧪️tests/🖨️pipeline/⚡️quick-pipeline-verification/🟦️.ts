@@ -1,3 +1,4 @@
+import { verifyPageChromeBorders, verifyPageChromeLogo } from "../../../../../🧪️tests/🏷️page-chrome/🟦️.ts";
 /** ⚡️ The quick print pipeline verification: the schema module reader, the toolchain manifest and the pure transformations of the print pipeline. */
 import MarkdownIt from "markdown-it";
 import assert from "node:assert/strict";
@@ -9,7 +10,7 @@ import { parseVizTaxonomyLeaves, visualizationTemplates } from "../../../../../�
 import { verifyVisualizationCoverage } from "../../../../../🔨️modules/📊️visualization-gallery/🩺️coverage-verification/🟦️.ts";
 import { printCompilerName, printSourceReferenceMapV1, printSourceReferenceTextV1 } from "../../../../../🔨️modules/📥️source-staging/🟦️.ts";
 import { deriveDarkPrintTexSource, printTemplatePdfNames, registeredPrintTemplates } from "../../../../../🔨️modules/🖨️tectonic-template-compilation/🟦️.ts";
-import { latexRoot, outputDirectory, pipelineScope, type PrintPipelineVerificationV1, printSchemaModule, productRoot } from "../🟦️.ts";
+import { latexRoot, type PrintPipelineVerificationV1, printSchemaModule, productRoot } from "../🟦️.ts";
 import { verifyPrintApiFreshness } from "../🧾️api-freshness-and-titles/🟦️.ts";
 import { verifyPrintMacroStaging, verifyPrintPdfGlyphPolicy } from "../📄️macro-and-pdf-verification/🟦️.ts";
 import { verifyPrintBundleContract, verifyPrintCommandBoundaries, verifyPrintDocumentCatalog, verifyPrintFontStaging } from "../🛡️command-and-publication-verification/🟦️.ts";
@@ -26,15 +27,13 @@ export function verifyPrintToolchainManifest(): void {
 }
 
 /** 🧪️ Runs pure deterministic print-pipeline verification. */
-export async function verifyPrintPipelineQuick(context:PrintPipelineVerificationV1): Promise<void> {
-  const outputRoot=outputDirectory(context),{execution,control}=pipelineScope(context);
+export async function verifyPrintPipelineSourcesV1(): Promise<void> {
+  verifyPageChromeBorders();
+  await verifyPageChromeLogo();
   verifyPrintApiFreshness();
   await verifyPrintPdfGlyphPolicy();
-  await verifyPrintCommandBoundaries(context);
   await verifyPrintDocumentCatalog();
-  await verifyPrintBundleContract(context);
   verifyPrintToolchainManifest();
-  await verifyPrintFontStaging(context);
   verifyPrintMacroStaging();
   const galleryIdentities = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🗺️gallery-identities.json"), "utf8")) as Record<string, string>;
   assert.deepEqual(Object.fromEntries(visualizationTemplates().map(({ id, texPath }) => [id, basename(texPath)])), galleryIdentities);
@@ -127,3 +126,11 @@ export async function verifyPrintPipelineQuick(context:PrintPipelineVerification
   verifyVisualizationCoverage();
 }
 //#endregion 🧪️PrintPipelineTests
+
+/** 🔍️ Combines pure source checks with retained operation, bundle and font boundaries. */
+export async function verifyPrintPipelineQuick(context: PrintPipelineVerificationV1): Promise<void> {
+  await verifyPrintPipelineSourcesV1();
+  await verifyPrintCommandBoundaries(context);
+  await verifyPrintBundleContract(context);
+  await verifyPrintFontStaging(context);
+}

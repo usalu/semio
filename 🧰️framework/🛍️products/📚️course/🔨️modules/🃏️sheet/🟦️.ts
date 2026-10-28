@@ -11,13 +11,13 @@
  * @see ../⛰️challenge/🟦️.ts — the rules of a challenge and the seconds of a task
  * @see ./🦀️.rs — the Rust twin
  */
-import type { Axis, Category, Challenge, Icon, QuestionPool, Quiz, SheetAxis, SheetItem, SheetTask, Sheet, ShortText, SortingItem, Task, Text } from "../../🧬️schema/🟦️.ts";
+import type { Axis, Category, Challenge, Icon, Mockup, QuestionPool, Quiz, SheetAxis, SheetItem, SheetTask, Sheet, ShortText, SortingItem, Task, Text } from "../../🧬️schema/🟦️.ts";
 import { challengeRules, taskSeconds, type ChallengeRules } from "../⛰️challenge/🟦️.ts";
 import { Mt19937, fnv1a32, shuffle, type RandomSource } from "../🎲️randomness/🟦️.ts";
 
 /** 🪧️ The solution-free projection of an item: id, label, short label and icon. */
-function sheetItem(item: { readonly id: string; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon }): SheetItem {
-  return { id: item.id, label: item.label, ...shortOf(item), ...iconOf(item) };
+function sheetItem(item: { readonly id: string; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup }): SheetItem {
+  return { id: item.id, label: item.label, ...(item.mockup ? { mockup: item.mockup } : {}), ...shortOf(item), ...iconOf(item) };
 }
 
 /** 🩳️ The short label of an item, a category or an axis as the optional field every presentation of it carries. */

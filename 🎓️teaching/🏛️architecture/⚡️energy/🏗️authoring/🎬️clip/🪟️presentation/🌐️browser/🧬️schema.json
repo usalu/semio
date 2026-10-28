@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Actual Semio UI Browser Frame Batch",
+  "type": "object",
+  "required": [
+    "schema",
+    "viewport",
+    "language",
+    "work_directory",
+    "frames",
+    "catalog"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio-presentation-browser/v1"
+    },
+    "viewport": {
+      "type": "object",
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "height": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "language": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "work_directory": {
+      "type": "string"
+    },
+    "frames": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/frame"
+      }
+    },
+    "catalog": {
+      "$ref": "../🧬️schema.json"
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "rect": {
+      "type": "object",
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "frame": {
+      "type": "object",
+      "required": [
+        "output",
+        "media",
+        "hierarchy"
+      ],
+      "properties": {
+        "output": {
+          "type": "string"
+        },
+        "cursor": {
+          "type": "object",
+          "properties": {
+            "point": {
+              "anyOf": [
+                {
+                  "type": "null"
+                },
+                {
+                  "type": "array",
+                  "minItems": 2,
+                  "maxItems": 2,
+                  "items": {
+                    "type": "number"
+                  }
+                }
+              ]
+            },
+            "kind": {
+              "enum": [
+                "arrow",
+                "pointer",
+                "selectable"
+              ]
+            },
+            "pressed": {
+              "type": "boolean"
+            },
+            "visible": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false
+        },
+        "menu_open": {
+          "type": "boolean"
+        },
+        "transition_elapsed": {
+          "type": "number",
+          "minimum": 0
+        },
+        "canonical_overview": {
+          "type": "boolean"
+        },
+        "media": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/media"
+          }
+        },
+        "hierarchy": {
+          "$ref": "#/$defs/hierarchy"
+        },
+        "content_camera": {
+          "type": "object",
+          "required": [
+            "video_id",
+            "progress"
+          ],
+          "properties": {
+            "video_id": {
+              "type": "string",
+              "minLength": 1
+            },
+            "progress": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "media": {
+      "type": "object",
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "body_image": {
+          "type": "string"
+        },
+        "body_opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "hierarchy": {
+      "type": "object",
+      "required": [
+        "opened_path",
+        "revealed_path",
+        "camera"
+      ],
+      "properties": {
+        "opened_path": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "revealed_path": {
+          "type": "array",
+          "maxItems": 4,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "camera": {
+          "type": "object",
+          "required": [
+            "x",
+            "y"
+          ],
+          "properties": {
+            "x": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            },
+            "y": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

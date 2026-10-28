@@ -1,0 +1,38 @@
+{
+  "topics": {
+    "parametric": "parametric-design",
+    "grasshopper": "grasshopper-data",
+    "excel": "excel-workbook",
+    "bim": "bim-concepts",
+    "optimization": "optimization-decisions"
+  },
+  "tasks": {
+    "bim-concepts": [
+      "data-information",
+      "object-oriented-model",
+      "model-coordination"
+    ],
+    "parametric-design": [
+      "parameter-domains",
+      "input-output-consistency",
+      "complexity-layers",
+      "design-tool-profiles",
+      "automation-levels"
+    ],
+    "optimization-decisions": [
+      "optimization-objectives",
+      "pareto-dominance"
+    ],
+    "excel-workbook": [
+      "workbook-terminology",
+      "spreadsheet-commands",
+      "copying-references"
+    ],
+    "grasshopper-data": [
+      "canvas-terminology",
+      "type-casting",
+      "tree-operations",
+      "list-matching"
+    ]
+  }
+}

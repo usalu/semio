@@ -36,6 +36,10 @@ const COUNTABLE = { en: /^(?!(?:The|A|An|One) )(?!\p{L}+ing (?:(?:an?|the)\b|\d)
 const length = (text: string): number => [...text].length;
 
 describe("architecture course", () => {
+  it("releases Energy and leaves every other topic awaiting its authored date", () => {
+    expect(course.unlocks).toEqual({ energy: 0, parametric: null, grasshopper: null, excel: null, bim: null, optimization: null });
+    expect(courseView(course, quizzes.map(({ quiz }) => quiz)).unlocks).toEqual(course.unlocks);
+  });
   it("shares valid proctor fixtures with the Rust unit and HTTP suites", () => {
     const proctor = resolve(siteRoot, "../../🛂️proctor");
     const source = readFileSync(resolve(proctor, "🔨️modules/📚️course/🧰️fixtures/🦀️.rs"), "utf8");
@@ -67,7 +71,7 @@ describe("architecture course", () => {
     expect(quizzes.map(({ quiz }) => quiz.id)).toEqual(courseContract.quizzes);
     expect(validCourse(course) ? [] : validCourse.errors).toEqual([]);
   });
-  it("declares Energy and five placeholders in the same order in authored material and the read model", () => {
+  it("declares Energy and all five authored subject quizzes in the same order in authored material and the read model", () => {
     expect(course.topics).toEqual(topicFixture.topics);
     expect(courseView(course, quizzes.map(({ quiz }) => quiz)).topics).toEqual(topicFixture.topics);
     expect(validCourse(course) ? [] : validCourse.errors).toEqual([]);
@@ -233,9 +237,9 @@ describe("standalone ventilation quiz", () => {
   const ventilation = quizzes.find(({ quiz }) => quiz.id === "ventilation")?.quiz;
 
   it("places ventilation between physics and heating in the authored course and the lazy material", async () => {
-    expect(quizzes.map(({ quiz }) => quiz.id)).toEqual(fixture.order);
+    expect(quizzes.slice(0, fixture.order.length).map(({ quiz }) => quiz.id)).toEqual(fixture.order);
     expect(course.topics![0]!.quizzes).toEqual(fixture.order);
-    expect((await material.loadArchitectureCourseMaterial()).quizzes.map(({ id }) => id)).toEqual(fixture.order);
+    expect((await material.loadArchitectureCourseMaterial()).quizzes.slice(0, fixture.order.length).map(({ id }) => id)).toEqual(fixture.order);
     expect(course.badges.find(({ id }) => id === "ventilation-expert")?.rule).toEqual({ kind: "perfect-quiz", quiz: "ventilation", challenge: "medium" });
   });
 

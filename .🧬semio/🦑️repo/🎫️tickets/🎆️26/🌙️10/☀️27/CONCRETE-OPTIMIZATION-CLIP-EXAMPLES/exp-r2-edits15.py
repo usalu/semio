@@ -1,0 +1,1 @@
+REPLACEMENTS = [('[self.tr("Cooling load", "Kühllast"), *_room.parts(found["cooling_demand"], "kWh/a", 1, german)]', '[self.tr("Cooling load", "Kühllast"), *_room.parts(found["cooling_demand"], "kWh/a", 1, german), "÷ EER", *_room.parts(EER, "", 1, german), "=", *_room.parts(found["cooling"], "kWh/a", 1, german)]')]

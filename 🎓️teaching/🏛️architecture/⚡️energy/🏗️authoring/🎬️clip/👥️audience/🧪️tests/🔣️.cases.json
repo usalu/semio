@@ -1,0 +1,8 @@
+{
+  "variants": ["speaker", "spectator"],
+  "invalid": ["", "audience", "Speaker", "both"],
+  "subtitles": {"speaker": true, "spectator": false},
+  "render": {"resolution": "320,180", "fps": 10, "clause": "Energie bleibt erhalten.", "swap": "Wärme wird übertragen.", "hold": 0.5},
+  "subtitle_difference_min": 100,
+  "duration_tolerance": 0.000001
+}

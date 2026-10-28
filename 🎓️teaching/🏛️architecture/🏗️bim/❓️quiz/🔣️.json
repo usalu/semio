@@ -1,0 +1,1228 @@
+{
+  "$schema": "../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
+  "schema": "semio.quiz/v1",
+  "id": "bim-concepts",
+  "emoji": "🏗️",
+  "title": {
+    "en": "BIM Concepts",
+    "de": "BIM-Grundlagen"
+  },
+  "description": {
+    "en": "Interpret building data, distinguish object-oriented concepts and coordinate models through explicit interfaces.",
+    "de": "Gebäudedaten deuten, objektorientierte Konzepte unterscheiden und Modelle über ausdrückliche Schnittstellen koordinieren."
+  },
+  "tasks": [
+    {
+      "kind": "classification",
+      "id": "data-information",
+      "title": {
+        "en": "Data and Information",
+        "de": "Daten und Information"
+      },
+      "icon": {
+        "emoji": "🔎",
+        "motion": "pulse"
+      },
+      "prompt": {
+        "en": "Classify the representation at the stated level of interpretation. Data means recorded symbols or values without the building meaning needed here. Information means those data interpreted through an explicit building concept, unit, relationship or requirement. A coordinate table may become information once its context is known; the raw tables here deliberately lack that context. BIM objects connect geometry with meaning. Allow five minutes.",
+        "de": "Ordne die Darstellung nach ihrer angegebenen Interpretation ein. Daten sind aufgezeichnete Zeichen oder Werte ohne die hier benötigte Gebäudebedeutung. Information entsteht durch ihre Deutung als Bauteil, Einheit, Beziehung oder Anforderung. Eine Koordinatentabelle kann mit Kontext Information werden; den Rohdaten hier fehlt dieser Kontext bewusst. BIM-Objekte verbinden Geometrie mit Bedeutung. Plane fünf Minuten ein."
+      },
+      "categories": [
+        {
+          "id": "data",
+          "label": {
+            "en": "Data",
+            "de": "Daten"
+          },
+          "icon": {
+            "emoji": "🔢",
+            "motion": "float"
+          },
+          "description": {
+            "en": "Recorded values without sufficient building interpretation in this exercise.",
+            "de": "Aufgezeichnete Werte ohne ausreichende Gebäudedeutung in dieser Aufgabe."
+          }
+        },
+        {
+          "id": "information",
+          "label": {
+            "en": "Information",
+            "de": "Information"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "float"
+          },
+          "description": {
+            "en": "Values with explicit building meaning and relevant context.",
+            "de": "Werte mit ausdrücklicher Gebäudebedeutung und relevantem Kontext."
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "coordinate-table",
+          "label": {
+            "en": "Unlabelled x/y/z coordinate table",
+            "de": "Unbeschriftete x/y/z-Tabelle"
+          },
+          "icon": {
+            "emoji": "🔢",
+            "motion": "bounce"
+          },
+          "category": "data",
+          "explanation": {
+            "en": "The rows contain positions, but no units, coordinate system or object identity. They do not yet tell us that the points belong to a door.",
+            "de": "Die Zeilen enthalten Positionen, aber weder Einheit noch Koordinatensystem oder Objektidentität. Dass die Punkte zu einer Tür gehören, geht daraus noch nicht hervor."
+          }
+        },
+        {
+          "id": "unlabelled-values",
+          "label": {
+            "en": "Unlabelled values 900 and 2100",
+            "de": "Unbeschriftete Werte 900 und 2100"
+          },
+          "icon": {
+            "emoji": "🔢",
+            "motion": "pulse"
+          },
+          "category": "data",
+          "explanation": {
+            "en": "The numbers could represent dimensions, identifiers or prices. Without quantities and units, their intended building meaning is undetermined.",
+            "de": "Die Zahlen könnten Abmessungen, Kennungen oder Preise sein. Ohne Größenbezeichnung und Einheit bleibt ihre Gebäudebedeutung unbestimmt."
+          }
+        },
+        {
+          "id": "anonymous-triangles",
+          "label": {
+            "en": "Triangles without element identity",
+            "de": "Dreiecke ohne Bauteilzuordnung"
+          },
+          "icon": {
+            "emoji": "🔢",
+            "motion": "spin"
+          },
+          "category": "data",
+          "explanation": {
+            "en": "A triangle mesh records shape. Without classification or relationships it does not identify a wall, a door or its purpose.",
+            "de": "Ein Dreiecksnetz speichert Form. Ohne Klassifikation und Beziehungen kennzeichnet es weder Wand noch Tür oder deren Zweck."
+          }
+        },
+        {
+          "id": "unmapped-code",
+          "label": {
+            "en": "Unmapped material code M17",
+            "de": "Materialcode M17 ohne Zuordnung"
+          },
+          "icon": {
+            "emoji": "🔢",
+            "motion": "sway"
+          },
+          "category": "data",
+          "explanation": {
+            "en": "M17 is a stored symbol. A material dictionary or linked definition is needed before it can communicate a material specification.",
+            "de": "M17 ist ein gespeichertes Zeichen. Erst ein Materialverzeichnis oder eine verknüpfte Definition vermittelt die Materialfestlegung."
+          }
+        },
+        {
+          "id": "raw-temperature-log",
+          "label": {
+            "en": "Sensor values without units",
+            "de": "Sensorwerte ohne Einheiten"
+          },
+          "icon": {
+            "emoji": "🔢",
+            "motion": "flip"
+          },
+          "category": "data",
+          "explanation": {
+            "en": "A sequence such as 21, 22, 23 lacks the measured quantity, location and unit. The log alone cannot establish room temperature.",
+            "de": "Einer Folge wie 21, 22, 23 fehlen Messgröße, Ort und Einheit. Das Protokoll allein beschreibt deshalb keine Raumtemperatur."
+          }
+        },
+        {
+          "id": "door-object",
+          "label": {
+            "en": "Door D12 in wall W3",
+            "de": "Tür D12 in Wand W3"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "bounce"
+          },
+          "category": "information",
+          "explanation": {
+            "en": "The geometry is identified as a door and related to a host wall. Object identity and relationship add building meaning to coordinates.",
+            "de": "Die Geometrie ist als Tür identifiziert und einer Wand zugeordnet. Objektidentität und Beziehung geben den Koordinaten Gebäudebedeutung."
+          }
+        },
+        {
+          "id": "fire-rating-meaning",
+          "label": {
+            "en": "Door fire resistance: 30 minutes",
+            "de": "Feuerwiderstand der Tür: 30 Minuten"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "pulse"
+          },
+          "category": "information",
+          "explanation": {
+            "en": "The value has a quantity, duration unit and a link to a door. It communicates a specified performance rather than an isolated number.",
+            "de": "Der Wert besitzt Größe, Zeiteinheit und Türbezug. Er vermittelt eine festgelegte Eigenschaft statt einer isolierten Zahl."
+          }
+        },
+        {
+          "id": "room-area-meaning",
+          "label": {
+            "en": "Room R4 floor area: 24 square metres",
+            "de": "Grundfläche von Raum R4: 24 m²"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "spin"
+          },
+          "category": "information",
+          "explanation": {
+            "en": "The number 24 becomes usable information through the room identity, measured property and square-metre unit.",
+            "de": "Die Zahl 24 wird durch Raumidentität, gemessene Eigenschaft und Quadratmetereinheit zu nutzbarer Information."
+          }
+        },
+        {
+          "id": "door-width-meaning",
+          "label": {
+            "en": "Door D12 clear width: 0.90 metres",
+            "de": "Lichte Breite von Tür D12: 0,90 m"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "sway"
+          },
+          "category": "information",
+          "explanation": {
+            "en": "Object identity, clear width and metres specify what 0.90 means. The statement can support a width check against an explicit requirement.",
+            "de": "Objektidentität, lichte Breite und Meter legen die Bedeutung von 0,90 fest. Damit lässt sich eine ausdrücklich vorgegebene Breitenanforderung prüfen."
+          },
+          "short": {
+            "en": "Door clear width",
+            "de": "Lichte Türbreite"
+          }
+        },
+        {
+          "id": "wall-layer-meaning",
+          "label": {
+            "en": "Wall W3 exterior insulation layer",
+            "de": "Außendämmschicht von Wand W3"
+          },
+          "icon": {
+            "emoji": "🚪",
+            "motion": "flip"
+          },
+          "category": "information",
+          "explanation": {
+            "en": "The layer is classified as insulation, placed outside and related to wall W3. Those semantics communicate construction intent beyond shape.",
+            "de": "Die Schicht ist als Dämmung klassifiziert, außen angeordnet und Wand W3 zugeordnet. Diese Semantik vermittelt den Konstruktionszweck über die Form hinaus."
+          }
+        }
+      ],
+      "draw": 2,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "coordinate-table",
+            "unlabelled-values",
+            "anonymous-triangles",
+            "unmapped-code",
+            "raw-temperature-log"
+          ],
+          [
+            "door-object",
+            "fire-rating-meaning",
+            "room-area-meaning",
+            "door-width-meaning",
+            "wall-layer-meaning"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "classification",
+      "id": "object-oriented-model",
+      "title": {
+        "en": "Object Orientation in BIM",
+        "de": "Objektorientierung im BIM"
+      },
+      "icon": {
+        "emoji": "🧩",
+        "motion": "pulse"
+      },
+      "prompt": {
+        "en": "Identify the object-oriented concept highlighted in each schematic model statement. A class defines a type; an instance is one identified object; an attribute stores a property; a method performs an operation. Inheritance expresses is-a specialization; composition expresses an owned part-of relationship. Treat these as conceptual software examples: a BIM authoring application need not implement the shown methods or classes literally. Allow five minutes.",
+        "de": "Bestimme das hervorgehobene objektorientierte Konzept jeder schematischen Modellaussage. Eine Klasse definiert einen Typ, eine Instanz ein einzelnes identifiziertes Objekt, ein Attribut speichert eine Eigenschaft und eine Methode führt eine Operation aus. Vererbung beschreibt eine Ist-ein-Spezialisierung, Komposition eine besitzende Teil-von-Beziehung. Dies sind konzeptionelle Softwarebeispiele; ein BIM-Programm muss die gezeigten Methoden oder Klassen nicht wörtlich umsetzen. Plane fünf Minuten ein."
+      },
+      "categories": [
+        {
+          "id": "class",
+          "label": {
+            "en": "Class",
+            "de": "Klasse"
+          },
+          "icon": {
+            "emoji": "📋",
+            "motion": "float"
+          },
+          "description": {
+            "en": "A reusable definition of a type with its properties and operations.",
+            "de": "Wiederverwendbare Typdefinition mit Eigenschaften und Operationen."
+          }
+        },
+        {
+          "id": "instance",
+          "label": {
+            "en": "Instance",
+            "de": "Instanz"
+          },
+          "icon": {
+            "emoji": "🏷️",
+            "motion": "float"
+          },
+          "description": {
+            "en": "One identified object created according to a class.",
+            "de": "Ein einzelnes identifiziertes Objekt gemäß einer Klasse."
+          }
+        },
+        {
+          "id": "attribute",
+          "label": {
+            "en": "Attribute",
+            "de": "Attribut"
+          },
+          "icon": {
+            "emoji": "📏",
+            "motion": "float"
+          },
+          "description": {
+            "en": "A stored value describing an object property.",
+            "de": "Ein gespeicherter Wert für eine Objekteigenschaft."
+          }
+        },
+        {
+          "id": "method",
+          "label": {
+            "en": "Method",
+            "de": "Methode"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "float"
+          },
+          "description": {
+            "en": "An operation defined for an object or its type.",
+            "de": "Eine für ein Objekt oder seinen Typ definierte Operation."
+          }
+        },
+        {
+          "id": "inheritance",
+          "label": {
+            "en": "Inheritance",
+            "de": "Vererbung"
+          },
+          "icon": {
+            "emoji": "🌳",
+            "motion": "float"
+          },
+          "description": {
+            "en": "An is-a specialization that derives from a more general class.",
+            "de": "Eine Ist-ein-Spezialisierung einer allgemeineren Klasse."
+          }
+        },
+        {
+          "id": "composition",
+          "label": {
+            "en": "Composition",
+            "de": "Komposition"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "float"
+          },
+          "description": {
+            "en": "An owning whole-part relationship in the stated model.",
+            "de": "Eine besitzende Ganzes-Teil-Beziehung im angegebenen Modell."
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "door-class",
+          "label": {
+            "en": "Blueprint defining the Door type",
+            "de": "Bauplan des Typs Tür"
+          },
+          "icon": {
+            "emoji": "📋",
+            "motion": "bounce"
+          },
+          "category": "class",
+          "explanation": {
+            "en": "Door defines the shared structure from which individual doors can be instantiated. The statement describes the type, not a particular installed door.",
+            "de": "Tür definiert die gemeinsame Struktur, aus der einzelne Türen erzeugt werden können. Gemeint ist der Typ und keine bestimmte eingebaute Tür."
+          }
+        },
+        {
+          "id": "wall-class",
+          "label": {
+            "en": "Blueprint defining the Wall type",
+            "de": "Bauplan des Typs Wand"
+          },
+          "icon": {
+            "emoji": "📋",
+            "motion": "pulse"
+          },
+          "category": "class",
+          "explanation": {
+            "en": "The Wall definition specifies the properties and operations available to walls. It is a class even before a wall object exists.",
+            "de": "Die Definition Wand legt Eigenschaften und Operationen für Wände fest. Sie ist bereits eine Klasse, bevor ein Wandobjekt existiert."
+          }
+        },
+        {
+          "id": "room-class",
+          "label": {
+            "en": "Blueprint defining the Room type",
+            "de": "Bauplan des Typs Raum"
+          },
+          "icon": {
+            "emoji": "📋",
+            "motion": "spin"
+          },
+          "category": "class",
+          "explanation": {
+            "en": "The Room type describes what all room objects can store or do. It does not identify one room such as R4.",
+            "de": "Der Typ Raum beschreibt, was alle Raumobjekte speichern oder ausführen können. Er kennzeichnet keinen einzelnen Raum wie R4."
+          }
+        },
+        {
+          "id": "window-class",
+          "label": {
+            "en": "Blueprint defining the Window type",
+            "de": "Bauplan des Typs Fenster"
+          },
+          "icon": {
+            "emoji": "📋",
+            "motion": "sway"
+          },
+          "category": "class",
+          "explanation": {
+            "en": "The reusable Window definition is the class. Individual windows may share it while carrying different widths and identities.",
+            "de": "Die wiederverwendbare Definition Fenster ist die Klasse. Einzelne Fenster können sie teilen und dennoch unterschiedliche Breiten und Identitäten besitzen."
+          }
+        },
+        {
+          "id": "column-class",
+          "label": {
+            "en": "Blueprint defining the Column type",
+            "de": "Bauplan des Typs Stütze"
+          },
+          "icon": {
+            "emoji": "📋",
+            "motion": "flip"
+          },
+          "category": "class",
+          "explanation": {
+            "en": "Column defines the common object type. The definition is separate from the many particular columns created from it.",
+            "de": "Stütze definiert den gemeinsamen Objekttyp. Die Definition ist von den vielen daraus erzeugten einzelnen Stützen zu unterscheiden."
+          }
+        },
+        {
+          "id": "door-instance",
+          "label": {
+            "en": "Door object D12 on level 2",
+            "de": "Türobjekt D12 im zweiten Geschoss"
+          },
+          "icon": {
+            "emoji": "🏷️",
+            "motion": "bounce"
+          },
+          "category": "instance",
+          "explanation": {
+            "en": "D12 identifies one door object with its own position and values. Many other door instances can use the same class.",
+            "de": "D12 kennzeichnet ein Türobjekt mit eigener Position und eigenen Werten. Viele weitere Türinstanzen können dieselbe Klasse nutzen."
+          }
+        },
+        {
+          "id": "wall-instance",
+          "label": {
+            "en": "Wall object W3 along grid A",
+            "de": "Wandobjekt W3 an Achse A"
+          },
+          "icon": {
+            "emoji": "🏷️",
+            "motion": "pulse"
+          },
+          "category": "instance",
+          "explanation": {
+            "en": "W3 names one particular wall. Its identity distinguishes the instance from the generic Wall definition.",
+            "de": "W3 benennt eine bestimmte Wand. Ihre Identität unterscheidet die Instanz von der allgemeinen Definition Wand."
+          }
+        },
+        {
+          "id": "room-instance",
+          "label": {
+            "en": "Room object R4 beside the stair",
+            "de": "Raumobjekt R4 neben der Treppe"
+          },
+          "icon": {
+            "emoji": "🏷️",
+            "motion": "spin"
+          },
+          "category": "instance",
+          "explanation": {
+            "en": "R4 refers to a particular room object. Its location is instance data rather than the definition of every room.",
+            "de": "R4 bezeichnet ein bestimmtes Raumobjekt. Seine Lage gehört zur Instanz und nicht zur Definition aller Räume."
+          }
+        },
+        {
+          "id": "window-instance",
+          "label": {
+            "en": "Window object F8 on the east facade",
+            "de": "Fensterobjekt F8 an der Ostfassade"
+          },
+          "icon": {
+            "emoji": "🏷️",
+            "motion": "sway"
+          },
+          "category": "instance",
+          "explanation": {
+            "en": "F8 is one identified window. The Window class can also define other windows with different locations.",
+            "de": "F8 ist ein identifiziertes Fenster. Die Klasse Fenster kann daneben weitere Fenster an anderen Orten beschreiben."
+          }
+        },
+        {
+          "id": "column-instance",
+          "label": {
+            "en": "Column object C5 at grid B2",
+            "de": "Stützenobjekt C5 an Achse B2"
+          },
+          "icon": {
+            "emoji": "🏷️",
+            "motion": "flip"
+          },
+          "category": "instance",
+          "explanation": {
+            "en": "C5 is the concrete model object at B2. The generic Column type does not prescribe this one identity or location.",
+            "de": "C5 ist das konkrete Modellobjekt an B2. Der allgemeine Typ Stütze schreibt diese einzelne Identität oder Lage nicht vor."
+          }
+        },
+        {
+          "id": "door-width",
+          "label": {
+            "en": "Width value of door D12",
+            "de": "Breitenwert der Tür D12"
+          },
+          "icon": {
+            "emoji": "📏",
+            "motion": "bounce"
+          },
+          "category": "attribute",
+          "explanation": {
+            "en": "The width is a property value, for example 0.90 m. Reading that value does not itself execute a door operation.",
+            "de": "Die Breite ist ein Eigenschaftswert, beispielsweise 0,90 m. Das Lesen dieses Werts führt noch keine Türoperation aus."
+          }
+        },
+        {
+          "id": "wall-thickness",
+          "label": {
+            "en": "Thickness value of wall W3",
+            "de": "Dickenwert der Wand W3"
+          },
+          "icon": {
+            "emoji": "📏",
+            "motion": "pulse"
+          },
+          "category": "attribute",
+          "explanation": {
+            "en": "Thickness stores a length associated with W3. It is an attribute rather than a class or a procedure.",
+            "de": "Die Dicke speichert eine W3 zugeordnete Länge. Sie ist ein Attribut und weder eine Klasse noch eine Prozedur."
+          }
+        },
+        {
+          "id": "room-name",
+          "label": {
+            "en": "Name value of room R4",
+            "de": "Namenswert des Raums R4"
+          },
+          "icon": {
+            "emoji": "📏",
+            "motion": "spin"
+          },
+          "category": "attribute",
+          "explanation": {
+            "en": "The room name is a stored text property. Attributes can contain text as well as numbers.",
+            "de": "Der Raumname ist eine gespeicherte Texteigenschaft. Attribute können neben Zahlen auch Texte enthalten."
+          }
+        },
+        {
+          "id": "window-u-value",
+          "label": {
+            "en": "U-value property of window F8",
+            "de": "U-Wert-Eigenschaft des Fensters F8"
+          },
+          "icon": {
+            "emoji": "📏",
+            "motion": "sway"
+          },
+          "category": "attribute",
+          "explanation": {
+            "en": "The stored thermal-transmittance value describes F8. A property can have a physical unit without becoming an operation.",
+            "de": "Der gespeicherte Wärmedurchgangskoeffizient beschreibt F8. Auch eine Eigenschaft mit physikalischer Einheit bleibt ein Attribut und keine Operation."
+          }
+        },
+        {
+          "id": "column-material",
+          "label": {
+            "en": "Material value of column C5",
+            "de": "Materialwert der Stütze C5"
+          },
+          "icon": {
+            "emoji": "📏",
+            "motion": "flip"
+          },
+          "category": "attribute",
+          "explanation": {
+            "en": "The material reference describes what C5 is made of. The statement highlights a stored property, not a material-changing method.",
+            "de": "Der Materialverweis beschreibt den Werkstoff von C5. Hervorgehoben wird die gespeicherte Eigenschaft und keine Methode zum Materialwechsel."
+          }
+        },
+        {
+          "id": "door-open",
+          "label": {
+            "en": "Open operation of door D12",
+            "de": "Öffnungsoperation der Tür D12"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "bounce"
+          },
+          "category": "method",
+          "explanation": {
+            "en": "Open changes the schematic door state when invoked. It is an operation; the current opening angle would instead be an attribute.",
+            "de": "Öffnen ändert beim Aufruf den schematischen Türzustand. Es ist eine Operation; der aktuelle Öffnungswinkel wäre dagegen ein Attribut."
+          }
+        },
+        {
+          "id": "wall-volume-method",
+          "label": {
+            "en": "Volume calculation of wall W3",
+            "de": "Volumenberechnung der Wand W3"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "pulse"
+          },
+          "category": "method",
+          "explanation": {
+            "en": "The method calculates a result from the wall geometry. The stored result may be an attribute, but calculation is the operation.",
+            "de": "Die Methode berechnet ein Ergebnis aus der Wandgeometrie. Das gespeicherte Ergebnis kann ein Attribut sein; die Berechnung ist die Operation."
+          }
+        },
+        {
+          "id": "room-rename-method",
+          "label": {
+            "en": "Rename operation of room R4",
+            "de": "Umbenennungsoperation von Raum R4"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "spin"
+          },
+          "category": "method",
+          "explanation": {
+            "en": "Rename performs a change to the room name. The operation differs from the name value that it updates.",
+            "de": "Umbenennen verändert den Raumnamen. Die Operation unterscheidet sich von dem Namenswert, den sie aktualisiert."
+          }
+        },
+        {
+          "id": "window-rotate-method",
+          "label": {
+            "en": "Rotation operation of window F8",
+            "de": "Drehoperation des Fensters F8"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "sway"
+          },
+          "category": "method",
+          "explanation": {
+            "en": "Rotate is invoked to transform the window object. Orientation is a property; changing it is an operation.",
+            "de": "Drehen wird aufgerufen, um das Fensterobjekt zu transformieren. Die Orientierung ist eine Eigenschaft; ihre Änderung ist eine Operation."
+          }
+        },
+        {
+          "id": "column-move-method",
+          "label": {
+            "en": "Move operation of column C5",
+            "de": "Verschiebeoperation der Stütze C5"
+          },
+          "icon": {
+            "emoji": "⚙️",
+            "motion": "flip"
+          },
+          "category": "method",
+          "explanation": {
+            "en": "Move performs a transformation on C5. The resulting location may be stored as an attribute after the method completes.",
+            "de": "Verschieben führt eine Transformation an C5 aus. Die resultierende Lage kann nach Abschluss der Methode als Attribut gespeichert werden."
+          }
+        },
+        {
+          "id": "firedoor-inheritance",
+          "label": {
+            "en": "FireDoor as a subtype of Door",
+            "de": "Brandschutztür als Untertyp von Tür"
+          },
+          "icon": {
+            "emoji": "🌳",
+            "motion": "bounce"
+          },
+          "category": "inheritance",
+          "explanation": {
+            "en": "Every FireDoor in this model is a Door with additional fire-related properties. This is an is-a relation between types.",
+            "de": "Jede Brandschutztür ist in diesem Modell eine Tür mit zusätzlichen Brandschutzeigenschaften. Das ist eine Ist-ein-Beziehung zwischen Typen."
+          }
+        },
+        {
+          "id": "curtainwall-inheritance",
+          "label": {
+            "en": "CurtainWall as a subtype of Wall",
+            "de": "Vorhangfassade als Untertyp von Wand"
+          },
+          "icon": {
+            "emoji": "🌳",
+            "motion": "pulse"
+          },
+          "category": "inheritance",
+          "explanation": {
+            "en": "In this schematic hierarchy a CurtainWall inherits the common Wall definition and specializes it. The stated is-a relationship is inheritance.",
+            "de": "In dieser schematischen Hierarchie übernimmt Vorhangfassade die allgemeine Definition Wand und spezialisiert sie. Die angegebene Ist-ein-Beziehung ist Vererbung."
+          }
+        },
+        {
+          "id": "office-inheritance",
+          "label": {
+            "en": "Office as a subtype of Room",
+            "de": "Büro als Untertyp von Raum"
+          },
+          "icon": {
+            "emoji": "🌳",
+            "motion": "spin"
+          },
+          "category": "inheritance",
+          "explanation": {
+            "en": "Office is a specialized Room type in this exercise. An office is a room; it is not a component owned by the Room class.",
+            "de": "Büro ist in dieser Aufgabe ein spezialisierter Raumtyp. Ein Büro ist ein Raum und kein Bauteil im Besitz der Klasse Raum."
+          }
+        },
+        {
+          "id": "roofwindow-inheritance",
+          "label": {
+            "en": "RoofWindow as a subtype of Window",
+            "de": "Dachfenster als Untertyp von Fenster"
+          },
+          "icon": {
+            "emoji": "🌳",
+            "motion": "sway"
+          },
+          "category": "inheritance",
+          "explanation": {
+            "en": "RoofWindow derives shared properties from Window and adds specialization. The relation connects a specific type to its more general type.",
+            "de": "Dachfenster übernimmt gemeinsame Eigenschaften von Fenster und ergänzt eine Spezialisierung. Die Beziehung verbindet einen spezielleren mit einem allgemeineren Typ."
+          }
+        },
+        {
+          "id": "steelcolumn-inheritance",
+          "label": {
+            "en": "SteelColumn as a subtype of Column",
+            "de": "Stahlstütze als Untertyp von Stütze"
+          },
+          "icon": {
+            "emoji": "🌳",
+            "motion": "flip"
+          },
+          "category": "inheritance",
+          "explanation": {
+            "en": "SteelColumn specializes Column in the stated hierarchy. An individual C5 made from steel would instead be an instance with a material value.",
+            "de": "Stahlstütze spezialisiert Stütze in der angegebenen Hierarchie. Eine einzelne C5 aus Stahl wäre dagegen eine Instanz mit einem Materialwert."
+          }
+        },
+        {
+          "id": "door-composition",
+          "label": {
+            "en": "Door assembly owning its leaf",
+            "de": "Türbaugruppe mit eigenem Türblatt"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "bounce"
+          },
+          "category": "composition",
+          "explanation": {
+            "en": "The door assembly owns a leaf component in this schematic model. A leaf is part of a door, not a subtype of Door.",
+            "de": "Die Türbaugruppe besitzt in diesem schematischen Modell ein Türblatt als Bestandteil. Ein Blatt ist Teil einer Tür und kein Untertyp von Tür."
+          }
+        },
+        {
+          "id": "wall-layer-composition",
+          "label": {
+            "en": "Wall assembly owning its layers",
+            "de": "Wandaufbau mit eigenen Schichten"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "pulse"
+          },
+          "category": "composition",
+          "explanation": {
+            "en": "The wall is composed of owned layer components. A layer is part of the wall assembly rather than a specialized Wall class.",
+            "de": "Die Wand besteht aus eigenen Schichtkomponenten. Eine Schicht ist Teil des Wandaufbaus und keine spezialisierte Wandklasse."
+          }
+        },
+        {
+          "id": "stair-composition",
+          "label": {
+            "en": "Stair assembly owning its flights",
+            "de": "Treppenbaugruppe mit eigenen Läufen"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "spin"
+          },
+          "category": "composition",
+          "explanation": {
+            "en": "The stair owns its flight components as parts of the assembly. This is a whole-part relationship, not is-a specialization.",
+            "de": "Die Treppe besitzt ihre Läufe als Teile der Baugruppe. Dies ist eine Ganzes-Teil-Beziehung und keine Ist-ein-Spezialisierung."
+          }
+        },
+        {
+          "id": "window-frame-composition",
+          "label": {
+            "en": "Window assembly owning its frame",
+            "de": "Fensterbaugruppe mit eigenem Rahmen"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "sway"
+          },
+          "category": "composition",
+          "explanation": {
+            "en": "The frame belongs to the window assembly in this model. It is not another kind of Window.",
+            "de": "Der Rahmen gehört in diesem Modell zur Fensterbaugruppe. Er ist keine andere Art von Fenster."
+          }
+        },
+        {
+          "id": "roof-layer-composition",
+          "label": {
+            "en": "Roof assembly owning its layers",
+            "de": "Dachaufbau mit eigenen Schichten"
+          },
+          "icon": {
+            "emoji": "🧱",
+            "motion": "flip"
+          },
+          "category": "composition",
+          "explanation": {
+            "en": "The roof owns insulation and covering components. Composition describes how these parts form the whole roof assembly.",
+            "de": "Das Dach besitzt Dämmung und Deckung als Bestandteile. Komposition beschreibt, wie diese Teile den gesamten Dachaufbau bilden."
+          }
+        }
+      ],
+      "draw": 6,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "door-class",
+            "wall-class",
+            "room-class",
+            "window-class",
+            "column-class"
+          ],
+          [
+            "door-instance",
+            "wall-instance",
+            "room-instance",
+            "window-instance",
+            "column-instance"
+          ],
+          [
+            "door-width",
+            "wall-thickness",
+            "room-name",
+            "window-u-value",
+            "column-material"
+          ],
+          [
+            "door-open",
+            "wall-volume-method",
+            "room-rename-method",
+            "window-rotate-method",
+            "column-move-method"
+          ],
+          [
+            "firedoor-inheritance",
+            "curtainwall-inheritance",
+            "office-inheritance",
+            "roofwindow-inheritance",
+            "steelcolumn-inheritance"
+          ],
+          [
+            "door-composition",
+            "wall-layer-composition",
+            "stair-composition",
+            "window-frame-composition",
+            "roof-layer-composition"
+          ]
+        ]
+      }
+    },
+    {
+      "kind": "classification",
+      "id": "model-coordination",
+      "title": {
+        "en": "Interfaces and Coordination",
+        "de": "Schnittstellen und Koordination"
+      },
+      "icon": {
+        "emoji": "🤝",
+        "motion": "pulse"
+      },
+      "prompt": {
+        "en": "Distinguish a technical exchange interface from coordination and isolated work. An interface defines how systems exchange interpretable data; coordination establishes and checks shared decisions across disciplines. A file format alone cannot resolve clashes or responsibility. Classify the action emphasized in each example, not every activity it may support. Allow five minutes.",
+        "de": "Unterscheide technische Austausch-Schnittstellen, Koordination und isoliertes Arbeiten. Eine Schnittstelle legt fest, wie Systeme interpretierbare Daten austauschen; Koordination vereinbart und prüft gemeinsame Entscheidungen über Fachgrenzen hinweg. Ein Dateiformat allein löst weder Kollisionen noch Zuständigkeiten. Ordne die jeweils hervorgehobene Handlung ein. Plane fünf Minuten ein."
+      },
+      "categories": [
+        {
+          "id": "interface",
+          "label": {
+            "en": "Exchange interface",
+            "de": "Austausch-Schnittstelle"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "float"
+          },
+          "description": {
+            "en": "A defined technical contract for transferring and interpreting model or issue data.",
+            "de": "Ein festgelegter technischer Vertrag zur Übertragung und Deutung von Modell- oder Vorgangsdaten."
+          }
+        },
+        {
+          "id": "coordination",
+          "label": {
+            "en": "Coordination",
+            "de": "Koordination"
+          },
+          "icon": {
+            "emoji": "🤝",
+            "motion": "float"
+          },
+          "description": {
+            "en": "Agreement, review and resolution of shared interdisciplinary model decisions.",
+            "de": "Abstimmung, Prüfung und Lösung gemeinsamer fachübergreifender Modellentscheidungen."
+          }
+        },
+        {
+          "id": "isolated-work",
+          "label": {
+            "en": "Isolated work",
+            "de": "Isoliertes Arbeiten"
+          },
+          "icon": {
+            "emoji": "🏝️",
+            "motion": "float"
+          },
+          "description": {
+            "en": "Local work without a defined shared exchange or coordination step in the scenario.",
+            "de": "Lokale Arbeit ohne festgelegten gemeinsamen Austausch oder Abstimmungsschritt im Beispiel."
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "ifc-delivery",
+          "label": {
+            "en": "IFC field mapping between tools",
+            "de": "IFC-Feldzuordnung zwischen Werkzeugen"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "bounce"
+          },
+          "category": "interface",
+          "explanation": {
+            "en": "A mapping defines how object properties are encoded and interpreted across tools. This enables exchange; agreement on the building design still needs coordination.",
+            "de": "Eine Zuordnung legt Kodierung und Deutung von Objekteigenschaften zwischen Werkzeugen fest. Sie ermöglicht Austausch; der Gebäudeentwurf muss weiterhin koordiniert werden."
+          }
+        },
+        {
+          "id": "bcf-schema",
+          "label": {
+            "en": "BCF issue exchange contract",
+            "de": "BCF-Vertrag zum Vorgangsaustausch"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "pulse"
+          },
+          "category": "interface",
+          "explanation": {
+            "en": "The structured issue exchange contract carries references and review context. Its technical format supports discussion but does not decide the solution.",
+            "de": "Der strukturierte Austauschvertrag überträgt Vorgangsverweise und Prüfkontext. Sein technisches Format unterstützt die Diskussion, entscheidet aber keine Lösung."
+          }
+        },
+        {
+          "id": "api-units",
+          "label": {
+            "en": "API contract for metres and IDs",
+            "de": "API-Vertrag für Meter und Kennungen"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "spin"
+          },
+          "category": "interface",
+          "explanation": {
+            "en": "Explicit units and stable identifiers make the receiving system interpret values consistently. The API contract describes the interface.",
+            "de": "Ausdrückliche Einheiten und stabile Kennungen ermöglichen eine konsistente Deutung im empfangenden System. Der API-Vertrag beschreibt die Schnittstelle."
+          }
+        },
+        {
+          "id": "property-schema",
+          "label": {
+            "en": "Shared property exchange schema",
+            "de": "Gemeinsames Eigenschaftsaustauschschema"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "sway"
+          },
+          "category": "interface",
+          "explanation": {
+            "en": "A schema fixes field names, value types and allowed structures for exchange. It cannot by itself guarantee that the values satisfy project needs.",
+            "de": "Ein Schema legt Feldnamen, Werttypen und erlaubte Austauschstrukturen fest. Es garantiert allein nicht, dass die Werte die Projektanforderungen erfüllen."
+          }
+        },
+        {
+          "id": "coordinate-contract",
+          "label": {
+            "en": "Coordinate system exchange contract",
+            "de": "Austauschvertrag zum Koordinatensystem"
+          },
+          "icon": {
+            "emoji": "🔌",
+            "motion": "flip"
+          },
+          "category": "interface",
+          "explanation": {
+            "en": "The stated origin, orientation and length unit define how transmitted geometry is read. Choosing and checking that agreement across teams is a separate coordination activity.",
+            "de": "Angegebener Ursprung, Orientierung und Längeneinheit bestimmen die Interpretation übertragener Geometrie. Auswahl und Prüfung dieser Vereinbarung über Teams hinweg sind Koordination."
+          }
+        },
+        {
+          "id": "opening-agreement",
+          "label": {
+            "en": "Agreed duct opening in a beam",
+            "de": "Abgestimmter Kanaldurchbruch im Träger"
+          },
+          "icon": {
+            "emoji": "🤝",
+            "motion": "bounce"
+          },
+          "category": "coordination",
+          "explanation": {
+            "en": "Structure and services jointly agree location and size after checking constraints. The shared design decision is coordination, whatever exchange format carries it.",
+            "de": "Tragwerk und Gebäudetechnik vereinbaren Lage und Größe nach Prüfung der Randbedingungen. Diese gemeinsame Entwurfsentscheidung ist unabhängig vom Austauschformat Koordination."
+          }
+        },
+        {
+          "id": "clash-report",
+          "label": {
+            "en": "Clash review with an assigned owner",
+            "de": "Kollisionsprüfung mit Zuständigkeit"
+          },
+          "icon": {
+            "emoji": "🤝",
+            "motion": "pulse"
+          },
+          "category": "coordination",
+          "explanation": {
+            "en": "The team interprets the conflict, assigns responsibility and tracks its resolution. Detecting or exporting a clash alone would not complete this coordination.",
+            "de": "Das Team bewertet den Konflikt, weist Verantwortung zu und verfolgt die Lösung. Das bloße Erkennen oder Exportieren einer Kollision schließt diese Koordination nicht ab."
+          }
+        },
+        {
+          "id": "origin-agreement",
+          "label": {
+            "en": "Team agreement on a shared origin",
+            "de": "Teamabstimmung zum gemeinsamen Ursprung"
+          },
+          "icon": {
+            "emoji": "🤝",
+            "motion": "spin"
+          },
+          "category": "coordination",
+          "explanation": {
+            "en": "The disciplines choose a common reference and verify aligned models. This decision and check are coordination; the encoded coordinate contract is the interface.",
+            "de": "Die Fachbereiche wählen einen gemeinsamen Bezug und prüfen die Modellausrichtung. Entscheidung und Kontrolle sind Koordination; der kodierte Koordinatenvertrag ist die Schnittstelle."
+          }
+        },
+        {
+          "id": "requirement-review",
+          "label": {
+            "en": "Joint review of required properties",
+            "de": "Gemeinsame Prüfung benötigter Angaben"
+          },
+          "icon": {
+            "emoji": "🤝",
+            "motion": "sway"
+          },
+          "category": "coordination",
+          "explanation": {
+            "en": "The team agrees which information is required, by whom and when, then checks delivery. Those responsibilities exceed the syntax of an exchange file.",
+            "de": "Das Team vereinbart benötigte Informationen, Zuständigkeiten und Termine und prüft die Lieferung. Diese Verantwortung geht über die Syntax einer Austauschdatei hinaus."
+          }
+        },
+        {
+          "id": "change-review",
+          "label": {
+            "en": "Approved route change across trades",
+            "de": "Fachübergreifend geprüfte Trassenänderung"
+          },
+          "icon": {
+            "emoji": "🤝",
+            "motion": "flip"
+          },
+          "category": "coordination",
+          "explanation": {
+            "en": "The route change is reviewed for architectural, structural and service effects. The shared approval resolves a design dependency across disciplines.",
+            "de": "Die Trassenänderung wird auf architektonische, statische und technische Folgen geprüft. Die gemeinsame Freigabe löst eine fachübergreifende Entwurfsabhängigkeit."
+          },
+          "short": {
+            "en": "Approved route change",
+            "de": "Geprüfte Trassenänderung"
+          }
+        },
+        {
+          "id": "native-silo",
+          "label": {
+            "en": "Private native file without exchange",
+            "de": "Private native Datei ohne Austausch"
+          },
+          "icon": {
+            "emoji": "🏝️",
+            "motion": "bounce"
+          },
+          "category": "isolated-work",
+          "explanation": {
+            "en": "The file stays with one author and no exchange contract or review is specified. Using an object-based tool alone does not establish interdisciplinary coordination.",
+            "de": "Die Datei bleibt bei einer Person; Austauschvertrag und Prüfung fehlen. Ein objektbasiertes Werkzeug allein schafft noch keine fachübergreifende Koordination."
+          }
+        },
+        {
+          "id": "silent-duct-edit",
+          "label": {
+            "en": "Unannounced private duct relocation",
+            "de": "Unangekündigte private Kanalverlegung"
+          },
+          "icon": {
+            "emoji": "🏝️",
+            "motion": "pulse"
+          },
+          "category": "isolated-work",
+          "explanation": {
+            "en": "Moving a duct without sharing the change or reviewing other models leaves dependencies unresolved. A local correction is not yet a coordinated change.",
+            "de": "Eine Kanalverlegung ohne Mitteilung und Prüfung anderer Modelle lässt Abhängigkeiten offen. Eine lokale Korrektur ist noch keine koordinierte Änderung."
+          }
+        },
+        {
+          "id": "unchecked-overlay",
+          "label": {
+            "en": "Private model overlay without review",
+            "de": "Private Modellüberlagerung ohne Prüfung"
+          },
+          "icon": {
+            "emoji": "🏝️",
+            "motion": "spin"
+          },
+          "category": "isolated-work",
+          "explanation": {
+            "en": "Placing models together privately does not establish shared decisions, responsibilities or issue resolution. In this scenario no coordination step follows.",
+            "de": "Eine private Modellüberlagerung schafft keine gemeinsamen Entscheidungen, Verantwortlichkeiten oder Lösungen. Im Beispiel folgt kein Abstimmungsschritt."
+          }
+        },
+        {
+          "id": "local-property-edit",
+          "label": {
+            "en": "Unshared local property change",
+            "de": "Ungeteilte lokale Eigenschaftsänderung"
+          },
+          "icon": {
+            "emoji": "🏝️",
+            "motion": "sway"
+          },
+          "category": "isolated-work",
+          "explanation": {
+            "en": "A property changed only in a private model has not passed through an agreed exchange or team review. The action remains isolated.",
+            "de": "Eine nur im privaten Modell geänderte Eigenschaft hat weder vereinbarten Austausch noch Teamprüfung durchlaufen. Die Handlung bleibt isoliert."
+          }
+        },
+        {
+          "id": "private-clash-image",
+          "label": {
+            "en": "Unshared private clash screenshot",
+            "de": "Ungeteilter privater Kollisionsausschnitt"
+          },
+          "icon": {
+            "emoji": "🏝️",
+            "motion": "flip"
+          },
+          "category": "isolated-work",
+          "explanation": {
+            "en": "The screenshot records a local observation, but nobody receives or owns an issue. Without the stated sharing and review, the scenario is isolated work.",
+            "de": "Das Bild hält eine lokale Beobachtung fest, aber niemand erhält oder verantwortet einen Vorgang. Ohne Weitergabe und Prüfung bleibt das Beispiel isoliertes Arbeiten."
+          },
+          "short": {
+            "en": "Private clash screenshot",
+            "de": "Privater Kollisionsausschnitt"
+          }
+        }
+      ],
+      "draw": 3,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "ifc-delivery",
+            "bcf-schema",
+            "api-units",
+            "property-schema",
+            "coordinate-contract"
+          ],
+          [
+            "opening-agreement",
+            "clash-report",
+            "origin-agreement",
+            "requirement-review",
+            "change-review"
+          ],
+          [
+            "native-silo",
+            "silent-duct-edit",
+            "unchecked-overlay",
+            "local-property-edit",
+            "private-clash-image"
+          ]
+        ]
+      }
+    }
+  ]
+}

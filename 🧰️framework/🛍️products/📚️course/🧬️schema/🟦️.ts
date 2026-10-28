@@ -26,10 +26,10 @@ export const MAX_TIMESTAMP: Timestamp = Number.MAX_SAFE_INTEGER;
 
 /** 🤝️ The version of this contract on the wire: the `version` of every quiz envelope and of every quiz kind a proctor
  * declares; raised with every change of the contract beyond its prose. */
-export type WireVersion = 8;
+export type WireVersion = 10;
 
 /** 📡️ The wire version of this contract (`$defs/WireVersion`). */
-export const WIRE_VERSION: WireVersion = 8;
+export const WIRE_VERSION: WireVersion = 10;
 
 /** 💯️ A score or credit in [0, 1]. */
 export type Score = number;
@@ -91,13 +91,13 @@ export type Icon = { readonly emoji: string; readonly motion: Motion };
 export type Category = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly description?: Text; readonly profile?: Profile };
 
 /** 🔖️ An item to classify together with its correct category. */
-export type ClassificationItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly category: Slug; readonly explanation?: Text };
+export type ClassificationItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup; readonly category: Slug; readonly explanation?: Text };
 
 /** 🔢️ An item to sort together with its true value; `familiar` marks an everyday thing a compare hint prefers as its reference (never presented). */
-export type SortingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly value: number; readonly familiar?: boolean; readonly explanation?: Text };
+export type SortingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup; readonly value: number; readonly familiar?: boolean; readonly explanation?: Text };
 
 /** 🧷️ An item to match together with its true value per dimension id; `familiar` marks an everyday thing a compare hint prefers as its reference (never presented). */
-export type MatchingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly values: Readonly<Record<Slug, number>>; readonly familiar?: boolean; readonly explanation?: Text };
+export type MatchingItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup; readonly values: Readonly<Record<Slug, number>>; readonly familiar?: boolean; readonly explanation?: Text };
 
 /** 🧺️ Fixed semantic slots with rotating variants and a per-question time budget. */
 export type QuestionPool = { readonly seconds: number; readonly slots: readonly (readonly Slug[])[] };
@@ -156,6 +156,34 @@ export type Quiz = {
   readonly description: Text;
   readonly tasks: readonly Task[];
 };
+
+/** 🧾️ Localized cell content, including meaningful empty cells. */
+export type MockupText = Text;
+/** 🔲️ Zero-based selected rectangle of the reference grid. */
+export type MockupSelection = { readonly row: number; readonly column: number; readonly rowEnd?: number; readonly columnEnd?: number };
+/** 🎯️ The highlighted Excel interface part. */
+export type ExcelTarget = "cell" | "range" | "row" | "column" | "worksheet" | "workbook" | "formula" | "name-box";
+/** 📗️ A workbook showing the given input of an exercise. */
+export type ExcelMockup = { readonly kind: "excel"; readonly caption: Text; readonly workbook: Text; readonly sheets: readonly Text[]; readonly activeSheet: number; readonly columns: readonly string[]; readonly rows: readonly (readonly MockupText[])[]; readonly selection: MockupSelection; readonly formula: MockupText; readonly target: ExcelTarget };
+/** 🔌️ A labelled node port. */
+export type MockupPort = { readonly id: Slug; readonly label: Text };
+/** 🧩️ A computation or parameter with identified ports. */
+export type MockupNode = { readonly id: Slug; readonly label: Text; readonly inputs: readonly MockupPort[]; readonly outputs: readonly MockupPort[]; readonly widget?: MockupWidget };
+/** 📍️ A port reference within a workspace. */
+export type MockupEndpoint = { readonly node: Slug; readonly port: Slug };
+/** 🧵️ A directed output-to-input connection. */
+export type MockupWire = { readonly from: MockupEndpoint; readonly to: MockupEndpoint };
+/** 🌿️ A tree path and its ordered reference values. */
+export type MockupBranch = { readonly path: string; readonly values: readonly MockupText[] };
+/** 🔦️ The highlighted Grasshopper interface part. */
+export type GrasshopperTargetKind = "node" | "input" | "output" | "wire" | "tree" | "branch" | "item";
+/** 🪧️ A referenced node/port or zero-based wire, branch or first-branch item. */
+export type MockupTarget = { readonly kind: GrasshopperTargetKind; readonly index: number; readonly node?: Slug; readonly port?: Slug };
+/** 🦗️ A bounded node graph and tree of given data. */
+export type GrasshopperMockup = { readonly kind: "grasshopper"; readonly caption: Text; readonly nodes: readonly MockupNode[]; readonly wires: readonly MockupWire[]; readonly tree: readonly MockupBranch[]; readonly target: MockupTarget };
+/** 🪟️ A solution-free workspace preview, independent of grading truth. */
+export type Mockup = ExcelMockup | GrasshopperMockup;
+
 //#endregion 🔖️Quiz
 
 //#region 🔖️Course
@@ -177,8 +205,22 @@ export const COURSE_ROOT_IDS = ["home", "identity", "introduction", "learner", "
 /** 👥️ An ordered course group; an empty quiz list marks a placeholder. */
 export type Topic = { readonly id: Slug; readonly emoji: string; readonly title: Text; readonly quizzes: readonly Slug[] };
 
-/** 📚️ The quizzes one site offers, its introduction and the badges spanning its quizzes; quiz paths are relative to the course file. */
+/** 🗓️ Release times by topic, quiz or quiz/task; null awaits scheduling, absent keys add no restriction. */
+export type Unlocks = Readonly<Record<string, Timestamp | null>>;
+
+/** 🖨️ A course PDF resolved by its catalog id, filename and explicit build producer. */
+export type AssignmentDocument = { readonly namespace: "course"; readonly id: Slug; readonly file: string; readonly producer: string };
+
+/** 🌍️ A printable artifact for every course language. */
+export type AssignmentDocuments = { readonly en: AssignmentDocument; readonly de: AssignmentDocument };
+
+/** ✍️ An ungraded topic exercise with a printable PDF in every supported language. */
+export type Assignment = { readonly id: Slug; readonly topic: Slug; readonly emoji: string; readonly title: Text; readonly description: Text; readonly documents: AssignmentDocuments };
+
+/** 📚️ Authored course material, quizzes and badges. */
 export type Course = {
+  readonly assignments?: readonly Assignment[];
+  readonly unlocks?: Unlocks;
   readonly $schema?: string;
   readonly schema: "semio.course/v1";
   readonly id: Slug;
@@ -193,7 +235,7 @@ export type Course = {
 
 //#region 🔖️Sheet
 /** 🪧️ A solution-free item of a sheet: its id, label, short label when it has one, and icon. */
-export type SheetItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon };
+export type SheetItem = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly icon?: Icon; readonly mockup?: Mockup };
 
 /** 🛞️ One spoke of a profile as a sheet presents it: `unit`, `min` and `max` travel together and are present exactly when the challenge shows the keys; without them the profile values of the sheet are shares of the axis range. */
 export type SheetAxis = { readonly id: Slug; readonly label: Text; readonly short?: ShortText; readonly unit?: string; readonly min?: number; readonly max?: number };
@@ -389,7 +431,7 @@ export type CourseQuizView = { readonly id: Slug; readonly emoji: string; readon
 export type CourseBadgeView = { readonly id: Slug; readonly emoji: string; readonly label: Text; readonly description: Text };
 
 /** 📖️ The solution-free course a client renders. */
-export type CourseView = { readonly id: Slug; readonly title: Text; readonly short?: ShortText; readonly introduction: Introduction; readonly quizzes: readonly CourseQuizView[]; readonly topics?: readonly Topic[]; readonly badges: readonly CourseBadgeView[] };
+export type CourseView = { readonly assignments?: readonly Assignment[]; readonly unlocks?: Unlocks; readonly id: Slug; readonly title: Text; readonly short?: ShortText; readonly introduction: Introduction; readonly quizzes: readonly CourseQuizView[]; readonly topics?: readonly Topic[]; readonly badges: readonly CourseBadgeView[] };
 
 /** 🚥️ The states of a run. */
 export const RUN_STATUSES = ["open", "submitted", "voided"] as const;
@@ -613,3 +655,6 @@ export type CrowdTask = { readonly task: Slug; readonly kind: TaskKind; readonly
 /** 👪️ What the learners answered and scored in the submitted runs of one quiz — the run scores (summing to `runs`), then per task (and dimension) and item: a persisted shared projection of run-submitted events. */
 export type CrowdView = { readonly quiz: Slug; readonly runs: number; readonly scores: CrowdScores; readonly tasks: readonly CrowdTask[] };
 //#endregion 🔖️Crowd
+
+/** 🎛️ Static software-native node appearance, independent of grading truth. */
+export type MockupWidget = { readonly kind: "parameter" | "component" } | { readonly kind: "slider"; readonly min: number; readonly max: number; readonly value: number } | { readonly kind: "panel"; readonly lines: readonly MockupText[] } | { readonly kind: "plugin"; readonly label: Text };

@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,20 +19,19 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
+section_assembly = _manim_module.section_assembly
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -79,19 +81,19 @@ set_vo_language = _manim_module.set_vo_language
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 TITLE_DE = "Theorie vs. Praxis"
 
-CALC_CYAN = "#38BDF8"
-REAL_ORANGE = "#FB923C"
-WARM_RED = "#EF4444"
-COLD_BLUE = "#4D96FF"
-GOOD_GREEN = "#22C55E"
-WATER_HOT = "#F97316"
-VENT_BLUE = "#60A5FA"
+CALC_CYAN = semio_color("secondary")
+REAL_ORANGE = semio_color("tertiary")
+WARM_RED = semio_color("primary")
+COLD_BLUE = semio_color("secondary")
+GOOD_GREEN = semio_color("success")
+WATER_HOT = semio_color("tertiary")
+VENT_BLUE = semio_color("secondary")
 
 #region Chain constants
 CHAIN_E_FACTORS = (1.04, 1.08, 1.06, 1.18)
@@ -125,7 +127,7 @@ CHAIN_CLASS_WP = _class_of(CHAIN_END_WP)[0]
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -137,7 +139,14 @@ def _din_ref(text: str):
 def _stand(floor_y, room_h, x, color=P_ORANGE):
     """🧍 Occupant at true scale — 70 % of the clear room height, feet on the floor line at ``x``."""
     height = 0.7 * room_h
-    return person_glyph(np.array([x, floor_y + 0.02 + height / 2, 0.0]), color=color, scale=height / 0.66)
+    return person_glyph(np.array([x, floor_y + height / 2, 0.0]), color=color, scale=height / 0.66)
+
+
+def _heater(floor_y, room_h, x):
+    """♨️ Physical panel size and floor clearance for a 2.5 m room."""
+    metre = room_h / 2.5
+    return radiator(np.array([x, floor_y + (0.12 + 0.65 / 2) * metre, 0.0]),
+                    height=0.65 * metre, width=1.3 * metre)
 
 
 def _stream(path, rate, *, color, color_end=None, count: int = 5, speed: float = 0.45, radius: float = 0.05,
@@ -291,9 +300,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Warum Rechnung und Abrechnung auseinanderlaufen", title)
+        subtitle = section_heading("Warum Rechnung und Abrechnung auseinanderlaufen")
         din = _din_ref("DIN V 18599-10:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -308,7 +315,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         room_h = hs["w_height"] / 2
         wall_in = float(br[0]) - 0.08 * scale
         person = _stand(y_floor, room_h, -4.00)
-        rad = radiator(np.array([float(bl[0]) + 1.0, y_floor + 0.27, 0.0])).scale(0.85)
+        rad = _heater(y_floor, room_h, float(bl[0]) + 1.0)
         th_h = 0.85
         th = thermometer_glyph(np.array([-4.30, y_mid + 0.28, 0.0]), height=th_h, color=P_RED, level=0.5)
         tick_y = y_mid + 0.28 + 0.05 + (th_h - 0.12) * 0.5
@@ -357,7 +364,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         ])
         cover = ValueTracker(0.0)
         cloud_core = Rectangle(width=0.75, height=0.10, stroke_width=0, fill_opacity=0).move_to(ORIGIN)
-        cloud_base = cloud_glyph(cloud_core, pad=(0.42, 0.26), bump=0.40)
+        cloud_base = cloud_glyph(cloud_core, pad=(0.42, 0.26))
         cloud_base.set_fill(P_DEEP_DARK, opacity=0.95)
         cloud = cloud_base.copy()
         cloud_far, cloud_near = np.array([-5.20, 2.05, 0.0]), np.array([-1.66, 1.14, 0.0])
@@ -424,7 +431,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
 
         self.play(FadeIn(calc_lbl), GrowFromEdge(calc_bar, LEFT), run_time=1.4)
         self.play(FadeIn(meas_lbl), GrowFromEdge(meas_bar, LEFT), run_time=1.4)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.4)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.4)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "norm"))
         self.play(FadeOut(meas_bar), FadeOut(meas_lbl), FadeIn(norm_note), Indicate(calc_bar, color=CALC_CYAN), run_time=1.6)
@@ -496,7 +503,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         diagonal = DashedLine(axes["pt"](0.0, 0.0), axes["pt"](1.0, 1.0), color=P_WHITE, stroke_width=2, stroke_opacity=0.55)
         diag_tag = body_text("Rechnung = Messung", font_size=LABEL_FONT_SIZE - 4, color=P_WHITE)
         diag_tag.set_opacity(0.6).next_to(axes["pt"](0.88, 0.88), UL, buff=0.06)
-        schematic_tag = body_text("schematische Darstellung", font_size=LABEL_FONT_SIZE - 4, color=P_TEAL)
+        schematic_tag = body_text("schematische Darstellung", font_size=LABEL_FONT_SIZE - 4, color=P_PRIMARY)
         schematic_tag.set_opacity(0.8).next_to(axes["x_label"], DOWN, buff=0.12)
         meas_total = sum(_measured_lengths())
         x_seg = Line(axes["pt"](0, 0), axes["pt"](calc_total, 0), color=CALC_CYAN, stroke_width=8)
@@ -581,7 +588,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         hold_for(self, self.NARRATION, "rebound_grund")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "fazit"))
-        verdict = note_line("genormte Randbedingungen machen Gebäude vergleichbar — nicht Haushalte", color=P_TEAL)
+        verdict = note_line("genormte Randbedingungen machen Gebäude vergleichbar — nicht Haushalte", color=P_PRIMARY)
         self.play(
             FadeIn(verdict), FadeOut(trend), FadeOut(re_zone), FadeOut(re_card), FadeOut(re_cause), FadeOut(arrow_re),
             FadeOut(ring),
@@ -592,7 +599,7 @@ class Beat1_BerechnungVsAbrechnung(Scene):
         hold_for(self, self.NARRATION, "fazit")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "fazit_zweck"))
-        self.play(diagonal.animate.set_color(P_TEAL).set_stroke(width=4.5, opacity=0.95), Indicate(verdict, color=P_TEAL),
+        self.play(diagonal.animate.set_color(P_PRIMARY).set_stroke(width=4.5, opacity=0.95), Indicate(verdict, color=P_PRIMARY),
                   run_time=1.4)
         hold_for(self, self.NARRATION, "fazit_zweck")
 
@@ -620,24 +627,23 @@ def _pipe_stream(points, rate, *, color, color_end=None):
 
 def _room_row(x_left, width, count, cy, height, t=0.14):
     """🏠 Row of rooms in section — shared ceiling and floor slabs, partition walls between the rooms."""
-    style = dict(color=P_WHITE, stroke_width=2, fill_color=P_WHITE, fill_opacity=0.14)
     total = width * count
-    ceiling = Rectangle(width=total + t, height=t, **style).move_to(np.array([x_left + total / 2, cy + height / 2, 0.0]))
-    floor = Rectangle(width=total + t, height=t, **style).move_to(np.array([x_left + total / 2, cy - height / 2, 0.0]))
-    walls = VGroup(*[Rectangle(width=t, height=height - t, **style).move_to(np.array([x_left + k * width, cy, 0.0]))
+    ceiling = section_material(Rectangle(width=total + t, height=t)).move_to(np.array([x_left + total / 2, cy + height / 2, 0.0]))
+    floor = section_material(Rectangle(width=total + t, height=t)).move_to(np.array([x_left + total / 2, cy - height / 2, 0.0]))
+    walls = VGroup(*[section_material(Rectangle(width=t, height=height - t)).move_to(np.array([x_left + k * width, cy, 0.0]))
                      for k in range(count + 1)])
-    return {"shell": VGroup(ceiling, walls, floor), "floor_top": cy - height / 2 + t / 2,
+    return {"shell": section_assembly(ceiling, walls, floor), "floor_top": cy - height / 2 + t / 2,
             "ceil_bottom": cy + height / 2 - t / 2, "x_left": x_left, "width": width, "t": t}
 
 
 def _valve(center, opening, gate):
     """🎚️ Radiator valve on the riser — the handle turns with the ``opening`` tracker (1 wide open … 0 shut) and fades with ``gate``."""
     c = np.array(center, dtype=float)
-    body = VGroup(Circle(radius=0.10, color=P_TEAL, stroke_width=2.2).set_fill(P_DEEP_DARK, opacity=1.0).move_to(c),
-                  Line(c + LEFT * 0.10, c + RIGHT * 0.10, color=P_TEAL, stroke_width=2.2))
+    body = VGroup(Circle(radius=0.10, color=P_PRIMARY, stroke_width=2.2).set_fill(P_DEEP_DARK, opacity=1.0).move_to(c),
+                  Line(c + LEFT * 0.10, c + RIGHT * 0.10, color=P_PRIMARY, stroke_width=2.2))
     handle = always_redraw(lambda: VGroup(
         Line(c, c + 0.26 * np.array([np.sin((1 - opening.get_value()) * PI / 2), np.cos((1 - opening.get_value()) * PI / 2), 0.0]),
-             color=P_TEAL, stroke_width=3),
+             color=P_PRIMARY, stroke_width=3),
     ).set_opacity(float(gate.get_value())))
     return body, handle
 
@@ -707,9 +713,7 @@ class Beat2_HydraulischerAbgleich(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Hydraulischer Abgleich", title)
+        subtitle = section_heading("Hydraulischer Abgleich")
         din = _din_ref("GEG § 60c · VOB/C DIN 18380")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -729,7 +733,7 @@ class Beat2_HydraulischerAbgleich(Scene):
                 np.array([x, (floor_top + ceil_bottom) / 2, 0.0]))
             for x in xs
         ])
-        rads = VGroup(*[radiator(np.array([x - 0.62, floor_top + 0.27, 0.0])).scale(0.85) for x in xs])
+        rads = VGroup(*[_heater(floor_top, clear_h, x - 0.62) for x in xs])
         rad_x = [float(r.get_center()[0]) for r in rads]
         rad_bottom = float(rads[0].get_bottom()[1])
         rad_mid = float(rads[0].get_center()[1])
@@ -737,8 +741,8 @@ class Beat2_HydraulischerAbgleich(Scene):
         room_gate = ValueTracker(0.0)
         thermos = [_thermo(np.array([x + 0.84, floor_top + 0.30, 0.0]), 1.0, lv, room_gate) for x, lv in zip(xs, levels)]
 
-        x_in = [rx - 0.26 for rx in rad_x]
-        x_out = [rx + 0.26 for rx in rad_x]
+        x_in = [float(r.get_left()[0]) for r in rads]
+        x_out = [float(r.get_right()[0]) for r in rads]
         supply = VGroup(
             Line(pump_c + RIGHT * 0.30, np.array([x_in[-1], y_sup, 0.0]), color=WATER_HOT, stroke_width=3.2, stroke_opacity=0.55),
             *[Line(np.array([xi, y_sup, 0.0]), np.array([xi, rad_bottom, 0.0]), color=WATER_HOT, stroke_width=3.2, stroke_opacity=0.55)
@@ -842,8 +846,8 @@ class Beat2_HydraulischerAbgleich(Scene):
         hold_for(self, self.NARRATION, "unabgeglichen", during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "unabgeglichen_naeh"))
-        near = VGroup(*[SurroundingRectangle(VGroup(gauges[k], readouts[k]), color=WARM_RED, buff=0.10, corner_radius=0.06,
-                                             stroke_width=2.4) for k in (0, 1)])
+        near = VGroup(*[SurroundingRectangle(VGroup(gauges[k], readouts[k]), color=WARM_RED, buff=_theme_module.UI_SPACING, corner_radius=0,
+                                             stroke_width=_theme_module.CHROME_BORDER) for k in (0, 1)])
         self.play(feed_on.animate.set_value(0.0), back_on.animate.set_value(0.0), Create(near), *heat(1.4), run_time=1.4)
         hold_for(self, self.NARRATION, "unabgeglichen_naeh", during=heat)
 
@@ -899,7 +903,7 @@ class Beat2_HydraulischerAbgleich(Scene):
             ("vl", r"\vartheta_{\mathrm{VL}}\;\text{sinkt}", WATER_HOT), (None, r"\to", P_WHITE),
             ("jaz", r"\mathrm{JAZ}\uparrow", GOOD_GREEN),
         ])
-        duty = note_line("für viele Heizungsanlagen verpflichtend — GEG § 60c", color=P_TEAL)
+        duty = note_line("für viele Heizungsanlagen verpflichtend — GEG § 60c", color=P_PRIMARY)
         self.play(Create(box), FadeIn(panel), FadeIn(jaz_meter["group"]), run_time=1.2)
         ring_vl = highlight_param(items, "vl", color=WATER_HOT)
         self.play(Create(ring_vl), *heat(1.4), run_time=1.4)
@@ -921,8 +925,8 @@ class Beat2_HydraulischerAbgleich(Scene):
 
 #region Beat 3 – Die Serie im Rückblick
 
-COL_NUTZ, COL_END, COL_PRIM = "#38BDF8", "#DC2626", "#A78BFA"
-LOSS_COLOURS = ("#FBBF24", "#F97316", "#EF4444", "#B91C1C")
+COL_NUTZ, COL_END, COL_PRIM = semio_color("secondary"), semio_color("danger"), semio_color("info")
+LOSS_COLOURS = (semio_color("warning"), semio_color("tertiary"), semio_color("primary"), semio_color("danger"))
 LOSS_VALUES = tuple(int(v) for v in np.diff(np.concatenate([[CHAIN_NUTZ], np.round(CHAIN_NUTZ * np.cumprod(CHAIN_E_FACTORS))])))
 STAGE_Y, STAGE_UNIT = -0.55, 0.0115
 X_A, X_B, X_C = -3.05, -0.75, 1.95
@@ -967,7 +971,7 @@ def _class_scale(x, top, bottom):
 
 def _class_chip(letter, colour, at):
     """🔤 Efficiency-class letter on a coloured tile."""
-    tile = RoundedRectangle(width=0.54, height=0.54, corner_radius=0.08, color=colour, stroke_width=1.6,
+    tile = RoundedRectangle(width=0.54, height=0.54, corner_radius=0, color=colour, stroke_width=_theme_module.CHROME_BORDER,
                             fill_color=colour, fill_opacity=0.95)
     mark = body_text(letter, font_size=BODY_FONT_SIZE + 6, color=P_DEEP_DARK).move_to(tile.get_center())
     return VGroup(tile, mark).move_to(at)
@@ -999,7 +1003,7 @@ def _boiler(center):
 
 def _tile(cx, title, detail, colour):
     """🗂️ One video of the series — framed slot with its title and what it contributed."""
-    frame = RoundedRectangle(width=2.54, height=2.70, corner_radius=0.12, color=colour, stroke_width=2.0).move_to(
+    frame = RoundedRectangle(width=2.54, height=2.70, corner_radius=0, color=colour, stroke_width=2.0).move_to(
         np.array([cx, 0.45, 0.0]))
     name = body_text(title, font_size=BODY_FONT_SIZE, color=colour).move_to(np.array([cx, -0.28, 0.0]))
     detail.move_to(np.array([cx, -0.68, 0.0]))
@@ -1064,9 +1068,7 @@ class Beat3_SerienAbschluss(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Serie im Rückblick", title)
+        subtitle = section_heading("Die Serie im Rückblick")
         din = _din_ref("GEG · DIN V 18599:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1102,7 +1104,7 @@ class Beat3_SerienAbschluss(Scene):
             _tile(xs[1], "2 · Lüftung", math_label(r"\dot{V},\;Q_{V}", size=LABEL_FONT_SIZE, color=P_WHITE), VENT_BLUE),
             _tile(xs[2], "3 · Heizen", body_text("Verluste & Gewinne", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_ORANGE),
             _tile(xs[3], "4 · Kühlen", body_text("Sommerlasten", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_CYAN),
-            _tile(xs[4], "5 · Energiebilanz", body_text("Gesetz & Ausweis", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_TEAL),
+            _tile(xs[4], "5 · Energiebilanz", body_text("Gesetz & Ausweis", font_size=LABEL_FONT_SIZE, color=P_WHITE), P_PRIMARY),
         )
         line_y = -1.18
         thread = smooth_path([(-6.0, line_y, 0), (0.0, line_y, 0), (6.0, line_y, 0)])
@@ -1147,9 +1149,9 @@ class Beat3_SerienAbschluss(Scene):
         hs = house_section(np.array([-5.15, STAGE_Y + 0.768, 0.0]), scale=0.64)
         bl, br = hs["bottom_left"], hs["bottom_right"]
         room_h = hs["w_height"] / 2
-        rad = radiator(np.array([float(bl[0]) + 0.62, STAGE_Y + 0.17, 0.0])).scale(0.5)
+        rad = _heater(float(bl[1]), room_h, float(bl[0]) + 0.62)
         boiler = _boiler(np.array([float(br[0]) - 0.42, STAGE_Y + 0.32 + 0.02, 0.0]))
-        person = _stand(STAGE_Y, room_h, float(bl[0]) + 1.25)
+        person = _stand(float(bl[1]), room_h, float(bl[0]) + 1.25)
         gas = ValueTracker(0.0)
         gas_path = _polyline([(TANK_X, STAGE_Y + 0.10, 0), (TANK_X, PIPE_Y, 0), (float(br[0]) - 0.42, PIPE_Y, 0),
                               (float(br[0]) - 0.42, STAGE_Y + 0.05, 0)])
@@ -1216,7 +1218,7 @@ class Beat3_SerienAbschluss(Scene):
         row, box, items = math_panel([
             ("qh", r"Q_{h}", COL_NUTZ), (None, r"\cdot", P_WHITE), ("ep", r"e_{p}", COL_END), (None, r"\cdot", P_WHITE),
             ("fp", r"f_{p}", COL_PRIM), (None, "=", P_WHITE), ("qp", r"Q_{P}", COL_PRIM),
-            (None, r"\;[\mathrm{kWh/(m^{2}\cdot a)}]", P_TEAL),
+            (None, r"\;[\mathrm{kWh/(m^{2}\cdot a)}]", P_PRIMARY),
         ], size=24, edge_buff=2.32)
 
         def e_p():
@@ -1239,8 +1241,8 @@ class Beat3_SerienAbschluss(Scene):
         wp_p_read = math_readout(lambda: de_num(stack_cw["total"]()), lambda: np.array([X_C_WP, stack_cw["top"]() + 0.28, 0.0]),
                                  size=LABEL_FONT_SIZE, color=COL_PRIM, edge="center")
         unit_note = VGroup(
-            body_text("Gaskessel-Variante, schematisches Beispiel, in", font_size=LABEL_FONT_SIZE, color=P_TEAL),
-            math_label(r"\mathrm{kWh/(m^{2}\cdot a)}", size=LABEL_FONT_SIZE, color=P_TEAL),
+            body_text("Gaskessel-Variante, schematisches Beispiel, in", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+            math_label(r"\mathrm{kWh/(m^{2}\cdot a)}", size=LABEL_FONT_SIZE, color=P_PRIMARY),
         ).arrange(RIGHT, buff=0.14, aligned_edge=DOWN).move_to(np.array([0.0, 2.30, 0.0]))
         gas_class, gas_colour = _class_of(CHAIN_END)
         wp_class, wp_colour = _class_of(CHAIN_END_WP)
@@ -1301,11 +1303,11 @@ class Beat3_SerienAbschluss(Scene):
         ho_room_h = ho["w_height"] / 2
         cold_wall = Line(ho_bl + RIGHT * 0.01, ho_bl + UP * ho_room_h + RIGHT * 0.01, color=COLD_BLUE, stroke_width=6)
         cold_spots = [ho_bl + UP * 0.30 + RIGHT * 0.03, ho_bl + UP * 0.80 + RIGHT * 0.03]
-        ground = Line(np.array([2.00, ho_floor, 0.0]), np.array([4.40, ho_floor, 0.0]), color=P_TEAL, stroke_width=2.2)
+        ground = Line(np.array([2.00, ho_floor, 0.0]), np.array([4.40, ho_floor, 0.0]), color=P_PRIMARY, stroke_width=2.2)
         landlord = _stand(ho_floor, ho_room_h, 2.70)
         tenant = _stand(ho_floor, ho_room_h, 3.50, color=P_CYAN)
         speech = _class_chip(gas_class, gas_colour, np.array([2.70, 0.30, 0.0]))
-        cloud = cloud_glyph(speech, pad=(0.34, 0.26), bump=0.40)
+        cloud = cloud_glyph(speech, pad=(0.34, 0.26))
         trail = cloud_trail(cloud, landlord.get_top() + UP * 0.12)
 
         def cold_air(rt):

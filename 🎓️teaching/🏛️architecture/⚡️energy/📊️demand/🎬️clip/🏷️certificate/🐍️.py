@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,20 +19,17 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -57,17 +57,17 @@ set_vo_language = _manim_module.set_vo_language
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 TITLE_DE = "Der Energieausweis"
 
-BEDARF_CYAN = "#38BDF8"
-VERBRAUCH_ORANGE = "#FB923C"
-PRIM_VIOLET = "#A78BFA"
-END_RED = "#DC2626"
-AMBIENT_GREEN = "#22C55E"
+BEDARF_CYAN = semio_color("secondary")
+VERBRAUCH_ORANGE = semio_color("tertiary")
+PRIM_VIOLET = semio_color("info")
+END_RED = semio_color("danger")
+AMBIENT_GREEN = semio_color("success")
 
 CLASSES = (
     ("A+", 30, "#1D7A3E"), ("A", 50, "#3FA34D"), ("B", 75, "#8DC63F"),
@@ -88,7 +88,7 @@ _RAW = np.clip(_SEASON * (1.0 + np.random.default_rng(6).uniform(-0.38, 0.38, MO
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -101,8 +101,8 @@ def _din_ref(text: str):
 def _document(center, *, color, width=2.20, height=0.95, lines=3):
     """📄 Certificate card — header band plus ruled body lines."""
     center = np.array(center, dtype=float)
-    card = RoundedRectangle(corner_radius=0.09, width=width, height=height,
-                            color=color, stroke_width=2.4).move_to(center)
+    card = RoundedRectangle(corner_radius=0, width=width, height=height,
+                            color=color, stroke_width=_theme_module.CHROME_BORDER).move_to(center)
     card.set_fill(P_DEEP_DARK, opacity=0.9)
     header = Rectangle(width=width - 0.28, height=0.20, color=color,
                        fill_color=color, fill_opacity=0.55, stroke_width=0)
@@ -255,10 +255,17 @@ def _stand(hs, x, color=P_ORANGE, storey=0):
     storey_h = hs["w_height"] / 2
     height = 0.7 * storey_h
     floor = hs["bottom_left"][1] + storey * storey_h
-    return person_glyph(np.array([x, floor + 0.02 + height / 2, 0.0]), color=color, scale=height / 0.66)
+    return person_glyph(np.array([x, floor + height / 2, 0.0]), color=color, scale=height / 0.66)
 
 
-def _envelope(hs, color=P_TEAL):
+def _heater(hs, x, color=P_RED):
+    """♨️ A 0.65 m panel with 0.12 m clearance at the house scale."""
+    metre = hs["w_height"] / 2 / 2.5
+    return radiator(np.array([x, hs["bottom_left"][1] + (0.12 + 0.65 / 2) * metre, 0.0]),
+                    color=color, height=0.65 * metre, width=1.3 * metre)
+
+
+def _envelope(hs, color=P_PRIMARY):
     """🧱 Heavy outline around the thermal envelope of a ``house_section``."""
     off, eave = 0.09, 0.26 * hs["w_width"] / 3.6
     bl, br, tl, tr, peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
@@ -318,9 +325,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Bedarf oder Verbrauch", title)
+        subtitle = section_heading("Bedarf oder Verbrauch")
         din = _din_ref("GEG § 79 ff. · § 80")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -328,11 +333,11 @@ class Beat1_BedarfVsVerbrauch(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         def clear():
-            return [FadeOut(m) for m in list(self.mobjects) if m not in (title, subtitle, din, caption)]
+            return [FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din, caption)]
 
         sheet = _certificate([0.0, -0.05], P_WHITE, "Energieausweis", width=3.2, height=3.4)
         self.play(Create(sheet[0]), FadeIn(sheet[1]), run_time=1.6)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.6)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6)
 
         sx = -3.6
         left_c = np.array([sx, -0.05, 0.0])
@@ -364,7 +369,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
                                        color=P_CYAN, level=0.5)
         norm_temp = math_label(r"20\,\mathrm{°C}", at=np.array([hx + 0.7, floor_y + 0.42, 0.0]),
                                size=LABEL_FONT_SIZE - 2, color=P_CYAN, edge="left")
-        norm_radiator = radiator(np.array([hx - 1.08, floor_y + 0.17, 0.0]), color=P_RED).scale(0.45)
+        norm_radiator = _heater(house, hx - 1.08)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bedarf_rand"))
         self.play(Create(house["group"]), run_time=1.5)
@@ -414,11 +419,11 @@ class Beat1_BedarfVsVerbrauch(Scene):
         real_lamp = lamp_glyph(np.array([hx2 + 0.5, house2["level_1"].get_center()[1], 0.0]), drop=0.1)
         row_a, box_a, items_a = math_panel([
             ("bed", r"\text{Bedarf}", BEDARF_CYAN), (None, "=", P_WHITE),
-            ("geb", r"\text{Gebäude}\;|_{\,\text{Norm}}", P_TEAL),
+            ("geb", r"\text{Gebäude}\;|_{\,\text{Norm}}", P_PRIMARY),
         ], size=BODY_FONT_SIZE + 2)
         row_b, box_b, items_b = math_panel([
             ("ver", r"\text{Verbrauch}", VERBRAUCH_ORANGE), (None, "=", P_WHITE),
-            ("geb2", r"\text{Gebäude}", P_TEAL), (None, "+", P_WHITE),
+            ("geb2", r"\text{Gebäude}", P_PRIMARY), (None, "+", P_WHITE),
             ("use", r"\text{Nutzung}", VERBRAUCH_ORANGE),
         ], size=BODY_FONT_SIZE + 2)
 
@@ -444,11 +449,11 @@ class Beat1_BedarfVsVerbrauch(Scene):
         orange_right = _certificate([2.6, 0.2], VERBRAUCH_ORANGE, "Verbrauchsausweis", width=2.6, height=2.8)
         oder = body_text("oder", font_size=BODY_FONT_SIZE, color=P_WHITE).move_to(np.array([0.0, 0.2, 0.0]))
         row_c, box_c, items_c = math_panel([
-            ("neu", r"\text{Neubau}", P_TEAL), (None, r"\Rightarrow", P_WHITE),
+            ("neu", r"\text{Neubau}", P_PRIMARY), (None, r"\Rightarrow", P_WHITE),
             ("bed", r"\text{Bedarfsausweis}", BEDARF_CYAN),
         ], size=BODY_FONT_SIZE + 2)
         row_d, box_d, items_d = math_panel([
-            ("alt", r"\text{Bestand}", P_TEAL), (None, r"\Rightarrow", P_WHITE),
+            ("alt", r"\text{Bestand}", P_PRIMARY), (None, r"\Rightarrow", P_WHITE),
             ("bed2", r"\text{Bedarf}", BEDARF_CYAN), (None, r"\text{oder}", P_WHITE),
             ("ver", r"\text{Verbrauch}", VERBRAUCH_ORANGE),
         ], size=BODY_FONT_SIZE + 2)
@@ -466,7 +471,7 @@ class Beat1_BedarfVsVerbrauch(Scene):
                   run_time=1.6)
         hold_for(self, self.NARRATION, "wann_bestand")
 
-        self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (title, subtitle, din)], run_time=0.6)
+        self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din)], run_time=0.6)
         self.wait(0.4)
 
 #endregion
@@ -517,9 +522,7 @@ class Beat2_DieSkala(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Skala lesen", title)
+        subtitle = section_heading("Die Skala lesen")
         din = _din_ref("GEG § 86 · Anlage 10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -536,12 +539,12 @@ class Beat2_DieSkala(Scene):
             for i, (_l, bound, _c) in enumerate(CLASSES[:-1])
         ])
         unit_label = math_label(UNIT, at=np.array([strip["center"][0] + strip["width"] / 2 + 0.2, band_y - 0.07, 0.0]),
-                                size=LABEL_FONT_SIZE - 4, color=P_TEAL, edge="left")
-        schematic_note = note_line("Klassenbreiten schematisch, nicht maßstäblich", color=P_TEAL)
+                                size=LABEL_FONT_SIZE - 4, color=P_PRIMARY, edge="left")
+        schematic_note = note_line("Klassenbreiten schematisch, nicht maßstäblich", color=P_PRIMARY)
 
         def clear(*keep):
             return [FadeOut(m) for m in list(self.mobjects)
-                    if m not in (title, subtitle, din, caption, *strip["bands"], *keep)]
+                    if m not in (subtitle, din, caption, *strip["bands"], *keep)]
 
         sheet_l = _certificate([-2.6, 0.75], BEDARF_CYAN, "Bedarf", width=2.2, height=1.3, rules=2)
         sheet_r = _certificate([2.6, 0.75], VERBRAUCH_ORANGE, "Verbrauch", width=2.2, height=1.3, rules=2)
@@ -690,7 +693,7 @@ class Beat2_DieSkala(Scene):
                   *_heat(warm, 1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "lesen_anlage", during=lambda rt: _heat(warm, rt))
 
-        self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (title, subtitle, din)], run_time=0.6)
+        self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din)], run_time=0.6)
         self.wait(0.4)
 
 #endregion
@@ -738,9 +741,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Was der Ausweis auslöst", title)
+        subtitle = section_heading("Was der Ausweis auslöst")
         din = _din_ref("GEG § 84 · § 87")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -748,7 +749,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         def clear(*keep):
-            return [FadeOut(m) for m in list(self.mobjects) if m not in (title, subtitle, din, caption, *keep)]
+            return [FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din, caption, *keep)]
 
         class_color = CLASSES[_class_index(GAS_END)][2]
         class_letter = CLASSES[_class_index(GAS_END)][0]
@@ -758,10 +759,10 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.6)
 
         card_x, text_x = -4.3, -6.2
-        listing = RoundedRectangle(corner_radius=0.10, width=4.6, height=3.9, color=P_TEAL, stroke_width=2.4)
+        listing = RoundedRectangle(corner_radius=0, width=4.6, height=3.9, color=P_PRIMARY, stroke_width=_theme_module.CHROME_BORDER)
         listing.move_to(np.array([card_x, 0.0, 0.0]))
         listing.set_fill(P_DEEP_DARK, opacity=0.9)
-        listing_head = body_text("Pflichtangaben nach GEG § 87", font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+        listing_head = body_text("Pflichtangaben nach GEG § 87", font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
         listing_head.next_to(listing.get_top(), DOWN, buff=0.22)
         small_sheet = _certificate([2.0, 0.1], BEDARF_CYAN, "Energieausweis", width=2.4, height=2.7)
         into_ad = Arrow(np.array([0.7, 0.1, 0.0]), np.array([listing.get_right()[0] + 0.12, 0.1, 0.0]), buff=0.0,
@@ -835,8 +836,8 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         h_wp = house_section(np.array([-3.2, -0.24, 0.0]), scale=0.55)
         h_gas = house_section(np.array([3.2, -0.24, 0.0]), scale=0.55)
         ground = float(h_wp["bottom_left"][1])
-        buyer = person_glyph(np.array([-0.8, ground + 0.52, 0.0]), color=P_ORANGE, scale=1.5)
-        tenant = person_glyph(np.array([0.8, ground + 0.52, 0.0]), color=P_YELLOW, scale=1.5)
+        buyer = person_glyph(np.array([-0.8, ground + 0.66 * 1.5 / 2, 0.0]), color=P_ORANGE, scale=1.5)
+        tenant = person_glyph(np.array([0.8, ground + 0.66 * 1.5 / 2, 0.0]), color=P_YELLOW, scale=1.5)
         who = VGroup(
             body_text("Käufer", font_size=LABEL_FONT_SIZE - 3, color=P_ORANGE).next_to(buyer, UP, buff=0.12),
             body_text("Mieter", font_size=LABEL_FONT_SIZE - 3, color=P_YELLOW).next_to(tenant, UP, buff=0.12),
@@ -857,8 +858,8 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         hold_for(self, self.NARRATION, "vergleich", during=lambda rt: _heat(warm_both, rt))
 
         doc = _certificate([-3.4, 0.0], BEDARF_CYAN, "Energieausweis", width=2.0, height=2.4)
-        costs = chip("genaue Kosten", P_TEAL, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, 0.8, 0.0]))
-        renovation = chip("Sanierungsaufwand", P_TEAL, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, -0.8, 0.0]))
+        costs = chip("genaue Kosten", P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, 0.8, 0.0]))
+        renovation = chip("Sanierungsaufwand", P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([2.6, -0.8, 0.0]))
         to_costs = Arrow(np.array([-2.3, 0.1, 0.0]), costs.get_left() + LEFT * 0.1, buff=0.05, color=P_WHITE,
                          stroke_width=2.5, max_tip_length_to_length_ratio=0.1)
         to_renovation = Arrow(np.array([-2.3, -0.1, 0.0]), renovation.get_left() + LEFT * 0.1, buff=0.05,
@@ -900,7 +901,7 @@ class Beat3_PflichtangabenUndFolgen(Scene):
         self.play(FadeIn(no_measure), *_heat(warm_old, 1.2), run_time=1.2)
         hold_for(self, self.NARRATION, "keine", during=lambda rt: _heat(warm_old, rt))
 
-        self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (title, subtitle, din)], run_time=0.6)
+        self.play(*[FadeOut(m) for m in list(self.mobjects) if m not in (subtitle, din)], run_time=0.6)
         self.wait(0.4)
 
 #endregion

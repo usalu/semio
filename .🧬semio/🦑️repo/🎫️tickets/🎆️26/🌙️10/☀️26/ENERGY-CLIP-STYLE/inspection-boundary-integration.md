@@ -1,0 +1,15 @@
+# Actual Boundary And Pointer Integration
+
+The actual recursive UI passes both locales at root course, course topics, topic clips, clip chapters and leaf chapter depths:10 DOM snapshots,43.171s. The visual scout passed all10 compositions. A separate actual choreography probe passed8 context endpoints and full-frame content-only camera pixels in710.156s; within-process versioned assets gave exact adjacent LCA equality.
+
+Uncached captures in independent browser processes are nondeterministic by a few RGB units. The first pair differed at three prefixes; a repeat differed at a different three. Full DOM metadata, rectangles, transforms and computed styles matched, with only output filenames differing. These diagnostics remain explicit research evidence, not an expected passing publication contract.
+
+The persistent actual-UI boundary feature was then exercised through PUBLIC `render_batch` in fresh producer and consumer Python/browser processes. All four ancestor assets were first writes for the producer and reused for the consumer. PNG bytes, SHA256 and independently decoded NumPy RGB arrays matched exactly; cached metadata output paths were correctly rebound to consumer paths. This passed222.098s on the browser version before the later conservative cold-discovery race correction. A final equivalent process pair is required once that correction is held stable.
+
+The actual German View-chip hover followed by fullscreen press/release/click passed56.270s. Pointer coordinates were inside the live View-chip and fullscreen SVG rectangles; all three native pointer events hit the enclosing chapter button, and the chapter leaf path committed on release. The adapter records the native parent card button identity, so the test checks that identity together with the real glyph hitbox. Evidence was generated/icb/chapter-pointer-5xwou6qc. The adjacent permanent pointer driver is included through the registered chapter feature's load_tests hook.
+
+The independent collection verifier itself passed real finite PyAV chapter/lesson fixtures and six deliberate defects: body overlay, false clock, wrong boundary, reversed chapter order, missing frame and stale source. This does not promote any old preview to the complete17-lesson/38-chapter acceptance gate.
+
+## Final Stable Source Graph Integration
+
+Two fresh public render_batch producer/consumer processes shared the same output root after the final two-pass source-closure fix. The real four-prefix PNG bytes, decoded arrays and rebound consumer metadata.output paths matched exactly; distinct process identities and actual persistent first-writer/reuse behavior were checked. Native integration passed in332.362s; evidence generated/icb/boundary-process-fyxdmgl2. This proves public canonical boundary assets across processes, not deterministic uncached Chromium painting. The final native pointer probe passed in36.420s (generated/icb/chapter-pointer-uwxsr1bw): it holds the precommit prefix for the click frame, so measured hover/fullscreen pointer release must actually open the chapter rather than being forced by a supplied hierarchy state.

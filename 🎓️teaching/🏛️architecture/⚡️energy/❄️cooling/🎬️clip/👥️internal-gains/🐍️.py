@@ -1,12 +1,18 @@
 
 
 import importlib
+import json
 import sys
 from pathlib import Path
 
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_animation_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.🎞️animation.🐍️")
+freeze_drawables = _animation_module.freeze_drawables
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,16 +22,15 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 SUBTITLE_FONT_SIZE = _manim_module.SUBTITLE_FONT_SIZE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_frame = _manim_module.window_frame
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -39,6 +44,7 @@ highlight_param = _manim_module.highlight_param
 house_section = _manim_module.house_section
 room_section = _manim_module.room_section
 person_glyph = _manim_module.person_glyph
+object_silhouette = _manim_module.object_silhouette
 seated_person_glyph = _manim_module.seated_person_glyph
 lamp_glyph = _manim_module.lamp_glyph
 droplets = _manim_module.droplets
@@ -60,7 +66,7 @@ load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -73,11 +79,11 @@ def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
     Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
     that never competes with the diagram. The formula panel sits on the
     bottom edge, so this corner is clear in every beat.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -86,48 +92,40 @@ def _din_ref(text: str):
 
 #region Shared helpers
 
+def _seated(room, x):
+    """🪑 A 1.3 m seated adult at the room scale, feet on the slab."""
+    height = 1.3 * room["h"] / 2.5
+    return seated_person_glyph(np.array([x, room["y_f"], 0.0]), color=P_ORANGE, scale=height / 0.55)
+
+
+_ACTIVITY_ROOT = Path(__file__).resolve().parent / "🏃️activity"
+_ACTIVITY = json.loads((_ACTIVITY_ROOT / "🔣️.json").read_text(encoding="utf-8"))
+
+
 def _activity_figure(kind: str, color=P_ORANGE, s: float = 1.0):
-    """🏃 Figure in one activity pose — ``sleep``, ``sit``, ``walk`` or ``sprint`` — in the ``person_glyph`` line style.
-
-    Feet sit on ``y = 0`` so a row of poses shares one ground line; metabolic
-    rates per pose follow ISO 7730 / VDI 2078 orders of magnitude. Returns the
-    figure and the point its body heat leaves from.
-    """
-    sw = 1.55
-
-    def L(a, b, c=color, w=sw):
-        return Line(np.array([*a, 0.0]) * s, np.array([*b, 0.0]) * s, color=c, stroke_width=w)
-
-    def H(cx, cy, r=0.085):
-        return Circle(radius=r * s, color=color, stroke_width=sw).move_to(np.array([cx, cy, 0.0]) * s)
-
-    if kind == "sleep":
-        bed = VGroup(L([-0.62, 0.0], [0.62, 0.0], P_WHITE, 1.3), L([-0.62, 0.0], [-0.62, 0.22], P_WHITE, 1.3),
-                     L([-0.58, -0.0], [-0.58, -0.12], P_WHITE, 1.3), L([0.58, 0.0], [0.58, -0.12], P_WHITE, 1.3))
-        body = VGroup(H(-0.4, 0.13), L([-0.31, 0.1], [0.28, 0.1]), L([-0.31, 0.16], [0.24, 0.16]),
-                      L([0.28, 0.1], [0.52, 0.08]))
-        return VGroup(bed, body), np.array([-0.05, 0.16, 0.0]) * s
+    """🏃 Connected filled human profiles in sleeping, seated, walking and running poses."""
     if kind == "sit":
         seated = seated_person_glyph(ORIGIN, color=color, scale=2.2 * s)
         return seated["group"], seated["chest"]
-    if kind == "walk":
-        return VGroup(
-            H(0.0, 1.12), L([-0.06, 1.0], [-0.05, 0.48]), L([0.06, 1.0], [0.05, 0.48]),
-            L([0.0, 0.48], [-0.24, 0.02]), L([0.0, 0.48], [0.24, 0.02]),
-            L([0.0, 0.92], [-0.22, 0.62]), L([0.0, 0.92], [0.22, 0.62]),
-        ), np.array([0.0, 0.8, 0.0]) * s
-    if kind == "sprint":
-        back_leg = VMobject(color=color, stroke_width=sw).set_points_as_corners(
-            [np.array([0.0, 0.5, 0.0]) * s, np.array([-0.26, 0.3, 0.0]) * s, np.array([-0.46, 0.1, 0.0]) * s])
-        front_leg = VMobject(color=color, stroke_width=sw).set_points_as_corners(
-            [np.array([0.0, 0.5, 0.0]) * s, np.array([0.22, 0.26, 0.0]) * s, np.array([0.14, 0.02, 0.0]) * s])
-        dashes = VGroup(*[L([-0.8 + 0.05 * k, y], [-0.55 + 0.05 * k, y], P_WHITE, 1.1).set_stroke(opacity=0.5)
-                          for k, y in enumerate((0.78, 0.55, 0.32))])
-        return VGroup(
-            dashes, H(0.4, 1.12), L([-0.04, 0.5], [0.26, 1.0]), L([0.06, 0.5], [0.34, 0.98]),
-            back_leg, front_leg, L([0.3, 0.98], [0.06, 0.78]), L([0.3, 0.98], [0.54, 0.8]),
-        ), np.array([0.15, 0.75, 0.0]) * s
-    raise ValueError(f"unknown activity pose {kind!r}")
+    if kind not in _ACTIVITY["poses"]:
+        raise ValueError(f"unknown activity pose {kind!r}")
+    profile = _ACTIVITY["poses"][kind]
+    body = SVGMobject(str(_ACTIVITY_ROOT / profile["asset"]), height=None, width=None)
+    body.set_fill(color, opacity=1).set_stroke(width=0)
+    body.set(**{profile["axis"]: _ACTIVITY["reference_height"] * s})
+    body.move_to([0, profile["bottom"] * s + body.height / 2, 0])
+    body.shift(UP * (profile["bottom"] * s - body.get_bottom()[1]))
+    accessories = VGroup()
+    if kind == "sleep":
+        bed = _ACTIVITY["bed"]
+        deck, thickness, width = bed["deck"] * s, bed["thickness"] * s, bed["width"] * s
+        accessories = VGroup(
+            Rectangle(width=width, height=thickness, color=P_WHITE, stroke_width=0,
+                      fill_color=P_WHITE, fill_opacity=0.65).move_to([0, deck - thickness / 2, 0]),
+            *[Line([x, 0, 0], [x, deck, 0], color=P_WHITE, stroke_width=1.3)
+              for x in (-width * 0.45, width * 0.45)],
+        )
+    return VGroup(body, accessories), np.array([*profile["heat"], 0.0]) * s
 
 
 def _office_furniture(room):
@@ -178,15 +176,13 @@ class Beat1_OfficeRoom(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Die umschlossene Umgebung", title)
+        subtitle = section_heading("Die umschlossene Umgebung")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         self.play(FadeIn(caption), run_time=0.3)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         facade = house_section(np.array([0.0, -0.55, 0.0]))["group"]
 
@@ -196,8 +192,8 @@ class Beat1_OfficeRoom(Scene):
         hold_for(self, self.NARRATION, "facade", used=3.4 + 0.35)
 
         room = room_section(np.array([0.0, -0.2, 0.0]), w=6.6, h=2.5)
-        insulation_box = SurroundingRectangle(room["shell"], buff=0.12, corner_radius=0.12, color=P_ORANGE,
-                                              stroke_width=2.2)
+        insulation_box = SurroundingRectangle(room["shell"], buff=_theme_module.UI_SPACING, corner_radius=0, color=P_ORANGE,
+                                              stroke_width=_theme_module.CHROME_BORDER)
         office = _office_furniture(room)
         interior_label = Text("Gewerblicher Arbeitsbereich", font_size=BODY_FONT_SIZE, color=P_CYAN)
         interior_label.move_to(np.array([1.3, room["y_c"] - 0.45, 0.0]))
@@ -205,6 +201,8 @@ class Beat1_OfficeRoom(Scene):
         office_env_label.next_to(insulation_box, UP, buff=0.12)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "interior"))
+        freeze_drawables(facade)
+        freeze_drawables(room["shell"])
         self.play(ReplacementTransform(facade, room["shell"]), FadeIn(room["glass"]), Create(insulation_box),
                   run_time=1.8)
         self.add(room["air"])
@@ -259,9 +257,7 @@ class Beat2_HumanFactor(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Menschliche Stoffwechselwärme", title)
+        subtitle = section_heading("Menschliche Stoffwechselwärme")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -270,9 +266,9 @@ class Beat2_HumanFactor(Scene):
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
 
         room = room_section(np.array([-0.9, 0.0, 0.0]), w=6.6, h=3.4)
-        seated = seated_person_glyph(np.array([-1.55, room["y_f"], 0.0]), color=P_ORANGE, scale=3.6)
-        desk_top_y = seated["figure"][7].get_end()[1] - 0.12
-        dx0 = seated["figure"][7].get_end()[0] + 0.1
+        seated = _seated(room, -1.55)
+        desk_top_y = seated["lap"][1]
+        dx0 = seated["lap"][0] + 0.1
         desk = VGroup(
             Line(np.array([dx0, desk_top_y, 0.0]), np.array([dx0 + 2.1, desk_top_y, 0.0]), color=P_WHITE, stroke_width=1.5),
             Line(np.array([dx0 + 2.0, desk_top_y, 0.0]), np.array([dx0 + 2.0, room["y_f"], 0.0]), color=P_WHITE,
@@ -397,9 +393,9 @@ class Beat2_HumanFactor(Scene):
             x = w_to_x(w)
             ticks.add(Line([x, scale_y - 0.09, 0], [x, scale_y + 0.09, 0], color=P_WHITE, stroke_width=2))
             tick_labels.add(math_label(de_num(w), at=np.array([x, scale_y - 0.42, 0.0]),
-                                       size=LABEL_FONT_SIZE, color=P_TEAL, edge="center"))
+                                       size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center"))
         unit_label = math_label(r"\mathrm{W}", at=np.array([w_to_x(800) + 0.45, scale_y - 0.42, 0.0]),
-                                size=LABEL_FONT_SIZE, color=P_TEAL, edge="center")
+                                size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center")
         dots = VGroup(*[
             Dot([w_to_x(watts), scale_y, 0], radius=0.09, color=color)
             for (name, watts, pose, color) in acts
@@ -438,7 +434,7 @@ class Beat2_HumanFactor(Scene):
         row, box, items = math_panel([
             ("qp_tot", r"\dot{Q}_{\text{Pers}}", P_ORANGE), (None, "=", P_WHITE),
             ("n", "n", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("qp", r"\dot{q}_{p}", P_ORANGE), (None, r"\;[\mathrm{W}]", P_TEAL),
+            ("qp", r"\dot{q}_{p}", P_ORANGE), (None, r"\;[\mathrm{W}]", P_PRIMARY),
         ])
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(FadeIn(row), Create(box), run_time=1.2)
@@ -500,12 +496,12 @@ class Beat2_HumanFactor(Scene):
         # caption band, instead of the badge crowding into the subtitle.
         hall_shift = UP * 0.4
         hall_outline = Rectangle(
-            width=9.6, height=3.0, stroke_color="#2C3545", stroke_width=2,
+            width=9.6, height=3.0, stroke_color=semio_color("dark-5-7"), stroke_width=2,
             fill_color=P_DEEP_DARK, fill_opacity=0.85,
         ).move_to(UP * 0.15 + hall_shift)
         tier_y = np.linspace(-1.15, 0.95, 5) + hall_shift[1]
         tier_lines = VGroup(*[
-            Line(start=[-4.5, y, 0], end=[4.5, y, 0], stroke_color="#2C3545", stroke_width=1, stroke_opacity=0.6)
+            Line(start=[-4.5, y, 0], end=[4.5, y, 0], stroke_color=semio_color("dark-5-7"), stroke_width=1, stroke_opacity=0.6)
             for y in tier_y
         ])
         grid_icons = VGroup()
@@ -589,9 +585,7 @@ class Beat3_DevicesLighting(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Geräte, Steckerlasten und Beleuchtung", title)
+        subtitle = section_heading("Geräte, Steckerlasten und Beleuchtung")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -606,10 +600,8 @@ class Beat3_DevicesLighting(Scene):
             Line(np.array([-3.5, desk_y, 0.0]), np.array([-3.5, room["y_f"], 0.0]), color=P_WHITE, stroke_width=1.5),
             Line(np.array([-1.3, desk_y, 0.0]), np.array([-1.3, room["y_f"], 0.0]), color=P_WHITE, stroke_width=1.5),
         )
-        laptop = VGroup(
-            Line(np.array([-2.75, desk_y + 0.02, 0.0]), np.array([-2.15, desk_y + 0.02, 0.0]), color=P_CYAN, stroke_width=1.8),
-            Line(np.array([-2.15, desk_y + 0.02, 0.0]), np.array([-2.05, desk_y + 0.5, 0.0]), color=P_CYAN, stroke_width=1.8),
-        )
+        laptop = VGroup(object_silhouette("laptop", color=P_CYAN, width=0.66))
+        laptop.move_to([-2.42, desk_y + laptop.height / 2, 0])
         rack_frame = Rectangle(width=1.0, height=1.9, color=P_CYAN, stroke_width=1.6)
         rack_frame.move_to(np.array([2.6, room["y_f"] + 0.95, 0.0]))
         slots = VGroup(*[
@@ -653,7 +645,7 @@ class Beat3_DevicesLighting(Scene):
             ("qg", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "=", P_WHITE),
             (None, r"\Sigma", P_WHITE),
             ("pel", r"P_{el}", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("fn", r"f_{N}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
+            ("fn", r"f_{N}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_PRIMARY),
         ])
         self.play(FadeIn(row_d), Create(box_d), *device_heat(1.1), run_time=1.1)
         hold_for(self, self.NARRATION, "devices", during=device_heat)
@@ -673,19 +665,17 @@ class Beat3_DevicesLighting(Scene):
         usage_groups = VGroup()
         usage_anim_specs = []
         for name, lit, color, cx in usages:
-            frame = RoundedRectangle(
-                width=3.4, height=2.4, corner_radius=0.12,
-                color=color, stroke_width=2.2, fill_color="#12151C", fill_opacity=0.92,
-            ).move_to([cx, 0.5, 0])
             label = Text(name, font_size=BODY_FONT_SIZE, color=color)
-            label.next_to(frame.get_top(), DOWN, buff=0.12)
+            depth = label.height + 2 * _theme_module.UI_SPACING
+            frame = window_frame(3.4, 2.4, title_width=label.width + 2 * _theme_module.UI_SPACING,
+                                 title_depth=depth, color=color).move_to([cx, 0.5, 0])
+            label.move_to([frame.get_left()[0] + _theme_module.UI_SPACING + label.width / 2,
+                           frame.get_top()[1] - depth / 2, 0])
             icons = VGroup()
             for i in range(10):
                 r, c = divmod(i, 5)
-                icon = VGroup(
-                    Rectangle(width=0.34, height=0.22, color="#2C3545", stroke_width=1.8, fill_opacity=0.0),
-                    Line(ORIGIN, RIGHT * 0.2, color="#2C3545", stroke_width=1.8).move_to([0, -0.16, 0]),
-                ).move_to([cx - 1.1 + c * 0.55, 0.7 - r * 0.55, 0])
+                icon = VGroup(object_silhouette("monitor", color=semio_color("dark-5-7"), width=0.34))
+                icon.move_to([cx - 1.1 + c * 0.55, 0.7 - r * 0.55, 0])
                 icons.add(icon)
             tr = ValueTracker(0.0)
             read = math_readout(
@@ -701,7 +691,7 @@ class Beat3_DevicesLighting(Scene):
             self.add(read)
             self.play(
                 LaggedStart(*[
-                    icons[i].animate.set_color(color).set_fill(color, opacity=0.45)
+                    icons[i].animate.set_color(color).set_fill(color, opacity=1)
                     for i in range(lit)
                 ], lag_ratio=0.12),
                 tr.animate.set_value(lit / 10),
@@ -753,7 +743,7 @@ class Beat3_DevicesLighting(Scene):
             ("ql", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, "=", P_WHITE),
             (None, r"\Sigma", P_WHITE),
             ("pl", r"P_{\text{Licht}}", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("fg", r"f_{g}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
+            ("fg", r"f_{g}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_PRIMARY),
         ])
         self.play(FadeIn(row_l), Create(box_l), *light_heat(1.1), run_time=1.1)
         hold_for(self, self.NARRATION, "lights", during=light_heat)
@@ -819,9 +809,7 @@ class Beat4_CumulativeLoad(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Summe der internen Gewinne", title)
+        subtitle = section_heading("Summe der internen Gewinne")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -833,11 +821,7 @@ class Beat4_CumulativeLoad(Scene):
             return person_glyph(center, color=P_ORANGE, scale=1.0)
 
         def mini_laptop(center=ORIGIN):
-            c = np.array(center, dtype=float)
-            return VGroup(
-                Line(c + np.array([-0.32, -0.14, 0.0]), c + np.array([0.24, -0.14, 0.0]), color=P_CYAN, stroke_width=1.8),
-                Line(c + np.array([0.24, -0.14, 0.0]), c + np.array([0.34, 0.22, 0.0]), color=P_CYAN, stroke_width=1.8),
-            )
+            return VGroup(object_silhouette("laptop", color=P_CYAN, width=0.66)).move_to(center)
 
         def mini_lamp(center=ORIGIN):
             lamp = lamp_glyph(np.array(center, dtype=float) + UP * 0.45, drop=0.3)
@@ -845,12 +829,12 @@ class Beat4_CumulativeLoad(Scene):
             return lamp["group"]
 
         def source_card(icon, title_de, term, color, center):
-            frame = RoundedRectangle(
-                width=2.15, height=2.1, corner_radius=0.12,
-                color=color, stroke_width=2.2, fill_color="#12151C", fill_opacity=0.92,
-            ).move_to(center)
             label = Text(title_de, font_size=BODY_FONT_SIZE, color=color)
-            label.next_to(frame.get_top(), DOWN, buff=0.12)
+            depth = label.height + 2 * _theme_module.UI_SPACING
+            frame = window_frame(2.15, 2.1, title_width=label.width + 2 * _theme_module.UI_SPACING,
+                                 title_depth=depth, color=color).move_to(center)
+            label.move_to([frame.get_left()[0] + _theme_module.UI_SPACING + label.width / 2,
+                           frame.get_top()[1] - depth / 2, 0])
             term_t = math_label(term, size=BODY_FONT_SIZE, color=P_WHITE)
             term_t.next_to(frame.get_bottom(), UP, buff=0.14)
             icon.move_to((label.get_bottom() + term_t.get_top()) / 2)
@@ -889,7 +873,7 @@ class Beat4_CumulativeLoad(Scene):
             ("qi", r"\dot{Q}_{i}", P_CYAN), (None, "=", P_WHITE),
             ("pers", r"\dot{Q}_{\text{Pers}}", P_ORANGE), (None, "+", P_WHITE),
             ("ger", r"\dot{Q}_{\text{Geräte}}", P_CYAN), (None, "+", P_WHITE),
-            ("licht", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_TEAL),
+            ("licht", r"\dot{Q}_{\text{Licht}}", P_YELLOW), (None, r"\;[\mathrm{W}]", P_PRIMARY),
         ])
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "formula"))
         self.play(FadeIn(row), Create(box), run_time=1.2)
@@ -938,9 +922,7 @@ class Beat5_Mitigation(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Minderung & intelligentes Design", title)
+        subtitle = section_heading("Minderung & intelligentes Design")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -960,17 +942,17 @@ class Beat5_Mitigation(Scene):
         room = rs["shell"]
         warm_fill = rs["air"]
         y_f = rs["y_f"]
-        seated = seated_person_glyph(np.array([-0.95, y_f, 0.0]), color=P_ORANGE, scale=2.6)
-        knee = seated["figure"][7].get_end()
+        seated = _seated(rs, -0.95)
+        knee = seated["lap"]
         desk_y = knee[1] - 0.06
         desk = VGroup(
             Line(np.array([knee[0] + 0.05, desk_y, 0.0]), np.array([knee[0] + 2.3, desk_y, 0.0]), color=P_WHITE, stroke_width=1.5),
             Line(np.array([knee[0] + 2.2, desk_y, 0.0]), np.array([knee[0] + 2.2, y_f, 0.0]), color=P_WHITE, stroke_width=1.5),
         )
-        laptop_screen = Line(np.array([knee[0] + 1.35, desk_y + 0.02, 0.0]), np.array([knee[0] + 1.45, desk_y + 0.45, 0.0]),
-                             color=C_HEAT_HOT, stroke_width=2.0)
-        laptop = VGroup(Line(np.array([knee[0] + 0.8, desk_y + 0.02, 0.0]), np.array([knee[0] + 1.35, desk_y + 0.02, 0.0]),
-                             color=C_HEAT_HOT, stroke_width=2.0), laptop_screen)
+        laptop_screen = object_silhouette("laptop", color=C_HEAT_HOT, width=0.65)
+        laptop_screen.stretch_to_fit_height(0.45)
+        laptop_screen.move_to([knee[0] + 1.12, desk_y + 0.02 + laptop_screen.height / 2, 0])
+        laptop = VGroup(laptop_screen)
         laptop_lbl = Text("Gerät", font_size=LABEL_FONT_SIZE, color=C_HEAT_HOT)
         laptop_lbl.next_to(laptop_screen, UP, buff=0.2)
         lamp = lamp_glyph(np.array([2.55, rs["y_c"], 0.0]), drop=0.42)
@@ -999,9 +981,9 @@ class Beat5_Mitigation(Scene):
 
         # Control strip sits just under the room, still above formula_panel (~ y=-1.2).
         ctrl_panel = RoundedRectangle(
-            width=room_w, height=0.9, corner_radius=0.1,
+            width=room_w, height=0.9, corner_radius=0,
             color=C_COOL_DIM, stroke_width=2,
-            fill_color="#12151C", fill_opacity=0.95,
+            fill_color=_theme_module.CHROME_FILL, fill_opacity=0.95,
         ).next_to(room, DOWN, buff=0.18)
 
         ctrl_title = Text("Smarte Laststeuerung", font_size=LABEL_FONT_SIZE, color=C_COOL)

@@ -1,0 +1,61 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "pages": 3,
+  "sectionCount": 1,
+  "subsectionCount": 2,
+  "exerciseMatrices": 2,
+  "workedDimensions": 3,
+  "workedParameters": 4,
+  "workedArcs": 6,
+  "directedArcs": 240,
+  "selectedArcs": 20,
+  "prose": false,
+  "hiddenLineGroups": 6,
+  "hiddenDashPt": [
+    1.6,
+    1.2
+  ],
+  "shapeLineWidthPt": 0.5,
+  "projectionAxes": [
+    [
+      1,
+      0
+    ],
+    [
+      0.45,
+      0.35
+    ],
+    [
+      0,
+      1
+    ]
+  ],
+  "workedHeaderScale": 0.6,
+  "workedParameterRows": 4,
+  "workedValues": [
+    [
+      2.5,
+      2.5,
+      3.5
+    ],
+    [
+      1.5,
+      1.5,
+      2.5
+    ],
+    [
+      2,
+      2,
+      3
+    ]
+  ],
+  "workedTableChrome": {
+    "component": "AssignmentTable",
+    "en": "Example",
+    "de": "Beispiel",
+    "number": "1.1.a"
+  }
+}

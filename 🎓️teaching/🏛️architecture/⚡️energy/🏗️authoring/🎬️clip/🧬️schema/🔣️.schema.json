@@ -11,15 +11,12 @@
     },
     "videos": {
       "type": "array",
-      "minItems": 5,
-      "maxItems": 5,
+      "minItems": 1,
       "items": {
         "type": "object",
         "required": [
           "id",
           "script",
-          "intro",
-          "playlist",
           "chapters",
           "output"
         ],
@@ -31,13 +28,7 @@
           },
           "script": {
             "type": "string",
-            "pattern": "^🏛️architecture/⚡️energy/[^/]+/🎬️clip/🐍️\\.py$"
-          },
-          "intro": {
-            "$ref": "#/$defs/segment"
-          },
-          "playlist": {
-            "type": "string"
+            "pattern": "^🏛️architecture/(?:[^/]+/)+🎬️clip/🐍️\\.py$"
           },
           "chapters": {
             "type": "array",
@@ -65,11 +56,29 @@
       "properties": {
         "script": {
           "type": "string",
-          "pattern": "^🏛️architecture/⚡️energy/[^\\\\]+/🐍️\\.py$"
+          "pattern": "^🏛️architecture/(?:[^/]+/)+🐍️\\.py$"
         },
         "scene": {
           "type": "string",
           "pattern": "^[A-Za-z_][A-Za-z_0-9]*$"
+        },
+        "clauses": {
+          "type": "object",
+          "required": [
+            "first",
+            "last"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "first": {
+              "type": "string",
+              "minLength": 1
+            },
+            "last": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
         }
       }
     },

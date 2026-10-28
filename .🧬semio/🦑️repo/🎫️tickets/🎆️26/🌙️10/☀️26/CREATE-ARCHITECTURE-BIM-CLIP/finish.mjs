@@ -1,0 +1,8 @@
+import fs from "node:fs";import path from "node:path";import {fileURLToPath} from "node:url";
+const ticket=path.dirname(fileURLToPath(import.meta.url)),workspace=path.resolve(ticket,"../../../../../../.."),generated=path.join(ticket,"🗑️generated");
+if(!fs.existsSync(path.join(workspace,"🧰️framework")))throw Error("Wrong workspace");
+if(path.basename(generated)!=="🗑️generated"||path.dirname(generated)!==ticket)throw Error("Wrong cleanup target");
+if(fs.existsSync(generated)){if(fs.lstatSync(generated).isSymbolicLink()||fs.realpathSync(generated)!==generated||!generated.startsWith(workspace+path.sep))throw Error("Unsafe cleanup target");fs.rmSync(generated,{recursive:true,maxRetries:3,retryDelay:250});}
+if(fs.existsSync(generated))throw Error("Generated outputs remain");
+fs.appendFileSync(path.join(ticket,"integration.md"),"\n## Completed media and cleanup\n\nThe final four-worker run completed24/24 jobs with no failures. PyAV decoded all1942 frames of640×360@1fps previews. Every within-language Speaker/Spectator pair had identical frame counts. All12 Speaker samples contained caption glyphs, all12 Spectator samples contained none, and all6 English/German caption comparisons passed. Source and representative composed-frame visual audits passed. Maximum generated path length was172. See media-verification.md and media-audience.md.\n\nThe resolved generated-directory target was verified within this exact ticket and workspace, then removed. All authored input scripts, schemas/cases, source files and Markdown reports were retained. No other ticket or shared dependency cache was removed.\n");
+console.log(JSON.stringify({removed:generated,exists:fs.existsSync(generated)}));

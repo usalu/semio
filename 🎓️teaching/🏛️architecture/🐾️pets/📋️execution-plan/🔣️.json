@@ -10,7 +10,11 @@
     "de": "BIM-Abwicklungsplan"
   },
   "grounds": [
-    "topic/bim"
+    "topic/bim",
+    "bim-concepts",
+    "bim-concepts/data-information",
+    "bim-concepts/object-oriented-model",
+    "bim-concepts/model-coordination"
   ],
   "size": {
     "width": 60,

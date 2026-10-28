@@ -1,0 +1,72 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Authored Cursor Activity",
+  "type": "object",
+  "required": [
+    "version",
+    "intervals"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "intervals": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "start",
+          "end"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "start": {
+            "type": "number",
+            "minimum": 0
+          },
+          "end": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "type",
+          "time"
+        ],
+        "properties": {
+          "type": {
+            "enum": [
+              "enter",
+              "move",
+              "press",
+              "release",
+              "click",
+              "leave",
+              "cancel"
+            ]
+          },
+          "time": {
+            "type": "number",
+            "minimum": 0
+          },
+          "point": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            },
+            "minItems": 2,
+            "maxItems": 2
+          }
+        },
+        "additionalProperties": true
+      }
+    }
+  },
+  "additionalProperties": false
+}

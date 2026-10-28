@@ -1,0 +1,37 @@
+{
+  "reference_height": 1.205,
+  "bed": {
+    "width": 1.4,
+    "deck": 0.18,
+    "thickness": 0.055
+  },
+  "poses": {
+    "sleep": {
+      "asset": "😴️sleep/🖼️.svg",
+      "axis": "width",
+      "bottom": 0.18,
+      "heat": [
+        -0.1,
+        0.27
+      ]
+    },
+    "walk": {
+      "asset": "🚶️walk/🖼️.svg",
+      "axis": "height",
+      "bottom": 0,
+      "heat": [
+        0,
+        0.8
+      ]
+    },
+    "sprint": {
+      "asset": "🏃️sprint/🖼️.svg",
+      "axis": "height",
+      "bottom": 0,
+      "heat": [
+        -0.1,
+        0.75
+      ]
+    }
+  }
+}

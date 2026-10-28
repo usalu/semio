@@ -39,6 +39,8 @@ use std::collections::BTreeMap;
 /// titles and kinds, and badges without rules.
 pub fn course_view(course: &Course, quizzes: &[Quiz]) -> CourseView {
     CourseView {
+        assignments: course.assignments.clone(),
+        unlocks: course.unlocks.clone(),
         id: course.id.clone(),
         title: course.title.clone(),
         short: course.short.clone(),

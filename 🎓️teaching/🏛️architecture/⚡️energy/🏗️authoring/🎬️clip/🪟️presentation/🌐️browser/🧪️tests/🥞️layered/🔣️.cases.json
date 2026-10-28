@@ -1,0 +1,93 @@
+{
+  "schema": "semio-teaching-layered-cases/v1",
+  "topics": [
+    "energy",
+    "parametric",
+    "bim",
+    "grasshopper",
+    "excel",
+    "optimization"
+  ],
+  "videos": [
+    "physical_fundamentals",
+    "ventilation",
+    "heating",
+    "cooling",
+    "energy_balance"
+  ],
+  "locales": [
+    "en",
+    "de"
+  ],
+  "labels": {
+    "en": "View",
+    "de": "Ansehen"
+  },
+  "viewport": {
+    "width": 1600,
+    "height": 842.4
+  },
+  "geometryTolerance": 0.5,
+  "scenarios": [
+    {
+      "id": "courses",
+      "count": 1
+    },
+    {
+      "id": "topics",
+      "count": 6
+    },
+    {
+      "id": "videos",
+      "count": 5
+    },
+    {
+      "id": "chapters",
+      "count": 1
+    }
+  ],
+  "actions": [
+    "pointer-pan",
+    "hover-reveal",
+    "click-open",
+    "escape-return"
+  ],
+  "openChip": {
+    "placement": "title",
+    "icon": "maximize-2",
+    "iconInsideChip": true,
+    "footerIcons": [],
+    "titleTextSource": "windowTitle"
+  },
+  "restoreChip": {
+    "placement": "title",
+    "textSource": "windowTitle",
+    "icon": "minimize-2",
+    "iconInsideChip": true,
+    "iconOnlyControl": true,
+    "nameClickRestores": false,
+    "controlCount": 1,
+    "titleButtonCount": 1,
+    "rightCapControlCount": 0,
+    "labels": {
+      "en": "Restore",
+      "de": "Wiederherstellen"
+    }
+  },
+  "sharedDefault": {
+    "placement": "footerLeft",
+    "icon": "chevron-right"
+  },
+  "courses": [
+    "architecture"
+  ],
+  "chapters": [
+    "PhysicalFundamentals_FullSection"
+  ],
+  "branch": [
+    "architecture",
+    "energy",
+    "physical_fundamentals",
+    "PhysicalFundamentals_FullSection"
+  ]
+}

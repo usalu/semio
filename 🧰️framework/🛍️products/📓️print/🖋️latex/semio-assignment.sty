@@ -1,0 +1,240 @@
+\NeedsTeXFormat{LaTeX2e}
+\ProvidesPackage{semio-assignment}[2026/10/26 v0.1.0 semio assignment sheets]
+\RequirePackage{expl3}
+\RequirePackage{xparse}
+\RequirePackage{array}
+\RequirePackage{graphicx}
+\RequirePackage{semio-core}
+\RequirePackage{semio-table}
+\RequirePackage{semio-window}
+
+\ExplSyntaxOn
+\tl_new:N \l_semio_assignment_course_tl
+\tl_new:N \l_semio_assignment_institution_tl
+\tl_new:N \l_semio_assignment_duration_tl
+\tl_new:N \l_semio_assignment_submission_tl
+\keys_define:nn { semio / assignment } {
+  course .tl_set:N = \l_semio_assignment_course_tl,
+  institution .tl_set:N = \l_semio_assignment_institution_tl,
+  duration .tl_set:N = \l_semio_assignment_duration_tl,
+  submission .tl_set:N = \l_semio_assignment_submission_tl,
+}
+\NewDocumentCommand \SemioAssignmentSetup { m } { \keys_set:nn { semio / assignment } {#1} }
+\cs_new:Npn \semio_assignment_label:n #1 {
+  \str_case:Vn \l_semio_language_tl {
+    { en } { \str_case:nn {#1} { { assignment } { Assignment } { duration } { Duration } { submission } { Submission } } }
+    { de } { \str_case:nn {#1} { { assignment } { Aufgabenblatt } { duration } { Bearbeitungszeit } { submission } { Abgabe } } }
+  }
+}
+\cs_new_protected:Npn \semio_assignment_metadata:nN #1#2 {
+  \tl_if_empty:NF #2 { \par \noindent \textbf { \semio_assignment_label:n {#1}: } ~ \tl_use:N #2 }
+}
+\cs_new_protected:Npn \semio_assignment_title: {
+  \par \group_begin:
+  \setlength { \parindent } { 0pt }
+  \SemioSans
+  \tl_if_empty:NF \l_semio_assignment_institution_tl { \tl_use:N \l_semio_assignment_institution_tl \par }
+  \tl_if_empty:NF \l_semio_assignment_course_tl { \tl_use:N \l_semio_assignment_course_tl \par }
+  { \small \semio_assignment_label:n { assignment } \par }
+  \smallskip
+  { \LARGE \color { semio-chrome-foreground } \@title \par }
+  \tl_if_empty:NF \l_semio_subtitle_tl { \large \tl_use:N \l_semio_subtitle_tl \par }
+  \normalsize
+  \tl_if_blank:eF { \@author } { \@author \par }
+  \tl_if_blank:eF { \@date } { \@date \par }
+  \semio_assignment_metadata:nN { duration } \l_semio_assignment_duration_tl
+  \semio_assignment_metadata:nN { submission } \l_semio_assignment_submission_tl
+  \par \medskip
+  \noindent \textcolor { semio-chrome-border-normal } { \rule { \linewidth } { \semio@stroke@hairline } }
+  \par \medskip
+  \group_end:
+}
+\NewDocumentCommand \makeassignmenttitle { } { \semio_assignment_title: }
+
+\NewDocumentCommand \AssignmentContrastImage { O{} m } {
+  \group_begin:
+  \str_if_eq:VnTF \l_semio_theme_tl { dark } {
+    \setlength { \fboxsep } { .4mm }
+    \colorbox { semio-chrome-light-canvas } { \includegraphics[#1]{#2} }
+  } {
+    \includegraphics[#1]{#2}
+  }
+  \group_end:
+}
+
+\int_new:N \l_semio_assignment_columns_int
+\dim_new:N \l_semio_assignment_row_dim
+\dim_new:N \l_semio_assignment_shape_dim
+\dim_new:N \l_semio_assignment_value_dim
+\keys_define:nn { semio / assignment / table } {
+  value-columns .int_set:N = \l_semio_assignment_columns_int,
+  value-columns .initial:n = 5,
+  row-height .dim_set:N = \l_semio_assignment_row_dim,
+  row-height .initial:n = 14mm,
+  shape-width .dim_set:N = \l_semio_assignment_shape_dim,
+  shape-width .initial:n = 27mm,
+}
+\NewDocumentCommand \AssignmentParameterRow { +m } {
+  \rule [ -.3\l_semio_assignment_row_dim ] { 0pt } { \l_semio_assignment_row_dim }
+  #1 \prg_replicate:nn { \l_semio_assignment_columns_int } { & }
+  \tabularnewline \hline
+}
+\NewDocumentEnvironment { AssignmentParameterTable } { O{} m +b } {
+  \par \group_begin:
+  \keys_set:nn { semio / assignment / table } {#1}
+  \int_compare:nNnTF { \l_semio_assignment_columns_int } > { 0 } {
+    \dim_set:Nn \l_semio_assignment_value_dim {
+      ( \linewidth - \l_semio_assignment_shape_dim
+        - \int_eval:n { 2 * ( \l_semio_assignment_columns_int + 1 ) } \tabcolsep
+        - \int_eval:n { \l_semio_assignment_columns_int + 2 } \arrayrulewidth )
+        / \int_use:N \l_semio_assignment_columns_int
+    }
+    \arrayrulecolor { semio-chrome-border-normal }
+    \noindent
+    \begin{tabular}{|>{\centering\arraybackslash}m{\l_semio_assignment_shape_dim}|*{\int_use:N\l_semio_assignment_columns_int}{m{\l_semio_assignment_value_dim}|}}
+      \hline
+      \rule[-2mm]{0pt}{10mm} \textbf{#2}
+      \prg_replicate:nn { \l_semio_assignment_columns_int } { & }
+      \tabularnewline \hline
+      #3
+    \end{tabular}
+  } {
+    \PackageError { semio-assignment } { Positive~value-columns~required } { Select~one~or~more~writable~columns. }
+  }
+  \par \group_end:
+}{}
+
+
+\bool_new:N \l_semio_assignment_matrix_active_bool
+\tl_new:N \l_semio_assignment_matrix_title_tl
+\NewDocumentEnvironment { AssignmentTable } { m } {
+  \group_begin:
+  \bool_set_true:N \l_semio_assignment_matrix_active_bool
+  \tl_set:Nn \l_semio_assignment_matrix_title_tl {#1}
+} { \group_end: }
+\cs_new:Npn \semio_assignment_matrix_chrome: {
+  \use:c { semio@table@long@continuation@chrome }
+    { \int_eval:n { \l_semio_assignment_type_columns_int + 1 } }
+}
+
+\int_new:N \l_semio_assignment_type_columns_int
+\int_new:N \l_semio_assignment_parameter_rows_int
+\dim_new:N \l_semio_assignment_matrix_header_dim
+\dim_new:N \l_semio_assignment_matrix_padding_dim
+\dim_new:N \l_semio_assignment_matrix_image_width_dim
+\dim_new:N \l_semio_assignment_matrix_image_height_dim
+\dim_new:N \l_semio_assignment_matrix_row_dim
+\dim_new:N \l_semio_assignment_label_dim
+\dim_new:N \l_semio_assignment_type_dim
+\keys_define:nn { semio / assignment / matrix } {
+  type-columns .int_set:N = \l_semio_assignment_type_columns_int,
+  type-columns .initial:n = 8,
+  parameter-rows .int_set:N = \l_semio_assignment_parameter_rows_int,
+  parameter-rows .initial:n = 8,
+  header-height .dim_set:N = \l_semio_assignment_matrix_header_dim,
+  header-height .initial:n = 16mm,
+  padding .dim_set:N = \l_semio_assignment_matrix_padding_dim,
+  padding .initial:n = 2mm,
+  row-height .dim_set:N = \l_semio_assignment_matrix_row_dim,
+  row-height .initial:n = 6mm,
+  label-width .dim_set:N = \l_semio_assignment_label_dim,
+  label-width .initial:n = 27mm,
+}
+\cs_new_protected:Npn \semio_assignment_matrix_header_begin:n #1 {
+  \vbox to \l_semio_assignment_matrix_header_dim \bgroup
+    \vfil \hbox to #1 \bgroup \hfil
+}
+\cs_new_protected:Npn \semio_assignment_matrix_header_end: {
+  \hfil \egroup \vfil \egroup
+}
+\cs_new:Npn \semio_assignment_matrix_writing_strut: {
+  \rule[-.5\l_semio_assignment_matrix_row_dim]{0pt}{\l_semio_assignment_matrix_row_dim}
+}
+\cs_new:Npn \semio_assignment_matrix_writing_cell: {
+  \multicolumn{1}{c|}{\semio_assignment_matrix_writing_strut:}
+}
+\cs_new:Npn \semio_assignment_matrix_blank_row: {
+  \multicolumn{1}{|c|}{\semio_assignment_matrix_writing_strut:}
+  \prg_replicate:nn { \l_semio_assignment_type_columns_int } { & \semio_assignment_matrix_writing_cell: }
+  \tabularnewline \hline
+}
+\NewExpandableDocumentCommand \AssignmentParameterMatrixBlankRows { m } {
+  \prg_replicate:nn {#1} { \semio_assignment_matrix_blank_row: }
+}
+\NewDocumentCommand \AssignmentMatrixImage { m } {
+  \group_begin:
+  \dim_set_eq:NN \l_semio_assignment_matrix_image_width_dim \l_semio_assignment_type_dim
+  \dim_set:Nn \l_semio_assignment_matrix_image_height_dim {
+    \l_semio_assignment_matrix_header_dim - 2 \l_semio_assignment_matrix_padding_dim
+  }
+  \str_if_eq:VnT \l_semio_theme_tl { dark } {
+    \dim_sub:Nn \l_semio_assignment_matrix_image_width_dim { .8mm }
+    \dim_sub:Nn \l_semio_assignment_matrix_image_height_dim { .8mm }
+  }
+  \AssignmentContrastImage[
+    width=\l_semio_assignment_matrix_image_width_dim,
+    height=\l_semio_assignment_matrix_image_height_dim,
+    keepaspectratio
+  ]{#1}
+  \group_end:
+}
+\cs_new:Npn \semio_assignment_matrix_text:n #1 {
+  \semio_assignment_matrix_writing_strut:
+  \raisebox { \dim_eval:n { ( \depth - \height ) / 2 } } [ 0pt ] [ 0pt ] {#1}
+}
+\cs_new:Npn \semio_assignment_matrix_value:n #1 {
+  & \multicolumn{1}{c|}{\semio_assignment_matrix_text:n {#1}}
+}
+\NewExpandableDocumentCommand \AssignmentParameterMatrixRow { m m } {
+  \multicolumn{1}{|c|}{\semio_assignment_matrix_text:n {#1}}
+  \clist_map_function:nN {#2} \semio_assignment_matrix_value:n
+  \tabularnewline \hline
+}
+\NewDocumentEnvironment { AssignmentParameterMatrix } { O{} m +m +b } {
+  \par \group_begin:
+  \keys_set:nn { semio / assignment / matrix } {#1}
+  \bool_lazy_and:nnTF
+    { \int_compare_p:n { \l_semio_assignment_type_columns_int > 0 } }
+    { \int_compare_p:n { \l_semio_assignment_parameter_rows_int > 0 } } {
+
+    \cs_set_eq:NN \semio_assignment_matrix_top: \hline
+    \bool_if:NT \l_semio_assignment_matrix_active_bool {
+      \exp_args:NV \semio_table_long_open:n \l_semio_assignment_matrix_title_tl
+      \cs_set_eq:NN \semio_assignment_matrix_top: \semio_assignment_matrix_chrome:
+    }
+    \setlength { \tabcolsep } { \l_semio_assignment_matrix_padding_dim }
+    \renewcommand { \arraystretch } { 0 }
+    \setlength { \extrarowheight } { 0pt }
+    \dim_set:Nn \l_semio_assignment_type_dim {
+      ( \linewidth - \l_semio_assignment_label_dim
+        - \int_eval:n { 2 * ( \l_semio_assignment_type_columns_int + 1 ) } \tabcolsep
+        - \int_eval:n { \l_semio_assignment_type_columns_int + 2 } \arrayrulewidth )
+        / \int_use:N \l_semio_assignment_type_columns_int
+    }
+    \arrayrulecolor { semio-chrome-border-normal }
+    \noindent
+    \begin{tabular}{|>{\semio_assignment_matrix_header_begin:n {\l_semio_assignment_label_dim}}c<{\semio_assignment_matrix_header_end:}|*{\int_use:N\l_semio_assignment_type_columns_int}{>{\semio_assignment_matrix_header_begin:n {\l_semio_assignment_type_dim}}c<{\semio_assignment_matrix_header_end:}|}}
+      \semio_assignment_matrix_top:
+      \textbf{#2} & #3
+      \tabularnewline \hline
+      \tl_if_blank:nTF {#4} {
+        \AssignmentParameterMatrixBlankRows{\l_semio_assignment_parameter_rows_int}
+      } {#4}
+    \end{tabular}
+    \bool_if:NT \l_semio_assignment_matrix_active_bool { \semio_table_long_close: }
+  } {
+    \PackageError { semio-assignment } { Positive~matrix~dimensions~required } { Select~one~or~more~type~columns~and~parameter~rows. }
+  }
+} { \par \group_end: }
+\str_if_eq:VnT \l_semio_type_tl { assignment } {
+  \AtBeginDocument {
+    \hypersetup { pdftitle = { \@title }, pdfauthor = { \@author } }
+    \str_case:Vn \l_semio_language_tl {
+      { en } { \hypersetup { pdflang = en-US } }
+      { de } { \hypersetup { pdflang = de-DE } }
+    }
+  }
+  \RenewDocumentCommand \maketitle { } { \semio_assignment_title: }
+  \date{}
+}
+\ExplSyntaxOff

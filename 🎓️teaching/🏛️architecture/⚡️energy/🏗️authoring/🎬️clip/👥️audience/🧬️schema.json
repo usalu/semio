@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Clip Audience Variants",
+  "type": "object",
+  "required": ["variants"],
+  "additionalProperties": false,
+  "properties": {
+    "$schema": {"type": "string"},
+    "variants": {
+      "type": "array",
+      "prefixItems": [
+        {"const": {"id": "speaker", "subtitles": "overlay"}},
+        {"const": {"id": "spectator", "subtitles": "hidden"}}
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

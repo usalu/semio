@@ -1,0 +1,43 @@
+# Domain Reference Audit
+
+The repo tool registry does not register rg, so a read-only Node traversal searched teaching and print text sources, excluding dependencies and AGENTS.md. Hits below include current publication names; build-owner files are coordinated separately.
+
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🟦️.ts:406:    (entry: any) => { entry.ownership.documents.en.file = "parametrization-en.pdf"; },
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧫️cases.json:729:        "id": "architecture-parametric-parametrization-en",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧫️cases.json:730:        "producer": "@teaching/architecture-course:build-parametrization-en",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧫️cases.json:731:        "file": "architecture-parametric-parametrization-en.pdf"
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧫️cases.json:735:        "id": "architecture-parametric-parametrization-de",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧫️cases.json:736:        "producer": "@teaching/architecture-course:build-parametrization-de",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧫️cases.json:737:        "file": "architecture-parametric-parametrization-de.pdf"
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧬️cases.schema.json:836:            "id": "architecture-parametric-parametrization-en",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧬️cases.schema.json:837:            "producer": "@teaching/architecture-course:build-parametrization-en",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧬️cases.schema.json:838:            "file": "architecture-parametric-parametrization-en.pdf"
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧬️cases.schema.json:842:            "id": "architecture-parametric-parametrization-de",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧬️cases.schema.json:843:            "producer": "@teaching/architecture-course:build-parametrization-de",
+- 🎓️teaching\🏛️architecture\📐️parametric\📝️assignment\🧪️tests\🧬️cases.schema.json:844:            "file": "architecture-parametric-parametrization-de.pdf"
+- 🎓️teaching\🏛️architecture\📚️course\📦️packages\🟦️typescript\📋️project.json:199:        "@semio-tech/print:build-parametrization-en",
+- 🎓️teaching\🏛️architecture\📚️course\📦️packages\🟦️typescript\📋️project.json:200:        "@semio-tech/print:build-parametrization-de"
+- 🎓️teaching\🏛️architecture\📚️course\📦️packages\🟦️typescript\📋️project.json:247:        "@semio-tech/print:build-parametrization-en",
+- 🎓️teaching\🏛️architecture\📚️course\📦️packages\🟦️typescript\📋️project.json:248:        "@semio-tech/print:build-parametrization-de"
+- 🎓️teaching\🏛️architecture\📚️course\📦️packages\🟦️typescript\📋️project.json:269:        "@semio-tech/print:build-parametrization-en",
+- 🎓️teaching\🏛️architecture\📚️course\📦️packages\🟦️typescript\📋️project.json:270:        "@semio-tech/print:build-parametrization-de"
+- 🎓️teaching\🏛️architecture\📚️course\🔣️.json:374:          "id": "architecture-parametric-parametrization-en",
+- 🎓️teaching\🏛️architecture\📚️course\🔣️.json:375:          "producer": "@teaching/architecture-course:build-parametrization-en",
+- 🎓️teaching\🏛️architecture\📚️course\🔣️.json:376:          "file": "architecture-parametric-parametrization-en.pdf"
+- 🎓️teaching\🏛️architecture\📚️course\🔣️.json:380:          "id": "architecture-parametric-parametrization-de",
+- 🎓️teaching\🏛️architecture\📚️course\🔣️.json:381:          "producer": "@teaching/architecture-course:build-parametrization-de",
+- 🎓️teaching\🏛️architecture\📚️course\🔣️.json:382:          "file": "architecture-parametric-parametrization-de.pdf"
+- 🎓️teaching\🏛️architecture\📚️course\🧪️tests\📖️assignment-pdfs\🟦️.ts:30:    expect(requests).toEqual(["/pdfs/parametrization-en.pdf", "/pdfs/parametrization-de.pdf"]);
+- 🎓️teaching\🏛️architecture\📚️course\🧪️tests\📖️assignment-pdfs\🟦️.ts:31:    expect([...documents.keys()]).toEqual(["parametrization-en.pdf", "parametrization-de.pdf"]);
+- 🎓️teaching\🏛️architecture\📚️course\🧪️tests\📖️assignment-pdfs\🟦️.ts:59:    const url = "http://127.0.0.1:" + port.port + "/assignments/parametrization-en.pdf";
+- 🧰️framework\🛍️products\📓️print\README.md:83:worked assignment documents are `parametrization-en` and `parametrization-de`;
+- 🧰️framework\🛍️products\📓️print\README.md:89:anpassbar; die Architekturbeispiele heißen `parametrization-en` und
+- 🧰️framework\🛍️products\📓️print\README.md:90:`parametrization-de`.
+- 🧰️framework\🛍️products\📓️print\🎮️commands\🧪️print-pipeline-verification\🧪️tests\🖨️pipeline\⚡️quick-pipeline-verification\🟦️.ts:2:import { verifyParametrizationAssignmentContentV1 } from "../../../../../🧪️tests/📝️parametrization-assignment/🟦️.ts";
+- 🧰️framework\🛍️products\📓️print\🎮️commands\🧪️print-pipeline-verification\🧪️tests\🧫️fixtures\🧫️merge-contract.json:10:    "parametrization-en",
+- 🧰️framework\🛍️products\📓️print\🎮️commands\🧪️print-pipeline-verification\🧪️tests\🧫️fixtures\🧫️merge-contract.json:11:    "parametrization-de"
+- 🧰️framework\🛍️products\📓️print\🔨️modules\🖨️tectonic-template-compilation\📋️intent\🧪️tests\🔣️.json:49:      "id": "architecture-parametric-parametrization-en",
+- 🧰️framework\🛍️products\📓️print\🔨️modules\🖨️tectonic-template-compilation\📋️intent\🧪️tests\🔣️.json:50:      "producer": "@teaching/architecture-course:build-parametrization-en",
+- 🧰️framework\🛍️products\📓️print\🔨️modules\🖨️tectonic-template-compilation\📋️intent\🧪️tests\🔣️.json:114:      "id": "architecture-parametric-parametrization-en",
+- 🧰️framework\🛍️products\📓️print\🔨️modules\🖨️tectonic-template-compilation\📋️intent\🧪️tests\🔣️.json:129:      "id": "architecture-parametric-parametrization-en",
+- 🧰️framework\🛍️products\📓️print\🔨️modules\🖨️tectonic-template-compilation\📋️intent\🧪️tests\🔣️.json:145:      "id": "architecture-parametric-parametrization-en",

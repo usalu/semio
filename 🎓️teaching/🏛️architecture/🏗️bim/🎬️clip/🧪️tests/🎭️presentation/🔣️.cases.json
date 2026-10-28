@@ -1,0 +1,828 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "animations": [
+    "FadeIn",
+    "FadeOut"
+  ],
+  "chapters": [
+    {
+      "id": "bim_information",
+      "script": "🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py",
+      "scene": "Beat1_DataToInformation",
+      "topic": "information",
+      "keys": [
+        "raw",
+        "guess",
+        "context",
+        "place",
+        "chain",
+        "meaning",
+        "source",
+        "question",
+        "diameter",
+        "clear",
+        "fits",
+        "reduced",
+        "gauge",
+        "sensitive",
+        "drive",
+        "pinch",
+        "wall",
+        "properties",
+        "relations",
+        "handoff",
+        "same"
+      ]
+    },
+    {
+      "id": "bim_objects",
+      "script": "🏛️architecture/🏗️bim/🎬️clip/🧬️objects/🐍️.py",
+      "scene": "Beat2_ObjectOrientation",
+      "topic": "objects",
+      "keys": [
+        "schema",
+        "class",
+        "instance",
+        "occurrences",
+        "pset",
+        "representations",
+        "geometry",
+        "methods",
+        "total",
+        "change",
+        "inheritance",
+        "values",
+        "spatial",
+        "opening",
+        "window",
+        "layers",
+        "distinction",
+        "exchange",
+        "recompute"
+      ]
+    },
+    {
+      "id": "bim_representations",
+      "script": "🏛️architecture/🏗️bim/🎬️clip/👁️representations/🐍️.py",
+      "scene": "Beat3_SameObject",
+      "topic": "representations",
+      "keys": [
+        "source",
+        "plan",
+        "section",
+        "elevation",
+        "three",
+        "stored",
+        "lod",
+        "scale200",
+        "scale20",
+        "sweep",
+        "derived",
+        "update",
+        "takeoff",
+        "volume",
+        "copies",
+        "drafted",
+        "regenerate",
+        "identity"
+      ]
+    },
+    {
+      "id": "bim_models",
+      "script": "🏛️architecture/🏗️bim/🎬️clip/🧩️models/🐍️.py",
+      "scene": "Beat4_PartialModels",
+      "topic": "models",
+      "keys": [
+        "whole",
+        "architecture",
+        "rooms",
+        "buildup",
+        "structure",
+        "services",
+        "schema",
+        "federation",
+        "slab",
+        "owners",
+        "check",
+        "translation",
+        "members",
+        "midsurface",
+        "supports",
+        "loads",
+        "loss",
+        "properties",
+        "trace"
+      ]
+    },
+    {
+      "id": "bim_exchange",
+      "script": "🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py",
+      "scene": "Beat5_Interfaces",
+      "topic": "exchange",
+      "keys": [
+        "interface",
+        "semantic",
+        "properties",
+        "mesh",
+        "roundtrip",
+        "purpose",
+        "mapping",
+        "slab",
+        "assumptions",
+        "buildup",
+        "cells",
+        "reaction",
+        "feedback",
+        "loss",
+        "domain",
+        "check"
+      ]
+    },
+    {
+      "id": "bim_consistency",
+      "script": "🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py",
+      "scene": "Beat6_Consistency",
+      "topic": "consistency",
+      "keys": [
+        "identity",
+        "models",
+        "metadata",
+        "leak",
+        "leakpath",
+        "change",
+        "kept",
+        "load",
+        "grid",
+        "derived",
+        "spread",
+        "stale",
+        "check",
+        "ids",
+        "report",
+        "retranslate",
+        "resolve",
+        "fork",
+        "decide",
+        "recap"
+      ]
+    }
+  ],
+  "dependencies": [
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/📐️drafting/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🧾️panels/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧊️axon/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📋️plan/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/✂️section/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🔩️detail/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🧮️analysis/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔌️exchange/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧮️analysis/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/🧱️core/🐍️.py",
+    "🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🏛️savoye/📏️sheet/🐍️.py"
+  ],
+  "window": {
+    "tag": "RW-S",
+    "guid": "1b9ulVlcPLiO2Z50WzfaEJ",
+    "class": "IfcWindow",
+    "opening": "OP-S"
+  },
+  "slots": {
+    "plan": [
+      3.2,
+      1.62,
+      0
+    ],
+    "section": [
+      5.7,
+      1.62,
+      0
+    ],
+    "elevation": [
+      3.2,
+      0.4,
+      0
+    ],
+    "3d": [
+      5.7,
+      0.4,
+      0
+    ]
+  },
+  "plan": {
+    "point": [
+      0.5,
+      0.3,
+      0
+    ],
+    "scale": 0.2,
+    "centre": [
+      10.75,
+      9.5,
+      0
+    ],
+    "known_point": [
+      10.75,
+      4.75,
+      0
+    ],
+    "levels": [
+      {
+        "id": "ground",
+        "parts": [
+          "B3"
+        ],
+        "kwargs": {
+          "grid": true,
+          "labels": true,
+          "layers": [
+            "structure"
+          ]
+        }
+      },
+      {
+        "id": "first",
+        "parts": [
+          "W-S",
+          "RW-S",
+          "SL-1"
+        ],
+        "kwargs": {
+          "grid": true,
+          "labels": true
+        }
+      }
+    ]
+  },
+  "providers": [
+    {
+      "id": "section",
+      "method": "villa_section",
+      "args": [
+        [
+          0,
+          0,
+          0
+        ],
+        0.2
+      ],
+      "kwargs": {
+        "cut": "salon",
+        "highlight": [
+          "SL-1"
+        ]
+      },
+      "parts": [
+        "SL-1"
+      ],
+      "spans": {
+        "SL-1": {
+          "width": 3.8
+        }
+      },
+      "projection": {
+        "centre": [
+          10.75,
+          9.5,
+          4.7
+        ],
+        "basis": [
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "source": [
+          10.75,
+          4.75,
+          0
+        ]
+      }
+    },
+    {
+      "id": "elevation",
+      "method": "villa_elevation",
+      "args": [],
+      "kwargs": {
+        "face": "south",
+        "point": [
+          0,
+          0,
+          0
+        ],
+        "scale": 0.2
+      },
+      "parts": [
+        "W-S",
+        "RW-S"
+      ]
+    },
+    {
+      "id": "piloti-detail",
+      "method": "piloti_detail",
+      "args": [
+        [
+          0,
+          0,
+          0
+        ],
+        0.5
+      ],
+      "kwargs": {
+        "dims": true,
+        "grow": 1
+      },
+      "parts": [
+        "B3"
+      ],
+      "spans": {
+        "B3": {
+          "width": 0.15,
+          "height": 1.625
+        }
+      },
+      "projection": {
+        "centre": [
+          10.75,
+          4.75,
+          1.625
+        ],
+        "basis": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "source": [
+          10.9,
+          4.75,
+          3.25
+        ]
+      }
+    },
+    {
+      "id": "slab-strip",
+      "method": "slab_strip",
+      "args": [
+        [
+          0,
+          0,
+          0
+        ],
+        0.3
+      ],
+      "kwargs": {
+        "row": "B",
+        "bays": [
+          2,
+          4
+        ],
+        "collapse": 0
+      },
+      "parts": [
+        "SL-1"
+      ],
+      "spans": {
+        "SL-1": {
+          "width": 2.85,
+          "height": 0.075
+        }
+      },
+      "projection": {
+        "centre": [
+          10.75,
+          4.75,
+          1.6875
+        ],
+        "basis": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "source": [
+          15.5,
+          4.75,
+          3.375
+        ]
+      }
+    },
+    {
+      "id": "wall-detail",
+      "method": "wall_detail",
+      "args": [
+        [
+          0,
+          0,
+          0
+        ],
+        0.2
+      ],
+      "kwargs": {
+        "tag": "W-S"
+      },
+      "parts": [
+        "W-S",
+        "RW-S"
+      ],
+      "spans": {
+        "W-S": {
+          "width": 0.06
+        }
+      }
+    },
+    {
+      "id": "analysis",
+      "method": "analysis_view",
+      "args": [
+        {
+          "model_call": "translate_structure"
+        },
+        [
+          0,
+          0,
+          0
+        ],
+        0.2
+      ],
+      "kwargs": {
+        "highlight": [
+          "B3"
+        ]
+      }
+    },
+    {
+      "id": "tributary",
+      "method": "tributary_view",
+      "args": [
+        {
+          "model_call": "tributary"
+        },
+        [
+          0,
+          0,
+          0
+        ],
+        0.2
+      ],
+      "kwargs": {
+        "highlight": [
+          "B3"
+        ]
+      },
+      "parts": [
+        "B3"
+      ]
+    },
+    {
+      "id": "load-arrows",
+      "method": "load_arrows",
+      "args": [
+        [
+          10,
+          20
+        ],
+        [
+          [
+            -1,
+            0,
+            0
+          ],
+          [
+            1,
+            0,
+            0
+          ]
+        ],
+        0.02
+      ],
+      "model": false
+    },
+    {
+      "id": "slab-collapsed-fixed",
+      "method": "slab_strip",
+      "args": [
+        [
+          0,
+          0,
+          0
+        ],
+        0.3
+      ],
+      "kwargs": {
+        "row": "B",
+        "bays": [
+          2,
+          4
+        ],
+        "collapse": 1,
+        "supports": "fixed"
+      },
+      "parts": [
+        "SL-1"
+      ],
+      "spans": {
+        "SL-1": {
+          "width": 2.85,
+          "height": 0
+        }
+      },
+      "projection": {
+        "centre": [
+          10.75,
+          4.75,
+          1.6875
+        ],
+        "basis": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "source": [
+          15.5,
+          4.75,
+          3.375
+        ]
+      }
+    },
+    {
+      "id": "slab-collapsed-pinned",
+      "method": "slab_strip",
+      "args": [
+        [
+          0,
+          0,
+          0
+        ],
+        0.3
+      ],
+      "kwargs": {
+        "row": "B",
+        "bays": [
+          2,
+          4
+        ],
+        "collapse": 1,
+        "supports": "pinned"
+      },
+      "parts": [
+        "SL-1"
+      ],
+      "spans": {
+        "SL-1": {
+          "width": 2.85,
+          "height": 0
+        }
+      },
+      "projection": {
+        "centre": [
+          10.75,
+          4.75,
+          1.6875
+        ],
+        "basis": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ],
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "source": [
+          15.5,
+          4.75,
+          3.375
+        ]
+      }
+    }
+  ],
+  "analysis_beats": [
+    "_translation",
+    "_members",
+    "_midsurface",
+    "_supports",
+    "_loads",
+    "_loss",
+    "_properties",
+    "_trace"
+  ],
+  "renderer_calls": [
+    "villa_axon",
+    "load_arrows"
+  ],
+  "native_methods": [
+    "scale",
+    "shift",
+    "rotate",
+    "copy"
+  ],
+  "invalid_renderer_calls": [
+    {
+      "renderer": "villa_axon",
+      "keywords": {
+        "slab": "ghost"
+      }
+    },
+    {
+      "renderer": "load_arrows",
+      "keywords": {
+        "model": {}
+      }
+    }
+  ],
+  "consuming_sequence": {
+    "centres": [
+      -1,
+      1
+    ],
+    "samples": [
+      0,
+      0.25,
+      0.5,
+      0.75,
+      1
+    ]
+  },
+  "segment_quads": {
+    "module": "🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🎨️visuals.🏛️savoye.✂️section.🐍️",
+    "function": "segment_quad",
+    "cases": [
+      {
+        "id": "horizontal",
+        "a": [
+          0,
+          0
+        ],
+        "b": [
+          4,
+          0
+        ],
+        "half_width": 0.5,
+        "corners": [
+          [
+            0,
+            0.5
+          ],
+          [
+            4,
+            0.5
+          ],
+          [
+            4,
+            -0.5
+          ],
+          [
+            0,
+            -0.5
+          ]
+        ],
+        "area": 4
+      },
+      {
+        "id": "diagonal",
+        "a": [
+          1,
+          2
+        ],
+        "b": [
+          4,
+          6
+        ],
+        "half_width": 0.2,
+        "corners": [
+          [
+            0.84,
+            2.12
+          ],
+          [
+            3.84,
+            6.12
+          ],
+          [
+            4.16,
+            5.88
+          ],
+          [
+            1.16,
+            1.88
+          ]
+        ],
+        "area": 2
+      }
+    ],
+    "invalid": [
+      {
+        "a": [
+          0,
+          0
+        ],
+        "b": [
+          0,
+          0
+        ],
+        "half_width": 0.5
+      },
+      {
+        "a": [
+          0,
+          0
+        ],
+        "b": [
+          4,
+          0
+        ],
+        "half_width": 0
+      },
+      {
+        "a": [
+          0,
+          0
+        ],
+        "b": [
+          4,
+          0
+        ],
+        "half_width": -0.1
+      }
+    ]
+  },
+  "information_dimension": {
+    "pair": [
+      "E3",
+      "E4"
+    ],
+    "points": [
+      [
+        10.75,
+        19.0
+      ],
+      [
+        15.5,
+        19.0
+      ]
+    ],
+    "x_overrides": [
+      null,
+      16.0
+    ]
+  }
+}

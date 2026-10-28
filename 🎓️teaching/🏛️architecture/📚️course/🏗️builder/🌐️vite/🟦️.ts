@@ -1,3 +1,4 @@
+import { courseAssignmentPdfsVitePlugin } from "./📖️assignments/🟦️.ts";
 import { canonicalWasmBuildVitePlugin } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🌐️vite/🕸️wasm/🟦️.ts";
 import { viteCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/⚡️caching/🌐️vite/📂️paths/🟦️.ts";
 import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎚️mode/🟦️.ts";
@@ -172,6 +173,7 @@ export default defineOwnedBuildConfigFactory(({ command, mode }) => ({
     uiReactBuildPlugin(),
     courseReleaseDocumentVitePlugin(proctorOrigin),
     courseMaterialPreloadVitePlugin(),
+    courseAssignmentPdfsVitePlugin(),
   ],
   build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(undefined, buildModePolicy(readBuildMode(mode))), outDir: resolve(bundleRoot, "dist", readBuildMode(mode)) }),
   define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.VITE_PROCTOR_URL": JSON.stringify(proctorOrigin) } : {}) },

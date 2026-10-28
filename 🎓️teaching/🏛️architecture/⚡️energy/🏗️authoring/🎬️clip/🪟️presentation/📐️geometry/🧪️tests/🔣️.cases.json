@@ -1,0 +1,738 @@
+{
+  "schema": "teaching-ui-parity-cases/v1",
+  "oracle": {
+    "implementation": "Actual React WindowChrome, WindowSilhouette, UI stylesheet, Anta WOFF2",
+    "engine": "Repository-managed Chromium",
+    "viewport": {
+      "width": 1600,
+      "height": 900
+    },
+    "layoutTolerance": 0.04,
+    "advanceTolerance": 0.04,
+    "inkEdgeTolerance": 1.5,
+    "compositeChannelTolerance": 1
+  },
+  "window": {
+    "rect": {
+      "x": 50,
+      "y": 50,
+      "width": 400,
+      "height": 300
+    },
+    "label": "1.1 Luft",
+    "titleAdvance": 35.14213562011719,
+    "title": {
+      "x": 50,
+      "y": 50,
+      "width": 41.53125,
+      "height": 22.390625
+    },
+    "control": {
+      "x": 427.609375,
+      "y": 50,
+      "width": 22.390625,
+      "height": 22.390625
+    },
+    "outline": [
+      [
+        50,
+        50
+      ],
+      [
+        91.53125,
+        50
+      ],
+      [
+        91.53125,
+        72.390625
+      ],
+      [
+        427.609375,
+        72.390625
+      ],
+      [
+        427.609375,
+        50
+      ],
+      [
+        450,
+        50
+      ],
+      [
+        450,
+        350
+      ],
+      [
+        50,
+        350
+      ]
+    ],
+    "borderOutline": [
+      [
+        51,
+        51
+      ],
+      [
+        91.53125,
+        51
+      ],
+      [
+        91.53125,
+        73.390625
+      ],
+      [
+        427.609375,
+        73.390625
+      ],
+      [
+        427.609375,
+        51
+      ],
+      [
+        449,
+        51
+      ],
+      [
+        449,
+        349
+      ],
+      [
+        51,
+        349
+      ]
+    ],
+    "bodyPixel": [
+      5,
+      25,
+      30
+    ],
+    "gapPixel": [
+      0,
+      17,
+      23
+    ]
+  },
+  "text": [
+    {
+      "value": "1.1 Luft",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 35.14213562011719,
+      "left": 0,
+      "right": 35.73979187011719,
+      "ascent": 8,
+      "descent": 0,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "1.1 Air",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 27.103073120117188,
+      "left": 0,
+      "right": 27.171051025390625,
+      "ascent": 8,
+      "descent": 0,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Fullscreen",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 54.47412109375,
+      "left": 0,
+      "right": 54.95538330078125,
+      "ascent": 8,
+      "descent": 0,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Vollbild",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 36.22492980957031,
+      "left": 1,
+      "right": 35.76087951660156,
+      "ascent": 8,
+      "descent": 0,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Physik",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 34.91246032714844,
+      "left": 0,
+      "right": 35.77105712890625,
+      "ascent": 8,
+      "descent": 2,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Energie",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 39.6593017578125,
+      "left": 0,
+      "right": 40.19525146484375,
+      "ascent": 8,
+      "descent": 2,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "gg",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 12.9281005859375,
+      "left": 0,
+      "right": 12.46405029296875,
+      "ascent": 6,
+      "descent": 2,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "MM",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 17.324981689453125,
+      "left": 0,
+      "right": 17.662490844726562,
+      "ascent": 8,
+      "descent": 0,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Physikalische Grundlagen",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 134.8208770751953,
+      "left": 0,
+      "right": 135.30213928222656,
+      "ascent": 8,
+      "descent": 2,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Heizen",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 36.20854187011719,
+      "left": 0,
+      "right": 36.68980407714844,
+      "ascent": 8,
+      "descent": 0,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Lüftung",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 41.38743591308594,
+      "left": 0,
+      "right": 40.92338562011719,
+      "ascent": 8,
+      "descent": 2,
+      "fontAscent": 11,
+      "fontDescent": 3
+    },
+    {
+      "value": "Ágy",
+      "size": 11.2,
+      "weight": 500,
+      "advance": 19.8187255859375,
+      "left": 1,
+      "right": 19.688262939453125,
+      "ascent": 12,
+      "descent": 2,
+      "fontAscent": 11,
+      "fontDescent": 3
+    }
+  ],
+  "shell": {
+    "navbarHeight": 28.8,
+    "footerHeight": 28.8,
+    "inset": 3.2,
+    "gap": 3.2,
+    "titleHeight": 22.4,
+    "controlSize": 22.4,
+    "iconSize": 16,
+    "fontSize": 11.2,
+    "borderWidth": 1
+  },
+  "grid": {
+    "canvas": {
+      "x": 0,
+      "y": 28.8,
+      "width": 1600,
+      "height": 842.4
+    },
+    "outerInset": 3.2,
+    "gap": 3.2
+  },
+  "silhouetteCases": [
+    {
+      "width": 400,
+      "height": 300,
+      "advance": 0,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          6.4,
+          0
+        ],
+        [
+          6.4,
+          22.4
+        ],
+        [
+          377.6,
+          22.4
+        ],
+        [
+          377.6,
+          0
+        ],
+        [
+          400,
+          0
+        ],
+        [
+          400,
+          300
+        ],
+        [
+          0,
+          300
+        ]
+      ],
+      "borderOutline": [
+        [
+          1,
+          1
+        ],
+        [
+          6.4,
+          1
+        ],
+        [
+          6.4,
+          23.4
+        ],
+        [
+          377.6,
+          23.4
+        ],
+        [
+          377.6,
+          1
+        ],
+        [
+          399,
+          1
+        ],
+        [
+          399,
+          299
+        ],
+        [
+          1,
+          299
+        ]
+      ]
+    },
+    {
+      "width": 400,
+      "height": 300,
+      "advance": 1000,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          192,
+          0
+        ],
+        [
+          192,
+          22.4
+        ],
+        [
+          377.6,
+          22.4
+        ],
+        [
+          377.6,
+          0
+        ],
+        [
+          400,
+          0
+        ],
+        [
+          400,
+          300
+        ],
+        [
+          0,
+          300
+        ]
+      ],
+      "borderOutline": [
+        [
+          1,
+          1
+        ],
+        [
+          192,
+          1
+        ],
+        [
+          192,
+          23.4
+        ],
+        [
+          377.6,
+          23.4
+        ],
+        [
+          377.6,
+          1
+        ],
+        [
+          399,
+          1
+        ],
+        [
+          399,
+          299
+        ],
+        [
+          1,
+          299
+        ]
+      ]
+    },
+    {
+      "width": 29.1,
+      "height": 50,
+      "advance": 0,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          29.1,
+          0
+        ],
+        [
+          29.1,
+          50
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "borderOutline": [
+        [
+          1,
+          1
+        ],
+        [
+          28.1,
+          1
+        ],
+        [
+          28.1,
+          49
+        ],
+        [
+          1,
+          49
+        ]
+      ]
+    },
+    {
+      "width": 30,
+      "height": 50,
+      "advance": 0,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          6.4,
+          0
+        ],
+        [
+          6.4,
+          22.4
+        ],
+        [
+          7.600000000000001,
+          22.4
+        ],
+        [
+          7.600000000000001,
+          0
+        ],
+        [
+          30,
+          0
+        ],
+        [
+          30,
+          50
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "borderOutline": [
+        [
+          1,
+          1
+        ],
+        [
+          6.4,
+          1
+        ],
+        [
+          6.4,
+          23.4
+        ],
+        [
+          7.600000000000001,
+          23.4
+        ],
+        [
+          7.600000000000001,
+          1
+        ],
+        [
+          29,
+          1
+        ],
+        [
+          29,
+          49
+        ],
+        [
+          1,
+          49
+        ]
+      ]
+    },
+    {
+      "width": 80,
+      "height": 50,
+      "advance": 1000,
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          80,
+          0
+        ],
+        [
+          80,
+          50
+        ],
+        [
+          0,
+          50
+        ]
+      ],
+      "borderOutline": [
+        [
+          1,
+          1
+        ],
+        [
+          79,
+          1
+        ],
+        [
+          79,
+          49
+        ],
+        [
+          1,
+          49
+        ]
+      ]
+    }
+  ],
+  "surfaceCases": [
+    {
+      "level": "base",
+      "parent": null,
+      "surfaceRgb": [
+        4.51226e-8,
+        0.0666666,
+        0.090196
+      ],
+      "alpha": 1,
+      "composite": [
+        0,
+        17,
+        23
+      ],
+      "blur": 0,
+      "saturate": 1.45
+    },
+    {
+      "level": "window",
+      "parent": null,
+      "surfaceRgb": [
+        0.024934,
+        0.102024,
+        0.123126
+      ],
+      "alpha": 0.88,
+      "composite": [
+        5,
+        25,
+        30
+      ],
+      "blur": 8,
+      "saturate": 1.45
+    },
+    {
+      "level": "pane",
+      "parent": null,
+      "surfaceRgb": [
+        0.0667293,
+        0.138736,
+        0.157079
+      ],
+      "alpha": 0.76,
+      "composite": [
+        13,
+        31,
+        36
+      ],
+      "blur": 16,
+      "saturate": 1.45
+    },
+    {
+      "level": "panel",
+      "parent": null,
+      "surfaceRgb": [
+        0.10936,
+        0.176697,
+        0.191985
+      ],
+      "alpha": 0.64,
+      "composite": [
+        18,
+        35,
+        40
+      ],
+      "blur": 24,
+      "saturate": 1.45
+    },
+    {
+      "level": "dialog",
+      "parent": null,
+      "surfaceRgb": [
+        0.15254,
+        0.215809,
+        0.22778
+      ],
+      "alpha": 0.52,
+      "composite": [
+        20,
+        37,
+        42
+      ],
+      "blur": 32,
+      "saturate": 1.45
+    },
+    {
+      "level": "menu",
+      "parent": null,
+      "surfaceRgb": [
+        0.196663,
+        0.255989,
+        0.264409
+      ],
+      "alpha": 0.4,
+      "composite": [
+        20,
+        36,
+        43
+      ],
+      "blur": 40,
+      "saturate": 1.45
+    },
+    {
+      "level": "window",
+      "parent": null,
+      "parentHex": "#06191f",
+      "surfaceRgb": [
+        0.024934,
+        0.102024,
+        0.123126
+      ],
+      "alpha": 0.88,
+      "composite": [
+        5,
+        26,
+        31
+      ],
+      "blur": 8,
+      "saturate": 1.45
+    }
+  ],
+  "retainedBackdropCases": [
+    {
+      "level": "window",
+      "parent": "window",
+      "surfaceRgb": [
+        0.024934,
+        0.102024,
+        0.123126
+      ],
+      "alpha": 0.88,
+      "composite": [
+        5,
+        26,
+        30
+      ],
+      "blur": 8,
+      "saturate": 1.45
+    }
+  ],
+  "sourceMembership": {
+    "pattern": "**/*.{ts,tsx}",
+    "initial": "existing.tsx",
+    "addition": "nested/added.tsx",
+    "ignored": "notes.md",
+    "expectedCalls": {
+      "warm": 2,
+      "add": 3,
+      "ignore": 3,
+      "remove": 4
+    }
+  }
+}

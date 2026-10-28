@@ -28,6 +28,9 @@ use crate::schema::{Answer, Axis, Badge, BadgeRule, Course, CourseView, Category
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet};
 
+#[path = "🖥️mockups/🦀️.rs"]
+mod mockups;
+
 /// 🔏️ The `schema` const of a quiz document.
 pub const QUIZ_SCHEMA: &str = "semio.quiz/v1";
 
@@ -162,9 +165,47 @@ pub fn quiz_issues(quiz: &Quiz) -> Vec<ValidationIssue> {
             Task::Sorting(task) => issues.sorting(&base, task),
             Task::Matching(task) => issues.matching(&base, task),
         }
+        let mockups: Vec<_> = match task {
+            Task::Classification(task) => task.items.iter().map(|item| item.mockup.as_ref()).collect(),
+            Task::Sorting(task) => task.items.iter().map(|item| item.mockup.as_ref()).collect(),
+            Task::Matching(task) => task.items.iter().map(|item| item.mockup.as_ref()).collect(),
+        };
+        for (index, mockup) in mockups.into_iter().enumerate() {
+            if let Some(mockup) = mockup { issues.mockup(&format!("{base}/items/{index}/mockup"), mockup); }
+        }
     }
     issues.unique("/tasks", quiz.tasks.iter().map(|task| task.id().as_str()));
     issues.finish()
+}
+
+/// 🏗️ Whether a producer names one scoped project and one build target.
+fn is_producer(value: &str) -> bool {
+    let Some((scope, rest)) = value.strip_prefix('@').and_then(|value| value.split_once('/')) else { return false; };
+    let Some((project, target)) = rest.split_once(':') else { return false; };
+    [scope, project, target].into_iter().all(|part| part.as_bytes().first().is_some_and(u8::is_ascii_lowercase) && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'-'))
+}
+
+/// 📝️ Checks printable assignment metadata and its course topic ownership.
+fn assignment_issues(assignments: &[crate::schema::Assignment], topics: Option<&[Topic]>, issues: &mut Issues) {
+    issues.unique("/assignments", assignments.iter().map(|assignment| assignment.id.as_str()));
+    for (index, assignment) in assignments.iter().enumerate() {
+        let base = format!("/assignments/{index}");
+        issues.slug(format!("{base}/id"), &assignment.id);
+        issues.slug(format!("{base}/topic"), &assignment.topic);
+        if !topics.is_some_and(|topics| topics.iter().any(|topic| topic.id == assignment.topic)) { issues.push(format!("{base}/topic"), IssueCode::ValueInvalid); }
+        issues.length(format!("{base}/emoji"), &assignment.emoji, 1, 16);
+        issues.text(&format!("{base}/title"), &assignment.title);
+        issues.text(&format!("{base}/description"), &assignment.description);
+        for (language, document) in [("en", &assignment.documents.en), ("de", &assignment.documents.de)] {
+            let pointer = format!("{base}/documents/{language}");
+            if document.namespace != "course" { issues.push(format!("{pointer}/namespace"), IssueCode::ValueInvalid); }
+            issues.length(format!("{pointer}/producer"), &document.producer, 1, 160);
+            if !is_producer(&document.producer) { issues.push(format!("{pointer}/producer"), IssueCode::ValueInvalid); }
+            issues.slug(format!("{pointer}/id"), &document.id);
+            issues.length(format!("{pointer}/file"), &document.file, 1, 128);
+            if !document.file.strip_suffix(".pdf").is_some_and(|stem| !stem.is_empty() && stem.split('-').all(|part| !part.is_empty() && part.bytes().all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit()))) { issues.push(format!("{pointer}/file"), IssueCode::ValueInvalid); }
+        }
+    }
 }
 
 /// 🗄️ Every issue of a course given its loaded quizzes in course order: structure, unique paths,
@@ -200,7 +241,14 @@ pub fn course_issues(course: &Course, quizzes: &[Quiz]) -> Vec<ValidationIssue> 
             issues.push(format!("/quizzes/{index}"), IssueCode::DuplicateId);
         }
     }
+    if let Some(unlocks) = &course.unlocks {
+        for (key, instant) in unlocks {
+            let parts: Vec<_> = key.split('/').collect();
+            if parts.len() > 2 || parts.iter().any(|part| !is_slug(part)) || instant.is_some_and(|at| at > MAX_TIMESTAMP) { issues.push(format!("/unlocks/{}", key.replace('~', "~0").replace('/', "~1")), IssueCode::ValueInvalid); }
+        }
+    }
     if let Some(topics) = &course.topics { issues.topic_groups(topics, &quiz_ids); }
+    if let Some(assignments) = &course.assignments { assignment_issues(assignments, course.topics.as_deref(), &mut issues); }
     for (index, badge) in course.badges.iter().enumerate() {
         issues.badge(&format!("/badges/{index}"), badge, quizzes, &quiz_ids);
     }
@@ -234,7 +282,14 @@ pub fn course_view_issues(course: &CourseView) -> Vec<ValidationIssue> {
             issues.icon(&pointer, task.icon.as_ref());
         }
     }
+    if let Some(unlocks) = &course.unlocks {
+        for (key, instant) in unlocks {
+            let parts: Vec<_> = key.split('/').collect();
+            if parts.len() > 2 || parts.iter().any(|part| !is_slug(part)) || instant.is_some_and(|at| at > MAX_TIMESTAMP) { issues.push(format!("/unlocks/{}", key.replace('~', "~0").replace('/', "~1")), IssueCode::ValueInvalid); }
+        }
+    }
     if let Some(topics) = &course.topics { issues.topic_groups(topics, &quiz_ids); }
+    if let Some(assignments) = &course.assignments { assignment_issues(assignments, course.topics.as_deref(), &mut issues); }
     issues.unique("/badges", course.badges.iter().map(|badge| badge.id.as_str()));
     for (index, badge) in course.badges.iter().enumerate() {
         let base = format!("/badges/{index}");

@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import importlib
 import sys
+from functools import lru_cache
 from pathlib import Path
 
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
@@ -20,36 +21,143 @@ if str(_WORKSPACE_ROOT) not in sys.path:
 
 import numpy as np
 
-#region Palette
-# The single source of truth — scenes import these, never copy-paste the block.
-P_DEEP_DARK = "#0B0C10"
-P_WHITE = "#E0E6ED"
-P_CYAN = "#66FCF1"
-P_TEAL = "#45A29E"
-P_ORANGE = "#FFAAA5"
-P_YELLOW = "#FFE66D"
-P_RED = "#FF6B6B"
-P_BLUE = "#4D96FF"
-P_GREEN = "#CAFFBF"
-#endregion
+import json
+
+_ARCHITECTURE = json.loads(Path(__file__).with_name("🔣️.json").read_text(encoding="utf-8"))
+_ARCHITECTURE_DIMENSIONS = _ARCHITECTURE["dimensions"]
+_SILHOUETTES = json.loads((Path(__file__).parent / "🫟️silhouettes/🔣️.json").read_text(encoding="utf-8"))["outlines"]
+
+_theme = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+color = _theme.color
+UI_SPACING = _theme.UI_SPACING
+UI_PIXEL = _theme.UI_PIXEL
+CHROME_BORDER = _theme.CHROME_BORDER
+CHROME_FILL = _theme.CHROME_FILL
+CHROME_FOREGROUND = _theme.CHROME_FOREGROUND
+
+P_DEEP_DARK = color("dark")
+P_WHITE = color("light")
+P_PRIMARY = color("primary")
+P_SECONDARY = color("secondary")
+P_CYAN = color("secondary")
+P_TEAL = color("secondary")
+P_ORANGE = color("tertiary")
+P_YELLOW = color("warning")
+P_RED = color("primary")
+P_BLUE = color("secondary")
+P_GREEN = color("success")
+
+PASTEL_WHITE = color("light")
+PASTEL_RED = color("primary")
+PASTEL_ORANGE = color("tertiary")
+PASTEL_YELLOW = color("warning")
+PASTEL_GREEN = color("success")
+PASTEL_TEAL = color("secondary")
+PASTEL_CYAN = color("secondary")
+PASTEL_BLUE = color("secondary")
+PASTEL_PURPLE = color("info")
+PASTEL_PINK = color("primary")
+PASTEL_GREY = color("gray")
+
+def window_silhouette_outline(
+    width: float, height: float, *, top_depth: float = 0, bottom_depth: float = 0,
+    top_chips=(), bottom_chips=(), inset: float = 1,
+) -> list[tuple[float, float]]:
+    """🪟 Match WindowSilhouette's canonical pixel outline and fused chip boundaries."""
+    from math import isfinite
+
+    epsilon = 0.5
+
+    def finite(value):
+        return max(0.0, value) if isfinite(value) else 0.0
+
+    def chips_in(chips, left, right):
+        merged = []
+        intervals = []
+        for chip in chips:
+            start, end = (chip["left"], chip["right"]) if isinstance(chip, dict) else chip
+            if isfinite(start) and isfinite(end) and end > start:
+                start, end = max(left, min(start, right)), max(left, min(end, right))
+                if end - start > epsilon:
+                    intervals.append((start, end))
+        for start, end in sorted(intervals):
+            if not merged or start > merged[-1][1] + epsilon:
+                merged.append((start, end))
+            else:
+                merged[-1] = (merged[-1][0], max(merged[-1][1], end))
+        return merged
+
+    def edge(depth, chips, left, right, outer, inner):
+        intervals = chips_in(chips, left, right)
+        if depth <= epsilon:
+            return [(left, outer), (right, outer)]
+        if not intervals:
+            return [(left, inner), (right, inner)]
+        points = [(left, outer if intervals[0][0] <= left + epsilon else inner)]
+
+        def push(x, y):
+            if abs(x - points[-1][0]) > epsilon or abs(y - points[-1][1]) > epsilon:
+                points.append((x, y))
+
+        if intervals[0][0] > left + epsilon:
+            push(intervals[0][0], inner)
+            push(intervals[0][0], outer)
+        for index, (_, end) in enumerate(intervals):
+            push(end, outer)
+            if index + 1 < len(intervals):
+                start = intervals[index + 1][0]
+                push(end, inner)
+                if end < start - epsilon:
+                    push(start, inner)
+                push(start, outer)
+            elif end < right - epsilon:
+                push(end, inner)
+                push(right, inner)
+        return points
+
+    width, height = finite(width), finite(height)
+    top_depth = min(finite(top_depth), height)
+    bottom_depth = min(finite(bottom_depth), max(0.0, height - top_depth))
+    top_chips = chips_in(top_chips, 0, width)
+    bottom_chips = chips_in(bottom_chips, 0, width)
+    inset = min(finite(inset), width * 0.5, height * 0.5)
+    left, top, right, bottom = inset, inset, width - inset, height - inset
+    top_inner = max(top, min(top + top_depth, bottom))
+    bottom_inner = max(top, min(bottom - bottom_depth, bottom))
+    outline = edge(top_depth, top_chips, left, right, top, top_inner)
+    outline += list(reversed(edge(bottom_depth, bottom_chips, left, right, bottom, bottom_inner)))
+    deduped = []
+    for point in outline:
+        if not deduped or any(abs(a - b) > epsilon for a, b in zip(point, deduped[-1])):
+            deduped.append(point)
+    if len(deduped) <= 2:
+        return deduped
+    simplified = []
+    for index, point in enumerate(deduped):
+        previous, following = deduped[index - 1], deduped[(index + 1) % len(deduped)]
+        horizontal = abs(previous[1] - point[1]) <= epsilon and abs(point[1] - following[1]) <= epsilon
+        vertical = abs(previous[0] - point[0]) <= epsilon and abs(point[0] - following[0]) <= epsilon
+        if not horizontal and not vertical:
+            simplified.append(point)
+    return simplified or deduped
 
 
-#region Pastel palette
-# Soft companions of the base palette for series that want a calm, harmonious
-# look (Heating). Same hue roles as the base names — warm, cold, sun, air — at
-# lower saturation, so one meaning keeps one colour across every scene.
-PASTEL_WHITE = "#FFFFFF"
-PASTEL_RED = "#EFA9A3"
-PASTEL_ORANGE = "#F3C49F"
-PASTEL_YELLOW = "#F2DFA2"
-PASTEL_GREEN = "#B9DCB3"
-PASTEL_TEAL = "#93C6BC"
-PASTEL_CYAN = "#AED9DF"
-PASTEL_BLUE = "#A9C3E6"
-PASTEL_PURPLE = "#C8B8E2"
-PASTEL_PINK = "#F0BCD0"
-PASTEL_GREY = "#9AA2AC"
-#endregion
+def window_frame(
+    width: float, height: float, *, title_width: float | None = None, title_depth: float = 0,
+    color: str = P_PRIMARY, fill_opacity: float = 0.88,
+):
+    """🔲 Build one square chrome polygon with an optional fused top-left title chip."""
+    from manim import Polygon
+
+    depth = title_depth if title_width is not None else 0
+    outline = window_silhouette_outline(
+        width / UI_PIXEL, height / UI_PIXEL, top_depth=depth / UI_PIXEL,
+        top_chips=() if title_width is None else ((0, title_width / UI_PIXEL),), inset=0,
+    )
+    return Polygon(
+        *[np.array([x * UI_PIXEL - width / 2, height / 2 - y * UI_PIXEL, 0.0]) for x, y in outline],
+        color=color, stroke_width=CHROME_BORDER, fill_color=CHROME_FILL, fill_opacity=fill_opacity,
+    )
 
 
 #region Layout zones
@@ -246,92 +354,55 @@ def respiration_parts(mouth_pos, *, scale: float = 1.0):
 
 
 #region Watt anchors
-_WATT_DEVICES: dict[str, tuple[str, int, str]] = {
-    "laptop": ("Laptop", 60, P_CYAN),
-    "bulb": ("Glühbirne", 100, P_YELLOW),
-    "toaster": ("Toaster", 1000, P_ORANGE),
-    "vacuum": ("Staubsauger", 1400, P_TEAL),
-    "heater": ("Heizgerät", 2000, P_RED),
+_WATT_DEVICES: dict[str, tuple[str, int]] = {
+    "laptop": ("Laptop", 60),
+    "bulb": ("Glühbirne", 100),
+    "toaster": ("Toaster", 1000),
+    "vacuum": ("Staubsauger", 1400),
+    "heater": ("Heizgerät", 2000),
 }
-
-
-def _device_glyph(kind: str, color: str):
-    """🔌 Tiny line-art stand-in for an everyday watt reference."""
-    from manim import DOWN, LEFT, Line, RIGHT, Circle, Rectangle, RoundedRectangle, UP, VGroup
-
-    if kind == "laptop":
-        base = Rectangle(width=0.55, height=0.08, color=color, stroke_width=2)
-        screen = Rectangle(width=0.5, height=0.32, color=color, stroke_width=2)
-        screen.next_to(base, UP, buff=0)
-        return VGroup(base, screen)
-    if kind == "bulb":
-        glass = Circle(radius=0.16, color=color, stroke_width=2)
-        base = Rectangle(width=0.12, height=0.1, color=color, stroke_width=2)
-        base.next_to(glass, DOWN, buff=0)
-        return VGroup(glass, base)
-    if kind == "toaster":
-        body = RoundedRectangle(width=0.55, height=0.38, corner_radius=0.06, color=color, stroke_width=2)
-        slot1 = Line(UP * 0.08 + LEFT * 0.12, UP * 0.08 + RIGHT * 0.12, color=color, stroke_width=2).move_to(body.get_center() + UP * 0.06 + LEFT * 0.1)
-        slot2 = slot1.copy().shift(RIGHT * 0.2)
-        return VGroup(body, slot1, slot2)
-    if kind == "vacuum":
-        body = RoundedRectangle(width=0.42, height=0.32, corner_radius=0.08, color=color, stroke_width=2)
-        hose = Line(body.get_right(), body.get_right() + RIGHT * 0.35 + UP * 0.15, color=color, stroke_width=2.5)
-        return VGroup(body, hose)
-    body = RoundedRectangle(width=0.45, height=0.5, corner_radius=0.06, color=color, stroke_width=2)
-    fins = VGroup(*[
-        Line(LEFT * 0.12 + UP * (0.12 - 0.1 * i), RIGHT * 0.12 + UP * (0.12 - 0.1 * i), color=color, stroke_width=1.5)
-        for i in range(3)
-    ]).move_to(body.get_center())
-    return VGroup(body, fins)
 
 
 def watt_anchor(watts: float, *, compare: str = "laptop", title: str | None = None, color: str | None = None,
                 row: bool = False):
-    """🔌 Badge that grounds a power number against a familiar device — stacked, or in one ``row`` for wide gaps."""
-    from manim import DOWN, RIGHT, RoundedRectangle, VGroup
-    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
-    FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
-    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
-    body_text = _manim_module.body_text
+    """🔌 Ground a power value in an everyday device inside fused square chrome."""
+    from manim import DOWN, RIGHT, VGroup
 
-    name, device_w, device_color = _WATT_DEVICES.get(compare, _WATT_DEVICES["laptop"])
-    color = color or device_color
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    name, device_w = _WATT_DEVICES.get(compare, _WATT_DEVICES["laptop"])
+    color = color or P_PRIMARY
     ratio = watts / device_w if device_w else 0.0
-    if ratio >= 0.85 and ratio <= 1.15:
+    if 0.85 <= ratio <= 1.15:
         compare_line = f"≈ 1× {name} ({device_w} W)"
     elif ratio < 1:
         compare_line = f"≈ {ratio:.1f}× {name} ({device_w} W)".replace(".", ",")
     else:
         compare_line = f"≈ {ratio:.0f}× {name} ({device_w} W)"
-
-    glyph = _device_glyph(compare if compare in _WATT_DEVICES else "laptop", color)
-    value = body_text(
-        f"{int(watts) if watts == int(watts) else watts} W",
-        font_size=FORMULA_FONT_SIZE,
-        color=color,
+    glyph = object_silhouette(compare if compare in _WATT_DEVICES else "laptop", color=color, width=0.65)
+    value = fonts.body_text(f"{int(watts) if watts == int(watts) else watts} W",
+                            font_size=fonts.FORMULA_FONT_SIZE, color=color)
+    hint = fonts.body_text(compare_line, font_size=fonts.LABEL_FONT_SIZE, color=P_WHITE)
+    body = VGroup(value, glyph, hint).arrange(RIGHT if row else DOWN, buff=3 * UI_SPACING if row else UI_SPACING)
+    head = fonts.body_text(title, font_size=fonts.LABEL_FONT_SIZE, color=CHROME_FOREGROUND) if title else None
+    depth = head.height + 2 * UI_SPACING if head is not None else 0
+    title_width = head.width + 2 * UI_SPACING if head is not None else None
+    frame = window_frame(
+        max(2.8, body.width + 4 * UI_SPACING, (title_width or 0) + 3 * UI_SPACING),
+        body.height + 2 * UI_SPACING + depth, title_width=title_width, title_depth=depth, color=color,
     )
-    hint = body_text(compare_line, font_size=LABEL_FONT_SIZE, color=P_WHITE)
-    head = body_text(title, font_size=LABEL_FONT_SIZE, color=P_TEAL) if title else None
-    body_parts = [p for p in (head, value, glyph, hint) if p is not None]
-    body = VGroup(*body_parts).arrange(RIGHT, buff=0.32) if row else VGroup(*body_parts).arrange(DOWN, buff=0.12)
-    frame = RoundedRectangle(
-        width=max(2.8, body.width + 0.45),
-        height=body.height + 0.35,
-        corner_radius=0.12,
-        color=color,
-        stroke_width=2,
-        fill_color="#0B0C10",
-        fill_opacity=0.92,
-    )
-    body.move_to(frame.get_center())
+    body.move_to(frame.get_center() + DOWN * depth / 2)
+    if head is not None:
+        head.move_to([frame.get_left()[0] + UI_SPACING + head.width / 2, frame.get_top()[1] - depth / 2, 0])
+        body.add(head)
     return VGroup(frame, body)
+
 #endregion
 
 
 #region Particle flow
 # A drawn streamline says "air could move here"; only moving particles say
 # "air is moving now". Anything showing an exchange of air uses these.
+
 def smooth_path(points):
     """〰️ Smooth polyline through ``points`` — the track particles travel along."""
     from manim import TipableVMobject
@@ -549,7 +620,7 @@ def animate_haze(
     run_time: float = 3.0,
     n: int = 48,
     color: str = P_ORANGE,
-    color_end: str = "#E8D5C4",
+    color_end: str = color("info"),
     cycles: float = 1.6,
     extra=None,
     seed: int = 7,
@@ -599,7 +670,7 @@ def animate_haze(
 
 #region Gauges and annotation primitives
 def meter(label: str, *, length: float = 2.3, thickness: float = 0.52,
-          color: str = P_CYAN, vertical: bool = True) -> dict:
+          color: str = P_PRIMARY, vertical: bool = True) -> dict:
     """📊 Track + fill gauge — ``set_meter`` drives the fill from a ``ValueTracker``.
 
     Turns an invisible quantity (air change rate, driving pressure, remaining
@@ -661,29 +732,24 @@ def recolor_meter(gauge: dict, color: str, **kwargs):
     return UpdateFromAlphaFunc(fill, lambda m, a: m.set_fill(interpolate_color(start, end, a), opacity=0.85), **kwargs)
 
 
-def chip(text: str, color: str = P_TEAL, *, font_size: int | None = None):
-    """🔖 Single-line boxed label — flow-chart node and inline annotation."""
-    from manim import SurroundingRectangle, VGroup
-    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
-    BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
-    body_text = _manim_module.body_text
+def window_chip(content, color: str = P_PRIMARY):
+    """🏷️ Frame plain or typeset label content with the shared square cap surface."""
+    from manim import VGroup
 
-    if font_size is None:
-        font_size = BODY_FONT_SIZE
+    frame = window_frame(content.width + 2 * UI_SPACING, content.height + 2 * UI_SPACING, color=color)
+    frame.move_to(content.get_center())
+    return VGroup(frame, content)
 
-    label = body_text(text, font_size=font_size, color=color)
-    box = SurroundingRectangle(label, color=color, corner_radius=0.1, buff=0.14, stroke_width=1.8)
-    return VGroup(box, label)
+
+def chip(text: str, color: str = P_PRIMARY, *, font_size: int | None = None):
+    """🔖 Set a label inside the same square chrome as a WindowChrome cap."""
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    label = fonts.body_text(text, font_size=font_size or fonts.BODY_FONT_SIZE, color=color)
+    return window_chip(label, color=color)
 
 
 def dim_chip(boxed, opacity: float) -> list:
-    """🌑 Fade a ``chip`` — box stroke and label fill only.
-
-    Never routes through ``set_opacity``: that would give the box a fill it
-    never had, so restoring to 1.0 turns the outline into a solid block. Play
-    this *before* any ``Indicate`` on the same mobject — ``Indicate`` snapshots
-    the starting state and restores it, silently undoing a same-play change.
-    """
+    """🌑 Fade a cap label and border while keeping its legibility surface intact."""
     return [boxed[0].animate.set_stroke(opacity=opacity),
             boxed[1].animate.set_fill(opacity=opacity)]
 
@@ -865,254 +931,311 @@ def beam_pulses(scene, paths, color, *, repeats: int = 2, run_time: float = 2.4,
 
 
 #region Buildings
-def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN):
-    """🪟 Window set into a line wall — reveal ticks at sill and lintel, a glazed sash seen edge-on in the wall line.
+def section_material(mobject):
+    """🧱 Apply the single opaque, unstroked architectural cut material."""
+    style = _ARCHITECTURE["section_material"]
+    return mobject.set_fill(color(style["color"]), opacity=style["fill_opacity"]).set_stroke(
+        width=style["stroke_width"], opacity=style["stroke_opacity"],
+    )
 
-    The sash is built face-on and turned 90° about its vertical hinge, so ``open_window`` swings it into the
-    room in true projection instead of sliding a rectangle around.
-    """
-    from manim import PI, UP, Line, Rectangle, VGroup
 
-    reveal = VGroup(*[Line(np.array([x - 0.1, y, 0.0]), np.array([x + 0.1, y, 0.0]), color=P_WHITE, stroke_width=1.6)
-                      for y in (sill, lintel)])
+def _update_section_assembly(assembly):
+    """🧩 Fill live opaque cut contours together without repainting semantic layers."""
+    from manim import VMobject
+
+    composite = next(part for part in assembly if getattr(part, "_section_composite", False))
+    parts = dict.fromkeys(part for root in assembly if root is not composite for part in root.get_family()
+                         if not getattr(part, "_section_composite", False) and len(getattr(part, "points", [])))
+    signature = tuple((id(part), part.points.tobytes(), part.get_fill_opacity(), part.get_fill_color().to_hex())
+                      for part in parts)
+    if signature == getattr(composite, "_section_signature", None):
+        return
+    merged = VMobject()
+    for part in parts:
+        if part.get_fill_opacity() == 1 and part.get_fill_color().to_hex() == P_WHITE.upper():
+            for points in part.get_subpaths():
+                contour = VMobject().set_points(points).force_direction("CCW")
+                merged.append_vectorized_mobject(contour)
+    if not len(merged.points):
+        composite.set_fill(opacity=0)
+        composite._section_signature = signature
+        return
+    composite.set_points(merged.points)
+    section_material(composite)
+    composite._section_signature = signature
+
+
+def section_assembly(*parts):
+    """🏗️ Keep cut pieces live while filling their opaque contours in one pass."""
+    from manim import VGroup, VMobject
+
+    composite = section_material(VMobject())
+    composite._section_composite = True
+    assembly = VGroup(*parts, composite)
+    assembly.add_updater(_update_section_assembly)
+    assembly.update(0)
+    return assembly
+
+
+def _section_material(width, height, center):
+    """🪨 Build a closed rectangular portion of the architectural material."""
+    from manim import Rectangle
+
+    return section_material(Rectangle(width=width, height=height)).move_to(center)
+
+
+def window_glyph(x: float, sill: float, lintel: float, *, depth: float = 0.42, color=P_CYAN,
+                 wall: float = 0.14, inward: float = 1.0):
+    """🪟 Glazing in a material reveal with a hinged sash in oblique projection."""
+    from manim import Line, Polygon, VGroup
+
+    if lintel <= sill or depth <= 0 or wall <= 0 or inward == 0:
+        raise ValueError("A window needs positive height, depth, wall and an inward direction")
+    sign = 1.0 if inward > 0 else -1.0
+    thickness = depth * 0.06
+    reveal_height = (lintel - sill) * 0.06
+    hinge_x = x + sign * wall / 2
+    vertices = [np.array([hinge_x, sill, 0.0]), np.array([hinge_x + sign * thickness, sill, 0.0]),
+                np.array([hinge_x + sign * thickness, lintel, 0.0]), np.array([hinge_x, lintel, 0.0])]
+    frame = Polygon(*vertices, color=color, stroke_width=1.5, fill_color=color, fill_opacity=0.35)
     mid = (sill + lintel) / 2
-    frame = Rectangle(width=depth, height=lintel - sill - 0.04, color=color, stroke_width=1.6)
-    frame.set_fill(color, opacity=0.14)
-    bars = VGroup(Line(frame.get_left(), frame.get_right(), color=color, stroke_width=1.1),
-                  Line(frame.get_top(), frame.get_bottom(), color=color, stroke_width=1.1))
-    sash = VGroup(frame, bars).move_to(np.array([x + depth / 2, mid, 0.0]))
-    hinge = np.array([x, mid, 0.0])
-    sash.rotate(PI / 2, axis=UP, about_point=hinge)
-    return {"x": x, "sill": sill, "lintel": lintel, "center": hinge, "hinge": hinge, "sash": sash,
-            "reveal": reveal, "group": VGroup(reveal, sash)}
+    mullion = Line([hinge_x, mid, 0], [hinge_x + sign * thickness, mid, 0], color=color, stroke_width=1.1)
+    sash = VGroup(frame, mullion)
+    reveal = VGroup(*[_section_material(wall, reveal_height, [x, y, 0])
+                      for y in (sill - reveal_height / 2, lintel + reveal_height / 2)])
+    reference = Polygon(*vertices, stroke_width=0, fill_opacity=0)
+    return {"x": x, "sill": sill, "lintel": lintel, "center": np.array([hinge_x, mid, 0.0]),
+            "hinge": np.array([hinge_x, mid, 0.0]), "sash": sash, "reveal": reveal,
+            "depth": depth, "wall": wall, "inward": sign, "projection": "oblique",
+            "reference": reference, "projection_ratio": depth / thickness,
+            "group": VGroup(reveal, sash, reference)}
 
 
-def open_window(window, *, run_time: float = 0.9):
-    """🚪 Turn the sash open into the room about its hinge."""
-    from manim import PI, UP, Rotate
+def window_opening(window, *, fraction: float = 1.0, tilt: bool = False):
+    """📐 Project a casement or bottom-hinged sash from its transformed closed reference."""
+    from manim import Line, Polygon, VGroup
 
-    return Rotate(window["sash"], angle=-PI / 2, axis=UP, about_point=window["hinge"], run_time=run_time)
+    if not 0 <= fraction <= 1:
+        raise ValueError("Window opening fraction must be between zero and one")
+    sash = window["sash"]
+    bottom, near_bottom, near_top, top = window["reference"].get_vertices()[:4]
+    across = (near_bottom - bottom) * window["projection_ratio"] * 0.82 * fraction
+    height = top - bottom
+    if tilt:
+        lean = across * 0.5
+        drop = height * 0.035 * fraction
+        vertices = [bottom, near_bottom, near_top + lean - drop, top + lean - drop]
+    else:
+        edge = near_bottom - bottom
+        vertices = [bottom, bottom + edge * (1 - fraction) + across + height * 0.1 * fraction,
+                    top + edge * (1 - fraction) + across - height * 0.1 * fraction, top]
+    frame = Polygon(*vertices, color=sash[0].get_stroke_color(), stroke_width=sash[0].get_stroke_width(),
+                    fill_color=sash[0].get_fill_color(), fill_opacity=sash[0].get_fill_opacity())
+    mullion = Line((vertices[0] + vertices[3]) / 2, (vertices[1] + vertices[2]) / 2,
+                   color=sash[1].get_stroke_color(), stroke_width=sash[1].get_stroke_width())
+    return VGroup(frame, mullion)
+
+
+def open_window(window, *, run_time: float = 0.9, fraction: float = 1.0, tilt: bool = False,
+                close: bool = False):
+    """🚪 Animate a projected window without losing its section's current transform."""
+    from manim import Transform
+
+    return Transform(window["sash"], window_opening(window, fraction=0 if close else fraction, tilt=tilt),
+                     run_time=run_time)
 
 
 def house_section(center=None, scale: float = 1.0):
-    """🏠 Two-storey section — wall thickness, eaves, and glazed openings in the left wall."""
-    from manim import DOWN, LEFT, ORIGIN, RIGHT, UP, Line, VGroup, VMobject
+    """🏠 Two storeys of solid section material at a shared architectural scale."""
+    from manim import ORIGIN, Polygon, VGroup
 
-    center = ORIGIN if center is None else np.array(center, dtype=float)
+    center = np.array(ORIGIN if center is None else center, dtype=float)
     s = scale
-    w_width, w_height, t, sw = 3.6 * s, 2.4 * s, 0.08 * s, 1.7
-    bottom_left = center + LEFT * (w_width / 2) + DOWN * (w_height / 2)
-    bottom_right = center + RIGHT * (w_width / 2) + DOWN * (w_height / 2)
-    top_left = center + LEFT * (w_width / 2) + UP * (w_height / 2)
-    top_right = center + RIGHT * (w_width / 2) + UP * (w_height / 2)
-    roof_peak = center + UP * (w_height / 2 + 1.1 * s)
-    floor_line = Line(bottom_left + LEFT * 0.55 * s, bottom_right + RIGHT * 0.55 * s, color=P_TEAL, stroke_width=2.2)
-    hatches = VGroup(*[
-        Line(p, p + (DOWN * 0.1 + LEFT * 0.07) * s, color=P_TEAL, stroke_width=1.1)
-        for p in [floor_line.point_from_proportion(u) for u in np.linspace(0.08, 0.92, 9)]
-    ])
-    level_1 = Line(bottom_left + UP * (w_height / 2), bottom_right + UP * (w_height / 2), color=P_WHITE, stroke_width=1.5)
-    w_h = 0.5 * s
-    cuts = (
-        (0.0, w_height / 4 - w_h / 2),
-        (w_height / 4 + w_h / 2, 3 * w_height / 4 - w_h / 2),
-        (3 * w_height / 4 + w_h / 2, w_height),
-    )
-    wall_left_1 = Line(bottom_left, bottom_left + UP * cuts[0][1], color=P_WHITE, stroke_width=sw)
-    wall_left_2 = Line(bottom_left + UP * cuts[1][0], bottom_left + UP * cuts[1][1], color=P_WHITE, stroke_width=sw)
-    wall_left_3 = Line(bottom_left + UP * cuts[2][0], top_left, color=P_WHITE, stroke_width=sw)
-    wall_right = Line(bottom_right, top_right, color=P_WHITE, stroke_width=sw)
-    inner = VGroup(*[
-        Line(bottom_left + RIGHT * t + UP * a, bottom_left + RIGHT * t + UP * b, color=P_WHITE, stroke_width=1.3)
-        for a, b in cuts
-    ], Line(bottom_right + LEFT * t, top_right + LEFT * t, color=P_WHITE, stroke_width=1.3))
-    eave_l, eave_r = top_left + LEFT * 0.26 * s, top_right + RIGHT * 0.26 * s
-    roof = VGroup(
-        VMobject(color=P_WHITE, stroke_width=sw).set_points_as_corners([eave_l, roof_peak, eave_r]),
-        VMobject(color=P_WHITE, stroke_width=1.3).set_points_as_corners([
-            top_left + RIGHT * t + DOWN * 0.05 * s, roof_peak + DOWN * 0.12 * s, top_right + LEFT * t + DOWN * 0.05 * s,
-        ]),
-    )
-    walls = VGroup(wall_left_1, wall_left_2, wall_left_3, wall_right, level_1, inner)
-    windows = [window_glyph(bottom_left[0], bottom_left[1] + f * w_height - w_h / 2,
-                            bottom_left[1] + f * w_height + w_h / 2, depth=0.42 * s)
-               for f in (0.25, 0.75)]
-    window_group = VGroup(*[w["group"] for w in windows])
-    return {
-        "center": center, "floor": floor_line, "walls": walls, "roof": roof, "windows": windows,
-        "window_group": window_group, "level_1": level_1, "wall_right": wall_right,
-        "bottom_left": bottom_left, "bottom_right": bottom_right, "top_left": top_left, "top_right": top_right,
-        "roof_peak": roof_peak, "w_width": w_width, "w_height": w_height,
-        "group": VGroup(floor_line, hatches, walls, roof, window_group),
-    }
+    w_width, w_height = 3.6 * s, 2.4 * s
+    t, deck = _ARCHITECTURE_DIMENSIONS["house_wall"] * s, 0.1 * s
+    cx, cy = center[:2]
+    x_l, x_r, y_f, y_c = cx - w_width / 2, cx + w_width / 2, cy - w_height / 2, cy + w_height / 2
+    bottom_left, bottom_right = np.array([x_l, y_f, 0]), np.array([x_r, y_f, 0])
+    top_left, top_right = np.array([x_l, y_c, 0]), np.array([x_r, y_c, 0])
+    roof_peak = np.array([cx, y_c + 1.1 * s, 0])
+    floor = _section_material(w_width, 0.12 * s, [cx, y_f - 0.06 * s, 0])
+    ground = VGroup()
+    level_1 = _section_material(w_width - 2 * t, deck, [cx, cy, 0])
+    window_height = 0.55 * s
+    openings = [(y_f + f * w_height - window_height / 2, y_f + f * w_height + window_height / 2)
+                for f in (0.25, 0.75)]
+    spans = [(y_f, openings[0][0]), (openings[0][1], openings[1][0]), (openings[1][1], y_c)]
+    left = VGroup(*[_section_material(t, b - a, [x_l + t / 2, (a + b) / 2, 0]) for a, b in spans])
+    roof_slope = 1.1 * s / (w_width / 2 + 0.26 * s)
+    roof_wall_outer_top = y_c + roof_slope * 0.26 * s - 0.14 * s
+    roof_wall_top = roof_wall_outer_top + roof_slope * t
+    left[-1].become(section_material(Polygon(
+        [x_l, spans[-1][0], 0], [x_l + t, spans[-1][0], 0],
+        [x_l + t, roof_wall_top, 0], [x_l, roof_wall_outer_top, 0],
+    )))
+    wall_right = section_material(Polygon([x_r - t, y_f, 0], [x_r, y_f, 0], [x_r, roof_wall_outer_top, 0],
+                         [x_r - t, roof_wall_top, 0]))
+    walls = VGroup(left, wall_right, level_1)
+    eave_l, eave_r = np.array([x_l - 0.26 * s, y_c, 0]), np.array([x_r + 0.26 * s, y_c, 0])
+    drop = np.array([0, -0.14 * s, 0])
+    roof = VGroup(section_material(Polygon(
+        eave_l, roof_peak, eave_r, eave_r + drop, roof_peak + drop, eave_l + drop,
+    )))
+    windows = [window_glyph(x_l + t / 2, a, b, depth=0.42 * s, wall=t) for a, b in openings]
+    window_group = VGroup(*[window["group"] for window in windows])
+    material = section_assembly(floor, walls, roof, *(window["reveal"] for window in windows))
+    return {"material": material, "center": center, "floor": floor, "ground": ground, "walls": walls, "roof": roof,
+            "windows": windows, "window_group": window_group, "level_1": level_1, "wall_right": wall_right,
+            "bottom_left": bottom_left, "bottom_right": bottom_right, "top_left": top_left, "top_right": top_right,
+            "roof_peak": roof_peak, "w_width": w_width, "w_height": w_height,
+            "x_l": x_l + t, "x_r": x_r - t, "y_f": y_f, "y_c": y_c, "w": w_width - 2 * t,
+            "h": w_height, "wall": t, "roof_wall_top": roof_wall_top,
+            "roof_wall_outer_top": roof_wall_outer_top,
+            "roof_wall_tops": {"left": [np.array([x_l, roof_wall_outer_top, 0]), np.array([x_l + t, roof_wall_top, 0])],
+                               "right": [np.array([x_r - t, roof_wall_top, 0]), np.array([x_r, roof_wall_outer_top, 0])]},
+            "storey_height": _ARCHITECTURE_DIMENSIONS["storey_height"] * s,
+            "group": VGroup(material, window_group)}
 
 
 def room_section(center, *, w: float = 5.0, h: float = 2.5, wall: float = 0.2, slab: float = 0.26,
-                 window=(0.30, 0.88)):
-    """🏛️ One-room section — floor and ceiling slabs, a glazed left wall, a solid right wall."""
+                 window=(0.30, 0.88), window_side: str = "left"):
+    """🏛️ Solid room section with optional apertures in either exterior wall."""
     from manim import Rectangle, VGroup
 
+    if min(w, h, wall, slab) <= 0 or not 0 < window[0] < window[1] < 1:
+        raise ValueError("Section dimensions and the window interval must be positive")
+    if window_side not in {"left", "right", "both", "none"}:
+        raise ValueError("Unknown window side")
     cx, cy = float(center[0]), float(center[1])
-    x_l, x_r = cx - w / 2, cx + w / 2
-    y_f, y_c = cy - h / 2, cy + h / 2
-    style = dict(color=P_WHITE, stroke_width=2, fill_color=P_WHITE, fill_opacity=0.14)
-    floor = Rectangle(width=w + 2 * wall, height=slab, **style).move_to(np.array([cx, y_f - slab / 2, 0.0]))
-    ceiling = Rectangle(width=w + 2 * wall, height=slab, **style).move_to(np.array([cx, y_c + slab / 2, 0.0]))
+    x_l, x_r, y_f, y_c = cx - w / 2, cx + w / 2, cy - h / 2, cy + h / 2
+    floor = _section_material(w + 2 * wall, slab, [cx, y_f - slab / 2, 0])
+    ceiling = _section_material(w + 2 * wall, slab, [cx, y_c + slab / 2, 0])
     lo, hi = y_f + window[0] * h, y_f + window[1] * h
-    gx = x_l - wall / 2
-    wall_lo = Rectangle(width=wall, height=lo - y_f, **style).move_to(np.array([gx, (y_f + lo) / 2, 0.0]))
-    wall_hi = Rectangle(width=wall, height=y_c - hi, **style).move_to(np.array([gx, (hi + y_c) / 2, 0.0]))
-    glass = Rectangle(width=0.1, height=hi - lo, color=P_CYAN, stroke_width=2.5, fill_color=P_CYAN,
-                      fill_opacity=0.15).move_to(np.array([gx, (lo + hi) / 2, 0.0]))
-    wall_r = Rectangle(width=wall, height=h, **style).move_to(np.array([x_r + wall / 2, cy, 0.0]))
-    air = Rectangle(width=w, height=h, stroke_width=0, fill_color=P_RED, fill_opacity=0.0)
-    air.move_to(np.array([cx, cy, 0.0]))
-    shell = VGroup(floor, ceiling, wall_lo, wall_hi, wall_r)
-    return {
-        "floor": floor, "ceiling": ceiling, "wall_lo": wall_lo, "wall_hi": wall_hi, "wall_r": wall_r,
-        "glass": glass, "air": air, "shell": shell, "group": VGroup(air, shell, glass),
-        "x_l": x_l, "x_r": x_r, "y_f": y_f, "y_c": y_c, "win_lo": lo, "win_hi": hi, "glass_x": gx,
-        "center": np.array([cx, cy, 0.0]), "w": w, "h": h, "slab": slab,
-    }
+    gx, rx = x_l - wall / 2, x_r + wall / 2
+    wall_lo = _section_material(wall, lo - y_f, [gx, (y_f + lo) / 2, 0])
+    wall_hi = _section_material(wall, y_c - hi, [gx, (hi + y_c) / 2, 0])
+    wall_l = VGroup(wall_lo, wall_hi) if window_side in {"left", "both"} else _section_material(wall, h, [gx, cy, 0])
+    wall_r = VGroup(*[_section_material(wall, b - a, [rx, (a + b) / 2, 0]) for a, b in ((y_f, lo), (hi, y_c))]) if window_side in {"right", "both"} else _section_material(wall, h, [rx, cy, 0])
+    glass = Rectangle(width=0.035, height=hi - lo, color=P_CYAN, stroke_width=1.5,
+                      fill_color=P_CYAN, fill_opacity=0.35).move_to([gx, (lo + hi) / 2, 0])
+    right_glass = glass.copy().move_to([rx, (lo + hi) / 2, 0]) if window_side in {"right", "both"} else None
+    if window_side not in {"left", "both"}:
+        glass.set_opacity(0)
+    air = Rectangle(width=w, height=h, stroke_width=0, fill_color=P_RED, fill_opacity=0).move_to([cx, cy, 0])
+    shell = section_assembly(floor, ceiling, wall_l, wall_r)
+    glazing = VGroup(glass, *([right_glass] if right_glass is not None else []))
+    return {"floor": floor, "ceiling": ceiling, "wall_lo": wall_lo, "wall_hi": wall_hi, "wall_l": wall_l,
+            "wall_r": wall_r, "glass": glass, "right_glass": right_glass, "air": air, "shell": shell,
+            "group": VGroup(air, shell, glazing), "x_l": x_l, "x_r": x_r, "y_f": y_f, "y_c": y_c,
+            "win_lo": lo, "win_hi": hi, "glass_x": gx, "right_glass_x": rx, "window_side": window_side,
+            "center": np.array([cx, cy, 0]), "w": w, "h": h, "wall": wall, "slab": slab}
 
 
-def radiator(center, color=P_RED):
-    """♨️ Panel radiator in elevation — casing, fins, feet."""
-    from manim import DOWN, LEFT, RIGHT, UP, Line, Rectangle, VGroup
+def radiator(center, color=P_RED, *, height: float | None = None, width: float | None = None):
+    """♨️ Filled panel radiator at the same human scale as the house section."""
+    from manim import Line, Rectangle, VGroup
 
-    sw = 1.5
-    body = Rectangle(width=0.92, height=0.5, color=color, stroke_width=sw)
-    grille = Line(body.get_corner(np.array([-1, 1, 0])) + DOWN * 0.08 + RIGHT * 0.06,
-                  body.get_corner(np.array([1, 1, 0])) + DOWN * 0.08 + LEFT * 0.06, color=color, stroke_width=1.1)
-    fins = VGroup(*[
-        Line(body.get_top() + DOWN * 0.14, body.get_bottom() + UP * 0.08, color=color, stroke_width=1.1).shift(RIGHT * dx)
-        for dx in np.linspace(-0.34, 0.34, 7)
-    ])
-    feet = VGroup(*[
-        Line(body.get_bottom() + RIGHT * dx, body.get_bottom() + RIGHT * dx + DOWN * 0.07, color=color, stroke_width=sw)
-        for dx in (-0.32, 0.32)
-    ])
-    return VGroup(body, grille, fins, feet).move_to(center)
+    height = _ARCHITECTURE_DIMENSIONS["radiator_height"] if height is None else height
+    width = _ARCHITECTURE_DIMENSIONS["radiator_width"] if width is None else width
+    body_height, feet_height = height * 0.88, height * 0.12
+    body = Rectangle(width=width, height=body_height, color=color, stroke_width=1.3,
+                     fill_color=color, fill_opacity=0.8).move_to([0, feet_height / 2, 0])
+    grille_y = body.get_top()[1] - body_height * 0.14
+    grille = Line([-width * 0.43, grille_y, 0], [width * 0.43, grille_y, 0],
+                  color=P_DEEP_DARK, stroke_width=0.8)
+    fins = VGroup(*[Line([x, grille_y - body_height * 0.1, 0], [x, body.get_bottom()[1] + body_height * 0.12, 0],
+                        color=P_DEEP_DARK, stroke_width=0.8)
+                   for x in np.linspace(-width * 0.38, width * 0.38, 7)])
+    feet = VGroup(*[Rectangle(width=width * 0.035, height=feet_height, color=color, stroke_width=0,
+                             fill_color=color, fill_opacity=0.8).move_to([x, body.get_bottom()[1] - feet_height / 2, 0])
+                   for x in (-width * 0.34, width * 0.34)])
+    result = VGroup(body, grille, fins, feet).move_to(center)
+    result.architectural_height = height
+    return result
 #endregion
 
 
 #region Everyday objects
 def sun_glyph(pos, color=P_YELLOW):
-    """☀️ Compact sun — core, glow, ring and twelve burst lines."""
-    from manim import TAU, Circle, Dot, Line, VGroup
+    """☀️ A quiet solid solar disc for architectural environmental drawings."""
+    from manim import VGroup
 
-    pos = np.array(pos, dtype=float)
-    core = Dot(pos, radius=0.45, color=color)
-    glow = Dot(pos, radius=0.7, color=color, fill_opacity=0.35)
-    ring = Circle(radius=0.85, color=color, stroke_width=2, stroke_opacity=0.6).move_to(pos)
-    burst = VGroup(*[
-        Line(pos + 0.55 * np.array([np.cos(a), np.sin(a), 0.0]), pos + 0.9 * np.array([np.cos(a), np.sin(a), 0.0]),
-             color=color, stroke_width=2)
-        for a in np.linspace(0, TAU, 12, endpoint=False)
-    ])
-    return VGroup(glow, core, ring, burst)
+    return VGroup(object_silhouette("sun", color=color, width=1.4)).move_to(pos)
 
 
 def moon_glyph(pos, color=P_WHITE):
-    """🌙 Crescent for night-time beats."""
-    from manim import Circle, VGroup
+    """🌒 One crescent contour, transparent around its concave edge."""
+    from manim import VGroup
 
-    disc = Circle(radius=0.24, color=color, fill_color=color, fill_opacity=0.85, stroke_width=0).move_to(pos)
-    bite = Circle(radius=0.22, color=P_DEEP_DARK, fill_color=P_DEEP_DARK, fill_opacity=1.0, stroke_width=0)
-    bite.move_to(np.array(pos) + np.array([0.12, 0.08, 0.0]))
-    return VGroup(disc, bite)
+    return VGroup(object_silhouette("moon", color=color, width=0.48)).move_to(pos)
+
+
+def _filled_outline(outline, color, height):
+    """🫟 Draw one connected opaque human contour from the portable outline contract."""
+    from manim import VMobject
+
+    point = lambda xy: np.array([xy[0] * height, xy[1] * height, 0.0])
+    body = VMobject(stroke_width=0, fill_color=color, fill_opacity=1)
+    body.start_new_path(point(outline["start"]))
+    for segment in outline["segments"]:
+        if len(segment) == 1:
+            body.add_line_to(point(segment[0]))
+        else:
+            body.add_cubic_bezier_curve_to(*[point(xy) for xy in segment])
+    body.close_path()
+    return body
+
+
+def object_silhouette(kind: str, *, color=P_WHITE, width: float = 0.65):
+    """🏺 Draw an original closed equipment or environmental elevation."""
+    outline = _filled_outline(_SILHOUETTES[kind], color, 1)
+    return outline.scale(width / outline.width).move_to([0, 0, 0])
 
 
 def person_glyph(pos, color=P_ORANGE, scale=1.0):
-    """🧍 Standing figure in elevation — head, torso and limbs, no face."""
-    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
+    """🧍 A connected filled standing silhouette, normalized to 0.66 drawing units."""
+    from manim import VGroup
 
-    sw = 1.55
-    head = Circle(radius=0.05, color=color, stroke_width=sw).shift(UP * 0.29)
-    neck = Line(head.get_bottom(), head.get_bottom() + DOWN * 0.025, color=color, stroke_width=sw)
-    sy, hy = head.get_bottom()[1] - 0.04, head.get_bottom()[1] - 0.2
-    shoulder = Line(LEFT * 0.1 + UP * sy, RIGHT * 0.1 + UP * sy, color=color, stroke_width=sw)
-    torso = VGroup(
-        Line(LEFT * 0.1 + UP * sy, LEFT * 0.065 + UP * hy, color=color, stroke_width=sw),
-        Line(RIGHT * 0.1 + UP * sy, RIGHT * 0.065 + UP * hy, color=color, stroke_width=sw),
-    )
-    arms = VGroup(
-        Line(LEFT * 0.1 + UP * sy, LEFT * 0.145 + UP * (hy + 0.02), color=color, stroke_width=sw),
-        Line(RIGHT * 0.1 + UP * sy, RIGHT * 0.145 + UP * (hy + 0.02), color=color, stroke_width=sw),
-    )
-    foot = hy - 0.3
-    legs = VGroup(
-        Line(LEFT * 0.035 + UP * hy, LEFT * 0.05 + UP * foot, color=color, stroke_width=sw),
-        Line(RIGHT * 0.035 + UP * hy, RIGHT * 0.05 + UP * foot, color=color, stroke_width=sw),
-    )
-    feet = VGroup(
-        Line(LEFT * 0.05 + UP * foot, LEFT * 0.015 + UP * foot, color=color, stroke_width=sw),
-        Line(RIGHT * 0.05 + UP * foot, RIGHT * 0.09 + UP * foot, color=color, stroke_width=sw),
-    )
-    fig = VGroup(head, neck, shoulder, torso, arms, legs, feet)
-    fig.scale(0.66 / fig.height)
-    return fig.scale(scale).move_to(pos)
+    height = _ARCHITECTURE_DIMENSIONS["standing_height"] * scale
+    figure = VGroup(_filled_outline(_ARCHITECTURE["standing"], color, height)).move_to(pos)
+    figure.architectural_height = height
+    return figure
 
 
 def seated_person_glyph(pos, color=P_ORANGE, scale=1.0, chair_color=P_WHITE):
-    """🪑 Seated figure in side elevation, facing right — the ``person_glyph`` line style on a thin chair.
-
-    ``pos`` is where the seat meets the floor; ``head``, ``mouth`` and ``lap`` are returned for heat and breath.
-    """
+    """🪑 One solid seated silhouette facing right, with feet at the floor anchor."""
     from manim import Circle, Line, VGroup
 
-    sw = 1.55
-
-    def L(a, b, c=color, w=sw):
-        return Line(np.array([a[0], a[1], 0.0]), np.array([b[0], b[1], 0.0]), color=c, stroke_width=w)
-
-    head = Circle(radius=0.05, color=color, stroke_width=sw).move_to(np.array([0.0, 0.305, 0.0]))
-    body = VGroup(
-        head, L((0.0, 0.255), (0.0, 0.23)),
-        L((-0.035, 0.215), (-0.045, 0.035)), L((0.035, 0.215), (0.03, 0.035)),
-        L((0.0, 0.035), (0.2, 0.035)), L((0.2, 0.035), (0.21, -0.195)), L((0.21, -0.195), (0.26, -0.195)),
-        L((0.02, 0.195), (0.1, 0.085)), L((0.1, 0.085), (0.22, 0.105)),
-    )
-    chair = VGroup(
-        L((-0.09, 0.0), (0.17, 0.0), chair_color, 1.3), L((-0.09, 0.0), (-0.11, 0.24), chair_color, 1.3),
-        L((0.04, 0.0), (0.04, -0.195), chair_color, 1.3), L((-0.06, -0.195), (0.14, -0.195), chair_color, 1.3),
-    )
-    group = VGroup(chair, body)
-    group.scale(scale, about_point=np.array([0.04, -0.195, 0.0]))
-    group.shift(np.array(pos, dtype=float) - np.array([0.04, -0.195, 0.0]))
+    height = _ARCHITECTURE_DIMENSIONS["seated_height"] * scale
+    anchor = np.array(pos, dtype=float)
+    body = _filled_outline(_ARCHITECTURE["seated"], color, height).shift(anchor)
+    point = lambda x, y: anchor + np.array([x * height, y * height, 0])
+    chair = VGroup(*[Line(point(*a), point(*b), color=chair_color, stroke_width=1.2)
+                    for a, b in [((-0.13, 0.4), (0.29, 0.4)), ((-0.13, 0.4), (-0.16, 0.82)),
+                                 ((-0.08, 0.4), (-0.08, 0)), ((0.26, 0.4), (0.26, 0))]])
+    head = Circle(radius=height * 0.08, stroke_width=0, fill_opacity=0).move_to(point(0, 0.93))
+    group = VGroup(chair, body, head)
     return {"group": group, "figure": body, "chair": chair, "head": head,
-            "mouth": head.get_center() + np.array([head.width / 2, -head.height * 0.15, 0.0]),
-            "chest": (body[2].get_center() + body[3].get_center()) / 2}
+            "mouth": point(0.1, 0.865), "chest": point(0.025, 0.7), "lap": point(0.23, 0.5),
+            "height": height}
 
 
-def cloud_glyph(content, *, pad=(0.42, 0.36), bump: float = 0.5, color=P_WHITE):
-    """☁️ Puffy speech cloud around ``content`` — one closed outline of outward arcs laid on an ellipse."""
-    from manim import PI, TAU, ArcBetweenPoints, VMobject
-
-    a, b = content.width / 2 + pad[0], content.height / 2 + pad[1]
-    c = content.get_center()
-    n = max(8, int(round(np.pi * (3 * (a + b) - np.sqrt((3 * a + b) * (a + 3 * b))) / bump)))
-    pts = [c + np.array([a * np.cos(t), b * np.sin(t), 0.0]) for t in np.linspace(0, TAU, n, endpoint=False) + PI / n]
-    outline = VMobject(color=color, stroke_width=2.2)
-    for p, q in zip(pts, pts[1:] + pts[:1]):
-        outline.append_points(ArcBetweenPoints(p, q, angle=0.8 * PI).points)
-    return outline.set_fill(P_DEEP_DARK, opacity=0.9)
+def cloud_glyph(content, *, pad=(0.42, 0.36), color=P_WHITE):
+    """📋 Architectural annotation frame sized to its typeset contents."""
+    return window_frame(content.width + 2 * pad[0], content.height + 2 * pad[1],
+                        color=color, fill_opacity=1).move_to(content)
 
 
 def cloud_trail(cloud, target, *, n: int = 3, color=P_WHITE):
-    """💭 Shrinking puffs that lead from the cloud's rim down to a speaker."""
-    from manim import LEFT, UP, Circle, VGroup, interpolate
+    """📎 A restrained annotation leader from the frame to the described object."""
+    from manim import Line, VGroup
 
-    start = cloud.get_bottom() + LEFT * cloud.width * 0.22 + UP * 0.04
-    end = np.array(target, dtype=float)
-    return VGroup(*[
-        Circle(radius=0.15 - 0.04 * k, color=color, stroke_width=2.0).set_fill(P_DEEP_DARK, opacity=0.9)
-        .move_to(interpolate(start, end, (k + 1) / (n + 1)))
-        for k in range(n)
-    ])
+    start = cloud.get_bottom()
+    return VGroup(Line(start, np.array(target, dtype=float), color=color,
+                       stroke_width=1.2, stroke_opacity=0.65))
 
 
-def clock_glyph(center, r: float = 0.42, color=P_CYAN):
+def clock_glyph(center, r: float = 0.42, color=P_PRIMARY):
     """🕐 Analogue dial — a full turn of the hand is one hour."""
     from manim import TAU, UP, Circle, Line, VGroup
 
@@ -1157,12 +1280,11 @@ def energy_tank(center, *, height: float = 2.2, width: float = 0.9, color=P_YELL
                            fill_color=P_WHITE, fill_opacity=0.6)
     cap.next_to(frame, UP, buff=0)
     tracker = ValueTracker(level)
-    inner = height - 0.12
-    base = frame.get_bottom() + UP * 0.06
-
     def fill():
-        h = max(0.002, inner * float(np.clip(tracker.get_value(), 0.0, 1.0)))
-        return Rectangle(width=width - 0.12, height=h, stroke_width=0, fill_color=color, fill_opacity=0.7).move_to(
+        sx, sy = frame.width / width, frame.height / height
+        h = max(0.002 * sy, (height - 0.12) * sy * float(np.clip(tracker.get_value(), 0.0, 1.0)))
+        base = frame.get_bottom() + UP * 0.06 * sy
+        return Rectangle(width=(width - 0.12) * sx, height=h, stroke_width=0, fill_color=color, fill_opacity=0.7).move_to(
             base + UP * h / 2)
 
     return {"frame": frame, "cap": cap, "level": tracker, "fill": always_redraw(fill),
@@ -1170,22 +1292,19 @@ def energy_tank(center, *, height: float = 2.2, width: float = 0.9, color=P_YELL
 
 
 def lamp_glyph(anchor, drop: float = 0.55, scale: float = 1.0):
-    """💡 Pendant lamp — cable, conical shade, bulb; ``scale`` shrinks the shade and bulb, not the cable drop."""
-    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, VGroup
+    """💡 Pendant with a closed filled shade and a connected luminous bulb."""
+    from manim import DOWN, LEFT, RIGHT, UP, Circle, Line, Polygon, VGroup
 
     a = np.array(anchor, dtype=float)
     cable = Line(a, a + DOWN * drop, color=P_WHITE, stroke_width=1.4)
     top = a + DOWN * drop
     h, w, tip = 0.2 * scale, 0.22 * scale, 0.05 * scale
-    shade = VGroup(
-        Line(top + LEFT * tip, top + DOWN * h + LEFT * w, color=P_WHITE, stroke_width=1.5),
-        Line(top + RIGHT * tip, top + DOWN * h + RIGHT * w, color=P_WHITE, stroke_width=1.5),
-        Line(top + DOWN * h + LEFT * w, top + DOWN * h + RIGHT * w, color=P_WHITE, stroke_width=1.5),
-    )
-    bulb = Circle(radius=0.09 * scale, color=P_YELLOW, stroke_width=1.5).move_to(top + DOWN * 0.32 * scale)
-    filament = Line(bulb.get_center() + (UP * 0.03 + LEFT * 0.025) * scale, bulb.get_center() + (DOWN * 0.03 + RIGHT * 0.025) * scale,
-                    color=P_YELLOW, stroke_width=1.1)
-    return {"cable": cable, "bulb": bulb, "group": VGroup(cable, shade, bulb, filament)}
+    shade = Polygon(top + LEFT * tip, top + RIGHT * tip, top + DOWN * h + RIGHT * w,
+                    top + DOWN * h + LEFT * w, color=P_WHITE, stroke_width=0,
+                    fill_color=P_WHITE, fill_opacity=1)
+    bulb = Circle(radius=0.09 * scale, color=P_YELLOW, stroke_width=0,
+                  fill_color=P_YELLOW, fill_opacity=1).move_to(top + DOWN * 0.24 * scale)
+    return {"cable": cable, "bulb": bulb, "shade": shade, "group": VGroup(cable, bulb, shade)}
 
 
 def droplets(center, n: int = 6, spread=(0.5, 0.6), seed: int = 3, color=P_BLUE):
@@ -1211,14 +1330,14 @@ def droplets(center, n: int = 6, spread=(0.5, 0.6), seed: int = 3, color=P_BLUE)
 # Hand-tuned per-beat coordinates are what produced the overlapping-label class
 # of bug that the layout guard at the bottom of this file now catches.
 
-# ``beat_subtitle`` bottoms out near y ≈ 2.68, so a note centred on NOTE_BAND_Y
+# The standalone section heading occupies the first content row; NOTE_BAND_Y
 # clears it, and any scaffold kept below CONTENT_TOP clears the note.
 NOTE_BAND_Y: float = 2.30
 CONTENT_TOP: float = 1.98
 NOTE_MAX_WIDTH: float = 11.0
 
 
-def note_line(text: str, *, color: str = P_TEAL, font_size: int | None = None, y: float = NOTE_BAND_Y):
+def note_line(text: str, *, color: str = P_PRIMARY, font_size: int | None = None, y: float = NOTE_BAND_Y):
     """🏷️ One-line aside on the reserved band under the beat subtitle."""
     from manim import UP
     _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
@@ -1241,11 +1360,30 @@ def note_line(text: str, *, color: str = P_TEAL, font_size: int | None = None, y
     return note
 
 
+def window_card(heading, reading, *, color: str = P_PRIMARY, width: float | None = None, height: float | None = None):
+    """🗃️ Fuse a heading cap with a body surface for plain or mathematical card content."""
+    from manim import VGroup
+
+    depth = heading.height + 2 * UI_SPACING if heading is not None else 0
+    title_width = heading.width + 2 * UI_SPACING if heading is not None else None
+    body_width = reading.width if reading is not None else 0
+    body_height = reading.height if reading is not None else 0
+    frame_width = max(width or 0, body_width + 4 * UI_SPACING, (title_width or 0) + 3 * UI_SPACING)
+    frame_height = max(height or 0, depth + body_height + 2 * UI_SPACING)
+    frame = window_frame(frame_width, frame_height, title_width=title_width, title_depth=depth, color=color)
+    if heading is not None:
+        heading.move_to([frame.get_left()[0] + UI_SPACING + heading.width / 2,
+                         frame.get_top()[1] - depth / 2, 0])
+    if reading is not None:
+        reading.move_to([0, -depth / 2, 0])
+    return VGroup(frame, VGroup(*[part for part in (heading, reading) if part is not None]))
+
+
 def stat_card(
     caption: str,
     value: str,
     *,
-    color: str = P_TEAL,
+    color: str = P_PRIMARY,
     value_color: str | None = None,
     caption_color: str | None = None,
     caption_size: int | None = None,
@@ -1253,43 +1391,17 @@ def stat_card(
     width: float | None = None,
     height: float | None = None,
 ):
-    """🪧 Framed caption-over-value block — the one label shape for a named quantity.
-
-    Two stacked lines inside a rounded frame: a dim caption naming the thing and
-    a coloured value. Passing ``width``/``height`` forces a fixed frame so a row
-    of cards lines up — which is what ``card_grid`` does. Filled with the same
-    translucent backdrop as ``caption_bar`` so a curve or gridline sitting behind
-    the card never bleeds through the text.
-    """
-    from manim import DOWN, RoundedRectangle, VGroup
-    _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
-    BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
-    LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
-    body_text = _manim_module.body_text
-
-    caption_size = caption_size or LABEL_FONT_SIZE
-    value_size = value_size or BODY_FONT_SIZE
-    caption_color = caption_color or P_TEAL
-    value_color = value_color or color
-
-    lines = []
-    if caption:
-        lines.append(body_text(caption, font_size=caption_size, color=caption_color))
-    if value:
-        lines.append(body_text(value, font_size=value_size, color=value_color))
-    body = VGroup(*lines).arrange(DOWN, buff=0.07)
-    frame = RoundedRectangle(
-        width=width if width is not None else body.width + 0.36,
-        height=height if height is not None else body.height + 0.30,
-        corner_radius=0.1, color=color, stroke_width=1.8,
-        fill_color=P_DEEP_DARK, fill_opacity=0.82,
-    )
-    body.move_to(frame.get_center())
-    return VGroup(frame, body)
+    """🪧 Place a named quantity in square chrome with its caption fused into the top cap."""
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    heading = fonts.body_text(caption, font_size=caption_size or fonts.LABEL_FONT_SIZE,
+                              color=caption_color or CHROME_FOREGROUND) if caption else None
+    reading = fonts.body_text(value, font_size=value_size or fonts.BODY_FONT_SIZE,
+                              color=value_color or color) if value else None
+    return window_card(heading, reading, color=color, width=width, height=height)
 
 
-def card_grid(entries, *, rows: int = 1, cols: int | None = None, color: str = P_TEAL,
-              buff: float = 0.22, **card_kwargs):
+def card_grid(entries, *, rows: int = 1, cols: int | None = None, color: str = P_PRIMARY,
+              buff: float = 2 * UI_SPACING, **card_kwargs):
     """🗂️ Grid of ``stat_card``s that all share one frame size.
 
     ``entries`` are ``(caption, value)`` or ``(caption, value, accent_colour)``.
@@ -1496,27 +1608,26 @@ def equation_row(parts, *, font_size: int | None = None, color: str = P_WHITE, b
     return row, items
 
 
-def formula_panel(row, *, color: str = P_TEAL, edge_buff: float = FORMULA_PANEL_EDGE_BUFF):
-    """📐 Place an equation row in the one fixed formula position and box it.
-
-    Same spot, same box, every scene — so viewers learn where to look.
-    """
-    from manim import DOWN, SurroundingRectangle
+def formula_panel(row, *, color: str = P_PRIMARY, edge_buff: float = FORMULA_PANEL_EDGE_BUFF):
+    """📐 Keep the formula in its reserved band inside the shared square chrome."""
+    from manim import DOWN
 
     row.to_edge(DOWN, buff=edge_buff)
     row.set_x(0)
     for fragment in row.get_family():
         fragment._layout_zone = "formula"
-    box = SurroundingRectangle(row, color=color, buff=0.22, corner_radius=0.1, stroke_width=2)
+    box = window_frame(row.width + 4 * UI_SPACING, row.height + 4 * UI_SPACING, color=color)
+    box.move_to(row.get_center())
+    box.set_z_index(-1)
     box._layout_zone = "formula_box"
     return row, box
 
 
-def highlight_param(items: dict, key: str, *, color: str = P_ORANGE):
+def highlight_param(items: dict, key: str, *, color: str = P_PRIMARY):
     """🔦 Ring for one named formula fragment — play it while the narration names that parameter."""
     from manim import SurroundingRectangle
 
-    ring = SurroundingRectangle(items[key], color=color, buff=0.08, stroke_width=3, corner_radius=0.05)
+    ring = SurroundingRectangle(items[key], color=color, buff=UI_SPACING, stroke_width=3, corner_radius=0)
     ring._layout_zone = getattr(items[key], "_layout_zone", "")
     return ring
 #endregion
@@ -1868,6 +1979,23 @@ def math_label(src: str, at=None, *, size: float | None = None, color: str = P_W
     return place_math(mob, at, edge) if at is not None else mob
 
 
+@lru_cache(maxsize=32)
+def _math_readout_template(src: str, size: float, color: tuple, context: tuple):
+    """🗃️ Own one bounded unplaced formula prototype for an explicit typography namespace."""
+    from manim import ManimColor
+
+    return math_text(src, font_size=size, color=ManimColor(color))
+
+
+def _math_readout_text(src: str, *, size: float | None = None, color: str = P_WHITE):
+    """🧫 Clone live formula geometry before placement or animation can mutate its template."""
+    from manim import ManimColor
+
+    fonts = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
+    rgba = tuple(float(channel) for channel in ManimColor(color).to_rgba())
+    return _math_readout_template(src, float(size or fonts.BODY_FONT_SIZE), rgba, fonts.text_context()).copy()
+
+
 def math_readout(fn, at, *, size: float | None = None, color: str = P_WHITE, edge: str = "left"):
     """📟 Live typeset label redrawn every frame from ``fn()``.
 
@@ -1875,12 +2003,12 @@ def math_readout(fn, at, *, size: float | None = None, color: str = P_WHITE, edg
     """
     from manim import always_redraw
 
-    return always_redraw(lambda: math_label(fn(), np.array(at() if callable(at) else at, dtype=float),
-                                            size=size, color=color, edge=edge))
+    return always_redraw(lambda: place_math(_math_readout_text(fn(), size=size, color=color),
+                                            np.array(at() if callable(at) else at, dtype=float), edge))
 
 
-def math_panel(parts, *, color: str = P_TEAL, size: float | None = None,
-               edge_buff: float = FORMULA_PANEL_EDGE_BUFF, buff: float = 0.18):
+def math_panel(parts, *, color: str = P_PRIMARY, size: float | None = None,
+               edge_buff: float = FORMULA_PANEL_EDGE_BUFF, buff: float = 2 * UI_SPACING):
     """🧮 Typeset formula in the fixed bottom panel, shrunk only when it would overrun the frame."""
     row, items = math_row(parts, font_size=size, buff=buff)
     if row.width > PANEL_MAX_WIDTH:
@@ -1895,9 +2023,9 @@ def math_panel(parts, *, color: str = P_TEAL, size: float | None = None,
 # sitting below formula_panel so the two fixed zones never collide.
 # Always CAPTION_FONT_SIZE, always center-aligned lines — never auto-shrink
 # (that made long clauses look tiny next to short ones and undid hand-breaks).
-CAPTION_EDGE_BUFF = 0.35
+CAPTION_EDGE_BUFF = 4 * UI_SPACING
 CAPTION_MAX_WIDTH = 11.5
-CAPTION_LINE_BUFF = 0.10
+CAPTION_LINE_BUFF = UI_SPACING
 # Two lines is what SAFE_BOTTOM was measured against; a third reaches y ≈ -2.1 and
 # starts colliding with beat content, so it is a text problem, not a layout one.
 CAPTION_MAX_LINES = 2
@@ -1910,7 +2038,10 @@ def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WH
     (and honours hand ``\\n``) so long clauses stay on-screen, center-aligned, with
     a fixed vertical gap between lines.
     """
-    from manim import DOWN, RoundedRectangle, VGroup
+    from manim import DOWN, VGroup, VectorizedPoint
+    audience = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.👥️audience.🐍️")
+    if not audience.subtitles_visible():
+        return VGroup(VectorizedPoint([0, -4 + CAPTION_EDGE_BUFF, 0]))
     _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
     CAPTION_FONT_SIZE = _manim_module.CAPTION_FONT_SIZE
     centered_body_text = _manim_module.centered_body_text
@@ -1935,19 +2066,16 @@ def caption_bar(text_de: str, *, font_size: int | None = None, color: str = P_WH
             f"caption_bar wrapped to {n_lines} lines (max {CAPTION_MAX_LINES}); "
             f"split or shorten the German clause: {text_de!r}"
         )
-    bg = RoundedRectangle(
-        width=label.width + 0.5,
-        height=label.height + 0.3,
-        corner_radius=0.08,
-        fill_color=P_DEEP_DARK,
-        fill_opacity=0.78,
-        stroke_width=0,
+    bg = window_frame(
+        label.width + 4 * UI_SPACING, label.height + 2 * UI_SPACING,
+        color=color, fill_opacity=0.88,
     )
     bg.move_to(label.get_center())
     bg._layout_zone = "caption_box"
     group = VGroup(bg, label)
     group.to_edge(DOWN, buff=CAPTION_EDGE_BUFF)
     group.set_x(0)
+    group.set_z_index(10000)
     for line in label.get_family():
         line._layout_zone = "caption"
     return group
@@ -2184,11 +2312,11 @@ def _dump_vo_trace() -> None:
         if not scene_file:
             continue
         owner = Path(scene_file).resolve().parent
-        output = __import__("os").environ.get("SEMIO_TEACHING_OUTPUT_ROOT")
+        output = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").output_root()
         from hashlib import sha256
 
         identity = sha256(owner.relative_to(_WORKSPACE_ROOT).as_posix().encode()).hexdigest()[:10]
-        path = (Path(output) / "trace" / identity / beat_id / "🔣️.json") if output else owner / "📍️trace" / "🔣️.json"
+        path = output / "trace" / identity / beat_id / "🔣️.json"
         path.parent.mkdir(parents=True, exist_ok=True)
         payload = {"beats": {}}
         if path.is_file():

@@ -1,0 +1,14 @@
+{
+  "schema": "semio.chapter-boundary-assets/v1",
+  "size": [
+    16,
+    9
+  ],
+  "cases": [
+    "fresh_process_identity",
+    "first_writer_wins",
+    "changed_identity",
+    "corrupt_asset_rejected",
+    "cancelled_before_write"
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "languages": ["en", "de"],
+  "keys": ["compare", "compare_2"],
+  "entry_run": 1,
+  "budget": 50,
+  "fps": 4,
+  "seconds": 6,
+  "curves": ["gradient", "pattern", "genetic"],
+  "used_runs": {"gradient": 50, "pattern": 49, "genetic": 50},
+  "endpoint_pixel_error": 0
+}

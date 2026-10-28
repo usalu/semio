@@ -11,12 +11,44 @@ fn issue(path: &str, code: IssueCode) -> ValidationIssue {
     ValidationIssue { path: path.to_string(), code }
 }
 
+#[test]
+fn software_mockup_vectors_agree_with_every_item_projection() {
+    let vectors: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/🖥️mockups/🔣️.json")).unwrap();
+    for vector in vectors.as_array().unwrap() {
+        let mut document = serde_json::to_value(quiz()).unwrap();
+        for task in document["tasks"].as_array_mut().unwrap() {
+            task.as_object_mut().unwrap().remove("draw");
+            task["items"][0]["mockup"] = vector["mockup"].clone();
+        }
+        let decoded = serde_json::from_value::<Quiz>(document);
+        let accepted = decoded.as_ref().is_ok_and(|quiz| quiz_issues(quiz).is_empty());
+        assert_eq!(accepted, vector["valid"].as_bool().unwrap(), "{}", vector["id"]);
+        if !accepted { continue; }
+        let quiz = decoded.unwrap();
+        for challenge in CHALLENGES {
+            let sheet = crate::sheet::sheet_of(&quiz, 42, challenge);
+            let mut count = 0;
+            for item in sheet.tasks.iter().flat_map(|task| task.items()) {
+                if let Some(mockup) = &item.mockup {
+                    count += 1;
+                    assert_eq!(serde_json::to_value(mockup).unwrap(), vector["mockup"]);
+                    let json = serde_json::to_value(item).unwrap();
+                    for key in ["category", "value", "values", "explanation", "familiar"] { assert!(json.get(key).is_none(), "{key}"); }
+                }
+            }
+            assert_eq!(count, 3);
+        }
+    }
+}
+
 fn badge(id: &str, rule: BadgeRule) -> Badge {
     Badge { id: id.to_string(), emoji: "🏅".to_string(), label: text(id), description: text(id), rule }
 }
 
 fn course() -> Course {
     Course {
+        assignments: None,
+        unlocks: None,
         json_schema: None,
         schema: COURSE_SCHEMA.to_string(),
         id: "architecture".to_string(),
@@ -307,7 +339,7 @@ fn issues_serialize_as_path_and_kebab_code() {
 }
 
 fn items(ids: &[&str]) -> Vec<SheetItem> {
-    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
+    ids.iter().map(|id| SheetItem { mockup: None, id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
 }
 
 fn classification_sheet() -> SheetTask {
@@ -694,4 +726,35 @@ fn course_aggregate_owns_quiz_components() {
     let view = crate::views::course_view(&course, &quizzes);
     assert!(course_view_issues(&view).is_empty());
     assert_eq!(view.topics.as_ref().unwrap()[0].quizzes, vec!["warmup"]);
+}
+
+#[test]
+fn localized_printable_assignments_share_the_language_neutral_cases() {
+    let cases: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📝️assignments/🔣️.json")).unwrap();
+    let mut document = course();
+    document.topics = Some(vec![Topic { id: "sample-topic".to_string(), emoji: "📝".to_string(), title: text("Sample Topic"), quizzes: vec!["energy".to_string()] }]);
+    let assignment: crate::schema::Assignment = serde_json::from_value(cases["valid"][0].clone()).unwrap();
+    document.assignments = Some(vec![assignment.clone()]);
+    assert!(course_issues(&document, &[quiz()]).is_empty());
+    let view = crate::views::course_view(&document, &[quiz()]);
+    assert_eq!(view.assignments, document.assignments);
+    assert!(course_view_issues(&view).is_empty());
+    for sample in cases["invalid"].as_array().unwrap() {
+        let mut value = cases["valid"][0].clone();
+        let pointer = sample.get("remove").unwrap_or(&sample["replace"]).as_str().unwrap();
+        let (parent, key) = pointer.rsplit_once('/').unwrap();
+        if sample.get("remove").is_some() { value.pointer_mut(parent).unwrap().as_object_mut().unwrap().remove(key); }
+        else { value.pointer_mut(parent).unwrap()[key] = sample["value"].clone(); }
+        let accepted = serde_json::from_value::<crate::schema::Assignment>(value).is_ok_and(|assignment| {
+            document.assignments = Some(vec![assignment]);
+            course_issues(&document, &[quiz()]).is_empty()
+        });
+        assert!(!accepted, "{}", sample["case"]);
+    }
+    document.assignments = Some(vec![assignment.clone(), assignment.clone()]);
+    assert!(!course_issues(&document, &[quiz()]).is_empty());
+    let mut unknown = assignment;
+    unknown.topic = "unknown".to_string();
+    document.assignments = Some(vec![unknown]);
+    assert!(!course_issues(&document, &[quiz()]).is_empty());
 }

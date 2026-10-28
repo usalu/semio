@@ -17,6 +17,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -26,14 +29,14 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -63,7 +66,7 @@ house_section = _manim_module.house_section
 open_window = _manim_module.open_window
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -82,9 +85,9 @@ Q_LATENT = round(V_DOT / 3600.0 * RHO_AIR * R_KJKG * 1000.0 * DX_GKG / 1000.0, -
 Q_WINTER_WRG = round(Q_WINTER * (1.0 - ETA_WRG), -1)
 Q_SUMMER_WRG = round(Q_SUMMER * (1.0 - ETA_WRG), -1)
 
-VENT_BLUE = "#60A5FA"
+VENT_BLUE = semio_color("secondary")
 COL_V, COL_N, COL_VDOT, COL_C = P_ORANGE, P_CYAN, VENT_BLUE, P_GREEN
-COL_DT, COL_DX, COL_ETA = P_YELLOW, P_BLUE, "#A78BFA"
+COL_DT, COL_DX, COL_ETA = P_YELLOW, P_BLUE, semio_color("info")
 COL_HEAT, COL_COOL, COL_REC = P_ORANGE, P_CYAN, P_TEAL
 #endregion
 
@@ -92,7 +95,7 @@ COL_HEAT, COL_COOL, COL_REC = P_ORANGE, P_CYAN, P_TEAL
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -112,11 +115,11 @@ def _sym_card(sym_src, name, fmt, color, at, *, width: float = 1.84, height: flo
     The frame stays on the board as a dim slot until the narration names the quantity.
     """
     at = np.array(at, dtype=float)
-    frame = RoundedRectangle(width=width, height=height, corner_radius=0.1, color=color, stroke_width=1.8,
-                             fill_color=P_DEEP_DARK, fill_opacity=0.82).move_to(at)
+    frame = RoundedRectangle(width=width, height=height, corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER,
+                             fill_color=_theme_module.CHROME_FILL, fill_opacity=0.82).move_to(at)
     frame.set_stroke(opacity=0.28).set_z_index(-1)
     sym = math_label(sym_src, at + UP * 0.22, size=28, color=color)
-    label = body_text(name, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL).move_to(at + DOWN * 0.08)
+    label = body_text(name, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY).move_to(at + DOWN * 0.08)
     tracker = ValueTracker(0.0)
     value = math_readout(lambda: fmt(tracker.get_value()), at + DOWN * 0.50, size=LABEL_FONT_SIZE - 1, color=P_WHITE,
                          edge="center")
@@ -141,9 +144,8 @@ def _hand_over(prefix, quantity_src, color):
     """🔖 Hand-over chip naming the quantity the later video takes over."""
     label = body_text(prefix, font_size=LABEL_FONT_SIZE + 1, color=color)
     quantity = math_label(quantity_src, size=BODY_FONT_SIZE, color=color)
-    content = VGroup(label, quantity).arrange(RIGHT, buff=0.14)
-    box = SurroundingRectangle(content, color=color, corner_radius=0.1, buff=0.14, stroke_width=1.8)
-    return VGroup(box, content)
+    content = VGroup(label, quantity).arrange(RIGHT, buff=_theme_module.UI_SPACING)
+    return window_chip(content, color=color)
 
 
 def _bar_stack(x, base_y, colours, *, unit, width: float = 0.55, opacities=None):
@@ -244,9 +246,7 @@ class Beat1_Zusammenfassung(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Sieben Größen, eine Kette", title)
+        subtitle = section_heading("Sieben Größen, eine Kette")
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -325,7 +325,7 @@ class Beat1_Zusammenfassung(Scene):
         k3 = ValueTracker(0.0)
         res3s = math_readout(lambda: rf"{de_num(Q_LATENT * k3.get_value())}\,\mathrm{{W}}",
                              np.array([X_SUMMER, Y_ROWS[2], 0.0]), size=BODY_FONT_SIZE, color=COL_DX, edge="center")
-        none_w = math_label("–", np.array([X_WINTER, Y_ROWS[2], 0.0]), size=BODY_FONT_SIZE, color=P_TEAL)
+        none_w = math_label("–", np.array([X_WINTER, Y_ROWS[2], 0.0]), size=BODY_FONT_SIZE, color=P_PRIMARY)
         caption = swap_caption(self, caption, subtitle_text(N, "lat"))
         self.add(res3s)
         self.play(*[TransformFromCopy(cards[k]["sym"], it3[k]) for k in ("vdot", "dx")], FadeIn(it3["q"]),
@@ -404,9 +404,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Was Heizung und Kühlung übernehmen", title)
+        subtitle = section_heading("Was Heizung und Kühlung übernehmen")
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -437,7 +435,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         summer = _bar_stack(X_BAR_S, base_y, [COL_COOL, COL_REC, COL_DX], unit=BAR_UNIT, opacities=[0.8, 0.42, 0.8])
         w0, w1 = winter["values"]
         s0, s1, s2 = summer["values"]
-        ground = VGroup(*[Line(np.array([x - 0.45, base_y, 0.0]), np.array([x + 0.45, base_y, 0.0]), color=P_TEAL, stroke_width=2.2)
+        ground = VGroup(*[Line(np.array([x - 0.45, base_y, 0.0]), np.array([x + 0.45, base_y, 0.0]), color=P_PRIMARY, stroke_width=2.2)
                           for x in (X_BAR_W, X_BAR_S)])
 
         hand_w = _hand_over("→ Heizung:", r"\Phi_{\mathrm{V}}", COL_HEAT).move_to(np.array([X_COL_W + 1.55, Y_HAND, 0.0]))
@@ -478,7 +476,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         hold_for(self, N, "winter", during=breeze("winter"))
 
         caption = swap_caption(self, caption, subtitle_text(N, "heizung"))
-        ring = SurroundingRectangle(hand_w, color=COL_HEAT, buff=0.08, corner_radius=0.1, stroke_width=3)
+        ring = SurroundingRectangle(hand_w, color=COL_HEAT, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
         self.play(Create(ring), FadeIn(w_term), *breeze("winter")(0.8), run_time=0.8)
         hold_for(self, N, "heizung", during=breeze("winter"))
 
@@ -496,7 +494,7 @@ class Beat2_UebergabeHeizungKuehlung(Scene):
         hold_for(self, N, "summer", during=breeze("summer"))
 
         caption = swap_caption(self, caption, subtitle_text(N, "kuehlung"))
-        ring = SurroundingRectangle(hand_s, color=COL_COOL, buff=0.08, corner_radius=0.1, stroke_width=3)
+        ring = SurroundingRectangle(hand_s, color=COL_COOL, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
         self.play(Create(ring), FadeIn(s_air), *breeze("summer")(0.8), run_time=0.8)
         hold_for(self, N, "kuehlung", during=breeze("summer"))
 

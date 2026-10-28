@@ -21,6 +21,7 @@ export default {
     mode: "test",
     environment: "node",
     include: [
+      "../🔓️access/🟦️.ts",
       "../🌀️mt19937-generator/🟦️.ts",
       "../🧗️challenge-ladder/🟦️.ts",
       "../💡️challenge-sorting-hints/🟦️.ts",
@@ -37,6 +38,8 @@ export default {
       "../🧬️contract-projection/🟦️.ts",
       "../🗳️crowd-answers/🟦️.ts",
       "../🧺️balanced-pools/🟦️.ts",
+      "../🖥️mockups/🟦️.ts",
+      "../📝️assignments/🟦️.ts",
     ].map(suite),
     coverage: { include: ["🟦️.ts", "../../🧬️schema/🟦️.ts", "../../🔨️modules/**/🟦️.ts"] },
     passWithNoTests: false,

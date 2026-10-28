@@ -16,6 +16,8 @@ pub const REVISED: &str = "22222222222222222222222222222222222222222222222222222
 pub fn course() -> Course {
     let badge = |id: &str, rule: BadgeRule| Badge { id: id.to_string(), emoji: "🏅".to_string(), label: text(id), description: text(id), rule };
     Course {
+        assignments: None,
+        unlocks: None,
         json_schema: None,
         schema: "semio.course/v1".to_string(),
         id: "architecture".to_string(),

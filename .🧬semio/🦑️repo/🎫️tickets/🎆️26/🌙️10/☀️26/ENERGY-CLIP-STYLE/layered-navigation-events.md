@@ -1,0 +1,22 @@
+# Layered Navigation Events
+
+- 0.000s: topics
+- 0.500s: root parallax left
+- 1.417s: root parallax right
+- 2.500s: card body hover does not reveal
+- 4.083s: Ansehen reveals topic at full viewport
+- 4.833s: press topic
+- 5.083s: release opens topic
+- 5.333s: video level parallax right
+- 6.250s: video level parallax left
+- 7.917s: Ansehen reveals video at full viewport
+- 8.750s: press video
+- 9.000s: release opens video
+- 9.833s: opened video
+- 10.417s: cursor targets real fullscreen button
+- 11.083s: press restore
+- 11.333s: release restores video level
+- 11.583s: cursor targets parent level control
+- 12.250s: press parent level
+- 12.500s: release restores topics
+- 13.417s: canonical topic handoff

@@ -10,7 +10,10 @@
     "de": "Heatmap"
   },
   "grounds": [
-    "topic/optimization"
+    "topic/optimization",
+    "optimization-decisions",
+    "optimization-decisions/optimization-objectives",
+    "optimization-decisions/pareto-dominance"
   ],
   "size": {
     "width": 60,

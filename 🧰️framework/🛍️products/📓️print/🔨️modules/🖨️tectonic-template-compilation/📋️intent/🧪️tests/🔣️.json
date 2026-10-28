@@ -10,7 +10,8 @@
       "sources": [
         "🧾️template"
       ],
-      "dark": true
+      "dark": true,
+      "producer": "@semio-tech/print:build-sample"
     },
     {
       "version": 1,
@@ -38,7 +39,49 @@
       "name": "viz-api-en.tex",
       "source": "\\documentclass[theme=light]{semio}",
       "dark": true,
-      "resources": []
+      "resources": [],
+      "producer": "@semio-tech/print:build-api-publication-en"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "producer": "@teaching/architecture-course:build-parametrization-en",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "producer": "@teaching/architecture-course:build-parametrization-en",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true,
+      "resources": [
+        {
+          "source": "🧰️framework/🔨️modules/🖼️assets/source.svg",
+          "name": "resources/source.png",
+          "format": "svg-png",
+          "width": 2048,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
     }
   ],
   "invalid": [
@@ -88,6 +131,110 @@
       "source": "content",
       "dark": true,
       "output": "/tmp/free"
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "producer": "../../outside",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "producer": "@teaching/architecture-course:build-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "producer": "@teaching/architecture-course:build-parametrization-en",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true,
+      "resources": [
+        {
+          "source": "🧰️framework/🔨️modules/🖼️assets/source.svg",
+          "name": "../outside.png",
+          "format": "svg-png",
+          "width": 2048,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
+    },
+    {
+      "version": 1,
+      "kind": "document",
+      "namespace": "course",
+      "id": "architecture-parametric-parametrization-en",
+      "producer": "@teaching/architecture-course:build-parametrization-en",
+      "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+      "texPath": "en.tex",
+      "sources": [
+        "en.tex",
+        "en.content.tex",
+        "geometry.tex",
+        "icons.json"
+      ],
+      "dark": true,
+      "resources": [
+        {
+          "source": "🧰️framework/🔨️modules/🖼️assets/source.svg",
+          "name": "resources/source.png",
+          "format": "svg-png",
+          "width": 2048,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        {
+          "source": "🧰️framework/🔨️modules/🖼️assets/source.svg",
+          "name": "resources/SOURCE.png",
+          "format": "svg-png",
+          "width": 2048,
+          "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+        }
+      ]
     }
   ]
 }

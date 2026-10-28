@@ -10,6 +10,7 @@
       "package": "ajv",
       "version": "8.20.0",
       "capabilities": [
+        "parametrization-assignment",
         "viz-catalog-coverage",
         "viz-catalog-schema",
         "viz-catalog-validity",
@@ -146,6 +147,7 @@
         "network-graph-algorithms",
         "network-placement-layouts",
         "network-placement-layouts-twin",
+        "parametrization-assignment",
         "viz-array-extent",
         "viz-array-ticks",
         "viz-charts-distribution",
@@ -1082,6 +1084,7 @@
       "package": "mathjs",
       "version": "14.0.0",
       "capabilities": [
+        "parametrization-assignment",
         "viz-scientific-function-sampling"
       ],
       "comparisonProfiles": [

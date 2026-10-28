@@ -1,0 +1,774 @@
+{
+  "version": 1,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "audiences": [
+    {
+      "id": "speaker",
+      "captions": true
+    },
+    {
+      "id": "spectator",
+      "captions": false
+    }
+  ],
+  "chapters": [
+    {
+      "folder": "📉️extrema",
+      "scene": "Beat1_LocalGlobalExtrema",
+      "video_id": "optimization_extrema",
+      "entry": "🏛️architecture/🎯️optimization/📉️extrema/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Local and Global Optima",
+        "de": "Lokale und Globale Optima"
+      },
+      "output": "optimization_extrema"
+    },
+    {
+      "folder": "🎲️sampling",
+      "scene": "Beat2_GridRandomSampling",
+      "video_id": "optimization_sampling",
+      "entry": "🏛️architecture/🎯️optimization/🎲️sampling/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Grid and Random Sampling",
+        "de": "Raster- und Zufallsstichproben"
+      },
+      "output": "optimization_sampling"
+    },
+    {
+      "folder": "🧪️experiments",
+      "scene": "Beat3_FactorialExperiments",
+      "video_id": "optimization_experiments",
+      "entry": "🏛️architecture/🎯️optimization/🧪️experiments/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Design of Experiments",
+        "de": "Versuchsplanung"
+      },
+      "output": "optimization_experiments"
+    },
+    {
+      "folder": "⚖️index",
+      "scene": "Beat4_NormalizedIndex",
+      "video_id": "optimization_index",
+      "entry": "🏛️architecture/🎯️optimization/⚖️index/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Multiple Criteria and Index",
+        "de": "Mehrere Kriterien und Index"
+      },
+      "output": "optimization_index"
+    },
+    {
+      "folder": "🏆️pareto",
+      "scene": "Beat5_ParetoFront",
+      "video_id": "optimization_pareto",
+      "entry": "🏛️architecture/🎯️optimization/🏆️pareto/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Pareto Optimality",
+        "de": "Pareto-Optimalität"
+      },
+      "output": "optimization_pareto"
+    },
+    {
+      "folder": "🧬️algorithms",
+      "scene": "Beat6_EvolutionarySearch",
+      "video_id": "optimization_algorithms",
+      "entry": "🏛️architecture/🎯️optimization/🧬️algorithms/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Optimization Algorithms",
+        "de": "Optimierungsalgorithmen"
+      },
+      "output": "optimization_algorithms"
+    }
+  ],
+  "baseline": {
+    "window_area": 10.8,
+    "wall_area": 13.2,
+    "u_wall": 0.192625,
+    "heating_demand": 203.875563,
+    "cooling_demand": 735.628911,
+    "heating": 58.250161,
+    "cooling": 245.209637,
+    "lighting": 218.634105,
+    "electricity": 522.093902,
+    "intensity": 10.876956,
+    "solar_winter": 1836.0,
+    "solar_summer": 429.437921,
+    "shading_winter": 0.0,
+    "shading_summer": 0.887005,
+    "sun_winter": 1.0,
+    "sun_summer": 0.574927,
+    "daylight": 2.7,
+    "autonomy": 0.662602,
+    "cost": 20359.2,
+    "carbon": 3816.0,
+    "conductance": 24.262653,
+    "heating_losses": 1698.385691,
+    "heating_gains": 2136.0,
+    "heating_eta": 0.699677,
+    "heating_used": 1494.510128,
+    "cop": 3.5,
+    "cooling_gains": 929.437921,
+    "cooling_removable": 194.101222,
+    "cooling_eta": 0.998495,
+    "cooling_removed": 193.80901,
+    "eer": 3,
+    "internal_winter": 300,
+    "internal_summer": 500,
+    "beam_winter": 5.989644,
+    "beam_summer": 2.35694,
+    "direct_winter": 0.5,
+    "direct_summer": 0.6,
+    "lighting_power": 0.432,
+    "lighting_hours": 1500,
+    "lamps_on": 0.337398
+  },
+  "continuity": {
+    "note": "Overhang shading weights each hourly sun position by the beam it delivers and divides by the larger of the delivered beam and climate.beam_reference, so no heating, cooling, lighting or total curve has a step over the bearing.",
+    "bearings": {
+      "from": 90,
+      "to": 450,
+      "step": 0.25,
+      "fine_step": 0.0625
+    },
+    "wwr": [
+      0.3,
+      0.6,
+      0.8
+    ],
+    "overhang": [
+      0,
+      0.3,
+      0.6,
+      1.0,
+      1.2
+    ],
+    "insulation": 0.16,
+    "step_bound": {
+      "heating": 2.0,
+      "cooling": 4.0,
+      "lighting": 0.15,
+      "electricity": 4.0
+    },
+    "max_step_found": {
+      "heating": 1.529965,
+      "cooling": 3.758102,
+      "lighting": 0.106658,
+      "electricity": 3.484737
+    },
+    "before_fix_max_step": {
+      "heating": 106.739106,
+      "cooling": 252.231784,
+      "lighting": 0.106658,
+      "electricity": 252.27027
+    },
+    "scaling_minimum": 3.3,
+    "grazing": {
+      "design": {
+        "wwr": 0.45,
+        "overhang": 0.6,
+        "insulation": 0.16
+      },
+      "bearings": [
+        354.0,
+        354.5,
+        355.0,
+        356.0,
+        360.0
+      ],
+      "shading_summer": [
+        0.030012,
+        0.016095,
+        0.002176,
+        0.0,
+        0.0
+      ],
+      "cooling": [
+        334.7839,
+        336.281976,
+        337.813809,
+        337.360393,
+        336.003154
+      ],
+      "electricity": [
+        894.060902,
+        895.614872,
+        897.197652,
+        896.831378,
+        895.628453
+      ],
+      "last_hour": {
+        "hour": 4,
+        "across": 88.921829,
+        "weight": 0.015006,
+        "direct_summer": 0.018007
+      }
+    }
+  },
+  "ranges": {
+    "electricity": [
+      300,
+      2500
+    ],
+    "intensity": [
+      10,
+      50
+    ],
+    "cost": [
+      10000,
+      60000
+    ]
+  },
+  "orientation": {
+    "local_minima": [
+      180,
+      360
+    ],
+    "local_maxima": [
+      282,
+      438
+    ],
+    "global_minimum": 180,
+    "feasible_minimum": 360,
+    "reference": 90,
+    "constraint": [
+      270,
+      450
+    ],
+    "samples": 361,
+    "values": {
+      "south": 681.283768,
+      "north": 882.008129,
+      "east": 1131.113435,
+      "west": 1145.930768,
+      "north_penalty": 0.294627
+    },
+    "minimum_penalty": 0.15,
+    "start": 315,
+    "descent": [
+      315,
+      320,
+      325,
+      330,
+      335,
+      340,
+      345,
+      350,
+      355,
+      360
+    ],
+    "tariff": 0.25,
+    "savings_north_chf": 62.276327,
+    "sun": {
+      "winter_altitude": 19.16,
+      "summer_altitude": 66.04,
+      "low_summer_altitude": 30,
+      "winter_azimuth": [
+        130.2,
+        229.8
+      ],
+      "summer_azimuth": [
+        58,
+        302
+      ]
+    }
+  },
+  "surface": {
+    "minimum": {
+      "wwr": 0.66,
+      "overhang": 0.99,
+      "electricity": 494.837964
+    },
+    "corners": {
+      "low_low": 807.993031,
+      "high_low": 775.474007,
+      "low_high": 846.375925,
+      "high_high": 499.187159
+    }
+  },
+  "sampling": {
+    "counts": {
+      "grid": 9,
+      "random": 9,
+      "lhs": 9
+    },
+    "electricity": {
+      "grid": [
+        807.993031,
+        808.973568,
+        846.375925,
+        636.795509,
+        522.093902,
+        547.135014,
+        775.474007,
+        615.506324,
+        499.187159
+      ],
+      "random": [
+        770.139117,
+        625.215791,
+        567.700311,
+        561.793126,
+        634.021451,
+        656.891305,
+        568.298521,
+        686.353575,
+        707.243529
+      ],
+      "lhs": [
+        757.050577,
+        655.422326,
+        624.530984,
+        557.161304,
+        572.252016,
+        554.007364,
+        681.824277,
+        495.864619,
+        598.535281
+      ]
+    },
+    "empty_corner": {
+      "wwr_above": 0.55,
+      "overhang_above": 0.8
+    },
+    "closest": {
+      "wwr_below": 0.05,
+      "overhang_below": 0.1
+    },
+    "diagnostics": {
+      "largest_empty_box": {
+        "wwr": [
+          0.3499,
+          0.6999
+        ],
+        "overhang": [
+          0.15,
+          1.2
+        ]
+      },
+      "closest_pair": [
+        2,
+        3,
+        0.057306
+      ]
+    }
+  },
+  "factorial": {
+    "responses": [
+      312.78617,
+      190.488589,
+      566.661384,
+      287.757694
+    ],
+    "effects": {
+      "a": 175.57216,
+      "b": -200.600636,
+      "ab": -78.303055
+    },
+    "coefficients": [
+      339.423459,
+      87.78608,
+      -100.300318,
+      -39.151527
+    ],
+    "centre": {
+      "predicted": 339.423459,
+      "actual": 298.314649
+    },
+    "minimum_curvature": 0.08,
+    "minimum_saving_ratio": 1.5,
+    "half_share": 0.69353
+  },
+  "fractional": {
+    "responses": [
+      316.53363,
+      186.285878,
+      564.839617,
+      289.356114
+    ],
+    "alias_contrast": -72.617875,
+    "true": {
+      "ab": -78.305595,
+      "c": 5.68772,
+      "sum": -72.617875
+    }
+  },
+  "brief": {
+    "budget_chf": 21000,
+    "excluded": [
+      "glass_shaded",
+      "glass_bare"
+    ],
+    "allowed_order": [
+      "ribbon",
+      "punched",
+      "punched_insulated"
+    ]
+  },
+  "index": {
+    "balanced": {
+      "electricity": 0.4,
+      "cost": 0.3,
+      "daylight": 0.2,
+      "carbon": 0.1
+    },
+    "cost_heavy": {
+      "electricity": 0.22857142857142856,
+      "cost": 0.6,
+      "daylight": 0.11428571428571428,
+      "carbon": 0.05714285714285714
+    },
+    "winner": {
+      "balanced": "ribbon",
+      "cost_heavy": "punched"
+    },
+    "scores_balanced": [
+      0.482307,
+      0.400032,
+      0.524444,
+      0.700094,
+      0.651985
+    ],
+    "order_five": [
+      "ribbon",
+      "punched",
+      "glass_shaded",
+      "glass_bare",
+      "punched_insulated"
+    ],
+    "order_six": [
+      "ribbon",
+      "glass_shaded",
+      "punched",
+      "glass_premium",
+      "glass_bare",
+      "punched_insulated"
+    ],
+    "variants": [
+      {
+        "id": "punched",
+        "intensity": 13.73212,
+        "cost": 19428.0,
+        "daylight": 2.0,
+        "carbon": 2520.0
+      },
+      {
+        "id": "ribbon",
+        "intensity": 10.922832,
+        "cost": 20544.0,
+        "daylight": 3.0,
+        "carbon": 3840.0
+      },
+      {
+        "id": "glass_shaded",
+        "intensity": 10.437479,
+        "cost": 21475.2,
+        "daylight": 3.36,
+        "carbon": 5136.0
+      },
+      {
+        "id": "punched_insulated",
+        "intensity": 13.406909,
+        "cost": 20940.0,
+        "daylight": 2.0,
+        "carbon": 3150.0
+      },
+      {
+        "id": "glass_bare",
+        "intensity": 15.105647,
+        "cost": 21091.2,
+        "daylight": 5.6,
+        "carbon": 2736.0
+      },
+      {
+        "id": "glass_premium",
+        "intensity": 10.407159,
+        "cost": 22080.0,
+        "daylight": 3.36,
+        "carbon": 5388.0
+      }
+    ]
+  },
+  "pareto": {
+    "count": 36,
+    "front": [
+      "w30-t12-d0",
+      "w30-t12-d60",
+      "w40-t12-d60",
+      "w50-t12-d60",
+      "w40-t20-d60",
+      "w50-t20-d60",
+      "w40-t30-d60",
+      "w50-t30-d60"
+    ],
+    "front3_count": 30,
+    "dominated_example": {
+      "winner": "w30-t12-d0",
+      "loser": "w70-t30-d0"
+    },
+    "knee": {
+      "tariff": "w30-t12-d60",
+      "tariff_hi": "w40-t12-d60"
+    },
+    "steps": [
+      {
+        "from": "w30-t12-d0",
+        "to": "w30-t12-d60",
+        "cost": 192.0,
+        "saved": 64.911324,
+        "payback": 11.831526
+      },
+      {
+        "from": "w30-t12-d60",
+        "to": "w40-t12-d60",
+        "cost": 427.2,
+        "saved": 50.885538,
+        "payback": 33.581251
+      },
+      {
+        "from": "w40-t12-d60",
+        "to": "w50-t12-d60",
+        "cost": 427.2,
+        "saved": 5.53475,
+        "payback": 308.740242
+      },
+      {
+        "from": "w50-t12-d60",
+        "to": "w40-t20-d60",
+        "cost": 264.0,
+        "saved": 3.155997,
+        "payback": 334.60107
+      },
+      {
+        "from": "w40-t20-d60",
+        "to": "w50-t20-d60",
+        "cost": 312.0,
+        "saved": 1.998694,
+        "payback": 624.407856
+      },
+      {
+        "from": "w50-t20-d60",
+        "to": "w40-t30-d60",
+        "cost": 552.0,
+        "saved": 2.291738,
+        "payback": 963.461095
+      },
+      {
+        "from": "w40-t30-d60",
+        "to": "w50-t30-d60",
+        "cost": 168.0,
+        "saved": 0.250781,
+        "payback": 2679.633157
+      }
+    ],
+    "refinement": {
+      "member": "w50-t30-d60",
+      "dominates": [
+        "w40-t30-d60",
+        "w50-t30-d60"
+      ]
+    },
+    "third_example": {
+      "dominated_2d": "w80-t12-d0",
+      "dominator": "w30-t12-d0"
+    },
+    "picks": [
+      {
+        "weight": 0,
+        "id": "w30-t12-d0"
+      },
+      {
+        "weight": 0.25,
+        "id": "w30-t12-d60"
+      },
+      {
+        "weight": 0.5,
+        "id": "w40-t12-d60"
+      },
+      {
+        "weight": 0.75,
+        "id": "w40-t12-d60"
+      },
+      {
+        "weight": 1,
+        "id": "w50-t30-d60"
+      }
+    ]
+  },
+  "algorithms": {
+    "gradient": {
+      "length": 10,
+      "first": 744.677406,
+      "last": 503.99574,
+      "evaluations": 50
+    },
+    "pattern": {
+      "length": 13,
+      "first": 744.677406,
+      "last": 496.6992,
+      "evaluations": 49,
+      "halvings": 3
+    },
+    "genetic": {
+      "best": [
+        586.639791,
+        548.278428,
+        524.075535,
+        522.740951,
+        513.701089,
+        506.33152,
+        498.059826,
+        498.059826
+      ],
+      "evaluations": [
+        8,
+        14,
+        20,
+        26,
+        32,
+        38,
+        44,
+        50
+      ]
+    },
+    "convergence": {
+      "gradient": 496.383023,
+      "pattern": 496.6992,
+      "genetic": 498.059826
+    },
+    "budget": 50,
+    "map_minimum": 494.837964
+  },
+  "invalidModels": [
+    {
+      "id": "missing-german",
+      "path": [
+        "title",
+        "de"
+      ],
+      "remove": true
+    },
+    {
+      "id": "invalid-language",
+      "path": [
+        "languages"
+      ],
+      "value": [
+        "en"
+      ]
+    },
+    {
+      "id": "empty-variants",
+      "path": [
+        "variants"
+      ],
+      "value": []
+    },
+    {
+      "id": "unknown-direction",
+      "path": [
+        "criteria",
+        0,
+        "direction"
+      ],
+      "value": "lower"
+    },
+    {
+      "id": "invalid-random-draw",
+      "path": [
+        "sampling",
+        "random",
+        0
+      ],
+      "value": [
+        0.2
+      ]
+    },
+    {
+      "id": "unknown-root-key",
+      "path": [
+        "legacy"
+      ],
+      "value": 1
+    },
+    {
+      "id": "missing-unit",
+      "path": [
+        "parameters",
+        "climate",
+        "heating_degree_hours",
+        "unit"
+      ],
+      "remove": true
+    },
+    {
+      "id": "missing-note",
+      "path": [
+        "parameters",
+        "envelope",
+        "u_window",
+        "note"
+      ],
+      "remove": true
+    },
+    {
+      "id": "text-for-number",
+      "path": [
+        "parameters",
+        "room",
+        "width",
+        "value"
+      ],
+      "value": "eight"
+    },
+    {
+      "id": "duplicate-permutation",
+      "path": [
+        "sampling",
+        "latin_permutation"
+      ],
+      "value": [
+        0,
+        0,
+        1
+      ]
+    },
+    {
+      "id": "range-as-text",
+      "path": [
+        "ranges",
+        "wwr",
+        "min"
+      ],
+      "value": "ten"
+    },
+    {
+      "id": "unknown-response",
+      "path": [
+        "factorial",
+        "response"
+      ],
+      "value": "noise"
+    },
+    {
+      "id": "missing-beam-reference",
+      "path": [
+        "parameters",
+        "climate",
+        "beam_reference"
+      ],
+      "remove": true
+    },
+    {
+      "id": "zero-beam-reference",
+      "path": [
+        "parameters",
+        "climate",
+        "beam_reference",
+        "value"
+      ],
+      "value": 0
+    }
+  ]
+}

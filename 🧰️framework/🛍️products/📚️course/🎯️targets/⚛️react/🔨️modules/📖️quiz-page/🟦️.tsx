@@ -7,6 +7,7 @@
  * @see ../🏠️home/🟦️.tsx — the overview the card sits on and the pane the page fills
  */
 
+import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { useEffect, useId, useState, type ReactElement, type ReactNode } from "react";
 import { challengeRules, roomScope, thinkingScope, type CourseQuizView, type Challenge, type RunView, type ThinkingState } from "@semio-tech/course";
 import { TASK_KIND_LABELS, localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
@@ -42,18 +43,19 @@ interface QuizProps {
  * stays beside it. */
 function actionsOf(props: QuizProps, ask?: () => void): { readonly primary: ReactElement; readonly secondary: readonly ReactElement[] } {
   const { quiz, session, state, text, busy, act, challenge } = props;
+  const locked = !clientAccess(state.course, quiz.id, Date.now());
   const open = openRunOf(state, quiz.id);
   const opened = openChallengeOf(state, quiz.id) ?? challenge;
   const last = lastSubmittedRunOf(state, quiz.id);
   const shown = last === undefined ? [] : [<CardAction key="last" onClick={() => session.open({ screen: "results", run: last })}>{text("course.home.lastResult")}</CardAction>];
   const start = (
-    <CardAction primary disabled={busy} onClick={open === undefined ? () => act((signal) => session.startRun(quiz.id, challenge, signal)) : ask}>
+    <CardAction primary disabled={busy || locked} onClick={open === undefined ? () => act((signal) => session.startRun(quiz.id, challenge, signal)) : ask}>
       {text(state.learnerView?.best[quiz.id] === undefined ? "course.home.start" : "course.home.again", { challenge: text(CHALLENGE_LABELS[challenge]) })}
     </CardAction>
   );
   if (open === undefined) return { primary: start, secondary: shown };
   const resume = (
-    <CardAction key="resume" primary={ask === undefined || opened === challenge} disabled={busy} onClick={() => act((signal) => session.resumeRun(open, signal))}>
+    <CardAction key="resume" primary={ask === undefined || opened === challenge} disabled={busy || locked} onClick={() => act((signal) => session.resumeRun(open, signal))}>
       {text("course.home.resume", { challenge: text(CHALLENGE_LABELS[opened]) })}
     </CardAction>
   );
@@ -85,7 +87,7 @@ function Earned(props: QuizProps): ReactElement | null {
 
 /** 🃏️ The card of a quiz on the overview; its heading opens the quiz's page (`#<quiz>`). Pets may match it with their
  * topic, the quiz, but never lift it. */
-export function QuizCardView(props: QuizProps & { readonly revealed: boolean; readonly onOpen: () => void }): ReactElement {
+export function QuizCardView(props: QuizProps & { readonly revealed: boolean; readonly onOpen?: () => void }): ReactElement {
   const { quiz, locale, revealed, onOpen } = props;
   const id = useId();
   const learning = usePresenceView().roster?.quizzes[quiz.id] ?? 0;
@@ -96,7 +98,7 @@ export function QuizCardView(props: QuizProps & { readonly revealed: boolean; re
       card={`quiz:${quiz.id}`}
       anchor={PRESENCE_ANCHORS.home(`quiz:${quiz.id}`)}
       topic={quiz.id}
-      href={`#${quiz.id}`}
+      href={onOpen === undefined ? undefined : `#${quiz.id}`}
       onOpen={onOpen}
       revealed={revealed}
       icon={<Glyph emoji={quiz.emoji} className="text-sm" />}
@@ -163,6 +165,7 @@ function QuizCrowd(props: QuizProps & { readonly gate: CrowdGate; readonly think
 export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly others?: OthersChoice; readonly onChallenge: (challenge: Challenge) => void }): ReactElement {
   const { quiz, session, state, text, locale, view, challenge, act, onChallenge } = props;
   const id = useId();
+  const at = useReleaseClock(state.course);
   const [asking, setAsking] = useState(false);
   const { roster, thinking } = usePresenceView();
   const learning = roster?.quizzes[quiz.id] ?? 0;
@@ -219,12 +222,12 @@ export function QuizPage(props: QuizProps & { readonly view: PaneView; readonly 
       <CourseCard id={`${id}-tasks`} card="course-tasks" anchor={PRESENCE_ANCHORS.quizTasks(quiz.id)} icon={<CardIcon icon="list" />} title={text("course.quizPage.tasks")}>
         <ol role="list" className="m-0 flex list-none flex-col gap-single p-0">
           {quiz.tasks.map((task, index) => (
-            <li key={task.id} data-icon-host="" data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double border border-normal px-double py-single text-sm">
+            <li key={task.id}><AccessGate course={state.course} page={quiz.id} task={task.id} at={at} locale={locale} text={text}><div data-icon-host="" data-pet-prop={petProp(quiz.id, task.id)} className="flex min-w-0 items-center gap-double border border-normal px-double py-single text-sm">
               <span className="course-nowrap w-[2ch] shrink-0 font-semibold tabular-nums text-muted-foreground">{index + 1}</span>
               <TaskGlyph task={task} />
               <span className="min-w-0 flex-1 font-medium">{localized(task.title, locale)}</span>
               <span className="text-xs text-muted-foreground">{text(TASK_KIND_LABELS[task.kind])}</span>
-            </li>
+            </div></AccessGate></li>
           ))}
         </ol>
       </CourseCard>

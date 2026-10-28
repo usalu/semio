@@ -1,0 +1,188 @@
+{
+  "version": 1,
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "hitTest": {
+    "bounds": "half-open",
+    "ancestors": "contain-and-enabled",
+    "order": [
+      "z",
+      "depth",
+      "source-index"
+    ],
+    "transparentGap": "polygon-outline"
+  },
+  "roles": {
+    "root": {
+      "profile": "plain",
+      "fill": "base",
+      "strokeWidth": 1,
+      "cursor": "arrow"
+    },
+    "canvas": {
+      "profile": "plain",
+      "fill": "base",
+      "strokeWidth": 1,
+      "cursor": "arrow"
+    },
+    "window": {
+      "profile": "plain",
+      "fill": "glass",
+      "strokeWidth": 1,
+      "cursor": "arrow"
+    },
+    "navbar": {
+      "profile": "plain",
+      "fill": "base",
+      "strokeWidth": 1,
+      "cursor": "arrow"
+    },
+    "footer": {
+      "profile": "plain",
+      "fill": "base",
+      "strokeWidth": 1,
+      "cursor": "arrow"
+    },
+    "group": {
+      "profile": "plain",
+      "fill": "transparent",
+      "strokeWidth": 1,
+      "cursor": "arrow"
+    },
+    "tree": {
+      "profile": "tree",
+      "fill": "transparent",
+      "strokeWidth": 1,
+      "hoverStrokeWidth": 1.5,
+      "cursor": "arrow"
+    },
+    "tab": {
+      "profile": "interactive",
+      "fill": "transparent",
+      "strokeWidth": 0,
+      "cursor": "pointer"
+    },
+    "button": {
+      "profile": "interactive",
+      "fill": "transparent",
+      "strokeWidth": 1,
+      "cursor": "pointer"
+    },
+    "fullscreen": {
+      "profile": "interactive",
+      "fill": "transparent",
+      "strokeWidth": 1,
+      "cursor": "selectable"
+    },
+    "toggle": {
+      "profile": "interactive",
+      "fill": "transparent",
+      "strokeWidth": 1,
+      "cursor": "selectable"
+    },
+    "device": {
+      "profile": "interactive",
+      "fill": "transparent",
+      "strokeWidth": 1,
+      "cursor": "pointer"
+    }
+  },
+  "control": {
+    "size": 22.4,
+    "inset": 3.2,
+    "iconSize": 16,
+    "titleHeight": 22.4,
+    "placement": "cap-right",
+    "offIcon": "maximize-2",
+    "onIcon": "minimize-2"
+  },
+  "states": {
+    "normal": {
+      "stroke": "borderNormal",
+      "text": "foreground"
+    },
+    "hovered": {
+      "stroke": "borderEmphasized",
+      "text": "borderEmphasized",
+      "interactiveFill": "hoverInteractiveFill"
+    },
+    "active": {
+      "fill": "activeBase",
+      "stroke": "activeBase",
+      "text": "activeForeground"
+    },
+    "activeHovered": {
+      "fill": "activeHover",
+      "stroke": "activeBase",
+      "text": "activeForeground"
+    },
+    "disabled": {
+      "opacity": 0.5,
+      "hit": false
+    },
+    "transition": {
+      "milliseconds": 120,
+      "easing": "ease",
+      "controlPoints": [
+        0.25,
+        0.1,
+        0.25,
+        1
+      ]
+    }
+  },
+  "cursors": {
+    "arrow": {
+      "asset": "🧰️framework/🔨️modules/🖼️assets/👆️cursor/🖱️default/🌙️dark.svg",
+      "hotspot": [
+        0,
+        0
+      ]
+    },
+    "pointer": {
+      "asset": "🧰️framework/🔨️modules/🖼️assets/👆️cursor/👆️pointer/🖋️dark-source.svg",
+      "hotspot": [
+        0,
+        0
+      ]
+    },
+    "selectable": {
+      "asset": "🧰️framework/🔨️modules/🖼️assets/👆️cursor/☑️selectable/🌙️dark.svg",
+      "hotspot": [
+        0,
+        0
+      ]
+    }
+  },
+  "icons": {
+    "maximize-2": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔎️viewing/🔲️maximize-2.svg",
+    "minimize-2": "🧰️framework/🔨️modules/🖼️assets/🔣️icons/🔎️viewing/🔳️minimize-2.svg"
+  },
+  "events": [
+    "enter",
+    "move",
+    "press",
+    "release",
+    "click",
+    "leave",
+    "cancel"
+  ],
+  "actions": {
+    "fullscreen": "fullscreen.toggle",
+    "toggle": "toggle",
+    "device": "device.activate",
+    "button": "activate"
+  },
+  "timeline": {
+    "park": [
+      1572,
+      840
+    ],
+    "idlePark": [
+      1624,
+      840
+    ]
+  }
+}

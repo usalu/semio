@@ -1,0 +1,135 @@
+{
+  "channels": [
+    {
+      "name": "Finite authenticated local PDF transport",
+      "value": [
+        {
+          "name": "course-assignment-pdfs",
+          "endpoint": "http://127.0.0.1:8765/pdfs",
+          "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "valid": true
+    },
+    {
+      "name": "No foreign network endpoint",
+      "value": [
+        {
+          "name": "course-assignment-pdfs",
+          "endpoint": "https://example.com/pdfs",
+          "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "Token is required",
+      "value": [
+        {
+          "name": "course-assignment-pdfs",
+          "endpoint": "http://127.0.0.1:8765/pdfs"
+        }
+      ],
+      "valid": false
+    },
+    {
+      "name": "No path authority",
+      "value": [
+        {
+          "name": "course-assignment-pdfs",
+          "endpoint": "http://127.0.0.1:8765/pdfs",
+          "secret": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "path": "C:/store"
+        }
+      ],
+      "valid": false
+    }
+  ],
+  "publications": [
+    {
+      "name": "Localized course producer retains both files",
+      "value": [
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        },
+        {
+          "namespace": "course",
+          "id": "assignment-de",
+          "producer": "@teaching/architecture-course:build-assignment-de",
+          "file": "assignment-de.pdf"
+        }
+      ],
+      "expected": [
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        },
+        {
+          "namespace": "course",
+          "id": "assignment-de",
+          "producer": "@teaching/architecture-course:build-assignment-de",
+          "file": "assignment-de.pdf"
+        }
+      ]
+    },
+    {
+      "name": "Exact duplicate publication is retained once",
+      "value": [
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        },
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        }
+      ],
+      "expected": [
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        }
+      ]
+    },
+    {
+      "name": "Different producers cannot overwrite a public file",
+      "value": [
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        },
+        {
+          "namespace": "course",
+          "id": "assignment-en",
+          "producer": "@other/course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        }
+      ]
+    },
+    {
+      "name": "Course publications reject Print template ownership",
+      "value": [
+        {
+          "namespace": "print",
+          "id": "assignment-en",
+          "producer": "@teaching/architecture-course:build-assignment-en",
+          "file": "assignment-en.pdf"
+        }
+      ],
+      "error": "Declared assignment PDF publication required"
+    }
+  ]
+}

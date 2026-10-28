@@ -1,0 +1,57 @@
+{
+  "standing": {
+    "height": 0.66,
+    "scale": 1.7,
+    "opacity": 1,
+    "contours": 1
+  },
+  "seated": {
+    "height": 0.55,
+    "scale": 2.4,
+    "opacity": 1,
+    "contours": 1
+  },
+  "radiator": {
+    "height": 0.26,
+    "width": 0.52,
+    "height_to_person": [
+      0.35,
+      0.45
+    ]
+  },
+  "house": {
+    "wall": 0.14,
+    "storey": 1.2,
+    "wall_to_storey": [
+      0.1,
+      0.16
+    ],
+    "roof_rise": 1.1,
+    "eave": 0.26,
+    "roof_depth": 0.14,
+    "material_components": 1
+  },
+  "room": {
+    "width": 5,
+    "height": 2.5,
+    "wall": 0.2,
+    "slab": 0.26
+  },
+  "window": {
+    "x": -2.5,
+    "sill": -0.5,
+    "lintel": 0.9,
+    "depth": 0.7,
+    "far_edge_height_ratio": [
+      0.7,
+      0.95
+    ]
+  },
+  "raster": {
+    "connected_components": 1
+  },
+  "lamp": {
+    "minimum_fill_opacity": 0.5,
+    "bulb_overlaps_shade": true
+  }
+}

@@ -9,7 +9,7 @@ use std::collections::BTreeMap;
 use Verdict::{Over, Reversed, Under};
 
 fn items(ids: &[&str]) -> Vec<SheetItem> {
-    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
+    ids.iter().map(|id| SheetItem { mockup: None, id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
 }
 
 fn familiar(task: Task, ids: &[&str]) -> Task {
@@ -400,7 +400,7 @@ fn a_far_off_profile_is_questioned_against_an_anchor_on_the_other_side_of_its_ow
     assert_eq!(hints_of(&task, &sheet, Some(&classify(&[("c", "low"), ("a", "passive")]))), [profiled("c", "low", "heat")], "a lies below both the claim and the truth: no anchor on the other side");
     let Task::Classification(mut definition) = task else { unreachable!() };
     definition.categories.push(Category { id: "mid".to_string(), label: text("mid"), short: None, icon: None, description: None, profile: Some(BTreeMap::from([("heat".to_string(), 6.0), ("cool".to_string(), 4.0), ("cost".to_string(), 4.0)])) });
-    definition.items.push(ClassificationItem { id: "e".to_string(), label: text("e"), short: None, icon: None, category: "mid".to_string(), explanation: None });
+    definition.items.push(ClassificationItem { mockup: None, id: "e".to_string(), label: text("e"), short: None, icon: None, category: "mid".to_string(), explanation: None });
     let sheet = SheetTask::Classification(SheetClassificationTask { id: "standards".to_string(), title: text("standards"), prompt: text("classify"), icon: None, axes: None, categories: definition.categories.clone(), items: items(&["e", "c", "d", "b", "a"]), seconds: None });
     let task = Task::Classification(definition);
     assert_eq!(hints_of(&task, &sheet, Some(&classify(&[("c", "passive"), ("e", "mid"), ("d", "low"), ("b", "low")]))), [against("c", "passive", "heat", "d", false)], "the anchor farthest from the truth first (d and b at 7 before e at 4), then sheet order");

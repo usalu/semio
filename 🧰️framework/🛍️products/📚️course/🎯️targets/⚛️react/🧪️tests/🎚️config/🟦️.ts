@@ -24,6 +24,7 @@ export default defineConfig(async () => ({
     name: "@semio-tech/course-react",
     environment: "jsdom",
     include: [
+      "../../../../🧪️tests/🔓️access/🟦️.tsx",
       "../../🧪️tests/📚️course-shell/🟦️.tsx",
       "../../../../🧪️tests/🎓️onboarding/🟦️.tsx",
       "../../../../🧪️tests/📐️quantity-formatting/🟦️.tsx",
@@ -65,6 +66,7 @@ export default defineConfig(async () => ({
       "../../../../🧪️tests/💬️challenge-hint-views/🟦️.tsx",
       "../../../../🧪️tests/⏱️challenge-clock-views/🟦️.tsx",
       "../../../../🧪️tests/🎨️stylesheet-tree/🟦️.tsx",
+      "../../../../🧪️tests/🖥️mockups/🟦️.tsx",
     ],
     coverage: { include: ["../../🟦️.tsx", "../../🔨️modules/**/🟦️.ts", "../../🔨️modules/**/🟦️.tsx"] },
     passWithNoTests: false,

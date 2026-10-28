@@ -30,6 +30,7 @@
 
 import { useId, useState, type FocusEvent, type ReactElement } from "react";
 import type { CompareHint, Hint, SheetSortingTask, Slug, SortingAnswer } from "@semio-tech/course";
+import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized } from "../🌐️i18n/🟦️.ts";
 import { BodyButton, IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, compareText, describedBy, elementId, exampleGuess, hintName, useFocusAfterRender, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
@@ -207,6 +208,7 @@ export function SortingTaskView(props: TaskViewProps<SheetSortingTask, SortingAn
                   </button>
                 </>
               )}
+              <ItemMockup item={task.items.find((item) => item.id === id)!} locale={locale} />
             </li>
           );
         })}

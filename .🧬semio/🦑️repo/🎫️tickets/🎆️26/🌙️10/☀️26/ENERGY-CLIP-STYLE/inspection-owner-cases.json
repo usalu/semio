@@ -1,0 +1,20 @@
+{
+  "files": {
+    "wrapper.py": "VERSION = 1\n",
+    "contract.json": "{\"version\":1}\n",
+    "🧪️tests/ignored.py": "TEST = 1\n"
+  },
+  "mutation": {
+    "path": "wrapper.py",
+    "content": "VERSION = 2\n"
+  },
+  "addition": {
+    "path": "new_owner.py",
+    "content": "NEW = True\n"
+  },
+  "ignore": "🧪️tests/ignored.py",
+  "body_sibling": {
+    "path": "body/scene.py",
+    "content": "BODY = 1\n"
+  }
+}

@@ -15,16 +15,15 @@ import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SPEECH_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = next(parent for parent in BASE_DIR.parents if (parent / "🧰️framework").is_dir())
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
+_output = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
+SPEECH_DIR = _output.speech_root(BASE_DIR)
+
 _scene = import_module("🎓️teaching.🏛️architecture.⚡️energy.❄️cooling.🎬️clip.☀️solar-radiation.🐍️")
 Beat1_SolarIrradiance = _scene.Beat1_SolarIrradiance
-Beat2_FrameFactor = _scene.Beat2_FrameFactor
-Beat3_ShadingFactor = _scene.Beat3_ShadingFactor
-Beat4_GlassTransmittance = _scene.Beat4_GlassTransmittance
 Beat5_SolarCoolingLoad = _scene.Beat5_SolarCoolingLoad
 _runtime = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 manim_command = _runtime.manim_command
@@ -41,17 +40,14 @@ write_vo_timing_manifest = _speech.write_vo_timing_manifest
 
 BEATS = [
     Beat1_SolarIrradiance,
-    Beat2_FrameFactor,
-    Beat3_ShadingFactor,
-    Beat4_GlassTransmittance,
     Beat5_SolarCoolingLoad,
 ]
 
 SCENE_FILE = BASE_DIR / "🐍️.py"
-TIMING_MANIFEST = BASE_DIR / "⏱️timing" / "🔣️.json"
+TIMING_MANIFEST = SPEECH_DIR / "timing.json"
 TRACE_OWNER = sha256(BASE_DIR.relative_to(WORKSPACE_ROOT).as_posix().encode()).hexdigest()[:10]
-OUTPUT_ROOT = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) if os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT") else SPEECH_DIR
-TRACE_MANIFEST = OUTPUT_ROOT / "trace" / TRACE_OWNER if os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT") else BASE_DIR / "📍️trace" / "🔣️.json"
+OUTPUT_ROOT = _output.output_root()
+TRACE_MANIFEST = OUTPUT_ROOT / "trace" / TRACE_OWNER
 TRACE_MEDIA_DIR = OUTPUT_ROOT / "trace-media" / TRACE_OWNER
 CLAUSE_GAP = 0.25
 

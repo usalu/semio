@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural Energy Drawing Contract",
+  "type": "object",
+  "required": [
+    "version",
+    "dimensions",
+    "standing",
+    "seated",
+    "section_material"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "dimensions": {
+      "type": "object",
+      "required": [
+        "standing_height",
+        "seated_height",
+        "radiator_height",
+        "radiator_width",
+        "house_wall",
+        "storey_height"
+      ],
+      "additionalProperties": {
+        "type": "number",
+        "exclusiveMinimum": 0
+      }
+    },
+    "standing": {
+      "$ref": "#/$defs/outline"
+    },
+    "seated": {
+      "$ref": "#/$defs/outline"
+    },
+    "section_material": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "color",
+        "fill_opacity",
+        "stroke_width",
+        "stroke_opacity"
+      ],
+      "properties": {
+        "color": {
+          "const": "light"
+        },
+        "fill_opacity": {
+          "const": 1
+        },
+        "stroke_width": {
+          "const": 0
+        },
+        "stroke_opacity": {
+          "const": 0
+        }
+      }
+    }
+  },
+  "$defs": {
+    "outline": {
+      "type": "object",
+      "required": [
+        "start",
+        "segments"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/point"
+        },
+        "segments": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/point"
+            },
+            "minItems": 1,
+            "maxItems": 3
+          }
+        }
+      }
+    },
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    }
+  }
+}

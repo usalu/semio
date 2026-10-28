@@ -1,0 +1,2 @@
+import {fileURLToPath} from "node:url";
+import {spawnSync} from 'node:child_process';import path from 'node:path';const r=spawnSync('repo',['tools','exec','uv','--','run','--project','🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📦️packages/🐍️python','--python','3.12','--group','test','python',fileURLToPath(new URL("./review-frames.py",import.meta.url))],{stdio:'inherit',shell:process.platform==='win32',env:{...process.env,PYTHONUTF8:'1',PYTHONDONTWRITEBYTECODE:'1',UV_PROJECT_ENVIRONMENT:path.resolve('.🧬semio/🎓️teaching/⚡️cache/python')}});process.exitCode=r.status??1;

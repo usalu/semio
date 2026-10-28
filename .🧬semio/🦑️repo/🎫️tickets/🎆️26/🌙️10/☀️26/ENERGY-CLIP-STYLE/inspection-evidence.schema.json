@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["width", "height", "fps", "clauses", "bim_sources", "columns", "rows_per_page", "row_height", "optimization", "controls"],
+  "properties": {
+    "width": {"const": 480},
+    "height": {"const": 270},
+    "fps": {"const": 4},
+    "clauses": {"const": 113},
+    "bim_sources": {"const": 6},
+    "columns": {"const": 3},
+    "rows_per_page": {"const": 6},
+    "row_height": {"const": 296},
+    "optimization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["ordinal", "clip_id", "scene", "keys", "phases"],
+      "properties": {
+        "ordinal": {"const": 122},
+        "clip_id": {"const": "optimization_experiments"},
+        "scene": {"const": "Beat3_FactorialExperiments"},
+        "keys": {"const": ["model", "curvature", "confirm_3"]},
+        "phases": {"const": ["early", "settled", "late"]}
+      }
+    },
+    "controls": {"type": "array", "minItems": 5, "maxItems": 5, "uniqueItems": true, "items": {"type": "string", "minLength": 1}}
+  }
+}

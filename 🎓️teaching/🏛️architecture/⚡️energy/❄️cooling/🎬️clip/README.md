@@ -1,10 +1,7 @@
 # Cooling Load — Full Video
 
-Plays the **Cooling load series** (Kühllast, VDI 2078 design power — not annual
-Kühlenergiebedarf) in curriculum order, prepended with the series intro card
-``Demo_Intro_Kuehllast`` from ``🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py``:
+Presents the **Cooling load series** (Kühllast, VDI2078 design power rather than annual cooling energy) inside the shared virtual semio UI. Its lesson window zooms in from the five-window canvas and returns to the identical overview; navbar and footer remain visible.
 
-0. Intro — Kühllast
 1. Teil 1 — Heizwärmebedarf vs. Kühllast
 2. Teil 2 — Interne Wärmegewinne
 3. Teil 3 — Transmission & Lüftungslast
@@ -24,20 +21,20 @@ This is the fourth video in the curriculum: Physical Fundamentals → **Lüftung
 From the workspace root, the repository entry provisions the pinned Python environment:
 
 ```sh
-repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video cooling --quality l --jobs 4 --output-root ./videos --no-play
+repo tools exec bun -- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --language de --video cooling --quality l --jobs 4 --output-root ./videos --no-play
 ```
 
-Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs every authored beat independently, assembles ordered chapters, and joins the institutional intro and all chapters into the complete silent lesson. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled.
+Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs each canonical source beat once, selects the declared narration sequences, assembles ordered chapters, and presents the complete lesson inside its virtual window. Video and optional source audio use identical cut boundaries; silent zoom transitions pad both ends. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled. Add `--chapter <chapter-identifier>` to render a selected chapter inside the same virtual window. Pass --language en for English chrome; the authored teaching content retains its recorded language. Chapter identifiers are declared in the curriculum JSON; lesson entry files expose `compose(language="de", chapters=[...], **settings)`.
 
-The final low-quality movie is `<output-root>/rendered/Full_Cooling_Demand_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
+The final low-quality movie is `<output-root>/rendered/Full_Cooling_Demand_de_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
 
-## Chapter Scenes and Beats
+## Chapter Identifiers and Beats
 
-| Scene class | Content |
+| Chapter identifier | Content |
 |-------------|---------|
 | `Cooling_01_HeatingVsCooling` | Teil 1 |
 | `Cooling_02_InternalGains` | Teil 2 |
-| `Cooling_03_TransmissionHumidity` | Teil 3 — opake Transmission, Time Lag, Brückenbeat `Beat3_LueftungslastImSommer` |
+| `Cooling_03_TransmissionHumidity` | Teil 3 — opake Transmission, canonical physics thermal-mass excerpts, Brückenbeat `Beat3_LueftungslastImSommer` |
 | `Cooling_04_SolarRadiation` | Teil 4 |
 | `Cooling_05_Systemauslegung` | Teil 5 — `Beat2_VolumeFlowEquation`, `Beat3_IsolateAirflow` (Last → Luftstrom → Kanal, gegen den Hygieneluftstrom) |
 | `Cooling_06_Sommerstrategie` | Teil 6 — `Beat1_LastZuerstSenken`, `Beat2_SorptionsKuehlung`, `Beat3_KomfortStrategie` |

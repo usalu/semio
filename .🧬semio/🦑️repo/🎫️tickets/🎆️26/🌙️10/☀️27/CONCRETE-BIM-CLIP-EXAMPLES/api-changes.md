@@ -1,0 +1,1 @@
+- model agent: sections 1-2 final (JSON v2, core functions, car_path, demo_event, resolve_link, clearance(spacing=)); details T/model-milestone-1.md

@@ -1,0 +1,272 @@
+{
+  "title": "Create Architecture BIM Clip",
+  "emoji": "🏗️",
+  "status": "closed",
+  "description": "Create bilingual architecture BIM clip with six conceptual chapters, semantic tests and primary-source audit. MCP ticket opened but current MCP record is not materialized in checkout; maintain the same logical ticket locally.",
+  "summary": "Rendered and fully decoded the first German Speaker BIM preview at 720p and 24fps. Retained the requested MP4 for playback and removed only ticket temporary media.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2774"
+  },
+  "goal": "runningframework/runningproducts",
+  "sessions": [
+    "87edf20b-b352-4c46-8c66-ca5200b3a5ec",
+    "b84063e9-25d6-47a0-bef7-af22d8c972be"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-26 23:47:26",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "prompt": "Create bilingual architecture BIM clip with six conceptual chapters, semantic tests and primary-source audit. MCP ticket opened but current MCP record is not materialized in checkout; maintain the same logical ticket locally.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-27 00:59:19",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "summary": "Created six independent bilingual BIM video sources, topic entries, schema-first semantic cases and tests. Verified 20 BIM contracts, a 28-test focused run, metadata-only browser loading regression, 196 caption-policy calls, and 24 rendered previews independently decoded with PyAV and inspected for all language/audience variants. No prerecorded speech added. Removed only ticket-generated previews/logs; retained sources, inputs and Markdown audits. No AGENTS edits, Git mutation commands, worktrees, goal changes or unrelated quiz edits.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/audience-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/bim-tests.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/clip-exploration.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/content-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/content.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/finish.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/integrate.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/integration.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/inventory.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/inventory.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/media-audience.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/media-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/media.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/pool.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/presentation-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/presentation-fingerprint-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/probe.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/python.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/render.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/review-final.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/review-final.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/review-frames.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/review-frames.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/runtime.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/split.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/verify.mjs"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟨️render.mjs"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🥞️hierarchy/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🧬️schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/👁️representations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧩️models/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️cases/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️tests/🟨️.cjs"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧪️tests/🟨️metadata.mjs"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧬️objects/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🎬️clip/🧱️model/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/👁️representations/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/📊️information/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🔌️exchange/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🔗️consistency/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🧩️models/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/🏗️bim/🧬️objects/🎬️clip/🐍️.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/🎫️ticket.json"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-27 06:54:29",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "prompt": "Show the rendered clip and retain the deliverable MP4 for playback.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-27 07:01:49",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "summary": "Rendered and fully decoded the first German Speaker BIM preview at 720p and 24fps. Retained the requested MP4 for playback and removed only ticket temporary media.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/preview.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/preview.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/preview-verify.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/preview-deliver.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/preview-finish.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-BIM-CLIP/summary.md"
+        },
+        {
+          "path": ".🧬semio/🎓️teaching/⚡️cache/bim-preview/de/speaker/BIM_information.mp4"
+        }
+      ]
+    }
+  ]
+}

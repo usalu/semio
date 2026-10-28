@@ -1,0 +1,232 @@
+    def _returned(self, f, u, point):
+        """↩️ The piloti that comes back from the mesh: the classified colours fade to grey triangles as ``u`` runs from 0 to 1."""
+        drawing = self.mesh_view(TAG, point, 0.55, view="axon", segments=16, counts=False, vertices=False, model=f.m)
+        grey = _d.mix(MUTED, _d.BACKGROUND, 0.35)
+        for shape in drawing.triangles:
+            shape.set_fill(_d.mix(shape.get_fill_color().to_hex(), grey, u), 1.0)
+        return _engine.VGroup(drawing)
+
+    def _beat_roundtrip(self, f):
+        """🔁 IFC to a triangle mesh and back: the drawn piloti returns as grey triangles and class, GlobalId, LoadBearing, material and type stay lost."""
+        s = self._s
+        data = _model.mesh(TAG, 16, f.m)
+        u = _engine.ValueTracker(0)
+        cx = (-4.7, 0.1, 4.9)
+        kept = [f"{self._text(item)}: {self.number(data['vertex_count' if item['id'] == 'vertices' else 'triangle_count'], 0)}" for item in data["kept"]]
+        lost = [self._text(item) for item in data["lost"]]
+        titles = _engine.VGroup(self.label("IFC file", "IFC-Datei", (cx[0], 2.65, 0), color=STRUCT), self.label("triangle mesh file", "Dreiecksnetz-Datei", (cx[1], 2.65, 0), color=MUTED),
+                                self.label("IFC again, read from the mesh", "IFC erneut, aus dem Netz gelesen", (cx[2], 2.65, 0), color=WARN, width=3.2))
+        original = self._post(f, 1.0, True, (cx[0], 0.7, 0), 0.5)
+        middle = self.mesh_view(TAG, (cx[1], 0.7, 0), 0.55, view="axon", segments=16, counts=False, vertices=False, model=f.m)
+        back = self.live(lambda: self._returned(f, u.get_value(), (cx[2], 0.7, 0)), key=lambda: round(u.get_value(), 2))
+        rows_a = self._lines([(text, GOOD) for text in lost], (cx[0] - 1.5, -0.55, 0))
+        rows_b = _engine.VGroup(self._lines([(text, GOOD) for text in kept], (cx[1] - 1.5, -0.55, 0)), self._lines([(text, MUTED) for text in lost], (cx[1] - 1.5, -0.55 - 0.27 * len(kept), 0)))
+        strikes_b = _engine.VGroup(*[_strike(label) for label in rows_b[1]])
+
+        def rows_c():
+            group = _engine.VGroup(self._lines([(text, GOOD) for text in kept], (cx[2] - 1.5, -0.55, 0)))
+            tail = self._lines([(text, _d.mix(GOOD, MUTED, u.get_value())) for text in lost], (cx[2] - 1.5, -0.55 - 0.27 * len(kept), 0))
+            group.add(tail, *[_strike(label).set_stroke(opacity=u.get_value()) for label in tail])
+            return group
+
+        returned = self.live(rows_c, key=lambda: round(u.get_value(), 2))
+        change = self.number(100 * (_volume(data) / f.q3["volume"] - 1), 1)
+        shape = self.label(f"shape returns roughly: volume {change} %", f"Form kommt grob zurück: Volumen {change} %", (cx[2], 2.2, 0), size=S_SMALL, color=MUTED, width=3.3)
+        counts = self.label(self.tr(f"{data['vertex_count']} vertices · {data['triangle_count']} triangles", f"{data['vertex_count']} Punkte · {data['triangle_count']} Dreiecke"), (cx[1], 2.2, 0), size=S_SMALL, color=DATA)
+        export = _engine.VGroup(_engine.Arrow((-3.05, 0.7, 0), (-1.5, 0.7, 0), buff=0, stroke_width=3, color=GOOD, max_tip_length_to_length_ratio=0.2), self.label("export", "Export", (-2.27, 0.98, 0), size=S_SMALL, color=GOOD))
+        reimport = _engine.VGroup(_engine.Arrow((1.7, 0.7, 0), (3.25, 0.7, 0), buff=0, stroke_width=3, color=WARN, max_tip_length_to_length_ratio=0.2), self.label("import", "Import", (2.47, 0.98, 0), size=S_SMALL, color=WARN))
+        self.step("roundtrip",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], _engine.FadeIn(titles), _in(original), _engine.FadeIn(rows_a)),
+                       (_engine.FadeIn(export), _in(middle), _engine.FadeIn(counts), _engine.FadeIn(rows_b)),
+                       (_engine.Create(strikes_b), _engine.FadeIn(reimport), _engine.FadeIn(back), _engine.FadeIn(returned)),
+                       (_to(u, 1, 2.4), _engine.FadeIn(shape))),
+                  seconds=6.5)
+        self._s = SimpleNamespace(off=[titles, original, middle, back, rows_a, rows_b, strikes_b, returned, shape, counts, export, reimport])
+
+    def _beat_slab(self, f):
+        """🗺️ The first-floor slab in plan with its real ramp opening and the hanging garden named, and the net area counted from gross minus opening."""
+        s = self._s
+        slab = f.analysis["slab"]
+        v = _engine.ValueTracker(0)
+        plan = self.villa_plan("first", (2.5, 0.05, 0), 0.22, model=f.m, highlight=(SLAB,), layers=("structure", "architecture"), grid=True, labels=True)
+        void = f.slab["voids"][0]
+        screen = [plan.at(px, py, 0) for px, py in void]
+        middle = np.mean(screen, axis=0)
+
+        def opening():
+            if v.get_value() < 0.02:
+                return _engine.VGroup()
+            return _hatched([middle + (p - middle) * v.get_value() for p in screen], WARN, 0.35, WARN, _d.W_EDGE, 0.07, WARN)
+
+        shape = self.live(opening, key=lambda: round(v.get_value(), 2))
+        garden = next(sp for sp in f.m["spaces"] if sp["tag"] == "SP-TERRACE")
+        ring = [p for p in garden["outline"] if isinstance(p, (list, tuple)) and len(p) == 2]
+        lawn = _hatched([plan.at(px, py, 0) for px, py in ring], GOOD, 0.1, GOOD, _d.W_THIN, 0.11, GOOD) if len(ring) >= 3 else _engine.VGroup()
+        reach = f.trib["cantilever"]["west"]
+        width = f.g["box"]["width"]
+        dim = _engine.VGroup(self.dimension(plan.at(0, width, 0), plan.at(reach, width, 0), self.quantity(reach, "m"), offset=0.2, color=INK),
+                             self.dimension(plan.at(f.g["box"]["length"] - reach, width, 0), plan.at(f.g["box"]["length"], width, 0), self.quantity(reach, "m"), offset=0.2, color=INK))
+        chip = self.guid_chip(SLAB, (-4.0, 2.4, 0), model=f.m)
+        gross = self.label(self.tr(f"gross {self.quantity(slab['gross_area'], 'm²', 1)}", f"brutto {self.quantity(slab['gross_area'], 'm²', 1)}"), (-6.7, 1.55, 0), size=S_LABEL, color=INK, anchor="l")
+        minus = self.live_label(lambda: "− " + self.tr("ramp opening ", "Rampenöffnung ") + self.quantity(v.get_value() * slab["void_area"], "m²", 1), (-6.7, 1.1, 0), size=S_LABEL, color=WARN, anchor="l")
+        net = self.live_label(lambda: "= " + self.tr("net ", "netto ") + self.quantity(slab["gross_area"] - v.get_value() * slab["void_area"], "m²", 1), (-6.7, 0.65, 0), size=S_LABEL, color=DATA, anchor="l")
+        names = _engine.VGroup(
+            self.label(f"{f.slab['void_tags'][0]} · " + self.tr("ramp opening in the slab", "Rampenöffnung in der Decke"), None, (-6.7, -0.2, 0), size=S_SMALL, color=WARN, anchor="l"),
+            self.label(f"{garden['tag']} · {self._text(garden['name'])}, {self.quantity(garden['area'], 'm²', 1)}", None, (-6.7, -0.6, 0), size=S_SMALL, color=GOOD, anchor="l", width=4.4),
+            self.label(self.tr(f"cantilever {self.quantity(reach, 'm')} west and east", f"Kragarm {self.quantity(reach, 'm')} West und Ost"), (-6.7, -1.0, 0), size=S_SMALL, color=INK, anchor="l"))
+        links = _engine.VGroup(_wire((-2.05, -0.2, 0), middle + np.array([0, -0.5, 0]), WARN),
+                               _wire((-2.05, -0.6, 0), np.mean([plan.at(px, py, 0) for px, py in ring], axis=0) if len(ring) >= 3 else middle, GOOD),
+                               _wire((-2.05, -1.0, 0), plan.at(reach / 2, width, 0), INK))
+        self.step("slab",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], _in(plan), _engine.FadeIn(lawn), _engine.FadeIn(chip), _engine.FadeIn(gross), _engine.FadeIn(minus), _engine.FadeIn(net)),
+                       (_engine.FadeIn(names), _engine.Create(links), _engine.FadeIn(dim)),
+                       (_engine.FadeIn(shape), _to(v, 1, 2.4))),
+                  seconds=6.5)
+        self._s = SimpleNamespace(off=[plan, lawn, chip, gross, minus, net, names, links, dim, shape])
+
+    def _beat_buildup(self, f):
+        """🥞 Section through the first-floor slab build-up: self-weight, finishes and imposed load are stacked into one area load before they meet the tributary areas."""
+        s = self._s
+        loads = f.analysis["loads"]
+        mine = next(p for p in f.trib["pilotis"] if p["tag"] == TAG)
+        order = [key for key, _ in LOAD_COLORS]
+        level = {key: _engine.ValueTracker(0) for key in order}
+        top, thick = f.slab["top"], f.slab["thickness"]
+        view = _d.View("section", (-3.5, 0.3, 0), 1.5, (f.b3["x"], f.b3["y"], top - thick / 2), axis="y")
+        y0, y1 = f.b3["y"] - 1.2, f.b3["y"] + 1.2
+        skin = 0.05
+        at = lambda y, z: view(f.b3["x"], y, z)
+        body = _hatched([at(y0, top - thick), at(y1, top - thick), at(y1, top), at(y0, top)], _d.CONCRETE, 0.35, STRUCT, _d.W_EDGE, 0.05)
+        finish = _d.polygon([at(y0, top), at(y1, top), at(y1, top + skin), at(y0, top + skin)], ARCH, 0.55, ARCH, _d.W_EDGE)
+        spots = np.linspace(y0 + 0.4, y1 - 0.4, 4)
+        people = _engine.VGroup(*[_engine.Circle(radius=0.05, stroke_color=DATA, stroke_width=_d.W_EDGE, fill_opacity=1, fill_color=DATA).move_to(at(y, top + skin) + np.array([0, 0.28, 0])) for y in spots])
+        stems = _d.segments([(at(y, top + skin) + np.array([0, 0.03, 0]), at(y, top + skin) + np.array([0, 0.23, 0])) for y in spots], DATA, _d.W_EDGE)
+        floor = _engine.VGroup(self.text(self.tr("section through SL-1 (axis 3, at B3)", "Schnitt durch SL-1 (Achse 3, bei B3)"), (-3.5, 1.9, 0), size=S_SMALL, color=MUTED),
+                               self.dimension(at(y0, top - thick), at(y0, top), "t = " + self.quantity(thick, "m"), offset=0.35, color=DATA),
+                               _d.segments([(at(y0 - 0.3, top - thick), at(y1 + 0.3, top - thick))], INK, _d.W_THIN, 0.5))
+        marks = _engine.VGroup(self.label(self.tr(f"self-weight {self.number(loads['self_weight']['density'], 0)} kN/m³ × {self.number(thick)} m", f"Eigengewicht {self.number(loads['self_weight']['density'], 0)} kN/m³ × {self.number(thick)} m"),
+                                          None, (-3.5, -0.55, 0), size=S_SMALL, color=STRUCT),
+                               self.label("finishes (layer thickness not modelled)", "Ausbau (Schichtdicke nicht modelliert)", (-3.5, -0.95, 0), size=S_SMALL, color=ARCH),
+                               self.label("imposed load: people and furniture", "Nutzlast: Personen und Möbel", (-3.5, -1.35, 0), size=S_SMALL, color=DATA))
+        unit, base, height = 0.5, 1.25, 0.5
+
+        def stack():
+            group, x = _engine.VGroup(), 0.9
+            for key, color in LOAD_COLORS:
+                width = level[key].get_value() * unit
+                if width > 0.01:
+                    group.add(_d.polygon([(x, base, 0), (x + width, base, 0), (x + width, base + height, 0), (x, base + height, 0)], color, 0.85, color, _d.W_EDGE))
+                    if width > 0.55:
+                        group.add(self.text(self.number(level[key].get_value()), (x + width / 2, base + height / 2, 0), size=S_SMALL, color=_d.BACKGROUND))
+                x += width
+            return group
+
+        bar = self.live(stack, key=lambda: tuple(round(level[k].get_value(), 2) for k in order))
+        total = lambda: sum(level[k].get_value() for k in order)
+        equation = self.live_label(lambda: " + ".join(self.number(level[k].get_value()) for k in order) + " = " + self.quantity(total(), "kN/m²"), (3.6, 2.2, 0), size=S_LABEL, color=DATA)
+        legend = _engine.VGroup(*[_engine.VGroup(_engine.Square(side_length=0.14, fill_color=color, fill_opacity=1, stroke_width=0).move_to((0.95, 0.75 - 0.35 * i, 0)),
+                                                 self.text(self._text(loads[key]), (1.2, 0.75 - 0.35 * i, 0), size=S_SMALL, color=INK, anchor="l")) for i, (key, color) in enumerate(LOAD_COLORS)])
+        times = self.live_label(lambda: self.quantity(total(), "kN/m²") + " × " + self.quantity(mine["area"], "m²", 1) + " = " + self.quantity(total() * mine["area"], "kN", 0), (3.6, -0.55, 0), size=S_LABEL, color=INK)
+        who = self.label(f"{TAG}: tributary cell as in the plan", f"{TAG}: Lasteinzugsfläche wie im Plan", (3.6, -1.0, 0), size=S_SMALL, color=MUTED)
+        self.step("buildup",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], _in(body), _in(finish), _engine.FadeIn(floor), _engine.FadeIn(marks[0]), _engine.FadeIn(bar), _engine.FadeIn(equation), _engine.FadeIn(legend)),
+                       (_to(level["self_weight"], loads["self_weight"]["value"], 1.4),),
+                       (_engine.FadeIn(marks[1]), _to(level["finishes"], loads["finishes"]["value"], 1.0)),
+                       (_engine.FadeIn(marks[2]), _engine.FadeIn(people), _engine.Create(stems), _to(level["imposed"], loads["imposed"]["value"], 1.0)),
+                       (_engine.FadeIn(times), _engine.FadeIn(who))),
+                  seconds=6.5)
+        self._s = SimpleNamespace(off=[body, finish, floor, marks, people, stems, bar, equation, legend, times, who])
+
+    def _beat_cells(self, f):
+        """🔲 How the tributary cell of B3 is built: midlines to the neighbours, the notch cut by the ramp opening, the area counted by a tracker."""
+        s = self._s
+        mine = next(p for p in f.trib["pilotis"] if p["tag"] == TAG)
+        x, y = f.b3["x"], f.b3["y"]
+        grid = f.g["grid"]
+        spacing = grid["spacing"]
+        half = spacing / 2
+        k = _engine.ValueTracker(0)
+        view = _d.View("plan", (3.75, 0.2, 0), 0.46, (x, y + 0.5, 0.0))
+        reach = 5.25
+        lo, hi = (x - reach, y - reach + 0.5), (x + reach, y + reach + 0.5)
+        frame = [view(lo[0], lo[1]), view(hi[0], lo[1]), view(hi[0], hi[1]), view(lo[0], hi[1])]
+        base = _engine.VGroup(_d.polygon(frame, _d.GROUND_PLANE, 1.0, MUTED, _d.W_THIN))
+        void = f.slab["voids"][0]
+        vx, vy = (min(p[0] for p in void), max(p[0] for p in void)), (min(p[1] for p in void), max(p[1] for p in void))
+        x0, x1 = max(vx[0], lo[0]), min(vx[1], hi[0])
+        y0, y1 = max(vy[0], lo[1]), min(vy[1], hi[1])
+        base.add(_hatched([view(x0, y0), view(x1, y0), view(x1, y1), view(x0, y1)], ARCH, 0.1, ARCH, _d.W_THIN, 0.09, _d.mix(ARCH, _d.BACKGROUND, 0.4)))
+        for gx in grid["x"]:
+            base.add(_d.polyline([view(gx, lo[1]), view(gx, hi[1])], MUTED, _d.W_HAIR, 0.8, dash=0.12))
+        for gy in grid["y"]:
+            base.add(_d.polyline([view(lo[0], gy), view(hi[0], gy)], MUTED, _d.W_HAIR, 0.8, dash=0.12))
+        for p in f.g["pilotis"]:
+            if lo[0] <= p["x"] <= hi[0] and lo[1] <= p["y"] <= hi[1]:
+                lit = p["tag"] == TAG
+                base.add(_engine.Circle(radius=max(p["radius"] * 0.46, 0.06), stroke_color=DATA if lit else INK, stroke_width=_d.W_EDGE, fill_color=DATA if lit else _d.CONCRETE, fill_opacity=1.0).move_to(view(p["x"], p["y"])),
+                         self.text(p["tag"], view(p["x"], p["y"]) + np.array([0.2, 0.15, 0]), size=S_SMALL, color=DATA if lit else MUTED))
+        for gx in (x - half, x + half):
+            base.add(_d.polyline([view(gx, lo[1]), view(gx, hi[1])], DATA, _d.W_THIN, 0.8, dash=0.09))
+        for gy in (y - half, y + half):
+            base.add(_d.polyline([view(lo[0], gy), view(hi[0], gy)], DATA, _d.W_THIN, 0.8, dash=0.09))
+        notch = [[max(x - half, vx[0]), max(y - half, vy[0])], [min(x + half, vx[1]), max(y - half, vy[0])], [min(x + half, vx[1]), y + half], [max(x - half, vx[0]), y + half]]
+
+        def grown(ring):
+            return [view(x + (px - x) * math.sqrt(k.get_value()), y + (py - y) * math.sqrt(k.get_value())) for px, py in ring]
+
+        def drawing():
+            if k.get_value() < 0.02:
+                return _engine.VGroup()
+            return _engine.VGroup(_hatched(grown(mine["cell"]), DATA, 0.3, DATA, _d.W_EDGE, 0.07, DATA), _hatched(grown(notch), WARN, 0.25, WARN, _d.W_THIN, 0.07, WARN))
+
+        shape = self.live(drawing, key=lambda: round(k.get_value(), 2))
+        dim_x = self.dimension(view(x, y - half), view(x + half, y - half), self.quantity(half, "m", 3), offset=-0.25, color=DATA)
+        dim_y = self.dimension(view(x + half, y), view(x + half, y + half), self.quantity(half, "m", 3), offset=-0.25, color=DATA)
+        full_area = spacing * spacing
+        cut = full_area - mine["area"]
+        rows = _engine.VGroup(
+            self.label(f"grid spacing {self.quantity(spacing, 'm')} → half {self.quantity(half, 'm', 3)}", f"Rasterabstand {self.quantity(spacing, 'm')} → halb {self.quantity(half, 'm', 3)}", (-6.7, 1.6, 0), size=S_SMALL, color=DATA, anchor="l"),
+            self.label(f"full cell {self.quantity(spacing, 'm')} × {self.quantity(spacing, 'm')} = {self.quantity(full_area, 'm²', 1)}", f"volle Zelle {self.quantity(spacing, 'm')} × {self.quantity(spacing, 'm')} = {self.quantity(full_area, 'm²', 1)}", (-6.7, 1.15, 0), size=S_SMALL, color=INK, anchor="l"),
+            self.label(f"ramp opening cuts away {self.quantity(cut, 'm²', 1)}", f"Rampenöffnung schneidet {self.quantity(cut, 'm²', 1)} ab", (-6.7, 0.7, 0), size=S_SMALL, color=WARN, anchor="l"))
+        area = self.live_label(lambda: self.tr(f"{TAG} cell = ", f"{TAG}-Zelle = ") + self.quantity(k.get_value() * mine["area"], "m²", 1), (-4.1, -0.1, 0), size=S_LABEL, color=DATA)
+        kind = self.label(f"{TAG}: interior piloti, but its cell is notched", f"{TAG}: Innenstütze, aber mit eingekerbter Zelle", (-4.1, -0.6, 0), size=S_SMALL, color=MUTED, width=5.2)
+        method = self.label(f.trib["method"], f.trib["method_de"], (-4.1, -1.05, 0), size=S_SMALL, color=MUTED, width=5.2)
+        self.step("cells",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], _in(base), _engine.FadeIn(rows[0]), _engine.FadeIn(rows[1])),
+                       (_engine.Create(dim_x), _engine.Create(dim_y), _engine.FadeIn(rows[2])),
+                       (_engine.FadeIn(shape), _engine.FadeIn(area), _to(k, 1, 2.6)),
+                       (_engine.FadeIn(kind), _engine.FadeIn(method))),
+                  seconds=6.5)
+        self._s = SimpleNamespace(off=[base, rows, dim_x, dim_y, shape, area, kind, method])
+
+    def _beat_feedback(self, f):
+        """🔄 What the analysis tool sends back: the reaction of B3 returns to the IFC model as a result linked to it, while class, geometry and GlobalId only flow forth."""
+        s = self._s
+        mine = next(p for p in f.trib["pilotis"] if p["tag"] == TAG)
+        chosen = {t: next(p for p in f.trib["pilotis"] if p["tag"] == t)["reaction"] for t in (TAG, "A3", "A1")}
+        p = _engine.ValueTracker(0)
+        chip = self.guid_chip(TAG, (-4.35, 2.4, 0), model=f.m)
+        left = self.label("IFC model", "IFC-Modell", (-4.35, 1.85, 0), size=S_SMALL, color=STRUCT)
+        rows = [(self.tr("Reaction R", "Auflagerkraft R"), mine["reaction"], "kN", "assumed"), (self.tr("Area load q", "Flächenlast q"), f.trib["area_load"], "kN/m²", "assumed"),
+                (self.tr("Tributary area A", "Lasteinzugsfläche A"), mine["area"], "m²", "assumed"), (self.tr("Source revision", "Quellrevision"), str(f.analysis["source_revision"]), "", "sourced")]
+        table = self.property_table(rows, (-4.35, 0.5, 0), width=4.5, title=self.tr("Result linked to B3 (example)", "Mit B3 verknüpftes Ergebnis (Beispiel)"))
+        note = self.label("a result set of its own, not a standard Pset", "ein eigenes Ergebnis-Set, kein Standard-Pset", (-4.35, -0.75, 0), size=S_SMALL, color=MUTED, width=4.5)
+        view = self.analysis_view(f.analysis, (4.6, 0.3, 0), 0.19, highlight=(TAG,), loads=chosen, model=f.m)
+        right = self.label("analysis tool", "Analysewerkzeug", (4.6, 2.65, 0), size=S_SMALL, color=STRUCT)
+        forth = _engine.VGroup(_engine.Arrow((-1.85, 1.5, 0), (2.2, 1.5, 0), buff=0, stroke_width=3, color=GOOD, max_tip_length_to_length_ratio=0.1),
+                               self.label("class, GlobalId, geometry, material, loads", "Klasse, GlobalId, Geometrie, Material, Lasten", (0.2, 1.8, 0), size=S_SMALL, color=GOOD, width=4.1))
+        route = _engine.Arrow((2.2, 0.35, 0), (-1.85, 0.35, 0), buff=0, stroke_width=3, color=DATA, max_tip_length_to_length_ratio=0.1)
+        back = _engine.VGroup(route, self.label("reactions R, source revision", "Auflagerkräfte R, Quellrevision", (0.2, 0.65, 0), size=S_SMALL, color=DATA, width=4.1))
+        packet = self.badge(f"R = {self.quantity(mine['reaction'], 'kN', 0)}", (2.2, 0.35, 0), color=DATA)
+        packet.add_updater(lambda mob: mob.move_to((2.2 - 4.05 * p.get_value(), 0.35, 0)))
+        never = _engine.VGroup(_engine.DashedLine((2.2, -0.9, 0), (-1.85, -0.9, 0), color=WARN, stroke_width=3).add_tip(tip_length=0.2), _d.segments([((0.0, -0.65, 0), (0.4, -1.15, 0)), ((0.0, -1.15, 0), (0.4, -0.65, 0))], WARN, 4),
+                               self.label("geometry edits and class do not flow back", "Geometrieänderungen und Klasse fließen nicht zurück", (0.2, -1.45, 0), size=S_SMALL, color=WARN, width=4.1))
+        self.step("feedback",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], _engine.FadeIn(chip), _engine.FadeIn(left), _engine.FadeIn(right), _engine.FadeIn(view)),
+                       (_engine.FadeIn(forth),),
+                       (_engine.FadeIn(back), _engine.FadeIn(packet), _to(p, 1, 2.4)),
+                       (_engine.FadeOut(packet), _engine.FadeIn(table), _engine.FadeIn(note), _engine.FadeIn(never))),
+                  seconds=6.5)
+        packet.clear_updaters()
+        self._s = SimpleNamespace(off=[chip, left, right, view, forth, back, table, note, never])
+

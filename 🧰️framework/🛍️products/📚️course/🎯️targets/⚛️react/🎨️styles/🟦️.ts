@@ -12,4 +12,6 @@ import s8 from "./📊️plots-and-crowd/🎨️.css?raw";
 import s9 from "./⚖️footer-and-forced-colors/🎨️.css?raw";
 import s10 from "./🎚️challenge-keys/🎨️.css?raw";
 
-export const quizStylesheet: string = [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10].join("\n");
+import s11 from "./🖥️mockups/🎨️.css?raw";
+
+export const quizStylesheet: string = [s0, s1, s2, s3, s4, s5, s6, s7, s8, s9, s10, s11].join("\n");

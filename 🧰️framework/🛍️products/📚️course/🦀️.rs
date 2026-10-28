@@ -16,7 +16,9 @@ pub use crate::validation::*;
 pub use crate::views::*;
 pub use course_schema as schema;
 pub use course_schema::{
-    Answer, Badge, Best, Course, CourseView, Challenge, ClassificationAnswer, ClassificationItemResult, Command, CrowdCount, CrowdItem, CrowdScores, CrowdTask, CrowdView, CursorState, DimensionResult, Event, HandleHolder, HandleView, Identity,
+    Assignment, AssignmentDocument, AssignmentDocuments, MockupWidget, Mockup, ExcelMockup, GrasshopperMockup, MockupText, MockupSelection, ExcelTarget, MockupPort, MockupNode, MockupEndpoint, MockupWire, MockupBranch, MockupTarget, GrasshopperTargetKind, Answer, Badge, Best, Course, CourseView, Challenge, ClassificationAnswer, ClassificationItemResult, Command, CrowdCount, CrowdItem, CrowdScores, CrowdTask, CrowdView, CursorState, DimensionResult, Event, HandleHolder, HandleView, Identity,
     Leaderboard, LeaderboardPeriod, LeaderboardRow, LearnerView, Limits, MatchingAnswer, MatchingItemResult, Place, PresenceState, Query, Quiz, Rejection, RunResult, RunStatus, RunView, Scale, Screen, SheetTask, SortingAnswer, SortingItem,
     SortingItemResult, Task, TaskKind, TaskResult, ThinkingAnswer, ThinkingState, Timestamp, CHALLENGES, CROWD_SCORE_BINS, DEFAULT_LIMITS, LEADERBOARD_PERIODS, LEADERBOARD_TOP, MAX_TIMESTAMP, WIRE_VERSION,
 };
+
+pub use crate::access::*;

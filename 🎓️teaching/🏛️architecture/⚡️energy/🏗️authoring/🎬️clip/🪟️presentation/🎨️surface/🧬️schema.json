@@ -1,0 +1,98 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Exact Uniform Semio Surface Paint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "level",
+    "appearance",
+    "fill",
+    "rgb",
+    "alpha",
+    "blur_px",
+    "saturate",
+    "parent_rgb",
+    "backdrop_rgb",
+    "composite_rgb",
+    "composite"
+  ],
+  "properties": {
+    "level": {
+      "enum": [
+        "base",
+        "window",
+        "pane",
+        "panel",
+        "dialog",
+        "menu"
+      ]
+    },
+    "appearance": {
+      "enum": [
+        "light",
+        "dark"
+      ]
+    },
+    "fill": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$"
+    },
+    "rgb": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "alpha": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1
+    },
+    "blur_px": {
+      "type": "number",
+      "minimum": 0
+    },
+    "saturate": {
+      "type": "number",
+      "minimum": 0
+    },
+    "parent_rgb": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "backdrop_rgb": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "composite_rgb": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 255
+      }
+    },
+    "composite": {
+      "type": "string",
+      "pattern": "^#[0-9a-f]{6}$"
+    }
+  }
+}

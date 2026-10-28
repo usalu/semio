@@ -1,0 +1,9 @@
+{
+  "schema": "cooling-animation-regressions/v1",
+  "interpolation": [0, 0.25, 0.5, 0.75, 1],
+  "raster": {"width": 480, "height": 270, "background": "#111111"},
+  "topologyError": "zip",
+  "office": {"origin": [0, -0.55, 0], "scaleAfter": 1.35, "centerAfter": [0, -0.15, 0], "roomCenter": [0, -0.2, 0], "roomWidth": 6.6, "roomHeight": 2.5},
+  "solar": {"origin": [-3.75, -0.3, 0], "scale": 0.78, "keepTargetUpdaters": true},
+  "microbes": {"scene": "Beat2_SorptionsKuehlung", "stripY": -1.86, "dimensions": 3, "z": 0, "points": [[-3.3, -1.94, 0], [-2.75, -1.94, 0], [-2.2, -1.94, 0], [-1.65, -1.94, 0], [0.1, -1.94, 0], [0.65, -1.94, 0]]}
+}

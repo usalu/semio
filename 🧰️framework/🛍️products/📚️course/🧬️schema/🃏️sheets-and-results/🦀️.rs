@@ -1,14 +1,17 @@
 //! 🃏️ What a run is made of: the sheet drawn for a learner, the answers given to it and the results scored from them.
 
 use std::collections::BTreeMap;
+use super::Mockup;
 use serde::{Deserialize, Serialize};
 use super::{Category, Challenge, Icon, Quantity, Score, ShortText, Slug, TaskKind, Text};
 
 //#region 🔖️Sheet
 /// 🪪️ A solution-free item: only its id, labels and icon.
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SheetItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mockup: Option<Mockup>,
     pub id: Slug,
     pub label: Text,
     #[serde(default, skip_serializing_if = "Option::is_none")]

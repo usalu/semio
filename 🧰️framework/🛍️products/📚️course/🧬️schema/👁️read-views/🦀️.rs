@@ -2,7 +2,7 @@
 
 use std::collections::BTreeMap;
 use serde::{Deserialize, Serialize};
-use super::{Answer, Challenge, Handle, Icon, Id, Identity, Introduction, RunResult, Score, Sheet, Slug, TaskKind, Text, Timestamp, Topic};
+use super::{Answer, Challenge, Handle, Icon, Id, Identity, Introduction, RunResult, Score, Sheet, Slug, TaskKind, Text, Timestamp, Topic, Unlocks};
 
 //#region 🔖️Views
 /// 🗒️ A task as the course lists it: id, kind, title and icon only.
@@ -43,6 +43,10 @@ pub struct CourseBadgeView {
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct CourseView {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub assignments: Option<Vec<super::Assignment>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unlocks: Option<Unlocks>,
     pub id: Slug,
     pub title: Text,
     #[serde(default, skip_serializing_if = "Option::is_none")]

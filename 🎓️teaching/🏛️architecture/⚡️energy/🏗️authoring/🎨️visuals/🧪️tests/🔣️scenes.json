@@ -1,0 +1,48 @@
+{
+  "house": {
+    "storey_m": 2.5,
+    "person_m": 1.75,
+    "radiator_height_m": 0.65,
+    "radiator_width_m": 1.3
+  },
+  "physics_shared": {
+    "_window": "window_glyph",
+    "_open_window": "open_window",
+    "_build_cross_section_house": "house_section",
+    "_room": "room_section",
+    "_radiator": "radiator",
+    "_person": "person_glyph",
+    "_build_sun": "sun_glyph",
+    "_moon": "moon_glyph",
+    "_energy_tank": "energy_tank",
+    "_lamp": "lamp_glyph"
+  },
+  "overview_scales": [
+    0.4,
+    0.75,
+    1.3
+  ],
+  "plant": {
+    "boiler_width_m": 0.6,
+    "boiler_height_m": 1.0,
+    "tank_width_m": 0.65,
+    "tank_height_m": 1.5
+  },
+  "occupancy": {
+    "center": [
+      -2.7,
+      0.45,
+      0
+    ],
+    "width": 5.2,
+    "height": 2.5,
+    "count": 4,
+    "minimum_drawing_clearance": 0.1,
+    "moisture_offset_x": 0.4,
+    "moisture_spread_x": 0.15
+  },
+  "solar_layout": {
+    "clearance": 0.2,
+    "factor": "I_{S,max} = 800"
+  }
+}

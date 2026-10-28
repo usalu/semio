@@ -20,6 +20,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -29,19 +32,18 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
 PASTEL_PURPLE = _manim_module.PASTEL_PURPLE
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
 PASTEL_CYAN = _manim_module.PASTEL_CYAN
-PASTEL_TEAL = _manim_module.PASTEL_TEAL
 PASTEL_ORANGE = _manim_module.PASTEL_ORANGE
 PASTEL_YELLOW = _manim_module.PASTEL_YELLOW
 PASTEL_RED = _manim_module.PASTEL_RED
@@ -81,7 +83,7 @@ LAMBDA_INSULATION = 0.035
 DT_DESIGN = 20.0
 WALL_AREA = 25.0
 BRICK = PASTEL_RED
-PLASTER = "#CFC8BA"
+PLASTER = semio_color("light-5-7")
 INSULATION = PASTEL_YELLOW
 
 
@@ -148,7 +150,7 @@ def _din_ref(text: str):
     competing with the diagram. The formula panel sits on the bottom edge, so
     this corner is clear in every beat.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -220,7 +222,7 @@ def _brick_block(center, *, w: float = 2.5, h: float = 2.2):
     for k in range(courses):
         for x in ((-w / 4, w / 4) if k % 2 == 0 else (0.0,)):
             joints.add(Line(np.array([x, -h / 2 + k * ch, 0.0]), np.array([x, -h / 2 + (k + 1) * ch, 0.0])))
-    joints.set_stroke("#0B0C10", width=2.2, opacity=0.5)
+    joints.set_stroke(semio_color("dark"), width=2.2, opacity=0.5)
     return VGroup(body, joints).move_to(center)
 
 
@@ -280,20 +282,23 @@ def _emitters(kind: str, row) -> list:
 def _envelope_house(center, scale: float, col: dict) -> dict:
     """🏠 Physical Fundamentals section house with a front door in the right wall, each envelope element in its colour."""
     h = house_section(center, scale)
-    br, tr, t = h["bottom_right"], h["top_right"], 0.08 * scale
+    br, tr, t = h["bottom_right"], h["top_right"], h["wall"]
     door_top = br[1] + 0.62 * scale
-    h["wall_right"].put_start_and_end_on(np.array([br[0], door_top, 0.0]), tr)
-    h["walls"][5][3].put_start_and_end_on(np.array([br[0] - t, door_top, 0.0]), tr + LEFT * t)
-    door = window_glyph(br[0], br[1], door_top, depth=0.5 * scale, color=col["Haustür"])
-    door["sash"].remove(door["sash"][1])
+    inner_top, outer_top = h["roof_wall_tops"]["right"]
+    h["wall_right"].become(section_material(Polygon(np.array([br[0] - t, door_top, 0.0]), np.array([br[0], door_top, 0.0]),
+                                    outer_top, inner_top)))
+    door = window_glyph(br[0] - t / 2, br[1], door_top, depth=0.5 * scale,
+                        color=col["Haustür"], wall=t, inward=-1)
+    door["sash"][1].set_opacity(0)
     for w in h["windows"]:
         w["sash"].set_color(col["Fenster"])
-    h["roof"].set_stroke(col["Dach"])
-    VGroup(*h["walls"][:4], h["walls"][5]).set_stroke(col["Außenwand"])
-    floor = VGroup(h["floor"], h["group"][1]).set_stroke(col["Boden"])
-    parts = {"Dach": h["roof"], "Außenwand": VGroup(*h["walls"][:4], h["walls"][5]),
-             "Fenster": VGroup(*[w["sash"] for w in h["windows"]]), "Haustür": door["sash"], "Boden": floor}
-    return {**h, "door": door, "door_top": door_top, "parts": parts, "group": VGroup(h["group"], door["group"])}
+    parts = {"Dach": h["roof"].copy(), "Außenwand": VGroup(h["walls"][0], h["wall_right"]).copy(),
+             "Fenster": VGroup(*[w["sash"] for w in h["windows"]]), "Haustür": door["sash"], "Boden": h["floor"].copy()}
+    overlays = VGroup(*[parts[name].set_fill(col[name], opacity=0.35).set_stroke(width=0, opacity=0)
+                        for name in ("Dach", "Außenwand", "Boden")])
+    return {**h, "door": door, "door_top": door_top, "parts": parts,
+            "group": VGroup(h["group"], overlays, door["group"])}
+
 #endregion
 
 
@@ -337,9 +342,7 @@ class Beat1_MakroUndMikro(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Makroskopisch und mikroskopisch", title)
+        subtitle = section_heading("Makroskopisch und mikroskopisch")
         din = _din_ref("DIN 4108-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -355,7 +358,7 @@ class Beat1_MakroUndMikro(Scene):
                                  np.array([-1.25, 1.55, 0.0]), color=PASTEL_WHITE, edge="center")
         right_read = math_readout(lambda: rf"\theta_{{2}} = {de_num(t_right.get_value())}\,\mathrm{{°C}}",
                                   np.array([1.25, 1.55, 0.0]), color=PASTEL_WHITE, edge="center")
-        wall_note = body_text("Zwei Ziegel im selben Mauerwerk", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL)
+        wall_note = body_text("Zwei Ziegel im selben Mauerwerk", font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
         wall_note.move_to(DOWN * 1.3)
         therms = []
         for x, trk, color in ((-3.2, t_left, PASTEL_RED), (3.2, t_right, PASTEL_BLUE)):
@@ -402,7 +405,7 @@ class Beat1_MakroUndMikro(Scene):
         )
         hold_for(self, self.NARRATION, "equilibrium", during=balanced)
 
-        micro_sub = beat_subtitle("Mikroskopisches Gitter & Wärmebarriere", title)
+        micro_sub = section_heading("Mikroskopisches Gitter & Wärmebarriere")
         self.play(
             FadeOut(left_block), FadeOut(right_block), FadeOut(eq_label), FadeOut(merged_outline), FadeOut(wall_note),
             *[FadeOut(VGroup(th["group"], th["column"])) for th in therms],
@@ -460,7 +463,7 @@ class Beat1_MakroUndMikro(Scene):
             stroke_color=PASTEL_YELLOW, stroke_width=2,
         ).move_to(np.array([insulation_x, start_y - (num_rows - 1) * dy / 2, 0.0]))
         air_gaps = VGroup(*[
-            Circle(radius=0.07, fill_color="#0B0C10", fill_opacity=1.0, stroke_color=PASTEL_YELLOW, stroke_width=1.5)
+            Circle(radius=0.07, fill_color=semio_color("dark"), fill_opacity=1.0, stroke_color=PASTEL_YELLOW, stroke_width=1.5)
             .move_to(np.array([insulation_x, y_c, 0.0]))
             for y_c in np.linspace(barrier_rect.get_bottom()[1] + 0.25, barrier_rect.get_top()[1] - 0.25, 5)
         ])
@@ -522,9 +525,7 @@ class Beat2_RWert(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Wärmedurchlasswiderstand R", title)
+        subtitle = section_heading("Wärmedurchlasswiderstand R")
         din = _din_ref("DIN EN ISO 6946")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -558,7 +559,7 @@ class Beat2_RWert(Scene):
         self.play(ReplacementTransform(grid_dots, rect), FadeIn(rect_label), FadeIn(lam_label), run_time=1.6)
 
         panel = math_panel([
-            ("r", "R", PASTEL_TEAL), (None, "=", PASTEL_WHITE),
+            ("r", "R", P_PRIMARY), (None, "=", PASTEL_WHITE),
             ("frac", rf"\frac{{\textcolor{{{PASTEL_ORANGE}}}{{d}}}}{{\textcolor{{{PASTEL_CYAN}}}{{\lambda}}}}", PASTEL_WHITE),
             (None, r"\;[\mathrm{m^{2}\,K/W}]", PASTEL_WHITE),
         ])
@@ -602,7 +603,7 @@ class Beat2_RWert(Scene):
         rect_label.clear_updaters()
         r_read.clear_updaters()
 
-        highlight_box = SurroundingRectangle(r_read, color=PASTEL_YELLOW, buff=0.08)
+        highlight_box = SurroundingRectangle(r_read, color=PASTEL_YELLOW, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=_theme_module.CHROME_BORDER)
         double_text = math_label(r"2 \times d \;\Rightarrow\; 2 \times R", color=PASTEL_GREEN)
         double_text.next_to(rect, RIGHT, buff=0.35)
         self.play(Create(highlight_box), FadeIn(double_text), *slab_heat(1.0), run_time=1.0)
@@ -641,9 +642,7 @@ class Beat3_UWertUndGradient(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("U-Wert und Temperaturgradient", title)
+        subtitle = section_heading("U-Wert und Temperaturgradient")
         din = _din_ref("DIN EN ISO 6946")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -651,13 +650,13 @@ class Beat3_UWertUndGradient(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         #region U = 1/R
-        r_lbl = math_label(r"R", np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=PASTEL_TEAL)
+        r_lbl = math_label(r"R", np.array([0.0, 0.7, 0.0]), size=FORMULA_FONT_SIZE, color=P_PRIMARY)
         self.play(FadeIn(r_lbl), run_time=0.7)
         hold_for(self, N, "u_intro", used=0.7 + 0.3)
 
         p_u = math_panel([
             ("u", "U", PASTEL_ORANGE), (None, "=", PASTEL_WHITE),
-            ("frac", rf"\frac{{1}}{{\textcolor{{{PASTEL_TEAL}}}{{R}}}}", PASTEL_WHITE),
+            ("frac", rf"\frac{{1}}{{\textcolor{{{P_PRIMARY}}}{{R}}}}", PASTEL_WHITE),
             (None, r"\;[\mathrm{W/(m^{2}\,K)}]", PASTEL_WHITE),
         ])
         caption = swap_caption(self, caption, subtitle_text(N, "u_formula"))
@@ -830,9 +829,7 @@ class Beat4_WattVergleich(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Wie viel Watt gehen durch die Wand?", title)
+        subtitle = section_heading("Wie viel Watt gehen durch die Wand?")
         din = _din_ref("DIN EN ISO 6946")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -856,7 +853,7 @@ class Beat4_WattVergleich(Scene):
         scale = 3.0
         y0, wall_h = 0.0, 1.45
         legend = math_label(r"\text{innen}\;20\,\mathrm{°C} \;\to\; A = 25\,\mathrm{m^{2}} \;\to\; \text{außen}\;0\,\mathrm{°C}",
-                            np.array([0.0, 2.15, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL)
+                            np.array([0.0, 2.15, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
         sections, titles, data = [], VGroup(), []
         for x, (name, layers) in zip(xs, WALLS):
             total = sum(d for _n, d, _l, _c in layers)
@@ -992,9 +989,7 @@ class Beat5_Gebaeudehuelle(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die thermische Gebäudehülle", title)
+        subtitle = section_heading("Die thermische Gebäudehülle")
         din = _din_ref("DIN EN ISO 13789")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1006,8 +1001,9 @@ class Beat5_Gebaeudehuelle(Scene):
         hs = _envelope_house(np.array([-4.75, 0.1, 0.0]), 0.75, col)
         house = hs["parts"]
         bl, br, tl, tr, roof_peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
-        eave_l, eave_r = hs["roof"][0].get_start(), hs["roof"][0].get_end()
-        heater = radiator(np.array([br[0] - 0.55, bl[1] + 0.24, 0.0]), PASTEL_RED).scale(0.55)
+        eave_l, eave_r = hs["roof"][0].get_vertices()[0], hs["roof"][0].get_vertices()[2]
+        heater = radiator(ORIGIN, PASTEL_RED, height=0.26 * hs["w_height"] / 2, width=0.52 * hs["w_height"] / 2)
+        heater.move_to(np.array([br[0] - 0.55, bl[1] + 0.048 * hs["w_height"] / 2 + heater.height / 2, 0.0]))
 
         def room_warmth(rt):
             return [_warmth([heater.get_top() + UP * 0.04], rt, r_max=0.38, color=PASTEL_RED)]
@@ -1059,7 +1055,7 @@ class Beat5_Gebaeudehuelle(Scene):
         bar_k = 0.00138
         y_head, y_rows = 2.2, [1.45, 0.92, 0.39, -0.14, -0.67]
         heads = VGroup(
-            body_text("Bauteil", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL).move_to(np.array([x_name, y_head, 0.0]), aligned_edge=LEFT),
+            body_text("Bauteil", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(np.array([x_name, y_head, 0.0]), aligned_edge=LEFT),
             math_label(r"A_{i}\;[\mathrm{m^{2}}]", np.array([x_a, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN),
             math_label(r"U_{i}", np.array([x_u, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_ORANGE),
             math_label(r"\Delta\theta_{i}\;[\mathrm{K}]", np.array([x_t, y_head - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_BLUE),
@@ -1067,7 +1063,7 @@ class Beat5_Gebaeudehuelle(Scene):
         )
         u_unit = math_label(r"[\mathrm{W/(m^{2}K)}]", np.array([x_u, y_head - 0.42, 0.0]), size=14, color=PASTEL_ORANGE)
         rule = Line(np.array([x_name, y_head - 0.55, 0.0]), np.array([x_bar + 1.5, y_head - 0.55, 0.0]),
-                    color=PASTEL_TEAL, stroke_width=1.2)
+                    color=P_PRIMARY, stroke_width=1.2)
         self.play(FadeIn(heads), FadeIn(u_unit), Create(rule), run_time=0.6)
 
         rows, bars, fracs = [], [], []
@@ -1127,7 +1123,7 @@ class Beat5_Gebaeudehuelle(Scene):
             for read in reads:
                 read.clear_updaters()
         y_sum = -1.22
-        sum_rule = Line(np.array([x_name, y_sum + 0.3, 0.0]), np.array([x_bar + 1.5, y_sum + 0.3, 0.0]), color=PASTEL_TEAL, stroke_width=1.2)
+        sum_rule = Line(np.array([x_name, y_sum + 0.3, 0.0]), np.array([x_bar + 1.5, y_sum + 0.3, 0.0]), color=P_PRIMARY, stroke_width=1.2)
         total = ValueTracker(0.0)
         sum_label = body_text("Summe", font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to(np.array([x_name, y_sum, 0.0]), aligned_edge=LEFT)
         sum_a = math_label(de_num(ENVELOPE_AREA), np.array([x_a, y_sum - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_CYAN)
@@ -1189,9 +1185,7 @@ class Beat6_Waermebruecken(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Wärmebrücken", title)
+        subtitle = section_heading("Wärmebrücken")
         din = _din_ref("DIN 4108 Bbl. 2 · DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1251,9 +1245,9 @@ class Beat6_Waermebruecken(Scene):
         y_rows = {"e": 1.35, "a": 0.75, "i": 0.15}
         names = {"e": "Außenmaß", "a": "Achsmaß", "i": "Innenmaß"}
         heads = VGroup(
-            math_label(r"l\;[\mathrm{m}]", np.array([x_l, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL, edge="center"),
+            math_label(r"l\;[\mathrm{m}]", np.array([x_l, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="center"),
             math_label(rf"U \cdot l \cdot h\;[\mathrm{{W/K}}],\; h = {de_num(CORNER_H)}\,\mathrm{{m}}",
-                       np.array([x_bar, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_TEAL, edge="left"),
+                       np.array([x_bar, 2.0, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="left"),
         )
         grow = {k: ValueTracker(0.0) for k in offsets}
 
@@ -1354,7 +1348,7 @@ class Beat6_Waermebruecken(Scene):
         brick.move_to(np.array([wx0 + 0.375, (wy0 + wy1) / 2, 0.0]))
         ins = Rectangle(width=0.45, height=wy1 - wy0, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=INSULATION, fill_opacity=0.45)
         ins.move_to(np.array([wx1 - 0.225, (wy0 + wy1) / 2, 0.0]))
-        slab = Rectangle(width=4.6, height=0.28, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color="#9AA3AD", fill_opacity=0.9)
+        slab = Rectangle(width=4.6, height=0.28, stroke_width=1.2, stroke_color=PASTEL_WHITE, fill_color=semio_color("light-5-9"), fill_opacity=0.9)
         slab.move_to(np.array([-4.1, 0.35, 0.0]))
         sec_in = body_text("innen", font_size=LABEL_FONT_SIZE, color=PASTEL_RED).move_to(np.array([-5.6, 1.5, 0.0]))
         sec_out = body_text("außen", font_size=LABEL_FONT_SIZE, color=PASTEL_BLUE).move_to(np.array([-2.5, 1.5, 0.0]))
@@ -1365,9 +1359,9 @@ class Beat6_Waermebruecken(Scene):
         l_trk = ValueTracker(0.0)
         bx0, by = 0.6, 1.2
         strip = always_redraw(lambda: Rectangle(width=max(0.001, 0.62 * l_trk.get_value()), height=0.32, stroke_width=1.2,
-                                                stroke_color=PASTEL_WHITE, fill_color="#9AA3AD", fill_opacity=0.8)
+                                                stroke_color=PASTEL_WHITE, fill_color=semio_color("light-5-9"), fill_opacity=0.8)
                               .move_to(np.array([bx0, by, 0.0]), aligned_edge=LEFT))
-        strip_lbl = body_text("Balkon, Draufsicht", font_size=LABEL_FONT_SIZE, color=PASTEL_TEAL).move_to(np.array([bx0, by + 0.45, 0.0]), aligned_edge=LEFT)
+        strip_lbl = body_text("Balkon, Draufsicht", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(np.array([bx0, by + 0.45, 0.0]), aligned_edge=LEFT)
         l_span = always_redraw(lambda: _span((bx0, by - 0.35, 0.0), (bx0 + 0.62 * l_trk.get_value(), by - 0.35, 0.0), color=PASTEL_ORANGE))
         l_read = math_readout(lambda: rf"l = {de_num(l_trk.get_value(), 1)}\,\mathrm{{m}}",
                               lambda: np.array([bx0 + 0.31 * max(l_trk.get_value(), 2.0), by - 0.78, 0.0]),
@@ -1416,7 +1410,7 @@ class Beat6_Waermebruecken(Scene):
         add_b = [ValueTracker(0.0) for _ in cols_x]
         labels_b = VGroup(*[math_label(tex, np.array([x, base_y - 0.3, 0.0]), size=LABEL_FONT_SIZE, color=PASTEL_WHITE)
                             for x, tex in zip(cols_x, heads_b)])
-        notes_vg = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE - 2, color=PASTEL_TEAL).move_to(np.array([x, base_y - 0.62, 0.0]))
+        notes_vg = VGroup(*[body_text(t, font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY).move_to(np.array([x, base_y - 0.62, 0.0]))
                             for x, t in zip(cols_x, notes_b) if t])
 
         def col_height(i: int) -> float:

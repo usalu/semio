@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,15 +19,14 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -58,14 +60,14 @@ droplets = _manim_module.droplets
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 # 🏔️ Persistent module title — written once on Beat1, self.add()'ed on later beats.
 TITLE_DE = "Sommerstrategie"
 
-AIR = "#60A5FA"
+AIR = semio_color("secondary")
 
 
 #region DIN citation
@@ -73,11 +75,11 @@ def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
     Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
     that never competes with the diagram. The formula panel sits on the
     bottom edge, so this corner is clear in every beat.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -86,9 +88,10 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 
-def _person(pos, color=P_ORANGE, scale=1.0):
-    """🧍 Physical Fundamentals occupant — the comfort target of the strategy."""
-    return person_glyph(pos, color=color, scale=1.09 * scale)
+def _person(house, x, color=P_ORANGE):
+    """🧍 A 1.75 m occupant with feet on the ground-floor slab."""
+    height = 0.7 * house["w_height"] / 2
+    return person_glyph(np.array([x, house["bottom_left"][1] + height / 2, 0.0]), color=color, scale=height / 0.66)
 
 
 def _streams(streams, rt: float, *, speed: float = 0.85, waves: int = 3):
@@ -115,9 +118,8 @@ def _back_chip(prefix: str, src: str | None = None):
     parts = [body_text(prefix, font_size=LABEL_FONT_SIZE + 1, color=AIR)]
     if src:
         parts.append(math_label(src, size=LABEL_FONT_SIZE + 1, color=AIR))
-    content = VGroup(*parts).arrange(RIGHT, buff=0.12)
-    box = SurroundingRectangle(content, color=AIR, corner_radius=0.1, buff=0.1, stroke_width=1.8)
-    return VGroup(box, content)
+    content = VGroup(*parts).arrange(RIGHT, buff=_theme_module.UI_SPACING)
+    return window_chip(content, color=AIR)
 
 #endregion
 
@@ -135,16 +137,14 @@ class Beat1_LastZuerstSenken(Scene):
          "What remains is ventilated with the tools of the ventilation video: window, cross and stack ventilation and the night purge from chapter 4.",
          "Den Rest lüften die Werkzeuge aus dem Lüftungsvideo: Fenster-,\nQuer-, Auftriebs- und Nachtlüftung, Kapitel 4."),
         ("reserve",
-         "Only the remainder goes to supply and exhaust with heat recovery from chapter 5. An open window recovers nothing, so the Passivhaus does not use it as the main air path.",
+         "Chapter 5: balanced recovery handles the rest. Passivhaus uses ducts as its main path: windows recover nothing.",
          "Nur der Rest geht an Zu-/Abluft mit WRG (Kapitel 5): ein offenes\nFenster gewinnt nichts zurück, im Passivhaus ist es nicht der Hauptweg."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Erst die Last senken, dann lüften", title)
+        subtitle = section_heading("Erst die Last senken, dann lüften")
         din = _din_ref("DIN 4108-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -154,16 +154,16 @@ class Beat1_LastZuerstSenken(Scene):
         hs = house_section(np.array([-3.85, -0.05, 0.0]), scale=0.8)
         bl, br, tl, tr, peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
         lo_win, up_win = hs["windows"]
-        person = _person(np.array([-3.25, bl[1] + 0.02 + 0.66 * 1.09 * 0.8 / 2, 0.0]), color=P_ORANGE, scale=0.8)
+        person = _person(hs, -3.25)
 
         off = 0.09
-        envelope = VMobject(color=P_TEAL, stroke_width=6, stroke_opacity=0.85).set_points_as_corners([
+        envelope = VMobject(color=P_PRIMARY, stroke_width=6, stroke_opacity=0.85).set_points_as_corners([
             bl + LEFT * off, tl + LEFT * off, tl + LEFT * (0.26 * 0.8 + off) + UP * 0.02, peak + UP * off,
             tr + RIGHT * (0.26 * 0.8 + off) + UP * 0.02, tr + RIGHT * off, br + RIGHT * off,
         ])
         louvre = VGroup(*[
             Line(np.array([w["x"] - 0.40, y - 0.07, 0.0]), np.array([w["x"] - 0.14, y + 0.07, 0.0]),
-                 color=P_TEAL, stroke_width=3)
+                 color=P_PRIMARY, stroke_width=3)
             for w in (lo_win, up_win)
             for y in np.linspace(w["sill"] + 0.07, w["lintel"] - 0.07, 4)
         ])
@@ -187,7 +187,7 @@ class Beat1_LastZuerstSenken(Scene):
             ).arrange(RIGHT, buff=0.20)
 
         steps = VGroup(
-            _step("1", "Hülle + Sonnenschutz", "Last sinkt", P_TEAL),
+            _step("1", "Hülle + Sonnenschutz", "Last sinkt", P_PRIMARY),
             _step("2", "Fenster · Quer · Nacht", "freie Kühlung", P_CYAN),
             _step("3", "Zu-/Abluft mit WRG", "Hauptweg", P_ORANGE),
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.34)
@@ -201,7 +201,7 @@ class Beat1_LastZuerstSenken(Scene):
         self.play(Create(hs["group"]), run_time=1.5)
         self.play(FadeIn(person), *heat(0.8), run_time=0.8)
         self.play(FadeIn(load_bar["group"]), *heat(1.0), run_time=1.0)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 0.8 + 1.0,
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5 + 0.8 + 1.0,
                  during=heat)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "envelope"))
@@ -261,7 +261,7 @@ class Beat2_SorptionsKuehlung(Scene):
     NARRATION = [
         ("intro",
          "Material physics itself can cool without a chiller: sorption-assisted cooling chains drying, heat exchange and evaporation into one engine.",
-         "Mit Stoffeigenschaften lässt sich ohne Kältemaschine kühlen: die sorptions-\ngestützte Kühlung verkettet Trocknen, Wärmetausch und Verdunstung."),
+         "Sorptionskühlung nutzt Stoffeigenschaften statt einer Kältemaschine: Trocknen, Wärmetausch, Verdunstung."),
         ("entfeuchten",
          "A desiccant wheel first dries the humid outdoor air — adsorption releases heat, so the dry air leaves warmer than it came.",
          "Das Sorptionsrad entfeuchtet zuerst die schwüle Außenluft —\ndie Sorptionswärme macht die trockene Luft zunächst wärmer."),
@@ -275,16 +275,14 @@ class Beat2_SorptionsKuehlung(Scene):
          "Solar heat regenerates the wheel: it drives the stored moisture out into the exhaust air, so the sun itself powers the cycle.",
          "Solarwärme regeneriert das Rad: sie treibt die gespeicherte\nFeuchte in die Fortluft aus — die Sonne treibt den Kreislauf."),
         ("nachteil",
-         "The drawback is microbial. Harsh swings of temperature and humidity put the germs under pressure. They mutate, and the harmful ones are the ones that survive.",
-         "Nachteil: krasse Temperatur- und Feuchtewechsel setzen Keime unter Druck.\nSie mutieren — es überleben bevorzugt die schädlichen."),
+         "Sharp temperature and humidity swings stress germs, causing mutations; harmful strains preferentially survive.",
+         "Starke Temperatur- und Feuchtewechsel stressen Keime. Sie mutieren; bevorzugt überleben die schädlichen."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Sorptionsgestützte Kühlung (DEC)", title)
+        subtitle = section_heading("Sorptionsgestützte Kühlung (DEC)")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -428,26 +426,18 @@ class Beat2_SorptionsKuehlung(Scene):
 
         # 🦠 Mikrobieller Preis: Hitze-/Feuchtezyklen selektieren resistente Keime.
         def _microbe(pos, color):
-            c = np.array([pos[0], pos[1], 0.0], dtype=float)
-            body = Circle(radius=0.11, color=color, stroke_width=2,
-                          fill_color=color, fill_opacity=0.25).move_to(c)
-            spikes = VGroup(*[
-                Line(c + 0.11 * d, c + 0.18 * d, color=color, stroke_width=1.8)
-                for a in np.linspace(0, TAU, 6, endpoint=False)
-                for d in [np.array([np.cos(a), np.sin(a), 0.0])]
-            ])
-            return VGroup(body, spikes)
+            return VGroup(_manim_module.object_silhouette("microbe", color=color, width=0.3)).move_to(pos)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "nachteil"))
         # Compact strip between the component labels (bottom ≈ −1.2) and the
         # caption box (top ≈ −2.6): every microbe and the verdict stay inside it.
         strip_y = -1.86
         panel = RoundedRectangle(
-            width=10.0, height=1.0, corner_radius=0.12,
-            color=P_RED, stroke_width=2.2, fill_color="#12151C", fill_opacity=0.94,
+            width=10.0, height=1.0, corner_radius=0,
+            color=P_RED, stroke_width=_theme_module.CHROME_BORDER, fill_color=_theme_module.CHROME_FILL, fill_opacity=0.94,
         ).move_to(np.array([0.0, strip_y, 0.0]))
         normal = VGroup(*[
-            _microbe([-3.3 + i * 0.55, strip_y - 0.08], P_TEAL) for i in range(4)
+            _microbe([-3.3 + i * 0.55, strip_y - 0.08, 0.0], P_TEAL) for i in range(4)
         ])
         survivors = (normal[2], normal[3])
         cycle_tag = math_label(r"ΔT\!\uparrow\;\;Δx\!\uparrow", at=np.array([-4.75, strip_y - 0.08, 0.0]),
@@ -469,7 +459,7 @@ class Beat2_SorptionsKuehlung(Scene):
             *[m[0].animate.set_fill(opacity=0.65) for m in survivors], *dec(1.0),
             run_time=1.0,
         )
-        clones = VGroup(_microbe([0.1, strip_y - 0.08], P_RED), _microbe([0.65, strip_y - 0.08], P_RED))
+        clones = VGroup(_microbe([0.1, strip_y - 0.08, 0.0], P_RED), _microbe([0.65, strip_y - 0.08, 0.0], P_RED))
         self.play(FadeIn(clones, scale=0.5), FadeIn(verdict), *dec(1.0), run_time=1.0)
         hold_for(self, self.NARRATION, "nachteil", during=dec)
 
@@ -488,13 +478,13 @@ class Beat3_KomfortStrategie(Scene):
          "Every decision starts with the same question: is the outdoor air cooler than the room?",
          "Am Anfang steht immer dieselbe Frage: ist die Außenluft kühler als der Raum?"),
         ("yes",
-         "If it is, ventilate naturally as in chapter 4 of the ventilation video. Set the opening, pick the cross or the stack path, and let outdoor air carry the heat away for free.",
+         "Usable outdoor air? As in ventilation chapter 4, set openings for cross or stack flow to carry heat away freely.",
          "Wenn ja: natürlich lüften (Lüftung Kapitel 4) — Öffnung einstellen,\nQuer- oder Auftriebsweg wählen, die Außenluft trägt die Wärme ab."),
         ("no",
          "If it is not, close and shade, and let the thermal mass buffer the day until the night window opens again.",
          "Wenn nein: schließen und verschatten — die Speichermasse\npuffert, bis das Nachtfenster wieder aufgeht."),
         ("reserve",
-         "Only what these steps cannot cover goes to the balanced supply and exhaust system with heat recovery from chapter 5: the small remainder from the very first beat.",
+         "Only the small remainder uses chapter 5’s balanced supply/exhaust with heat recovery, as in the first beat.",
          "Nur was diese Schritte nicht schaffen, geht an die Zu-/Abluftanlage\nmit Wärmerückgewinnung (Lüftung Kapitel 5)."),
         ("close",
          "Comfort first, outdoor air second, machines last.",
@@ -504,9 +494,7 @@ class Beat3_KomfortStrategie(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Strategie: freie Kühlung zuerst", title)
+        subtitle = section_heading("Strategie: freie Kühlung zuerst")
         din = _din_ref("DIN EN 16798-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -526,10 +514,10 @@ class Beat3_KomfortStrategie(Scene):
         question = VGroup(diamond, q_text).move_to(np.array([0.0, 1.22, 0.0]))
 
         yes_box = chip("Natürlich lüften", P_CYAN).move_to(np.array([-3.45, 0.02, 0.0]))
-        yes_sub = chip("Öffnung · Luftweg · Zeitplan", P_TEAL, font_size=LABEL_FONT_SIZE)
+        yes_sub = chip("Öffnung · Luftweg · Zeitplan", P_PRIMARY, font_size=LABEL_FONT_SIZE)
         yes_sub.move_to(np.array([-3.45, -0.78, 0.0]))
         no_box = chip("Schließen + verschatten", P_ORANGE).move_to(np.array([3.45, 0.02, 0.0]))
-        no_sub = chip("Speichermasse puffert", P_TEAL, font_size=LABEL_FONT_SIZE)
+        no_sub = chip("Speichermasse puffert", P_PRIMARY, font_size=LABEL_FONT_SIZE)
         no_sub.move_to(np.array([3.45, -0.78, 0.0]))
 
         mech = chip("Reserve: Zu-/Abluft mit WRG", P_ORANGE).move_to(np.array([0.0, -1.60, 0.0]))
@@ -545,8 +533,8 @@ class Beat3_KomfortStrategie(Scene):
             _link(diamond.get_right(), no_box.get_top(), P_ORANGE),
             _link(yes_box.get_bottom(), yes_sub.get_top(), P_CYAN),
             _link(no_box.get_bottom(), no_sub.get_top(), P_ORANGE),
-            _link(yes_sub.get_bottom(), mech.get_left(), P_TEAL),
-            _link(no_sub.get_bottom(), mech.get_right(), P_TEAL),
+            _link(yes_sub.get_bottom(), mech.get_left(), P_PRIMARY),
+            _link(no_sub.get_bottom(), mech.get_right(), P_PRIMARY),
             _link(mech.get_bottom(), goal.get_top(), P_GREEN),
         )
         # Inside the elbow of each link, away from the diamond corner where the token parks.
@@ -587,7 +575,7 @@ class Beat3_KomfortStrategie(Scene):
             FadeIn(chip_nat),
             run_time=1.2,
         )
-        self.play(token.animate.move_to(_park(yes_sub)), Indicate(yes_sub, color=P_TEAL), run_time=1.1)
+        self.play(token.animate.move_to(_park(yes_sub)), Indicate(yes_sub, color=P_PRIMARY), run_time=1.1)
         hold_for(self, self.NARRATION, "yes", used=1.2 + 1.1 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "no"))
@@ -599,7 +587,7 @@ class Beat3_KomfortStrategie(Scene):
             run_time=0.9,
         )
         self.play(Indicate(no_box, color=P_ORANGE), run_time=0.7)
-        self.play(token.animate.move_to(_park(no_sub)), Indicate(no_sub, color=P_TEAL), run_time=1.0)
+        self.play(token.animate.move_to(_park(no_sub)), Indicate(no_sub, color=P_PRIMARY), run_time=1.0)
         hold_for(self, self.NARRATION, "no", used=0.9 + 0.7 + 1.0 + 0.35)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "reserve"))

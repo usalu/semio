@@ -19,6 +19,7 @@ export interface OverviewCardBaseProps {
   readonly slot: string;
   readonly icon: React.ReactNode;
   readonly title: React.ReactNode;
+  readonly titleAdornment?: React.ReactNode;
   readonly children?: React.ReactNode;
   readonly footerLeft?: React.ReactNode;
   readonly footerRight?: React.ReactNode;
@@ -60,7 +61,7 @@ const CARD_STACK_DATA = { "data-overview-card-stack": "" } as const;
  * @see ../🗂️WindowChrome/🟦️.tsx
  * @see https://www.w3.org/WAI/ARIA/apg/practices/landmark-regions/ — sections named by their heading */
 export function OverviewCard(props: OverviewCardProps): React.ReactElement {
-  const { slot, icon, title, children, footerLeft, footerRight, className, bodyClassName, contentClassName, data } = props;
+  const { slot, icon, title, titleAdornment, children, footerLeft, footerRight, className, bodyClassName, contentClassName, data } = props;
   const Heading = props.as === "section" ? (`h${props.headingLevel ?? 2}` as const) : "span";
   const chrome = (
     <WindowChrome
@@ -80,6 +81,7 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
           >
             {title}
           </Heading>
+          {titleAdornment}
         </div>
       }
       body={
@@ -125,14 +127,14 @@ export function OverviewCard(props: OverviewCardProps): React.ReactElement {
 /** 🔖️ The chip frame every footer chip shares — the chrome's own title-chip shape with the card's text size. */
 export const overviewCardChipClass = cn(windowChromeTitleChipClass, "inline-flex items-center gap-single px-single text-xs font-medium");
 
-/** 🏷️ A footer chip that only labels the card's own action (the whole card is the button): muted text and a chevron
+/** 🏷️ A footer chip that only labels the card's own action (the whole card is the button): muted text and an optional icon
  * that follow the card's hover. The pointer zooms the page behind the card only while it is over this chip. */
-export function OverviewCardOpenChip({ slot, children }: { readonly slot: string; readonly children: React.ReactNode }): React.ReactElement {
+export function OverviewCardOpenChip({ slot, children, icon }: { readonly slot: string; readonly children: React.ReactNode; readonly icon?: React.ReactNode }): React.ReactElement {
   return (
     <div data-slot={`${slot}-open-chip`} data-layered-zoom="" className={windowChromeTitleChipClass}>
       <span className="inline-flex items-center gap-single px-single text-xs font-medium text-muted-foreground transition-colors group-hover:text-foreground">
         {children}
-        <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" />
+        {icon === undefined ? <Icon icon="chevron-right" size="small" className="transition-transform group-hover:translate-x-0.5 motion-reduce:transition-none" /> : icon}
       </span>
     </div>
   );

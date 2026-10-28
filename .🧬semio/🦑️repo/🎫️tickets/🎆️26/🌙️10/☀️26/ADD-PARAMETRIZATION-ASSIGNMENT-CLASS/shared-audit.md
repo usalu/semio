@@ -1,0 +1,9 @@
+# Shared Dimension Audit
+
+The language-neutral v10 contract sets box and pyramid dimensions to (2.5, 1.5, 2) and the elliptical cylinder to (3.5, 2.5, 3). Each numeric row has multiplicities two and one; the same pair shares all three dimensions while Form differs. All six directed edge vectors and the wrong direct (2, 1, 1) change agree with this contract.
+
+The TypeScript subject checks multiplicities with native maps; independent d3-array rollup validates the same properties. Positive checks and negative all-equal, all-distinct and mismatched shared-pair cases cover each axis. A same-category mutation rejects the shared-dimensions example. Existing mathjs checks independently validate differences and cycle sums.
+
+The PDF audit independently reads table values and native geometry: three distinct forms, cylinder dimensions (3.5, 2.5, 3), a 20 mm worked header, six curved directed arcs, six categorical captions and four signed three-dimensional vector captions.
+
+Final v10 semantic verification passes with exit code zero after restored bilingual content: schema mutation tests, numeric multiplicity and shared-pair property tests, independent D3 and mathjs references, complete directed K16, matrix and bilingual source contracts. Fresh final wrapped German PDF passes mixed, directed and matrix audits; final English PDF passes the mixed audit. The measured 20.14008 mm header interval includes the nominal 20 mm header and its 0.4 pt rule; the audit accounts for that rule. The German graph measures 125.603 mm high, ratio 1.50243 to the original 83.6 mm height. Both nine-by-nine matrices retain centered native vector artwork and clear padding. All 240 directed arcs, 20 selected directions, 266 arrowheads, K3 endpoint clearance, six Form captions and four signed vector captions pass. Final wrapped-source semantic verification also passes. Parent review handles rendered visibility of the complete captions.

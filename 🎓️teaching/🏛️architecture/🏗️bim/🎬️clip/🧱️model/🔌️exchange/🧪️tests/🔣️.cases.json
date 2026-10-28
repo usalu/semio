@@ -1,0 +1,46 @@
+{
+  "tag": "B3",
+  "guid": "0yoQlyTGDVUBsRS$cAaoWq",
+  "material": "MAT-RC",
+  "axis": [
+    10.75,
+    4.75
+  ],
+  "radius": 0.15,
+  "base": 0,
+  "top": 3.25,
+  "first_id": 101,
+  "shift": 20,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "segments": [
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "roles": [
+    "class",
+    "guid",
+    "placement",
+    "predefined",
+    "pset",
+    "value",
+    "material",
+    "profile",
+    "depth"
+  ],
+  "material_label_path": [
+    "material",
+    "name"
+  ]
+}

@@ -1,4 +1,5 @@
 /** 📚️ The course application shell, without the package's task and view reexports. */
+import { AccessGate, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { Component, StrictMode, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore, type ReactElement, type ReactNode } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { presenceProfile, type PresencePreferences, type PresencePresentation } from "@semio-tech/course";
@@ -244,6 +245,7 @@ function Screen(props: {
 }): ReactElement {
   const { session, state, connection, text, locale, preferences, onPreferences } = props;
   const step = state.step;
+  const at = useReleaseClock(state.course);
   const screens = useCourseScreens(courseScreen(step.screen));
   const [introductionPage, setIntroductionPage] = useState<string | undefined>(undefined);
   const waiting = (
@@ -275,7 +277,9 @@ function Screen(props: {
         waiting
       ) : (
         <Page wide>
+          <AccessGate course={state.course} page={state.runs[step.run]!.quiz} at={at} locale={locale} text={text}>
           <screens.ResultsScreen session={session} state={state} run={step.run} text={text} locale={locale} others={preferences.others} />
+          </AccessGate>
         </Page>
       );
   }

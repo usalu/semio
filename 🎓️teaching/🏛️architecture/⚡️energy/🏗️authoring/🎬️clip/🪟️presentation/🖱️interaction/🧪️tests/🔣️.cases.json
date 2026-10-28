@@ -1,0 +1,1290 @@
+{
+  "schema": "energy-cursor-interaction-tests/v1",
+  "viewport": [
+    1600,
+    900
+  ],
+  "nodes": [
+    {
+      "id": "app",
+      "parent": null,
+      "role": "root",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 900
+      },
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "id": "navbar",
+      "parent": "app",
+      "role": "navbar",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1600,
+        "height": 28.8
+      },
+      "z": 2,
+      "enabled": true
+    },
+    {
+      "id": "canvas",
+      "parent": "app",
+      "role": "canvas",
+      "rect": {
+        "x": 0,
+        "y": 28.8,
+        "width": 1600,
+        "height": 842.4
+      },
+      "z": 0,
+      "enabled": true
+    },
+    {
+      "id": "footer",
+      "parent": "app",
+      "role": "footer",
+      "rect": {
+        "x": 0,
+        "y": 871.2,
+        "width": 1600,
+        "height": 28.8
+      },
+      "z": 2,
+      "enabled": true
+    },
+    {
+      "id": "window",
+      "parent": "canvas",
+      "role": "window",
+      "rect": {
+        "x": 40,
+        "y": 150,
+        "width": 480,
+        "height": 272
+      },
+      "z": 0,
+      "enabled": true,
+      "outline": [
+        [
+          40,
+          150
+        ],
+        [
+          200,
+          150
+        ],
+        [
+          200,
+          172.4
+        ],
+        [
+          497.6,
+          172.4
+        ],
+        [
+          497.6,
+          150
+        ],
+        [
+          520,
+          150
+        ],
+        [
+          520,
+          422
+        ],
+        [
+          40,
+          422
+        ]
+      ]
+    },
+    {
+      "id": "tab",
+      "parent": "window",
+      "role": "tab",
+      "rect": {
+        "x": 40,
+        "y": 150,
+        "width": 160,
+        "height": 22.4
+      },
+      "z": 1,
+      "enabled": true
+    },
+    {
+      "id": "fullscreen",
+      "parent": "window",
+      "role": "fullscreen",
+      "rect": {
+        "x": 497.6,
+        "y": 150,
+        "width": 22.4,
+        "height": 22.4
+      },
+      "z": 3,
+      "enabled": true
+    },
+    {
+      "id": "toggle",
+      "parent": "navbar",
+      "role": "toggle",
+      "rect": {
+        "x": 1200,
+        "y": 3.2,
+        "width": 22.4,
+        "height": 22.4
+      },
+      "z": 3,
+      "enabled": true
+    },
+    {
+      "id": "tree",
+      "parent": "canvas",
+      "role": "tree",
+      "rect": {
+        "x": 8,
+        "y": 100,
+        "width": 24,
+        "height": 160
+      },
+      "z": 1,
+      "enabled": true
+    },
+    {
+      "id": "tree-item",
+      "parent": "tree",
+      "role": "button",
+      "rect": {
+        "x": 8,
+        "y": 120,
+        "width": 24,
+        "height": 28
+      },
+      "z": 2,
+      "enabled": true
+    }
+  ],
+  "hits": [
+    {
+      "id": "outside",
+      "point": [
+        1600,
+        900
+      ],
+      "path": []
+    },
+    {
+      "id": "navbar-parent",
+      "point": [
+        20,
+        20
+      ],
+      "path": [
+        "app",
+        "navbar"
+      ]
+    },
+    {
+      "id": "footer-parent",
+      "point": [
+        20,
+        880
+      ],
+      "path": [
+        "app",
+        "footer"
+      ]
+    },
+    {
+      "id": "window-body",
+      "point": [
+        200,
+        300
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "window"
+      ]
+    },
+    {
+      "id": "window-tab",
+      "point": [
+        80,
+        161.2
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "window",
+        "tab"
+      ]
+    },
+    {
+      "id": "fullscreen-parent-chain",
+      "point": [
+        508.8,
+        161.2
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "window",
+        "fullscreen"
+      ]
+    },
+    {
+      "id": "right-edge-excluded",
+      "point": [
+        520,
+        161.2
+      ],
+      "path": [
+        "app",
+        "canvas"
+      ]
+    },
+    {
+      "id": "bottom-edge-excluded",
+      "point": [
+        508.8,
+        172.4
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "window"
+      ]
+    },
+    {
+      "id": "disabled-control",
+      "point": [
+        508.8,
+        161.2
+      ],
+      "disabled": [
+        "fullscreen"
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "window"
+      ]
+    },
+    {
+      "id": "disabled-parent",
+      "point": [
+        508.8,
+        161.2
+      ],
+      "disabled": [
+        "window"
+      ],
+      "path": [
+        "app",
+        "canvas"
+      ]
+    },
+    {
+      "id": "tree-item-chain",
+      "point": [
+        20,
+        130
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "tree",
+        "tree-item"
+      ]
+    },
+    {
+      "id": "stable-topmost-sibling",
+      "point": [
+        508.8,
+        161.2
+      ],
+      "extra": [
+        {
+          "id": "upper-button",
+          "parent": "window",
+          "role": "button",
+          "rect": {
+            "x": 497.6,
+            "y": 150,
+            "width": 22.4,
+            "height": 22.4
+          },
+          "z": 3,
+          "enabled": true
+        }
+      ],
+      "path": [
+        "app",
+        "canvas",
+        "window",
+        "upper-button"
+      ]
+    },
+    {
+      "id": "transparent-window-cap-gap",
+      "point": [
+        300,
+        161.2
+      ],
+      "outlines": {
+        "window": [
+          [
+            40,
+            150
+          ],
+          [
+            200,
+            150
+          ],
+          [
+            200,
+            172.4
+          ],
+          [
+            497.6,
+            172.4
+          ],
+          [
+            497.6,
+            150
+          ],
+          [
+            520,
+            150
+          ],
+          [
+            520,
+            422
+          ],
+          [
+            40,
+            422
+          ]
+        ]
+      },
+      "path": [
+        "app",
+        "canvas"
+      ]
+    }
+  ],
+  "gestures": [
+    {
+      "id": "fullscreen-only-after-click",
+      "events": [
+        {
+          "type": "enter",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            508.8,
+            161.2
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          "window"
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          [
+            "fullscreen.toggle"
+          ]
+        ],
+        "finalToggles": {}
+      },
+      "disabled": []
+    },
+    {
+      "id": "drag-out-cancels",
+      "events": [
+        {
+          "type": "move",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "move",
+          "point": [
+            200,
+            300
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            200,
+            300
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            200,
+            300
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "finalToggles": {}
+      },
+      "disabled": []
+    },
+    {
+      "id": "release-outside-reenter-click-cancels",
+      "events": [
+        {
+          "type": "enter",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "move",
+          "point": [
+            200,
+            300
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            200,
+            300
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            508.8,
+            161.2
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "finalToggles": {}
+      },
+      "disabled": []
+    },
+    {
+      "id": "press-one-release-another-cancels",
+      "events": [
+        {
+          "type": "enter",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "move",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            1210,
+            24
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          [],
+          []
+        ],
+        "finalToggles": {}
+      },
+      "disabled": []
+    },
+    {
+      "id": "disabled-control-never-activates",
+      "events": [
+        {
+          "type": "enter",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            508.8,
+            161.2
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          null
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          []
+        ],
+        "finalToggles": {}
+      },
+      "disabled": [
+        "fullscreen"
+      ]
+    },
+    {
+      "id": "click-without-press-is-inert",
+      "events": [
+        {
+          "type": "click",
+          "point": [
+            508.8,
+            161.2
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null
+        ],
+        "effectTypes": [
+          []
+        ],
+        "finalToggles": {}
+      },
+      "disabled": []
+    },
+    {
+      "id": "toggle-two-committed-clicks",
+      "events": [
+        {
+          "type": "enter",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            1210,
+            24
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            1210,
+            24
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          null
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          [
+            "toggle"
+          ],
+          [],
+          [],
+          [
+            "toggle"
+          ]
+        ],
+        "finalToggles": {
+          "toggle": false
+        }
+      },
+      "disabled": []
+    },
+    {
+      "id": "fullscreen-toggle-off",
+      "events": [
+        {
+          "type": "enter",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "press",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "release",
+          "point": [
+            508.8,
+            161.2
+          ]
+        },
+        {
+          "type": "click",
+          "point": [
+            508.8,
+            161.2
+          ]
+        }
+      ],
+      "expected": {
+        "fullscreen": [
+          null,
+          null,
+          null,
+          "window",
+          "window",
+          "window",
+          null
+        ],
+        "effectTypes": [
+          [],
+          [],
+          [],
+          [
+            "fullscreen.toggle"
+          ],
+          [],
+          [],
+          [
+            "fullscreen.toggle"
+          ]
+        ],
+        "finalToggles": {}
+      },
+      "disabled": []
+    }
+  ],
+  "visuals": [
+    {
+      "role": "button",
+      "state": {},
+      "expected": {
+        "text": "#7b827d",
+        "opacity": 1,
+        "fill_opacity": 0
+      }
+    },
+    {
+      "role": "button",
+      "state": {
+        "hovered": true
+      },
+      "expected": {
+        "fill": "#606966",
+        "stroke": "#f7f3e3",
+        "text": "#f7f3e3",
+        "opacity": 1,
+        "fill_opacity": 1
+      }
+    },
+    {
+      "role": "button",
+      "state": {
+        "selected": true
+      },
+      "expected": {
+        "fill": "#ff344f",
+        "text": "#001117",
+        "opacity": 1,
+        "fill_opacity": 1
+      }
+    },
+    {
+      "role": "button",
+      "state": {
+        "selected": true,
+        "hovered": true
+      },
+      "expected": {
+        "fill": "#fd5a6d",
+        "text": "#001117",
+        "opacity": 1,
+        "fill_opacity": 1
+      }
+    },
+    {
+      "role": "button",
+      "state": {
+        "disabled": true
+      },
+      "expected": {
+        "opacity": 0.5,
+        "fill_opacity": 0
+      }
+    },
+    {
+      "role": "window",
+      "state": {
+        "hovered": true
+      },
+      "expected": {
+        "stroke": "#f7f3e3"
+      }
+    },
+    {
+      "role": "navbar",
+      "state": {
+        "hovered": true
+      },
+      "expected": {
+        "stroke": "#f7f3e3"
+      }
+    },
+    {
+      "role": "footer",
+      "state": {
+        "hovered": true
+      },
+      "expected": {
+        "stroke": "#f7f3e3"
+      }
+    },
+    {
+      "role": "tree",
+      "state": {
+        "hovered": true
+      },
+      "expected": {
+        "stroke_width": 1.5
+      }
+    },
+    {
+      "role": "button",
+      "state": {
+        "pressed": true
+      },
+      "expected": {
+        "fill": "#ff344f",
+        "fill_opacity": 1,
+        "text": "#001117",
+        "opacity": 1
+      }
+    },
+    {
+      "role": "button",
+      "state": {
+        "pressed": true,
+        "hovered": true
+      },
+      "expected": {
+        "fill": "#fd5a6d",
+        "fill_opacity": 1,
+        "text": "#001117",
+        "opacity": 1
+      }
+    }
+  ],
+  "blend": {
+    "primary": "#ff344f",
+    "light": "#f7f3e3",
+    "primaryRatio": 0.8,
+    "expected": "#fd5a6d"
+  },
+  "idlePoint": [
+    1624,
+    840
+  ],
+  "intervals": {
+    "normalize": [
+      {
+        "id": "sort-merge-overlap-and-adjacent",
+        "input": [
+          {
+            "start": 2,
+            "end": 3
+          },
+          {
+            "start": 1,
+            "end": 2
+          },
+          {
+            "start": 4,
+            "end": 5
+          },
+          {
+            "start": 4.5,
+            "end": 6
+          }
+        ],
+        "expected": [
+          {
+            "start": 1,
+            "end": 3
+          },
+          {
+            "start": 4,
+            "end": 6
+          }
+        ]
+      },
+      {
+        "id": "empty",
+        "input": [],
+        "expected": []
+      }
+    ],
+    "clip": [
+      {
+        "id": "clip-and-rebase-half-open",
+        "input": [
+          {
+            "start": 0,
+            "end": 1
+          },
+          {
+            "start": 1,
+            "end": 2
+          },
+          {
+            "start": 3,
+            "end": 5
+          }
+        ],
+        "range": [
+          1.5,
+          4.5
+        ],
+        "expected": [
+          {
+            "start": 0,
+            "end": 0.5
+          },
+          {
+            "start": 1.5,
+            "end": 3
+          }
+        ]
+      },
+      {
+        "id": "drop-touching-only-ranges",
+        "input": [
+          {
+            "start": 0,
+            "end": 1
+          },
+          {
+            "start": 2,
+            "end": 3
+          }
+        ],
+        "range": [
+          1,
+          2
+        ],
+        "expected": []
+      }
+    ],
+    "invalid": [
+      [
+        -1,
+        1
+      ],
+      [
+        1,
+        1
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        "nan",
+        1
+      ],
+      [
+        0,
+        "inf"
+      ]
+    ],
+    "concat": {
+      "durations": [
+        2,
+        3,
+        1
+      ],
+      "input": [
+        [
+          {
+            "start": 0.5,
+            "end": 1.5
+          }
+        ],
+        [],
+        [
+          {
+            "start": 0,
+            "end": 0.75
+          }
+        ]
+      ],
+      "expected": [
+        {
+          "start": 0.5,
+          "end": 1.5
+        },
+        {
+          "start": 5,
+          "end": 5.75
+        }
+      ]
+    }
+  },
+  "transition": {
+    "before": "#7b827d",
+    "after": "#f7f3e3",
+    "duration": 0.12,
+    "controlPoints": [
+      0.25,
+      0.1,
+      0.25,
+      1
+    ],
+    "samples": [
+      {
+        "elapsed": -0.1,
+        "expected": "#7b827d"
+      },
+      {
+        "elapsed": 0,
+        "expected": "#7b827d"
+      },
+      {
+        "elapsed": 0.03,
+        "expected": "#aeb0a7"
+      },
+      {
+        "elapsed": 0.06,
+        "expected": "#deddcf"
+      },
+      {
+        "elapsed": 0.09,
+        "expected": "#f2efdf"
+      },
+      {
+        "elapsed": 0.12,
+        "expected": "#f7f3e3"
+      },
+      {
+        "elapsed": 0.2,
+        "expected": "#f7f3e3"
+      }
+    ],
+    "invalidElapsed": [
+      "nan",
+      "inf"
+    ],
+    "invalidColors": [
+      "#fff",
+      "not-a-color",
+      "#zz1122"
+    ]
+  },
+  "native": {
+    "resolution": [
+      960,
+      540
+    ],
+    "fps": 12,
+    "language": "de",
+    "phaseSeconds": {
+      "focus": 6.4,
+      "restore": 3.7
+    },
+    "layeredSampleSeconds": {
+      "overview": 0,
+      "courseHover": 0.7,
+      "courseOpened": 1.35,
+      "topicHover": 2.1,
+      "topicOpened": 2.75,
+      "clipHover": 3.5,
+      "clipOpened": 4.15,
+      "chapterHover": 4.9,
+      "focused": 6.4
+    },
+    "chapter": "PhysicalFundamentals_FullSection",
+    "nextChapter": "Ventilation_01_WarumLueften",
+    "branch": [
+      "architecture",
+      "energy",
+      "physical_fundamentals",
+      "PhysicalFundamentals_FullSection"
+    ],
+    "boundary": [
+      "architecture",
+      "energy"
+    ],
+    "clickTargets": {
+      "focus": [
+        "architecture",
+        "energy",
+        "physical_fundamentals",
+        "PhysicalFundamentals_FullSection"
+      ],
+      "restore": [
+        "PhysicalFundamentals_FullSection:fullscreen",
+        "footer:path:energy"
+      ]
+    }
+  },
+  "iconViewport": {
+    "viewBox": [
+      0,
+      0,
+      24,
+      24
+    ],
+    "inkBounds": [
+      3,
+      3,
+      21,
+      21
+    ],
+    "cssSize": 16,
+    "expectedVisibleSize": [
+      12,
+      12
+    ],
+    "icons": [
+      "maximize-2",
+      "minimize-2"
+    ]
+  },
+  "popup": {
+    "normalForeground": "oklab(0.70831 -0.0076355 0.00975207)",
+    "emphasizedForeground": "rgb(247, 243, 227)",
+    "rowBackground": "rgba(0, 0, 0, 0)",
+    "labelBackground": "rgba(0, 0, 0, 0)",
+    "menuBackground": "color(srgb 0.196663 0.255989 0.264409 / 0.4)",
+    "insideNavbar": false
+  },
+  "borderOwnership": {
+    "role": "toggle",
+    "rect": {
+      "x": 700,
+      "y": 400,
+      "width": 22.4,
+      "height": 22.4
+    },
+    "fusedWidth": 0,
+    "standaloneWidth": 1,
+    "states": [
+      {
+        "hovered": false,
+        "pressed": false
+      },
+      {
+        "hovered": true,
+        "pressed": false
+      },
+      {
+        "hovered": true,
+        "pressed": true
+      },
+      {
+        "hovered": true,
+        "pressed": false
+      }
+    ]
+  },
+  "popupPaths": {
+    "leaf": [
+      "navbar:tree:architecture",
+      "navbar:tree:energy",
+      "navbar:tree:physical_fundamentals",
+      "navbar:tree:PhysicalFundamentals_FullSection"
+    ],
+    "sibling": [
+      "navbar:tree:architecture",
+      "navbar:tree:energy",
+      "navbar:tree:ventilation"
+    ]
+  }
+}

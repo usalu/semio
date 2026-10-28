@@ -1,0 +1,16 @@
+const fs = require('node:fs');
+const path = require('node:path');
+const print = path.join(process.cwd(), '🧰️framework/🛍️products/📓️print');
+const engine = fs.readFileSync(path.join(print, '🔨️modules/🖨️tectonic-template-compilation/🟦️.ts'), 'utf8');
+const start = engine.indexOf('export function deriveDarkPrintTexSource(');
+const end = engine.indexOf('\n}\n', start) + 2;
+if (start < 0 || end < start) throw new Error('Official dark derivation missing');
+const definition = engine.slice(start, end).replace('export function', 'function').replace('(lightSource: string): string', '(lightSource)');
+const derive = Function('return (' + definition + ')')();
+const source = fs.readFileSync(path.join(print, '🧾️template/📝️assignment/parametrization-de.tex'), 'utf8');
+const target = path.join(__dirname, '🗑️generated/ledger-dark/parametrization-de-dark.tex');
+if (target.length > 256) throw new Error('Path length exceeds repository limit');
+fs.mkdirSync(path.dirname(target), { recursive: true });
+fs.writeFileSync(target + '.new', derive(source));
+fs.renameSync(target + '.new', target);
+process.stdout.write(target + '\n');

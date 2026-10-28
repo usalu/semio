@@ -1,0 +1,49 @@
+{
+  "schema": "semio.ui-candidate-closure/v1",
+  "steps": [
+    {
+      "members": [
+        "a.ts",
+        "b.ts"
+      ],
+      "calls": 2
+    },
+    {
+      "members": [
+        "a.ts",
+        "b.ts"
+      ],
+      "calls": 2
+    },
+    {
+      "members": [
+        "a.ts",
+        "b.ts"
+      ],
+      "edit": "b.ts",
+      "calls": 3
+    },
+    {
+      "members": [
+        "a.ts",
+        "b.ts"
+      ],
+      "calls": 3
+    },
+    {
+      "members": [
+        "a.ts",
+        "b.ts",
+        "c.ts"
+      ],
+      "calls": 4
+    },
+    {
+      "members": [
+        "a.ts",
+        "b.ts"
+      ],
+      "calls": 5
+    }
+  ]
+}

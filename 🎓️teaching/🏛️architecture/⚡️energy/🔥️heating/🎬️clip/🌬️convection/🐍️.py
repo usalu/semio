@@ -16,6 +16,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -25,19 +28,18 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
 PASTEL_CYAN = _manim_module.PASTEL_CYAN
-PASTEL_TEAL = _manim_module.PASTEL_TEAL
 PASTEL_ORANGE = _manim_module.PASTEL_ORANGE
 PASTEL_YELLOW = _manim_module.PASTEL_YELLOW
 PASTEL_RED = _manim_module.PASTEL_RED
@@ -76,7 +78,7 @@ def _din_ref(text: str):
     ``2_conduction/scene_2.py`` so every module footnotes its norm identically. The winter ventilation loss is the
     chain of DIN EN 12831-1 (Φ_V = V · n · c_Luft · Δθ).
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -100,7 +102,7 @@ V_DOT = V_NET * N_RATE
 PHI_V = round(V_DOT * C_LUFT * D_THETA, -2)
 PHI_T = 2300.0
 ETA_WRG = 0.8
-VENT_BLUE = "#60A5FA"
+VENT_BLUE = semio_color("secondary")
 #endregion
 
 
@@ -110,15 +112,14 @@ def _backlink(origin: str, src: str | None = None, *, color: str = VENT_BLUE):
     parts = VGroup(body_text(f"← {origin}" + (":" if src else ""), font_size=LABEL_FONT_SIZE, color=color))
     if src:
         parts.add(math_label(src, size=LABEL_FONT_SIZE + 1, color=color))
-    parts.arrange(RIGHT, buff=0.1)
-    box = SurroundingRectangle(parts, color=color, corner_radius=0.1, buff=0.09, stroke_width=1.6)
-    return VGroup(box, parts)
+    parts.arrange(RIGHT, buff=_theme_module.UI_SPACING)
+    return window_chip(parts, color=color)
 
 
 def _outlook_chip(text: str, *, color: str = VENT_BLUE):
     """➡️ Chip that points forward to a chapter of the Lüftung video."""
     label = body_text(text, font_size=LABEL_FONT_SIZE, color=color)
-    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0.1, buff=0.1, stroke_width=1.6), label)
+    return window_chip(label, color=color)
 #endregion
 
 
@@ -162,9 +163,7 @@ class Beat1_LueftungImWinter(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Lüftungsverlust im Winter", title)
+        subtitle = section_heading("Lüftungsverlust im Winter")
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -229,7 +228,7 @@ class Beat1_LueftungImWinter(Scene):
         xs = [0.025 + i * (card_w + gap) for i in range(3)]
         cards = {}
         for (key, sym, name, value, digits, unit, color, chapter, _keys), x in zip(specs, xs):
-            frame = RoundedRectangle(width=card_w, height=1.62, corner_radius=0.1, color=color, stroke_width=1.8)
+            frame = RoundedRectangle(width=card_w, height=1.62, corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER)
             frame.set_fill(P_DEEP_DARK, 0.82).move_to([x, cy, 0])
             head = math_label(sym, np.array([x, cy + 0.32, 0]), size=FORMULA_FONT_SIZE, color=color)
             cap = body_text(name, font_size=LABEL_FONT_SIZE, color=PASTEL_WHITE).move_to([x, cy - 0.12, 0])

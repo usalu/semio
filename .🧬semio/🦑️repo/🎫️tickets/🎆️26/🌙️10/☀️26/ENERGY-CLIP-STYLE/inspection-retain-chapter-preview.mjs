@@ -1,0 +1,33 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+
+const ticket=path.dirname(fileURLToPath(import.meta.url));
+const read=file=>JSON.parse(fs.readFileSync(file,'utf8'));
+const sha=file=>crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+const metrics=read(path.join(ticket,'🗑️generated/iv/chapter-measurements.json'));
+const clip=process.argv[2]==='--clip';
+const scene=process.argv[clip?3:2]??'Cooling_01_HeatingVsCooling';
+if(!/^[A-Za-z0-9_]+$/.test(scene))throw Error('Invalid chapter identity');
+const record=(clip?metrics.videos:metrics.chapters).find(item=>item.id===scene&&item.pass===true);
+if(!record||!Number.isInteger(record.frames)||record.frames<1)throw Error('Chapter is not independently verified');
+const source=fs.realpathSync(record.path),allowed=fs.realpathSync(path.join(ticket,'🗑️generated/i'));
+const relative=path.relative(allowed,source);
+if(!relative||relative.startsWith('..')||path.isAbsolute(relative)||sha(source)!==record.sha256)throw Error('Verified media identity mismatch');
+const certificate=source.replace(/\.mp4$/,'.render.json');
+if(sha(certificate)!==record.certificate_sha256)throw Error('Verified certificate changed');
+const owner=read(path.join(ticket,'🗑️generated/i/publish-owner.json'));
+if(owner.state!=='current')throw Error('Publisher owner is not current');
+const bindings=new Map(Object.entries(owner.sources));
+const collect=value=>{if(!value||typeof value!=='object')return;for(const[key,item]of Object.entries(value)){if((key==='sources'||key==='assets')&&item&&!Array.isArray(item)&&typeof item==='object'){for(const[file,digest]of Object.entries(item)){if(typeof digest!=='string'||!/^[0-9a-f]{64}$/.test(digest))continue;if(bindings.has(file)&&bindings.get(file)!==digest)throw Error('Conflicting source binding');bindings.set(file,digest)}}else collect(item)}};
+collect(read(certificate));
+const current=()=>[...bindings].every(([file,digest])=>sha(file)===digest);
+if(!current())throw Error('Verified inputs changed before preview retention');
+const name=(clip?'inspection-clip-preview-':'inspection-chapter-preview-')+scene+'.mp4',destination=path.join(ticket,name),staging=path.join(ticket,'🗑️generated','preview-'+scene+'.mp4');
+if(fs.existsSync(destination)||fs.existsSync(staging))throw Error('Chapter preview already exists');
+try{fs.copyFileSync(source,staging);if(sha(staging)!==record.sha256||sha(source)!==record.sha256||sha(certificate)!==record.certificate_sha256||!current())throw Error('Preview source changed while copying');fs.renameSync(staging,destination)}finally{if(fs.existsSync(staging))fs.unlinkSync(staging)}
+const link=destination.replaceAll('\\','/');
+const report=clip?'inspection-clip-preview-'+scene+'.md':scene==='Cooling_01_HeatingVsCooling'?'inspection-first-chapter.md':'inspection-chapter-preview-'+scene+'.md';
+fs.writeFileSync(path.join(ticket,report),'# Updated '+(clip?'Complete Clip':'Chapter')+' Preview\n\nThis independently verified complete '+(clip?'clip':'chapter')+' is an early inspection artifact while all17clips/38chapters continue rendering. It contains the actual updated UI and title-free authored body. Its '+record.frames+' decoded frames and source/body/order/clock/audio checks passed; the complete neighboring collection joins and all55-output gate remain pending.\n\n!['+scene+']('+link+')\n\nSHA-256: '+record.sha256+'\n\nDuration: '+record.duration+'seconds. Profile:480×270,4fps,de/spectator.\n');
+console.log(JSON.stringify({scene,path:destination,sha256:record.sha256,frames:record.frames,duration:record.duration,sourceBindings:bindings.size}));

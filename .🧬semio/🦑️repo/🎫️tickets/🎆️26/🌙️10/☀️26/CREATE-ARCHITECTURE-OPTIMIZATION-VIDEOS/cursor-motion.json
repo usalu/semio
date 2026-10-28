@@ -1,0 +1,33 @@
+{
+  "fps": 30,
+  "resolution": [
+    1600,
+    900
+  ],
+  "target": {
+    "kind": "topic",
+    "id": "optimization"
+  },
+  "stages": [
+    {
+      "id": "idle",
+      "durationSeconds": 1.5
+    },
+    {
+      "id": "approach",
+      "durationSeconds": 2.5
+    },
+    {
+      "id": "hover",
+      "durationSeconds": 3
+    },
+    {
+      "id": "return",
+      "durationSeconds": 2.5
+    },
+    {
+      "id": "settle",
+      "durationSeconds": 1.5
+    }
+  ]
+}

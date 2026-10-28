@@ -19,6 +19,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -28,10 +31,7 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
@@ -39,6 +39,9 @@ FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 from types import SimpleNamespace
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
+window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -73,12 +76,13 @@ load_vo_timing = _manim_module.load_vo_timing
 room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
+window_opening = _manim_module.window_opening
 person_glyph = _manim_module.person_glyph
 color_ramp = _manim_module.color_ramp
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -102,11 +106,11 @@ def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
     Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
     that never competes with the diagram. The chapter title is wide, so the
     footnote sits one line lower, level with the beat subtitle.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30).shift(DOWN * 0.6)
     return ref
@@ -115,17 +119,17 @@ def _din_ref(text: str):
 
 #region Shared visual motifs
 
-def _room(center, width, height, color=P_WHITE, t: float = 0.16):
-    """🏠 Physical Fundamentals room section — ceiling slab and side walls, then the floor slab, centred on the outline."""
-    cx, cy = float(center[0]), float(center[1])
-    style = dict(color=color, stroke_width=2, fill_color=color, fill_opacity=0.14)
-    ceiling = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy + height / 2, 0.0]))
-    walls = VGroup(*[
-        Rectangle(width=t, height=height - t, **style).move_to(np.array([cx + s * width / 2, cy, 0.0]))
-        for s in (-1, 1)
-    ])
-    floor = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy - height / 2, 0.0]))
-    return VGroup(VGroup(ceiling, walls), floor)
+def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
+          window_side="none", window_y=None, window_h=1.15):
+    """🏠 Closed room material around declared openings, with slabs centred on the outline."""
+    inner_h = height - t
+    floor_y = float(center[1]) - inner_h / 2
+    mid = float(center[1]) if window_y is None else window_y
+    opening = (0.30, 0.88) if window_side == "none" else ((mid - window_h / 2 - floor_y) / inner_h, (mid + window_h / 2 - floor_y) / inner_h)
+    section = room_section(center, w=width - t, h=inner_h, wall=t, slab=t,
+                           window=opening, window_side=window_side)
+    body = VGroup(section["ceiling"], *[m for m in section["shell"] if m is not section["floor"] and m is not section["ceiling"]])
+    return section_material(VGroup(body, section["floor"]))
 
 
 def _fan(pos, color, radius=0.24):
@@ -157,16 +161,16 @@ def _port(pos, color=P_WHITE):
 
 
 def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
-    """🧍 Occupant at true scale — 70 % of the inner room height, feet on the floor slab's top edge at ``x``."""
+    """🧍 A 1.75 m occupant in a 2.5 m clear room, anchored to the slab top."""
     height = 0.7 * (room_h - t)
-    return person_glyph(np.array([x, float(room_c[1]) - room_h / 2 + t / 2 + height / 2, 0.0]),
-                        color=color, scale=height / 0.66)
+    floor_y = float(room_c[1]) - room_h / 2 + t / 2
+    return person_glyph([x, floor_y + height / 2, 0], color=color, scale=height / 0.66)
 
 
 def _math_chip(src: str, color: str):
     """🔖 Boxed typeset label — hand-over chips and inline annotations with real subscripts."""
     label = math_label(src, size=BODY_FONT_SIZE, color=color)
-    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0.1, buff=0.14, stroke_width=1.8), label)
+    return window_chip(label, color=color)
 
 
 _AIR_TEMP = color_ramp([(0.0, P_BLUE), (0.4, P_CYAN), (0.7, P_ORANGE), (1.0, P_RED)])
@@ -206,8 +210,8 @@ def _live_value(fn):
 
 def _temp_port(title: str, value_fn, at, color):
     """🏷️ Port tag of a duct — name over a live temperature read from the drawn exchanger."""
-    box = RoundedRectangle(width=1.3, height=0.84, corner_radius=0.1, color=color, stroke_width=1.8,
-                           fill_color=P_DEEP_DARK, fill_opacity=0.82).move_to(at)
+    box = RoundedRectangle(width=1.3, height=0.84, corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER,
+                           fill_color=_theme_module.CHROME_FILL, fill_opacity=0.82).move_to(at)
     name = Text(title, font_size=LABEL_FONT_SIZE, color=color).move_to(box.get_center() + UP * 0.24)
     read = math_readout(lambda: rf"{de_num(value_fn())}\,°\mathrm{{C}}", box.get_center() + DOWN * 0.17,
                         size=BODY_FONT_SIZE, color=P_WHITE, edge="center")
@@ -224,7 +228,7 @@ class Beat1_Grundtypen(Scene):
          "Fan-assisted ventilation comes in three basic types. They differ in one thing only: which of the two air streams gets a fan.",
          "Ventilatorgestützte Lüftung hat drei Grundtypen — sie\nunterscheiden sich nur darin, wer einen Ventilator bekommt."),
         ("exhaust",
-         "The exhaust-only system extracts air mechanically. Fresh air seeps in unfiltered through passive wall vents, and the room sits at a slight negative pressure.",
+         "Exhaust-only: a fan extracts air; fresh air enters unfiltered through passive wall vents, with slight room suction.",
          "Die Abluftanlage saugt mechanisch ab — die Zuluft kommt\nungefiltert nach, im Raum herrscht leichter Unterdruck."),
         ("supply",
          "The supply-only system does the opposite. Treated air is pushed in and leaks back out through joints and gaps, at a slight positive pressure.",
@@ -233,7 +237,7 @@ class Beat1_Grundtypen(Scene):
          "The balanced supply and exhaust system ducts both streams. The pressures cancel out, and both volume flows are known quantities.",
          "Die Zu-/Abluftanlage führt beide Ströme — die Drücke\ngleichen sich aus, beide Volumenströme sind bekannt."),
         ("verdict",
-         "Only that third type has both streams under control, and only then do filtering, humidity control and heat recovery become possible, in winter as in summer.",
+         "Only the third type controls both air streams, enabling filtering, humidity control and heat recovery in both seasons.",
          "Nur der dritte Typ hat beide Ströme unter Kontrolle — erst dann\nsind Filter, Feuchte und WRG möglich, im Winter wie im Sommer."),
     ]
 
@@ -247,9 +251,7 @@ class Beat1_Grundtypen(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Drei mechanische Grundtypen", title)
+        subtitle = section_heading("Drei mechanische Grundtypen")
         din = _din_ref("DIN EN 16798-3")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -257,7 +259,8 @@ class Beat1_Grundtypen(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         c0, c1, c2 = self.CENTERS
-        shells = [_room(c, self.ROOM_W, self.ROOM_H) for c in self.CENTERS]
+        shells = [_room(c, self.ROOM_W, self.ROOM_H, window_side=side, window_y=0.70, window_h=0.50)
+                  for c, side in zip(self.CENTERS, ("left", "right", "none"))]
         rooms = VGroup(*[s[0] for s in shells])
         floors = VGroup(*[s[1] for s in shells])
         wall_y = rooms[0].get_top()[1]
@@ -384,7 +387,7 @@ class Beat1_Grundtypen(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "verdict"))
         pick = SurroundingRectangle(
             VGroup(rooms[2], headers[2], signs[2], sign_tags[2], port_tags[2], bal_in, bal_out),
-            color=P_GREEN, buff=0.14, corner_radius=0.1, stroke_width=2.5,
+            color=P_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5,
         )
         self.play(Create(pick), FadeIn(verdict, shift=UP * 0.12), *machines(1.3), run_time=1.3)
         hold_for(self, self.NARRATION, "verdict", during=machines)
@@ -403,13 +406,13 @@ class Beat2_Waermerueckgewinnung(Scene):
          "In winter the twenty-degree exhaust air gives heat to the zero-degree outdoor air, and the supply air rises to sixteen degrees.",
          "Im Winter gibt die 20 °C warme Abluft Wärme an die 0 °C\nkalte Außenluft ab — die Zuluft steigt auf 16 °C."),
         ("formula",
-         "The temperature change ratio eta is the warming the supply air actually gained, divided by the difference that was available between exhaust and outdoor air.",
+         "η divides the achieved supply-air warming by the available exhaust-to-outdoor temperature difference.",
          "Der Temperaturänderungsgrad η: erreichte Erwärmung der Zuluft,\ngeteilt durch die verfügbare Differenz Abluft − Außenluft."),
         ("winter_bars",
          "Only the share one minus eta stays as a loss: at eta equal to zero point eight, fifteen hundred watts shrink to three hundred.",
          "Nur der Anteil 1 − η bleibt als Verlust: bei η = 0,8\nsinken 1500 W auf 300 W."),
         ("summer",
-         "In summer the same definition holds: outdoor air at thirty-two degrees, exhaust at twenty-six. About five of six kelvin are gained, so heat recovery becomes cold recovery.",
+         "Summer: 32 °C outdoors, 26 °C exhaust; about 5 of 6 K recovered. The same ratio turns heat recovery into cold recovery.",
          "Im Sommer gilt dieselbe Definition: Außenluft 32 °C, Abluft 26 °C —\nfast fünf von sechs Kelvin, die WRG wird zur Kälterückgewinnung."),
         ("summer_bars",
          "The sensible cooling load drops from four hundred fifty to about ninety watts.",
@@ -426,9 +429,7 @@ class Beat2_Waermerueckgewinnung(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Wärmerückgewinnung im Plattenübertrager", title)
+        subtitle = section_heading("Wärmerückgewinnung im Plattenübertrager")
         din = _din_ref("DIN EN 308")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -692,19 +693,17 @@ class Beat3_Anlagenvergleich(Scene):
          "Decentralised ceramic push-pull units store the heat alternately and recover seventy to ninety percent, room by room.",
          "Dezentrale Keramik-Pendellüfter speichern die Wärme abwechselnd\nund gewinnen raumweise 70 bis 90 % zurück."),
         ("outro",
-         "DIN 1946-6: mechanical recovery can cut the ventilation heat loss by up to ninety percent in winter, and in summer the same technology recovers cold.",
-         "DIN 1946-6: mechanische WRG senkt den Lüftungswärmeverlust im Winter\num bis zu 90 % — im Sommer gewinnt sie dieselbe Kälte zurück."),
+         "DIN 1946-6: recovery cuts winter ventilation heat loss by up to 90%. In summer the same unit recovers cold.",
+         "DIN 1946-6: WRG senkt den Winter-Lüftungswärmeverlust um bis zu 90 %. Im Sommer gewinnt dieselbe Technik Kälte zurück."),
         ("passivhaus",
-         "An open window recovers nothing. That is why the Passivhaus ducts its air through a heat recovery unit and gives up window ventilation as the main air path.",
+         "Open windows recover nothing. The Passivhaus uses ducts and a heat-recovery unit as its main ventilation path.",
          "Ein offenes Fenster gewinnt nichts zurück — das Passivhaus führt\ndie Luft deshalb über die WRG, nicht über das Fenster."),
     ]
 
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Lüftungssysteme im Vergleich", title)
+        subtitle = section_heading("Lüftungssysteme im Vergleich")
         din = _din_ref("DIN 1946-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -739,7 +738,7 @@ class Beat3_Anlagenvergleich(Scene):
             return {"track": track, "upper": upper, "lower": lower, "group": VGroup(track, label)}
 
         def panel(px, color, fill, main, sub, eta_src, bar):
-            card = RoundedRectangle(width=col_w, height=col_h, corner_radius=0.15, color=color, fill_color=fill,
+            card = RoundedRectangle(width=col_w, height=col_h, corner_radius=0, color=color, fill_color=fill,
                                     fill_opacity=0.85).move_to([px, -0.25, 0])
             hdr = VGroup(Text(main, font_size=LABEL_FONT_SIZE, color=color),
                          Text(sub, font_size=LABEL_FONT_SIZE, color=GREY_A)).arrange(DOWN, buff=0.05)
@@ -751,7 +750,7 @@ class Beat3_Anlagenvergleich(Scene):
             room = room_section(np.array([px + 0.35, -0.85, 0.0]), w=room_w, h=room_h, wall=0.13, slab=slab,
                                 window=(0.3, 0.75))
             for part in room["shell"]:
-                part.set_stroke(P_WHITE).set_fill(P_WHITE, opacity=0.14)
+                part.set_stroke(P_WHITE).set_fill(P_WHITE, opacity=1)
             room["glass"].set_stroke(P_CYAN).set_fill(P_CYAN, opacity=0.15)
             height = 0.7 * room_h
             person = person_glyph([px + 1.17, room["y_f"] + height / 2, 0], color=P_ORANGE, scale=height / 0.66)
@@ -760,9 +759,9 @@ class Beat3_Anlagenvergleich(Scene):
         p1 = -4.4
         bar1 = loss_bar(1.0, 1.0, P_RED)
         card1, hdr1, box1_stat, room1, person1 = panel(
-            p1, P_RED, "#1a1215", "Fensterlüftung", "freie Lüftung ohne WRG", r"\eta_{\mathrm{WRG}} = 0", bar1)
+            p1, P_RED, semio_color("dark-8-9"), "Fensterlüftung", "freie Lüftung ohne WRG", r"\eta_{\mathrm{WRG}} = 0", bar1)
         x_l, y_f, y_c, lo, hi = room1["x_l"], room1["y_f"], room1["y_c"], room1["win_lo"], room1["win_hi"]
-        win1 = window_glyph(room1["glass_x"], lo, hi, depth=0.4, color=P_CYAN)
+        win1 = window_glyph(room1["glass_x"], lo, hi, depth=0.4, wall=0.13, color=P_CYAN)
         in1 = [path((x_l - 1.05, lo - 0.05), (x_l - 0.4, lo + 0.08), (x_l + 0.3, lo + 0.06), (x_l + 0.8, y_f + 0.15),
                     (p1 + 0.5, y_f + 0.2))]
         out1 = [path((p1 + 0.55, y_c - 0.35), (p1 + 0.3, y_c - 0.15), (x_l + 0.45, hi - 0.06), (x_l - 0.35, hi - 0.04),
@@ -774,9 +773,9 @@ class Beat3_Anlagenvergleich(Scene):
         p2 = 0.0
         bar2 = loss_bar(0.1, 0.2, P_GREEN)
         card2, hdr2, box2_stat, room2, person2 = panel(
-            p2, P_BLUE, "#101825", "Zentrale WRG", "zentrales Lüftungsgerät", r"\eta_{\mathrm{WRG}} \approx 0{,}8 \ldots 0{,}9", bar2)
+            p2, P_BLUE, semio_color("dark-8-9"), "Zentrale WRG", "zentrales Lüftungsgerät", r"\eta_{\mathrm{WRG}} \approx 0{,}8 \ldots 0{,}9", bar2)
         y_c2 = room2["y_c"]
-        mvhr_box = RoundedRectangle(width=1.5, height=0.5, corner_radius=0.05, color=P_WHITE, fill_color="#2C3E50",
+        mvhr_box = RoundedRectangle(width=1.5, height=0.5, corner_radius=0.05, color=P_WHITE, fill_color=semio_color("dark-5-7"),
                                     fill_opacity=0.95, stroke_width=2).move_to([p2 + 0.15, 0.6, 0])
         lbl_mvhr = Text("WRG\nZentral", font_size=LABEL_FONT_SIZE, color=P_YELLOW).scale(0.65)
         lbl_mvhr.move_to(mvhr_box.get_center() + LEFT * 0.33)
@@ -795,7 +794,7 @@ class Beat3_Anlagenvergleich(Scene):
         p3 = 4.4
         bar3 = loss_bar(0.1, 0.3, P_GREEN)
         card3, hdr3, box3_stat, room3, person3 = panel(
-            p3, P_GREEN, "#102018", "Dezentrale WRG", "Pendellüfter mit Keramik", r"\eta_{\mathrm{WRG}} \approx 0{,}7 \ldots 0{,}9", bar3)
+            p3, P_GREEN, semio_color("dark-8-9"), "Dezentrale WRG", "Pendellüfter mit Keramik", r"\eta_{\mathrm{WRG}} \approx 0{,}7 \ldots 0{,}9", bar3)
         x_l3, gx3 = room3["x_l"], room3["glass_x"]
         y_u = 0.5 * (room3["win_hi"] + room3["y_c"])
         core = Rectangle(width=0.37, height=0.22, color=P_YELLOW, stroke_width=1.5, fill_color=P_ORANGE,
@@ -871,8 +870,8 @@ class Beat3_Anlagenvergleich(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "passivhaus"))
         verdict = note_line("Passivhaus: Zu-/Abluft mit WRG — Fensterlüftung entfällt als Hauptweg", color=P_ORANGE)
         mark = cross_mark(size=0.2).move_to(win1["hinge"])
-        ring_bad = SurroundingRectangle(col1, color=P_RED, buff=0.06, corner_radius=0.15, stroke_width=2.5)
-        ring_good = SurroundingRectangle(VGroup(col2, col3), color=P_GREEN, buff=0.06, corner_radius=0.15, stroke_width=2.5)
+        ring_bad = SurroundingRectangle(col1, color=P_RED, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5)
+        ring_good = SurroundingRectangle(VGroup(col2, col3), color=P_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=2.5)
         self.play(FadeIn(verdict, shift=DOWN * 0.1), Create(ring_bad), Create(ring_good), Create(mark), *systems(1.2), run_time=1.2)
         hold_for(self, N, "passivhaus", during=systems)
 
@@ -894,7 +893,7 @@ class Beat4_Kanalquerschnitt(Scene):
          "To keep the duct quiet, the mean velocity is limited to about two point five metres per second. This small duct is far too fast.",
          "Für einen leisen Kanal wird die Geschwindigkeit auf etwa 2,5 m/s\nbegrenzt — der kleine Kanal hier ist viel zu schnell."),
         ("area",
-         "A larger area slows the same flow down. At two point five metres per second the area is the flow divided by the velocity: about 0.0244 square metres.",
+         "For the same flow, more area means less speed. At 2.5 m/s, area = flow ÷ speed ≈ 0.0244 m².",
          "Mehr Fläche bremst denselben Strom: bei 2,5 m/s ist A gleich\nVolumenstrom durch Geschwindigkeit — rund 0,0244 m²."),
         ("radius",
          "For a round duct the radius is the square root of the area over pi: about nine centimetres, a diameter of roughly eighteen centimetres.",
@@ -911,9 +910,7 @@ class Beat4_Kanalquerschnitt(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Vom Luftstrom zum Kanalquerschnitt", title)
+        subtitle = section_heading("Vom Luftstrom zum Kanalquerschnitt")
         din = _din_ref("VDI 2087")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1025,7 +1022,7 @@ class Beat4_Kanalquerschnitt(Scene):
 
         caption = swap_caption(self, caption, subtitle_text(N, "vm"))
         self.play(FadeIn(v_gauge["group"]), FadeIn(limit), *duct_air(1.2), run_time=1.2)
-        ring_v = SurroundingRectangle(v_read, color=P_RED, buff=0.1, corner_radius=0.05, stroke_width=3)
+        ring_v = SurroundingRectangle(v_read, color=P_RED, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
         self.play(Create(ring_v), *duct_air(1.2), run_time=1.2)
         hold_for(self, N, "vm", during=duct_air)
         self.play(FadeOut(ring_v), *duct_air(0.25), run_time=0.25)
@@ -1034,8 +1031,8 @@ class Beat4_Kanalquerschnitt(Scene):
         ap, ap_box, ap_items = area_panel()
         self.play(ReplacementTransform(cp, ap), ReplacementTransform(cp_box, ap_box), *duct_air(1.2), run_time=1.2)
         self.play(r.animate(rate_func=smooth).set_value(r_final), *duct_air(3.4), run_time=3.4)
-        ring_a = SurroundingRectangle(a_read, color=P_BLUE, buff=0.1, corner_radius=0.05, stroke_width=3)
-        ring_ok = SurroundingRectangle(v_read, color=P_GREEN, buff=0.1, corner_radius=0.05, stroke_width=3)
+        ring_a = SurroundingRectangle(a_read, color=P_BLUE, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
+        ring_ok = SurroundingRectangle(v_read, color=P_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=3)
         self.play(Create(ring_a), Create(ring_ok), *duct_air(1.0), run_time=1.0)
         hold_for(self, N, "area", during=duct_air)
         self.play(FadeOut(ring_a), FadeOut(ring_ok), *duct_air(0.25), run_time=0.25)

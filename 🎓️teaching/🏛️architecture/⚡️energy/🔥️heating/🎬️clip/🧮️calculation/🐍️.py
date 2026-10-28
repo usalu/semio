@@ -8,6 +8,10 @@ _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 import os
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+UI_SPACING = _theme_module.UI_SPACING
+
 import numpy as np
 import math
 from manim import *
@@ -18,14 +22,20 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
+section_heading = _manim_module.section_heading
+body_text = _manim_module.body_text
 BODY_FONT = _manim_module.BODY_FONT
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
+BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
+FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
+section_assembly = _manim_module.section_assembly
 PASTEL_CYAN = _manim_module.PASTEL_CYAN
 PASTEL_PURPLE = _manim_module.PASTEL_PURPLE
 PASTEL_PINK = _manim_module.PASTEL_PINK
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
-PASTEL_TEAL = _manim_module.PASTEL_TEAL
 PASTEL_ORANGE = _manim_module.PASTEL_ORANGE
 PASTEL_YELLOW = _manim_module.PASTEL_YELLOW
 PASTEL_RED = _manim_module.PASTEL_RED
@@ -167,14 +177,14 @@ _Q_E = _Q_BEFORE_G + _Q_G
 
 
 #region Shared helpers
-def _heading(text: str, *, size: float = 34, buff: float = 0.6):
-    """🏷️ Topic heading in the style every scene of this file uses."""
-    return Text(text, font_size=size, color=PASTEL_WHITE, font=BODY_FONT, disable_ligatures=True).to_edge(UP, buff=buff)
+def _heading(text: str):
+    """🏷️ Place the instructional calculation heading in the shared content row."""
+    return section_heading(text)
 
 
-def _label(text: str, *, size: float = 16, color=GREY_A):
-    """🔤 Plain body-font label."""
-    return Text(text, font_size=size, color=color, font=BODY_FONT, disable_ligatures=True)
+def _label(text: str, *, size: float = LABEL_FONT_SIZE, color=PASTEL_GREY):
+    """🔤 Set a label in the canonical face and label hierarchy."""
+    return body_text(text, font_size=size, color=color)
 
 
 def _slot(mob):
@@ -199,14 +209,13 @@ def _gt_profile():
 
 
 #region Physical Fundamentals glyphs
-_SLAB = dict(color=PASTEL_WHITE, stroke_width=2, fill_color=PASTEL_WHITE, fill_opacity=0.14)
 
 
 #region Buildings
 def _house(center, scale: float = 1.0):
     """🏠 Physical Fundamentals section house in the pastel palette, plus its interior ``air`` for a warm tint."""
     h = house_section(np.array(center, dtype=float), scale=scale)
-    VGroup(h["group"][0], h["group"][1]).set_color(PASTEL_TEAL)
+    h["ground"].set_color(P_PRIMARY)
     for w in h["windows"]:
         w["sash"].set_color(PASTEL_CYAN)
     t = 0.1 * scale
@@ -248,8 +257,8 @@ def _window_wall(x: float, y: float, *, height: float = 1.1, opening: float = 0.
     """🪟 Physical Fundamentals wall slab with a glazed opening — the sash opens into the room on the right."""
     lo, hi = y - opening / 2, y + opening / 2
     y0, y1 = y - height / 2, y + height / 2
-    below = Rectangle(width=wall, height=lo - y0, **_SLAB).move_to(np.array([x, (y0 + lo) / 2, 0.0]))
-    above = Rectangle(width=wall, height=y1 - hi, **_SLAB).move_to(np.array([x, (hi + y1) / 2, 0.0]))
+    below = section_material(Rectangle(width=wall, height=lo - y0)).move_to(np.array([x, (y0 + lo) / 2, 0.0]))
+    above = section_material(Rectangle(width=wall, height=y1 - hi)).move_to(np.array([x, (hi + y1) / 2, 0.0]))
     win = window_glyph(x, lo, hi, depth=0.42, color=PASTEL_CYAN)
     return {"x": x, "lo": lo, "hi": hi, "window": win, "group": VGroup(below, above, win["group"])}
 
@@ -268,7 +277,7 @@ def _exchange_paths(ww, *, reach: float = 0.75):
 def _gain_room(center, *, w: float = 1.5, h: float = 1.1):
     """🏛️ Small Physical Fundamentals room section in the pastel palette — glazed left wall, tintable ``air``."""
     room = room_section(center, w=w, h=h, wall=0.1, slab=0.1)
-    room["shell"].set_stroke(PASTEL_WHITE).set_fill(PASTEL_WHITE)
+    section_material(room["shell"])
     room["glass"].set_color(PASTEL_CYAN)
     room["air"].set_z_index(-1)
     return room
@@ -422,7 +431,7 @@ class Scene2(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "phi"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = _heading("Vom Wärmestrom zur Jahresenergie", buff=0.55)
+        title = _heading("Vom Wärmestrom zur Jahresenergie")
         self.play(Write(title), run_time=0.8)
 
         ICY_BLUE = PASTEL_CYAN
@@ -434,7 +443,7 @@ class Scene2(Scene):
         initial_eq, ie = math_row([
             ("loss", r"\Phi_{\mathrm{Verlust}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE),
             ("t", r"\Phi_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("v", r"\Phi_{\mathrm{V}}", DEEP_BLUE),
-        ], font_size=38, buff=0.12)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         initial_eq.move_to(UP * 1.35)
 
         house = _house(np.array([-2.5, -0.05, 0.0]), scale=0.4)
@@ -464,7 +473,7 @@ class Scene2(Scene):
         multiplier_group, mg = math_row([
             ("arrow", r"\to", PURPLE), ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PURPLE),
             ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
-        ], font_size=38, buff=0.18)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING * 2)
         probe = VGroup(initial_eq.copy(), multiplier_group.copy()).arrange(RIGHT, buff=0.3).move_to(UP * 1.35)
         target_initial_pos = probe[0].get_center()
         multiplier_group.move_to(probe[1].get_center())
@@ -578,14 +587,14 @@ class Scene2(Scene):
             ("ht", r"H_{\mathrm{T}}", ICY_BLUE), ("plus", "+", PASTEL_WHITE), ("hv", r"H_{\mathrm{V}}", DEEP_BLUE),
             ("rp", ")", PURPLE), ("times", r"\cdot", PURPLE), ("gt", r"G_{\mathrm{t}}", PURPLE),
             ("times2", r"\cdot", PURPLE), ("hd", r"24\,\mathrm{h/d}", PURPLE),
-        ], font_size=36, buff=0.12)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         consolidated_eq.move_to(UP * 1.35)
         values, vi = math_row([
             ("eq", "=", PASTEL_WHITE),
             ("h", rf"({de_num(_H_T)} + {de_num(_H_V)})\,\mathrm{{W/K}}", PASTEL_WHITE),
             ("d1", r"\cdot", PASTEL_WHITE), ("gt", rf"{de_num(_GT)}\,\mathrm{{K\,d/a}}", PURPLE),
             ("d2", r"\cdot", PASTEL_WHITE), ("hd", r"24\,\mathrm{h/d}", PASTEL_WHITE),
-        ], font_size=26, buff=0.14)
+        ], font_size=BODY_FONT_SIZE, buff=UI_SPACING)
         values.move_to(UP * 0.35)
         q = ValueTracker(0.0)
         q_read = math_readout(
@@ -649,11 +658,10 @@ class ReviewingHeatGains(Scene):
 
         SOLAR_YELLOW = PASTEL_YELLOW
         INT_ORANGE = PASTEL_ORANGE
-        TEXT_WHITE = "#F3F4F6"
-        SUBTEXT_GREY = "#9CA3AF"
+        TEXT_WHITE = semio_color("light")
+        SUBTEXT_GREY = semio_color("light-5-9")
 
-        title = Text("Übersicht der Wärmegewinne", font_size=34, color=TEXT_WHITE, font=BODY_FONT, disable_ligatures=True)
-        title.to_edge(UP, buff=0.6)
+        title = _heading("Übersicht der Wärmegewinne")
 
         subtitle = _label("Freie Wärmegewinne (DIN V 18599)", size=18, color=SUBTEXT_GREY)
         subtitle.next_to(title, DOWN, buff=0.15)
@@ -684,7 +692,7 @@ class ReviewingHeatGains(Scene):
         #region internal
         int_room = _gain_room(np.array([0.0, INT_Y, 0.0]))
         floor_y, ceil_y = int_room["y_f"], int_room["y_c"]
-        person = person_glyph(ORIGIN, INT_ORANGE, scale=0.85)
+        person = person_glyph(ORIGIN, INT_ORANGE).set(height=0.7 * int_room["h"])
         person.move_to(np.array([-0.42, floor_y + 0.01 + person.height / 2, 0.0]))
         lamp = lamp_glyph(np.array([0.02, ceil_y, 0.0]), drop=0.1)
         desk_y = floor_y + 0.3
@@ -692,14 +700,13 @@ class ReviewingHeatGains(Scene):
             Line(np.array([0.28, desk_y, 0.0]), np.array([0.66, desk_y, 0.0]), color=PASTEL_WHITE, stroke_width=1.5),
             Line(np.array([0.34, desk_y, 0.0]), np.array([0.34, floor_y, 0.0]), color=PASTEL_WHITE, stroke_width=1.5),
             Line(np.array([0.6, desk_y, 0.0]), np.array([0.6, floor_y, 0.0]), color=PASTEL_WHITE, stroke_width=1.5),
-            Line(np.array([0.36, desk_y + 0.02, 0.0]), np.array([0.56, desk_y + 0.02, 0.0]), color=PASTEL_CYAN,
-                 stroke_width=1.8),
+            _manim_module.object_silhouette("laptop", color=PASTEL_CYAN, width=0.24).move_to([0.46, desk_y + 0.08, 0]),
             Line(np.array([0.56, desk_y + 0.02, 0.0]), np.array([0.52, desk_y + 0.2, 0.0]), color=PASTEL_CYAN,
                  stroke_width=1.8),
         )
         sources = VGroup(person, lamp["group"], laptop)
         person_icon = VGroup(int_room["group"], sources)
-        warm_spots = [person.get_top() + DOWN * 0.12, laptop[4].get_center() + UP * 0.04]
+        warm_spots = [person.get_top() + DOWN * 0.12, laptop[3].get_center() + UP * 0.04]
 
         int_text = math_label(
             r"\Phi_{\mathrm{int}} = \Phi_{\mathrm{p}} + \Phi_{\mathrm{e}} + \Phi_{\mathrm{l}}",
@@ -820,8 +827,7 @@ class Scene4(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "day"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = Text("Der Ausnutzungsgrad der Wärmegewinne", font_size=28, color=PASTEL_WHITE, font=BODY_FONT, disable_ligatures=True)
-        title.to_edge(UP, buff=0.5)
+        title = _heading("Der Ausnutzungsgrad der Wärmegewinne")
         self.add(title)
 
         GREEN = PASTEL_GREEN
@@ -991,7 +997,7 @@ class Scene4(Scene):
         initial_eq, ie = math_row([
             ("q", r"Q_{\mathrm{Gewinn}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("sol", r"Q_{\mathrm{sol}}", PASTEL_YELLOW),
             ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{int}}", PASTEL_ORANGE),
-        ], font_size=38, buff=0.15)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING * 2)
         initial_eq.move_to(UP * 1.1)
 
         self.play(FadeIn(initial_eq), run_time=1.2)
@@ -1001,7 +1007,7 @@ class Scene4(Scene):
             ("q", r"Q_{\mathrm{nutz}}", PASTEL_WHITE), ("eq", "=", PASTEL_WHITE), ("eta", r"\eta_{\mathrm{h}}", GREEN),
             ("dot", r"\cdot", GREEN), ("lp", "(", GREEN), ("sol", r"Q_{\mathrm{sol}}", PASTEL_YELLOW),
             ("plus", "+", PASTEL_WHITE), ("int", r"Q_{\mathrm{int}}", PASTEL_ORANGE), ("rp", ")", GREEN),
-        ], font_size=38, buff=0.12)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         target_group.move_to(UP * 1.1)
 
         self.play(
@@ -1032,7 +1038,7 @@ class Scene4(Scene):
 
         #region explanation
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "eta"))
-        eta_box = SurroundingRectangle(tg["eta"], color=GREEN, buff=0.05, corner_radius=0.06)
+        eta_box = SurroundingRectangle(tg["eta"], color=GREEN, buff=_theme_module.UI_SPACING, corner_radius=0, stroke_width=_theme_module.CHROME_BORDER)
 
         eta_title = VGroup(
             math_label(r"\eta_{\mathrm{h}}\text{:}", size=22, color=GREEN),
@@ -1071,12 +1077,7 @@ class UltimateEnergyBalance(Scene):
         caption = caption_bar(subtitle_text(self.NARRATION, "balance"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = Text(
-            "Die Hauptgleichung des Heizwärmebedarfs (DIN V 18599)",
-            font_size=26,
-            color=PASTEL_WHITE,
-            font=BODY_FONT, disable_ligatures=True)
-        title.to_edge(UP, buff=0.5)
+        title = section_heading("Die Hauptgleichung des Heizwärmebedarfs (DIN V 18599)")
 
         LOSS_C, ETA_C, GAIN_C, QH_C = PASTEL_BLUE, PASTEL_GREEN, PASTEL_YELLOW, PASTEL_RED
 
@@ -1092,10 +1093,11 @@ class UltimateEnergyBalance(Scene):
             r["group"].set_color(GAIN_C)
         ray_paths = [[s, h, p] for r in ray_sets for s, h, p in zip(r["starts"], r["hits"], r["lands"])]
         floor_y = house["bottom_left"][1]
-        person = person_glyph(ORIGIN, PASTEL_ORANGE, scale=0.9)
+        person = person_glyph(ORIGIN, PASTEL_ORANGE).set(height=0.7 * house["w_height"] / 2)
         person.move_to(np.array([0.0, floor_y + 0.02 + person.height / 2, 0.0]))
         lamp = lamp_glyph(np.array([0.4, 0.95, 0.0]), drop=0.45)
-        heater = radiator(np.array([0.82, floor_y + 0.2, 0.0]), QH_C).scale(0.45)
+        heater = radiator(ORIGIN, QH_C, height=0.26 * house["w_height"] / 2, width=0.52 * house["w_height"] / 2)
+        heater.set_x(0.82)
         heater.align_to(np.array([0.0, floor_y + 0.05, 0.0]), DOWN)
         scene_house = VGroup(house["group"], house["air"], sun, *[r["group"] for r in ray_sets], person,
                              lamp["group"], heater)
@@ -1130,7 +1132,7 @@ class UltimateEnergyBalance(Scene):
 
         q_gain_tag, gt = math_row([
             ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE), ("g", r"Q_{\mathrm{Gewinn}}", GAIN_C),
-        ], font_size=26, buff=0.08)
+        ], font_size=BODY_FONT_SIZE, buff=UI_SPACING)
         q_gain_tag.move_to(np.array([-4.6, -0.6, 0.0]))
         gain_v = ValueTracker(0.0)
         gain_read = math_readout(lambda: rf"{de_num(round(gain_v.get_value(), -1))}\,\mathrm{{kWh/a}}",
@@ -1152,14 +1154,14 @@ class UltimateEnergyBalance(Scene):
             ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", r"Q_{\mathrm{Verlust}}", LOSS_C),
             ("minus", "-", PASTEL_WHITE), ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
             ("gain", r"Q_{\mathrm{Gewinn}}", GAIN_C),
-        ], font_size=36, buff=0.12)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         master_eq.move_to(UP * 1.2)
 
         numbers, nb = math_row([
             ("qh", r"Q_{\mathrm{h}}", QH_C), ("eq", "=", PASTEL_WHITE), ("loss", de_num(_Q_LOSS_SHOWN), LOSS_C),
             ("minus", "-", PASTEL_WHITE), ("gain", de_num(_Q_USE), GAIN_C), ("approx", r"\approx", PASTEL_WHITE),
             ("slot", rf"{de_num(_Q_H)}\,\mathrm{{kWh/a}}", QH_C),
-        ], font_size=32, buff=0.14)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         numbers.move_to(UP * 0.1)
         q_h = ValueTracker(0.0)
         qh_read = math_readout(lambda: rf"{de_num(round(q_h.get_value(), -1))}\,\mathrm{{kWh/a}}",
@@ -1187,7 +1189,7 @@ class UltimateEnergyBalance(Scene):
             ("loss", r"(Q_{\mathrm{T}} + Q_{\mathrm{V}})", LOSS_C), ("minus", "-", PASTEL_WHITE),
             ("eta", r"\eta_{\mathrm{h}}", ETA_C), ("dot", r"\cdot", PASTEL_WHITE),
             ("gain", r"(Q_{\mathrm{sol}} + Q_{\mathrm{int}})", GAIN_C),
-        ], font_size=30, buff=0.12)
+        ], font_size=FORMULA_FONT_SIZE, buff=UI_SPACING)
         expanded_eq.move_to(DOWN * 1.1)
 
         self.play(FadeIn(VGroup(ex["qh"], ex["eq"]), shift=UP * 0.3), run_time=0.8)
@@ -1207,7 +1209,7 @@ class UltimateEnergyBalance(Scene):
 
 
 #region System losses scene
-P_DEEP_GREY = "#1F2937"
+P_DEEP_GREY = semio_color("dark-5-7")
 _HOUSE_DY = 0.22
 
 
@@ -1216,50 +1218,55 @@ def _plant_house():
     energy-tank store and pipes."""
     PIPE = PASTEL_RED
     P = lambda x, y: np.array([x, y + _HOUSE_DY, 0.0])
-    slab = lambda x0, x1, y0, y1: Rectangle(width=x1 - x0, height=y1 - y0, **_SLAB).move_to(P((x0 + x1) / 2, (y0 + y1) / 2))
+    slab = lambda x0, x1, y0, y1: section_material(Rectangle(width=x1 - x0, height=y1 - y0)).move_to(P((x0 + x1) / 2, (y0 + y1) / 2))
     WIN = (0.65, 1.25)
-    RAD_X, RAD_Y, PIPE_Y, TANK_X = (-6.12, -1.88), 0.04, -0.48, -4.9
+    room_h, wall = 1.6, 0.35 * 1.6 / 2.5
+    metre = room_h / 2.5
+    RAD_X, PIPE_Y, TANK_X = (-6.12, -1.88), -0.48, -4.9
+    RAD_Y = -0.15 + metre * (0.12 + 0.65 / 2)
     parts = {}
-    parts["room"] = Rectangle(width=4.95, height=1.6, stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.10
+    parts["room"] = Rectangle(width=5.3 - wall, height=room_h, stroke_width=0, fill_color=PASTEL_ORANGE, fill_opacity=0.10
                               ).move_to(P(-4.0, 0.65))
-    parts["cellar"] = Rectangle(width=4.95, height=1.3, stroke_width=0, fill_color=PASTEL_BLUE, fill_opacity=0.10
+    parts["cellar"] = Rectangle(width=5.3 - wall, height=1.3, stroke_width=0, fill_color=PASTEL_BLUE, fill_opacity=0.10
                                 ).move_to(P(-4.0, -0.95))
     parts["walls"] = VGroup(
-        *[slab(x - 0.15, x + 0.15, -0.15, WIN[0]) for x in (-6.65, -1.35)],
-        *[slab(x - 0.15, x + 0.15, WIN[1], 1.45) for x in (-6.65, -1.35)],
-        *[slab(x - 0.15, x + 0.15, -1.6, -0.3) for x in (-6.65, -1.35)],
+        *[slab(x - wall / 2, x + wall / 2, -0.15, WIN[0]) for x in (-6.65, -1.35)],
+        *[slab(x - wall / 2, x + wall / 2, WIN[1], 1.45) for x in (-6.65, -1.35)],
+        *[slab(x - wall / 2, x + wall / 2, -1.6, -0.3) for x in (-6.65, -1.35)],
         slab(-6.8, -1.2, -0.3, -0.15), slab(-6.8, -1.2, -1.72, -1.6),
     )
     parts["back_wall"] = parts["walls"][0]
-    parts["roof"] = VGroup(
-        VMobject(color=PASTEL_WHITE, stroke_width=1.7).set_points_as_corners([P(-7.0, 1.45), P(-4.0, 2.4), P(-1.0, 1.45)]),
-        VMobject(color=PASTEL_WHITE, stroke_width=1.3).set_points_as_corners([P(-6.5, 1.42), P(-4.0, 2.26), P(-1.5, 1.42)]),
-    )
-    windows = [window_glyph(x, WIN[0] + _HOUSE_DY, WIN[1] + _HOUSE_DY, depth=0.3, color=PASTEL_CYAN)
+    parts["roof"] = section_material(Polygon(P(-7.0, 1.45), P(-4.0, 2.4), P(-1.0, 1.45), P(-1.0, 1.29), P(-4.0, 2.24), P(-7.0, 1.29)))
+    windows = [window_glyph(x, WIN[0] + _HOUSE_DY, WIN[1] + _HOUSE_DY, depth=0.3, color=PASTEL_CYAN, wall=wall, inward=1 if x < -4 else -1)
                for x in (-6.65, -1.35)]
     parts["windows"] = VGroup(*[w["group"] for w in windows])
-    parts["radiators"] = VGroup(*[radiator(P(x, RAD_Y), PIPE).scale(0.42) for x in RAD_X])
+    parts["radiators"] = VGroup(*[radiator(P(x, RAD_Y), PIPE, height=0.65 * metre, width=1.3 * metre) for x in RAD_X])
     parts["thermostat"] = Circle(radius=0.065, color=PASTEL_WHITE, stroke_width=2, fill_color=P_DEEP_GREY, fill_opacity=1
                                  ).move_to(P(-5.83, RAD_Y + 0.08))
-    tank = energy_tank(P(TANK_X, -1.13), height=0.72, width=0.5, color=PASTEL_YELLOW, level=0.9)
+    tank_h, boiler_h, boiler_w = 1.5 * metre, 1.0 * metre, 0.6 * metre
+    tank = energy_tank(P(TANK_X, -1.6 + tank_h / 2), height=tank_h, width=0.65 * metre, color=PASTEL_YELLOW, level=0.9)
     parts["tank"] = tank
     parts["store"] = VGroup(tank["group"], tank["fill"])
-    parts["boiler"] = Rectangle(width=1.6, height=0.7, color=PASTEL_ORANGE, stroke_width=2, fill_color=PASTEL_ORANGE,
-                                fill_opacity=0.12).move_to(P(-2.85, -1.2))
+    parts["boiler"] = Rectangle(width=boiler_w, height=boiler_h, color=PASTEL_ORANGE, stroke_width=1.3,
+                                fill_color=PASTEL_ORANGE, fill_opacity=0.55).move_to(P(-2.85, -1.6 + boiler_h / 2))
+    flue_bottom, flue_top = -1.6 + boiler_h, 2.3
     parts["chimney"] = VGroup(
-        Line(P(-2.46, -0.85), P(-2.46, 2.3), color=PASTEL_WHITE, stroke_width=1.5),
-        Line(P(-2.24, -0.85), P(-2.24, 2.3), color=PASTEL_WHITE, stroke_width=1.5),
+        section_material(Rectangle(width=0.14, height=flue_top - flue_bottom)).move_to(P(-2.85, (flue_top + flue_bottom) / 2)),
+        section_material(Rectangle(width=0.24, height=0.05)).move_to(P(-2.85, flue_top + 0.025)),
     )
+    parts["material"] = section_assembly(parts["walls"], parts["roof"])
     rad_in = [P(x, RAD_Y - 0.1) for x in RAD_X]
     tank_top = tank["cap"].get_top()
+    boiler_out, tank_in = parts["boiler"].get_left(), tank["frame"].get_right()
+    plant_link = [boiler_out, np.array([tank_in[0], boiler_out[1], 0.0]), tank_in]
     run = [rad_in[0], P(RAD_X[0], PIPE_Y), P(RAD_X[1], PIPE_Y), rad_in[1]]
     parts["pipes"] = VGroup(
         VMobject(color=PIPE, stroke_width=4).set_points_as_corners(run),
         Line(tank_top, P(TANK_X, PIPE_Y), color=PIPE, stroke_width=4),
-        Line(P(-3.65, -1.2), P(TANK_X + 0.25, -1.2), color=PIPE, stroke_width=4),
+        VMobject(color=PIPE, stroke_width=4).set_points_as_corners(plant_link),
     )
     parts["flow_paths"] = [
-        VMobject().set_points_as_corners([P(-3.65, -1.2), P(TANK_X + 0.25, -1.2)]),
+        VMobject().set_points_as_corners(plant_link),
         VMobject().set_points_as_corners([tank_top, P(TANK_X, PIPE_Y), P(RAD_X[0], PIPE_Y), rad_in[0]]),
         VMobject().set_points_as_corners([P(TANK_X, PIPE_Y), P(RAD_X[1], PIPE_Y), rad_in[1]]),
     ]
@@ -1271,13 +1278,16 @@ def _plant_house():
     )
     parts["labels"] = VGroup(
         _label("Speicher", size=15, color=PASTEL_YELLOW).move_to(P(-4.2, -0.92)),
-        _label("Wärmeerzeuger", size=15, color=PASTEL_ORANGE).move_to(parts["boiler"]),
+        _label("Wärmeerzeuger", size=15, color=PASTEL_ORANGE).next_to(parts["boiler"], UP, buff=0.12),
         VGroup(_label("unbeheizter", size=15, color=GREY_A), _label("Keller", size=15, color=GREY_A)
                ).arrange(DOWN, buff=0.06).move_to(P(-5.9, -1.15)),
         _label("beheizt, 20 °C", size=15, color=PASTEL_ORANGE).move_to(P(-4.0, 0.95)),
     )
     parts["thermo_label"] = _label("Thermostat", size=15, color=PASTEL_WHITE).move_to(P(-5.05, RAD_Y + 0.08))
     parts["pipe_label"] = _label("30 m Rohr", size=15, color=PIPE).move_to(P(-3.05, -0.68))
+    parts["floor_y"] = -0.15 + _HOUSE_DY
+    parts["room_height"] = room_h
+    parts["person"] = person_glyph(P(-3.35, -0.15 + 1.75 * metre / 2), PASTEL_ORANGE, scale=1.75 * metre / 0.66)
     return parts
 
 
@@ -1317,21 +1327,20 @@ class AnlagenVerluste(Scene):
         caption = caption_bar(subtitle_text(N, "need"))
         self.play(FadeIn(caption), run_time=0.3)
 
-        title = _heading("Anlagenverluste: vom Heizwärmebedarf zur Endenergie", size=28, buff=0.5)
+        title = _heading("Anlagenverluste: vom Heizwärmebedarf zur Endenergie")
         self.play(Write(title), run_time=0.8)
 
         QH_C, CE_C, D_C, S_C, G_C, E_C = PASTEL_RED, PASTEL_PINK, PASTEL_ORANGE, PASTEL_YELLOW, PASTEL_PURPLE, PASTEL_WHITE
         h = _plant_house()
         floor_y = h["walls"][6].get_top()[1]
-        person = person_glyph(ORIGIN, PASTEL_ORANGE, scale=0.85)
-        person.move_to(np.array([-3.35, floor_y + 0.01 + person.height / 2, 0.0]))
+        person = h["person"]
         rad_l = h["radiators"][0]
         glow = h["back_wall"].copy().set_stroke(width=0).set_fill(QH_C, opacity=0.0)
         wall_paths = [Line(np.array([rad_l.get_left()[0] - 0.02, y, 0.0]), np.array([-7.0, y, 0.0]))
                       for y in np.linspace(rad_l.get_bottom()[1] + 0.06, rad_l.get_top()[1] - 0.04, 3)]
         sc = h["tank"]["frame"].get_center()
-        flue = [smooth_path([np.array([-2.35, -0.85 + _HOUSE_DY, 0.0]), np.array([-2.35, 1.0 + _HOUSE_DY, 0.0]),
-                             np.array([-2.35, 2.3 + _HOUSE_DY, 0.0]), np.array([-2.15, 2.6 + _HOUSE_DY, 0.0])])]
+        flue = [smooth_path([h["boiler"].get_top(), np.array([-2.85, 1.0 + _HOUSE_DY, 0.0]),
+                             np.array([-2.85, 2.3 + _HOUSE_DY, 0.0]), np.array([-2.65, 2.6 + _HOUSE_DY, 0.0])])]
         on = set()
 
         def running(rt):
@@ -1405,7 +1414,7 @@ class AnlagenVerluste(Scene):
         #endregion
 
         #region need
-        self.play(FadeIn(h["room"]), FadeIn(h["cellar"]), FadeIn(h["walls"]), FadeIn(h["roof"]),
+        self.play(FadeIn(h["room"]), FadeIn(h["cellar"]), FadeIn(h["material"]),
                   FadeIn(h["windows"]), FadeIn(h["labels"][3]), FadeIn(person), Create(bar_floor), run_time=1.2)
         self.add(bar_live, readouts[0])
         self.play(FadeIn(name_mobs[0]), Create(leaders[0]), vals[0].animate.set_value(_Q_H),
@@ -1471,7 +1480,7 @@ class AnlagenVerluste(Scene):
             (None, "+", PASTEL_WHITE), ("s", r"Q_{\mathrm{h,s}}", S_C), (None, "+", PASTEL_WHITE),
             ("g", r"Q_{\mathrm{h,g}}", G_C), (None, r"\approx", PASTEL_WHITE),
             ("v", rf"{de_num(round(_Q_E, -2))}\,\mathrm{{kWh/a}}", E_C),
-        ], color=PASTEL_TEAL)
+        ], color=P_PRIMARY)
         sources = {
             key: math_label(src, _slot(r), size=21, color=c, edge="left")
             for key, src, r, c in zip(

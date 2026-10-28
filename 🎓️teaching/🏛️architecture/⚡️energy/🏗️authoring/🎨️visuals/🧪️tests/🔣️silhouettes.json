@@ -1,0 +1,33 @@
+{
+  "people": {
+    "minimum_cubic_fraction": 0.75,
+    "minimum_standing_asymmetry": 0.06,
+    "connected_components": 1,
+    "maximum_hole_pixels": 3,
+    "scales": [
+      1,
+      2.5
+    ]
+  },
+  "devices": [
+    "laptop",
+    "bulb",
+    "toaster",
+    "vacuum",
+    "heater"
+  ],
+  "celestial": [
+    "sun",
+    "moon"
+  ],
+  "activities": [
+    "sleep",
+    "walk",
+    "sprint"
+  ],
+  "activity_minimum_cubic_fraction": 0.7,
+  "backdrop_fade": {
+    "duration": 0.2,
+    "components": "constant"
+  }
+}

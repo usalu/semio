@@ -1,0 +1,97 @@
+{
+  "case": "K16 Closed Directed Ring and 50 Percent Visible Height",
+  "vertices": 16,
+  "directedArcCount": 240,
+  "selectedRing": [
+    [
+      1,
+      2
+    ],
+    [
+      2,
+      3
+    ],
+    [
+      3,
+      4
+    ],
+    [
+      4,
+      5
+    ],
+    [
+      5,
+      6
+    ],
+    [
+      6,
+      7
+    ],
+    [
+      7,
+      8
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      10,
+      11
+    ],
+    [
+      11,
+      12
+    ],
+    [
+      12,
+      13
+    ],
+    [
+      13,
+      14
+    ],
+    [
+      14,
+      15
+    ],
+    [
+      15,
+      16
+    ],
+    [
+      16,
+      1
+    ]
+  ],
+  "selectedChords": [
+    [
+      1,
+      10
+    ],
+    [
+      2,
+      12
+    ],
+    [
+      4,
+      10
+    ],
+    [
+      5,
+      13
+    ]
+  ],
+  "radiusYmm": 53,
+  "previousVisibleHeightMm": 83.6,
+  "estimatedFixedHeightMm": 19.6,
+  "visibleHeightRatioTolerance": [
+    1.49,
+    1.52
+  ],
+  "workedExampleRadiusYmm": 32
+}

@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { existsSync, readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
-import { basename, dirname, join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { BundleScript, createIssuedResourceControlV1 } from "../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/🟦️.ts";
 import { ActorNetworkScript } from "../👥️actor-network/📜️script.ts";
 import { actorNetworkData, validateActorNetwork, validateActorNetworkAssets, validateActorNetworkRenderSync } from "../👥️actor-network/🟦️.ts";
@@ -99,8 +99,8 @@ export class TestScript extends BundleScript {
       const { readPrintMaterialFileV1 } = await import("@semio-tech/print/artifacts/material/producer");
       const phaseControl = createIssuedResourceControlV1(this.invocation, "print:report:read", 0);
       await withPrintExecutionV1({ workspace: this.repoRoot, invocation: this.invocation, phaseControl, kind: "document" }, async execution => {
-        for (const vector of expected.documents) await withPublishedPrintDocumentV1(execution, "report", vector.id, async artifact => {
-          const bytes = await readPrintMaterialFileV1(join(artifact.path, `${basename(DOCUMENTS[vector.id]!, ".tex")}.pdf`), 67108864, artifact.control);
+        for (const vector of expected.documents) await withPublishedPrintDocumentV1(execution, "report", vector.id, `@semio-tech/mit-bestand-bericht:build-${vector.id}`, async artifact => {
+          const bytes = await readPrintMaterialFileV1(join(artifact.path, `${vector.id}.pdf`), 67108864, artifact.control);
           const pdf = await getDocument({ data: new Uint8Array(bytes) }).promise;
           try {
             assert.ok(pdf.numPages >= vector.minPages, `${vector.id} has ${pdf.numPages} pages`);

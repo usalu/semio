@@ -73,7 +73,9 @@
       "{workspaceRoot}/🎓️teaching/🛂️proctor/📦️packages/🦀️rust/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust/Cargo.toml",
-      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json"
+      "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/🧬️schema/🎮️registry/🔣️.json",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/🌐️vite/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*"
     ],
     "workspaceManifests": [
       "{workspaceRoot}/bun.lock",
@@ -116,6 +118,22 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🧬️schema/📶️state/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/📚️course/**/Cargo.toml",
       "{workspaceRoot}/🧰️framework/🛍️products/🖥️server/**/Cargo.toml"
+    ],
+    "assignment": [
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📐️parametric/📝️assignment/**/*",
+      "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🏗️builder/📖️assignments/**/*",
+      "{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/*",
+      "!{workspaceRoot}/🧰️framework/🛍️products/📓️print/**/dist/**/*",
+      "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/**/*",
+      {
+        "externalDependencies": [
+          "sharp",
+          "pdfjs-dist",
+          "d3-array",
+          "mathjs",
+          "ajv"
+        ]
+      }
     ]
   },
   "targets": {
@@ -129,7 +147,11 @@
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "diagnostic", "reason": "measures-environment" }
+          "cache": {
+            "version": 1,
+            "class": "diagnostic",
+            "reason": "measures-environment"
+          }
         }
       }
     },
@@ -143,7 +165,11 @@
       "outputs": [],
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -185,7 +211,9 @@
       "dependsOn": [
         "@semio-tech/assets:build",
         "@semio-tech/ui-styling-tokens:generate",
-        "@teaching/proctor:build"
+        "@teaching/proctor:build",
+        "@teaching/architecture-course:build-parametrization-en",
+        "@teaching/architecture-course:build-parametrization-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -231,7 +259,9 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/architecture-course:build-parametrization-en",
+        "@teaching/architecture-course:build-parametrization-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -251,19 +281,45 @@
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
-        "@semio-tech/ui-styling-tokens:generate"
+        "@semio-tech/ui-styling-tokens:generate",
+        "@teaching/architecture-course:build-parametrization-en",
+        "@teaching/architecture-course:build-parametrization-de"
       ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts build",
         "forwardAllArgs": true
       },
-      "metadata": { "semio": { "closure": { "typescript": ["{projectRoot}/tsconfig.site.json"] } } },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "typescript": [
+              "{projectRoot}/tsconfig.site.json"
+            ]
+          }
+        }
+      },
       "cache": true,
       "inputs": [
         "default",
-        { "env": "PROCTOR_URL" },
-        { "externalDependencies": ["@dnd-kit/core", "@dnd-kit/sortable", "@dnd-kit/utilities", "@tailwindcss/vite", "@vitejs/plugin-react", "ajv", "immer", "react", "react-dom", "tailwindcss", "vite"] },
+        {
+          "env": "PROCTOR_URL"
+        },
+        {
+          "externalDependencies": [
+            "@dnd-kit/core",
+            "@dnd-kit/sortable",
+            "@dnd-kit/utilities",
+            "@tailwindcss/vite",
+            "@vitejs/plugin-react",
+            "ajv",
+            "immer",
+            "react",
+            "react-dom",
+            "tailwindcss",
+            "vite"
+          ]
+        },
         "{workspaceRoot}/🎓️teaching/🏛️architecture/⚡️energy/**/❓️quiz/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🖼️assets/**/*"
       ],
@@ -272,7 +328,36 @@
       ]
     },
     "publish": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "execution-mode",
+                "title": {
+                  "en": "Required build mode",
+                  "de": "Erforderlicher Build-Modus"
+                },
+                "kind": "choice",
+                "default": "release",
+                "values": [
+                  {
+                    "id": "release",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "publishes-remote"
+          }
+        }
+      },
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
@@ -286,7 +371,9 @@
       "cache": false,
       "inputs": [
         "default",
-        { "env": "PROCTOR_URL" }
+        {
+          "env": "PROCTOR_URL"
+        }
       ],
       "outputs": [
         "{projectRoot}/dist/release/pages/course"
@@ -307,33 +394,203 @@
         "command": "repo ./📜️script.ts test",
         "forwardAllArgs": true
       },
-      "metadata": { "semio": { "closure": { "modules": ["{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🧪️tests/**/🟦️.ts"] } } },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "modules": [
+              "{workspaceRoot}/🎓️teaching/🏛️architecture/📚️course/🧪️tests/**/🟦️.ts"
+            ]
+          }
+        }
+      },
       "cache": true,
       "inputs": [
         "default",
         "workspaceManifests",
         "proctorTestReads",
         "proctorCargoManifests",
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "runtime": "repo tools exec --light node -- --version" },
-        { "dependentTasksOutputFiles": "**/*", "transitive": false }
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "runtime": "repo tools exec --light node -- --version"
+        },
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": false
+        }
       ],
       "outputs": []
     },
     "test-e2e": {
-      "metadata": { "semio": { "dashboard": { "parameters": [
-        { "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] },
-        { "id": "serial", "title": { "en": "Run topologies sequentially", "de": "Topologien nacheinander prüfen" }, "description": { "en": "Run one topology after the other instead of concurrently.", "de": "Topologien nacheinander statt gleichzeitig ausführen." }, "kind": "flag", "default": false, "args": ["--serial"] },
-        { "id": "keep", "title": { "en": "Retain run artifacts", "de": "Laufartefakte behalten" }, "description": { "en": "Keep the run directory after success; failed runs already retain diagnostics.", "de": "Laufverzeichnis nach Erfolg behalten; fehlgeschlagene Läufe behalten ihre Diagnosedaten bereits." }, "kind": "flag", "default": false, "args": ["--keep"] },
-        { "id": "proctor", "title": { "en": "Existing proctor executable", "de": "Vorhandene Proctor-Programmdatei" }, "description": { "en": "Optional absolute or workspace-relative executable path; leave empty to build the checkout's proctor.", "de": "Optionaler absoluter oder zum Workspace relativer Programmpfad; leer lassen, um den Proctor des Checkouts zu bauen." }, "kind": "text", "valueFlag": "--proctor" },
-        { "id": "topology", "title": { "en": "Test topology", "de": "Testtopologie" }, "description": { "en": "Both runs the development stack and release rehearsal; select one to narrow the gate.", "de": "Die Auswahl both prüft Entwicklungsstack und Release-Generalprobe; eine Auswahl begrenzt die Prüfung." }, "kind": "choice", "default": "both", "values": [{ "id": "both", "args": ["--topology", "both", "--"] }, { "id": "dev", "args": ["--topology", "dev", "--"] }, { "id": "rehearsal", "args": ["--topology", "rehearsal", "--"] }] },
-        { "id": "grep", "title": { "en": "Test name pattern", "de": "Muster für Testnamen" }, "description": { "en": "Optional Playwright regular expression; additional filters remain available in Arguments.", "de": "Optionaler regulärer Playwright-Ausdruck; weitere Filter stehen im Feld Argumente zur Verfügung." }, "kind": "text", "valueFlag": "--grep" },
-        { "id": "project", "title": { "en": "Playwright project", "de": "Playwright-Projekt" }, "description": { "en": "Optional project name such as desktop, phone or layout; leave empty for all projects.", "de": "Optionaler Projektname wie desktop, phone oder layout; leer lassen für alle Projekte." }, "kind": "text", "valueFlag": "--project" },
-        { "id": "headed", "title": { "en": "Show browser window", "de": "Browserfenster anzeigen" }, "kind": "flag", "default": false, "args": ["--headed"] },
-        { "id": "workers", "title": { "en": "Playwright workers", "de": "Playwright-Worker" }, "description": { "en": "Optional Playwright worker count or percentage; leave empty for one worker per topology.", "de": "Optionale Playwright-Workerzahl oder Prozentangabe; leer lassen für einen Worker je Topologie." }, "kind": "text", "valueFlag": "--workers" }
-      ] },
-      "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "execution-mode",
+                "title": {
+                  "en": "Required build mode",
+                  "de": "Erforderlicher Build-Modus"
+                },
+                "kind": "choice",
+                "default": "release",
+                "values": [
+                  {
+                    "id": "release",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "serial",
+                "title": {
+                  "en": "Run topologies sequentially",
+                  "de": "Topologien nacheinander prüfen"
+                },
+                "description": {
+                  "en": "Run one topology after the other instead of concurrently.",
+                  "de": "Topologien nacheinander statt gleichzeitig ausführen."
+                },
+                "kind": "flag",
+                "default": false,
+                "args": [
+                  "--serial"
+                ]
+              },
+              {
+                "id": "keep",
+                "title": {
+                  "en": "Retain run artifacts",
+                  "de": "Laufartefakte behalten"
+                },
+                "description": {
+                  "en": "Keep the run directory after success; failed runs already retain diagnostics.",
+                  "de": "Laufverzeichnis nach Erfolg behalten; fehlgeschlagene Läufe behalten ihre Diagnosedaten bereits."
+                },
+                "kind": "flag",
+                "default": false,
+                "args": [
+                  "--keep"
+                ]
+              },
+              {
+                "id": "proctor",
+                "title": {
+                  "en": "Existing proctor executable",
+                  "de": "Vorhandene Proctor-Programmdatei"
+                },
+                "description": {
+                  "en": "Optional absolute or workspace-relative executable path; leave empty to build the checkout's proctor.",
+                  "de": "Optionaler absoluter oder zum Workspace relativer Programmpfad; leer lassen, um den Proctor des Checkouts zu bauen."
+                },
+                "kind": "text",
+                "valueFlag": "--proctor"
+              },
+              {
+                "id": "topology",
+                "title": {
+                  "en": "Test topology",
+                  "de": "Testtopologie"
+                },
+                "description": {
+                  "en": "Both runs the development stack and release rehearsal; select one to narrow the gate.",
+                  "de": "Die Auswahl both prüft Entwicklungsstack und Release-Generalprobe; eine Auswahl begrenzt die Prüfung."
+                },
+                "kind": "choice",
+                "default": "both",
+                "values": [
+                  {
+                    "id": "both",
+                    "args": [
+                      "--topology",
+                      "both",
+                      "--"
+                    ]
+                  },
+                  {
+                    "id": "dev",
+                    "args": [
+                      "--topology",
+                      "dev",
+                      "--"
+                    ]
+                  },
+                  {
+                    "id": "rehearsal",
+                    "args": [
+                      "--topology",
+                      "rehearsal",
+                      "--"
+                    ]
+                  }
+                ]
+              },
+              {
+                "id": "grep",
+                "title": {
+                  "en": "Test name pattern",
+                  "de": "Muster für Testnamen"
+                },
+                "description": {
+                  "en": "Optional Playwright regular expression; additional filters remain available in Arguments.",
+                  "de": "Optionaler regulärer Playwright-Ausdruck; weitere Filter stehen im Feld Argumente zur Verfügung."
+                },
+                "kind": "text",
+                "valueFlag": "--grep"
+              },
+              {
+                "id": "project",
+                "title": {
+                  "en": "Playwright project",
+                  "de": "Playwright-Projekt"
+                },
+                "description": {
+                  "en": "Optional project name such as desktop, phone or layout; leave empty for all projects.",
+                  "de": "Optionaler Projektname wie desktop, phone oder layout; leer lassen für alle Projekte."
+                },
+                "kind": "text",
+                "valueFlag": "--project"
+              },
+              {
+                "id": "headed",
+                "title": {
+                  "en": "Show browser window",
+                  "de": "Browserfenster anzeigen"
+                },
+                "kind": "flag",
+                "default": false,
+                "args": [
+                  "--headed"
+                ]
+              },
+              {
+                "id": "workers",
+                "title": {
+                  "en": "Playwright workers",
+                  "de": "Playwright-Worker"
+                },
+                "description": {
+                  "en": "Optional Playwright worker count or percentage; leave empty for one worker per topology.",
+                  "de": "Optionale Playwright-Workerzahl oder Prozentangabe; leer lassen für einen Worker je Topologie."
+                },
+                "kind": "text",
+                "valueFlag": "--workers"
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
@@ -363,7 +620,15 @@
         "command": "repo ./📜️script.ts typecheck",
         "forwardAllArgs": true
       },
-      "metadata": { "semio": { "closure": { "typescript": ["{projectRoot}/tsconfig.json"] } } },
+      "metadata": {
+        "semio": {
+          "closure": {
+            "typescript": [
+              "{projectRoot}/tsconfig.json"
+            ]
+          }
+        }
+      },
       "cache": true,
       "inputs": [
         "default",
@@ -376,7 +641,9 @@
     },
     "check": {
       "executor": "repo:script",
-      "dependsOn": ["@teaching/proctor:build"],
+      "dependsOn": [
+        "@teaching/proctor:build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts check"
@@ -385,17 +652,59 @@
       "outputs": [],
       "inputs": [
         "default",
-        { "dependentTasksOutputFiles": "**/receipt.json", "transitive": false },
-        { "env": "SEMIO_TEST_LEVEL" },
-        { "env": "SEMIO_TEST_BUDGET_MS" },
-        { "env": "SEMIO_BUILD_BUDGET_MS" },
-        { "env": "PROCTOR_COURSE" }
+        {
+          "dependentTasksOutputFiles": "**/receipt.json",
+          "transitive": false
+        },
+        {
+          "env": "SEMIO_TEST_LEVEL"
+        },
+        {
+          "env": "SEMIO_TEST_BUDGET_MS"
+        },
+        {
+          "env": "SEMIO_BUILD_BUDGET_MS"
+        },
+        {
+          "env": "PROCTOR_COURSE"
+        }
       ]
     },
     "docker-image-build": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "execution-mode",
+                "title": {
+                  "en": "Required build mode",
+                  "de": "Erforderlicher Build-Modus"
+                },
+                "kind": "choice",
+                "default": "release",
+                "values": [
+                  {
+                    "id": "release",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
+        }
+      },
       "executor": "repo:script",
-      "dependsOn": ["@teaching/proctor:build"],
+      "dependsOn": [
+        "@teaching/proctor:build"
+      ],
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts docker-image-build",
@@ -413,12 +722,45 @@
       "cache": false,
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "live", "reason": "drives-running-process" }
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
         }
       }
     },
     "docker-image-publish": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "side-effecting", "reason": "publishes-remote" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "execution-mode",
+                "title": {
+                  "en": "Required build mode",
+                  "de": "Erforderlicher Build-Modus"
+                },
+                "kind": "choice",
+                "default": "release",
+                "values": [
+                  {
+                    "id": "release",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "publishes-remote"
+          }
+        }
+      },
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -428,13 +770,73 @@
       "cache": false
     },
     "docker-stack-check": {
-      "metadata": { "semio": { "dashboard": { "parameters": [
-        { "id": "tag", "title": { "en": "Image tag", "de": "Image-Tag" }, "kind": "text", "default": "latest", "valueFlag": "--tag" },
-        { "id": "http-port", "title": { "en": "HTTP host port", "de": "HTTP-Hostport" }, "description": { "en": "Host port for the temporary stack's HTTP redirect listener.", "de": "Hostport für die HTTP-Weiterleitung des temporären Stacks." }, "kind": "text", "default": "18080", "valueFlag": "--http-port" },
-        { "id": "https-port", "title": { "en": "HTTPS host port", "de": "HTTPS-Hostport" }, "description": { "en": "Host port for the temporary stack's HTTPS listener.", "de": "Hostport für den HTTPS-Dienst des temporären Stacks." }, "kind": "text", "default": "18443", "valueFlag": "--https-port" },
-        { "id": "keep", "title": { "en": "Retain temporary stack", "de": "Temporären Stack behalten" }, "description": { "en": "Keep the probe stack and volumes for inspection instead of removing them.", "de": "Prüfstack und Volumes zur Untersuchung behalten statt sie zu entfernen." }, "kind": "flag", "default": false, "args": ["--keep"] }
-      ] },
-      "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "tag",
+                "title": {
+                  "en": "Image tag",
+                  "de": "Image-Tag"
+                },
+                "kind": "text",
+                "default": "latest",
+                "valueFlag": "--tag"
+              },
+              {
+                "id": "http-port",
+                "title": {
+                  "en": "HTTP host port",
+                  "de": "HTTP-Hostport"
+                },
+                "description": {
+                  "en": "Host port for the temporary stack's HTTP redirect listener.",
+                  "de": "Hostport für die HTTP-Weiterleitung des temporären Stacks."
+                },
+                "kind": "text",
+                "default": "18080",
+                "valueFlag": "--http-port"
+              },
+              {
+                "id": "https-port",
+                "title": {
+                  "en": "HTTPS host port",
+                  "de": "HTTPS-Hostport"
+                },
+                "description": {
+                  "en": "Host port for the temporary stack's HTTPS listener.",
+                  "de": "Hostport für den HTTPS-Dienst des temporären Stacks."
+                },
+                "kind": "text",
+                "default": "18443",
+                "valueFlag": "--https-port"
+              },
+              {
+                "id": "keep",
+                "title": {
+                  "en": "Retain temporary stack",
+                  "de": "Temporären Stack behalten"
+                },
+                "description": {
+                  "en": "Keep the probe stack and volumes for inspection instead of removing them.",
+                  "de": "Prüfstack und Volumes zur Untersuchung behalten statt sie zu entfernen."
+                },
+                "kind": "flag",
+                "default": false,
+                "args": [
+                  "--keep"
+                ]
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -444,11 +846,43 @@
       "cache": false
     },
     "docker-stack-bundle": {
-      "metadata": { "semio": { "dashboard": { "parameters": [
-        { "id": "tag", "title": { "en": "Image tag", "de": "Image-Tag" }, "kind": "text", "default": "latest", "valueFlag": "--tag" },
-        { "id": "out", "title": { "en": "Bundle output directory", "de": "Ausgabeverzeichnis des Bundles" }, "description": { "en": "Relative paths resolve from the course TypeScript package; the default is dist/proctor.", "de": "Relative Pfade gelten ab dem TypeScript-Paket des Kurses; Standard ist dist/proctor." }, "kind": "text", "default": "dist/proctor", "valueFlag": "--out" }
-      ] },
-      "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "tag",
+                "title": {
+                  "en": "Image tag",
+                  "de": "Image-Tag"
+                },
+                "kind": "text",
+                "default": "latest",
+                "valueFlag": "--tag"
+              },
+              {
+                "id": "out",
+                "title": {
+                  "en": "Bundle output directory",
+                  "de": "Ausgabeverzeichnis des Bundles"
+                },
+                "description": {
+                  "en": "Relative paths resolve from the course TypeScript package; the default is dist/proctor.",
+                  "de": "Relative Pfade gelten ab dem TypeScript-Paket des Kurses; Standard ist dist/proctor."
+                },
+                "kind": "text",
+                "default": "dist/proctor",
+                "valueFlag": "--out"
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
       "executor": "repo:script",
       "options": {
         "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
@@ -461,7 +895,36 @@
       ]
     },
     "deploy-check": {
-      "metadata": { "semio": { "dashboard": { "parameters": [{ "id": "execution-mode", "title": { "en": "Required build mode", "de": "Erforderlicher Build-Modus" }, "kind": "choice", "default": "release", "values": [{ "id": "release", "env": { "SEMIO_BUILD_MODE": "release" } }] }] }, "cache": { "version": 1, "class": "live", "reason": "drives-running-process" } } },
+      "metadata": {
+        "semio": {
+          "dashboard": {
+            "parameters": [
+              {
+                "id": "execution-mode",
+                "title": {
+                  "en": "Required build mode",
+                  "de": "Erforderlicher Build-Modus"
+                },
+                "kind": "choice",
+                "default": "release",
+                "values": [
+                  {
+                    "id": "release",
+                    "env": {
+                      "SEMIO_BUILD_MODE": "release"
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "cache": {
+            "version": 1,
+            "class": "live",
+            "reason": "drives-running-process"
+          }
+        }
+      },
       "executor": "repo:script",
       "dependsOn": [
         "@semio-tech/assets:build",
@@ -476,6 +939,70 @@
         "forwardAllArgs": true
       },
       "cache": false
+    },
+    "build-parametrization-en": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/print:fonts",
+        "@semio-tech/print:deps-tectonic",
+        "@semio-tech/print:deps-tex",
+        "@semio-tech/print:generate"
+      ],
+      "inputs": [
+        "default",
+        "assignment",
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/course/architecture-parametric-parametrization-en"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build-parametrization-en",
+        "forwardAllArgs": false
+      }
+    },
+    "build-parametrization-de": {
+      "executor": "repo:script",
+      "cache": true,
+      "dependsOn": [
+        "@semio-tech/print:fonts",
+        "@semio-tech/print:deps-tectonic",
+        "@semio-tech/print:deps-tex",
+        "@semio-tech/print:generate"
+      ],
+      "inputs": [
+        "default",
+        "assignment",
+        {
+          "env": "SEMIO_BUILD_MODE"
+        }
+      ],
+      "outputs": [
+        "{workspaceRoot}/.cache/b/p/m/print/{options.env.SEMIO_BUILD_MODE}/documents/course/architecture-parametric-parametrization-de"
+      ],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts build-parametrization-de",
+        "forwardAllArgs": false
+      }
+    },
+    "test-assignment": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "assignment"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🎓️teaching/🏛️architecture/📚️course/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test-assignment",
+        "forwardAllArgs": false
+      }
     }
   }
 }

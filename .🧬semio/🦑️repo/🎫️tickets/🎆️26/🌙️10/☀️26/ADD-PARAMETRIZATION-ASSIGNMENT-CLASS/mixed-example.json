@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1,
+    "form": "box",
+    "macro": "AssignmentBox",
+    "L": 2.5,
+    "B": 1.5,
+    "H": 2
+  },
+  {
+    "id": 2,
+    "form": "pyramid",
+    "macro": "AssignmentPyramid",
+    "L": 2.5,
+    "B": 1.5,
+    "H": 2
+  },
+  {
+    "id": 3,
+    "form": "elliptical-cylinder",
+    "macro": "AssignmentEllipticalCylinder",
+    "L": 3.5,
+    "B": 1.5,
+    "H": 2
+  }
+]

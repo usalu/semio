@@ -1,0 +1,856 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Single Metabolism Parametrization Exercise Cases",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "graph",
+    "languages",
+    "pages",
+    "exercise",
+    "matrix",
+    "pageOrder",
+    "content",
+    "headings",
+    "workedExample",
+    "tableChrome",
+    "silhouettes",
+    "ownership"
+  ],
+  "properties": {
+    "version": {
+      "const": 18
+    },
+    "exercise": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "strategy",
+        "tables"
+      ],
+      "properties": {
+        "id": {
+          "const": "dwelling-capsules"
+        },
+        "strategy": {
+          "const": "shared"
+        },
+        "tables": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "prefixItems": [
+            {
+              "type": "object",
+              "required": [
+                "id",
+                "types",
+                "label"
+              ],
+              "properties": {
+                "id": {
+                  "const": "One"
+                },
+                "types": {
+                  "type": "array",
+                  "minItems": 8,
+                  "maxItems": 8,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "family",
+                      "variant",
+                      "icon",
+                      "image",
+                      "sha256",
+                      "viewBox",
+                      "paths"
+                    ],
+                    "properties": {
+                      "family": {
+                        "enum": [
+                          "capsule",
+                          "ellipsoid-capsule"
+                        ]
+                      },
+                      "variant": {
+                        "enum": [
+                          "backslash",
+                          "slash",
+                          "q",
+                          "p",
+                          "J",
+                          "L",
+                          "z",
+                          "s"
+                        ]
+                      },
+                      "icon": {
+                        "type": "string",
+                        "pattern": "^🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/(💊️capsules|🥚️ellipsoids)/.+\\.svg$"
+                      },
+                      "image": {
+                        "type": "string",
+                        "pattern": "^resources/metabolism-(capsule|ellipsoid-capsule)-[a-zA-Z]+\\.png$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "viewBox": {
+                        "type": "array",
+                        "minItems": 4,
+                        "maxItems": 4,
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "paths": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "const": "A"
+                }
+              },
+              "additionalProperties": false
+            },
+            {
+              "type": "object",
+              "required": [
+                "id",
+                "types",
+                "label"
+              ],
+              "properties": {
+                "id": {
+                  "const": "Two"
+                },
+                "types": {
+                  "type": "array",
+                  "minItems": 8,
+                  "maxItems": 8,
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                      "family",
+                      "variant",
+                      "icon",
+                      "image",
+                      "sha256",
+                      "viewBox",
+                      "paths"
+                    ],
+                    "properties": {
+                      "family": {
+                        "enum": [
+                          "capsule",
+                          "ellipsoid-capsule"
+                        ]
+                      },
+                      "variant": {
+                        "enum": [
+                          "backslash",
+                          "slash",
+                          "q",
+                          "p",
+                          "J",
+                          "L",
+                          "z",
+                          "s"
+                        ]
+                      },
+                      "icon": {
+                        "type": "string",
+                        "pattern": "^🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/(💊️capsules|🥚️ellipsoids)/.+\\.svg$"
+                      },
+                      "image": {
+                        "type": "string",
+                        "pattern": "^resources/metabolism-(capsule|ellipsoid-capsule)-[a-zA-Z]+\\.png$"
+                      },
+                      "sha256": {
+                        "type": "string",
+                        "pattern": "^[0-9a-f]{64}$"
+                      },
+                      "viewBox": {
+                        "type": "array",
+                        "minItems": 4,
+                        "maxItems": 4,
+                        "items": {
+                          "type": "number"
+                        }
+                      },
+                      "paths": {
+                        "type": "integer",
+                        "minimum": 1
+                      }
+                    }
+                  }
+                },
+                "label": {
+                  "const": "B"
+                }
+              },
+              "additionalProperties": false
+            }
+          ],
+          "items": false
+        }
+      }
+    },
+    "graph": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "vertices",
+        "edges",
+        "crossTableEdges",
+        "numbering",
+        "layout",
+        "fullTextWidth",
+        "verticalRadiusMm",
+        "ledgerRows",
+        "ledgerColumns",
+        "ledgerRowHeightMm",
+        "vertexMapping",
+        "ledgerEntries",
+        "selectionSeed",
+        "ringEdges",
+        "chords",
+        "selectedEdges",
+        "chordMinimumCyclicDistance",
+        "chordMaximumCyclicDistance",
+        "directed",
+        "inDegree",
+        "outDegree",
+        "cycleVertices",
+        "selectionKind",
+        "selectionAttempts"
+      ],
+      "properties": {
+        "vertices": {
+          "const": 16
+        },
+        "edges": {
+          "const": 240
+        },
+        "crossTableEdges": {
+          "const": 128
+        },
+        "numbering": {
+          "const": "table-A-1-8-table-B-9-16"
+        },
+        "layout": {
+          "const": "horizontal-ellipse"
+        },
+        "fullTextWidth": {
+          "const": true
+        },
+        "verticalRadiusMm": {
+          "const": 53
+        },
+        "ledgerRows": {
+          "const": 10
+        },
+        "ledgerColumns": {
+          "const": 2
+        },
+        "ledgerRowHeightMm": {
+          "const": 6.3
+        },
+        "vertexMapping": {
+          "const": [
+            {
+              "vertex": 1,
+              "table": "A",
+              "column": 1,
+              "image": "resources/metabolism-capsule-backslash.png"
+            },
+            {
+              "vertex": 2,
+              "table": "A",
+              "column": 2,
+              "image": "resources/metabolism-ellipsoid-capsule-backslash.png"
+            },
+            {
+              "vertex": 3,
+              "table": "A",
+              "column": 3,
+              "image": "resources/metabolism-capsule-slash.png"
+            },
+            {
+              "vertex": 4,
+              "table": "A",
+              "column": 4,
+              "image": "resources/metabolism-ellipsoid-capsule-slash.png"
+            },
+            {
+              "vertex": 5,
+              "table": "A",
+              "column": 5,
+              "image": "resources/metabolism-capsule-q.png"
+            },
+            {
+              "vertex": 6,
+              "table": "A",
+              "column": 6,
+              "image": "resources/metabolism-ellipsoid-capsule-q.png"
+            },
+            {
+              "vertex": 7,
+              "table": "A",
+              "column": 7,
+              "image": "resources/metabolism-capsule-p.png"
+            },
+            {
+              "vertex": 8,
+              "table": "A",
+              "column": 8,
+              "image": "resources/metabolism-ellipsoid-capsule-p.png"
+            },
+            {
+              "vertex": 9,
+              "table": "B",
+              "column": 1,
+              "image": "resources/metabolism-capsule-J.png"
+            },
+            {
+              "vertex": 10,
+              "table": "B",
+              "column": 2,
+              "image": "resources/metabolism-ellipsoid-capsule-J.png"
+            },
+            {
+              "vertex": 11,
+              "table": "B",
+              "column": 3,
+              "image": "resources/metabolism-capsule-L.png"
+            },
+            {
+              "vertex": 12,
+              "table": "B",
+              "column": 4,
+              "image": "resources/metabolism-ellipsoid-capsule-L.png"
+            },
+            {
+              "vertex": 13,
+              "table": "B",
+              "column": 5,
+              "image": "resources/metabolism-capsule-z.png"
+            },
+            {
+              "vertex": 14,
+              "table": "B",
+              "column": 6,
+              "image": "resources/metabolism-ellipsoid-capsule-z.png"
+            },
+            {
+              "vertex": 15,
+              "table": "B",
+              "column": 7,
+              "image": "resources/metabolism-capsule-s.png"
+            },
+            {
+              "vertex": 16,
+              "table": "B",
+              "column": 8,
+              "image": "resources/metabolism-ellipsoid-capsule-s.png"
+            }
+          ]
+        },
+        "ledgerEntries": {
+          "const": 20
+        },
+        "selectionSeed": {
+          "const": 20261027
+        },
+        "ringEdges": {
+          "const": [
+            "1-2",
+            "2-3",
+            "3-4",
+            "4-5",
+            "5-6",
+            "6-7",
+            "7-8",
+            "8-9",
+            "9-10",
+            "10-11",
+            "11-12",
+            "12-13",
+            "13-14",
+            "14-15",
+            "15-16",
+            "16-1"
+          ]
+        },
+        "chords": {
+          "const": [
+            "1-5",
+            "5-10",
+            "10-13",
+            "13-1"
+          ]
+        },
+        "selectedEdges": {
+          "const": [
+            "1-2",
+            "2-3",
+            "3-4",
+            "4-5",
+            "5-6",
+            "6-7",
+            "7-8",
+            "8-9",
+            "9-10",
+            "10-11",
+            "11-12",
+            "12-13",
+            "13-14",
+            "14-15",
+            "15-16",
+            "16-1",
+            "1-5",
+            "5-10",
+            "10-13",
+            "13-1"
+          ]
+        },
+        "chordMinimumCyclicDistance": {
+          "const": 3
+        },
+        "chordMaximumCyclicDistance": {
+          "const": 5
+        },
+        "directed": {
+          "const": true
+        },
+        "inDegree": {
+          "const": 15
+        },
+        "outDegree": {
+          "const": 15
+        },
+        "cycleVertices": {
+          "const": [
+            1,
+            5,
+            10,
+            13
+          ]
+        },
+        "selectionKind": {
+          "const": "seeded-clockwise-four-vertex-cycle"
+        },
+        "selectionAttempts": {
+          "const": 19
+        }
+      }
+    },
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "pages": {
+      "const": 3
+    },
+    "matrix": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "totalRows",
+        "totalColumns",
+        "headerRows",
+        "labelColumns",
+        "parameterRows",
+        "typeColumns",
+        "orientation",
+        "emptyParameterNames",
+        "emptyParameterValues",
+        "writingLinesPerRow",
+        "rowHeightMm"
+      ],
+      "properties": {
+        "totalRows": {
+          "const": 9
+        },
+        "totalColumns": {
+          "const": 9
+        },
+        "headerRows": {
+          "const": 1
+        },
+        "labelColumns": {
+          "const": 1
+        },
+        "parameterRows": {
+          "const": 8
+        },
+        "typeColumns": {
+          "const": 8
+        },
+        "orientation": {
+          "const": "types-across-columns"
+        },
+        "emptyParameterNames": {
+          "const": true
+        },
+        "emptyParameterValues": {
+          "const": true
+        },
+        "writingLinesPerRow": {
+          "const": 1
+        },
+        "rowHeightMm": {
+          "const": 6
+        }
+      }
+    },
+    "pageOrder": {
+      "const": [
+        "worked-example",
+        "tables-A-B",
+        "complete-graph-20-selected-changes-reflection"
+      ]
+    },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "const": {
+            "exerciseHeading": "Dwelling Capsules",
+            "tableLabels": [
+              "",
+              ""
+            ],
+            "footerLogos": [
+              "🖼️assets/🪧️logo/🎓️luh/☀️logo.png"
+            ]
+          }
+        },
+        "de": {
+          "const": {
+            "exerciseHeading": "Wohnkapseln",
+            "tableLabels": [
+              "",
+              ""
+            ],
+            "footerLogos": [
+              "🖼️assets/🪧️logo/🎓️luh/☀️logo.png"
+            ]
+          }
+        }
+      }
+    },
+    "headings": {
+      "const": {
+        "de": [
+          "Fingerübung Parametrisierung",
+          "Beispiel",
+          "Wohnkapseln"
+        ],
+        "en": [
+          "Finger Exercise: Parametrization",
+          "Example",
+          "Dwelling Capsules"
+        ]
+      }
+    },
+    "workedExample": {
+      "const": {
+        "columns": 3,
+        "parameterRows": [
+          "L",
+          "B",
+          "H",
+          "Form"
+        ],
+        "domains": {
+          "L": "positive-real",
+          "B": "positive-real",
+          "H": "positive-real",
+          "Form": [
+            "box",
+            "pyramid",
+            "elliptical-cylinder"
+          ]
+        },
+        "points": [
+          {
+            "dimensions": [
+              2.5,
+              1.5,
+              2
+            ],
+            "form": "box"
+          },
+          {
+            "dimensions": [
+              2.5,
+              1.5,
+              2
+            ],
+            "form": "pyramid"
+          },
+          {
+            "dimensions": [
+              3.5,
+              2.5,
+              3
+            ],
+            "form": "elliptical-cylinder"
+          }
+        ],
+        "values": [
+          [
+            2.5,
+            2.5,
+            3.5
+          ],
+          [
+            1.5,
+            1.5,
+            2.5
+          ],
+          [
+            2,
+            2,
+            3
+          ]
+        ],
+        "forms": [
+          "box",
+          "pyramid",
+          "elliptical-cylinder"
+        ],
+        "edges": [
+          {
+            "from": 1,
+            "to": 2,
+            "numeric": [
+              0,
+              0,
+              0
+            ],
+            "category": [
+              "box",
+              "pyramid"
+            ]
+          },
+          {
+            "from": 2,
+            "to": 1,
+            "numeric": [
+              0,
+              0,
+              0
+            ],
+            "category": [
+              "pyramid",
+              "box"
+            ]
+          },
+          {
+            "from": 2,
+            "to": 3,
+            "numeric": [
+              1,
+              1,
+              1
+            ],
+            "category": [
+              "pyramid",
+              "elliptical-cylinder"
+            ]
+          },
+          {
+            "from": 3,
+            "to": 2,
+            "numeric": [
+              -1,
+              -1,
+              -1
+            ],
+            "category": [
+              "elliptical-cylinder",
+              "pyramid"
+            ]
+          },
+          {
+            "from": 1,
+            "to": 3,
+            "numeric": [
+              1,
+              1,
+              1
+            ],
+            "category": [
+              "box",
+              "elliptical-cylinder"
+            ]
+          },
+          {
+            "from": 3,
+            "to": 1,
+            "numeric": [
+              -1,
+              -1,
+              -1
+            ],
+            "category": [
+              "elliptical-cylinder",
+              "box"
+            ]
+          }
+        ],
+        "cycle": [
+          1,
+          2,
+          3,
+          1
+        ],
+        "wrongDirectNumeric": [
+          2,
+          1,
+          1
+        ],
+        "oneHot": [
+          [
+            1,
+            0,
+            0
+          ],
+          [
+            0,
+            1,
+            0
+          ],
+          [
+            0,
+            0,
+            1
+          ]
+        ],
+        "titleBanner": false,
+        "directed": true,
+        "edgeLabels": "separate-shared-ledger",
+        "separateLedger": true,
+        "matrix": {
+          "parameterRows": 8,
+          "filledRows": 4,
+          "blankRows": 4,
+          "totalColumns": 4,
+          "totalRows": 9,
+          "headerHeightMm": 16,
+          "rowHeightMm": 6,
+          "paddingMm": 2,
+          "labelWidthMm": 27,
+          "headerShapeScale": 0.5,
+          "headerNumbered": false,
+          "tableChrome": true,
+          "blankRowComponent": "AssignmentParameterMatrixBlankRows",
+          "textVerticalAlignment": "glyph-ink-center",
+          "maxInkCenterOffsetMm": 0.25,
+          "centeredFilledCells": 16
+        },
+        "ledger": {
+          "rows": 3,
+          "columns": 2,
+          "entries": 6,
+          "rowHeightMm": 6.3,
+          "valueFontPt": 9,
+          "numericNotation": "named-nonzero-semicolon-separated",
+          "dimensionNames": [
+            "L",
+            "B",
+            "H"
+          ],
+          "zeroNumericChanges": "omitted",
+          "ruleWidthFractionOfColumn": 0.76,
+          "ruleWidthBasis": "native-inner-linewidth"
+        }
+      }
+    },
+    "tableChrome": {
+      "const": {
+        "titleVisibleName": false,
+        "rightAutomaticChip": true,
+        "connectedOutline": true,
+        "wrappedTables": 3
+      }
+    },
+    "silhouettes": {
+      "const": {
+        "diagrams": 2,
+        "transitions": 2,
+        "titleVisibleName": false,
+        "rightAutomaticChip": true,
+        "connectedOutline": true,
+        "breakable": false,
+        "pages": 3,
+        "diagramNumbers": [
+          "1.1.b",
+          "1.2.c"
+        ],
+        "transitionNumbers": [
+          "1.1.c",
+          "1.2.d"
+        ],
+        "kindLabels": {
+          "en": {
+            "Diagram": "Diagram",
+            "Transitions": "Transitions"
+          },
+          "de": {
+            "Diagram": "Diagramm",
+            "Transitions": "Übergänge"
+          }
+        }
+      }
+    },
+    "ownership": {
+      "const": {
+        "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+        "files": [
+          "en.tex",
+          "de.tex",
+          "en.content.tex",
+          "de.content.tex",
+          "geometry.tex",
+          "icons.json"
+        ],
+        "documentNamespace": "course",
+        "assignment": "parametrization",
+        "topic": "parametric",
+        "documents": {
+          "en": {
+            "namespace": "course",
+            "id": "architecture-parametric-parametrization-en",
+            "producer": "@teaching/architecture-course:build-parametrization-en",
+            "file": "architecture-parametric-parametrization-en.pdf"
+          },
+          "de": {
+            "namespace": "course",
+            "id": "architecture-parametric-parametrization-de",
+            "producer": "@teaching/architecture-course:build-parametrization-de",
+            "file": "architecture-parametric-parametrization-de.pdf"
+          }
+        }
+      }
+    }
+  }
+}

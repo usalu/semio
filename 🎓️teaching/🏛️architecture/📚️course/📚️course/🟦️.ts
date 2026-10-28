@@ -22,6 +22,11 @@ export const loadArchitectureCourseMaterial: CourseMaterialSource = async () => 
     import("../../⚡️energy/🔥️heating/❓️quiz/🔣️.json"),
     import("../../⚡️energy/❄️cooling/❓️quiz/🔣️.json"),
     import("../../⚡️energy/📊️demand/❓️quiz/🔣️.json"),
+    import("../../📐️parametric/❓️quiz/🔣️.json"),
+    import("../../🦗️grasshopper/❓️quiz/🔣️.json"),
+    import("../../📊️excel/❓️quiz/🔣️.json"),
+    import("../../🏗️bim/❓️quiz/🔣️.json"),
+    import("../../🎯️optimization/❓️quiz/🔣️.json"),
   ]);
   return { course: course.default as unknown as Course, quizzes: quizzes.map((quiz) => quiz.default) as unknown as readonly Quiz[] };
 };

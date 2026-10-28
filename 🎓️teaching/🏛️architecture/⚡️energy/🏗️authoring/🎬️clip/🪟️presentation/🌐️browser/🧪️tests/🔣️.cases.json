@@ -1,0 +1,14 @@
+{
+  "schema":"semio-browser-lifecycle-cases/v1",
+  "missingMessage":"browserType.launch: Executable doesn't exist at /owned/browser/chromium",
+  "cases":[
+    {"id":"healthy","launch":["healthy"],"calls":["launch"],"result":"healthy"},
+    {"id":"missing-cache","launch":["missing","healthy"],"calls":["launch","provision","launch"],"result":"healthy"},
+    {"id":"unrelated-launch-error","launch":["unrelated"],"calls":["launch"],"error":"unrelated"},
+    {"id":"missing-like-unrelated-error","launch":["unrelatedMissingText"],"calls":["launch"],"error":"unrelatedMissingText"},
+    {"id":"provision-failure","launch":["missing"],"provision":"fail","calls":["launch","provision"],"error":"provision"},
+    {"id":"retry-failure","launch":["missing","retry"],"calls":["launch","provision","launch"],"error":"retry"},
+    {"id":"abort-before-launch","abort":"before","launch":["healthy"],"calls":[],"errorName":"AbortError"},
+    {"id":"abort-during-provision","abort":"provision","launch":["missing","healthy"],"calls":["launch","provision"],"errorName":"AbortError"}
+  ]
+}

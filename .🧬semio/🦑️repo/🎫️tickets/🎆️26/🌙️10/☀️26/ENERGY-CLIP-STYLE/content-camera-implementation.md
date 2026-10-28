@@ -1,0 +1,21 @@
+# Content Camera Implementation
+
+The authored source video fills the complete output frame throughout the body. The FFmpeg composition no longer renders or overlays a focused window shell, hover shell, or browser cursor over the body. The original source frame order, frame-rate conversion, source audio delay, and finite silent padding remain owned by the existing private runtime interface. First and last snapshots use the same contain/pad fitting filter as the body.
+
+The schema defines contentCamera.duration as 0.6 seconds. Both transitions retain their original three-second native navigation route and add a separate camera move. Focus finishes native opening and its settled hold before zooming into content. Restore starts at the source frame, zooms back out with the cursor parked, and then performs the original visible native restore clicks. transition_duration derives the full phase length, while each encoded pad is quantized to the selected output frame rate.
+
+The browser measures the actual DOM content host and the contained image ink bounds using intrinsic image dimensions. It uniformly transforms the complete application around that measured source rectangle. Navbar, footer, and window chrome naturally leave the frame during the zoom. The transformation resets before native hit tests and mouse events for the next frame. Only the virtual navigation cursor is hidden while zooming; the authored source cursor remains inside source pixels. Browser metadata exposes camera progress, target rectangle, uniform scale, and translation. Exact camera endpoints copy the normalized source snapshot when its dimensions match the requested output, avoiding a raster-resampling seam at each body join.
+
+Validation: the new portable contract and full-frame body oracle first failed against the prior implementation. Production Python syntax and JSON parse successfully. All eight hierarchy tests pass, including independent NumPy camera midpoint/endpoints and native release-before-click boundaries shifted by the camera duration. The tests agent reports the silent source media case and nine presentation contract tests passing. The tests agent subsequently verified all eight actual browser camera samples and a complete narrated representative encode.
+
+Changed production files: presentation Python, presentation JSON contract/schema, hierarchy renderer Python, browser frame schema, browser TSX application, browser Node batch renderer. Hierarchy portable fixture and Python tests were updated. Retained ticket scripts document the atomic implementation and hierarchy verification workflow.
+
+The actual browser fused restore control test passes in both English and German (57.8 seconds). It verifies native pressed/released interaction and the single combined restore label/icon chip without changing canonical hit-test coordinates.
+
+A final independent 4 fps to 2 fps regression first failed at the restore join with mean RGB error 18.6926. Snapshot extraction now shares the exact setpts/tpad/fps/trim/fit normalizer with the body, and the final snapshot selects normalized frame body_count minus one. The converted source sequence remains [0, 2, 4, 6]. Both frame-rate conversion handoffs and the finite silent-source media regression pass after the fix (two tests, 2.676 seconds). All eight hierarchy tests pass again on the final production state.
+
+The obsolete focused-shell wrapper, hierarchy shell renderer, shell transparency punchout, and unused transparent_body schema property were removed. No production body path can reintroduce virtual chrome. The canonical focus_viewport geometry utility remains for independent actual UI geometry checks.
+
+All requested production and local validation work is complete. Root owns the final preview artifact, ticket close, and cleanup of the shared generated output tree.
+
+The final source probe now decodes video instead of counting compressed packet samples. A real retained source has 48 packet samples but 47 decoded frames; the independent PyAV oracle agrees with FFmpeg decode. The portable edited-MP4 regression reproduces 13 packet samples versus 12 visible frames and now passes with the correct body, total frame count, and finite audio duration. All three fast media regressions pass on the final production state. See content-frame-count.md for evidence.

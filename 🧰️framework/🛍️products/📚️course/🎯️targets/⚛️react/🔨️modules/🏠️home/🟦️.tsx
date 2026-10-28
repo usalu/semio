@@ -4,6 +4,8 @@
  * @see ./🗺️pages/🟦️.ts — course-derived page hierarchy
  * @see ../🚏️navigation/🟦️.tsx — history and parent navigation
  */
+import { AssignmentDownloads } from "../📝️assignments/🟦️.tsx";
+import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { createContext, useCallback, useContext, useEffect, useId, useLayoutEffect, useMemo, useRef, useState, type CSSProperties, type ReactElement, type ReactNode } from "react";
 import { LayeredOverview, UI_MOBILE_MAX_WIDTH_PX, UI_TABLET_MAX_WIDTH_PX, stripGrid, useMediaQuery, type IconName, type LayeredCardState, type LayeredCell, type LayeredDirection, type LayeredMode, type LayeredPane } from "@semio-tech/ui-react/chrome";
 import { type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
@@ -182,6 +184,7 @@ function CollectionCard(props: HomeProps & { readonly page: string; readonly rev
 }
 
 interface HomeOverviewProps extends HomeProps {
+  readonly at: number;
   readonly container?: string;
   readonly enabled: boolean;
   readonly busy: boolean;
@@ -198,7 +201,8 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
   const narrow = useMediaQuery(queries.narrow);
   const medium = useMediaQuery(queries.medium);
   const short = { desktop: useMediaQuery(queries.short.desktop), tablet: useMediaQuery(queries.short.tablet) };
-  const selected = state.step.screen === "home" ? state.step.page : undefined;
+  const wanted = state.step.screen === "home" ? state.step.page : undefined;
+  const selected = wanted !== undefined && clientAccess(state.course, wanted, props.at) ? wanted : undefined;
   const activeContainer = course === undefined || isHomeGrid(selected, course) ? selected : selected === undefined ? undefined : parentPage(selected, course);
   const activeGrid = enabled && activeContainer === container;
   const interactive = activeGrid && follow.following === undefined;
@@ -247,21 +251,24 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
       shortLabel: pageLabel(page, state, locale, text, true) ?? label,
       icon: ICONS[page],
       render: (pane) => {
-        if (isHomeGrid(page, course)) return <HomeOverview {...props} container={page} enabled={enabled && pane.opened} />;
-        const view = { opened: enabled && pane.opened, revealed: pane.revealed };
-        const quiz = course.quizzes.find((candidate) => candidate.id === page);
-        if (quiz !== undefined) return <QuizPage {...common} quiz={quiz} busy={busy} act={act} view={view} others={preferences.others} challenge={challengeOf(preferences, quiz.id)} onChallenge={(challenge) => onPreferences(withChallenge(preferences, quiz.id, challenge))} />;
-        if (course.topics?.some((topic) => topic.id === page)) return <PageFrame page={page}><CollectionCard {...props} page={page} placeholder /></PageFrame>;
-        switch (page) {
-          case HOME_PAGES.learner:
-            return <LearnerPage {...common} busy={busy} act={act} view={view} />;
-          case HOME_PAGES.leaderboard:
-            return <LeaderboardPage {...common} view={view} />;
-          case HOME_PAGES.badges:
-            return <BadgesPage state={state} text={text} locale={locale} view={view} />;
-          default:
-            return <PreferencesPage course={course.id} preferences={preferences} locale={locale} text={text} onChange={onPreferences} view={view} />;
-        }
+        const content = (): ReactNode => {
+          if (isHomeGrid(page, course)) return <HomeOverview {...props} container={page} enabled={enabled && pane.opened} />;
+          const view = { opened: enabled && pane.opened, revealed: pane.revealed };
+          const quiz = course.quizzes.find((candidate) => candidate.id === page);
+          if (quiz !== undefined) return <QuizPage {...common} quiz={quiz} busy={busy} act={act} view={view} others={preferences.others} challenge={challengeOf(preferences, quiz.id)} onChallenge={(challenge) => onPreferences(withChallenge(preferences, quiz.id, challenge))} />;
+          if (course.topics?.some((topic) => topic.id === page)) return <PageFrame page={page}><CollectionCard {...props} page={page} placeholder /></PageFrame>;
+          switch (page) {
+            case HOME_PAGES.learner:
+              return <LearnerPage {...common} busy={busy} act={act} view={view} />;
+            case HOME_PAGES.leaderboard:
+              return <LeaderboardPage {...common} view={view} />;
+            case HOME_PAGES.badges:
+              return <BadgesPage state={state} text={text} locale={locale} view={view} />;
+            default:
+              return <PreferencesPage course={course.id} preferences={preferences} locale={locale} text={text} onChange={onPreferences} view={view} />;
+          }
+        };
+        return <AccessGate course={course} page={page} at={props.at} locale={locale} text={text}>{content()}</AccessGate>;
       },
     };
   });
@@ -270,9 +277,10 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
   const tracks = layout.grid === "desktop" ? HOME_GRID_TRACKS : undefined;
   const cardOf = (pane: LayeredPane, card: LayeredCardState): ReactNode => {
     const shown = { revealed: card.revealed, onOpen: card.open };
+    const onOpen = clientAccess(course, pane.id, props.at) ? card.open : undefined;
     const quiz = course.quizzes.find((candidate) => candidate.id === pane.id);
-    if (quiz !== undefined) return <QuizCardView {...common} {...shown} quiz={quiz} busy={busy} act={act} challenge={challengeOf(preferences, quiz.id)} />;
-    if (pane.id === HOME_PAGES.quizzes || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} />;
+    if (quiz !== undefined) return <QuizCardView {...common} {...shown} onOpen={onOpen} quiz={quiz} busy={busy} act={act} challenge={challengeOf(preferences, quiz.id)} />;
+    if (pane.id === HOME_PAGES.quizzes || course.topics?.some((topic) => topic.id === pane.id)) return <CollectionCard {...props} page={pane.id} {...shown} onOpen={onOpen} />;
     switch (pane.id) {
       case HOME_PAGES.learner:
         return <LearnerCard {...common} {...shown} />;
@@ -285,6 +293,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
     }
   };
   const renderCard = (pane: LayeredPane, card: LayeredCardState): ReactNode => {
+    const gatedCard = <AccessGate course={course} page={pane.id} at={props.at} locale={locale} text={text}>{cardOf(pane, card)}</AccessGate>;
     const cell = cells[pane.id];
     const quiz = course.quizzes.some((candidate) => candidate.id === pane.id);
     const collection = isHomeGrid(pane.id, course);
@@ -293,8 +302,8 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
     const activity = <CardPresence anchor={PRESENCE_ANCHORS.home(key)} text={text} accepts={(place, presentation) => quiz ? place.quiz === pane.id : collection ? (place.quiz !== undefined && contained.has(place.quiz)) || (place.screen === "home" && presentation?.home !== undefined && (presentation.home === pane.id || contained.has(presentation.home))) : place.screen === (pane.id === HOME_PAGES.leaderboard ? "leaderboard" : pane.id === HOME_PAGES.preferences ? "preferences" : pane.id)} />;
     const alias = container === undefined ? `course.home.${pane.id}` : undefined;
     return card.mode === "strip" && cell !== undefined ? (
-      <div data-element-alias={alias} className="course-home-cell" style={{ gridColumn: cell.column + 1, gridRow: cell.row + 1 }}><div className="course-home-card">{cardOf(pane, card)}{activity}</div></div>
-    ) : <div data-element-alias={alias} className="course-home-entry course-home-card">{cardOf(pane, card)}{activity}</div>;
+      <div data-element-alias={alias} className="course-home-cell" style={{ gridColumn: cell.column + 1, gridRow: cell.row + 1 }}><div className="course-home-card">{gatedCard}{activity}</div></div>
+    ) : <div data-element-alias={alias} className="course-home-entry course-home-card">{gatedCard}{activity}</div>;
   };
   return (
     <div ref={root} data-page={container} data-course-grid={container ?? "root"} data-grid-active={activeGrid ? "" : undefined} className="relative h-full min-h-0 w-full">
@@ -315,7 +324,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
         revealedId={activeGrid && follow.following !== undefined ? follow.presentation?.reveal ?? null : undefined}
         revealedBy={activeGrid && follow.following !== undefined ? follow.presentation?.revealedBy : undefined}
         onRevealedIdChange={interactive ? (page, source) => follow.onRevealed(page ?? undefined, source ?? undefined) : undefined}
-        onOpenedIdChange={(page) => session.open(page === null ? container === undefined ? { screen: "home" } : { screen: "home", page: container } : { screen: "home", page })}
+        onOpenedIdChange={(page) => (page === null || clientAccess(course, page, props.at)) && session.open(page === null ? container === undefined ? { screen: "home" } : { screen: "home", page: container } : { screen: "home", page })}
         lifecycle={{ budget: pages.length, warmStartMs: 0, warmIntervalMs: 0 }}
         labels={{
           grid: container === undefined ? text("course.home.cards") : pageLabel(container, state, locale, text) ?? container,
@@ -331,6 +340,7 @@ function HomeOverview(props: HomeOverviewProps): ReactElement | null {
 /** 🏠️ The home screen, with a layered grid at every level of the course's topic tree. */
 export function HomeScreen(props: HomeProps): ReactElement | null {
   const { session, state, text } = props;
+  const at = useReleaseClock(state.course);
   const previewPointer = useRef<PreviewPointerBus | null>(null);
   if (previewPointer.current === null) previewPointer.current = createPreviewPointerBus();
   const [pending, setPending] = useState<AbortController | undefined>(undefined);
@@ -360,6 +370,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
   return (
     <div className="course-home flex min-h-0 flex-1 flex-col">
       <h1 tabIndex={-1} className="sr-only">{heading}</h1>
+      {selected === undefined || state.course.topics?.some((topic) => topic.id === selected) ? <AssignmentDownloads assignments={state.course.assignments ?? []} locale={props.locale} topic={selected} /> : null}
       {problem === undefined ? null : <ProblemNote problem={problem} text={text} className="m-double mb-0" />}
       {pending === undefined ? null : (
         <div role="status" className="flex flex-wrap items-center gap-double px-double pt-double text-sm">
@@ -370,7 +381,7 @@ export function HomeScreen(props: HomeProps): ReactElement | null {
       )}
       <div className="relative min-h-0 flex-1">
         <PreviewPointerContext.Provider value={previewPointer.current}>
-          <HomeOverview {...props} enabled busy={pending !== undefined} act={act} />
+          <HomeOverview {...props} at={at} enabled busy={pending !== undefined} act={act} />
         </PreviewPointerContext.Provider>
       </div>
     </div>

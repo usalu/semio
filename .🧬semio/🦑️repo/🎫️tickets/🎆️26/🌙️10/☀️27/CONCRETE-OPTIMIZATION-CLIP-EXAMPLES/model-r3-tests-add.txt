@@ -1,0 +1,114 @@
+
+    def test_energy_balance_terms_close_each_demand_and_each_conversion(self):
+        import numpy as np
+
+        generator = np.random.default_rng(20261028)
+        rows = np.column_stack((generator.uniform(90, 450, 60), generator.uniform(.1, 1, 60), generator.uniform(0, 1.5, 60), generator.uniform(.1, .3, 60)))
+        for row in rows:
+            result = self.api.evaluate(dict(zip(KEYS, row)))
+            with self.subTest(design=row.tolist()):
+                self.assertAlmostEqual(result["heating_gains"], result["solar_winter"] + result["internal_winter"])
+                self.assertAlmostEqual(result["heating_losses"], result["conductance"] * 70)
+                self.assertAlmostEqual(result["heating_used"], result["heating_eta"] * result["heating_gains"])
+                self.assertAlmostEqual(result["heating_demand"], max(0.0, result["heating_losses"] - result["heating_used"]))
+                self.assertAlmostEqual(result["heating"] * result["cop"], result["heating_demand"])
+                self.assertAlmostEqual(result["cooling_gains"], result["solar_summer"] + result["internal_summer"])
+                self.assertAlmostEqual(result["cooling_removable"], result["conductance"] * 8)
+                self.assertAlmostEqual(result["cooling_removed"], result["cooling_eta"] * result["cooling_removable"])
+                self.assertAlmostEqual(result["cooling_demand"], max(0.0, result["cooling_gains"] - result["cooling_removed"]))
+                self.assertAlmostEqual(result["cooling"] * result["eer"], result["cooling_demand"])
+                self.assertAlmostEqual(result["lighting"], result["lighting_power"] * result["lighting_hours"] * result["lamps_on"])
+                self.assertAlmostEqual(result["lamps_on"], 1 - result["autonomy"])
+                self.assertTrue(0 < result["heating_eta"] <= 1 and 0 < result["cooling_eta"] <= 1)
+                self.assertTrue(0 <= result["direct_winter"] <= .5 and 0 <= result["direct_summer"] <= .6)
+        self.assertEqual((self.api.evaluate()["cop"], self.api.evaluate()["eer"]), (3.5, 3.0))
+
+    def test_direct_gain_fades_with_the_beam_and_the_diffuse_rest_never_jumps(self):
+        grazing = CASES["continuity"]["grazing"]
+        design = grazing["design"]
+        for theta, shading, cooling, electricity in zip(grazing["bearings"], grazing["shading_summer"], grazing["cooling"], grazing["electricity"], strict=True):
+            result = self.api.evaluate({**design, "orientation": theta})
+            self.assertAlmostEqual(result["shading_summer"], shading, places=5, msg=theta)
+            self.assertAlmostEqual(result["cooling"], cooling, places=3, msg=theta)
+            self.assertAlmostEqual(result["electricity"], electricity, places=3, msg=theta)
+        last = self.api.sun_samples(354, "summer")
+        self.assertEqual([item["hour"] for item in last], [grazing["last_hour"]["hour"]])
+        self.assertAlmostEqual(last[0]["across"], grazing["last_hour"]["across"], places=5)
+        self.assertAlmostEqual(last[0]["weight"], grazing["last_hour"]["weight"], places=5)
+        self.assertEqual(self.api.sun_samples(355, "summer"), [])
+        reach = self.api.evaluate({**design, "orientation": 354})
+        self.assertAlmostEqual(reach["direct_summer"], grazing["last_hour"]["direct_summer"], places=5)
+        self.assertLess(reach["shading_summer"], reach["direct_summer"] / self.study["parameters"]["climate"]["direct_share_summer"]["value"] + 1e-12)
+        self.assertLess(abs(reach["cooling"] - self.api.evaluate({**design, "orientation": 355})["cooling"]), 4)
+        fade = [self.api.evaluate({**design, "orientation": 350 + step / 10})["shading_summer"] for step in range(52)]
+        self.assertTrue(all(a >= b - 1e-12 for a, b in zip(fade, fade[1:])))
+        self.assertEqual(fade[-1], 0)
+        north = self.api.evaluate({**design, "orientation": 360, "overhang": 1.2})
+        bare = self.api.evaluate({**design, "orientation": 360, "overhang": 0})
+        self.assertEqual((north["beam_summer"], north["direct_summer"], north["shading_summer"]), (0, 0, 0))
+        self.assertEqual(north["solar_summer"], bare["solar_summer"])
+        self.assertEqual(north["solar_winter"], bare["solar_winter"])
+
+    def test_the_reference_beam_leaves_every_well_lit_façade_unchanged(self):
+        climate = self.study["parameters"]["climate"]
+        south = self.api.evaluate({"orientation": 180, "overhang": .6})
+        for season in ("winter", "summer"):
+            self.assertGreater(south[f"beam_{season}"], 4 * climate["beam_reference"]["value"])
+            self.assertEqual(south[f"direct_{season}"], climate[f"direct_share_{season}"]["value"])
+            self.assertAlmostEqual(south[f"beam_{season}"], sum(item["weight"] for item in self.api.sun_samples(180, season)))
+
+
+class BearingContinuity(unittest.TestCase):
+    """🌀 Heating, cooling, lighting and total electricity are smooth curves of the façade bearing for every overhang and window share."""
+
+    @classmethod
+    def setUpClass(cls):
+        cls.api = model_api()
+        cls.study = cls.api.load_study()
+        cls.setup = CASES["continuity"]
+
+    def curves(self, step, wwr, depth):
+        import numpy as np
+
+        bearings = self.setup["bearings"]
+        theta = np.arange(bearings["from"], bearings["to"] + step / 2, step)
+        designs = np.column_stack((theta, np.full_like(theta, wwr), np.full_like(theta, depth), np.full_like(theta, self.setup["insulation"])))
+        return reference_evaluate(self.study, designs)
+
+    def test_no_curve_has_a_step_above_the_smooth_bound_and_steps_scale_with_the_bearing_step(self):
+        import numpy as np
+
+        largest = dict.fromkeys(self.setup["step_bound"], 0.0)
+        for wwr, depth in itertools.product(self.setup["wwr"], self.setup["overhang"]):
+            coarse, fine = self.curves(self.setup["bearings"]["step"], wwr, depth), self.curves(self.setup["bearings"]["fine_step"], wwr, depth)
+            for key, bound in self.setup["step_bound"].items():
+                step, finer = np.abs(np.diff(coarse[key])).max(), np.abs(np.diff(fine[key])).max()
+                largest[key] = max(largest[key], step)
+                with self.subTest(wwr=wwr, overhang=depth, quantity=key):
+                    self.assertLessEqual(step, bound)
+                    self.assertLessEqual(finer, step / self.setup["scaling_minimum"] + 1e-9)
+        for key, expected in self.setup["max_step_found"].items():
+            self.assertAlmostEqual(largest[key], expected, places=4, msg=key)
+            self.assertLessEqual(largest[key], self.setup["before_fix_max_step"][key] + 1e-9)
+        self.assertGreater(self.setup["before_fix_max_step"]["cooling"], 50 * self.setup["step_bound"]["cooling"])
+
+    def test_the_public_function_follows_the_reference_across_the_grazing_bearings(self):
+        import numpy as np
+
+        bearings = np.array([300.0, 309.75, 310.0, 345.0, 350.0, 353.9, 354.0, 354.1, 354.9, 355.0, 355.1, 365.0, 365.1, 366.0, 380.0, 420.0, 289.5])
+        designs = np.column_stack((bearings, np.full(bearings.shape, .8), np.full(bearings.shape, 1.2), np.full(bearings.shape, .16)))
+        reference = reference_evaluate(self.study, designs)
+        for key in ("heating", "cooling", "lighting", "electricity", "shading_summer", "shading_winter", "beam_summer", "direct_summer"):
+            actual = [self.api.evaluate(dict(zip(KEYS, row)))[key] for row in designs]
+            np.testing.assert_allclose(actual, reference[key], rtol=1e-9, atol=1e-12, err_msg=key)
+
+    def test_the_public_function_has_no_step_on_the_api_grid_either(self):
+        for wwr, depth in ((.8, .6), (.3, 1.2)):
+            previous = None
+            for index in range(int((450 - 90) / .25) + 1):
+                current = self.api.evaluate({"orientation": 90 + index * .25, "wwr": wwr, "overhang": depth, "insulation": self.setup["insulation"]})
+                if previous is not None:
+                    for key, bound in self.setup["step_bound"].items():
+                        self.assertLessEqual(abs(current[key] - previous[key]), bound, msg=(wwr, depth, index, key))
+                previous = current
+

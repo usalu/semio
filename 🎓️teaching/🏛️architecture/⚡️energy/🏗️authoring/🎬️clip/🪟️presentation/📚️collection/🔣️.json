@@ -1,0 +1,174 @@
+{
+  "$schema": "./🧬️schema.json",
+  "version": 1,
+  "course": "🏛️architecture/📚️course/🔣️.json",
+  "manifest": "🏛️architecture/⚡️energy/🎬️clip/🔣️.json",
+  "labels": {
+    "courses": {
+      "en": "Courses",
+      "de": "Kurse"
+    },
+    "clips": {
+      "en": "Clips",
+      "de": "Clips"
+    },
+    "chapters": {
+      "en": "Chapters",
+      "de": "Kapitel"
+    }
+  },
+  "chapters": {
+    "PhysicalFundamentals_FullSection": {
+      "en": "Physical Fundamentals",
+      "de": "Physikalische Grundlagen"
+    },
+    "Ventilation_01_WarumLueften": {
+      "en": "Why Ventilate?",
+      "de": "Warum lüften?"
+    },
+    "Ventilation_02_Luftmenge": {
+      "en": "Air Volume and Flow",
+      "de": "Luftmenge und Volumenstrom"
+    },
+    "Ventilation_03_WaermestromLuft": {
+      "en": "Heat Flow in Air",
+      "de": "Wärmestrom der Luft"
+    },
+    "Ventilation_04_NatuerlicheLueftung": {
+      "en": "Natural Ventilation",
+      "de": "Natürliche Lüftung"
+    },
+    "Ventilation_05_MechanischeLueftung": {
+      "en": "Mechanical Ventilation",
+      "de": "Mechanische Lüftung"
+    },
+    "Ventilation_06_Uebergabe": {
+      "en": "Summary and Handoff",
+      "de": "Zusammenfassung und Übergabe"
+    },
+    "Heating_01_Introduction": {
+      "en": "Heat Transfer Fundamentals",
+      "de": "Grundlagen der Wärmeübertragung"
+    },
+    "Heating_02_Conduction": {
+      "en": "Conduction and Envelope",
+      "de": "Wärmeleitung und Gebäudehülle"
+    },
+    "Heating_03_Convection": {
+      "en": "Ventilation Heat Loss",
+      "de": "Lüftungswärmeverluste"
+    },
+    "Heating_04_InternalGains": {
+      "en": "Internal Heat Gains",
+      "de": "Interne Wärmegewinne"
+    },
+    "Heating_05_Solar": {
+      "en": "Solar Heat Gains",
+      "de": "Solare Wärmegewinne"
+    },
+    "Heating_06_FinalCalculation": {
+      "en": "Heating Demand Calculation",
+      "de": "Berechnung des Heizbedarfs"
+    },
+    "Cooling_01_HeatingVsCooling": {
+      "en": "From Heating to Cooling",
+      "de": "Vom Heizen zum Kühlen"
+    },
+    "Cooling_02_InternalGains": {
+      "en": "Internal Cooling Loads",
+      "de": "Interne Kühllasten"
+    },
+    "Cooling_03_TransmissionHumidity": {
+      "en": "Transmission and Humidity",
+      "de": "Transmission und Feuchte"
+    },
+    "Cooling_04_SolarRadiation": {
+      "en": "Solar Radiation",
+      "de": "Sonnenstrahlung"
+    },
+    "Cooling_05_Systemauslegung": {
+      "en": "Cooling System Design",
+      "de": "Auslegung der Kühlung"
+    },
+    "Cooling_06_Sommerstrategie": {
+      "en": "Summer Strategy",
+      "de": "Sommerstrategie"
+    },
+    "EnergyBalance_01_Energiebilanz": {
+      "en": "Energy Balance",
+      "de": "Energiebilanz"
+    },
+    "EnergyBalance_02_RegelwerkKlima": {
+      "en": "Regulations and Climate",
+      "de": "Regelwerk und Klima"
+    },
+    "EnergyBalance_03_BedarfVsLeistung": {
+      "en": "Demand and Power",
+      "de": "Bedarf und Leistung"
+    },
+    "EnergyBalance_04_NutzZuEndenergie": {
+      "en": "Useful and Final Energy",
+      "de": "Nutzenergie und Endenergie"
+    },
+    "EnergyBalance_05_Primaerenergie": {
+      "en": "Primary Energy",
+      "de": "Primärenergie"
+    },
+    "EnergyBalance_06_Energieausweis": {
+      "en": "Energy Certificate",
+      "de": "Energieausweis"
+    },
+    "EnergyBalance_07_TheorieVsPraxis": {
+      "en": "Theory and Practice",
+      "de": "Theorie und Praxis"
+    },
+    "BIM_01_Information": {
+      "en": "Data and Information",
+      "de": "Daten und Information"
+    },
+    "BIM_02_Objects": {
+      "en": "Object Orientation",
+      "de": "Objektorientierung"
+    },
+    "BIM_03_Representations": {
+      "en": "Object Representations",
+      "de": "Repräsentationen von Objekten"
+    },
+    "BIM_04_Models": {
+      "en": "Partial Models and Translation",
+      "de": "Teilmodelle und Modellübersetzungen"
+    },
+    "BIM_05_Exchange": {
+      "en": "Interfaces and Model Translation",
+      "de": "Schnittstellen und Modellübersetzung"
+    },
+    "BIM_06_Consistency": {
+      "en": "Consistency across Models",
+      "de": "Konsistenz über Modelle hinweg"
+    },
+    "Optimization_Extrema": {
+      "en": "Minimization and Maximization",
+      "de": "Minimierung und Maximierung"
+    },
+    "Optimization_Sampling": {
+      "en": "Sampling the Design Space",
+      "de": "Sampling des Entwurfsraums"
+    },
+    "Optimization_Experiments": {
+      "en": "Design of Experiments",
+      "de": "Design of Experiments"
+    },
+    "Optimization_Index": {
+      "en": "Multiple Criteria and Indices",
+      "de": "Multikriteriell und Index"
+    },
+    "Optimization_Pareto": {
+      "en": "Pareto Fronts",
+      "de": "Pareto-Fronten"
+    },
+    "Optimization_Algorithms": {
+      "en": "Optimization Algorithms",
+      "de": "Optimierungsalgorithmen"
+    }
+  }
+}

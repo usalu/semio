@@ -1,0 +1,82 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Architectural Silhouette Library",
+  "type": "object",
+  "required": [
+    "version",
+    "outlines"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "outlines": {
+      "type": "object",
+      "required": [
+        "laptop",
+        "bulb",
+        "toaster",
+        "heater",
+        "vacuum",
+        "sun",
+        "moon",
+        "tree",
+        "factory",
+        "flame",
+        "monitor",
+        "microbe"
+      ],
+      "additionalProperties": {
+        "$ref": "#/$defs/outline"
+      }
+    }
+  },
+  "$defs": {
+    "point": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "outline": {
+      "type": "object",
+      "required": [
+        "start",
+        "segments"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "start": {
+          "$ref": "#/$defs/point"
+        },
+        "segments": {
+          "type": "array",
+          "minItems": 4,
+          "items": {
+            "oneOf": [
+              {
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 1,
+                "items": {
+                  "$ref": "#/$defs/point"
+                }
+              },
+              {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "$ref": "#/$defs/point"
+                }
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

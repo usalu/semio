@@ -1,0 +1,32 @@
+\documentclass[theme=light,language=de]{assignment}
+\input{parametrization-geometry.tex}
+\input{shapes.tex}
+\title{Fingerübung Parametrisierung}
+\author{Architektur}
+\date{}
+\SemioHeaderSetup{left={Architektur und Technologie},center={Fingerübung},right={Parametrisierung}}
+\begin{document}
+\section{Fingerübung Parametrisierung}
+\subsection{Beispiel}
+\begin{AssignmentTable}{Beispiel}
+\AssignmentWorkedExampleTable{Länge $L$}{Breite $B$}{Höhe $H$}{Form}{Quader}{Pyramide}{ellipt. Zylinder}
+\end{AssignmentTable}
+\AssignmentWorkedExampleGraph
+  {Form: Quader $\to$ Pyramide}
+  {Form: Pyramide $\to$ Quader}
+  {\shortstack[l]{$\Delta(L,B,H)=(+1,+1,+1)$\\Form: Pyramide $\to$ ellipt. Zylinder}}
+  {\shortstack[l]{$\Delta(L,B,H)=(-1,-1,-1)$\\Form: ellipt. Zylinder $\to$ Pyramide}}
+  {\shortstack[l]{$\Delta(L,B,H)=(+1,+1,+1)$\\Form: Quader $\to$ ellipt. Zylinder}}
+  {\shortstack[l]{$\Delta(L,B,H)=(-1,-1,-1)$\\Form: ellipt. Zylinder $\to$ Quader}}
+\clearpage
+\subsection{Wohnkapseln}
+\begin{AssignmentTable}{Tabelle A}
+\AssignmentExerciseTable{One}
+\end{AssignmentTable}
+\begin{AssignmentTable}{Tabelle B}
+\AssignmentExerciseTable{Two}
+\end{AssignmentTable}
+\clearpage
+\AssignmentCompleteGraph
+\AssignmentSelectedLedger
+\end{document}

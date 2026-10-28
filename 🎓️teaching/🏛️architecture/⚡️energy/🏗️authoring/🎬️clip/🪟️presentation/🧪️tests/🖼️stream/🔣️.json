@@ -1,0 +1,29 @@
+{
+  "settings": {
+    "language": "en",
+    "quality": "-ql",
+    "resolution": "480,270",
+    "fps": 4.0,
+    "audience": "spectator"
+  },
+  "body_frames": 64,
+  "focus_frames": 9,
+  "restore_frames": 18,
+  "mixed_restore_frames": [
+    12,
+    14
+  ],
+  "alpha": 242,
+  "minimum_body_frames": 64,
+  "expected_frames": 91,
+  "normalization": {
+    "mode": "RGB",
+    "metadata": {},
+    "rgb_identity": true,
+    "source_immutable": true
+  },
+  "languages": [
+    "en",
+    "de"
+  ]
+}

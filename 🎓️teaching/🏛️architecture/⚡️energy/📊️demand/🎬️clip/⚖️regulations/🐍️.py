@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,16 +19,16 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
+window_card = _manim_module.window_card
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -70,16 +73,16 @@ cloud_glyph = _manim_module.cloud_glyph
 card_grid = _manim_module.card_grid
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 TITLE_DE = "Regelwerk & Klimadaten"
 
-LOSS_BLUE = "#38BDF8"
-SOLAR_YELLOW = "#FDE047"
-ETA_GREEN = "#22C55E"
-DEMAND_RED = "#EF4444"
+LOSS_BLUE = semio_color("secondary")
+SOLAR_YELLOW = semio_color("warning")
+ETA_GREEN = semio_color("success")
+DEMAND_RED = semio_color("primary")
 
 MONTHS = ("J", "F", "M", "A", "M", "J", "J", "A", "S", "O", "N", "D")
 
@@ -146,7 +149,7 @@ def _degree_days(reach: float, shift: float = 0.0) -> float:
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -321,10 +324,10 @@ def _gauge(symbol: str, *, color, length=1.9, thickness=0.32):
 
 
 #region House stage
-def _stand(floor_y: float, x: float, color=P_ORANGE):
+def _stand(floor_y: float, room_h: float, x: float, color=P_ORANGE):
     """🧍 Occupant at true scale — 1.75 m in a 2.5 m storey is 70 % of the clear height, feet on the slab's top edge."""
-    height = 0.7 * HOUSE_S * 1.2
-    return person_glyph(np.array([x, floor_y + 0.02 + height / 2, 0.0]), color=color, scale=height / 0.66)
+    height = 0.7 * room_h
+    return person_glyph(np.array([x, floor_y + height / 2, 0.0]), color=color, scale=height / 0.66)
 
 
 def _level_flow(paths, color, level_fn, *, waves=7, speed=0.5, radius=0.06):
@@ -348,19 +351,16 @@ def _level_flow(paths, color, level_fn, *, waves=7, speed=0.5, radius=0.06):
 
 
 def _north_window(hs):
-    """🧭 Second glazed opening in the right wall of the section — the north façade."""
-    br, tr = hs["bottom_right"], hs["top_right"]
-    up = hs["windows"][1]
-    sill, lintel = up["sill"], up["lintel"]
-    wall, inner = hs["wall_right"], hs["walls"][5][3]
-    t = 0.08 * HOUSE_S
-    lower = Line(br, np.array([br[0], sill, 0.0]), color=P_WHITE, stroke_width=wall.get_stroke_width())
-    lower_in = Line(br + LEFT * t, np.array([br[0] - t, sill, 0.0]), color=P_WHITE,
-                    stroke_width=inner.get_stroke_width())
-    wall.put_start_and_end_on(np.array([br[0], lintel, 0.0]), tr)
-    inner.put_start_and_end_on(np.array([br[0] - t, lintel, 0.0]), tr + LEFT * t)
-    glass = window_glyph(float(br[0]), sill, lintel, depth=0.42 * HOUSE_S)
-    hs["walls"].add(lower, lower_in)
+    """🧭 Cut a north-facing aperture through the solid exterior wall."""
+    br, tr, t = hs["bottom_right"], hs["top_right"], hs["wall"]
+    sill, lintel = hs["windows"][1]["sill"], hs["windows"][1]["lintel"]
+    inner_top, outer_top = hs["roof_wall_tops"]["right"]
+    lower = section_material(Rectangle(width=t, height=sill - br[1])).move_to(
+        np.array([br[0] - t / 2, (br[1] + sill) / 2, 0.0]))
+    upper = section_material(Polygon(np.array([br[0] - t, lintel, 0.0]), np.array([br[0], lintel, 0.0]), outer_top, inner_top))
+    pieces = VGroup(lower, upper)
+    hs["wall_right"].become(pieces)
+    glass = window_glyph(float(br[0] - t / 2), sill, lintel, depth=0.42 * HOUSE_S, wall=t, inward=-1)
     hs["window_group"].add(glass["group"])
     return glass
 
@@ -379,7 +379,7 @@ def _stage(*, north=False, with_radiator=False):
     x0 = float(bl[0])
     glass_n = _north_window(hs) if north else None
 
-    person = _stand(floor_y, x0 + 1.75)
+    person = _stand(floor_y, hs["w_height"] / 2, x0 + 1.75)
     lamp = lamp_glyph(np.array([x0 + 1.55, tl[1] - 0.05, 0.0]), drop=0.12)
     sun = sun_glyph(SUN_C).scale(0.42)
     therm = thermometer_glyph(np.array([THERMO_X, -0.80, 0.0]), height=1.30, color=P_BLUE, level=0.4)
@@ -402,8 +402,6 @@ def _stage(*, north=False, with_radiator=False):
     def sun_tick(g):
         k = lvl["sun"].get_value()
         g[0].set_fill(opacity=0.10 + 0.30 * k)
-        g[2].set_stroke(opacity=0.15 + 0.45 * k)
-        g[3].set_stroke(opacity=0.20 + 0.80 * k)
 
     sun.add_updater(sun_tick)
     for r in rays:
@@ -414,8 +412,9 @@ def _stage(*, north=False, with_radiator=False):
              "lvl": lvl, "warm": warm, "glass_n": glass_n, "x0": x0, "floor_y": floor_y, "level_y": level_y,
              "lo": lo, "up": up}
     if with_radiator:
-        rad = radiator(np.array([x0 + 0.62, floor_y + 0.02 + 0.14, 0.0])).scale(0.55)
-        rad.move_to(np.array([x0 + 0.62, floor_y + 0.03 + rad.height / 2, 0.0]))
+        metre = hs["w_height"] / 2 / 2.5
+        rad = radiator(np.array([x0 + 0.62, floor_y + (0.12 + 0.65 / 2) * metre, 0.0]),
+                       height=0.65 * metre, width=1.3 * metre)
         rise = smooth_path([np.array([x0 + 0.62, rad.get_top()[1] + 0.02, 0.0]), np.array([x0 + 0.78, -0.10, 0.0]),
                             np.array([x0 + 1.0, 0.08, 0.0])])
         flows.append(_level_flow([rise], P_RED, lambda: lvl["heat"].get_value(), waves=5, speed=0.4))
@@ -556,17 +555,14 @@ class Beat1_GEGundNormen(Scene):
     @staticmethod
     def _norm_card(lines, norm, color, size):
         """🪧 Standard card — topic on one or two lines, the DIN number below, in the shared card frame."""
-        topic = VGroup(*[line if isinstance(line, Mobject) else body_text(line, font_size=LABEL_FONT_SIZE, color=P_TEAL)
+        topic = VGroup(*[line if isinstance(line, Mobject) else body_text(line, font_size=LABEL_FONT_SIZE, color=P_PRIMARY)
                          for line in lines]).arrange(DOWN, buff=0.04)
-        body = VGroup(topic, body_text(norm, font_size=LABEL_FONT_SIZE, color=color)).arrange(DOWN, buff=0.07)
-        frame = RoundedRectangle(width=size[0], height=size[1], corner_radius=0.1, color=color, stroke_width=1.8,
-                                 fill_color=P_DEEP_DARK, fill_opacity=0.82)
-        body.move_to(frame.get_center())
-        return VGroup(frame, body)
+        value = body_text(norm, font_size=LABEL_FONT_SIZE, color=color)
+        return window_card(topic, value, color=color, width=size[0], height=size[1])
 
     @staticmethod
     def _law_card():
-        return card_grid([("Gesetz", "GEG — Gebäudeenergiegesetz", P_TEAL)], rows=1, value_size=LABEL_FONT_SIZE + 2)
+        return card_grid([("Gesetz", "GEG — Gebäudeenergiegesetz", P_PRIMARY)], rows=1, value_size=LABEL_FONT_SIZE + 2)
 
     @staticmethod
     def _method_card():
@@ -575,16 +571,14 @@ class Beat1_GEGundNormen(Scene):
 
     @staticmethod
     def _topic(word):
-        return VGroup(body_text(word, font_size=LABEL_FONT_SIZE, color=P_TEAL),
-                      math_label(r"[\mathrm{kW}]", size=LABEL_FONT_SIZE, color=P_TEAL)).arrange(RIGHT, buff=0.1)
+        return VGroup(body_text(word, font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
+                      math_label(r"[\mathrm{kW}]", size=LABEL_FONT_SIZE, color=P_PRIMARY)).arrange(RIGHT, buff=0.1)
 
     def construct(self):
         apply_scene_style(self)
         t0 = self.renderer.time
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Vom Gesetz zur Rechenmethode", title)
+        subtitle = section_heading("Vom Gesetz zur Rechenmethode")
         din = _din_ref("GEG § 20 ff.")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -596,12 +590,12 @@ class Beat1_GEGundNormen(Scene):
         hold_for(self, self.NARRATION, "intro", used=self.renderer.time - t0)
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "geg"))
-        goal = note_line("Ziel: den Primärenergiebedarf begrenzen", color=P_TEAL)
+        goal = note_line("Ziel: den Primärenergiebedarf begrenzen", color=P_PRIMARY)
         self.play(law.animate.move_to(np.array([-2.6, 1.0, 0.0])), FadeIn(goal), run_time=1.4)
         hold_for(self, self.NARRATION, "geg")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "grenze"))
-        gauge = _gauge(r"Q_P", color=P_TEAL, length=2.2, thickness=0.5)
+        gauge = _gauge(r"Q_P", color=P_PRIMARY, length=2.2, thickness=0.5)
         gauge["group"][0].move_to(np.array([3.0, -0.2, 0.0]))
         gauge["fill"].move_to(gauge["track"].get_center())
         gauge["tag"].next_to(gauge["track"], UP, buff=0.16)
@@ -628,7 +622,7 @@ class Beat1_GEGundNormen(Scene):
         hold_for(self, self.NARRATION, "din")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "methode"))
-        revision = note_line("Die Normenreihe wurde 2025 als DIN/TS 18599 überarbeitet.", color=P_TEAL)
+        revision = note_line("Die Normenreihe wurde 2025 als DIN/TS 18599 überarbeitet.", color=P_PRIMARY)
         compute = Arrow(method.get_right(), gauge["track"].get_left() + LEFT * 0.05, buff=0.08, color=P_CYAN,
                         stroke_width=3, max_tip_length_to_length_ratio=0.12)
         self.play(GrowArrow(compute), FadeIn(revision), run_time=1.2)
@@ -659,7 +653,7 @@ class Beat1_GEGundNormen(Scene):
             self.play(Indicate(card, color=card[0].get_color(), scale_factor=1.06), run_time=1.0)
             hold_for(self, self.NARRATION, key)
 
-        _wrap_up(self, keep=[title, subtitle, din], run_time=0.6)
+        _wrap_up(self, keep=[subtitle, din], run_time=0.6)
 
 #endregion
 
@@ -716,9 +710,7 @@ class Beat2_Monatsbilanz(Scene):
         apply_scene_style(self)
         t0 = self.renderer.time
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Warum Monat für Monat bilanziert wird", title)
+        subtitle = section_heading("Warum Monat für Monat bilanziert wird")
         din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -893,7 +885,7 @@ class Beat2_Monatsbilanz(Scene):
         hold_for(self, self.NARRATION, "formel")
 
         self.play(FadeOut(box), FadeOut(row), FadeOut(ring4), run_time=0.4)
-        _wrap_up(self, keep=[title, subtitle, din])
+        _wrap_up(self, keep=[subtitle, din])
 
 #endregion
 
@@ -933,7 +925,7 @@ class Beat3_Klimadaten(Scene):
 
     @staticmethod
     def _source_card():
-        return card_grid([("Datenquelle", "DWD · Testreferenzjahr (TRY)", P_TEAL)], rows=1, value_size=LABEL_FONT_SIZE + 1)
+        return card_grid([("Datenquelle", "DWD · Testreferenzjahr (TRY)", P_PRIMARY)], rows=1, value_size=LABEL_FONT_SIZE + 1)
 
     @staticmethod
     def _delta(chart, month, base, theta_fn):
@@ -951,9 +943,7 @@ class Beat3_Klimadaten(Scene):
         apply_scene_style(self)
         t0 = self.renderer.time
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Klimadaten: das Testreferenzjahr", title)
+        subtitle = section_heading("Klimadaten: das Testreferenzjahr")
         din = _din_ref("DIN V 18599-10 · DWD TRY")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1074,7 +1064,7 @@ class Beat3_Klimadaten(Scene):
         hold_for(self, self.NARRATION, "potsdam")
 
         self.play(FadeOut(ref_note), FadeOut(pin), FadeOut(leader), run_time=0.4)
-        _wrap_up(self, keep=[title, subtitle, din])
+        _wrap_up(self, keep=[subtitle, din])
 
     def _orientation(self, st, month, target, clear):
         """🧭 Same summer sun, two façades: the south window takes the rays, the north one only the diffuse sky."""
@@ -1083,7 +1073,7 @@ class Beat3_Klimadaten(Scene):
         up = hs["windows"][1]
         sky_c = np.array([-0.95, 1.18, 0.0])
         marker = Rectangle(width=0.62, height=0.10, stroke_width=0, fill_opacity=0).move_to(sky_c)
-        sky = cloud_glyph(marker, pad=(0.30, 0.22), bump=0.4)
+        sky = cloud_glyph(marker, pad=(0.30, 0.22))
         diffuse = sun_rays(sky_c, float(br[0]), [up["center"][1] + 0.08, up["center"][1] - 0.08], st["level_y"], gap=0.5)
         diffuse["out"].set_stroke(opacity=0.38)
         diffuse["in"].set_stroke(opacity=0.2)
@@ -1140,9 +1130,7 @@ class Beat4_Gradtagszahl(Scene):
         apply_scene_style(self)
         t0 = self.renderer.time
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Heizgrenze & Gradtagszahl", title)
+        subtitle = section_heading("Heizgrenze & Gradtagszahl")
         din = _din_ref("VDI 3807 · DIN 4108-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1252,7 +1240,7 @@ class Beat4_Gradtagszahl(Scene):
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "nutzen"))
         row, box, items = math_panel([
             ("q", r"Q_{\text{temp.-abh.}}", LOSS_BLUE), (None, "~", P_WHITE), ("gt", r"G_t", P_ORANGE),
-            (None, r"\to", P_WHITE), (None, r"\text{vereinfachtes Prinzip der Witterungsbereinigung}", P_TEAL),
+            (None, r"\to", P_WHITE), (None, r"\text{vereinfachtes Prinzip der Witterungsbereinigung}", P_PRIMARY),
         ], size=FORMULA_FONT_SIZE - 4)
         self.play(Create(box), FadeIn(row), run_time=1.2)
         ring = highlight_param(items, "gt", color=P_ORANGE)
@@ -1260,7 +1248,7 @@ class Beat4_Gradtagszahl(Scene):
         hold_for(self, self.NARRATION, "nutzen")
 
         self.play(FadeOut(box), FadeOut(row), FadeOut(ring), run_time=0.4)
-        _wrap_up(self, keep=[title, subtitle, din])
+        _wrap_up(self, keep=[subtitle, din])
 
     @staticmethod
     def _degree_area(chart, month, base, *, shift, color, opacity):

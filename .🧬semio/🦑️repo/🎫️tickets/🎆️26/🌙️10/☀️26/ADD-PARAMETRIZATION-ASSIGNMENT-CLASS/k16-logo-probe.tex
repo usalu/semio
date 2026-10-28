@@ -1,0 +1,24 @@
+\errorcontextlines=999
+\documentclass[theme=dark,language=de]{assignment}
+\ExplSyntaxOn
+\iow_term:n{[DEBUG]logo-dark-parse-start}
+\semio_logo_dark_variant:nN {🖼️assets/🪧️logo/🎓️luh/☀️logo.png} \l_tmpa_tl
+\iow_term:x{[DEBUG]logo-dark-parse-end:~\tl_use:N\l_tmpa_tl}
+\semio_logo_resolve_path:nN {🖼️assets/🪧️logo/🎓️luh/☀️logo.png} \l_semio_logo_path_tl
+\iow_term:x{[DEBUG]logo-resolve-end:~\tl_use:N\l_semio_logo_path_tl}
+\ExplSyntaxOff
+\title{Logo Probe}
+\author{Architecture}
+\SemioHeaderSetup{left={Architecture},center={Probe},right={Logo}}
+\newsavebox{\LogoProbeBox}
+\begin{document}
+\ExplSyntaxOn
+\iow_term:n{[DEBUG]logo-raw-start}
+\sbox{\LogoProbeBox}{\includegraphics[height=10pt]{"🖼️assets/🪧️logo/🎓️luh/☀️logo.png"}}
+\iow_term:n{[DEBUG]logo-raw-end}
+\iow_term:n{[DEBUG]logo-height-start}
+\sbox{\LogoProbeBox}{\semio_logo_height:nn {10pt}{🖼️assets/🪧️logo/🎓️luh/☀️logo.png}}
+\iow_term:n{[DEBUG]logo-height-end}
+\ExplSyntaxOff
+Test
+\end{document}

@@ -1,0 +1,493 @@
+\usetikzlibrary{arrows.meta}
+\pgfdeclarelayer{assignmentbackground}
+\pgfsetlayers{assignmentbackground,main}
+\newcommand{\AssignmentShape}[3]{
+  \AssignmentContrastImage[width=22mm,height=11mm,keepaspectratio]{#3}
+}
+\newcommand{\AssignmentTypesOne}[1]{
+  #1{capsule}{backslash}{resources/metabolism-capsule-backslash.png}
+  #1{ellipsoid-capsule}{backslash}{resources/metabolism-ellipsoid-capsule-backslash.png}
+  #1{capsule}{slash}{resources/metabolism-capsule-slash.png}
+  #1{ellipsoid-capsule}{slash}{resources/metabolism-ellipsoid-capsule-slash.png}
+  #1{capsule}{q}{resources/metabolism-capsule-q.png}
+  #1{ellipsoid-capsule}{q}{resources/metabolism-ellipsoid-capsule-q.png}
+  #1{capsule}{p}{resources/metabolism-capsule-p.png}
+  #1{ellipsoid-capsule}{p}{resources/metabolism-ellipsoid-capsule-p.png}
+}
+\newcommand{\AssignmentTypesTwo}[1]{
+  #1{capsule}{J}{resources/metabolism-capsule-J.png}
+  #1{ellipsoid-capsule}{J}{resources/metabolism-ellipsoid-capsule-J.png}
+  #1{capsule}{L}{resources/metabolism-capsule-L.png}
+  #1{ellipsoid-capsule}{L}{resources/metabolism-ellipsoid-capsule-L.png}
+  #1{capsule}{z}{resources/metabolism-capsule-z.png}
+  #1{ellipsoid-capsule}{z}{resources/metabolism-ellipsoid-capsule-z.png}
+  #1{capsule}{s}{resources/metabolism-capsule-s.png}
+  #1{ellipsoid-capsule}{s}{resources/metabolism-ellipsoid-capsule-s.png}
+}
+\newcommand{\AssignmentDirectedEdges}[1]{
+  #1{1}{2}
+  #1{1}{3}
+  #1{1}{4}
+  #1{1}{5}
+  #1{1}{6}
+  #1{1}{7}
+  #1{1}{8}
+  #1{1}{9}
+  #1{1}{10}
+  #1{1}{11}
+  #1{1}{12}
+  #1{1}{13}
+  #1{1}{14}
+  #1{1}{15}
+  #1{1}{16}
+  #1{2}{1}
+  #1{2}{3}
+  #1{2}{4}
+  #1{2}{5}
+  #1{2}{6}
+  #1{2}{7}
+  #1{2}{8}
+  #1{2}{9}
+  #1{2}{10}
+  #1{2}{11}
+  #1{2}{12}
+  #1{2}{13}
+  #1{2}{14}
+  #1{2}{15}
+  #1{2}{16}
+  #1{3}{1}
+  #1{3}{2}
+  #1{3}{4}
+  #1{3}{5}
+  #1{3}{6}
+  #1{3}{7}
+  #1{3}{8}
+  #1{3}{9}
+  #1{3}{10}
+  #1{3}{11}
+  #1{3}{12}
+  #1{3}{13}
+  #1{3}{14}
+  #1{3}{15}
+  #1{3}{16}
+  #1{4}{1}
+  #1{4}{2}
+  #1{4}{3}
+  #1{4}{5}
+  #1{4}{6}
+  #1{4}{7}
+  #1{4}{8}
+  #1{4}{9}
+  #1{4}{10}
+  #1{4}{11}
+  #1{4}{12}
+  #1{4}{13}
+  #1{4}{14}
+  #1{4}{15}
+  #1{4}{16}
+  #1{5}{1}
+  #1{5}{2}
+  #1{5}{3}
+  #1{5}{4}
+  #1{5}{6}
+  #1{5}{7}
+  #1{5}{8}
+  #1{5}{9}
+  #1{5}{10}
+  #1{5}{11}
+  #1{5}{12}
+  #1{5}{13}
+  #1{5}{14}
+  #1{5}{15}
+  #1{5}{16}
+  #1{6}{1}
+  #1{6}{2}
+  #1{6}{3}
+  #1{6}{4}
+  #1{6}{5}
+  #1{6}{7}
+  #1{6}{8}
+  #1{6}{9}
+  #1{6}{10}
+  #1{6}{11}
+  #1{6}{12}
+  #1{6}{13}
+  #1{6}{14}
+  #1{6}{15}
+  #1{6}{16}
+  #1{7}{1}
+  #1{7}{2}
+  #1{7}{3}
+  #1{7}{4}
+  #1{7}{5}
+  #1{7}{6}
+  #1{7}{8}
+  #1{7}{9}
+  #1{7}{10}
+  #1{7}{11}
+  #1{7}{12}
+  #1{7}{13}
+  #1{7}{14}
+  #1{7}{15}
+  #1{7}{16}
+  #1{8}{1}
+  #1{8}{2}
+  #1{8}{3}
+  #1{8}{4}
+  #1{8}{5}
+  #1{8}{6}
+  #1{8}{7}
+  #1{8}{9}
+  #1{8}{10}
+  #1{8}{11}
+  #1{8}{12}
+  #1{8}{13}
+  #1{8}{14}
+  #1{8}{15}
+  #1{8}{16}
+  #1{9}{1}
+  #1{9}{2}
+  #1{9}{3}
+  #1{9}{4}
+  #1{9}{5}
+  #1{9}{6}
+  #1{9}{7}
+  #1{9}{8}
+  #1{9}{10}
+  #1{9}{11}
+  #1{9}{12}
+  #1{9}{13}
+  #1{9}{14}
+  #1{9}{15}
+  #1{9}{16}
+  #1{10}{1}
+  #1{10}{2}
+  #1{10}{3}
+  #1{10}{4}
+  #1{10}{5}
+  #1{10}{6}
+  #1{10}{7}
+  #1{10}{8}
+  #1{10}{9}
+  #1{10}{11}
+  #1{10}{12}
+  #1{10}{13}
+  #1{10}{14}
+  #1{10}{15}
+  #1{10}{16}
+  #1{11}{1}
+  #1{11}{2}
+  #1{11}{3}
+  #1{11}{4}
+  #1{11}{5}
+  #1{11}{6}
+  #1{11}{7}
+  #1{11}{8}
+  #1{11}{9}
+  #1{11}{10}
+  #1{11}{12}
+  #1{11}{13}
+  #1{11}{14}
+  #1{11}{15}
+  #1{11}{16}
+  #1{12}{1}
+  #1{12}{2}
+  #1{12}{3}
+  #1{12}{4}
+  #1{12}{5}
+  #1{12}{6}
+  #1{12}{7}
+  #1{12}{8}
+  #1{12}{9}
+  #1{12}{10}
+  #1{12}{11}
+  #1{12}{13}
+  #1{12}{14}
+  #1{12}{15}
+  #1{12}{16}
+  #1{13}{1}
+  #1{13}{2}
+  #1{13}{3}
+  #1{13}{4}
+  #1{13}{5}
+  #1{13}{6}
+  #1{13}{7}
+  #1{13}{8}
+  #1{13}{9}
+  #1{13}{10}
+  #1{13}{11}
+  #1{13}{12}
+  #1{13}{14}
+  #1{13}{15}
+  #1{13}{16}
+  #1{14}{1}
+  #1{14}{2}
+  #1{14}{3}
+  #1{14}{4}
+  #1{14}{5}
+  #1{14}{6}
+  #1{14}{7}
+  #1{14}{8}
+  #1{14}{9}
+  #1{14}{10}
+  #1{14}{11}
+  #1{14}{12}
+  #1{14}{13}
+  #1{14}{15}
+  #1{14}{16}
+  #1{15}{1}
+  #1{15}{2}
+  #1{15}{3}
+  #1{15}{4}
+  #1{15}{5}
+  #1{15}{6}
+  #1{15}{7}
+  #1{15}{8}
+  #1{15}{9}
+  #1{15}{10}
+  #1{15}{11}
+  #1{15}{12}
+  #1{15}{13}
+  #1{15}{14}
+  #1{15}{16}
+  #1{16}{1}
+  #1{16}{2}
+  #1{16}{3}
+  #1{16}{4}
+  #1{16}{5}
+  #1{16}{6}
+  #1{16}{7}
+  #1{16}{8}
+  #1{16}{9}
+  #1{16}{10}
+  #1{16}{11}
+  #1{16}{12}
+  #1{16}{13}
+  #1{16}{14}
+  #1{16}{15}
+}
+\newcommand{\AssignmentSelectedEdges}[1]{
+  #1{1}{2}
+  #1{2}{3}
+  #1{3}{4}
+  #1{4}{5}
+  #1{5}{6}
+  #1{6}{7}
+  #1{7}{8}
+  #1{8}{9}
+  #1{9}{10}
+  #1{10}{11}
+  #1{11}{12}
+  #1{12}{13}
+  #1{13}{14}
+  #1{14}{15}
+  #1{15}{16}
+  #1{16}{1}
+  #1{1}{5}
+  #1{5}{10}
+  #1{10}{13}
+  #1{13}{1}
+}
+\newcommand{\AssignmentMatrixShape}[3]{
+  \AssignmentMatrixImage{#3}
+}
+\ExplSyntaxOn
+\tl_new:N \l_semio_assignment_icon_header_tl
+\cs_new_protected:Npn \semio_assignment_icon_header:nnn #1#2#3 {
+  \tl_if_empty:NF \l_semio_assignment_icon_header_tl {
+    \tl_put_right:Nn \l_semio_assignment_icon_header_tl { & }
+  }
+  \tl_put_right:Nn \l_semio_assignment_icon_header_tl { \AssignmentMatrixShape{#1}{#2}{#3} }
+}
+\NewDocumentCommand \AssignmentExerciseTable { m } {
+  \group_begin:
+  \tl_clear:N \l_semio_assignment_icon_header_tl
+  \use:c { AssignmentTypes#1 } { \semio_assignment_icon_header:nnn }
+  \begin{AssignmentParameterMatrix}[type-columns=8,parameter-rows=8,header-height=16mm,row-height=6mm,padding=2mm,label-width=27mm]{Parameter}{\tl_use:N \l_semio_assignment_icon_header_tl}
+  \end{AssignmentParameterMatrix}
+  \group_end:
+}
+\ExplSyntaxOff
+\newcounter{assignmentvertex}
+\newdimen\AssignmentGraphRadiusX
+\newdimen\AssignmentGraphRadiusY
+\AssignmentGraphRadiusY=53mm
+\newsavebox{\AssignmentGraphBox}
+\newcommand{\AssignmentGraphEdge}[2]{
+  \draw[draw=semio-chrome-foreground!18!semio-chrome-canvas,line width=.35pt,-{Stealth[length=.9mm,width=.65mm]},shorten >=1.2pt,shorten <=1.2pt]
+    (v#1) to[bend left=8] (v#2);
+}
+\newcommand{\AssignmentSelectedGraphEdge}[2]{
+  \draw[draw=semio-chrome-foreground!85!semio-chrome-canvas,line width=.8pt,-{Stealth[length=1.7mm,width=1.1mm]},shorten >=1.8pt,shorten <=1.8pt]
+    (v#1) to[bend left=8] (v#2);
+}
+\newcommand{\AssignmentEdgeIdentifier}[2]{#1\,$\to$\,#2}
+\newcommand{\AssignmentGraphEdgeLabel}[2]{
+  \path (v#1) to[bend left=8]
+    node[midway,sloped,above=1mm,font=\fontsize{8}{9}\selectfont,inner sep=.4mm,outer sep=0pt,text=semio-chrome-foreground,fill=semio-chrome-canvas]
+      {\AssignmentEdgeIdentifier{#1}{#2}} (v#2);
+}
+\newcommand{\AssignmentGraphVertex}[3]{
+  \stepcounter{assignmentvertex}
+  \pgfmathsetmacro{\AssignmentAngle}{90-22.5*(\value{assignmentvertex}-1)}
+  \node[fill=semio-chrome-canvas,inner sep=1mm,label={[inner xsep=0pt]\AssignmentAngle:{\small\theassignmentvertex}}]
+    (v\theassignmentvertex) at ({cos(\AssignmentAngle)},{sin(\AssignmentAngle)}) {\scalebox{.8}{\AssignmentShape{#1}{#2}{#3}}};
+}
+\newcommand{\AssignmentGraphPicture}{
+  \begin{tikzpicture}[x=\AssignmentGraphRadiusX,y=\AssignmentGraphRadiusY]
+    \setcounter{assignmentvertex}{0}
+    \AssignmentTypesOne{\AssignmentGraphVertex}
+    \AssignmentTypesTwo{\AssignmentGraphVertex}
+    \begin{pgfonlayer}{assignmentbackground}
+      \AssignmentDirectedEdges{\AssignmentGraphEdge}
+      \AssignmentSelectedEdges{\AssignmentSelectedGraphEdge}
+    \end{pgfonlayer}
+    \AssignmentSelectedEdges{\AssignmentGraphEdgeLabel}
+  \end{tikzpicture}
+}
+\newcommand{\AssignmentCompleteGraph}{
+  \begin{center}
+    \AssignmentGraphRadiusX=\dimexpr\linewidth/2-14mm\relax
+    \sbox{\AssignmentGraphBox}{\ignorespaces\AssignmentGraphPicture\unskip}
+    \advance\AssignmentGraphRadiusX by \dimexpr(\linewidth-\wd\AssignmentGraphBox)/2\relax
+    \sbox{\AssignmentGraphBox}{\ignorespaces\AssignmentGraphPicture\unskip}
+    \usebox{\AssignmentGraphBox}
+  \end{center}
+}
+\newcounter{assignmentedge}
+\newdimen\AssignmentLedgerColumnWidth
+\newcommand{\AssignmentLedgerRows}{10}
+\newcommand{\AssignmentLedgerEntry}[3]{
+  \stepcounter{assignmentedge}
+  \pgfmathtruncatemacro{\AssignmentColumn}{floor((\value{assignmentedge}-1)/\AssignmentLedgerRows)}
+  \pgfmathtruncatemacro{\AssignmentRow}{mod(\value{assignmentedge}-1,\AssignmentLedgerRows)}
+  \node[anchor=east,font=\small] at ({.14+\AssignmentColumn},{-6.3*\AssignmentRow}) {\AssignmentEdgeIdentifier{#1}{#2}};
+  \draw[draw=semio-chrome-foreground!65!semio-chrome-canvas,line width=.3pt]
+    ({.18+\AssignmentColumn},{-6.3*\AssignmentRow-1.5}) -- ({.94+\AssignmentColumn},{-6.3*\AssignmentRow-1.5});
+  \if\relax\detokenize{#3}\relax\else
+    \node[anchor=base west,inner sep=0pt,font=\fontsize{9}{10}\selectfont]
+      at ({.18+\AssignmentColumn},{-6.3*\AssignmentRow-.7}) {#3};
+  \fi
+}
+\newcommand{\AssignmentBlankLedgerEntry}[2]{
+  \AssignmentLedgerEntry{#1}{#2}{}
+}
+\newcommand{\AssignmentLedger}[2]{
+  \par
+  \begingroup
+  \renewcommand{\AssignmentLedgerRows}{#1}
+  \AssignmentLedgerColumnWidth=\dimexpr\linewidth/2\relax
+  \noindent\begin{tikzpicture}[x=\AssignmentLedgerColumnWidth,y=1mm]
+    \path[use as bounding box] (0,3) rectangle (2,{-6.3*(#1-1)-3.3});
+    \setcounter{assignmentedge}{0}
+    #2
+  \end{tikzpicture}
+  \endgroup\par
+}
+\newcommand{\AssignmentSelectedLedger}{
+  \AssignmentLedger{10}{\AssignmentSelectedEdges{\AssignmentBlankLedgerEntry}}
+}
+\newcommand{\AssignmentWorkedExampleLedger}[6]{
+  \AssignmentLedger{3}{
+    \AssignmentLedgerEntry{1}{2}{#1}
+    \AssignmentLedgerEntry{2}{3}{#3}
+    \AssignmentLedgerEntry{3}{1}{#6}
+    \AssignmentLedgerEntry{2}{1}{#2}
+    \AssignmentLedgerEntry{3}{2}{#4}
+    \AssignmentLedgerEntry{1}{3}{#5}
+  }
+}
+\newcommand{\AssignmentBox}[3]{
+  \begin{tikzpicture}[x=6mm,y=6mm,baseline=-.5ex,line width=.5pt,draw=semio-chrome-foreground]
+    \draw (0,0) rectangle (#1,#3);
+    \draw (0,#3) -- (#2*.45,#3+#2*.35) -- (#1+#2*.45,#3+#2*.35) -- (#1,#3);
+    \draw (#1,0) -- (#1+#2*.45,#2*.35) -- (#1+#2*.45,#3+#2*.35);
+    \draw[densely dashed] (0,0) -- (#2*.45,#2*.35) -- (#1+#2*.45,#2*.35);
+    \draw[densely dashed] (#2*.45,#2*.35) -- (#2*.45,#3+#2*.35);
+  \end{tikzpicture}
+}
+\newcommand{\AssignmentPyramid}[3]{
+  \begin{tikzpicture}[x=6mm,y=6mm,baseline=-.5ex,line width=.5pt,draw=semio-chrome-foreground]
+    \coordinate (apex) at ({#1/2+#2*.225},{#3+#2*.175});
+    \draw (0,0) -- (#1,0) -- ({#1+#2*.45},{#2*.35}) -- (apex) -- cycle;
+    \draw (#1,0) -- (apex);
+    \draw[densely dashed] (0,0) -- ({#2*.45},{#2*.35}) -- ({#1+#2*.45},{#2*.35});
+    \draw[densely dashed] ({#2*.45},{#2*.35}) -- (apex);
+  \end{tikzpicture}
+}
+\newcommand{\AssignmentEllipticalCylinder}[3]{
+  \begin{tikzpicture}[x=6mm,y=6mm,baseline=-.5ex,line width=.5pt,draw=semio-chrome-foreground]
+    \pgfmathsetmacro{\AssignmentCylinderTangent}{atan(.45*#2/#1)}
+    \draw plot[domain=\AssignmentCylinderTangent+180:\AssignmentCylinderTangent+360,samples=33,smooth]
+      ({#1/2+#2*.225+#1/2*cos(\x)+#2*.225*sin(\x)},{#2*.175+#2*.175*sin(\x)});
+    \draw[densely dashed] plot[domain=\AssignmentCylinderTangent:\AssignmentCylinderTangent+180,samples=33,smooth]
+      ({#1/2+#2*.225+#1/2*cos(\x)+#2*.225*sin(\x)},{#2*.175+#2*.175*sin(\x)});
+    \foreach \side in {0,180}{
+      \draw ({#1/2+#2*.225+#1/2*cos(\AssignmentCylinderTangent+\side)+#2*.225*sin(\AssignmentCylinderTangent+\side)},{#2*.175+#2*.175*sin(\AssignmentCylinderTangent+\side)})
+        -- ({#1/2+#2*.225+#1/2*cos(\AssignmentCylinderTangent+\side)+#2*.225*sin(\AssignmentCylinderTangent+\side)},{#3+#2*.175+#2*.175*sin(\AssignmentCylinderTangent+\side)});
+    }
+    \draw plot[domain=0:360,samples=65,smooth,variable=\x]
+      ({#1/2+#2*.225+#1/2*cos(\x)+#2*.225*sin(\x)},{#3+#2*.175+#2*.175*sin(\x)});
+  \end{tikzpicture}
+}
+\newcommand{\AssignmentWorkedExampleShape}[1]{
+  \ifcase#1\or
+    \AssignmentBox{2.5}{1.5}{2}
+  \or
+    \AssignmentPyramid{2.5}{1.5}{2}
+  \or
+    \AssignmentEllipticalCylinder{3.5}{2.5}{3}
+  \fi
+}
+\newcommand{\AssignmentWorkedExampleHeader}[1]{
+  \scalebox{.5}{\AssignmentWorkedExampleShape{#1}}
+}
+\newcommand{\AssignmentWorkedExampleTable}[7]{
+  \begin{AssignmentParameterMatrix}[type-columns=3,parameter-rows=8,header-height=16mm,row-height=6mm,padding=2mm,label-width=27mm]{Parameter}{
+    \AssignmentWorkedExampleHeader{1} &
+    \AssignmentWorkedExampleHeader{2} &
+    \AssignmentWorkedExampleHeader{3}
+  }
+    \AssignmentParameterMatrixRow{#1}{2.5,2.5,3.5}
+    \AssignmentParameterMatrixRow{#2}{1.5,1.5,2.5}
+    \AssignmentParameterMatrixRow{#3}{2,2,3}
+    \AssignmentParameterMatrixRow{#4}{#5,#6,#7}
+    \AssignmentParameterMatrixBlankRows{4}
+  \end{AssignmentParameterMatrix}
+}
+\newcommand{\AssignmentWorkedExampleGraphVertex}[1]{
+  \pgfmathsetmacro{\AssignmentAngle}{90-120*(#1-1)}
+  \node[fill=semio-chrome-canvas,inner sep=1mm,label={[inner xsep=0pt]\AssignmentAngle:{\small #1}}]
+    (v#1) at ({cos(\AssignmentAngle)},{sin(\AssignmentAngle)}) {\AssignmentWorkedExampleShape{#1}};
+}
+\newcommand{\AssignmentWorkedExampleGraphPicture}{
+  \begin{tikzpicture}[x=\AssignmentGraphRadiusX,y=\AssignmentGraphRadiusY]
+    \AssignmentWorkedExampleGraphVertex{1}
+    \AssignmentWorkedExampleGraphVertex{2}
+    \AssignmentWorkedExampleGraphVertex{3}
+    \begin{pgfonlayer}{assignmentbackground}
+      \AssignmentSelectedGraphEdge{1}{2}
+      \AssignmentSelectedGraphEdge{2}{1}
+      \AssignmentSelectedGraphEdge{2}{3}
+      \AssignmentSelectedGraphEdge{3}{2}
+      \AssignmentSelectedGraphEdge{1}{3}
+      \AssignmentSelectedGraphEdge{3}{1}
+    \end{pgfonlayer}
+    \AssignmentGraphEdgeLabel{1}{2}
+    \AssignmentGraphEdgeLabel{2}{1}
+    \AssignmentGraphEdgeLabel{2}{3}
+    \AssignmentGraphEdgeLabel{3}{2}
+    \AssignmentGraphEdgeLabel{1}{3}
+    \AssignmentGraphEdgeLabel{3}{1}
+  \end{tikzpicture}
+}
+\newcommand{\AssignmentWorkedExampleGraph}{
+  \begin{center}
+    \AssignmentGraphRadiusX=\dimexpr\linewidth/2-14mm\relax
+    \AssignmentGraphRadiusY=32mm
+    \sbox{\AssignmentGraphBox}{\ignorespaces\AssignmentWorkedExampleGraphPicture\unskip}
+    \pgfmathsetlength{\AssignmentGraphRadiusX}{\AssignmentGraphRadiusX+(\linewidth-\wd\AssignmentGraphBox)/1.7320508}
+    \sbox{\AssignmentGraphBox}{\ignorespaces\AssignmentWorkedExampleGraphPicture\unskip}
+    \usebox{\AssignmentGraphBox}
+  \end{center}
+}

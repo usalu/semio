@@ -91,6 +91,9 @@ test-results
 /playwright/.cache/
 /playwright/.auth/
 #--------------------------------------OUTPUTS--------------------------------------
+/media/
+🎓️teaching/🏛️architecture/⚡️energy/**/📍️trace/
+🎓️teaching/🏛️architecture/⚡️energy/**/⏱️timing/
 **/🤖️generated/
 **/🤖️generated.*
 /🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔤️tokens/🦀️.rs
@@ -632,3 +635,5 @@ nul
 # Compiled Go executables of the main packages are build output
 **/📦️packages/🐹️go/📦️main/main
 **/📦️packages/🐹️go/📦️main/bin
+
+/output/pdf/

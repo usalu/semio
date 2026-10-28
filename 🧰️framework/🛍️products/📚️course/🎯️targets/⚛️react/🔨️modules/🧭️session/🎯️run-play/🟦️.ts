@@ -3,6 +3,7 @@
  * @see ../../📮️outbox/🟦️.ts — where answers wait for the proctor
  */
 
+import { clientAccess } from "../../🔓️access/🟦️.tsx";
 import { type Answer, type BadgeAwardedEvent, type Challenge, type Id, type OpenTaskCommand, type RunSubmittedEvent, type Slug, type StartRunCommand, type SubmitRunCommand } from "@semio-tech/course";
 import { type Outbox } from "../../📮️outbox/🟦️.ts";
 import { newId } from "../../🛂️proctor/🟦️.ts";
@@ -31,6 +32,7 @@ export class RunPlay {
    * resumed instead, and one at another challenge is voided by the start — the learner asked for that, so no notice says
    * it. */
   async startRun(quiz: Slug, challenge: Challenge, signal: AbortSignal): Promise<SessionFailure | undefined> {
+    if (!clientAccess(this.state.read().course, quiz, this.link.now())) return undefined;
     const learner = this.state.learnerId();
     if (learner === undefined) return { kind: "rejected", rejection: "unknown-learner" };
     const command: StartRunCommand = { type: "start-run", id: newId(), learner, run: newId(), quiz, challenge, at: this.link.now() };
@@ -53,6 +55,8 @@ export class RunPlay {
   async resumeRun(run: Id, signal: AbortSignal): Promise<undefined> {
     if (this.state.read().runs[run] === undefined) await this.reads.loadRun(run, signal);
     else void this.reads.loadRun(run);
+    const quiz = this.state.read().runs[run]?.quiz;
+    if (quiz !== undefined && !clientAccess(this.state.read().course, quiz, this.link.now())) return undefined;
     this.state.dispatch({ type: "step-opened", step: { screen: "run", run } });
     void this.reads.refreshLearner();
     return undefined;
@@ -68,7 +72,9 @@ export class RunPlay {
     const learner = this.state.learnerId();
     if (learner === undefined) return { kind: "rejected", rejection: "unknown-learner" };
     if (this.state.read().runs[run] === undefined) await this.reads.loadRun(run, signal);
-    const opened = this.state.read().runs[run]?.opened;
+    const view = this.state.read().runs[run];
+    if (view !== undefined && !clientAccess(this.state.read().course, view.quiz, this.link.now(), task)) return undefined;
+    const opened = view?.opened;
     if (opened !== undefined && Object.hasOwn(opened, task)) return undefined;
     const command: OpenTaskCommand = { type: "open-task", id: newId(), learner, run, task, at: this.link.now() };
     const { verdict, by } = await this.routing.decided(command, signal);
@@ -100,6 +106,7 @@ export class RunPlay {
     const view = this.state.read().runs[run];
     if (learner === undefined || view === undefined || view.status !== "open") return;
     const at = this.link.now();
+    if (!clientAccess(this.state.read().course, view.quiz, at, task)) return;
     if (overdue(view, task, at)) return this.state.dispatch({ type: "notice-raised", notice: { kind: "rejection", rejection: "time-up" } });
     this.state.dispatch({ type: "answer-given", run, task, answer });
     this.reads.noteEdit(run, task);

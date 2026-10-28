@@ -1,0 +1,133 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Calm Cursor Motion",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "fps",
+    "resolution",
+    "target",
+    "stages"
+  ],
+  "properties": {
+    "fps": {
+      "const": 30
+    },
+    "resolution": {
+      "type": "array",
+      "prefixItems": [
+        {
+          "const": 1600
+        },
+        {
+          "const": 900
+        }
+      ],
+      "minItems": 2,
+      "maxItems": 2
+    },
+    "target": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "id"
+      ],
+      "properties": {
+        "kind": {
+          "const": "topic"
+        },
+        "id": {
+          "const": "optimization"
+        }
+      }
+    },
+    "stages": {
+      "type": "array",
+      "minItems": 5,
+      "maxItems": 5,
+      "prefixItems": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "durationSeconds"
+          ],
+          "properties": {
+            "id": {
+              "const": "idle"
+            },
+            "durationSeconds": {
+              "const": 1.5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "durationSeconds"
+          ],
+          "properties": {
+            "id": {
+              "const": "approach"
+            },
+            "durationSeconds": {
+              "const": 2.5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "durationSeconds"
+          ],
+          "properties": {
+            "id": {
+              "const": "hover"
+            },
+            "durationSeconds": {
+              "const": 3
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "durationSeconds"
+          ],
+          "properties": {
+            "id": {
+              "const": "return"
+            },
+            "durationSeconds": {
+              "const": 2.5
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "id",
+            "durationSeconds"
+          ],
+          "properties": {
+            "id": {
+              "const": "settle"
+            },
+            "durationSeconds": {
+              "const": 1.5
+            }
+          }
+        }
+      ]
+    }
+  }
+}

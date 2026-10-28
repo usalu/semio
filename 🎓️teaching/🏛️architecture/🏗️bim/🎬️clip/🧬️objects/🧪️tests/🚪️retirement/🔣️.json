@@ -1,0 +1,8 @@
+{
+  "languages": ["en", "de"],
+  "diameter_delta": 0.001,
+  "fps": 4,
+  "key": "inheritance",
+  "kept_radii": [0.1, 0.2],
+  "pixel_error": 0
+}

@@ -54,7 +54,7 @@ export function verifyPrintMacroStaging(): void {
 /** 🧪️ Compiles the semantic graph owner twice through the production stage and independently reads its PDF. */
 export async function verifyPrintMacroStagingNative(context:PrintPipelineVerificationV1):Promise<void>{
  const{execution}=pipelineScope(context),sourceRoot="🧰️framework/🛍️products/📓️print/🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🖨️macro-staging",pdfs:Uint8Array[]=[];
- for(const id of["graph-macro-native-first","graph-macro-native-second"]){await publishPrintArtifact(execution,{version:1,kind:"document",namespace:"probe",id,sourceRoot,texPath:"🧪️control.tex",sources:["🧪️control.tex"],dark:false});await withPublishedPrintDocumentV1(execution,"probe",id,async artifact=>{assert.deepEqual(artifact.files,["🧪️control.pdf"]);pdfs.push(await readPrintMaterialFileV1(join(artifact.path,"🧪️control.pdf"),67108864,artifact.control));await artifact.recheck();});}
+ for(const id of["graph-macro-native-first","graph-macro-native-second"]){await publishPrintArtifact(execution,{version:1,kind:"document",namespace:"probe",id,producer:`@semio-tech/print:build-${id}`,sourceRoot,texPath:"🧪️control.tex",sources:["🧪️control.tex"],dark:false});await withPublishedPrintDocumentV1(execution,"probe",id,`@semio-tech/print:build-${id}`,async artifact=>{assert.deepEqual(artifact.files,[id+".pdf"]);pdfs.push(await readPrintMaterialFileV1(join(artifact.path,id+".pdf"),67108864,artifact.control));await artifact.recheck();});}
  assert.deepEqual(pdfs[0],pdfs[1]);const bytes=pdfs[0];if(!bytes)throw Error("Actual first macro PDF required");const pdf=await openPrintPdf(context,bytes,pipelineScope(context).control);try{const texts:string[]=[];for(let index=1;index<=pdf.numPages;index++){const page=await pdf.getPage(index);texts.push((await page.getTextContent()).items.map(item=>"str"in item?item.str:"").join(" "));page.cleanup();}assert.ok(texts.join(" ").replace(/\s+/g," ").includes("Graph macro staging reached"));}finally{await pdf.destroy();}
 }
 
@@ -74,7 +74,7 @@ export async function verifyPrintPdfs(context:PrintPipelineVerificationV1,templa
   const visual = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🔓️api-freshness.json"), "utf8")).printed.visual;
   const painted: any[] = [], paintContract = JSON.parse(readFileSync(join(import.meta.dir, "../../🧫️fixtures/🖌️kind-paint/🔣️.json"), "utf8"));
   let count = 0;
-  for (const template of templates) await withPublishedPrintDocumentV1(execution,"print",template.id,async artifact=>{for (const name of Object.values(printTemplatePdfNames(template.texPath))) {
+  for (const template of templates) await withPublishedPrintDocumentV1(execution,"print",template.id,`@semio-tech/print:build-${template.id}`,async artifact=>{for (const name of Object.values(printTemplatePdfNames(template.id+".tex"))) {
     const pdf = await openPrintPdf(context,await readPrintMaterialFileV1(join(artifact.path,name),67108864,artifact.control),artifact.control);
     try {
       assert.ok(pdf.numPages >= expected.minimumPages, `${name}: empty document`);

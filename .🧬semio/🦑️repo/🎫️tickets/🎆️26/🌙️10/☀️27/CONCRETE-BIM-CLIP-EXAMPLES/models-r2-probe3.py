@@ -1,0 +1,25 @@
+import importlib, json, sys
+from pathlib import Path
+ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
+sys.path.insert(0, str(ROOT))
+sys.stdout.reconfigure(encoding="utf-8")
+M = importlib.import_module("🎓️teaching.🏛️architecture.🏗️bim.🎬️clip.🧱️model.🐍️")
+for r in M.relations_of("SP-HALL"):
+    print("[DEBUG] rel", r["class"], r["role"], r["relating"], [o["tag"] for o in r["related"]])
+m = M.load_model()
+print("[DEBUG] prop names", list(m["property_names"].keys()))
+for pid in ("LoadBearing", "IsExternal", "FireRating"):
+    print("[DEBUG] info C3", pid, M.information("C3", pid, "en"))
+print("[DEBUG] info SL-1", M.information("SL-1", "LoadBearing", "de"))
+e = M.element("SL-1")
+print("[DEBUG] SL-1 attrs", e["attributes"], e.get("material"))
+print("[DEBUG] W-S material", json.dumps(M.element("W-S")["material"], ensure_ascii=False)[:900])
+print("[DEBUG] W-S psets", M.element("W-S")["psets"])
+print("[DEBUG] C3 psets", M.element("C3")["psets"])
+print("[DEBUG] DP-1", M.element("DP-1")["geometry"], M.element("DP-1")["attributes"], M.quantities("DP-1"))
+print("[DEBUG] clearance", {k: v for k, v in M.clearance().items() if k not in ("gaps",)})
+print("[DEBUG] membership", M.partial_model("architecture")["element_guids"][:2])
+print("[DEBUG] spaces geometry", [(s["id"], s["storey"], round(s["area"], 2)) for s in M.building_geometry()["spaces"]])
+print("[DEBUG] mat concrete", [x for x in m["materials"] if x["id"] in ("concrete",) ][:1] if isinstance(m["materials"], list) else list(m["materials"].keys()))
+tr = M.tributary()
+print("[DEBUG] trib pilotis", [(p["tag"], p["kind"], round(p["area"], 2), round(p["reaction"], 1)) for p in tr["pilotis"] if p["tag"] in ("C3", "A1", "A2", "B2")])

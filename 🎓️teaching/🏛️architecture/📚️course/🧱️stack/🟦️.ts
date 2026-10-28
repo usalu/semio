@@ -154,6 +154,7 @@ export function launchOwned(command: string, args: readonly string[], cwd: strin
 /** 🗂️ The media type of every kind of file a site artifact holds. */
 export const SITE_MEDIA_TYPES: Readonly<Record<string, string>> = {
   ".html": "text/html; charset=utf-8",
+  ".pdf": "application/pdf",
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",

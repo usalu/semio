@@ -23,6 +23,7 @@
     }
   },
   "include": [
+    "../../../../🧪️tests/🔓️access/🟦️.tsx",
     "../../../../🧪️tests/🎓️onboarding/🟦️.tsx",
     "./🟦️.tsx",
     "../../🟦️.tsx",

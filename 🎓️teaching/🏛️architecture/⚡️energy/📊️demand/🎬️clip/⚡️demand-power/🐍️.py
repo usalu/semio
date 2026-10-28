@@ -7,6 +7,8 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+
 import numpy as np
 from manim import *
 
@@ -16,20 +18,17 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -64,7 +63,7 @@ ripples = _manim_module.ripples
 energy_tank = _manim_module.energy_tank
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -90,7 +89,7 @@ WIDE_W, WIDE_H = 8.8, 2.75
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -154,8 +153,8 @@ def _card(name: str, src: str, color: str, at):
     """🪪 Titled quantity card — the name above, the typeset symbol with its unit below."""
     inner = VGroup(body_text(name, font_size=BODY_FONT_SIZE, color=color),
                    math_label(src, size=FORMULA_FONT_SIZE, color=color)).arrange(DOWN, buff=0.25)
-    frame = RoundedRectangle(width=max(inner.width + 0.8, 3.4), height=inner.height + 0.6, corner_radius=0.15,
-                             color=color, stroke_width=2.4)
+    frame = RoundedRectangle(width=max(inner.width + 0.8, 3.4), height=inner.height + 0.6, corner_radius=0,
+                             color=color, stroke_width=_theme_module.CHROME_BORDER)
     return VGroup(frame, inner).move_to(at)
 
 
@@ -251,11 +250,11 @@ def _heated_house(center, scale: float):
     top_y = float(hs["top_left"][1])
     storey = hs["w_height"] / 2
     floors = (float(bl[1]), float(hs["level_1"].get_center()[1]))
-    rad_scale = 0.26 * storey / 0.5
+    metre = storey / 2.5
     rads = VGroup()
     for fy in floors:
-        r = radiator(ORIGIN, color=POWER).scale(rad_scale)
-        r.move_to(np.array([bl[0] + 0.15 * scale + 0.1 + r.width / 2, fy + r.height / 2 + 0.03, 0.0]))
+        r = radiator(ORIGIN, color=POWER, height=0.65 * metre, width=1.3 * metre)
+        r.move_to(np.array([bl[0] + 0.15 * scale + 0.1 + r.width / 2, fy + r.height / 2 + 0.12 * metre, 0.0]))
         rads.add(r)
     win_paths = []
     for w, r in zip(hs["windows"], rads):
@@ -412,9 +411,7 @@ class Beat1_LeistungUndEnergie(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Leistung ist eine Rate, Energie eine Menge", title)
+        subtitle = section_heading("Leistung ist eine Rate, Energie eine Menge")
         din = _din_ref("Grundlagen · DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -539,7 +536,7 @@ class Beat1_LeistungUndEnergie(Scene):
         self.play(Create(highlight_param(panel[2], "q", color=ENERGY)), FadeIn(tag_demand), run_time=1.4)
         hold_for(self, N, "trennung")
 
-        _clear_stage(self, (title, subtitle, din))
+        _clear_stage(self, (subtitle, din))
         self.wait(0.4)
 
 #endregion
@@ -559,7 +556,7 @@ def _signed(value: float, digits: int = 0) -> str:
 
 def _fact(name: str, value):
     """📋 One line of the standard's identity card — a label and its typeset or plain value."""
-    return VGroup(body_text(name, font_size=LABEL_FONT_SIZE, color=P_TEAL), value).arrange(RIGHT, buff=0.2)
+    return VGroup(body_text(name, font_size=LABEL_FONT_SIZE, color=P_PRIMARY), value).arrange(RIGHT, buff=0.2)
 
 
 class Beat2_Normheizlast(Scene):
@@ -610,9 +607,7 @@ class Beat2_Normheizlast(Scene):
         N = self.NARRATION
         H_T_VAL, H_V_VAL = 225.0, 87.5
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Norm-Heizlast nach DIN EN 12831-1", title)
+        subtitle = section_heading("Die Norm-Heizlast nach DIN EN 12831-1")
         din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -710,7 +705,7 @@ class Beat2_Normheizlast(Scene):
         hold_for(self, N, "normtemperatur")
 
         caption = swap_caption(self, caption, subtitle_text(N, "raumweise"))
-        rooms = [Rectangle(width=hs["w_width"] - 0.2, height=storey - 0.06, color=P_TEAL, stroke_width=2.6)
+        rooms = [Rectangle(width=hs["w_width"] - 0.2, height=storey - 0.06, color=P_PRIMARY, stroke_width=2.6)
                  .move_to(np.array([hs["center"][0], fy + storey / 2, 0.0])) for fy in (floor0, floor1)]
         self.play(Create(rooms[0]), run_time=1.6)
         self.play(ReplacementTransform(rooms[0], rooms[1]), run_time=1.6)
@@ -768,7 +763,7 @@ class Beat2_Normheizlast(Scene):
         v_lbl = math_label(rf"H_{{V}} = {de_num(H_V_VAL, 1)}\,\mathrm{{W/K}}", np.array([-6.2, -0.05, 0.0]),
                            size=LABEL_FONT_SIZE, color=H_V, edge="left")
         note = math_label(r"\text{schematisch vereinfacht — die Norm enthält weitere Terme}",
-                          np.array([0.0, NOTE_BAND_Y - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_TEAL)
+                          np.array([0.0, NOTE_BAND_Y - 0.07, 0.0]), size=LABEL_FONT_SIZE, color=P_PRIMARY)
         guides_t = flow_guides(walls_t, H_T, opacity=0.3)
         guides_v = flow_guides(walls_v, H_V, opacity=0.3)
 
@@ -823,7 +818,7 @@ class Beat2_Normheizlast(Scene):
         self.play(FadeIn(kw_tag), Indicate(ring, color=POWER, scale_factor=1.1), run_time=1.4)
         hold_for(self, N, "auslegung")
 
-        _clear_stage(self, (title, subtitle, din))
+        _clear_stage(self, (subtitle, din))
         self.wait(0.4)
 
 #endregion
@@ -872,9 +867,7 @@ class Beat3_Jahresdauerlinie(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Jahresdauerlinie", title)
+        subtitle = section_heading("Die Jahresdauerlinie")
         din = _din_ref("DIN EN 12831-1 · DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1014,7 +1007,7 @@ class Beat3_Jahresdauerlinie(Scene):
         self.play(FadeIn(share, shift=UP * 0.2), Indicate(rect, color=P_YELLOW, scale_factor=1.04), run_time=1.6)
         hold_for(self, N, "bruchteil")
 
-        _clear_stage(self, (title, subtitle, din))
+        _clear_stage(self, (subtitle, din))
         self.wait(0.4)
 
 #endregion
@@ -1067,9 +1060,7 @@ class Beat4_RichtigAuslegen(Scene):
         N = self.NARRATION
         PEAK_F = 0.68
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Auslegen auf die Spitze, nicht auf den Mittelwert", title)
+        subtitle = section_heading("Auslegen auf die Spitze, nicht auf den Mittelwert")
         din = _din_ref("DIN EN 12831-1 · DIN/TS 12831-1 · VDI 4645")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1189,7 +1180,7 @@ class Beat4_RichtigAuslegen(Scene):
         hold_for(self, N, "auslegungspunkt")
 
         caption = swap_caption(self, caption, subtitle_text(N, "anlage"))
-        parts = [body_text(name, font_size=BODY_FONT_SIZE, color=P_TEAL).move_to(np.array([px, 1.75, 0.0]))
+        parts = [body_text(name, font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(np.array([px, 1.75, 0.0]))
                  for name, px in (("Erzeuger", -3.2), ("Regelung", -1.0), ("Speicher", 1.2))]
         for part in parts:
             self.play(FadeIn(part, shift=UP * 0.2), run_time=1.3)
@@ -1222,7 +1213,7 @@ class Beat4_RichtigAuslegen(Scene):
         _fill_panel(self, panel, {"q": q_final})
         hold_for(self, N, "kosten")
 
-        _clear_stage(self, (title, subtitle, din))
+        _clear_stage(self, (subtitle, din))
         self.wait(0.4)
 
 #endregion

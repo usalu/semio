@@ -30,3 +30,6 @@ pub use component::*;
 
 /// 🧪️ The JSON codec the Protocol v2 subject hosts decode the shared vectors with.
 pub use serde_json;
+
+#[path = "../../🔨️modules/🔓️access/🦀️.rs"]
+pub mod access;

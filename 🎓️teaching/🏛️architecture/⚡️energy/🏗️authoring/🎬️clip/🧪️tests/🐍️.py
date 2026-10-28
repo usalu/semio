@@ -57,6 +57,23 @@ class VideoContractTest(unittest.TestCase):
         if output:
             Path(output).mkdir(parents=True, exist_ok=True)
 
+    def setUp(self):
+        import shutil
+
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+
+        def envelope(video_id, content, output, settings, *, session=None):
+            output.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(content, output)
+            return output
+
+        self.presentation = patch.object(runtime, "render_presentation", side_effect=envelope, create=True)
+        self.presentation.start()
+        self.addCleanup(self.presentation.stop)
+        state = patch.object(runtime, "presentation_state", return_value={"presentation": "isolated-runtime-fixture"})
+        state.start()
+        self.addCleanup(state.stop)
+
     def test_canonical_modules_and_asset_paths(self):
         case = CONTRACT["canonical_paths"]
         runtime = importlib.import_module(case["runtime"])
@@ -66,7 +83,7 @@ class VideoContractTest(unittest.TestCase):
         self.assertNotEqual(fonts.__file__, visuals.__file__)
         self.assertIs(fonts, importlib.import_module(case["fonts"]))
         self.assertEqual(runtime.teaching_root(Path(fonts.__file__)), ROOT)
-        self.assertTrue((ROOT / case["intro_pdf"]).is_file())
+        self.assertTrue((ROOT / "🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🔣️.json").is_file())
         for video in runtime.load_manifest():
             self.assertEqual(Path(video["script"]).name, case["kind_leaf"])
             for chapter in video["chapters"]:
@@ -112,14 +129,34 @@ class VideoContractTest(unittest.TestCase):
         self.assertEqual([v["id"] for v in videos], CONTRACT["curriculum"]["ids"])
         self.assertEqual([len(v["chapters"]) for v in videos], CONTRACT["curriculum"]["chapter_counts"])
         self.assertEqual([[len(chapter["segments"]) for chapter in v["chapters"]] for v in videos], CONTRACT["curriculum"]["segment_counts"])
-        self.assertEqual(len({v["id"] for v in videos}), 5)
-        self.assertEqual(len({v["intro"]["scene"] for v in videos}), CONTRACT["curriculum"]["intro_count"])
-        intros = {n.name for n in ast.parse((ROOT / "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py").read_text(encoding="utf-8")).body if isinstance(n, ast.ClassDef)}
+        self.assertEqual(len({v["id"] for v in videos}), len(CONTRACT["curriculum"]["ids"]))
+        self.assertTrue(all("intro" not in video for video in videos))
         for video in videos:
             with self.subTest(video=video["id"]):
-                classes = {n.name for n in ast.parse((ROOT / video["script"]).read_text(encoding="utf-8")).body if isinstance(n, ast.ClassDef)}
-                self.assertTrue({chapter["scene"] for chapter in video["chapters"]}.issubset(classes))
-                self.assertIn(video["intro"]["scene"], intros)
+                module = importlib.import_module("🎓️teaching." + video["script"][:-3].replace("/", "."))
+                self.assertEqual(module.VIDEO_ID, video["id"])
+                with patch.object(module._runtime, "compose_videos", return_value={}) as compose:
+                    module.compose(language="de", audience="speaker", chapters=[video["chapters"][0]["scene"]], force=True)
+                    compose.assert_called_once_with([video["id"]], language="de", audience="speaker", chapter_scenes=[video["chapters"][0]["scene"]], force=True)
+
+    def test_physics_explains_power_before_work_in_every_entry_point(self):
+        import numpy as np
+        from manim import Scene
+
+        case = CONTRACT["physics_power_first"]
+        module_name = "🎓️teaching.🏛️architecture.⚡️energy.🧲️physics.🎬️clip.🧲️fundamentals"
+        physics = importlib.import_module(module_name + ".🐍️")
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        video = next(video for video in runtime.load_manifest() if video["id"] == "physical_fundamentals")
+        expected = case["scenes"]
+        self.assertEqual([segment["scene"] for segment in video["chapters"][0]["segments"]], expected)
+        self.assertEqual([beat.__name__ for beat in physics.BEATS], expected)
+        for beat in physics.BEATS:
+            self.assertTrue(issubclass(beat, Scene))
+        np.testing.assert_array_equal([beat.__name__ for beat in physics.BEATS], expected)
+        self.assertEqual([clause[0] for clause in physics.BEATS[0].NARRATION[:3]], case["opening_clauses"])
+        self.assertNotIn("kWh", physics.BEATS[0].NARRATION[0][2])
+        self.assertEqual([clause[0] for clause in physics.BEATS[-1].NARRATION[:2]], case["recap_clauses"])
 
     def test_segment_plan_has_stable_global_identifiers(self):
         _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
@@ -203,33 +240,34 @@ class VideoContractTest(unittest.TestCase):
         runtime = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
         with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
             folder = Path(directory)
-            intro = {"script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py", "scene": "Intro"}
             beat = {"script": "chapter/scene.py", "scene": "Beat"}
-            for name in (intro["script"], beat["script"], "🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py", "🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"):
+            for name in (beat["script"], "🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py", "🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"):
                 path = folder / name
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text("authored render input", encoding="utf-8")
-            video = {"id": "fixture", "script": "wrapper.py", "playlist": "PLAYLIST", "intro": intro,
+            video = {"id": "fixture", "script": "wrapper.py", "playlist": "PLAYLIST",
                      "chapters": [{"scene": "Chapter", "segments": [beat]}], "output": "Full_Fixture"}
-            settings = {"quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
             media = folder / "media"
             with patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "load_manifest", return_value=[video]):
-                for scene, segments in (("Intro", [intro]), ("Chapter", [beat])):
-                    clip = media / "v" / f"{scene}.mp4"
+                for scene, segments in (("Chapter", [beat]),):
+                    clip = media / "de" / "speaker" / "v" / f"{scene}.mp4"
                     clip.parent.mkdir(parents=True, exist_ok=True)
                     clip.write_bytes(b"0" * 1200)
-                    clip.with_suffix(".render.json").write_text(json.dumps(runtime._logical_state(scene, segments, settings)), encoding="utf-8")
+                    runtime.publish_cursor_intervals(clip, [])
+                    clip.with_suffix(".render.json").write_text(json.dumps(runtime._logical_state(scene, segments, settings, [media / "de" / "speaker" / "s" / "1" / "v" / "Beat.mp4"])), encoding="utf-8")
 
                 def concatenate(clips, output, list_path):
                     output.parent.mkdir(parents=True, exist_ok=True)
                     output.write_bytes(b"0" * 1200)
+                    runtime.publish_cursor_intervals(output, [])
 
                 with patch.object(runtime, "run_command") as command, patch.object(runtime, "concat_videos", side_effect=concatenate) as concat:
-                    result = runtime.compose_video("fixture", media_dir=media, output_dir=folder / "out", concat_only=True)
+                    result = runtime.compose_video("fixture", language="de", audience="speaker", media_dir=media, output_dir=folder / "out", concat_only=True)
                 self.assertTrue(result.is_file())
                 command.assert_not_called()
                 concat.assert_called_once()
-                self.assertFalse((media / "s").exists())
+                self.assertFalse((media / "de" / "speaker" / "s").exists())
 
     @unittest.skipUnless(os.environ.get("SEMIO_TEST_MANIM") == "1", "Enable real segment rendering with SEMIO_TEST_MANIM=1")
     def test_real_manim_segments_preserve_order_and_full_frame_counts(self):
@@ -248,15 +286,15 @@ class VideoContractTest(unittest.TestCase):
                 (folder / name).parent.mkdir(parents=True, exist_ok=True)
                 (folder / name).write_text("authored fixture dependency", encoding="utf-8")
             segments = [{"script": "🎬️scene/🐍️.py", "scene": name} for name in ("FixtureIntro", "FixtureA", "FixtureB")]
-            video = {"id": "fixture", "script": "wrapper.py", "playlist": "PLAYLIST", "intro": segments[0],
-                     "chapters": [{"scene": "FixtureChapter", "segments": segments[1:]}], "output": "Full_Fixture"}
+            video = {"id": "fixture", "script": "wrapper.py", "playlist": "PLAYLIST",
+                     "chapters": [{"scene": "FixtureChapter", "segments": segments}], "output": "Full_Fixture"}
             output = folder / "output"
             with patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "load_manifest", return_value=[video]):
-                movie = runtime.compose_videos(output_root=output, jobs=2, log_output=True)["fixture"]
+                movie = runtime.compose_videos(language="de", audience="speaker", output_root=output, jobs=2, log_output=True)["fixture"]
             for ordinal, segment in enumerate(segments, 1):
-                with av.open(output / "s" / str(ordinal) / "v" / f"{segment['scene']}.mp4") as container:
+                with av.open(output / "de" / "speaker" / "s" / str(ordinal) / "v" / f"{segment['scene']}.mp4") as container:
                     self.assertEqual(sum(1 for _ in container.decode(video=0)), case["frames_per_segment"])
-            with av.open(output / "1/v/FixtureChapter.mp4") as container:
+            with av.open(output / "de/speaker/1/v/FixtureChapter.mp4") as container:
                 self.assertEqual(sum(1 for _ in container.decode(video=0)), case["chapter_frames"])
             with av.open(movie) as container:
                 frames = list(container.decode(video=0))
@@ -264,6 +302,199 @@ class VideoContractTest(unittest.TestCase):
             for ordinal, channel in enumerate(case["dominant_channels"]):
                 pixels = frames[ordinal * case["frames_per_segment"]].to_ndarray(format="rgb24")
                 self.assertEqual(int(pixels[pixels.shape[0] // 2, pixels.shape[1] // 2].argmax()), channel)
+
+
+    @unittest.skipUnless(os.environ.get("SEMIO_TEST_MANIM") == "1", "Enable canonical solar example validation with SEMIO_TEST_MANIM=1")
+    def test_solar_cooling_uses_the_earlier_window_and_numpy_reference(self):
+        import numpy as np
+        cooling = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.❄️cooling.🎬️clip.☀️solar-radiation.🐍️")
+        heating = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🔥️heating.🎬️clip.☀️solar-gains.🐍️")
+        expected = CONTRACT["partial_reuse"]["solar_example"]
+        actual = cooling.solar_cooling_example()
+        for key, value in expected.items():
+            self.assertAlmostEqual(actual[key], value)
+        self.assertEqual(actual["area"], heating.WIN_A)
+        self.assertEqual(actual["glass_share"], heating.FF_GLASS)
+        self.assertEqual(actual["glass_transmittance"], heating.G_VALUE)
+        self.assertAlmostEqual(actual["load"], float(np.prod([actual[key] for key in ("area", "glass_share", "glass_transmittance", "shading", "irradiance")])))
+
+    def test_replaced_explanations_have_one_canonical_source(self):
+        for case in CONTRACT["partial_reuse"]["removed_sources"]:
+            script = ROOT / "🏛️architecture/⚡️energy" / case["script"]
+            classes = {node.name for node in ast.parse(script.read_text(encoding="utf-8")).body if isinstance(node, ast.ClassDef)}
+            self.assertTrue(classes.isdisjoint(case["scenes"]))
+
+
+    def test_shared_visual_profile_and_imported_source_invalidate_cached_clips(self):
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        case = CONTRACT["shared_render_dependency"]
+        with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
+            folder = Path(directory)
+            scene = folder / "fixture" / "scene.py"
+            scene.parent.mkdir()
+            scene.write_text("import importlib\nshared = importlib.import_module(" + repr(case["module"]) + ")\n", encoding="utf-8")
+            dependency = folder / case["script"]
+            dependency.parent.mkdir(parents=True)
+            dependency.write_text("VALUE = 1\n", encoding="utf-8")
+            profile = folder / case["profile"]
+            profile.parent.mkdir(parents=True, exist_ok=True)
+            profile.write_text(case["before"], encoding="utf-8")
+            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            segment = {"script": "fixture/scene.py", "scene": "Fixture"}
+            clip = folder / "fixture.mp4"
+            clip.write_bytes(b"0" * 1200)
+            with patch.object(runtime, "teaching_root", return_value=folder):
+                initial = runtime.segment_state(segment, settings)
+                clip.with_suffix(".render.json").write_text(json.dumps(initial), encoding="utf-8")
+                self.assertTrue(runtime.reusable_clip(clip, initial))
+                profile.write_text(case["after"], encoding="utf-8")
+                self.assertFalse(runtime.reusable_clip(clip, runtime.segment_state(segment, settings)))
+                profile.write_text(case["before"], encoding="utf-8")
+                dependency.write_text("VALUE = 2\n", encoding="utf-8")
+                self.assertFalse(runtime.reusable_clip(clip, runtime.segment_state(segment, settings)))
+
+
+    def test_source_narration_tracks_recordings_and_rejects_incomplete_sets(self):
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
+            folder = Path(directory)
+            script = folder / "source" / "scene.py"
+            script.parent.mkdir()
+            script.write_text("class Beat1_Source:\n    NARRATION = [('a', 'A', 'A'), ('b', 'B', 'B')]\n", encoding="utf-8")
+            speech = runtime.source_speech_root(script, language="de") / "beat_1_clauses"
+            speech.mkdir(parents=True)
+            files = [speech / f"clause_{index:02d}.wav" for index in range(2)]
+            segment = {"script": "source/scene.py", "scene": "Beat1_Source"}
+            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
+            with patch.object(runtime, "teaching_root", return_value=folder):
+                self.assertEqual(runtime.source_narration(segment, language="de"), [])
+                files[0].write_bytes(b"first canonical recording")
+                with self.assertRaises(ValueError):
+                    runtime.source_narration(segment, language="de")
+                files[1].write_bytes(b"second canonical recording")
+                self.assertEqual(runtime.source_narration(segment, language="de"), list(zip(("a", "b"), files, strict=True)))
+                before = runtime.segment_state(segment, settings)
+                clip = folder / "cached.mp4"
+                clip.write_bytes(b"0" * 1200)
+                clip.with_suffix(".render.json").write_text(json.dumps(before), encoding="utf-8")
+                self.assertTrue(runtime.reusable_clip(clip, before))
+                files[0].write_bytes(b"updated canonical recording")
+                self.assertFalse(runtime.reusable_clip(clip, runtime.segment_state(segment, settings)))
+
+    def test_semantic_excerpt_ranges_and_source_reuse(self):
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        case = CONTRACT["partial_reuse"]
+        self.assertEqual(list(runtime.clause_interval(case["marks"], **case["selection"])), case["interval"])
+        for first, last in case["invalid"]:
+            with self.subTest(first=first, last=last), self.assertRaises(ValueError):
+                runtime.clause_interval(case["marks"], first=first, last=last)
+        full = {"script": "shared.py", "scene": "Shared"}
+        partial = {**full, "clauses": case["selection"]}
+        video = {"id": "fixture", "chapters": [{"scene": "A", "segments": [full, partial]}]}
+        plan = runtime.segment_plan([video])
+        self.assertEqual([job["ordinal"] for job in runtime.source_plan(plan)], case["source_ordinals"])
+        self.assertEqual([job["source_ordinal"] for job in plan], case["occurrence_sources"])
+        self.assertEqual(len(runtime.source_plan(runtime.segment_plan())), case["curriculum_unique_sources"])
+
+    @unittest.skipUnless(os.environ.get("SEMIO_TEST_MANIM") == "1", "Enable FFmpeg/PyAV excerpt validation with SEMIO_TEST_MANIM=1")
+    def test_excerpts_match_independent_decoded_video_and_audio_reference(self):
+        import av
+        import subprocess
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        case = CONTRACT["partial_reuse"]
+        with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
+            folder = Path(directory)
+            source = folder / "source.mp4"
+            command = [*runtime.ffmpeg_command(), "-y", "-f", "lavfi", "-i", "color=green:s=64x64:r=15:d=0.2",
+                       "-f", "lavfi", "-i", "color=red:s=64x64:r=15:d=0.2", "-f", "lavfi", "-i", "color=blue:s=64x64:r=15:d=0.2",
+                       "-f", "lavfi", "-i", "sine=frequency=440:sample_rate=48000:duration=0.6",
+                       "-filter_complex", "[0:v][1:v][2:v]concat=n=3:v=1:a=0[v]", "-map", "[v]", "-map", "3:a",
+                       "-c:v", "libx264", "-pix_fmt", "yuv420p", "-c:a", "aac", str(source)]
+            subprocess.run(command, check=True, capture_output=True)
+            interval = runtime.clause_interval(case["marks"], **case["selection"])
+            output = folder / "excerpt.mp4"
+            runtime.cut_clip(source, output, *interval)
+            with av.open(source) as container:
+                reference = [frame for frame in container.decode(video=0) if interval[0] <= float(frame.time) < interval[1]]
+            with av.open(output) as container:
+                actual = list(container.decode(video=0))
+            self.assertEqual(len(actual), case["selected_frames"])
+            self.assertEqual(len(actual), len(reference))
+            for expected, frame in zip(reference, actual, strict=True):
+                self.assertEqual(int(expected.to_ndarray(format="rgb24")[32, 32].argmax()),
+                                 int(frame.to_ndarray(format="rgb24")[32, 32].argmax()))
+            with av.open(output) as container:
+                stream = container.streams.audio[0]
+                self.assertEqual(stream.rate, case["audio_rate"])
+                self.assertAlmostEqual(float(stream.duration * stream.time_base), interval[1] - interval[0], places=2)
+
+
+    @unittest.skipUnless(os.environ.get("SEMIO_TEST_MANIM") == "1", "Enable canonical source composition with SEMIO_TEST_MANIM=1")
+    def test_real_partial_sources_render_once_and_preserve_chapter_order(self):
+        import av
+        import math
+        import wave
+        import numpy as np
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        case = CONTRACT["partial_reuse"]
+        with tempfile.TemporaryDirectory(dir=os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT")) as directory:
+            folder = Path(directory)
+            script = folder / "scene" / "🐍️.py"
+            script.parent.mkdir()
+            script.write_text("from manim import Scene, Square, GREEN, RED, BLUE\n"
+                              "import hashlib, json, os\nfrom pathlib import Path\n"
+                              "class Shared(Scene):\n"
+                              "    NARRATION = [('first', 'first', 'first'), ('middle', 'middle', 'middle'), ('last', 'last', 'last')]\n"
+                              "    def construct(self):\n"
+                              "        square = Square(color=GREEN, fill_opacity=1)\n"
+                              "        self.add(square)\n"
+                              "        marks = {}\n"
+                              "        for key, color in [('first', GREEN), ('middle', RED), ('last', BLUE)]:\n"
+                              "            square.set_color(color)\n"
+                              "            start = self.renderer.time\n"
+                              "            self.wait(0.2)\n"
+                              "            marks[key] = dict(start=start, window=self.renderer.time-start)\n"
+                              "        target = Path(os.environ['SEMIO_TEACHING_OUTPUT_ROOT']) / 'trace' / hashlib.sha256(b'scene').hexdigest()[:10] / 'Shared' / '🔣️.json'\n"
+                              "        target.parent.mkdir(parents=True, exist_ok=True)\n"
+                              "        target.write_text(json.dumps(dict(beats=dict(Shared=marks))), encoding='utf-8')\n",
+                              encoding="utf-8")
+            speech = runtime.source_speech_root(script, language="de") / "Shared_clauses"
+            speech.mkdir(parents=True)
+            for index, frequency in enumerate(case["clause_frequencies"]):
+                with wave.open(str(speech / f"clause_{index:02d}.wav"), "wb") as track:
+                    track.setnchannels(1)
+                    track.setsampwidth(2)
+                    track.setframerate(case["audio_rate"])
+                    samples = np.sin(2 * np.pi * frequency * np.arange(case["audio_rate"] // 5) / case["audio_rate"])
+                    track.writeframes((samples * 12000).astype("<i2").tobytes())
+            source = {"script": "scene/🐍️.py", "scene": "Shared"}
+            selected = {**source, "clauses": case["selection"]}
+            first = {**source, "clauses": {"first": "first", "last": "first"}}
+            video = {"id": "fixture", "script": "wrapper.py",
+                     "chapters": [{"scene": "Chapter", "segments": [selected, first, selected]}], "output": "Full_Fixture"}
+            output = folder / "output"
+            with patch.object(runtime, "_WORKSPACE_ROOT", folder), patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "load_manifest", return_value=[video]):
+                with patch.object(runtime, "render_segment", wraps=runtime.render_segment) as render, patch.object(runtime, "cut_clip", wraps=runtime.cut_clip) as cut:
+                    results = runtime.compose_videos(language="de", audience="speaker", output_root=output, chapter_scenes=["Chapter"], force=True, jobs=2, log_output=True)
+                    self.assertEqual(render.call_count, 1)
+                    self.assertEqual(cut.call_count, 2)
+                with patch.object(runtime, "render_segment") as render, patch.object(runtime, "cut_clip") as cut:
+                    self.assertEqual(runtime.compose_videos(language="de", audience="speaker", output_root=output, chapter_scenes=["Chapter"], concat_only=True), results)
+                    render.assert_not_called()
+                    cut.assert_not_called()
+            self.assertEqual(list(results), ["Chapter"])
+            with av.open(results["Chapter"]) as container:
+                actual = list(container.decode(video=0))
+            self.assertEqual(len(actual), case["composed_frames"])
+            channels = [int(frame.to_ndarray(format="rgb24")[240, 427].argmax()) for frame in actual]
+            self.assertEqual(channels, case["composed_channels"])
+            with av.open(results["Chapter"]) as container:
+                rate = container.streams.audio[0].rate
+                samples = np.concatenate([frame.to_ndarray().flatten() for frame in container.decode(audio=0)])
+            for index, expected in enumerate(case["composed_frequencies"]):
+                window = samples[int((index * 0.2 + 0.06) * rate):int((index * 0.2 + 0.14) * rate)]
+                peak = np.fft.rfftfreq(len(window), 1 / rate)[np.abs(np.fft.rfft(window)).argmax()]
+                self.assertAlmostEqual(peak, expected, delta=20)
 
     def test_root_ignores_product_package(self):
         _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
@@ -363,7 +594,7 @@ class VideoContractTest(unittest.TestCase):
             self.assertEqual(file_link.read_bytes(), b"")
             self.assertEqual(nested.read_bytes(), b"")
 
-    def test_changed_intro_asset_invalidates_clip(self):
+    def test_changed_dependency_asset_invalidates_clip(self):
         _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
         clip_state = _video_module.clip_state
         reusable_clip = _video_module.reusable_clip
@@ -375,7 +606,7 @@ class VideoContractTest(unittest.TestCase):
             pdf.write_bytes(case["before"].encode())
             clip = folder / "intro.mp4"
             clip.write_bytes(b"0" * 1001)
-            settings = {"quality": "-ql", "resolution": None, "fps": None}
+            settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
             clip.with_suffix(".render.json").write_text(json.dumps(clip_state(settings, [pdf])), encoding="utf-8")
             self.assertEqual(reusable_clip(clip, clip_state(settings, [pdf])), case["reusable_before"])
             pdf.write_bytes(case["after"].encode())
@@ -391,8 +622,8 @@ class VideoContractTest(unittest.TestCase):
             folder = Path(directory)
             source = folder / "scene.py"
             source.write_text("authored scene", encoding="utf-8")
-            low = {"quality": case["previous_quality"], "resolution": None, "fps": None}
-            high = {**low, "quality": case["target_quality"]}
+            low = {"language": "de", "audience": "speaker", "quality": case["previous_quality"], "resolution": None, "fps": None}
+            high = {**low, "audience": "speaker", "quality": case["target_quality"]}
             clips = [folder / "completed.mp4", folder / "pending.mp4"]
             for clip, settings in zip(clips, [high, low]):
                 clip.write_bytes(b"0" * 1001)
@@ -416,7 +647,7 @@ class VideoContractTest(unittest.TestCase):
                 clip = media / "v" / "Intro.mp4"
                 clip.parent.mkdir(parents=True)
                 clip.write_bytes(b"0" * case["cached_bytes"])
-                settings = {"quality": "-ql", "resolution": None, "fps": None}
+                settings = {"language": "de", "audience": "speaker", "quality": "-ql", "resolution": None, "fps": None}
                 segment = {"script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py", "scene": "Intro"}
                 with patch.object(runtime, "teaching_root", return_value=folder):
                     state = runtime.segment_state(segment, settings)
@@ -452,7 +683,7 @@ class VideoContractTest(unittest.TestCase):
                 clip.write_bytes(b"0" * 1200)
                 if sidecar_kind == "mismatched":
                     clip.with_suffix(".render.json").write_text(json.dumps({"stale": True}), encoding="utf-8")
-                settings = {"quality": case["quality"], "resolution": None, "fps": None}
+                settings = {"language": "de", "audience": "speaker", "quality": case["quality"], "resolution": None, "fps": None}
                 (media / "settings.json").write_text(json.dumps(settings), encoding="utf-8")
                 segment = {"script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py", "scene": "Intro"}
                 with patch.object(runtime, "teaching_root", return_value=folder), patch.object(runtime, "run_command") as command:
@@ -543,23 +774,16 @@ class VideoContractTest(unittest.TestCase):
     def test_manifest_matches_manim_discovery(self):
         from manim import Scene
         from manim.utils.module_ops import get_scene_classes_from_module
-        _video_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
-        load_manifest = _video_module.load_manifest
-
-        for video in load_manifest():
-            with self.subTest(video=video["id"]):
-                module = importlib.import_module("🎓️teaching." + video["script"][:-3].replace("/", "."))
+        runtime = importlib.import_module(CONTRACT["canonical_paths"]["runtime"])
+        for job in runtime.source_plan(runtime.segment_plan()):
+            segment = job["segment"]
+            with self.subTest(scene=segment["scene"]):
+                module = importlib.import_module("🎓️teaching." + segment["script"][:-3].replace("/", "."))
                 discovered = {scene.__name__ for scene in get_scene_classes_from_module(module)}
-                self.assertTrue({chapter["scene"] for chapter in video["chapters"]}.issubset(discovered))
-                playlist = getattr(module, video["playlist"])
-                self.assertEqual(len(playlist), len(video["chapters"]))
-                for chapter, (_, beats) in zip(video["chapters"], playlist, strict=True):
-                    self.assertTrue(issubclass(getattr(module, chapter["scene"]), Scene))
-                    actual = [{"script": Path(sys.modules[beat.__module__].__file__).resolve().relative_to(ROOT).as_posix(), "scene": beat.__name__} for beat in beats]
-                    self.assertEqual(chapter["segments"], actual)
-                    for beat in beats:
-                        found = {scene.__name__ for scene in get_scene_classes_from_module(sys.modules[beat.__module__])}
-                        self.assertIn(beat.__name__, found)
+                self.assertIn(segment["scene"], discovered)
+                self.assertTrue(issubclass(getattr(module, segment["scene"]), Scene))
+
+
 
 
 if __name__ == "__main__":

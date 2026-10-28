@@ -1,0 +1,695 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical Teaching Cursor Interaction",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "viewport",
+    "hitTest",
+    "roles",
+    "control",
+    "states",
+    "cursors",
+    "icons",
+    "events",
+    "actions",
+    "timeline"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "viewport": {
+      "$ref": "#/$defs/size"
+    },
+    "hitTest": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "bounds",
+        "ancestors",
+        "order",
+        "transparentGap"
+      ],
+      "properties": {
+        "bounds": {
+          "const": "half-open"
+        },
+        "ancestors": {
+          "const": "contain-and-enabled"
+        },
+        "order": {
+          "const": [
+            "z",
+            "depth",
+            "source-index"
+          ]
+        },
+        "transparentGap": {
+          "const": "polygon-outline"
+        }
+      }
+    },
+    "roles": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "root",
+        "canvas",
+        "window",
+        "navbar",
+        "footer",
+        "group",
+        "tree",
+        "tab",
+        "button",
+        "fullscreen",
+        "toggle",
+        "device"
+      ],
+      "properties": {
+        "root": {
+          "$ref": "#/$defs/role"
+        },
+        "canvas": {
+          "$ref": "#/$defs/role"
+        },
+        "window": {
+          "$ref": "#/$defs/role"
+        },
+        "navbar": {
+          "$ref": "#/$defs/role"
+        },
+        "footer": {
+          "$ref": "#/$defs/role"
+        },
+        "group": {
+          "$ref": "#/$defs/role"
+        },
+        "tree": {
+          "$ref": "#/$defs/role"
+        },
+        "tab": {
+          "$ref": "#/$defs/role"
+        },
+        "button": {
+          "$ref": "#/$defs/role"
+        },
+        "fullscreen": {
+          "$ref": "#/$defs/role"
+        },
+        "toggle": {
+          "$ref": "#/$defs/role"
+        },
+        "device": {
+          "$ref": "#/$defs/role"
+        }
+      }
+    },
+    "control": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "size",
+        "inset",
+        "iconSize",
+        "titleHeight",
+        "placement",
+        "offIcon",
+        "onIcon"
+      ],
+      "properties": {
+        "size": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "inset": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "iconSize": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "titleHeight": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "placement": {
+          "const": "cap-right"
+        },
+        "offIcon": {
+          "const": "maximize-2"
+        },
+        "onIcon": {
+          "const": "minimize-2"
+        }
+      }
+    },
+    "states": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "normal",
+        "hovered",
+        "active",
+        "activeHovered",
+        "disabled",
+        "transition"
+      ],
+      "properties": {
+        "normal": {
+          "const": {
+            "stroke": "borderNormal",
+            "text": "foreground"
+          }
+        },
+        "hovered": {
+          "const": {
+            "stroke": "borderEmphasized",
+            "text": "borderEmphasized",
+            "interactiveFill": "hoverInteractiveFill"
+          }
+        },
+        "active": {
+          "const": {
+            "fill": "activeBase",
+            "stroke": "activeBase",
+            "text": "activeForeground"
+          }
+        },
+        "activeHovered": {
+          "const": {
+            "fill": "activeHover",
+            "stroke": "activeBase",
+            "text": "activeForeground"
+          }
+        },
+        "disabled": {
+          "const": {
+            "opacity": 0.5,
+            "hit": false
+          }
+        },
+        "transition": {
+          "const": {
+            "milliseconds": 120,
+            "easing": "ease",
+            "controlPoints": [
+              0.25,
+              0.1,
+              0.25,
+              1
+            ]
+          }
+        }
+      }
+    },
+    "cursors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arrow",
+        "pointer",
+        "selectable"
+      ],
+      "properties": {
+        "arrow": {
+          "$ref": "#/$defs/asset"
+        },
+        "pointer": {
+          "$ref": "#/$defs/asset"
+        },
+        "selectable": {
+          "$ref": "#/$defs/asset"
+        }
+      }
+    },
+    "icons": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "maximize-2",
+        "minimize-2"
+      ],
+      "properties": {
+        "maximize-2": {
+          "type": "string",
+          "minLength": 1
+        },
+        "minimize-2": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "events": {
+      "const": [
+        "enter",
+        "move",
+        "press",
+        "release",
+        "click",
+        "leave",
+        "cancel"
+      ]
+    },
+    "actions": {
+      "const": {
+        "fullscreen": "fullscreen.toggle",
+        "toggle": "toggle",
+        "device": "device.activate",
+        "button": "activate"
+      }
+    },
+    "timeline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "park",
+        "idlePark"
+      ],
+      "properties": {
+        "park": {
+          "$ref": "#/$defs/point"
+        },
+        "idlePark": {
+          "$ref": "#/$defs/point"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "point": {
+      "type": "array",
+      "minItems": 2,
+      "maxItems": 2,
+      "items": {
+        "type": "number"
+      }
+    },
+    "role": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile",
+        "fill",
+        "strokeWidth",
+        "cursor"
+      ],
+      "properties": {
+        "profile": {
+          "enum": [
+            "plain",
+            "tree",
+            "interactive"
+          ]
+        },
+        "fill": {
+          "enum": [
+            "base",
+            "glass",
+            "transparent"
+          ]
+        },
+        "strokeWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "hoverStrokeWidth": {
+          "type": "number",
+          "minimum": 0
+        },
+        "cursor": {
+          "enum": [
+            "arrow",
+            "pointer",
+            "selectable"
+          ]
+        }
+      }
+    },
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "asset",
+        "hotspot"
+      ],
+      "properties": {
+        "asset": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hotspot": {
+          "$ref": "#/$defs/point"
+        }
+      }
+    },
+    "node": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "parent",
+        "role",
+        "rect"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "parent": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "role": {
+          "enum": [
+            "root",
+            "canvas",
+            "window",
+            "navbar",
+            "footer",
+            "group",
+            "tree",
+            "tab",
+            "button",
+            "fullscreen",
+            "toggle",
+            "device"
+          ]
+        },
+        "rect": {
+          "$ref": "#/$defs/rect"
+        },
+        "enabled": {
+          "type": "boolean"
+        },
+        "z": {
+          "type": "number"
+        },
+        "outline": {
+          "type": "array",
+          "minItems": 3,
+          "items": {
+            "$ref": "#/$defs/point"
+          }
+        },
+        "action": {
+          "type": "string"
+        }
+      }
+    },
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number"
+        },
+        "y": {
+          "type": "number"
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type"
+      ],
+      "properties": {
+        "type": {
+          "enum": [
+            "enter",
+            "move",
+            "press",
+            "release",
+            "click",
+            "leave",
+            "cancel"
+          ]
+        },
+        "point": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/point"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "id": {
+          "type": "string"
+        },
+        "time": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "target": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "effect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "type",
+        "target",
+        "value"
+      ],
+      "properties": {
+        "type": {
+          "type": "string",
+          "minLength": 1
+        },
+        "target": {
+          "type": "string",
+          "minLength": 1
+        },
+        "value": {
+          "type": "boolean"
+        }
+      }
+    },
+    "state": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "point",
+        "hovered",
+        "pressed",
+        "armed",
+        "fullscreen",
+        "toggles",
+        "events",
+        "effects"
+      ],
+      "properties": {
+        "point": {
+          "oneOf": [
+            {
+              "$ref": "#/$defs/point"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "hovered": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "uniqueItems": true
+        },
+        "pressed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "armed": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "fullscreen": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "toggles": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "boolean"
+          }
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/event"
+          }
+        },
+        "effects": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/effect"
+          }
+        }
+      }
+    },
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "fill",
+        "fill_opacity",
+        "stroke",
+        "text",
+        "stroke_width",
+        "opacity",
+        "cursor"
+      ],
+      "properties": {
+        "fill": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "stroke": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "text": {
+          "type": "string",
+          "pattern": "^#[0-9a-fA-F]{6}$"
+        },
+        "fill_opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "stroke_width": {
+          "type": "number",
+          "minimum": 0
+        },
+        "opacity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "cursor": {
+          "enum": [
+            "arrow",
+            "pointer",
+            "selectable"
+          ]
+        }
+      }
+    },
+    "cursorOutline": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "viewBox",
+        "hotspot",
+        "paths"
+      ],
+      "properties": {
+        "viewBox": {
+          "type": "array",
+          "minItems": 4,
+          "maxItems": 4,
+          "items": {
+            "type": "number"
+          }
+        },
+        "hotspot": {
+          "$ref": "#/$defs/point"
+        },
+        "paths": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "points",
+              "fill",
+              "stroke",
+              "stroke_width",
+              "miter_limit"
+            ],
+            "properties": {
+              "points": {
+                "type": "array",
+                "minItems": 3,
+                "items": {
+                  "$ref": "#/$defs/point"
+                }
+              },
+              "fill": {
+                "type": "string"
+              },
+              "stroke": {
+                "type": "string"
+              },
+              "stroke_width": {
+                "type": "number",
+                "minimum": 0
+              },
+              "miter_limit": {
+                "type": "number",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Teaching Chapter Window Collection",
+  "type": "object",
+  "required": [
+    "version",
+    "course",
+    "manifest",
+    "labels",
+    "chapters"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "course": {
+      "type": "string",
+      "minLength": 1
+    },
+    "manifest": {
+      "type": "string",
+      "minLength": 1
+    },
+    "labels": {
+      "type": "object",
+      "required": [
+        "courses",
+        "clips",
+        "chapters"
+      ],
+      "properties": {
+        "courses": {
+          "$ref": "#/$defs/localized"
+        },
+        "clips": {
+          "$ref": "#/$defs/localized"
+        },
+        "chapters": {
+          "$ref": "#/$defs/localized"
+        }
+      },
+      "additionalProperties": false
+    },
+    "chapters": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "#/$defs/localized"
+      }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "localized": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

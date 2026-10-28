@@ -1,5 +1,6 @@
 /** 🔭️ What the learner looks at and how they find the way: the screen and the trail of steps around it, the crowd of a quiz and the leaderboard, each asking the proctor for what it shows. */
 
+import { clientAccess } from "../../🔓️access/🟦️.tsx";
 import { type Slug } from "@semio-tech/course";
 import { type HeldState } from "../🗃️held-state/🟦️.ts";
 import { type ProctorReads } from "../📖️proctor-reads/🟦️.ts";
@@ -11,12 +12,14 @@ export class Attention {
   constructor(
     private readonly state: HeldState,
     private readonly reads: ProctorReads,
+    private readonly now: () => number,
   ) {}
 
   /** 🚪️ Opens a screen and refreshes what it shows from the proctor; a cached run shows at once, also offline. The
    * step left stays on the trail behind — unless the new one shows `instead` of it, as the page the address named on
    * arrival does. */
   open(step: CourseStep, instead = false): void {
+    if (!this.allowed(step)) return;
     this.state.dispatch({ type: "step-opened", step, instead });
     this.refresh(step);
   }
@@ -60,7 +63,18 @@ export class Attention {
   private retrace(to: keyof CourseTrail): void {
     const left = this.state.read().step;
     this.state.dispatch({ type: "step-retraced", to });
+    while (!this.allowed(this.state.read().step)) {
+      const before = this.state.read().step;
+      this.state.dispatch({ type: "step-retraced", to });
+      if (this.state.read().step === before) { this.open({ screen: "home" }); break; }
+    }
     if (this.state.read().step !== left) this.refresh(this.state.read().step);
+  }
+
+  private allowed(step: CourseStep): boolean {
+    const state = this.state.read();
+    const page = step.screen === "home" ? step.page : step.screen === "run" || step.screen === "results" ? state.runs[step.run]?.quiz : undefined;
+    return page === undefined || clientAccess(state.course, page, this.now());
   }
 
   private refresh(step: CourseStep): void {

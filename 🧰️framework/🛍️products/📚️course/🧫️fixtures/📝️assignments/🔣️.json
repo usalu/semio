@@ -1,0 +1,71 @@
+{
+  "valid": [
+    {
+      "id": "sample-assignment",
+      "topic": "sample-topic",
+      "emoji": "📝",
+      "title": {
+        "en": "Topic Exercise",
+        "de": "Themenübung"
+      },
+      "description": {
+        "en": "Complete the exercise for this course topic.",
+        "de": "Bearbeite die Übung zu diesem Kursthema."
+      },
+      "documents": {
+        "en": {
+          "namespace": "course",
+          "id": "sample-assignment-en",
+          "file": "sample-assignment-en.pdf",
+          "producer": "@teaching/sample-course:build-assignment-en"
+        },
+        "de": {
+          "namespace": "course",
+          "id": "sample-assignment-de",
+          "file": "sample-assignment-de.pdf",
+          "producer": "@teaching/sample-course:build-assignment-de"
+        }
+      }
+    }
+  ],
+  "invalid": [
+    {
+      "case": "missing translation",
+      "remove": "/documents/de"
+    },
+    {
+      "case": "not a PDF",
+      "replace": "/documents/en/file",
+      "value": "worksheet.tex"
+    },
+    {
+      "case": "path traversal",
+      "replace": "/documents/en/file",
+      "value": "../worksheet.pdf"
+    },
+    {
+      "case": "unknown property",
+      "replace": "/answers",
+      "value": []
+    },
+    {
+      "case": "missing producer",
+      "remove": "/documents/en/producer"
+    },
+    {
+      "case": "template namespace",
+      "replace": "/documents/en/namespace",
+      "value": "print"
+    },
+    {
+      "case": "invalid producer",
+      "replace": "/documents/en/producer",
+      "value": "../build"
+    },
+    {
+      "case": "overlong producer",
+      "replace": "/documents/en/producer",
+      "value": "@teaching/sample-course:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+    }
+  ]
+}

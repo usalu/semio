@@ -1,0 +1,96 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Cooling Activity Silhouettes",
+  "type": "object",
+  "required": [
+    "reference_height",
+    "bed",
+    "poses"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "reference_height": {
+      "type": "number",
+      "exclusiveMinimum": 0
+    },
+    "bed": {
+      "type": "object",
+      "required": [
+        "width",
+        "deck",
+        "thickness"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "deck": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "thickness": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "poses": {
+      "type": "object",
+      "required": [
+        "sleep",
+        "walk",
+        "sprint"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "sleep": {
+          "$ref": "#/$defs/pose"
+        },
+        "walk": {
+          "$ref": "#/$defs/pose"
+        },
+        "sprint": {
+          "$ref": "#/$defs/pose"
+        }
+      }
+    }
+  },
+  "$defs": {
+    "pose": {
+      "type": "object",
+      "required": [
+        "asset",
+        "axis",
+        "bottom",
+        "heat"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "asset": {
+          "type": "string",
+          "pattern": "^[^\\\\]+/🖼️\\.svg$"
+        },
+        "axis": {
+          "enum": [
+            "width",
+            "height"
+          ]
+        },
+        "bottom": {
+          "type": "number",
+          "minimum": 0
+        },
+        "heat": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "genetic_hidden": [
+    "rooms",
+    "bar",
+    "ledger",
+    "note_chip"
+  ],
+  "genetic_visible": [
+    "small",
+    "bar",
+    "sum_row",
+    "gen_chip"
+  ],
+  "close_visible": [
+    "rooms",
+    "bar",
+    "note_chip"
+  ],
+  "close_hidden": ["ledger"],
+  "retired_consumers": [
+    "room",
+    "table",
+    "_table",
+    "ROOM_AT"
+  ]
+}

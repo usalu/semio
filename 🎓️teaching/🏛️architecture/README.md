@@ -1,7 +1,6 @@
 # 🏛️ Architecture — architektur-und-technologie.de
 
-The course site for architecture and technology students: it trains the feeling for the numbers behind energy-efficient
-buildings. The site `https://architektur-und-technologie.de` offers the course [`📚️course/🔣️.json`](📚️course/🔣️.json)
+The course site for architecture and technology students: it trains energy literacy, parametric design, software workflows, BIM concepts and optimization. The site `https://architektur-und-technologie.de` offers the course [`📚️course/🔣️.json`](📚️course/🔣️.json)
 (id `architecture`, title "Architecture and Technology" / "Architektur und Technologie") through the
 [proctor](../🛂️proctor) at `https://semio.iek.uni-hannover.de`, which records runs, scores, badges and the leaderboard.
 
@@ -10,7 +9,8 @@ buildings. The site `https://architektur-und-technologie.de` offers the course [
 | Course: introduction, quiz paths, badges | `📚️course/🔣️.json` |
 | Web package `@teaching/architecture-course`: static build for the CDN with the proctor origin baked in; in development vite on port 6061 proxies the gateway routes to the proctor on 8791 (develop, check, test and publish via `repo run @teaching/architecture-course:<target>` or the dashboard commands; prerequisites, ports, cache and the German chapter in [its README](📚️course/README.md)) | `📚️course/📦️packages/🟦️typescript` |
 | Deployment: the site as a static artifact on a CDN; the proctor as an API-only Docker image with Caddy (TLS with a certificate it obtains itself or one the operator supplies) for `semio.iek.uni-hannover.de` | see the site and [proctor](../🛂️proctor/README.md) READMEs |
-| Quizzes | `⚡️energy/<topic>/❓️quiz/🔣️.json` |
+| BIM videos: six independent lessons on information, object orientation, representations, partial models and translation, interfaces, and cross-model consistency; English and German, Speaker and Spectator outputs | [BIM video authoring and render commands](🏗️bim/🎬️clip/README.md) |
+| Quizzes | `⚡️energy/<topic>/❓️quiz/🔣️.json` and `{📐️parametric,🦗️grasshopper,📊️excel,🏗️bim,🎯️optimization}/❓️quiz/🔣️.json` |
 | Pets: twenty animated companions, each the likeness of a thing the quiz items are about (sunny, cloudy, housy, solary, radiatory, pumpy, windowy, waly, battery, windy, boily, roofy, insuly, shady, venty, chilly, kettly, flamy, thermy, servy), with their bonds and one cast for the home screen and one per quiz; the site loads them lazily and only for a learner who wants pets (roster, casts, bonds and how to add one in [its README](🐾️pets/README.md)) | `🐾️pets/🔣️.json`, `🐾️pets/<species>/🔣️.json`, `🐾️pets/🟦️.ts` |
 
 ## Quizzes
@@ -22,6 +22,13 @@ buildings. The site `https://architektur-und-technologie.de` offers the course [
 | 🔥 `heating` — Heating / Heizen | U-values of building components (matching, 17, 10, W/(m²·K)); heating load and heating demand of buildings (matching with two dimensions, 11, 8, W/m² and kWh/(m²·a)) | envelope quality from single glazing to the passive-house roof; building age and standard |
 | ❄️ `cooling` — Cooling / Kühlen | cooling load and cooling demand (matching with two dimensions, 37, 7, W/m² and kWh/(m²·a)) | internal and solar loads, full-load hours |
 | 📊 `demand` — Energy Demand / Energiebedarf | energy standards and their spider-diagram profiles (classification, 6 standards onto 6 profiles); final energy demand of buildings with their supply systems (matching, 9, 7, kWh/(m²·a)) | how envelope, airtightness, heat recovery and supply system add up |
+| 📐 `parametric-design` — Parametrics / Parametrik | five classification tasks; 65 examples | parameter domains, consistent dependencies, complexity, four-axis profiles and automation |
+| 🦗 `grasshopper-data` — Grasshopper | four classification tasks; 85 examples with canvas mockups | terminology, casting, data trees and list matching |
+| 📊 `excel-workbook` — Excel | three classification tasks; 110 examples with workbook mockups | terminology, command outputs and copied references |
+| 🏗️ `bim-concepts` — BIM | three classification tasks; 55 examples | data and information, object orientation, interfaces and coordination |
+| 🎯 `optimization-decisions` — Optimization / Optimierung | two classification tasks; 25 examples | objectives and constraints, strict Pareto dominance and trade-offs |
+
+Each subject has a perfect-quiz badge from medium challenge onward. Public access follows the course release schedule; author review uses the explicit `?preview=1` URL argument. Mockups show given data and keep grading categories in the solution documents.
 
 All magnitudes use logarithmic scales, so confusing neighbours costs little and confusing orders of magnitude costs a
 lot (design §6 of the ticket `QUIZ-PRODUCT-AND-TEACHING-PROCTOR`).

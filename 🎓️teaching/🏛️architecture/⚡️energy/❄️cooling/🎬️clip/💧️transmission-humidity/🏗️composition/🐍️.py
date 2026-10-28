@@ -1,28 +1,19 @@
-"""🎬 Render the section's authored beats with optional narration."""
+"""🎬 Compose the curriculum chapter with canonical source excerpts."""
 
 from importlib import import_module
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-SPEECH_DIR = BASE_DIR / "🔊️speech"
-WORKSPACE_ROOT = next(parent for parent in BASE_DIR.parents if (parent / "🧰️framework").is_dir())
-if str(WORKSPACE_ROOT) not in sys.path:
-    sys.path.insert(0, str(WORKSPACE_ROOT))
+_WORKSPACE_ROOT = next(parent for parent in Path(__file__).resolve().parents if (parent / "🧰️framework").is_dir())
+if str(_WORKSPACE_ROOT) not in sys.path:
+    sys.path.insert(0, str(_WORKSPACE_ROOT))
 
-build_section_video = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔊️speech.🐍️").build_section_video
-
-SCENES = [
-    (BASE_DIR / "🐍️.py", "Beat1_TransmissionOpaque", SPEECH_DIR / "beat_1_audio.mp3"),
-    (BASE_DIR / "🐍️.py", "Beat2_TimeLag", SPEECH_DIR / "beat_2_audio.mp3"),
-    (BASE_DIR / "🐍️.py", "Beat3_LueftungslastImSommer", SPEECH_DIR / "beat_3_audio.mp3"),
-]
+_runtime = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.⚙️runtime.🐍️")
 
 
-def main() -> int:
-    """▶️ Build every section beat, failing if any render or mux fails."""
-    build_section_video(BASE_DIR, SCENES, "Full_Scene3_Transmission_Humidity.mp4")
-    return 0
+def main(argv: list[str] | None = None) -> int:
+    """▶️ Render the declared chapter through the shared range-aware execution plan."""
+    return _runtime.video_main("cooling", ["--chapter", "Cooling_03_TransmissionHumidity", *(sys.argv[1:] if argv is None else argv)])
 
 
 if __name__ == "__main__":

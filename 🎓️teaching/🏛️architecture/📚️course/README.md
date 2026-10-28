@@ -8,8 +8,8 @@ config, the operator verbs and the tests read them there.
 
 The overview starts with profile, quizzes, leaderboard, badges, and preferences cards. A shared introductory walkthrough overlays the overview on the first visit; the profile card opens explicit sign-in. Quizzes opens
 the topic grid: Energie, Parametrik, Grasshopper, Excel, Building Information Modelling, and Optimierung. Energie
-opens the existing physics, ventilation, heating, cooling, and demand quiz cards. The other topics are placeholders with no run
-action. Every grid keeps the same glass backdrop, pointer pan, crisp hover or keyboard focus, and opening zoom.
+opens the existing physics, ventilation, heating, cooling, and demand quiz cards. Each other topic contains its authored subject quiz with terminology, classification and application exercises.
+The configured release schedule controls access to these quizzes. Every grid keeps the same glass backdrop, pointer pan, crisp hover or keyboard focus, and opening zoom.
 Escape and Up return one level; Overview returns to the root. Topic and quiz IDs also name direct hash links.
 
 | Path | What |
@@ -27,6 +27,12 @@ Escape and Up return one level; Overview returns to the root. Topic and quiz IDs
 | `🧱️stack/🟦️.ts` | the local stack: `dev` (proctor and site in one terminal) and the parts the end-to-end gate boots its stacks from |
 | `🎭️e2e/` | the end-to-end gate (`🟦️.ts`), its Playwright projects (`🎚️config`) and the learner the specs drive (`🚶️learner`) |
 | `🚀️deploy/` | `🔣️.json` (hosts, image, port) and its contract (`🧬️schema/🔣️.json`), the runtime-only `Dockerfile` and context allowlist (`Dockerfile.dockerignore`), the bounded tar encoder and content selector (`📦️image/🟦️.ts`), `compose.yaml`, `Caddyfile` and the operator verbs (`🟦️.ts`): `publish`, `docker-image-build`, `docker-image-check`, `docker-stack-check`, `docker-stack-bundle`, `docker-image-publish`, `deploy-check` |
+
+## Subject Quizzes
+
+Energy is joined by five authored bilingual quizzes: parametric design (domains, dependencies, complexity, radar profiles and automation), Grasshopper (canvas terminology, casting, trees and list matching), Excel (workbook terminology, command outputs and copied references), BIM (data and information, object orientation and coordination), and optimization (objectives and Pareto dominance). Native spreadsheet and node canvas previews show the exercise data alongside the answer controls; named scroll regions, semantic tables, textual wire relations and visible highlights support keyboard and screen-reader use. Question pools rotate five alternatives per semantic slot. Existing release dates still govern public access; the explicit `?preview=1` URL argument enables author review.
+
+Die fünf weiteren zweisprachigen Quizze behandeln Parametrik, Grasshopper, Excel, BIM und Optimierung. Tabellen- und Canvas-Mockups zeigen konkrete Übungsdaten neben den Antwortfeldern. Benannte Scrollbereiche, semantische Tabellen, textuelle Verbindungen und sichtbare Markierungen unterstützen Tastatur und Screenreader. Die vorhandene Freigabeplanung gilt weiterhin; `?preview=1` ermöglicht die Autorenansicht.
 
 ## Challenges
 
@@ -203,7 +209,7 @@ expects fails after twenty seconds; a whole test may take ten minutes.
 |---|---|
 | `🚀️site-boot` | the site loads and shows the introduction (runs first, so a cold dev server is warm for the others) |
 | `🪪️first-visit` | introduction, then anonymous, pseudonym or name; a known pseudonym recalls its progress on a fresh device; switching identity asks first |
-| `🥞️layered-home` | root, topic, and question grids; the live screen-sized pages behind glass, pointer pan, crisp hover and focus, opening zoom, placeholder topics, direct hashes, one-level Escape and Up, and navigation through the trail |
+| `🥞️layered-home` | root, topic, and question grids; the live screen-sized pages behind glass, pointer pan, crisp hover and focus, opening zoom, populated scheduled topic previews, direct hashes, one-level Escape and Up, and navigation through the trail |
 | `🎯️quiz-runs` | every quiz to a perfect score and every badge; one mistake per task for partial credit (the classification mistake is dragged with the mouse) |
 | `⛰️challenge-levels` | physics at every challenge: easy with the keys on the ladder and, beside each value placed far off until it is fixed, a question asserted by its structure with items named by their short labels (extremes exchanged: the order question without a number, the larger first, against an item placed right; the two largest exchanged: "together only add up to" and "it takes", no long digit runs), exactly three on a sorting placed upside down, nothing general anywhere (100 points, no badge); easy on a matching (both exchanged cards asked for their order, on two quantities the one named, in German "in puncto Heizlast") and on spider profiles (above or below a standard placed right on the named axis, else the profile's value), in English and German; medium (200 points and the physics badges), hard with typed guesses (300 points; one guess far off costs score and shows as a miss), expert behind a clock per task driven past its deadline with Playwright's page clock (read-only, open tasks score nothing, points of 400) |
 | `🏆️live-leaderboard` | rows ordered by total, arriving on a watching device without a reload; the same learners on today's, this week's and this month's leaderboard and on the one of the quiz they played; a column heading clicked to sort |
@@ -381,7 +387,7 @@ first, caches them and reports each as a task of its own:
   document runs — the entry script 250 000 B for `publish` and for `rehearsal`, the topology the end-to-end gate serves
   against its own proctor, and the stylesheet 60 000 B gzip — and 5 MB on disk; the development topology serves
   unbundled modules and has no entry chunk). A run with its results, the pets and the material are lazy chunks the first
-  screen does not wait for, so they are not charged — the document merely hints the six of the material at low priority
+  screen does not wait for, so they are not charged — the document merely hints every material chunk at low priority
   (`<link rel="modulepreload" fetchpriority="low">`, governed by `script-src`; a `prefetch` is blocked by `connect-src`),
   which runs nothing. On 2026-10-25 the entry weighed 239 674 B (it was 304 232 B
   while the five quizzes with their solutions, 62 kB gzip, were imported statically), the material chunks 68 213 B
@@ -813,3 +819,11 @@ Der Stack gibt `… is ready after … ms` mit der Adresse erst aus, nachdem die
 Der Release-Pfad ist `publish` (Seite), `docker-image-build`, `docker-image-check`, `docker-stack-check`, `docker-stack-bundle` und `docker-image-publish` (Proctor), zusammengefasst im Tor `deploy-check`. Er braucht den Release-Modus, einen laufenden Docker-Daemon und für das Image einen nativen Linux-x64-Host; der Workflow `.github/workflows/architecture-course.yml` nutzt dafür den Runner der Repository-Variable `ARCHITECTURE_COURSE_RUNNER`. Schritte, Rollback, Backup und Betrieb des Docker-Hosts beschreibt der englische Teil ab *Proof of concept by hand*.
 
 Nicht verifiziert: Für diese Dokumentation ist kein Lauf dieser Kette unter einem der beiden Werkzeuge aufgezeichnet. Targetnamen, Abhängigkeiten, Ports, Cache-Flags und Registereinträge sind am 2026-10-20 aus Manifest, Router und Quellen gelesen. Am 2026-10-25 (Welle 1025f) liefen `typecheck`, `test`, `check` (das zuerst den Proctor baut) und `build` des Kurses auf der Bazel-Route grün; für `dev`, `test-e2e` und den Image-Pfad gibt es noch keinen aufgezeichneten grünen Lauf. Der GitHub-Workflow `build-system.yml` führt `@teaching/architecture-course:test` unter beiden Werkzeugen aus und ist noch nie gelaufen. Statische Prüfungen vom 2026-10-20: `playwright test --list`, mit Bun gestartet, zählt 76 Tests in 16 Dateien; die Vite-Konfiguration löst unter beiden Konfigurationsladern von Vite für `build` und `serve` auf; die Skripte von Gate, Stack, Deploy und Lernenden-Prüfung lassen sich ohne Fehler bündeln; die Playwright-Browser lädt `repo run workspace:deps-browsers` nach `.🧬semio/🦑️repo/⚡️cache/tools/ms-playwright`.
+
+## Parametric Assignment Documents
+
+The parametrization finger exercise belongs to the Parametric topic. Its authored English and German TeX, geometry and icon plan live in `../📐️parametric/📝️assignment`. Shared Print macros and compilation remain framework-owned. The course builds canonical SVG icons into bounded PNG resources in managed compiler storage and publishes one PDF per explicitly selected language.
+
+Run `repo run @teaching/architecture-course:build-parametrization-en` or `repo run @teaching/architecture-course:build-parametrization-de`. The normal `dev`, `dev-site` and `build` targets require both publications; `publish` consumes the course build. The browser receives the PDFs through the retained authenticated build transport. Run `repo run @teaching/architecture-course:test-assignment` for assignment semantics, resource provenance and PDF delivery contracts.
+
+Deutsch: Die Fingerübung Parametrisierung gehört zum Kursthema Parametrik. Bearbeitbare Aufgabenquellen und das Icon-Verzeichnis liegen beim Thema; Print stellt die gemeinsamen Makros und den Compiler bereit. Die Sprachziele `build-parametrization-en` und `build-parametrization-de` erzeugen die PDFs. Die regulären Entwicklungs- und Build-Ziele binden beide Fassungen ein; `test-assignment` prüft Inhalt und PDF-Transport. Generierte PDF- und PNG-Dateien bleiben außerhalb der versionierten Quellen.

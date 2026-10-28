@@ -1,0 +1,39 @@
+{
+  "quiz": "bim-concepts",
+  "tasks": [
+    {
+      "id": "data-information",
+      "kind": "classification"
+    },
+    {
+      "id": "object-oriented-model",
+      "kind": "classification"
+    },
+    {
+      "id": "model-coordination",
+      "kind": "classification"
+    }
+  ],
+  "classifications": {
+    "data-information": {
+      "coordinate-table": "data",
+      "unlabelled-values": "data",
+      "door-object": "information",
+      "fire-rating-meaning": "information"
+    },
+    "object-oriented-model": {
+      "door-class": "class",
+      "door-instance": "instance",
+      "door-width": "attribute",
+      "door-open": "method",
+      "firedoor-inheritance": "inheritance",
+      "door-composition": "composition"
+    },
+    "model-coordination": {
+      "ifc-delivery": "interface",
+      "opening-agreement": "coordination",
+      "clash-report": "coordination",
+      "native-silo": "isolated-work"
+    }
+  }
+}

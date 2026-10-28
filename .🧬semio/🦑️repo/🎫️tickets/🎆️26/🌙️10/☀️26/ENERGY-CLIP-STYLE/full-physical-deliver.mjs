@@ -1,0 +1,18 @@
+import fs from 'node:fs';
+import path from 'node:path';
+import crypto from 'node:crypto';
+import {fileURLToPath} from 'node:url';
+const ticket=path.dirname(fileURLToPath(import.meta.url));
+const input=path.resolve(process.argv[2] ?? '');
+const generated=path.join(ticket,'🗑️generated');
+const relative=path.relative(generated,input);
+if(!relative || relative.startsWith('..') || path.isAbsolute(relative) || path.extname(input)!=='.mp4') throw new Error('Expected an owned generated MP4');
+const output=path.join(ticket,'full-physical-updated.mp4');
+if(fs.existsSync(output)) throw new Error('Delivery already exists');
+const digest=p=>crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex');
+const before=digest(input);
+const temp=path.join(generated,'full-physical-delivery.mp4');
+fs.copyFileSync(input,temp);
+if(digest(temp)!==before || digest(input)!==before) throw new Error('Copy verification failed');
+fs.renameSync(temp,output);
+process.stdout.write(JSON.stringify({output,bytes:fs.statSync(output).size,sha256:before})+'\n');

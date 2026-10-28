@@ -1,0 +1,140 @@
+{
+  "cases": [
+    {
+      "name": "English assignment",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Topic Exercise",
+        "course": "Sample Course"
+      },
+      "valid": true
+    },
+    {
+      "name": "German assignment",
+      "value": {
+        "language": "de",
+        "theme": "dark",
+        "title": "Themenübung",
+        "duration": "90 Minuten"
+      },
+      "valid": true
+    },
+    {
+      "name": "Language is required",
+      "value": {
+        "theme": "light",
+        "title": "Assignment"
+      },
+      "valid": false
+    },
+    {
+      "name": "Unsupported language",
+      "value": {
+        "language": "fr",
+        "theme": "light",
+        "title": "Assignment"
+      },
+      "valid": false
+    },
+    {
+      "name": "Empty title",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": ""
+      },
+      "valid": false
+    },
+    {
+      "name": "No implicit theme",
+      "value": {
+        "language": "en",
+        "title": "Assignment"
+      },
+      "valid": false
+    },
+    {
+      "name": "Unknown metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Assignment",
+        "deadline": "Tomorrow"
+      },
+      "valid": false
+    },
+    {
+      "name": "Typed metadata",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "Assignment",
+        "duration": 90
+      },
+      "valid": false
+    },
+    {
+      "name": "Inherited property toString",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "X",
+        "toString": "not schema metadata"
+      },
+      "valid": false
+    },
+    {
+      "name": "Inherited property constructor",
+      "value": {
+        "language": "en",
+        "theme": "light",
+        "title": "X",
+        "constructor": "not schema metadata"
+      },
+      "valid": false
+    }
+  ],
+  "escaping": {
+    "input": "A & B_50% {x} #1 $y$ ~ ^ \\",
+    "expected": "A \\& B\\_50\\% \\{x\\} \\#1 \\$y\\$ \\textasciitilde{} \\textasciicircum{} \\textbackslash{}"
+  },
+  "contrast": {
+    "light": {
+      "backing": null
+    },
+    "dark": {
+      "backing": "semio-chrome-light-canvas",
+      "paddingMillimetres": 0.4
+    },
+    "imageHeightMillimetres": 11,
+    "rowHeightMillimetres": 14
+  },
+  "pdfMetadata": [
+    {
+      "language": "en",
+      "pdfLanguage": "en-US"
+    },
+    {
+      "language": "de",
+      "pdfLanguage": "de-DE"
+    }
+  ],
+  "matrix": {
+    "typeColumns": 8,
+    "parameterRows": 8,
+    "totalColumns": 9,
+    "totalRows": 9,
+    "rowHeightMillimetres": 6,
+    "labelWidthMillimetres": 27,
+    "headerHeightMillimetres": 16,
+    "columnPaddingMillimetres": 2,
+    "imageFitsCell": true
+  },
+  "silhouette": {
+    "component": "Table",
+    "connectedOutline": true,
+    "titleInsideTable": false,
+    "rightAutomaticChip": true
+  }
+}

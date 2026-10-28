@@ -4,7 +4,7 @@
  * and the results — no label is left unresolved, the course's texts are those of the chosen language, and every action
  * and heading the client itself words reads differently in the other language.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive */
-import { COURSE, LOCALES, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { COURSE, LOCALES, authorPreview, QUIZZES, activeOverview, openGrid, answerRun, arrive, card, expect, handle, openTask, pane, playQuiz, primary, quizOf, readIntroduction, screen, shownName, shownTask, test, unresolvedLabels, type Device, type Locale } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 const other = (locale: Locale): Locale => (locale === "en" ? "de" : "en");
 
@@ -101,16 +101,19 @@ for (const locale of LOCALES) {
     await primary(screen(learner.page, "identity")).click();
     await expect(activeOverview(learner.page)).toBeVisible();
     await expect.poll(() => shownName(learner)).toBe(name);
+    await authorPreview(learner);
 
     await expectBothLanguages(learner, locale, "root overview", [name]);
     await openGrid(learner, "quizzes");
     for (const topic of COURSE.topics) await expect(card(learner.page, topic.id).getByRole("heading")).toHaveText(topic.title[locale]);
     await expectBothLanguages(learner, locale, "topics overview", [name]);
-    await openGrid(learner, "energy");
-    for (const quiz of QUIZZES) {
+    for (const topic of COURSE.topics) {
+      await openGrid(learner, topic.id);
+      for (const quiz of QUIZZES.filter(quiz => topic.quizzes.includes(quiz.id))) {
       await expect(card(learner.page, quiz.id).getByRole("heading")).toHaveText(quiz.title[locale]);
       await expect(card(learner.page, quiz.id)).toContainText(quiz.description[locale]);
     }
+      }
     await expectBothLanguages(learner, locale, "overview", [name]);
 
     await expect(learner.page.getByRole("navigation")).toHaveCount(2);

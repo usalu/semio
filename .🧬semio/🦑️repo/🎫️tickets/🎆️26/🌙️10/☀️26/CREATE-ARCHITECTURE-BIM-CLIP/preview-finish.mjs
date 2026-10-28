@@ -1,0 +1,17 @@
+import fs from "node:fs";
+import path from "node:path";
+import {fileURLToPath} from "node:url";
+const ticket=path.dirname(fileURLToPath(import.meta.url)),root=path.resolve(process.cwd());
+const target=path.resolve(ticket,"🗑️generated"),expected=path.join(ticket,"🗑️generated");
+const video=path.join(root,".🧬semio/🎓️teaching/⚡️cache/bim-preview/de/speaker/BIM_information.mp4");
+if(!fs.statSync(video).isFile()||fs.statSync(video).size!==6359114)throw Error("Delivery unavailable");
+if(target!==expected||!target.startsWith(root+path.sep)||fs.lstatSync(target).isSymbolicLink())throw Error("Unexpected cleanup target");
+const walk=d=>fs.readdirSync(d,{withFileTypes:true}).flatMap(e=>e.isDirectory()?walk(path.join(d,e.name)):[path.join(d,e.name)]);
+const longest=Math.max(...walk(target).map(f=>f.length));
+if(longest>256)throw Error("Path limit exceeded");
+fs.rmSync(target,{recursive:true});
+fs.appendFileSync(path.join(ticket,"preview.md"),"\n## Visual Review and Cleanup\n\nReviewed the encoded frame at 30 seconds: the German wall diagram, data/schema labels, teaching shell and complete Speaker caption fit the 720p frame. Maximum temporary path length was "+longest+" characters. The retained MP4 remains available; only the resolved non-symlink generated directory inside this ticket was deleted after successful full decode and byte-identical delivery. No product sources were modified for this playback request.\n");
+let summary=fs.readFileSync(path.join(ticket,"summary.md"),"utf8");
+summary=summary.replace("Temporary encoded previews, frames, compiler outputs and logs are removed under the repository's generated-output policy.","Temporary smoke previews, frames, compiler outputs and logs were removed under the repository's generated-output policy. The subsequently requested playback MP4 is retained and linked below.");
+fs.writeFileSync(path.join(ticket,"summary.md"),summary);
+console.log("[DEBUG] Requested MP4 retained; ticket temporary media removed.");

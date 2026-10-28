@@ -9,3 +9,4 @@ export * from "../../🔨️modules/🏅️badges/🟦️.ts";
 export * from "../../🔨️modules/🧾️lifecycle/🟦️.ts";
 export * from "../../🔨️modules/👁️views/🟦️.ts";
 export * from "../../🔨️modules/👥️presence/🟦️.ts";
+export * from "../../🔨️modules/🔓️access/🟦️.ts";

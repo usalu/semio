@@ -1,0 +1,104 @@
+{
+  "quiz": "optimization-decisions",
+  "tasks": [
+    {
+      "id": "optimization-objectives",
+      "kind": "classification"
+    },
+    {
+      "id": "pareto-dominance",
+      "kind": "classification"
+    }
+  ],
+  "classifications": {
+    "optimization-objectives": {
+      "cost-with-height-limit": "single",
+      "energy-with-budget-limit": "single",
+      "area-fixed-brief": "single",
+      "carbon-code-compliant": "single",
+      "weighted-score": "single",
+      "cost-and-carbon": "multi",
+      "daylight-and-glare": "multi",
+      "area-and-energy": "multi",
+      "comfort-and-cost": "multi",
+      "structure-and-carbon": "multi"
+    },
+    "pareto-dominance": {
+      "cheap-carbon-heavy": "pareto",
+      "costly-carbon-light": "pareto",
+      "small-cost-tradeoff": "pareto",
+      "small-carbon-tradeoff": "pareto",
+      "large-tradeoff": "pareto",
+      "worse-both": "dominated",
+      "same-cost-more-carbon": "dominated",
+      "more-cost-same-carbon": "dominated",
+      "much-worse-both": "dominated",
+      "slightly-worse-both": "dominated",
+      "equal-objectives": "pareto",
+      "better-both": "pareto",
+      "same-cost-less-carbon": "pareto",
+      "less-cost-same-carbon": "pareto",
+      "much-better-both": "pareto"
+    }
+  },
+  "pareto": {
+    "baseline": [
+      100,
+      50
+    ],
+    "minimize": [
+      "cost",
+      "carbon"
+    ],
+    "cases": [
+      {
+        "id": "cheap-carbon-heavy",
+        "values": [
+          80,
+          70
+        ],
+        "dominated": false
+      },
+      {
+        "id": "costly-carbon-light",
+        "values": [
+          120,
+          30
+        ],
+        "dominated": false
+      },
+      {
+        "id": "equal-objectives",
+        "values": [
+          100,
+          50
+        ],
+        "dominated": false
+      },
+      {
+        "id": "worse-both",
+        "values": [
+          120,
+          70
+        ],
+        "dominated": true
+      },
+      {
+        "id": "same-cost-more-carbon",
+        "values": [
+          100,
+          70
+        ],
+        "dominated": true
+      },
+      {
+        "id": "more-cost-same-carbon",
+        "values": [
+          120,
+          50
+        ],
+        "dominated": true
+      }
+    ]
+  }
+}

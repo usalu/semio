@@ -15,6 +15,8 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+
 import numpy as np
 from manim import *
 
@@ -24,18 +26,18 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+P_TEAL = _manim_module.P_TEAL
+section_material = _manim_module.section_material
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -60,6 +62,10 @@ set_vo_language = _manim_module.set_vo_language
 load_vo_timing = _manim_module.load_vo_timing
 house_section = _manim_module.house_section
 open_window = _manim_module.open_window
+room_section = _manim_module.room_section
+window_glyph = _manim_module.window_glyph
+window_opening = _manim_module.window_opening
+window_opening = _manim_module.window_opening
 person_glyph = _manim_module.person_glyph
 sun_glyph = _manim_module.sun_glyph
 cloud_glyph = _manim_module.cloud_glyph
@@ -69,7 +75,7 @@ ripples = _manim_module.ripples
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -95,7 +101,7 @@ def _din_ref(text: str):
     Same size, colour, opacity and corner as ``_din_ref`` in every other tutorial chapter. This chapter cites
     DIN EN 16798-1 (indoor air quality, CO₂ categories) and DIN 1946-6 (ventilation of dwellings).
     """
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -103,29 +109,33 @@ def _din_ref(text: str):
 
 
 #region Shared visual motifs
-def _room(center, width, height, color=P_WHITE, t: float = 0.16):
-    """🏠 Physical Fundamentals room section — ceiling slab and side walls, then the floor slab, centred on the outline."""
-    cx, cy = float(center[0]), float(center[1])
-    style = dict(color=color, stroke_width=2, fill_color=color, fill_opacity=0.14)
-    ceiling = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy + height / 2, 0.0]))
-    walls = VGroup(*[Rectangle(width=t, height=height - t, **style).move_to(np.array([cx + s * width / 2, cy, 0.0]))
-                     for s in (-1, 1)])
-    floor = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy - height / 2, 0.0]))
-    return VGroup(VGroup(ceiling, walls), floor)
+def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
+          window_side="none", window_y=None, window_h=1.15):
+    """🏠 Closed room material around declared openings, with slabs centred on the outline."""
+    inner_h = height - t
+    floor_y = float(center[1]) - inner_h / 2
+    mid = float(center[1]) if window_y is None else window_y
+    opening = (0.30, 0.88) if window_side == "none" else ((mid - window_h / 2 - floor_y) / inner_h, (mid + window_h / 2 - floor_y) / inner_h)
+    section = room_section(center, w=width - t, h=inner_h, wall=t, slab=t,
+                           window=opening, window_side=window_side)
+    body = VGroup(section["ceiling"], *[m for m in section["shell"] if m is not section["floor"] and m is not section["ceiling"]])
+    return section_material(VGroup(body, section["floor"]))
 
 
-def _window(pos, height: float = 1.15, width: float = 0.26, color=P_CYAN):
-    """🪟 Facade opening in a room wall — a framed gap through the slab line."""
-    return Rectangle(width=width, height=height, color=color, stroke_width=2.2, fill_color=P_DEEP_DARK,
-                     fill_opacity=1.0).move_to(pos)
+def _window(pos, height=1.15, width=0.16, color=P_CYAN, inward=1):
+    """🪟 Recessed sash projected inward within a structural wall aperture."""
+    win = window_glyph(float(pos[0]), float(pos[1]) - height / 2, float(pos[1]) + height / 2,
+                       depth=0.8 * height, wall=width, color=color, inward=inward)
+    win["sash"].become(window_opening(win))
+    win["group"].window = win
+    return win["group"]
 
 
 def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
-    """🧍 Occupant at true scale — 1.75 m in a 2.5 m room, feet on the floor slab's top edge at ``x``."""
+    """🧍 A 1.75 m occupant in a 2.5 m clear room, anchored to the slab top."""
     height = 0.7 * (room_h - t)
-    scale = height / (0.66 * 1.09)
-    pos = np.array([x, float(room_c[1]) - room_h / 2 + t / 2 + height / 2, 0.0])
-    return person_glyph(pos, color=color, scale=1.09 * scale)
+    floor_y = float(room_c[1]) - room_h / 2 + t / 2
+    return person_glyph([x, floor_y + height / 2, 0], color=color, scale=height / 0.66)
 
 
 def _fan(pos, color, radius: float = 0.24):
@@ -141,6 +151,18 @@ def _streams(streams, rt: float, *, speed: float = 0.5, waves: int = 3, radius: 
     return flow_animation([(list(p), *c) for p, *c in streams], waves=waves, radius=radius, cycles=speed * rt)
 
 
+def _room_occupants(room_c, room_h, left_window, right_window, *, count: int = 4):
+    """🫂 Place full-height occupants clear of both inward window swing envelopes."""
+    prototype = _stand(room_c, room_h, float(room_c[0]))
+    gap = 0.12 * prototype.height / 1.75
+    left = left_window.get_right()[0] + prototype.width / 2 + gap
+    right = right_window.get_left()[0] - prototype.width / 2 - gap
+    if count < 1 or right - left < (count - 1) * (prototype.width + gap):
+        raise ValueError("Occupants do not fit clear of the open windows")
+    xs = [(left + right) / 2] if count == 1 else np.linspace(left, right, count)
+    return VGroup(*[_stand(room_c, room_h, x) for x in xs])
+
+
 def _gauge(x: float, y_c: float, color: str, tracker, *, length: float = 2.4, thickness: float = 0.46):
     """📊 Vertical ``meter`` without its text cap, driven by ``tracker`` (0…1) — the caption is typeset by the beat."""
     gauge = meter("·", length=length, thickness=thickness, color=color)
@@ -153,7 +175,7 @@ def _gauge(x: float, y_c: float, color: str, tracker, *, length: float = 2.4, th
 def _handover(src: str, color: str):
     """🔖 Typeset hand-over chip naming the quantity the next video takes over."""
     label = math_label(src, size=BODY_FONT_SIZE, color=color)
-    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0.1, buff=0.14, stroke_width=1.8), label)
+    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER), label)
 
 
 def _snap(mob):
@@ -226,9 +248,7 @@ class Beat1_Lueftungsbedarf(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Was Lüftung leisten muss", title)
+        subtitle = section_heading("Was Lüftung leisten muss")
         din = _din_ref("DIN EN 16798-1 · DIN 1946-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -236,12 +256,12 @@ class Beat1_Lueftungsbedarf(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         room_c, room_w, room_h = np.array([-2.7, 0.45, 0.0]), 5.2, 2.5
-        shell = _room(room_c, room_w, room_h)
-        xs = [-4.5, -3.3, -2.1, -0.9]
-        people = VGroup(*[_stand(room_c, room_h, x) for x in xs])
+        shell = _room(room_c, room_w, room_h, window_side="both", window_y=room_c[1] + 0.3)
         win_y = room_c[1] + 0.3
         left_win = _window(np.array([room_c[0] - room_w / 2, win_y, 0.0]))
-        right_win = _window(np.array([room_c[0] + room_w / 2, win_y, 0.0]))
+        right_win = _window(np.array([room_c[0] + room_w / 2, win_y, 0.0]), inward=-1)
+        people = _room_occupants(room_c, room_h, left_win, right_win)
+        xs = [person.get_x() for person in people]
         floor_top = room_c[1] - room_h / 2 + 0.08
         heads = [p.get_top() + UP * 0.05 for p in people]
 
@@ -369,11 +389,11 @@ class Beat1_Lueftungsbedarf(Scene):
                            math_label(rf"\theta_{{\mathrm{{e}}}} = {de_num(theta)}\,°\mathrm{{C}}", size=LABEL_FONT_SIZE, color=color),
                            math_label(rf"\dot{{V}}_{{\mathrm{{Pers}}}} = {de_num(PER_PERSON_M3H * PEOPLE)}\,\mathrm{{m^{{3}}/h}}",
                                       size=LABEL_FONT_SIZE, color=P_WHITE)).arrange(DOWN, buff=0.14, aligned_edge=LEFT)
-            frame = RoundedRectangle(width=3.7, height=1.4, corner_radius=0.12, color=color, stroke_width=2).move_to(at)
+            frame = RoundedRectangle(width=3.7, height=1.4, corner_radius=0, color=color, stroke_width=2).move_to(at)
             lines.move_to(at + RIGHT * 0.35)
             return VGroup(frame, icon.move_to(at + LEFT * 1.15), lines)
 
-        winter_icon = cloud_glyph(Rectangle(width=0.22, height=0.06), pad=(0.2, 0.12), color=WINTER_COLOR)
+        winter_icon = _room(ORIGIN, 0.8, 0.55, color=WINTER_COLOR, t=0.07)
         summer_icon = sun_glyph(ORIGIN, color=P_YELLOW).scale(0.34)
         card_w = season_card("Winter", WINTER_COLOR, THETA_WINTER[1], winter_icon, np.array([4.3, 0.95, 0.0]))
         card_s = season_card("Sommer", SUMMER_COLOR, THETA_SUMMER[1], summer_icon, np.array([4.3, -0.55, 0.0]))
@@ -418,9 +438,7 @@ class Beat2_Lueftungsweg(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Der Lüftungsweg durchs Haus", title)
+        subtitle = section_heading("Der Lüftungsweg durchs Haus")
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -587,9 +605,7 @@ class Beat3_Fahrplan(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Der Fahrplan des Videos", title)
+        subtitle = section_heading("Der Fahrplan des Videos")
         din = _din_ref("DIN EN 12831-1 · DIN 1946-6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -612,18 +628,16 @@ class Beat3_Fahrplan(Scene):
                 path = smooth_path([np.array([-0.62, 0.05, 0.0]), np.array([0.0, 0.12, 0.0]), np.array([0.62, 0.05, 0.0])])
                 return VGroup(room, flow_guides([path], color, opacity=0.9, width=2.4))
             if i == 2:
-                win = Rectangle(width=0.55, height=0.8, color=color, stroke_width=2.2)
-                return VGroup(win, Line(win.get_top(), win.get_bottom(), color=color, stroke_width=1.6),
-                              Line(win.get_left(), win.get_right(), color=color, stroke_width=1.6))
+                window = window_glyph(-0.15, -0.4, 0.4, depth=0.55, color=color)
+                window["sash"].become(_manim_module.window_opening(window))
+                return window["group"]
             if i == 3:
                 return _fan(ORIGIN, color, radius=0.4)
-            roof = Polygon(np.array([-0.5, 0.0, 0.0]), np.array([0.0, 0.42, 0.0]), np.array([0.5, 0.0, 0.0]), color=color, stroke_width=2.2)
-            body = Rectangle(width=0.8, height=0.4, color=color, stroke_width=2.2).move_to(np.array([0.0, -0.2, 0.0]))
-            return VGroup(roof, body)
+            return house_section(scale=0.24)["group"].set_color(color)
 
         cards, shades = [], []
         for i, (x, color) in enumerate(zip(xs, colors)):
-            frame = RoundedRectangle(width=card_w, height=card_h, corner_radius=0.14, color=color, stroke_width=2.2)
+            frame = RoundedRectangle(width=card_w, height=card_h, corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER)
             frame.move_to(np.array([x, y_c, 0.0]))
             badge = VGroup(Circle(radius=0.19, color=color, stroke_width=2, fill_color=color, fill_opacity=1.0),
                            body_text(str(i + 1), font_size=LABEL_FONT_SIZE, color=P_DEEP_DARK))
@@ -639,16 +653,16 @@ class Beat3_Fahrplan(Scene):
             sym.move_to(np.array([x, y_c - card_h / 2 + 0.3, 0.0]), coor_mask=np.array([1, 0, 0]))
             sym.shift(UP * (y_c - card_h / 2 + 0.3 - sym.base.get_center()[1]))
             cards.append(VGroup(frame, badge, name, pic, sym))
-            shades.append(RoundedRectangle(width=card_w + 0.04, height=card_h + 0.04, corner_radius=0.14, stroke_width=0,
-                                           fill_color=P_DEEP_DARK, fill_opacity=0.74).move_to(frame))
+            shades.append(RoundedRectangle(width=card_w + 0.04, height=card_h + 0.04, corner_radius=0, stroke_width=0,
+                                           fill_color=_theme_module.CHROME_FILL, fill_opacity=0.74).move_to(frame))
         links = [Arrow(np.array([x + card_w / 2 + 0.03, y_c, 0.0]), np.array([x + card_w / 2 + gap - 0.03, y_c, 0.0]), buff=0,
                        color=P_WHITE, stroke_width=3, max_tip_length_to_length_ratio=0.5) for x in xs[:-1]]
 
         span_y = y_c - card_h / 2 - 0.25
-        bracket = VGroup(Line(np.array([xs[0] - card_w / 2, span_y, 0.0]), np.array([xs[3] + card_w / 2, span_y, 0.0]), color=P_TEAL, stroke_width=2),
-                         *[Line(np.array([x, span_y, 0.0]), np.array([x, span_y + 0.12, 0.0]), color=P_TEAL, stroke_width=2)
+        bracket = VGroup(Line(np.array([xs[0] - card_w / 2, span_y, 0.0]), np.array([xs[3] + card_w / 2, span_y, 0.0]), color=P_PRIMARY, stroke_width=2),
+                         *[Line(np.array([x, span_y, 0.0]), np.array([x, span_y + 0.12, 0.0]), color=P_PRIMARY, stroke_width=2)
                            for x in (xs[0] - card_w / 2, xs[3] + card_w / 2)])
-        bracket_tag = body_text("gilt im Winter wie im Sommer", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
+        bracket_tag = body_text("gilt im Winter wie im Sommer", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
             np.array([0.5 * (xs[0] + xs[3]) - 0.4, span_y - 0.32, 0.0]))
         chip_h = _handover(r"\to\;\text{Heizung:}\;\Phi_{\mathrm{V}}", P_ORANGE)
         chip_k = _handover(r"\to\;\text{Kühlung:}\;\dot{Q}_{\mathrm{L}}", P_CYAN)

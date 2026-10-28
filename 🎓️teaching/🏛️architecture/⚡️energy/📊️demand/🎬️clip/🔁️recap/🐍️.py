@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,16 +19,14 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -73,7 +74,7 @@ load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -82,12 +83,12 @@ TITLE_DE = "Die Energiebilanz des Gebäudes"
 
 # Carried over unchanged from the Ventilation, Heating and Cooling series so a viewer who
 # watched those recognises each flow by its colour before reading its label.
-LOSS_BLUE = "#38BDF8"     # Transmission — 3_heating/2_conduction
-VENT_BLUE = "#60A5FA"     # Lüftung — 2_ventilation/
-SOLAR_YELLOW = "#FDE047"  # Solare Gewinne — 3_heating/5_solar_heat_gain
-INT_ORANGE = "#F59E0B"    # Interne Gewinne — 3_heating/4_internal_heat_gain
-ETA_GREEN = "#22C55E"     # Ausnutzungsgrad
-DEMAND_RED = "#EF4444"    # Was die Anlage liefern muss
+LOSS_BLUE = semio_color("secondary")     # Transmission — 3_heating/2_conduction
+VENT_BLUE = semio_color("secondary")     # Lüftung — 2_ventilation/
+SOLAR_YELLOW = semio_color("warning")  # Solare Gewinne — 3_heating/5_solar_heat_gain
+INT_ORANGE = semio_color("tertiary")    # Interne Gewinne — 3_heating/4_internal_heat_gain
+ETA_GREEN = semio_color("success")     # Ausnutzungsgrad
+DEMAND_RED = semio_color("primary")    # Was die Anlage liefern muss
 
 HOUSE_SCALE = 0.8
 
@@ -98,7 +99,7 @@ HOUSE_SCALE = 0.8
 # readout below is a product of drawn quantities.
 SURFACES = [
     ("Außenwand", 209.0, 0.24, 20.0, LOSS_BLUE),
-    ("Dach", 89.0, 0.20, 20.0, "#A78BFA"),
+    ("Dach", 89.0, 0.20, 20.0, semio_color("info")),
     ("Fenster", 30.0, 1.10, 20.0, P_CYAN),
     ("Boden", 80.0, 0.30, 10.0, P_TEAL),
 ]
@@ -132,7 +133,7 @@ def _din_ref(text: str):
     (``4_cooling/3_transmission_humidity/scene_3.py``) — a dim footnote that
     never competes with the diagram.
     """
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -179,7 +180,7 @@ def _roof(H, side: str, u: float):
     return p, np.array([-d[1], d[0], 0.0])
 
 
-def _envelope(H, off: float = 0.26, color=P_TEAL):
+def _envelope(H, off: float = 0.26, color=P_PRIMARY):
     """⭕ Dashed thermal envelope hugging the house — the boundary every balance flow crosses."""
     nl, nr = _roof(H, "l", 0.0)[1], _roof(H, "r", 0.0)[1]
     bottom = H["floor_y"] - 0.22
@@ -194,8 +195,15 @@ def _envelope(H, off: float = 0.26, color=P_TEAL):
 def _stand(H, x: float, color=P_ORANGE):
     """🧍 Occupant at true scale — 70 % of the storey height, feet on the slab's top edge at ``x``."""
     storey = H["mid_y"] - H["floor_y"]
-    height = 0.7 * (storey - 0.04)
-    return person_glyph(np.array([x, H["floor_y"] + 0.02 + height / 2, 0.0]), color=color, scale=height / 0.66)
+    height = 0.7 * storey
+    return person_glyph(np.array([x, H["floor_y"] + height / 2, 0.0]), color=color, scale=height / 0.66)
+
+
+def _heater(H):
+    """♨️ A 1.3 m wide panel at the same scale as the storey."""
+    metre = (H["mid_y"] - H["floor_y"]) / 2.5
+    return radiator(np.array([H["x_r"] - 0.6, H["floor_y"] + (0.12 + 0.65 / 2) * metre, 0.0]),
+                    color=DEMAND_RED, height=0.65 * metre, width=1.3 * metre)
 
 
 def _gains(H):
@@ -209,14 +217,12 @@ def _gains(H):
         Line(np.array([cx + 0.7, desk_y, 0.0]), np.array([cx + 0.7, my, 0.0]), color=P_WHITE, stroke_width=1.5),
         Line(np.array([cx + 1.3, desk_y, 0.0]), np.array([cx + 1.3, my, 0.0]), color=P_WHITE, stroke_width=1.5),
     )
-    laptop = VGroup(
-        Line(np.array([cx + 0.85, desk_y + 0.02, 0.0]), np.array([cx + 1.13, desk_y + 0.02, 0.0]), color=P_CYAN, stroke_width=1.8),
-        Line(np.array([cx + 1.13, desk_y + 0.02, 0.0]), np.array([cx + 1.08, desk_y + 0.22, 0.0]), color=P_CYAN, stroke_width=1.8),
-    )
+    laptop = VGroup(_manim_module.object_silhouette("laptop", color=P_CYAN, width=0.32))
+    laptop.move_to([cx + 0.99, desk_y + 0.02 + laptop.height / 2, 0])
     return {
         "person": person, "lamp": lamp["group"], "device": VGroup(desk, laptop),
         "sources": VGroup(person, lamp["group"], desk, laptop),
-        "warm": [person.get_center() + UP * 0.08, laptop[1].get_center()],
+        "warm": [person.get_center() + UP * 0.08, laptop.get_center()],
         "bulbs": [lamp["bulb"].get_center()],
     }
 
@@ -312,11 +318,11 @@ def _surfaces(H):
     hs = H["hs"]
 
     def thick(mob, color):
-        return mob.copy().set_color(color).set_stroke(width=6.5, opacity=0.95)
+        return mob.copy().set_color(color).set_fill(opacity=0.85).set_stroke(width=1.5, opacity=0.95)
 
     colors = {n: c for n, _a, _u, _d, c in SURFACES}
     return {
-        "Außenwand": VGroup(*[thick(hs["walls"][i], colors["Außenwand"]) for i in (0, 1, 2, 3)]),
+        "Außenwand": VGroup(*[thick(hs["walls"][i], colors["Außenwand"]) for i in (0, 1)]),
         "Dach": thick(hs["roof"][0], colors["Dach"]),
         "Fenster": VGroup(*[Line(np.array([w["x"], w["sill"], 0.0]), np.array([w["x"], w["lintel"], 0.0]),
                                  color=colors["Fenster"], stroke_width=7.5) for w in hs["windows"]]),
@@ -327,8 +333,8 @@ def _surfaces(H):
 def _card(title: str, color, specs, *, x: float = 4.5, top: float = 1.85, width: float = 2.3, gap: float = 0.44):
     """🪪 Factor card — a framed title over live readouts that count up from the physical picture."""
     frame = RoundedRectangle(
-        width=width, height=0.66 + gap * len(specs), corner_radius=0.1, color=color, stroke_width=1.8,
-        fill_color=P_DEEP_DARK, fill_opacity=0.85,
+        width=width, height=0.66 + gap * len(specs), corner_radius=0, color=color, stroke_width=_theme_module.CHROME_BORDER,
+        fill_color=_theme_module.CHROME_FILL, fill_opacity=0.85,
     )
     frame.move_to(np.array([x + width / 2, top - frame.height / 2, 0.0])).set_z_index(-2)
     head_at = np.array([x + width / 2, top - 0.3, 0.0])
@@ -425,9 +431,7 @@ class Beat1_Bilanzgrenze(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Bilanzgrenze & Energieerhaltung", title)
+        subtitle = section_heading("Bilanzgrenze & Energieerhaltung")
         din = _din_ref("DIN V 18599-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -466,7 +470,7 @@ class Beat1_Bilanzgrenze(Scene):
         self.play(Create(H["group"]), run_time=1.4)
         self.play(LaggedStart(*[FadeIn(m) for m in G["sources"]], lag_ratio=0.2),
                   H["air"].animate.set_fill(P_ORANGE, opacity=0.07), run_time=1.0)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.0,
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.0,
                  during=lambda rt: _gain_heat(G, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "huelle"))
@@ -504,7 +508,7 @@ class Beat1_Bilanzgrenze(Scene):
         hold_for(self, self.NARRATION, "intern", during=lambda rt: _gain_heat(G, rt))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "rest"))
-        rad = radiator(np.array([H["x_r"] - 0.6, H["floor_y"] + 0.28, 0.0]), color=DEMAND_RED).scale(0.9)
+        rad = _heater(H)
         tag_h = _tag("Heizwärmebedarf", r"Q_{h}", DEMAND_RED)
         tag_h.move_to(np.array([4.95, H["floor_y"] + 0.2, 0.0]))
         lead_h = _lead(tag_h, P["supply"][0].point_from_proportion(0.05), side="right", color=DEMAND_RED)
@@ -523,7 +527,7 @@ class Beat1_Bilanzgrenze(Scene):
         row, box, items = math_panel([
             ("qh", r"Q_{h}", DEMAND_RED), (None, "+", P_WHITE),
             ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, "=", P_WHITE),
-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_TEAL),
+            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_PRIMARY),
         ])
         glue = [m for m in row if all(m is not v for v in items.values())]
         sink_anims, sink_spare = _merge([tag_t[1], tag_v[1]], items["senke"])
@@ -614,9 +618,7 @@ class Beat2_Verlustseite(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Verlustseite: Transmission & Lüftung", title)
+        subtitle = section_heading("Die Verlustseite: Transmission & Lüftung")
         din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -664,7 +666,7 @@ class Beat2_Verlustseite(Scene):
             (None, r"\Sigma\,(", P_ORANGE), ("u", r"U", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("a", r"A", P_CYAN), (None, r")", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("dt", r"\Delta\theta", P_BLUE), (None, r"\cdot", P_WHITE),
-            ("t", r"t", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         self.add(_veil(row_t))
         self.play(Create(box_t), *_terms(row_t, 0, 3), FadeOut(sym_v),
@@ -706,11 +708,11 @@ class Beat2_Verlustseite(Scene):
         hold_for(self, self.NARRATION, "dt")
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "t"))
-        clk = clock_glyph(np.array([-1.3, -0.1, 0.0]), r=0.85, color=P_TEAL)
+        clk = clock_glyph(np.array([-1.3, -0.1, 0.0]), r=0.85, color=P_PRIMARY)
         t_tr = ValueTracker(0.0)
-        t_card = _card("", P_TEAL, [(lambda: rf"t = {de_num(t_tr.get_value())}\,\mathrm{{h}}", P_TEAL)], x=0.3, top=0.65)
-        t_head = body_text("Stunden im Monat", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(t_card["head_at"])
-        ring_t = highlight_param(it_t, "t", color=P_TEAL)
+        t_card = _card("", P_PRIMARY, [(lambda: rf"t = {de_num(t_tr.get_value())}\,\mathrm{{h}}", P_PRIMARY)], x=0.3, top=0.65)
+        t_head = body_text("Stunden im Monat", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(t_card["head_at"])
+        ring_t = highlight_param(it_t, "t", color=P_PRIMARY)
         self.add(*t_card["rows"])
         self.play(FadeOut(th["static"]), *[FadeOut(m) for m in (th["in"]["column"], th["out"]["column"], dth_read, th["arrow"])],
                   ReplacementTransform(ring_dt, ring_t), run_time=0.6)
@@ -775,7 +777,7 @@ class Beat2_Verlustseite(Scene):
             (None, r"\Sigma\,(", P_ORANGE), ("u", r"(U+\Delta U_{WB})", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("a", r"A", P_CYAN), (None, r")", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("dt", r"\Delta\theta", P_BLUE), (None, r"\cdot", P_WHITE),
-            ("t", r"t", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         ring_u2 = highlight_param(it_t2, "u", color=P_ORANGE)
         self.add(du_read)
@@ -804,7 +806,7 @@ class Beat2_Verlustseite(Scene):
             ("v", r"V", P_YELLOW), (None, r"\cdot", P_WHITE),
             ("rc", r"\rho\,c", P_GREEN), (None, r"\cdot", P_WHITE),
             ("dt", r"\Delta\theta", P_BLUE), (None, r"\cdot", P_WHITE),
-            ("t", r"t", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         ring_n = highlight_param(it_v, "n", color=P_YELLOW)
         ring_v = highlight_param(it_v, "v", color=P_YELLOW)
@@ -852,7 +854,7 @@ class Beat2_Verlustseite(Scene):
         row_s, box_s, it_s = math_panel([
             ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, "=", P_WHITE),
             ("qt", r"Q_{T}", LOSS_BLUE), (None, "+", P_WHITE),
-            ("qv", r"Q_{V}", VENT_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_TEAL),
+            ("qv", r"Q_{V}", VENT_BLUE), (None, r"\;[\mathrm{kWh/a}]", P_PRIMARY),
         ])
         glue = [m for m in row_s if all(m is not v for v in it_s.values())]
         self.play(FadeOut(VGroup(H["group"], H["air"], envelope, vol, sym_v, v_card["frame"], v_head, row_v, box_v)),
@@ -935,9 +937,7 @@ class Beat3_Gewinnseite(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Gewinnseite & der Ausnutzungsgrad", title)
+        subtitle = section_heading("Die Gewinnseite & der Ausnutzungsgrad")
         din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -999,7 +999,7 @@ class Beat3_Gewinnseite(Scene):
             ("a", r"A_{W}", P_CYAN), (None, r"\cdot", P_WHITE),
             ("i", r"I_{S}", P_YELLOW), (None, r"\cdot", P_WHITE),
             ("g", r"g", P_ORANGE), (None, r"\cdot", P_WHITE),
-            ("f", r"F_{S}", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("f", r"F_{S}", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         ring_a = highlight_param(it_s, "a", color=P_CYAN)
         ring_i = highlight_param(it_s, "i", color=P_YELLOW)
@@ -1048,7 +1048,7 @@ class Beat3_Gewinnseite(Scene):
         i_card = _card("", INT_ORANGE, [
             (lambda: rf"q_{{I}} = {de_num(q_t.get_value())}\,\mathrm{{W/m^{{2}}}}", P_ORANGE),
             (lambda: rf"A_{{N}} = {de_num(an_t.get_value())}\,\mathrm{{m^{{2}}}}", P_CYAN),
-            (lambda: rf"t = {de_num(t_t.get_value())}\,\mathrm{{h}}", P_TEAL),
+            (lambda: rf"t = {de_num(t_t.get_value())}\,\mathrm{{h}}", P_PRIMARY),
             (lambda: rf"Q_{{I}} = {de_num(qi_t.get_value())}\,\mathrm{{kWh}}", INT_ORANGE),
         ], top=1.85)
         floors = VGroup(*[Line(np.array([H["x_l"] + 0.12, y + 0.04, 0.0]), np.array([H["x_r"] - 0.12, y + 0.04, 0.0]),
@@ -1060,11 +1060,11 @@ class Beat3_Gewinnseite(Scene):
             ("qi", r"Q_{I}", INT_ORANGE), (None, "=", P_WHITE),
             ("q", r"q_{I}", P_ORANGE), (None, r"\cdot", P_WHITE),
             ("a", r"A_{N}", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("t", r"t", P_TEAL), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("t", r"t", P_PRIMARY), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         ring_q = highlight_param(it_i, "q", color=P_ORANGE)
         ring_an = highlight_param(it_i, "a", color=P_CYAN)
-        ring_t = highlight_param(it_i, "t", color=P_TEAL)
+        ring_t = highlight_param(it_i, "t", color=P_PRIMARY)
         self.add(_veil(row_i))
         self.play(FadeOut(VGroup(s_card["frame"], glass, slats, patches, S["sun"], S["group"], row_s)),
                   *[FadeOut(r) for r in s_card["rows"]],
@@ -1140,7 +1140,7 @@ class Beat3_Gewinnseite(Scene):
         hold_for(self, self.NARRATION, "ueberhitzung", during=lambda rt: _gain_heat(G, rt, color=P_RED))
 
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "bilanz"))
-        rad = radiator(np.array([H["x_r"] - 0.6, H["floor_y"] + 0.28, 0.0]), color=DEMAND_RED).scale(0.9)
+        rad = _heater(H)
         supply = P["supply"]
         demand = block(x_gain, Q_USABLE, Q_SENKE - Q_USABLE, DEMAND_RED)
         level = DashedLine(np.array([x_sink + 0.65, base_y + Q_SENKE * unit, 0.0]),
@@ -1154,7 +1154,7 @@ class Beat3_Gewinnseite(Scene):
             ("qh", r"Q_{h}", DEMAND_RED), (None, "=", P_WHITE),
             ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, "−", P_WHITE),
             ("eta", r"\eta_{h}", ETA_GREEN), (None, r"\cdot", P_WHITE),
-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         ring_h = highlight_param(it_b, "qh", color=DEMAND_RED)
         warm_in = lambda rt: [_stream(supply, DEMAND_RED, rt, period=1.2),
@@ -1217,9 +1217,7 @@ class Beat4_WinterUndSommer(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Dieselbe Bilanz, zwei Jahreszeiten", title)
+        subtitle = section_heading("Dieselbe Bilanz, zwei Jahreszeiten")
         din = _din_ref("DIN V 18599-2 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1297,7 +1295,7 @@ class Beat4_WinterUndSommer(Scene):
         season_chip_j = chip("Juli", P_RED).move_to(season_chip)
         result_chip_k = chip("Kühlbedarf", DEMAND_RED).move_to(result_chip)
         eta_g = _gauge(r"\eta", ETA_GREEN, np.array([4.9, 0.1, 0.0]), eta_t)
-        card = _card("", P_TEAL, [
+        card = _card("", P_PRIMARY, [
             (lambda: rf"\Delta\theta = {de_num(mix(D_THETA, D_THETA_JUL, climate))}\,\mathrm{{K}}", P_BLUE),
             (lambda: rf"I_{{S}} = {de_num(mix(I_S, I_S_JUL, climate))}\,\mathrm{{kWh/m^{{2}}}}", P_YELLOW),
         ], x=-6.3, top=0.85)
@@ -1306,13 +1304,13 @@ class Beat4_WinterUndSommer(Scene):
             ("qh", r"Q_{h}", DEMAND_RED), (None, "=", P_WHITE),
             ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, "−", P_WHITE),
             ("eta", r"\eta_{h}", ETA_GREEN), (None, r"\cdot", P_WHITE),
-            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         row_k, box_k, it_k = math_panel([
             ("qk", r"Q_{K}", DEMAND_RED), (None, "=", P_WHITE),
             ("quelle", r"Q_{\mathrm{Quelle}}", SOLAR_YELLOW), (None, "−", P_WHITE),
             ("eta", r"\eta_{k}", ETA_GREEN), (None, r"\cdot", P_WHITE),
-            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh}]", P_TEAL),
+            ("senke", r"Q_{\mathrm{Senke}}", LOSS_BLUE), (None, r"\;[\mathrm{kWh}]", P_PRIMARY),
         ])
         ring_h = highlight_param(it_w, "qh", color=DEMAND_RED)
         ring_k = highlight_param(it_k, "qk", color=DEMAND_RED)
@@ -1376,7 +1374,7 @@ class Beat4_WinterUndSommer(Scene):
                   *[FadeOut(m) for m in (loss_col, gain_col, gap_s, sun_live)], run_time=1.0)
         self.add(H["air"])
         self.play(Create(H["group"]), Create(envelope), H["air"].animate.set_fill(P_ORANGE, opacity=0.07), run_time=1.4)
-        self.play(FadeIn(sign_h), FadeIn(sign_k), Indicate(envelope, color=P_TEAL, scale_factor=1.0), run_time=1.4)
+        self.play(FadeIn(sign_h), FadeIn(sign_k), Indicate(envelope, color=P_PRIMARY, scale_factor=1.0), run_time=1.4)
         hold_for(self, self.NARRATION, "groessen")
 
         self.play(FadeOut(VGroup(caption, sign_h, sign_k, envelope, H["group"], H["air"])), run_time=0.6)

@@ -1,0 +1,1415 @@
+{
+  "version": 2,
+  "languages": [
+    "en",
+    "de"
+  ],
+  "guid": {
+    "alphabet": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$",
+    "seed": "semio:villa-savoye:",
+    "namespace": "6ba7b811-9dad-11d1-80b4-00c04fd430c8",
+    "vectors": [
+      {
+        "uuid": "00000000-0000-0000-0000-000000000000",
+        "globalId": "0000000000000000000000"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000001",
+        "globalId": "0000000000000000000001"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-00000000003f",
+        "globalId": "000000000000000000000$"
+      },
+      {
+        "uuid": "00000000-0000-0000-0000-000000000040",
+        "globalId": "0000000000000000000010"
+      },
+      {
+        "uuid": "ffffffff-ffff-ffff-ffff-ffffffffffff",
+        "globalId": "3$$$$$$$$$$$$$$$$$$$$$"
+      },
+      {
+        "uuid": "40000000-0000-0000-0000-000000000000",
+        "globalId": "1000000000000000000000"
+      },
+      {
+        "uuid": "80000000-0000-0000-0000-000000000000",
+        "globalId": "2000000000000000000000"
+      },
+      {
+        "uuid": "c0000000-0000-0000-0000-000000000000",
+        "globalId": "3000000000000000000000"
+      }
+    ],
+    "random_seed": 2027,
+    "random_count": 400,
+    "invalid_text": [
+      "",
+      "short",
+      "000000000000000000000",
+      "00000000000000000000000",
+      "000000000000000000000#",
+      "00000000000000000000 0",
+      "4000000000000000000000",
+      "ÄÖÜ0000000000000000000",
+      "0000000000000000000000\n"
+    ],
+    "invalid_int": [
+      "-1",
+      "340282366920938463463374607431768211456",
+      "-340282366920938463463374607431768211456"
+    ]
+  },
+  "model": {
+    "schema_id": "IFC4X3_ADD2",
+    "spatial": {
+      "project": "PROJECT",
+      "site": "SITE",
+      "building": "BUILDING"
+    },
+    "units": [
+      "m",
+      "m²",
+      "m³",
+      "kN/m²",
+      "kN/m³",
+      "°"
+    ],
+    "domains": [
+      "architecture",
+      "structure",
+      "services"
+    ]
+  },
+  "sourced": {
+    "box": {
+      "length": 21.5,
+      "width": 19.0,
+      "height": 9.4
+    },
+    "spacing": 4.75,
+    "initial_spacing": 5.0,
+    "roof_garden_area": 110.0,
+    "solarium_area": 70.0,
+    "area_tolerance": 0.01,
+    "years": {
+      "design_start": 1928,
+      "completed": 1931,
+      "listed": 1965,
+      "restoration_start": 1985,
+      "restoration_end": 1997,
+      "unesco": 2016
+    },
+    "architects": [
+      "Le Corbusier",
+      "Pierre Jeanneret"
+    ],
+    "site": "Poissy"
+  },
+  "grid": {
+    "x": [
+      1.25,
+      6.0,
+      10.75,
+      15.5,
+      20.25
+    ],
+    "y": [
+      0.0,
+      4.75,
+      9.5,
+      14.25,
+      19.0
+    ],
+    "rows": "ABCDE",
+    "columns": "12345",
+    "pilotis": 25
+  },
+  "tags": {
+    "piloti_type": "TY-PILOTI",
+    "wall_type": "TY-WALL",
+    "slabs": [
+      "SL-1",
+      "SL-R"
+    ],
+    "walls": [
+      "W-S",
+      "W-E",
+      "W-N",
+      "W-W"
+    ],
+    "openings": [
+      "OP-S",
+      "OP-E",
+      "OP-N",
+      "OP-W"
+    ],
+    "windows": [
+      "RW-S",
+      "RW-E",
+      "RW-N",
+      "RW-W"
+    ],
+    "curtain_wall": "CW-1",
+    "ramps": [
+      "RM-1",
+      "RM-2"
+    ],
+    "storeys": [
+      "ground",
+      "first",
+      "roof"
+    ],
+    "spaces": [
+      "SP-HALL",
+      "SP-GARAGE",
+      "SP-BOILER",
+      "SP-SALON",
+      "SP-TERRACE",
+      "SP-SOLARIUM"
+    ],
+    "lookup": [
+      "B3",
+      "SL-1",
+      "TY-PILOTI",
+      "RW-S",
+      "ground",
+      "BUILDING",
+      "MAT-RC"
+    ]
+  },
+  "information": [
+    {
+      "tag": "B3",
+      "property": "piloti.diameter",
+      "unit": "m",
+      "basis": "assumed",
+      "value": 0.3
+    },
+    {
+      "tag": "B3",
+      "property": "grid.spacing",
+      "unit": "m",
+      "basis": "sourced",
+      "value": 4.75
+    },
+    {
+      "tag": "B3",
+      "property": "grid.initial_spacing",
+      "unit": "m",
+      "basis": "sourced",
+      "value": 5.0
+    },
+    {
+      "tag": "B3",
+      "property": "car.width",
+      "unit": "m",
+      "basis": "assumed",
+      "value": 1.75
+    },
+    {
+      "tag": "B3",
+      "property": "Pset_ColumnCommon.LoadBearing",
+      "unit": "",
+      "basis": "inferred",
+      "value": true
+    },
+    {
+      "tag": "B3",
+      "property": "height",
+      "unit": "m",
+      "basis": "derived",
+      "value": 3.25
+    },
+    {
+      "tag": "B3",
+      "property": "volume",
+      "unit": "m³",
+      "basis": "derived"
+    },
+    {
+      "tag": "B3",
+      "property": "GlobalId",
+      "unit": "",
+      "basis": "derived"
+    }
+  ],
+  "class_chains": {
+    "IfcColumn": [
+      [
+        "IfcRoot",
+        [
+          "GlobalId",
+          "OwnerHistory",
+          "Name",
+          "Description"
+        ]
+      ],
+      [
+        "IfcObjectDefinition",
+        []
+      ],
+      [
+        "IfcObject",
+        [
+          "ObjectType"
+        ]
+      ],
+      [
+        "IfcProduct",
+        [
+          "ObjectPlacement",
+          "Representation"
+        ]
+      ],
+      [
+        "IfcElement",
+        [
+          "Tag"
+        ]
+      ],
+      [
+        "IfcBuiltElement",
+        []
+      ],
+      [
+        "IfcColumn",
+        [
+          "PredefinedType"
+        ]
+      ]
+    ],
+    "IfcSlab": [
+      [
+        "IfcRoot",
+        [
+          "GlobalId",
+          "OwnerHistory",
+          "Name",
+          "Description"
+        ]
+      ],
+      [
+        "IfcObjectDefinition",
+        []
+      ],
+      [
+        "IfcObject",
+        [
+          "ObjectType"
+        ]
+      ],
+      [
+        "IfcProduct",
+        [
+          "ObjectPlacement",
+          "Representation"
+        ]
+      ],
+      [
+        "IfcElement",
+        [
+          "Tag"
+        ]
+      ],
+      [
+        "IfcBuiltElement",
+        []
+      ],
+      [
+        "IfcSlab",
+        [
+          "PredefinedType"
+        ]
+      ]
+    ],
+    "IfcWall": [
+      [
+        "IfcRoot",
+        [
+          "GlobalId",
+          "OwnerHistory",
+          "Name",
+          "Description"
+        ]
+      ],
+      [
+        "IfcObjectDefinition",
+        []
+      ],
+      [
+        "IfcObject",
+        [
+          "ObjectType"
+        ]
+      ],
+      [
+        "IfcProduct",
+        [
+          "ObjectPlacement",
+          "Representation"
+        ]
+      ],
+      [
+        "IfcElement",
+        [
+          "Tag"
+        ]
+      ],
+      [
+        "IfcBuiltElement",
+        []
+      ],
+      [
+        "IfcWall",
+        [
+          "PredefinedType"
+        ]
+      ]
+    ],
+    "IfcWindow": [
+      [
+        "IfcRoot",
+        [
+          "GlobalId",
+          "OwnerHistory",
+          "Name",
+          "Description"
+        ]
+      ],
+      [
+        "IfcObjectDefinition",
+        []
+      ],
+      [
+        "IfcObject",
+        [
+          "ObjectType"
+        ]
+      ],
+      [
+        "IfcProduct",
+        [
+          "ObjectPlacement",
+          "Representation"
+        ]
+      ],
+      [
+        "IfcElement",
+        [
+          "Tag"
+        ]
+      ],
+      [
+        "IfcBuiltElement",
+        []
+      ],
+      [
+        "IfcWindow",
+        [
+          "OverallHeight",
+          "OverallWidth",
+          "PredefinedType",
+          "PartitioningType",
+          "UserDefinedPartitioningType"
+        ]
+      ]
+    ],
+    "IfcPipeSegment": [
+      [
+        "IfcRoot",
+        [
+          "GlobalId",
+          "OwnerHistory",
+          "Name",
+          "Description"
+        ]
+      ],
+      [
+        "IfcObjectDefinition",
+        []
+      ],
+      [
+        "IfcObject",
+        [
+          "ObjectType"
+        ]
+      ],
+      [
+        "IfcProduct",
+        [
+          "ObjectPlacement",
+          "Representation"
+        ]
+      ],
+      [
+        "IfcElement",
+        [
+          "Tag"
+        ]
+      ],
+      [
+        "IfcDistributionElement",
+        []
+      ],
+      [
+        "IfcDistributionFlowElement",
+        []
+      ],
+      [
+        "IfcFlowSegment",
+        []
+      ],
+      [
+        "IfcPipeSegment",
+        [
+          "PredefinedType"
+        ]
+      ]
+    ],
+    "IfcSpace": [
+      [
+        "IfcRoot",
+        [
+          "GlobalId",
+          "OwnerHistory",
+          "Name",
+          "Description"
+        ]
+      ],
+      [
+        "IfcObjectDefinition",
+        []
+      ],
+      [
+        "IfcObject",
+        [
+          "ObjectType"
+        ]
+      ],
+      [
+        "IfcProduct",
+        [
+          "ObjectPlacement",
+          "Representation"
+        ]
+      ],
+      [
+        "IfcSpatialElement",
+        [
+          "LongName"
+        ]
+      ],
+      [
+        "IfcSpatialStructureElement",
+        [
+          "CompositionType"
+        ]
+      ],
+      [
+        "IfcSpace",
+        [
+          "PredefinedType",
+          "ElevationWithFlooring"
+        ]
+      ]
+    ]
+  },
+  "representations": {
+    "objects": [
+      "B3",
+      "W-S",
+      "SL-1",
+      "RW-S"
+    ],
+    "kinds": {
+      "axis": {
+        "identifier": "Axis",
+        "types": [
+          "Curve2D",
+          "Curve3D"
+        ]
+      },
+      "footprint": {
+        "identifier": "FootPrint",
+        "types": [
+          "Curve2D"
+        ]
+      },
+      "plan": {
+        "identifier": "Body",
+        "types": [
+          "SweptSolid"
+        ]
+      },
+      "section": {
+        "identifier": "Body",
+        "types": [
+          "SweptSolid"
+        ]
+      },
+      "elevation": {
+        "identifier": "Body",
+        "types": [
+          "SweptSolid"
+        ]
+      },
+      "3d": {
+        "identifier": "Body",
+        "types": [
+          "SweptSolid"
+        ]
+      },
+      "body": {
+        "identifier": "Body",
+        "types": [
+          "SweptSolid"
+        ]
+      }
+    }
+  },
+  "models": {
+    "ids": [
+      "architecture",
+      "structure",
+      "services"
+    ],
+    "shared": [
+      "SL-1",
+      "SL-R"
+    ],
+    "services_classes": [
+      "IfcBoiler",
+      "IfcSpaceHeater",
+      "IfcWasteTerminal",
+      "IfcPipeSegment"
+    ]
+  },
+  "step": {
+    "keys": [
+      "B3",
+      "SL-1",
+      "SL-R",
+      "W-S"
+    ],
+    "attribute_counts": {
+      "IFCCOLUMN": 9,
+      "IFCSLAB": 9,
+      "IFCWALL": 9,
+      "IFCCOLUMNTYPE": 10,
+      "IFCWALLTYPE": 10,
+      "IFCBUILDINGSTOREY": 10,
+      "IFCPROPERTYSINGLEVALUE": 4,
+      "IFCPROPERTYSET": 5,
+      "IFCRELDEFINESBYPROPERTIES": 6,
+      "IFCRELASSOCIATESMATERIAL": 6,
+      "IFCRELDEFINESBYTYPE": 6,
+      "IFCRELCONTAINEDINSPATIALSTRUCTURE": 6,
+      "IFCLOCALPLACEMENT": 2,
+      "IFCAXIS2PLACEMENT3D": 3,
+      "IFCAXIS2PLACEMENT2D": 2,
+      "IFCCARTESIANPOINT": 1,
+      "IFCDIRECTION": 1,
+      "IFCSHAPEREPRESENTATION": 4,
+      "IFCPRODUCTDEFINITIONSHAPE": 3,
+      "IFCGEOMETRICREPRESENTATIONCONTEXT": 6,
+      "IFCEXTRUDEDAREASOLID": 4,
+      "IFCCIRCLEPROFILEDEF": 4,
+      "IFCRECTANGLEPROFILEDEF": 5,
+      "IFCMATERIAL": 3,
+      "IFCMATERIALLAYER": 7,
+      "IFCMATERIALLAYERSET": 3
+    }
+  },
+  "mesh": {
+    "segments": [
+      3,
+      4,
+      5,
+      6,
+      8,
+      12,
+      16,
+      32
+    ]
+  },
+  "ids": {
+    "cases": [
+      {
+        "id": "column-load-bearing",
+        "spec": {
+          "entity": "IfcColumn",
+          "pset": "Pset_ColumnCommon",
+          "property": "LoadBearing",
+          "cardinality": "required"
+        },
+        "passed": 25,
+        "failed": 0
+      },
+      {
+        "id": "column-fire-rating",
+        "spec": "IfcColumn Pset_ColumnCommon.FireRating exists",
+        "passed": 25,
+        "failed": 0
+      },
+      {
+        "id": "column-must-not-be-load-bearing",
+        "spec": {
+          "entity": "IfcColumn",
+          "pset": "Pset_ColumnCommon",
+          "property": "LoadBearing",
+          "datatype": "boolean",
+          "value": false,
+          "cardinality": "required"
+        },
+        "passed": 0,
+        "failed": 25
+      },
+      {
+        "id": "column-load-bearing-prohibited",
+        "spec": "IfcColumn Pset_ColumnCommon.LoadBearing prohibited",
+        "passed": 0,
+        "failed": 25
+      },
+      {
+        "id": "slab-fire-rating",
+        "spec": "IfcSlab Pset_SlabCommon.FireRating exists",
+        "passed": 0,
+        "failed": 2
+      },
+      {
+        "id": "wall-is-external",
+        "spec": {
+          "entity": "IfcWall",
+          "property": "IsExternal",
+          "cardinality": "required"
+        },
+        "passed": 5,
+        "failed": 0
+      },
+      {
+        "id": "window-fire-rating",
+        "spec": "IfcWindow FireRating exists",
+        "passed": 4,
+        "failed": 0
+      }
+    ]
+  },
+  "analysis": {
+    "slab_nodes": 35,
+    "shells": 24,
+    "curve_members": 25,
+    "surface_members": 24,
+    "supports": 25
+  },
+  "tributary": {
+    "step": 0.025,
+    "tolerance": 0.01,
+    "kinds": {
+      "interior": 9,
+      "edge": 12,
+      "corner": 4
+    }
+  },
+  "clash": {
+    "violations": [
+      [
+        "DP-1",
+        "A1"
+      ]
+    ]
+  },
+  "events": {
+    "sill": {
+      "type": "OpeningResized",
+      "object_tag": "RW-S",
+      "sill": 0.7,
+      "head": 2.0
+    },
+    "soil": {
+      "type": "LayerThicknessChanged",
+      "object_tag": "SL-R",
+      "layer": "soil",
+      "value": 0.3,
+      "unit": "m"
+    },
+    "soil_alt": {
+      "type": "LayerThicknessChanged",
+      "object_tag": "SL-R",
+      "layer": "soil",
+      "value": 0.2,
+      "unit": "m"
+    },
+    "sill_touches": [
+      "W-S",
+      "OP-S",
+      "RW-S"
+    ],
+    "soil_unchanged": [
+      "C4"
+    ]
+  },
+  "invalid_events": [
+    {
+      "id": "unknown-type",
+      "base": "sill",
+      "set": {
+        "type": "Unknown"
+      }
+    },
+    {
+      "id": "missing-object",
+      "base": "soil",
+      "remove": [
+        "object_guid"
+      ]
+    },
+    {
+      "id": "missing-sill",
+      "base": "sill",
+      "remove": [
+        "sill"
+      ]
+    },
+    {
+      "id": "extra-key",
+      "base": "sill",
+      "set": {
+        "colour": "red"
+      }
+    },
+    {
+      "id": "unknown-object",
+      "base": "soil",
+      "set": {
+        "object_guid": "MISSING"
+      }
+    },
+    {
+      "id": "window-event-on-slab",
+      "base": "sill",
+      "set": {
+        "object_tag": "SL-R"
+      }
+    },
+    {
+      "id": "layer-event-on-window",
+      "base": "soil",
+      "set": {
+        "object_tag": "RW-S"
+      }
+    },
+    {
+      "id": "layer-event-on-plain-slab",
+      "base": "soil",
+      "set": {
+        "object_tag": "SL-1"
+      }
+    },
+    {
+      "id": "unit-in-centimetres",
+      "base": "soil",
+      "set": {
+        "unit": "cm"
+      }
+    },
+    {
+      "id": "zero-thickness",
+      "base": "soil",
+      "set": {
+        "value": 0
+      }
+    },
+    {
+      "id": "negative-thickness",
+      "base": "soil",
+      "set": {
+        "value": -0.1
+      }
+    },
+    {
+      "id": "text-thickness",
+      "base": "soil",
+      "set": {
+        "value": "0.3"
+      }
+    },
+    {
+      "id": "boolean-thickness",
+      "base": "soil",
+      "set": {
+        "value": true
+      }
+    },
+    {
+      "id": "not-a-number",
+      "base": "soil",
+      "set": {
+        "value": "nan"
+      }
+    },
+    {
+      "id": "unknown-layer",
+      "base": "soil",
+      "set": {
+        "layer": "gravel"
+      }
+    },
+    {
+      "id": "sill-above-head",
+      "base": "sill",
+      "set": {
+        "sill": 2.0,
+        "head": 0.9
+      }
+    },
+    {
+      "id": "sill-equals-head",
+      "base": "sill",
+      "set": {
+        "sill": 1.0,
+        "head": 1.0
+      }
+    },
+    {
+      "id": "negative-sill",
+      "base": "sill",
+      "set": {
+        "sill": -0.1
+      }
+    },
+    {
+      "id": "head-above-wall",
+      "base": "sill",
+      "set": {
+        "head": 3.5
+      }
+    },
+    {
+      "id": "text-sill",
+      "base": "sill",
+      "set": {
+        "sill": "0.7"
+      }
+    }
+  ],
+  "forbidden": [
+    "WALL-01",
+    "WALL-TYPE-01",
+    "SHELL-01",
+    "translate_fem",
+    "stale-fem",
+    "LoadBearingWall"
+  ],
+  "chapters": [
+    {
+      "folder": "📊️information",
+      "scene": "Beat1_DataToInformation",
+      "concepts": [
+        "data",
+        "information"
+      ],
+      "video_id": "bim_information",
+      "entry": "🏛️architecture/🏗️bim/📊️information/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Data and Information",
+        "de": "Daten und Information"
+      },
+      "output": "BIM_information"
+    },
+    {
+      "folder": "🧬️objects",
+      "scene": "Beat2_ObjectOrientation",
+      "concepts": [
+        "class",
+        "object",
+        "inheritance",
+        "composition"
+      ],
+      "video_id": "bim_objects",
+      "entry": "🏛️architecture/🏗️bim/🧬️objects/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Object Orientation",
+        "de": "Objektorientierung"
+      },
+      "output": "BIM_objects"
+    },
+    {
+      "folder": "👁️representations",
+      "scene": "Beat3_SameObject",
+      "concepts": [
+        "representation",
+        "geometry"
+      ],
+      "video_id": "bim_representations",
+      "entry": "🏛️architecture/🏗️bim/👁️representations/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Object Representations",
+        "de": "Repräsentationen von Objekten"
+      },
+      "output": "BIM_representations"
+    },
+    {
+      "folder": "🧩️models",
+      "scene": "Beat4_PartialModels",
+      "concepts": [
+        "schema",
+        "model"
+      ],
+      "video_id": "bim_models",
+      "entry": "🏛️architecture/🏗️bim/🧩️models/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Partial Models and Translation",
+        "de": "Teilmodelle und Modellübersetzungen"
+      },
+      "output": "BIM_models"
+    },
+    {
+      "folder": "🔌️exchange",
+      "scene": "Beat5_Interfaces",
+      "concepts": [
+        "interface",
+        "translation",
+        "FEM"
+      ],
+      "video_id": "bim_exchange",
+      "entry": "🏛️architecture/🏗️bim/🔌️exchange/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Interfaces and Model Translation",
+        "de": "Schnittstellen und Modellübersetzung"
+      },
+      "output": "BIM_exchange"
+    },
+    {
+      "folder": "🔗️consistency",
+      "scene": "Beat6_Consistency",
+      "concepts": [
+        "identity",
+        "consistency"
+      ],
+      "video_id": "bim_consistency",
+      "entry": "🏛️architecture/🏗️bim/🔗️consistency/🎬️clip/🐍️.py",
+      "title": {
+        "en": "Consistency across Models",
+        "de": "Konsistenz über Modelle hinweg"
+      },
+      "output": "BIM_consistency"
+    }
+  ],
+  "audiences": [
+    {
+      "id": "speaker",
+      "captions": true
+    },
+    {
+      "id": "spectator",
+      "captions": false
+    }
+  ],
+  "source_validation": {
+    "manifest": {
+      "videos": [
+        {
+          "id": "ready",
+          "script": "🏛️architecture/🧪️ready/🎬️clip/🐍️.py",
+          "chapters": [
+            {
+              "scene": "Ready",
+              "segments": [
+                {
+                  "script": "🏛️architecture/🧪️ready/🎬️clip/🐍️.py",
+                  "scene": "Beat1_Ready"
+                }
+              ]
+            }
+          ],
+          "output": "Ready"
+        },
+        {
+          "id": "missing",
+          "script": "🏛️architecture/🧪️missing/🎬️clip/🐍️.py",
+          "chapters": [
+            {
+              "scene": "Missing",
+              "segments": [
+                {
+                  "script": "🏛️architecture/🧪️missing/🎬️clip/🐍️.py",
+                  "scene": "Beat2_Missing"
+                }
+              ]
+            }
+          ],
+          "output": "Missing"
+        }
+      ]
+    },
+    "selections": [
+      {
+        "id": "selected-ready",
+        "source_ids": [
+          "ready"
+        ],
+        "accepted": true
+      },
+      {
+        "id": "metadata-only",
+        "source_ids": [],
+        "accepted": true
+      },
+      {
+        "id": "selected-missing",
+        "source_ids": [
+          "missing"
+        ],
+        "accepted": false
+      },
+      {
+        "id": "all-sources",
+        "source_ids": null,
+        "accepted": false
+      }
+    ],
+    "invalid_structure": [
+      {
+        "id": "unselected-wrapper-escape",
+        "path": [
+          "videos",
+          1,
+          "script"
+        ],
+        "value": "../escape.py"
+      },
+      {
+        "id": "unselected-segment-escape",
+        "path": [
+          "videos",
+          1,
+          "chapters",
+          0,
+          "segments",
+          0,
+          "script"
+        ],
+        "value": "../escape.py"
+      },
+      {
+        "id": "unselected-invalid-scene",
+        "path": [
+          "videos",
+          1,
+          "chapters",
+          0,
+          "segments",
+          0,
+          "scene"
+        ],
+        "value": "Invalid-Scene"
+      },
+      {
+        "id": "unselected-invalid-clauses",
+        "path": [
+          "videos",
+          1,
+          "chapters",
+          0,
+          "segments",
+          0,
+          "clauses"
+        ],
+        "value": {
+          "first": "",
+          "last": "b"
+        }
+      }
+    ],
+    "compose_all": [
+      null,
+      []
+    ],
+    "missing_segment": "🏛️architecture/🧪️ready/🎬️clip/🧩️missing/🐍️.py"
+  },
+  "browser_metadata": {
+    "schema": "semio-presentation-browser/v1",
+    "renderer": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🪟️presentation/🌐️browser/🟨️render.mjs",
+    "adapter": "🧰️framework/🔨️modules/🏃️process/🧰️tools/🎭️playwright/🟦️.ts",
+    "work_directory": ".🧬semio/🧪️browser-metadata",
+    "calls": [
+      "adapter-bundle",
+      "ui-bundle"
+    ]
+  },
+  "invalid_models": [
+    {
+      "id": "short-global-id",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "guid"
+      ],
+      "value": "3KWwk33UXPqR9ieWnIoNg"
+    },
+    {
+      "id": "long-global-id",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "guid"
+      ],
+      "value": "3KWwk33UXPqR9ieWnIoNghh"
+    },
+    {
+      "id": "global-id-alphabet",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "guid"
+      ],
+      "value": "3KWwk33UXPqR9ieWnIoN#h"
+    },
+    {
+      "id": "global-id-first-character",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "guid"
+      ],
+      "value": "9KWwk33UXPqR9ieWnIoNgh"
+    },
+    {
+      "id": "unknown-ifc-class",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "class"
+      ],
+      "value": "IfcBanana"
+    },
+    {
+      "id": "lowercase-ifc-class",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "class"
+      ],
+      "value": "ifccolumn"
+    },
+    {
+      "id": "unknown-schema",
+      "path": [
+        "schema_id"
+      ],
+      "value": "IFC2X3"
+    },
+    {
+      "id": "missing-basis",
+      "path": [
+        "grid",
+        "spacing",
+        "basis"
+      ],
+      "remove": true
+    },
+    {
+      "id": "unknown-basis",
+      "path": [
+        "grid",
+        "spacing",
+        "basis"
+      ],
+      "value": "guessed"
+    },
+    {
+      "id": "unknown-unit",
+      "path": [
+        "grid",
+        "spacing",
+        "unit"
+      ],
+      "value": "furlong"
+    },
+    {
+      "id": "text-quantity",
+      "path": [
+        "grid",
+        "spacing",
+        "value"
+      ],
+      "value": "4.75"
+    },
+    {
+      "id": "negative-slab-thickness",
+      "path": [
+        "elements",
+        {
+          "tag": "SL-1"
+        },
+        "attributes",
+        "thickness",
+        "value"
+      ],
+      "value": -0.1
+    },
+    {
+      "id": "zero-piloti-diameter",
+      "path": [
+        "types",
+        {
+          "tag": "TY-PILOTI"
+        },
+        "profile",
+        "diameter",
+        "value"
+      ],
+      "value": 0
+    },
+    {
+      "id": "missing-german-name",
+      "path": [
+        "building",
+        "name",
+        "de"
+      ],
+      "remove": true
+    },
+    {
+      "id": "missing-english-element-name",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "name",
+        "en"
+      ],
+      "remove": true
+    },
+    {
+      "id": "empty-german-name",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "name",
+        "de"
+      ],
+      "value": ""
+    },
+    {
+      "id": "implicit-language",
+      "path": [
+        "languages"
+      ],
+      "value": [
+        "en"
+      ]
+    },
+    {
+      "id": "reordered-languages",
+      "path": [
+        "languages"
+      ],
+      "value": [
+        "de",
+        "en"
+      ]
+    },
+    {
+      "id": "third-language",
+      "path": [
+        "languages"
+      ],
+      "value": [
+        "en",
+        "de",
+        "fr"
+      ]
+    },
+    {
+      "id": "missing-revision",
+      "path": [
+        "revision"
+      ],
+      "remove": true
+    },
+    {
+      "id": "zero-revision",
+      "path": [
+        "revision"
+      ],
+      "value": 0
+    },
+    {
+      "id": "missing-storey",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "storey"
+      ],
+      "remove": true
+    },
+    {
+      "id": "unknown-domain",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "metadata",
+        "domains",
+        0
+      ],
+      "value": "plumbing"
+    },
+    {
+      "id": "additional-property",
+      "path": [
+        "building",
+        "colour"
+      ],
+      "add": true,
+      "value": "white"
+    },
+    {
+      "id": "additional-element-property",
+      "path": [
+        "elements",
+        {
+          "tag": "A1"
+        },
+        "colour"
+      ],
+      "add": true,
+      "value": "white"
+    },
+    {
+      "id": "missing-grid",
+      "path": [
+        "grid"
+      ],
+      "remove": true
+    },
+    {
+      "id": "missing-links",
+      "path": [
+        "links"
+      ],
+      "remove": true
+    }
+  ]
+}

@@ -1,0 +1,15 @@
+import fs from "node:fs";
+import path from "node:path";
+import {fileURLToPath} from "node:url";
+import {spawn} from "node:child_process";
+const ticket=path.dirname(fileURLToPath(import.meta.url));
+const output=path.join(ticket,"🗑️generated","preview");
+fs.mkdirSync(output,{recursive:true});
+const log=fs.openSync(path.join(output,"render.log"),"a");
+const args=["🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts","render","--video","bim_information","--language","de","--audience","speaker","--output-root",output,"--resolution","1280,720","--fps","24","--jobs","2","-q","l","--no-play"];
+const child=spawn("repo",args,{stdio:["ignore",log,log],shell:process.platform==="win32",env:{...process.env,PYTHONUTF8:"1",PYTHONIOENCODING:"utf-8",PYTHONDONTWRITEBYTECODE:"1",SEMIO_TEACHING_OUTPUT_ROOT:output,UV_PROJECT_ENVIRONMENT:path.resolve(".🧬semio/🎓️teaching/⚡️cache/python")}});
+console.log("[DEBUG] German BIM preview started: "+output);
+child.on("error",error=>{console.error(error);process.exitCode=1;});
+child.on("exit",code=>{fs.closeSync(log);console.log("[DEBUG] Preview render exit "+code);process.exitCode=code??1;});
+process.on("SIGINT",()=>child.kill("SIGINT"));
+process.on("SIGTERM",()=>child.kill("SIGTERM"));

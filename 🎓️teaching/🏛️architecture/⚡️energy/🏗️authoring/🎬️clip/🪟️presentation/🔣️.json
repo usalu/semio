@@ -1,0 +1,398 @@
+{
+  "$schema": "./🧬️schema.json",
+  "version": 1,
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "locales": [
+    "en",
+    "de"
+  ],
+  "identity": {
+    "brand": "semio",
+    "subject": {
+      "en": "Teaching",
+      "de": "Lehre"
+    },
+    "section": {
+      "en": "Architecture · Building Systems",
+      "de": "Architektur · Gebäudesysteme"
+    }
+  },
+  "chrome": {
+    "navbarHeight": 28.8,
+    "footerHeight": 28.8,
+    "titleHeight": 22.4,
+    "inset": 3.2
+  },
+  "focus": {
+    "rect": {
+      "x": 3.2,
+      "y": 32,
+      "width": 1593.6,
+      "height": 836
+    },
+    "viewport": {
+      "x": 6.4,
+      "y": 57.6,
+      "width": 1587.2,
+      "height": 807.2
+    }
+  },
+  "sourceCrop": {
+    "left": 0,
+    "top": 0,
+    "right": 1,
+    "bottom": 1
+  },
+  "contentCamera": {
+    "duration": 0.6
+  },
+  "timing": {
+    "topicTravel": 0.4,
+    "topicReveal": 0.6,
+    "topicPress": 0.3,
+    "topicHold": 0.1,
+    "videoTravel": 0.5,
+    "videoReveal": 0.6,
+    "videoPress": 0.3,
+    "focusHold": 0.2
+  },
+  "labels": {
+    "view": {
+      "en": "View",
+      "de": "Ansehen"
+    },
+    "topics": {
+      "en": "Topics",
+      "de": "Themen"
+    },
+    "videos": {
+      "en": "Videos",
+      "de": "Videos"
+    },
+    "empty": {
+      "en": "No videos yet",
+      "de": "Noch keine Videos"
+    },
+    "overview": {
+      "en": "Overview",
+      "de": "Übersicht"
+    }
+  },
+  "topics": [
+    {
+      "id": "energy",
+      "title": {
+        "en": "Energy",
+        "de": "Energie"
+      },
+      "icon": "⚡",
+      "cell": {
+        "column": 0,
+        "row": 0
+      },
+      "videos": [
+        {
+          "id": "physical_fundamentals",
+          "title": {
+            "en": "Physical Fundamentals",
+            "de": "Physikalische Grundlagen"
+          },
+          "icon": "🧲",
+          "symbol": "physics",
+          "cell": {
+            "column": 0,
+            "row": 0
+          }
+        },
+        {
+          "id": "ventilation",
+          "title": {
+            "en": "Ventilation",
+            "de": "Lüftung"
+          },
+          "icon": "🌬️",
+          "symbol": "air",
+          "cell": {
+            "column": 1,
+            "row": 0
+          }
+        },
+        {
+          "id": "heating",
+          "title": {
+            "en": "Heating",
+            "de": "Heizen"
+          },
+          "icon": "🔥",
+          "symbol": "heat",
+          "cell": {
+            "column": 2,
+            "row": 0
+          }
+        },
+        {
+          "id": "cooling",
+          "title": {
+            "en": "Cooling",
+            "de": "Kühlen"
+          },
+          "icon": "❄️",
+          "symbol": "cool",
+          "cell": {
+            "column": 0,
+            "row": 1
+          }
+        },
+        {
+          "id": "energy_balance",
+          "title": {
+            "en": "Energy Balance",
+            "de": "Energiebilanz"
+          },
+          "icon": "📊",
+          "symbol": "balance",
+          "cell": {
+            "column": 1,
+            "row": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "parametric",
+      "title": {
+        "en": "Parametrics",
+        "de": "Parametrik"
+      },
+      "icon": "📐",
+      "cell": {
+        "column": 1,
+        "row": 0
+      },
+      "videos": []
+    },
+    {
+      "id": "bim",
+      "title": {
+        "en": "Building Information Modelling",
+        "de": "Building Information Modelling"
+      },
+      "icon": "🏗️",
+      "cell": {
+        "column": 2,
+        "row": 0
+      },
+      "videos": [
+        {
+          "id": "bim_information",
+          "title": {
+            "en": "Data and Information",
+            "de": "Daten und Information"
+          },
+          "icon": "📊️",
+          "symbol": "bim",
+          "cell": {
+            "column": 0,
+            "row": 0
+          }
+        },
+        {
+          "id": "bim_objects",
+          "title": {
+            "en": "Object Orientation",
+            "de": "Objektorientierung"
+          },
+          "icon": "🧬️",
+          "symbol": "bim",
+          "cell": {
+            "column": 1,
+            "row": 0
+          }
+        },
+        {
+          "id": "bim_representations",
+          "title": {
+            "en": "Object Representations",
+            "de": "Repräsentationen von Objekten"
+          },
+          "icon": "👁️",
+          "symbol": "bim",
+          "cell": {
+            "column": 2,
+            "row": 0
+          }
+        },
+        {
+          "id": "bim_models",
+          "title": {
+            "en": "Partial Models and Translation",
+            "de": "Teilmodelle und Modellübersetzungen"
+          },
+          "icon": "🧩️",
+          "symbol": "bim",
+          "cell": {
+            "column": 0,
+            "row": 1
+          }
+        },
+        {
+          "id": "bim_exchange",
+          "title": {
+            "en": "Interfaces and Model Translation",
+            "de": "Schnittstellen und Modellübersetzung"
+          },
+          "icon": "🔌️",
+          "symbol": "bim",
+          "cell": {
+            "column": 1,
+            "row": 1
+          }
+        },
+        {
+          "id": "bim_consistency",
+          "title": {
+            "en": "Consistency across Models",
+            "de": "Konsistenz über Modelle hinweg"
+          },
+          "icon": "🔗️",
+          "symbol": "bim",
+          "cell": {
+            "column": 2,
+            "row": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "grasshopper",
+      "title": {
+        "en": "Grasshopper",
+        "de": "Grasshopper"
+      },
+      "icon": "🦗",
+      "cell": {
+        "column": 0,
+        "row": 1
+      },
+      "videos": []
+    },
+    {
+      "id": "excel",
+      "title": {
+        "en": "Excel",
+        "de": "Excel"
+      },
+      "icon": "📊",
+      "cell": {
+        "column": 1,
+        "row": 1
+      },
+      "videos": []
+    },
+    {
+      "id": "optimization",
+      "title": {
+        "en": "Optimization",
+        "de": "Optimierung"
+      },
+      "icon": "🎯",
+      "cell": {
+        "column": 2,
+        "row": 1
+      },
+      "videos": [
+        {
+          "id": "optimization_extrema",
+          "title": {
+            "en": "Minimization and Maximization",
+            "de": "Minimierung und Maximierung"
+          },
+          "icon": "📉️",
+          "symbol": "optimization",
+          "cell": {
+            "column": 0,
+            "row": 0
+          }
+        },
+        {
+          "id": "optimization_sampling",
+          "title": {
+            "en": "Sampling the Design Space",
+            "de": "Sampling des Entwurfsraums"
+          },
+          "icon": "🎲️",
+          "symbol": "optimization",
+          "cell": {
+            "column": 1,
+            "row": 0
+          }
+        },
+        {
+          "id": "optimization_experiments",
+          "title": {
+            "en": "Design of Experiments",
+            "de": "Design of Experiments"
+          },
+          "icon": "🧪️",
+          "symbol": "optimization",
+          "cell": {
+            "column": 2,
+            "row": 0
+          }
+        },
+        {
+          "id": "optimization_index",
+          "title": {
+            "en": "Multiple Criteria and Indices",
+            "de": "Multikriteriell und Index"
+          },
+          "icon": "⚖️",
+          "symbol": "optimization",
+          "cell": {
+            "column": 0,
+            "row": 1
+          }
+        },
+        {
+          "id": "optimization_pareto",
+          "title": {
+            "en": "Pareto Fronts",
+            "de": "Pareto-Fronten"
+          },
+          "icon": "🏆️",
+          "symbol": "optimization",
+          "cell": {
+            "column": 1,
+            "row": 1
+          }
+        },
+        {
+          "id": "optimization_algorithms",
+          "title": {
+            "en": "Optimization Algorithms",
+            "de": "Optimierungsalgorithmen"
+          },
+          "icon": "🧬️",
+          "symbol": "optimization",
+          "cell": {
+            "column": 2,
+            "row": 1
+          }
+        }
+      ]
+    }
+  ],
+  "restoreTiming": {
+    "topicTravel": 0.35,
+    "topicReveal": 0.15,
+    "topicPress": 0.25,
+    "topicHold": 0.05,
+    "videoTravel": 0.35,
+    "videoReveal": 0.1,
+    "videoPress": 0.25,
+    "focusHold": 1.5
+  }
+}

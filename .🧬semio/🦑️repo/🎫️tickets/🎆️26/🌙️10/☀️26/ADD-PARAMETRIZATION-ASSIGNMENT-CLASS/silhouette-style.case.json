@@ -1,0 +1,50 @@
+{
+  "feature": "Native graph and transition silhouettes",
+  "kinds": [
+    {
+      "counter": "semiodiagram",
+      "kind": "diagram",
+      "environment": "Diagram",
+      "tier": "visual",
+      "list": "diagrams",
+      "en": "Diagram",
+      "de": "Diagramm",
+      "pluralEn": "Diagrams",
+      "pluralDe": "Diagramme"
+    },
+    {
+      "counter": "semiotransitions",
+      "kind": "transitions",
+      "environment": "Transitions",
+      "tier": "logical",
+      "list": "transitions",
+      "en": "Transitions",
+      "de": "Übergänge",
+      "pluralEn": "Transitions",
+      "pluralDe": "Übergänge"
+    }
+  ],
+  "titles": [
+    {
+      "input": "omitted",
+      "leftChip": "localized-kind"
+    },
+    {
+      "input": "empty",
+      "leftChip": false
+    },
+    {
+      "input": "named",
+      "leftChip": "supplied-name"
+    }
+  ],
+  "hierarchy": [
+    "1.1.a",
+    "1.1.b",
+    "1.1.c",
+    "1.2.a",
+    "1.2.b",
+    "1.2.c",
+    "1.2.d"
+  ]
+}

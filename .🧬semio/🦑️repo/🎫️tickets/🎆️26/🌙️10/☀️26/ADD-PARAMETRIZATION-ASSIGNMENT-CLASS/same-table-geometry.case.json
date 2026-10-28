@@ -1,0 +1,32 @@
+{
+  "title": "Worked Example Uses the Task Table",
+  "matrix": {
+    "typeColumns": 3,
+    "parameterRows": 8,
+    "headerHeight": "16mm",
+    "rowHeight": "6mm",
+    "padding": "2mm",
+    "labelWidth": "27mm",
+    "populatedRows": 4,
+    "blankRows": 4
+  },
+  "shapeScale": 0.5,
+  "values": [
+    [
+      2.5,
+      2.5,
+      3.5
+    ],
+    [
+      1.5,
+      1.5,
+      2.5
+    ],
+    [
+      2,
+      2,
+      3
+    ]
+  ],
+  "headerNumbers": false
+}

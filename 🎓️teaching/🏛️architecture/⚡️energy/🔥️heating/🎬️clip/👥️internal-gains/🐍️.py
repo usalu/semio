@@ -29,20 +29,17 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 SUBTITLE_FONT_SIZE = _manim_module.SUBTITLE_FONT_SIZE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
 PASTEL_PINK = _manim_module.PASTEL_PINK
 PASTEL_WHITE = _manim_module.PASTEL_WHITE
 PASTEL_CYAN = _manim_module.PASTEL_CYAN
-PASTEL_TEAL = _manim_module.PASTEL_TEAL
 PASTEL_ORANGE = _manim_module.PASTEL_ORANGE
 PASTEL_YELLOW = _manim_module.PASTEL_YELLOW
 PASTEL_RED = _manim_module.PASTEL_RED
@@ -104,12 +101,12 @@ def _cycles(run_time: float, period: float = 1.3) -> int:
 
 
 def _laptop(hinge, *, color=PASTEL_WHITE, w: float = 0.5, h: float = 0.42):
-    """💻 Laptop in side elevation — base on the desk, screen tilted back at ``hinge``."""
+    """💻 A solid side elevation with physical screen and chassis thickness."""
     hinge = np.array(hinge, dtype=float)
-    return VGroup(
-        Line(hinge + LEFT * w, hinge, color=color, stroke_width=1.8),
-        Line(hinge, hinge + np.array([0.09, h, 0.0]), color=color, stroke_width=1.8),
-    )
+    profile = _manim_module.object_silhouette("laptop", color=color, width=w + 0.09)
+    profile.stretch_to_fit_height(h)
+    profile.move_to(hinge + np.array([-w / 2 + 0.045, h / 2, 0]))
+    return VGroup(profile)
 
 
 def _desk(x0: float, x1: float, top: float, floor: float, legs):
@@ -204,7 +201,7 @@ def _din_ref(text: str):
     modules. Internal gains are tabulated in DIN V 18599-10, so every beat that
     does not already print that standard in its diagram footnotes it here.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=PASTEL_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -251,7 +248,7 @@ def _envelope_losses(house):
 def _house_gains(house):
     """💡 Person, desk laptop and pendant lamp in the house — the Physical Fundamentals glyphs, labelled."""
     floor_y, mid_y = house["bottom_left"][1], house["level_1"].get_center()[1]
-    person = person_glyph(ORIGIN, color=COLOR_PEOPLE, scale=1.6)
+    person = person_glyph(ORIGIN, color=COLOR_PEOPLE).set(height=0.7 * house["w_height"] / 2)
     person.move_to(np.array([-1.3, floor_y + 0.02 + person.height / 2, 0.0]))
     desk_y = mid_y + 0.5
     desk = _desk(-0.6, 0.7, desk_y, mid_y, legs=(-0.5, 0.6))
@@ -266,7 +263,7 @@ def _house_gains(house):
     )
     return {
         "sources": VGroup(person, VGroup(desk, laptop), lamp["group"]), "labels": labels, "lamp": lamp, "rays": rays,
-        "warm": [person.get_center() + UP * 0.12, laptop[1].get_center()], "bulb": bulb,
+        "warm": [person.get_center() + UP * 0.12, laptop.get_center()], "bulb": bulb,
     }
 
 
@@ -295,9 +292,7 @@ class Beat1_WinterInterneGewinne(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Kalte Außenluft vs. interne Quellen", title)
+        subtitle = section_heading("Kalte Außenluft vs. interne Quellen")
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "winter"))
@@ -336,7 +331,7 @@ class Beat1_WinterInterneGewinne(Scene):
                   ripples(gains["warm"], r_max=0.35, color=COLOR_HEAT, cycles=1), run_time=1.6)
         hold_for(self, self.NARRATION, "inside", during=all_heat)
 
-        din_tag = Text("DIN V 18599", font_size=BODY_FONT_SIZE, color=PASTEL_TEAL).move_to(B1_DIN_AT)
+        din_tag = Text("DIN V 18599", font_size=BODY_FONT_SIZE, color=P_PRIMARY).move_to(B1_DIN_AT)
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "din"))
         self.play(FadeIn(din_tag, shift=LEFT * 0.2), *all_heat(1.3), run_time=1.3)
         hold_for(self, self.NARRATION, "din", during=all_heat)
@@ -366,9 +361,7 @@ class Beat2_PersonenPhiP(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Personenabwärme", title)
+        subtitle = section_heading("Personenabwärme")
         din = _din_ref("DIN V 18599-10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -376,7 +369,7 @@ class Beat2_PersonenPhiP(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         room = room_section(B2_ROOM_C, w=5.6, h=3.3)
-        seated = seated_person_glyph(np.array([room["x_l"] + 1.9, room["y_f"], 0.0]), color=COLOR_PEOPLE, scale=3.6,
+        seated = seated_person_glyph(np.array([room["x_l"] + 1.9, room["y_f"], 0.0]), color=COLOR_PEOPLE, scale=0.52 * room["h"] / 0.55,
                                      chair_color=PASTEL_WHITE)
         chest = seated["chest"]
         plume = _plume(seated["head"].get_top(), room["y_c"] - 0.08)
@@ -450,9 +443,7 @@ class Beat3_GeraetePhiE(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Geräteabwärme", title)
+        subtitle = section_heading("Geräteabwärme")
         din = _din_ref("DIN V 18599-10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -461,9 +452,9 @@ class Beat3_GeraetePhiE(Scene):
 
         room = room_section(B3_ROOM_C, w=7.0, h=3.2)
         y_f = room["y_f"]
-        seated = seated_person_glyph(np.array([room["x_l"] + 1.4, y_f, 0.0]), color=COLOR_PEOPLE, scale=3.2,
+        seated = seated_person_glyph(np.array([room["x_l"] + 1.4, y_f, 0.0]), color=COLOR_PEOPLE, scale=0.52 * room["h"] / 0.55,
                                      chair_color=PASTEL_WHITE)
-        elbow = seated["figure"][7].get_end()
+        elbow = seated["lap"] + UP * (0.12 * seated["height"])
         desk_y, x0 = elbow[1] - 0.1, elbow[0] + 0.1
         desk = _desk(x0, x0 + 2.9, desk_y, y_f, legs=(x0 + 1.25, x0 + 2.8))
         hinge = np.array([x0 + 1.0, desk_y + 0.02, 0.0])
@@ -486,7 +477,7 @@ class Beat3_GeraetePhiE(Scene):
                          np.array([x0 + 1.1, y_f + 0.45, 0.0]), hinge + DOWN * 0.02]),
         ]
         cable_lines = VGroup(*[c.copy().set_stroke(COLOR_EQUIP, width=1.3, opacity=0.45) for c in cables])
-        warm = [laptop[1].get_center(), server_box.get_top() + UP * 0.04]
+        warm = [laptop.get_center(), server_box.get_top() + UP * 0.04]
 
         def warm_heat(rt):
             cyc = _cycles(rt)
@@ -568,9 +559,7 @@ class Beat4_BeleuchtungPhiL(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Beleuchtungswärme", title)
+        subtitle = section_heading("Beleuchtungswärme")
         din = _din_ref("DIN V 18599-10")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -656,7 +645,7 @@ def _b5_icon(key: str, x: float):
         return fig, fig.get_center() + UP * 0.08, False
     if key == "e":
         lap = _laptop(at + np.array([0.22, -0.2, 0.0]), color=COLOR_EQUIP)
-        return lap, lap[1].get_center(), False
+        return lap, lap.get_center(), False
     lamp = lamp_glyph(at + UP * 0.3, drop=0.1)
     lamp["bulb"].set_fill(COLOR_LIGHT, opacity=0.85)
     return lamp["group"], lamp["bulb"].get_center(), True
@@ -682,9 +671,7 @@ class Beat5_SummeUndDichte(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Summe und Wärmestromdichte", title)
+        subtitle = section_heading("Summe und Wärmestromdichte")
         self.play(FadeIn(subtitle), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "sources"))
@@ -775,7 +762,7 @@ class Beat5_SummeUndDichte(Scene):
         hold_for(self, self.NARRATION, "sum")
         self.play(FadeOut(ring), run_time=0.25)
 
-        density_sub = beat_subtitle("Spezifische Wärmestromdichte (DIN V 18599-10)", title)
+        density_sub = section_heading("Spezifische Wärmestromdichte (DIN V 18599-10)")
         caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "density"))
         self.play(ReplacementTransform(subtitle, density_sub), run_time=0.7)
         subtitle = density_sub

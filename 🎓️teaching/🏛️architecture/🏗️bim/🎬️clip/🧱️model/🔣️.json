@@ -1,0 +1,2264 @@
+{
+  "version": 2,
+  "languages": ["en", "de"],
+  "revision": 1,
+  "schema_id": "IFC4X3_ADD2",
+  "orientation_note": {
+    "en": "Teaching simplification: the box is aligned with the compass; the entrance with the curved glass wall faces north, the salon faces south.",
+    "de": "Lehrvereinfachung: der Baukörper ist nach den Himmelsrichtungen ausgerichtet; der Eingang mit der gebogenen Glaswand liegt im Norden, der Salon im Süden."
+  },
+  "notes": [
+    {
+      "id": "scope",
+      "text": {
+        "en": "Simplified teaching model of the Villa Savoye (Poissy, 1928-1931): rounded values, one orientation, selected elements only.",
+        "de": "Vereinfachtes Lehrmodell der Villa Savoye (Poissy, 1928-1931): gerundete Werte, eine Ausrichtung, ausgewählte Bauteile."
+      }
+    },
+    {
+      "id": "piloti-count",
+      "text": {
+        "en": "The real number of pilotis is open: the sources disagree (25 versus 15). The model draws a 5 × 5 grid as a teaching assumption.",
+        "de": "Die echte Anzahl der Pilotis ist offen: Die Quellen widersprechen sich (25 gegenüber 15). Das Modell zeichnet ein 5 × 5-Raster als Lehrannahme."
+      }
+    },
+    {
+      "id": "piloti-diameter",
+      "text": {
+        "en": "Piloti diameter 0.30 m, storey elevations, slab thickness and wall build-up are assumed; one weak student slideshow gives a piloti radius of 0.30 m (diameter 0.60 m).",
+        "de": "Pilotidurchmesser 0,30 m, Geschosshöhen, Deckendicke und Wandaufbau sind angenommen; eine schwache Studentenpräsentation nennt einen Pilotiradius von 0,30 m (Durchmesser 0,60 m)."
+      }
+    },
+    {
+      "id": "ribbon-windows",
+      "text": {
+        "en": "Ribbon windows are modelled on all four first-floor façades; sources conflict (all sides versus only the south façade).",
+        "de": "Bandfenster sind an allen vier Fassaden des Obergeschosses modelliert; die Quellen widersprechen sich (alle Seiten gegenüber nur Südseite)."
+      }
+    },
+    {
+      "id": "infill-walls",
+      "text": {
+        "en": "Walls are infill on the concrete frame (LoadBearing FALSE); the pilotis carry the slab (LoadBearing TRUE).",
+        "de": "Wände sind Ausfachung des Betonskeletts (LoadBearing FALSE); die Pilotis tragen die Decke (LoadBearing TRUE)."
+      }
+    },
+    {
+      "id": "ground-enclosure",
+      "text": {
+        "en": "The ground-floor enclosure is set back from the façades; its curved glass end follows the turning path of an assumed 1929 car.",
+        "de": "Der Erdgeschossraum ist gegenüber den Fassaden zurückgesetzt; sein gebogenes Glasende folgt der Wendekurve eines angenommenen Autos von 1929."
+      }
+    },
+    {
+      "id": "enclosed-area",
+      "text": {
+        "en": "The model encloses about 96 m² on the ground floor; the 190 m² reported by one source is not reproduced (service rooms are not modelled).",
+        "de": "Das Modell schließt im Erdgeschoss rund 96 m² ein; die 190 m² einer Quelle werden nicht erreicht (Nebenräume sind nicht modelliert)."
+      }
+    },
+    {
+      "id": "ramp",
+      "text": {
+        "en": "The ramp is two half-turn ramps with four straight flights at an assumed slope of about 1:6; the real slope and length are not sourced.",
+        "de": "Die Rampe besteht aus zwei Halbwendelrampen mit vier geraden Läufen bei angenommener Steigung von etwa 1:6; echte Steigung und Länge sind nicht belegt."
+      }
+    },
+    {
+      "id": "garden-fit",
+      "text": {
+        "en": "Hanging garden (first floor) and solarium (roof) areas are fitted to the sourced 110 m² and 70 m² (+0.2 % and +0.0 %).",
+        "de": "Fläche des hängenden Gartens (1. OG) und des Solariums (Dach) sind an die belegten 110 m² und 70 m² angepasst (+0,2 % und +0,0 %)."
+      }
+    },
+    {
+      "id": "hanging-garden",
+      "text": {
+        "en": "Planting beds on the hanging garden are not loaded separately; only the roof slab carries a soil layer.",
+        "de": "Pflanzbeete im Dachgarten sind nicht gesondert belastet; nur die Dachdecke trägt eine Substratschicht."
+      }
+    },
+    {
+      "id": "ifc-names",
+      "text": {
+        "en": "IFC class chains and attributes follow IFC 4.3.2.0 as summarised in the research; items marked as memory there still need a check against the official schema.",
+        "de": "IFC-Klassenketten und Attribute folgen IFC 4.3.2.0 wie in der Recherche zusammengefasst; dort als Erinnerung markierte Punkte brauchen noch eine Prüfung am offiziellen Schema."
+      }
+    },
+    {
+      "id": "tributary",
+      "text": {
+        "en": "Piloti reactions are tributary-area estimates (area load times area), not finite element results.",
+        "de": "Pilotilasten sind Lasteinzugsflächen-Näherungen (Flächenlast mal Fläche), keine Finite-Elemente-Ergebnisse."
+      }
+    }
+  ],
+  "classes": {
+    "IfcRoot": {"supertype": null, "adds": ["GlobalId", "OwnerHistory", "Name", "Description"]},
+    "IfcObjectDefinition": {"supertype": "IfcRoot", "adds": []},
+    "IfcObject": {"supertype": "IfcObjectDefinition", "adds": ["ObjectType"]},
+    "IfcProduct": {"supertype": "IfcObject", "adds": ["ObjectPlacement", "Representation"]},
+    "IfcElement": {"supertype": "IfcProduct", "adds": ["Tag"]},
+    "IfcBuiltElement": {"supertype": "IfcElement", "adds": []},
+    "IfcColumn": {"supertype": "IfcBuiltElement", "adds": ["PredefinedType"]},
+    "IfcSlab": {"supertype": "IfcBuiltElement", "adds": ["PredefinedType"]},
+    "IfcWall": {"supertype": "IfcBuiltElement", "adds": ["PredefinedType"]},
+    "IfcWindow": {
+      "supertype": "IfcBuiltElement",
+      "adds": ["OverallHeight", "OverallWidth", "PredefinedType", "PartitioningType", "UserDefinedPartitioningType"]
+    },
+    "IfcCurtainWall": {"supertype": "IfcBuiltElement", "adds": ["PredefinedType"]},
+    "IfcRamp": {"supertype": "IfcBuiltElement", "adds": ["PredefinedType"]},
+    "IfcRampFlight": {"supertype": "IfcBuiltElement", "adds": ["PredefinedType"]},
+    "IfcFeatureElement": {"supertype": "IfcElement", "adds": []},
+    "IfcFeatureElementSubtraction": {"supertype": "IfcFeatureElement", "adds": []},
+    "IfcOpeningElement": {"supertype": "IfcFeatureElementSubtraction", "adds": ["PredefinedType"]},
+    "IfcDistributionElement": {"supertype": "IfcElement", "adds": []},
+    "IfcDistributionFlowElement": {"supertype": "IfcDistributionElement", "adds": []},
+    "IfcEnergyConversionDevice": {"supertype": "IfcDistributionFlowElement", "adds": []},
+    "IfcBoiler": {"supertype": "IfcEnergyConversionDevice", "adds": ["PredefinedType"]},
+    "IfcFlowTerminal": {"supertype": "IfcDistributionFlowElement", "adds": []},
+    "IfcSpaceHeater": {"supertype": "IfcFlowTerminal", "adds": ["PredefinedType"]},
+    "IfcWasteTerminal": {"supertype": "IfcFlowTerminal", "adds": ["PredefinedType"]},
+    "IfcFlowSegment": {"supertype": "IfcDistributionFlowElement", "adds": []},
+    "IfcPipeSegment": {"supertype": "IfcFlowSegment", "adds": ["PredefinedType"]},
+    "IfcSpatialElement": {"supertype": "IfcProduct", "adds": ["LongName"]},
+    "IfcSpatialStructureElement": {"supertype": "IfcSpatialElement", "adds": ["CompositionType"]},
+    "IfcSpace": {"supertype": "IfcSpatialStructureElement", "adds": ["PredefinedType", "ElevationWithFlooring"]},
+    "IfcBuildingStorey": {"supertype": "IfcSpatialStructureElement", "adds": ["Elevation"]},
+    "IfcSite": {
+      "supertype": "IfcSpatialStructureElement",
+      "adds": ["RefLatitude", "RefLongitude", "RefElevation", "LandTitleNumber", "SiteAddress"]
+    },
+    "IfcBuilding": {
+      "supertype": "IfcSpatialStructureElement",
+      "adds": ["ElevationOfRefHeight", "ElevationOfTerrain", "BuildingAddress"]
+    },
+    "IfcProject": {
+      "supertype": "IfcObjectDefinition",
+      "adds": ["ObjectType", "LongName", "Phase", "RepresentationContexts", "UnitsInContext"]
+    },
+    "IfcStructuralItem": {"supertype": "IfcProduct", "adds": []},
+    "IfcStructuralMember": {"supertype": "IfcStructuralItem", "adds": []},
+    "IfcStructuralCurveMember": {"supertype": "IfcStructuralMember", "adds": ["PredefinedType", "Axis"]},
+    "IfcStructuralSurfaceMember": {"supertype": "IfcStructuralMember", "adds": ["PredefinedType", "Thickness"]},
+    "IfcStructuralConnection": {"supertype": "IfcStructuralItem", "adds": ["AppliedCondition"]},
+    "IfcStructuralPointConnection": {"supertype": "IfcStructuralConnection", "adds": ["ConditionCoordinateSystem"]}
+  },
+  "property_names": {
+    "diameter": {"name": {"en": "Diameter", "de": "Durchmesser"}, "unit": "m"},
+    "height": {"name": {"en": "Height", "de": "Höhe"}, "unit": "m"},
+    "length": {"name": {"en": "Length", "de": "Länge"}, "unit": "m"},
+    "width": {"name": {"en": "Width", "de": "Breite"}, "unit": "m"},
+    "thickness": {"name": {"en": "Thickness", "de": "Dicke"}, "unit": "m"},
+    "volume": {"name": {"en": "Volume", "de": "Volumen"}, "unit": "m³"},
+    "area": {"name": {"en": "Area", "de": "Fläche"}, "unit": "m²"},
+    "cross_section_area": {"name": {"en": "Cross-section area", "de": "Querschnittsfläche"}, "unit": "m²"},
+    "spacing": {
+      "name": {"en": "Grid spacing", "de": "Achsabstand"},
+      "unit": "m",
+      "meaning": {"en": "Distance between neighbouring piloti axes", "de": "Abstand benachbarter Pilotiachsen"}
+    },
+    "initial_spacing": {
+      "name": {"en": "Initial grid spacing", "de": "Ursprünglicher Achsabstand"},
+      "unit": "m",
+      "meaning": {
+        "en": "First planned distance between piloti axes, reduced to save cost",
+        "de": "Zuerst geplanter Abstand der Pilotiachsen, aus Kostengründen verkleinert"
+      }
+    },
+    "clear_width": {
+      "name": {"en": "Clear width between pilotis", "de": "Lichte Weite zwischen den Pilotis"},
+      "unit": "m",
+      "meaning": {
+        "en": "Free width between two piloti surfaces",
+        "de": "Freie Breite zwischen zwei Piloti-Oberflächen"
+      }
+    },
+    "car_width": {
+      "name": {"en": "Car width", "de": "Fahrzeugbreite"},
+      "unit": "m",
+      "meaning": {"en": "Width of the assumed car of 1929", "de": "Breite des angenommenen Autos von 1929"}
+    },
+    "car_length": {
+      "name": {"en": "Car length", "de": "Fahrzeuglänge"},
+      "unit": "m",
+      "meaning": {"en": "Length of the assumed car of 1929", "de": "Länge des angenommenen Autos von 1929"}
+    },
+    "turning_radius": {
+      "name": {"en": "Turning radius", "de": "Wenderadius"},
+      "unit": "m",
+      "meaning": {
+        "en": "Turning radius of the assumed car of 1929",
+        "de": "Wenderadius des angenommenen Autos von 1929"
+      }
+    },
+    "material": {
+      "name": {"en": "Material", "de": "Material"},
+      "unit": "",
+      "meaning": {"en": "Material the object is made of", "de": "Material, aus dem das Bauteil besteht"}
+    },
+    "LoadBearing": {
+      "name": {"en": "Load-bearing", "de": "Tragend"},
+      "unit": "",
+      "meaning": {"en": "Whether the object carries loads", "de": "Ob das Bauteil Lasten trägt"}
+    },
+    "IsExternal": {
+      "name": {"en": "External", "de": "Außenbauteil"},
+      "unit": "",
+      "meaning": {"en": "Whether the object faces the outside", "de": "Ob das Bauteil an die Außenluft grenzt"}
+    },
+    "FireRating": {
+      "name": {"en": "Fire rating", "de": "Feuerwiderstand"},
+      "unit": "",
+      "meaning": {"en": "Fire resistance class of the object", "de": "Feuerwiderstandsklasse des Bauteils"}
+    },
+    "GlobalId": {
+      "name": {"en": "GlobalId", "de": "GlobalId"},
+      "unit": "",
+      "meaning": {
+        "en": "Stable identity of the object across exchanges",
+        "de": "Stabile Identität des Objekts über Austausche hinweg"
+      }
+    },
+    "PredefinedType": {"name": {"en": "Predefined type", "de": "Vordefinierter Typ"}, "unit": ""},
+    "sill": {"name": {"en": "Sill height", "de": "Brüstungshöhe"}, "unit": "m"},
+    "head": {"name": {"en": "Head height", "de": "Sturzhöhe"}, "unit": "m"},
+    "start": {"name": {"en": "Opening start", "de": "Öffnungsbeginn"}, "unit": "m"},
+    "end": {"name": {"en": "Opening end", "de": "Öffnungsende"}, "unit": "m"}
+  },
+  "project": {
+    "guid": "2FDIvkx7rReh4AhmZsT_cH",
+    "tag": "PROJECT",
+    "class": "IfcProject",
+    "name": {"en": "Villa Savoye teaching project", "de": "Lehrprojekt Villa Savoye"}
+  },
+  "site": {
+    "guid": "3UMQGyvVDUfeF4RxwV2M7n",
+    "tag": "SITE",
+    "class": "IfcSite",
+    "name": {"en": "Poissy", "de": "Poissy"},
+    "address": "82 rue de Villiers, 78300 Poissy",
+    "latitude": {"value": 48.9244, "unit": "°", "basis": "sourced", "source": "VS-10.7"},
+    "longitude": {"value": 2.0283, "unit": "°", "basis": "sourced", "source": "VS-10.7"}
+  },
+  "building": {
+    "guid": "3UqUqdm$TQouEduNos6GRk",
+    "tag": "BUILDING",
+    "class": "IfcBuilding",
+    "name": {"en": "Villa Savoye", "de": "Villa Savoye"},
+    "architects": ["Le Corbusier", "Pierre Jeanneret"],
+    "clients": ["Pierre Savoye", "Eugénie Savoye"],
+    "years": {
+      "design_start": 1928,
+      "completed": 1931,
+      "listed": 1965,
+      "restoration_start": 1985,
+      "restoration_end": 1997,
+      "unesco": 2016,
+      "basis": "sourced"
+    },
+    "box": {
+      "length": {"value": 21.5, "unit": "m", "basis": "inferred", "source": "VS-2.1"},
+      "width": {"value": 19.0, "unit": "m", "basis": "inferred", "source": "VS-2.1"},
+      "height": {"value": 9.4, "unit": "m", "basis": "inferred", "source": "VS-2.2"}
+    }
+  },
+  "storeys": [
+    {
+      "guid": "0AcfIgkJ5Kngz0yJhMTOnI",
+      "tag": "ground",
+      "id": "ground",
+      "class": "IfcBuildingStorey",
+      "name": {"en": "Ground floor", "de": "Erdgeschoss"},
+      "elevation": {"value": 0.0, "unit": "m", "basis": "assumed"}
+    },
+    {
+      "guid": "1kINBm_CjUKAOJeFAoTtZO",
+      "tag": "first",
+      "id": "first",
+      "class": "IfcBuildingStorey",
+      "name": {"en": "First floor", "de": "Obergeschoss"},
+      "elevation": {"value": 3.5, "unit": "m", "basis": "assumed"}
+    },
+    {
+      "guid": "0ZQBsEJgLMLuvs3MIpFTFo",
+      "tag": "roof",
+      "id": "roof",
+      "class": "IfcBuildingStorey",
+      "name": {"en": "Roof", "de": "Dach"},
+      "elevation": {"value": 6.7, "unit": "m", "basis": "assumed"}
+    }
+  ],
+  "grid": {
+    "x": [1.25, 6.0, 10.75, 15.5, 20.25],
+    "y": [0.0, 4.75, 9.5, 14.25, 19.0],
+    "labels_x": ["1", "2", "3", "4", "5"],
+    "labels_y": ["A", "B", "C", "D", "E"],
+    "spacing": {"value": 4.75, "unit": "m", "basis": "sourced", "source": "VS-2.10"},
+    "initial_spacing": {"value": 5.0, "unit": "m", "basis": "sourced", "source": "VS-2.10"}
+  },
+  "types": [
+    {
+      "guid": "3Jo9irrVrUeveTP_aY7quZ",
+      "tag": "TY-PILOTI",
+      "class": "IfcColumnType",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti", "de": "Piloti-Stütze"},
+      "material": "MAT-RC",
+      "profile": {"shape": "circle", "diameter": {"value": 0.3, "unit": "m", "basis": "assumed"}},
+      "attributes": {},
+      "psets": {
+        "Pset_ColumnCommon": {
+          "LoadBearing": {"value": true, "ifc_type": "IfcBoolean", "basis": "inferred", "source": "VS-3.1"},
+          "IsExternal": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"},
+          "FireRating": {"value": "R 60", "ifc_type": "IfcLabel", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "2nsf2OSZnP$RPBKd$zjsvy",
+      "tag": "TY-RIBBON",
+      "class": "IfcWindowType",
+      "predefined_type": "WINDOW",
+      "name": {"en": "Ribbon window", "de": "Bandfenster"},
+      "material": "MAT-GLASS",
+      "attributes": {},
+      "psets": {
+        "Pset_WindowCommon": {
+          "IsExternal": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"},
+          "FireRating": {"value": "none", "ifc_type": "IfcLabel", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "1rPY4snnLV48U$pl1uGMf4",
+      "tag": "TY-WALL",
+      "class": "IfcWallType",
+      "predefined_type": "STANDARD",
+      "name": {"en": "Infill wall", "de": "Ausfachungswand"},
+      "material": "LS-WALL",
+      "attributes": {},
+      "psets": {
+        "Pset_WallCommon": {
+          "LoadBearing": {"value": false, "ifc_type": "IfcBoolean", "basis": "inferred", "source": "VS-3.1"},
+          "IsExternal": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"},
+          "FireRating": {"value": "EI 30", "ifc_type": "IfcLabel", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    }
+  ],
+  "materials": [
+    {
+      "guid": "3GXEP93HPRue2Pnmgth61I",
+      "tag": "MAT-RC",
+      "class": "IfcMaterial",
+      "name": {"en": "Reinforced concrete", "de": "Stahlbeton"},
+      "density": {"value": 25.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "1Gk6nsLprNiQhhN5mujplY",
+      "tag": "MAT-WATERPROOF",
+      "class": "IfcMaterial",
+      "name": {"en": "Waterproofing", "de": "Abdichtung"},
+      "density": {"value": 10.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "3SD9I$SYrUsA01zBxJ26iu",
+      "tag": "MAT-SCREED",
+      "class": "IfcMaterial",
+      "name": {"en": "Screed", "de": "Estrich"},
+      "density": {"value": 22.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "06zobK10bGIflp1vabsMW2",
+      "tag": "MAT-SOIL",
+      "class": "IfcMaterial",
+      "name": {"en": "Planting soil", "de": "Pflanzsubstrat"},
+      "density": {"value": 18.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "0$OHqFSkjUhgIPaxAKV_2T",
+      "tag": "MAT-RENDER",
+      "class": "IfcMaterial",
+      "name": {"en": "Render", "de": "Außenputz"},
+      "density": {"value": 20.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "0WN4HmXf1UR9gVPS4AmGhj",
+      "tag": "MAT-BRICK",
+      "class": "IfcMaterial",
+      "name": {"en": "Brick infill", "de": "Ziegelausfachung"},
+      "density": {"value": 18.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "3huJLJMfHLnuj97RXCstfY",
+      "tag": "MAT-PLASTER",
+      "class": "IfcMaterial",
+      "name": {"en": "Plaster", "de": "Innenputz"},
+      "density": {"value": 18.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "1GPexKU95ICeo6rydFquwE",
+      "tag": "MAT-GLASS",
+      "class": "IfcMaterial",
+      "name": {"en": "Glass", "de": "Glas"},
+      "density": {"value": 25.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "2q_3aZzJ1Oa8taK$FqfYGK",
+      "tag": "MAT-RENDERED",
+      "class": "IfcMaterial",
+      "name": {"en": "Rendered concrete", "de": "Verputzter Beton"},
+      "density": {"value": 24.0, "unit": "kN/m³", "basis": "assumed"}
+    },
+    {
+      "guid": "2xRdb08lfVzfmvqfCgjHrM",
+      "tag": "LS-ROOF",
+      "class": "IfcMaterialLayerSet",
+      "name": {"en": "Roof build-up", "de": "Dachaufbau"},
+      "layers": [
+        {
+          "id": "concrete",
+          "material": "MAT-RC",
+          "name": {"en": "Reinforced concrete slab", "de": "Stahlbetondecke"},
+          "thickness": {"value": 0.2, "unit": "m", "basis": "assumed"},
+          "zones": ["planted", "solarium"]
+        },
+        {
+          "id": "waterproofing",
+          "material": "MAT-WATERPROOF",
+          "name": {"en": "Waterproofing", "de": "Abdichtung"},
+          "thickness": {"value": 0.02, "unit": "m", "basis": "assumed"},
+          "zones": ["planted", "solarium"]
+        },
+        {
+          "id": "screed",
+          "material": "MAT-SCREED",
+          "name": {"en": "Screed to falls", "de": "Gefälleestrich"},
+          "thickness": {"value": 0.06, "unit": "m", "basis": "assumed"},
+          "zones": ["planted", "solarium"]
+        },
+        {
+          "id": "soil",
+          "material": "MAT-SOIL",
+          "name": {"en": "Planting soil", "de": "Pflanzsubstrat"},
+          "thickness": {"value": 0.1, "unit": "m", "basis": "assumed"},
+          "zones": ["planted"]
+        }
+      ]
+    },
+    {
+      "guid": "2YGYhEg4rGwA_qx0LZPVqg",
+      "tag": "LS-WALL",
+      "class": "IfcMaterialLayerSet",
+      "name": {"en": "Infill wall build-up", "de": "Wandaufbau Ausfachung"},
+      "layers": [
+        {
+          "id": "render",
+          "material": "MAT-RENDER",
+          "name": {"en": "Render (white)", "de": "Außenputz (weiß)"},
+          "thickness": {"value": 0.03, "unit": "m", "basis": "assumed"}
+        },
+        {
+          "id": "brick",
+          "material": "MAT-BRICK",
+          "name": {"en": "Brick infill", "de": "Ziegelausfachung"},
+          "thickness": {"value": 0.24, "unit": "m", "basis": "assumed"}
+        },
+        {
+          "id": "plaster",
+          "material": "MAT-PLASTER",
+          "name": {"en": "Plaster", "de": "Innenputz"},
+          "thickness": {"value": 0.03, "unit": "m", "basis": "assumed"}
+        }
+      ]
+    }
+  ],
+  "elements": [
+    {
+      "guid": "3KWwk33UXPqR9ieWnIoNgh",
+      "tag": "A1",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti A1", "de": "Piloti-Stütze A1"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [1.25, 0.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "1qAhTtcGvV8wdkakBY37FC",
+      "tag": "A2",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti A2", "de": "Piloti-Stütze A2"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [6.0, 0.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "21TWgKZNrUZezSCzwRKNor",
+      "tag": "A3",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti A3", "de": "Piloti-Stütze A3"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [10.75, 0.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "0M8QinpxzMGB9Jc4pLN2uc",
+      "tag": "A4",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti A4", "de": "Piloti-Stütze A4"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [15.5, 0.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "1ytewYSWnNUvWgXXLdtiqI",
+      "tag": "A5",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti A5", "de": "Piloti-Stütze A5"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [20.25, 0.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "11tRzlznXJmwOQPmdXskLs",
+      "tag": "B1",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti B1", "de": "Piloti-Stütze B1"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [1.25, 4.75], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "1rBcKA9zbVgRAvU_UNlTSC",
+      "tag": "B2",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti B2", "de": "Piloti-Stütze B2"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [6.0, 4.75], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "0yoQlyTGDVUBsRS$cAaoWq",
+      "tag": "B3",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti B3", "de": "Piloti-Stütze B3"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [10.75, 4.75], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "1uPQz2iPHNF8yxnu$N00M$",
+      "tag": "B4",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti B4", "de": "Piloti-Stütze B4"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [15.5, 4.75], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "1Lmox9yU5JEwBVDwI9nhUM",
+      "tag": "B5",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti B5", "de": "Piloti-Stütze B5"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [20.25, 4.75], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "31dMOJSiLQkvHB5GQ$ugBc",
+      "tag": "C1",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti C1", "de": "Piloti-Stütze C1"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [1.25, 9.5], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "2QqT5v8yvLxPzOiUgW4AO_",
+      "tag": "C2",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti C2", "de": "Piloti-Stütze C2"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [6.0, 9.5], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "2xgqd$lyrTYuKJPULI6c45",
+      "tag": "C3",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti C3", "de": "Piloti-Stütze C3"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [10.75, 9.5], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "3GYCHvj2LGAA93OIY6C9un",
+      "tag": "C4",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti C4", "de": "Piloti-Stütze C4"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [15.5, 9.5], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "3fPHXVXtvVnevHI9O4nWmM",
+      "tag": "C5",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti C5", "de": "Piloti-Stütze C5"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [20.25, 9.5], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "2TSHdyOlvRCvs4p_QGFn65",
+      "tag": "D1",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti D1", "de": "Piloti-Stütze D1"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [1.25, 14.25], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "2IKAIalabMmQUKyUEEP1tv",
+      "tag": "D2",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti D2", "de": "Piloti-Stütze D2"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [6.0, 14.25], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "0hdYb_BLTVNfKYdOK2U3Lo",
+      "tag": "D3",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti D3", "de": "Piloti-Stütze D3"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [10.75, 14.25], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "1L$4xJOWrNgffZlJL1hmaO",
+      "tag": "D4",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti D4", "de": "Piloti-Stütze D4"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [15.5, 14.25], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "12__MjZKTUeQiCiMybKLfK",
+      "tag": "D5",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti D5", "de": "Piloti-Stütze D5"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [20.25, 14.25], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "3hbShQZoLUQAIJ1f4ZBUnw",
+      "tag": "E1",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti E1", "de": "Piloti-Stütze E1"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [1.25, 19.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "2R1Mc4qY1Gw8zbFreZGxEz",
+      "tag": "E2",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti E2", "de": "Piloti-Stütze E2"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [6.0, 19.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "3Zc4bSMnPHUxLaBuFmsQ4K",
+      "tag": "E3",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti E3", "de": "Piloti-Stütze E3"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [10.75, 19.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "3Ma4lfRNHOvATVMzdgGGz$",
+      "tag": "E4",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti E4", "de": "Piloti-Stütze E4"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [15.5, 19.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "0GYD_i1kbIfuntC7dKFgn8",
+      "tag": "E5",
+      "class": "IfcColumn",
+      "predefined_type": "COLUMN",
+      "name": {"en": "Piloti E5", "de": "Piloti-Stütze E5"},
+      "storey": "ground",
+      "type": "TY-PILOTI",
+      "geometry": {"axis": [20.25, 19.0], "base_level": "ground", "top_level": "soffit:SL-1"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["structure"]}
+    },
+    {
+      "guid": "0pGEEBTyDTuRFhzLBoa7lM",
+      "tag": "SL-1",
+      "class": "IfcSlab",
+      "predefined_type": "FLOOR",
+      "name": {"en": "First-floor slab", "de": "Geschossdecke über dem Erdgeschoss"},
+      "storey": "first",
+      "material": "MAT-RC",
+      "geometry": {
+        "outline": [[0, 0], [21.5, 0], [21.5, 19], [0, 19]],
+        "voids": [{"tag": "V-RAMP", "outline": [[7.6, 2.8], [10.0, 2.8], [10.0, 14.5], [7.6, 14.5]]}],
+        "level": "first"
+      },
+      "attributes": {"thickness": {"value": 0.25, "unit": "m", "basis": "assumed"}},
+      "psets": {
+        "Pset_SlabCommon": {
+          "LoadBearing": {"value": true, "ifc_type": "IfcBoolean", "basis": "sourced", "source": "VS-3.1"},
+          "IsExternal": {"value": false, "ifc_type": "IfcBoolean", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "2DXklET1jK3AZcJz_ZtAN9",
+      "tag": "SL-R",
+      "class": "IfcSlab",
+      "predefined_type": "ROOF",
+      "name": {"en": "Roof slab over the enclosed rooms", "de": "Dachdecke über den Wohnräumen"},
+      "storey": "roof",
+      "material": "LS-ROOF",
+      "geometry": {
+        "outline": [[0, 0], [21.5, 0], [21.5, 19], [0, 19]],
+        "voids": [
+          {"tag": "V-TERRACE", "outline": [[10.5, 4.2], [21.2, 4.2], [21.2, 14.5], [10.5, 14.5]]},
+          {"tag": "V-RAMP-R", "outline": [[7.6, 2.8], [10.0, 2.8], [10.0, 14.5], [7.6, 14.5]]}
+        ],
+        "level": "roof",
+        "zones": {"solarium": "SP-SOLARIUM"}
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_SlabCommon": {
+          "LoadBearing": {"value": true, "ifc_type": "IfcBoolean", "basis": "sourced", "source": "VS-3.1"},
+          "IsExternal": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Structural engineer", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "3fNY9OuTHQ5QVew2$dtdIV",
+      "tag": "W-S",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {"en": "South wall", "de": "Südwand"},
+      "storey": "first",
+      "type": "TY-WALL",
+      "geometry": {"path": [[0, 0.15], [21.5, 0.15]], "base_level": "first", "top_level": "soffit:SL-R"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "28tb6V2rfShP0kIyNz3BdC",
+      "tag": "W-E",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {"en": "East wall", "de": "Ostwand"},
+      "storey": "first",
+      "type": "TY-WALL",
+      "geometry": {"path": [[21.35, 0.3], [21.35, 18.7]], "base_level": "first", "top_level": "soffit:SL-R"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "3yyoTz4kvVK90JrTq199pi",
+      "tag": "W-N",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {"en": "North wall", "de": "Nordwand"},
+      "storey": "first",
+      "type": "TY-WALL",
+      "geometry": {"path": [[0, 18.85], [21.5, 18.85]], "base_level": "first", "top_level": "soffit:SL-R"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "29MaCncJLHawWD5OhV6u5D",
+      "tag": "W-W",
+      "class": "IfcWall",
+      "predefined_type": "STANDARD",
+      "name": {"en": "West wall", "de": "Westwand"},
+      "storey": "first",
+      "type": "TY-WALL",
+      "geometry": {"path": [[0.15, 0.3], [0.15, 18.7]], "base_level": "first", "top_level": "soffit:SL-R"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "3RqlD47TXK1A3beD_bk7js",
+      "tag": "OP-S",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {"en": "Ribbon opening south", "de": "Bandfensteröffnung Süd"},
+      "storey": "first",
+      "geometry": {"wall": "W-S"},
+      "attributes": {
+        "start": {"value": 1.5, "unit": "m", "basis": "assumed"},
+        "end": {"value": 20.0, "unit": "m", "basis": "assumed"},
+        "sill": {"value": 0.9, "unit": "m", "basis": "assumed"},
+        "head": {"value": 2.0, "unit": "m", "basis": "assumed"}
+      },
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "3bRmcXu$PUSvwpOM69xUrD",
+      "tag": "OP-E",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {"en": "Ribbon opening east", "de": "Bandfensteröffnung Ost"},
+      "storey": "first",
+      "geometry": {"wall": "W-E"},
+      "attributes": {
+        "start": {"value": 1.5, "unit": "m", "basis": "assumed"},
+        "end": {"value": 16.9, "unit": "m", "basis": "assumed"},
+        "sill": {"value": 0.9, "unit": "m", "basis": "assumed"},
+        "head": {"value": 2.0, "unit": "m", "basis": "assumed"}
+      },
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "367RBNPNfS09Ryv9fITZ1X",
+      "tag": "OP-N",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {"en": "Ribbon opening north", "de": "Bandfensteröffnung Nord"},
+      "storey": "first",
+      "geometry": {"wall": "W-N"},
+      "attributes": {
+        "start": {"value": 1.5, "unit": "m", "basis": "assumed"},
+        "end": {"value": 20.0, "unit": "m", "basis": "assumed"},
+        "sill": {"value": 0.9, "unit": "m", "basis": "assumed"},
+        "head": {"value": 2.0, "unit": "m", "basis": "assumed"}
+      },
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "1IJimYdprVSAv9oZ50xPrh",
+      "tag": "OP-W",
+      "class": "IfcOpeningElement",
+      "predefined_type": "OPENING",
+      "name": {"en": "Ribbon opening west", "de": "Bandfensteröffnung West"},
+      "storey": "first",
+      "geometry": {"wall": "W-W"},
+      "attributes": {
+        "start": {"value": 1.5, "unit": "m", "basis": "assumed"},
+        "end": {"value": 16.9, "unit": "m", "basis": "assumed"},
+        "sill": {"value": 0.9, "unit": "m", "basis": "assumed"},
+        "head": {"value": 2.0, "unit": "m", "basis": "assumed"}
+      },
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "1b9ulVlcPLiO2Z50WzfaEJ",
+      "tag": "RW-S",
+      "class": "IfcWindow",
+      "predefined_type": "WINDOW",
+      "name": {"en": "Ribbon window south", "de": "Bandfenster Süd"},
+      "storey": "first",
+      "type": "TY-RIBBON",
+      "geometry": {"opening": "OP-S"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "2c7tu5toHNWemXqXGz6Kwi",
+      "tag": "RW-E",
+      "class": "IfcWindow",
+      "predefined_type": "WINDOW",
+      "name": {"en": "Ribbon window east", "de": "Bandfenster Ost"},
+      "storey": "first",
+      "type": "TY-RIBBON",
+      "geometry": {"opening": "OP-E"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "1E4nm0seTPVwt$ztpeZXGd",
+      "tag": "RW-N",
+      "class": "IfcWindow",
+      "predefined_type": "WINDOW",
+      "name": {"en": "Ribbon window north", "de": "Bandfenster Nord"},
+      "storey": "first",
+      "type": "TY-RIBBON",
+      "geometry": {"opening": "OP-N"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "125$SRHrTPbA267EuIZR2m",
+      "tag": "RW-W",
+      "class": "IfcWindow",
+      "predefined_type": "WINDOW",
+      "name": {"en": "Ribbon window west", "de": "Bandfenster West"},
+      "storey": "first",
+      "type": "TY-RIBBON",
+      "geometry": {"opening": "OP-W"},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "18Tk7ZT$fV29ih7n549tv9",
+      "tag": "CW-1",
+      "class": "IfcCurtainWall",
+      "predefined_type": "NOTDEFINED",
+      "name": {"en": "Curved glass wall", "de": "Gebogene Glaswand"},
+      "storey": "ground",
+      "material": "MAT-GLASS",
+      "geometry": {
+        "centre": [8.5, 12.0],
+        "south_y": 4.5,
+        "radius_from": "car",
+        "base_level": "ground",
+        "top_level": "soffit:SL-1"
+      },
+      "attributes": {},
+      "psets": {
+        "Pset_CurtainWallCommon": {
+          "IsExternal": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "0_yUehthXMBg4KJDgWjzCa",
+      "tag": "RM-1",
+      "class": "IfcRamp",
+      "predefined_type": "HALF_TURN_RAMP",
+      "name": {"en": "Ramp, ground floor to first floor", "de": "Rampe Erdgeschoss bis Obergeschoss"},
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "from_level": "ground",
+        "to_level": "first",
+        "landings": [
+          {"outline": [[7.6, 2.8], [10.0, 2.8], [10.0, 4.0], [7.6, 4.0]], "portion": 0.5},
+          {"outline": [[7.6, 14.5], [10.0, 14.5], [10.0, 15.1], [7.6, 15.1]], "portion": 0.0}
+        ]
+      },
+      "attributes": {"width": {"value": 1.0, "unit": "m", "basis": "assumed"}},
+      "psets": {
+        "Pset_RampCommon": {
+          "IsExternal": {"value": false, "ifc_type": "IfcBoolean", "basis": "assumed"},
+          "LoadBearing": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "3oI2oOntLScR7huffQzd0G",
+      "tag": "RM-2",
+      "class": "IfcRamp",
+      "predefined_type": "HALF_TURN_RAMP",
+      "name": {"en": "Ramp, first floor to roof", "de": "Rampe Obergeschoss bis Dach"},
+      "storey": "first",
+      "material": "MAT-RC",
+      "geometry": {
+        "from_level": "first",
+        "to_level": "roof",
+        "landings": [
+          {"outline": [[7.6, 2.8], [10.0, 2.8], [10.0, 4.0], [7.6, 4.0]], "portion": 0.5},
+          {"outline": [[7.6, 14.5], [10.0, 14.5], [10.0, 15.1], [7.6, 15.1]], "portion": 0.0}
+        ]
+      },
+      "attributes": {"width": {"value": 1.0, "unit": "m", "basis": "assumed"}},
+      "psets": {
+        "Pset_RampCommon": {
+          "IsExternal": {"value": false, "ifc_type": "IfcBoolean", "basis": "assumed"},
+          "LoadBearing": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "0VVtov00DVsQDhvoFSA3L5",
+      "tag": "RF-1A",
+      "class": "IfcRampFlight",
+      "predefined_type": "STRAIGHT",
+      "name": {"en": "Ramp flight 1", "de": "Rampenlauf 1"},
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "ramp": "RM-1",
+        "path": [[8.2, 14.5], [8.2, 4.0]],
+        "from_level": "ground",
+        "to_level": "first",
+        "portion": [0.0, 0.5]
+      },
+      "attributes": {"width": {"value": 1.0, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "3a9iXPRBnPfOt1xYPzR8G8",
+      "tag": "RF-1B",
+      "class": "IfcRampFlight",
+      "predefined_type": "STRAIGHT",
+      "name": {"en": "Ramp flight 2", "de": "Rampenlauf 2"},
+      "storey": "ground",
+      "material": "MAT-RC",
+      "geometry": {
+        "ramp": "RM-1",
+        "path": [[9.4, 4.0], [9.4, 14.5]],
+        "from_level": "ground",
+        "to_level": "first",
+        "portion": [0.5, 1.0]
+      },
+      "attributes": {"width": {"value": 1.0, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "190dLteUnICwSp6v_JS2lO",
+      "tag": "RF-2A",
+      "class": "IfcRampFlight",
+      "predefined_type": "STRAIGHT",
+      "name": {"en": "Ramp flight 3", "de": "Rampenlauf 3"},
+      "storey": "first",
+      "material": "MAT-RC",
+      "geometry": {
+        "ramp": "RM-2",
+        "path": [[9.4, 14.5], [9.4, 4.0]],
+        "from_level": "first",
+        "to_level": "roof",
+        "portion": [0.0, 0.5]
+      },
+      "attributes": {"width": {"value": 1.0, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "0WiUV8g_9Jz9SUgi61qEEE",
+      "tag": "RF-2B",
+      "class": "IfcRampFlight",
+      "predefined_type": "STRAIGHT",
+      "name": {"en": "Ramp flight 4", "de": "Rampenlauf 4"},
+      "storey": "first",
+      "material": "MAT-RC",
+      "geometry": {
+        "ramp": "RM-2",
+        "path": [[8.2, 4.0], [8.2, 14.5]],
+        "from_level": "first",
+        "to_level": "roof",
+        "portion": [0.5, 1.0]
+      },
+      "attributes": {"width": {"value": 1.0, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture", "structure"]}
+    },
+    {
+      "guid": "3dCkziyzfRtfAp5dPvn0xq",
+      "tag": "SC-1",
+      "class": "IfcWall",
+      "predefined_type": "SOLIDWALL",
+      "name": {"en": "Solarium screen", "de": "Solarium-Windschutzwand"},
+      "storey": "roof",
+      "material": "MAT-RENDERED",
+      "geometry": {
+        "path": [
+          [7.5, 4.5],
+          [2.0, 4.5],
+          {
+            "arc": {"centre": [2.0, 6.0], "radius": 1.5, "start": 270, "end": 180}
+          },
+          [0.5, 13.0],
+          {
+            "arc": {"centre": [2.0, 13.0], "radius": 1.5, "start": 180, "end": 90}
+          },
+          [7.5, 14.5]
+        ],
+        "base_level": "roof",
+        "top_level": "overall"
+      },
+      "attributes": {"thickness": {"value": 0.15, "unit": "m", "basis": "assumed"}},
+      "psets": {
+        "Pset_WallCommon": {
+          "IsExternal": {"value": true, "ifc_type": "IfcBoolean", "basis": "assumed"},
+          "LoadBearing": {"value": false, "ifc_type": "IfcBoolean", "basis": "assumed"}
+        }
+      },
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "3dTjOMxp1JcQ7i67HdQ8Tp",
+      "tag": "BL-1",
+      "class": "IfcBoiler",
+      "predefined_type": "WATER",
+      "name": {"en": "Heating boiler", "de": "Heizkessel"},
+      "storey": "ground",
+      "system": "heating",
+      "geometry": {"points": [[6.0, 2.75, 0.0], [6.0, 2.75, 1.2]], "size": [0.6, 0.6, 1.2]},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "2$qDB1YrPRVwgV1LGdNhXx",
+      "tag": "RAD-1",
+      "class": "IfcSpaceHeater",
+      "predefined_type": "RADIATOR",
+      "name": {"en": "Radiator under the salon window", "de": "Heizkörper unter dem Salonfenster"},
+      "storey": "first",
+      "system": "heating",
+      "geometry": {"points": [[2.0, 0.45, 3.6], [4.0, 0.45, 3.6]], "size": [2.0, 0.1, 0.6]},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "06LVQFCKLTlvLtlXeeFxeu",
+      "tag": "DR-1",
+      "class": "IfcWasteTerminal",
+      "predefined_type": "ROOFDRAIN",
+      "name": {"en": "Roof drain 1", "de": "Dachablauf 1"},
+      "storey": "roof",
+      "system": "rainwater",
+      "geometry": {"points": [[1.4, 0.35, "roof"]], "size": [0.3, 0.3, 0.1]},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "09lAGtOwzPYAY10Fx0aZ92",
+      "tag": "DR-2",
+      "class": "IfcWasteTerminal",
+      "predefined_type": "ROOFDRAIN",
+      "name": {"en": "Roof drain 2", "de": "Dachablauf 2"},
+      "storey": "roof",
+      "system": "rainwater",
+      "geometry": {"points": [[20.0, 0.6, "roof"]], "size": [0.3, 0.3, 0.1]},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "3fpMyMl1DJfQC3YSoeyQGr",
+      "tag": "DR-3",
+      "class": "IfcWasteTerminal",
+      "predefined_type": "ROOFDRAIN",
+      "name": {"en": "Roof drain 3", "de": "Dachablauf 3"},
+      "storey": "roof",
+      "system": "rainwater",
+      "geometry": {"points": [[1.5, 18.4, "roof"]], "size": [0.3, 0.3, 0.1]},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "00k5rT42XNhR76fjlkiWaO",
+      "tag": "DR-4",
+      "class": "IfcWasteTerminal",
+      "predefined_type": "ROOFDRAIN",
+      "name": {"en": "Roof drain 4", "de": "Dachablauf 4"},
+      "storey": "roof",
+      "system": "rainwater",
+      "geometry": {"points": [[20.0, 18.4, "roof"]], "size": [0.3, 0.3, 0.1]},
+      "attributes": {},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "0bgPDike5TRg3hJFuJQRTO",
+      "tag": "DP-1",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Downpipe 1", "de": "Fallrohr 1"},
+      "storey": "ground",
+      "system": "rainwater",
+      "geometry": {"points": [[1.4, 0.35, "roof"], [1.4, 0.35, "ground"]]},
+      "attributes": {"diameter": {"value": 0.1, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "0FOebW4g5Ns9jwJVWmKVLb",
+      "tag": "DP-2",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Downpipe 2", "de": "Fallrohr 2"},
+      "storey": "ground",
+      "system": "rainwater",
+      "geometry": {"points": [[20.0, 0.6, "roof"], [20.0, 0.6, "ground"]]},
+      "attributes": {"diameter": {"value": 0.1, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "3ya50_nKXQ6PXKWH_c6KJv",
+      "tag": "DP-3",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Downpipe 3", "de": "Fallrohr 3"},
+      "storey": "ground",
+      "system": "rainwater",
+      "geometry": {"points": [[1.5, 18.4, "roof"], [1.5, 18.4, "ground"]]},
+      "attributes": {"diameter": {"value": 0.1, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "3eesrNRa1JIfF1RhVHsRbM",
+      "tag": "DP-4",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Downpipe 4", "de": "Fallrohr 4"},
+      "storey": "ground",
+      "system": "rainwater",
+      "geometry": {"points": [[20.0, 18.4, "roof"], [20.0, 18.4, "ground"]]},
+      "attributes": {"diameter": {"value": 0.1, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "33_9BBRCzOfOtRCg8MSryF",
+      "tag": "PS-1",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Heating riser", "de": "Heizungssteigleitung"},
+      "storey": "ground",
+      "system": "heating",
+      "geometry": {"points": [[6.0, 2.75, 1.2], [6.0, 2.75, 3.6]]},
+      "attributes": {"diameter": {"value": 0.05, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "1$hnwXpH9LoRAzutkPho9n",
+      "tag": "PS-2",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Heating flow, salon", "de": "Heizungsvorlauf Salon"},
+      "storey": "first",
+      "system": "heating",
+      "geometry": {"points": [[6.0, 2.75, 3.6], [6.0, 0.45, 3.6]]},
+      "attributes": {"diameter": {"value": 0.05, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    },
+    {
+      "guid": "0BMvNgrOnOuOdPEHXnbksn",
+      "tag": "PS-3",
+      "class": "IfcPipeSegment",
+      "predefined_type": "RIGIDSEGMENT",
+      "name": {"en": "Heating branch, radiator", "de": "Heizungsanbindung Heizkörper"},
+      "storey": "first",
+      "system": "heating",
+      "geometry": {"points": [[6.0, 0.45, 3.6], [4.0, 0.45, 3.6]]},
+      "attributes": {"diameter": {"value": 0.05, "unit": "m", "basis": "assumed"}},
+      "psets": {},
+      "metadata": {"author": "Heating engineer", "revision": 1, "domains": ["services"]}
+    }
+  ],
+  "spaces": [
+    {
+      "guid": "2eb1M_qobGGhKfmOPchnTF",
+      "tag": "SP-HALL",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {"en": "Entrance hall with ramp foot", "de": "Eingangshalle mit Rampenfuß"},
+      "storey": "ground",
+      "outline": [[5.0, 4.5], [12.0, 4.5], [12.0, 12.0], {"arc_of": "CW-1", "reverse": true}, [5.0, 12.0]],
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "3iA$q$FzTMU8faEZxc59DC",
+      "tag": "SP-GARAGE",
+      "class": "IfcSpace",
+      "predefined_type": "PARKING",
+      "name": {"en": "Garage", "de": "Garage"},
+      "storey": "ground",
+      "outline": [[7.0, 1.0], [12.0, 1.0], [12.0, 4.5], [7.0, 4.5]],
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "3NDEFmsyPMsehPC3XpVv62",
+      "tag": "SP-BOILER",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {"en": "Boiler room", "de": "Heizraum"},
+      "storey": "ground",
+      "outline": [[5.0, 1.0], [7.0, 1.0], [7.0, 4.5], [5.0, 4.5]],
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "2nTqBnWbnHsPgakl7DfsQc",
+      "tag": "SP-SALON",
+      "class": "IfcSpace",
+      "predefined_type": "INTERNAL",
+      "name": {"en": "Salon", "de": "Salon"},
+      "storey": "first",
+      "outline": [[0.3, 0.3], [7.6, 0.3], [7.6, 9.0], [0.3, 9.0]],
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "326yuIB35MMR1B$Wrq6KGk",
+      "tag": "SP-TERRACE",
+      "class": "IfcSpace",
+      "predefined_type": "EXTERNAL",
+      "name": {"en": "Hanging garden (first floor, open air)", "de": "Hängender Garten (1. OG, offen)"},
+      "storey": "first",
+      "outline": [[10.5, 4.2], [21.2, 4.2], [21.2, 14.5], [10.5, 14.5]],
+      "reference_area": {"value": 110.0, "unit": "m²", "basis": "sourced", "source": "VS-2.7"},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    },
+    {
+      "guid": "2RHme$lUzK1hNe7B7XOrkW",
+      "tag": "SP-SOLARIUM",
+      "class": "IfcSpace",
+      "predefined_type": "EXTERNAL",
+      "name": {"en": "Solarium (roof)", "de": "Solarium (Dach)"},
+      "storey": "roof",
+      "outline": [[0.5, 4.5], [7.5, 4.5], [7.5, 14.5], [0.5, 14.5]],
+      "reference_area": {"value": 70.0, "unit": "m²", "basis": "sourced", "source": "VS-2.8"},
+      "metadata": {"author": "Atelier (architecture)", "revision": 1, "domains": ["architecture"]}
+    }
+  ],
+  "relations": [
+    {
+      "guid": "0UIVihk9DTBwB3dSlxcXBU",
+      "tag": "REL-001",
+      "class": "IfcRelAggregates",
+      "relating": "PROJECT",
+      "related": ["SITE"],
+      "name": {"en": "Project contains the site", "de": "Projekt enthält das Grundstück"}
+    },
+    {
+      "guid": "0TYex7QTTIahcYGD_509Aj",
+      "tag": "REL-002",
+      "class": "IfcRelAggregates",
+      "relating": "SITE",
+      "related": ["BUILDING"],
+      "name": {"en": "Site contains the building", "de": "Grundstück enthält das Gebäude"}
+    },
+    {
+      "guid": "32R0nZtdLKnf2TLSmpFaax",
+      "tag": "REL-003",
+      "class": "IfcRelAggregates",
+      "relating": "BUILDING",
+      "related": ["ground", "first", "roof"],
+      "name": {"en": "Building is divided into storeys", "de": "Gebäude gliedert sich in Geschosse"}
+    },
+    {
+      "guid": "3ngpnGHY9T6P$hzF6M0D_1",
+      "tag": "REL-004",
+      "class": "IfcRelAggregates",
+      "relating": "ground",
+      "related": ["SP-HALL", "SP-GARAGE", "SP-BOILER"],
+      "name": {"en": "Storey is divided into spaces", "de": "Geschoss gliedert sich in Räume"}
+    },
+    {
+      "guid": "3jGv2UHSPMCAnU71HjNYxg",
+      "tag": "REL-005",
+      "class": "IfcRelAggregates",
+      "relating": "first",
+      "related": ["SP-SALON", "SP-TERRACE"],
+      "name": {"en": "Storey is divided into spaces", "de": "Geschoss gliedert sich in Räume"}
+    },
+    {
+      "guid": "3X7DEymEfVdxnppIJqRl1Q",
+      "tag": "REL-006",
+      "class": "IfcRelAggregates",
+      "relating": "roof",
+      "related": ["SP-SOLARIUM"],
+      "name": {"en": "Storey is divided into spaces", "de": "Geschoss gliedert sich in Räume"}
+    },
+    {
+      "guid": "3Ohn$jnTzL4h9qJdQigTlW",
+      "tag": "REL-007",
+      "class": "IfcRelAggregates",
+      "relating": "RM-1",
+      "related": ["RF-1A", "RF-1B"],
+      "name": {"en": "Ramp is made of flights", "de": "Rampe besteht aus Läufen"}
+    },
+    {
+      "guid": "1_tMOkMWTJOAczkdqxJ8m6",
+      "tag": "REL-008",
+      "class": "IfcRelAggregates",
+      "relating": "RM-2",
+      "related": ["RF-2A", "RF-2B"],
+      "name": {"en": "Ramp is made of flights", "de": "Rampe besteht aus Läufen"}
+    },
+    {
+      "guid": "3Mx3a7A1zMxQXAwDfiPP13",
+      "tag": "REL-009",
+      "class": "IfcRelContainedInSpatialStructure",
+      "relating": "ground",
+      "related": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "CW-1",
+        "RM-1",
+        "RF-1A",
+        "RF-1B",
+        "BL-1",
+        "DP-1",
+        "DP-2",
+        "DP-3",
+        "DP-4",
+        "PS-1"
+      ],
+      "name": {"en": "Storey contains the elements", "de": "Geschoss enthält die Bauteile"}
+    },
+    {
+      "guid": "2biIOwanPJnR1M9FVnr$eM",
+      "tag": "REL-010",
+      "class": "IfcRelContainedInSpatialStructure",
+      "relating": "first",
+      "related": ["SL-1", "W-S", "W-E", "W-N", "W-W", "OP-S", "OP-E", "OP-N", "OP-W", "RW-S", "RW-E", "RW-N", "RW-W", "RM-2", "RF-2A", "RF-2B", "RAD-1", "PS-2", "PS-3"],
+      "name": {"en": "Storey contains the elements", "de": "Geschoss enthält die Bauteile"}
+    },
+    {
+      "guid": "3xjH$CyczO4Bxf691bUy6K",
+      "tag": "REL-011",
+      "class": "IfcRelContainedInSpatialStructure",
+      "relating": "roof",
+      "related": ["SL-R", "SC-1", "DR-1", "DR-2", "DR-3", "DR-4"],
+      "name": {"en": "Storey contains the elements", "de": "Geschoss enthält die Bauteile"}
+    },
+    {
+      "guid": "0JAI$NFwDGyA2mhJqs4NmD",
+      "tag": "REL-012",
+      "class": "IfcRelDefinesByType",
+      "relating": "TY-PILOTI",
+      "related": ["A1", "A2", "A3", "A4", "A5", "B1", "B2", "B3", "B4", "B5", "C1", "C2", "C3", "C4", "C5", "D1", "D2", "D3", "D4", "D5", "E1", "E2", "E3", "E4", "E5"],
+      "name": {"en": "Type defines all pilotis", "de": "Typ definiert alle Pilotis"}
+    },
+    {
+      "guid": "0_itYPMwLNX8Ys8soJQlOB",
+      "tag": "REL-013",
+      "class": "IfcRelDefinesByType",
+      "relating": "TY-RIBBON",
+      "related": ["RW-S", "RW-E", "RW-N", "RW-W"],
+      "name": {"en": "Type defines the ribbon windows", "de": "Typ definiert die Bandfenster"}
+    },
+    {
+      "guid": "0YVG8srXLTYuxzt1y2rneS",
+      "tag": "REL-014",
+      "class": "IfcRelDefinesByType",
+      "relating": "TY-WALL",
+      "related": ["W-S", "W-E", "W-N", "W-W"],
+      "name": {"en": "Type defines the infill walls", "de": "Typ definiert die Ausfachungswände"}
+    },
+    {
+      "guid": "3agFt6skXGg8y$MNJQnqWa",
+      "tag": "REL-015",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-S",
+      "related": ["OP-S"],
+      "name": {"en": "Wall is voided by the opening", "de": "Wand wird durch die Öffnung durchbrochen"}
+    },
+    {
+      "guid": "1h7w1xfNHLe9zc3167uz5c",
+      "tag": "REL-016",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-E",
+      "related": ["OP-E"],
+      "name": {"en": "Wall is voided by the opening", "de": "Wand wird durch die Öffnung durchbrochen"}
+    },
+    {
+      "guid": "0RT$8_cBPVrx8IU3WsbIZy",
+      "tag": "REL-017",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-N",
+      "related": ["OP-N"],
+      "name": {"en": "Wall is voided by the opening", "de": "Wand wird durch die Öffnung durchbrochen"}
+    },
+    {
+      "guid": "1$RIgHLQfRJuyyXaXf1l7M",
+      "tag": "REL-018",
+      "class": "IfcRelVoidsElement",
+      "relating": "W-W",
+      "related": ["OP-W"],
+      "name": {"en": "Wall is voided by the opening", "de": "Wand wird durch die Öffnung durchbrochen"}
+    },
+    {
+      "guid": "2ubJYp8nbSiv4Eg7L85ONd",
+      "tag": "REL-019",
+      "class": "IfcRelFillsElement",
+      "relating": "OP-S",
+      "related": ["RW-S"],
+      "name": {"en": "Window fills the opening", "de": "Fenster füllt die Öffnung"}
+    },
+    {
+      "guid": "3HfXvrHhXUpP3VE1ivCoHK",
+      "tag": "REL-020",
+      "class": "IfcRelFillsElement",
+      "relating": "OP-E",
+      "related": ["RW-E"],
+      "name": {"en": "Window fills the opening", "de": "Fenster füllt die Öffnung"}
+    },
+    {
+      "guid": "1wmWcrYAfQ3gW80tKEqv47",
+      "tag": "REL-021",
+      "class": "IfcRelFillsElement",
+      "relating": "OP-N",
+      "related": ["RW-N"],
+      "name": {"en": "Window fills the opening", "de": "Fenster füllt die Öffnung"}
+    },
+    {
+      "guid": "0M7aWAsnbNaQT0uCwFIPe2",
+      "tag": "REL-022",
+      "class": "IfcRelFillsElement",
+      "relating": "OP-W",
+      "related": ["RW-W"],
+      "name": {"en": "Window fills the opening", "de": "Fenster füllt die Öffnung"}
+    },
+    {
+      "guid": "2qHFMPUPbMrgYjHSCcaujS",
+      "tag": "REL-023",
+      "class": "IfcRelConnectsElements",
+      "relating": "A1",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "1XLSBNRDXJiwRdLw_uhQbW",
+      "tag": "REL-024",
+      "class": "IfcRelConnectsElements",
+      "relating": "A2",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3sLbe2BxzIzvEt1G4VaFl0",
+      "tag": "REL-025",
+      "class": "IfcRelConnectsElements",
+      "relating": "A3",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "13lAoVZdrOZ8uGO9dREoaz",
+      "tag": "REL-026",
+      "class": "IfcRelConnectsElements",
+      "relating": "A4",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "0hpFuetobTael8EbZn4ffs",
+      "tag": "REL-027",
+      "class": "IfcRelConnectsElements",
+      "relating": "A5",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "1Ia40jMjjKVfbGCukMerEL",
+      "tag": "REL-028",
+      "class": "IfcRelConnectsElements",
+      "relating": "B1",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "0jS0uaarjGaQi8bGRVG$qP",
+      "tag": "REL-029",
+      "class": "IfcRelConnectsElements",
+      "relating": "B2",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3$oTGBLknKm8NgTMcHV0hf",
+      "tag": "REL-030",
+      "class": "IfcRelConnectsElements",
+      "relating": "B3",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3$iJl_Bz9UEO01kRafzXL_",
+      "tag": "REL-031",
+      "class": "IfcRelConnectsElements",
+      "relating": "B4",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "06JYMER2nUBAoLWEHWscbG",
+      "tag": "REL-032",
+      "class": "IfcRelConnectsElements",
+      "relating": "B5",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3Sqpw18zLVQOLjq7Q29A3a",
+      "tag": "REL-033",
+      "class": "IfcRelConnectsElements",
+      "relating": "C1",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3zrWbGOIjLFx4yAAOADvzY",
+      "tag": "REL-034",
+      "class": "IfcRelConnectsElements",
+      "relating": "C2",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "2iFNhTtQbHqxGf_Eokef3Q",
+      "tag": "REL-035",
+      "class": "IfcRelConnectsElements",
+      "relating": "C3",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "1WaKQeqAbIwAXSKDkGF1E8",
+      "tag": "REL-036",
+      "class": "IfcRelConnectsElements",
+      "relating": "C4",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "29Ssw8herVSPYQkJyZnVFb",
+      "tag": "REL-037",
+      "class": "IfcRelConnectsElements",
+      "relating": "C5",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3UJgzGQx5PRf1JNbeQ6Mh6",
+      "tag": "REL-038",
+      "class": "IfcRelConnectsElements",
+      "relating": "D1",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "2MJ$$asFXNif0Ndq4X4aVx",
+      "tag": "REL-039",
+      "class": "IfcRelConnectsElements",
+      "relating": "D2",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3qkuSy1nvIzhfNWvV360Wl",
+      "tag": "REL-040",
+      "class": "IfcRelConnectsElements",
+      "relating": "D3",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "2umaUkidTQOAggGQhOGvfm",
+      "tag": "REL-041",
+      "class": "IfcRelConnectsElements",
+      "relating": "D4",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "2VUKmi4pPQ5u6qYeo_TIDQ",
+      "tag": "REL-042",
+      "class": "IfcRelConnectsElements",
+      "relating": "D5",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "3Je0$SpK5GFPG5_4$uY7gV",
+      "tag": "REL-043",
+      "class": "IfcRelConnectsElements",
+      "relating": "E1",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "2MIp6_EnjTe8ow$QF6DOSh",
+      "tag": "REL-044",
+      "class": "IfcRelConnectsElements",
+      "relating": "E2",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "349rl4sIrIgOGy8PtCtPnk",
+      "tag": "REL-045",
+      "class": "IfcRelConnectsElements",
+      "relating": "E3",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "0tqQEro3zGwxz8DS8aAGtz",
+      "tag": "REL-046",
+      "class": "IfcRelConnectsElements",
+      "relating": "E4",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "1CCraBFADRrQ5axMTPoyrs",
+      "tag": "REL-047",
+      "class": "IfcRelConnectsElements",
+      "relating": "E5",
+      "related": ["SL-1"],
+      "name": {"en": "Piloti carries the slab", "de": "Piloti trägt die Decke"}
+    },
+    {
+      "guid": "23JO9VR9TUMu43AMpz6Qhj",
+      "tag": "REL-048",
+      "class": "IfcRelAssociatesMaterial",
+      "relating": "MAT-RC",
+      "related": ["TY-PILOTI", "SL-1", "RM-1", "RM-2", "RF-1A", "RF-1B", "RF-2A", "RF-2B"],
+      "name": {"en": "Reinforced concrete is assigned", "de": "Stahlbeton ist zugewiesen"}
+    },
+    {
+      "guid": "2g5lKGvPbPExSVqxczjoTw",
+      "tag": "REL-049",
+      "class": "IfcRelAssociatesMaterial",
+      "relating": "LS-ROOF",
+      "related": ["SL-R"],
+      "name": {"en": "Roof build-up is assigned", "de": "Dachaufbau ist zugewiesen"}
+    },
+    {
+      "guid": "1W7t6gYyPQq9Vnj8lhrL9k",
+      "tag": "REL-050",
+      "class": "IfcRelAssociatesMaterial",
+      "relating": "LS-WALL",
+      "related": ["TY-WALL"],
+      "name": {"en": "Wall build-up is assigned", "de": "Wandaufbau ist zugewiesen"}
+    },
+    {
+      "guid": "0j3Pjf9LvH8R03KmfgKkXS",
+      "tag": "REL-051",
+      "class": "IfcRelAssociatesMaterial",
+      "relating": "MAT-GLASS",
+      "related": ["TY-RIBBON", "CW-1"],
+      "name": {"en": "Glass is assigned", "de": "Glas ist zugewiesen"}
+    },
+    {
+      "guid": "0m2Ow5sODO3BruQUO8anVZ",
+      "tag": "REL-052",
+      "class": "IfcRelAssociatesMaterial",
+      "relating": "MAT-RENDERED",
+      "related": ["SC-1"],
+      "name": {"en": "Rendered concrete is assigned", "de": "Verputzter Beton ist zugewiesen"}
+    }
+  ],
+  "models": [
+    {
+      "id": "architecture",
+      "schema_id": "IFC4X3_ADD2",
+      "author": "Atelier (architecture)",
+      "author_label": {"en": "Atelier (architecture) · teaching role", "de": "Atelier (Architektur) · Lehrrolle"},
+      "name": {"en": "Architecture model", "de": "Architekturmodell"},
+      "revision": 1,
+      "element_tags": [
+        "W-S",
+        "W-E",
+        "W-N",
+        "W-W",
+        "OP-S",
+        "OP-E",
+        "OP-N",
+        "OP-W",
+        "RW-S",
+        "RW-E",
+        "RW-N",
+        "RW-W",
+        "CW-1",
+        "RM-1",
+        "RM-2",
+        "RF-1A",
+        "RF-1B",
+        "RF-2A",
+        "RF-2B",
+        "SC-1",
+        "SL-1",
+        "SL-R",
+        "SP-HALL",
+        "SP-GARAGE",
+        "SP-BOILER",
+        "SP-SALON",
+        "SP-TERRACE",
+        "SP-SOLARIUM"
+      ]
+    },
+    {
+      "id": "structure",
+      "schema_id": "IFC4X3_ADD2",
+      "author": "Structural engineer",
+      "author_label": {"en": "Structural engineer · teaching role", "de": "Tragwerksplanung · Lehrrolle"},
+      "name": {"en": "Structure model", "de": "Tragwerksmodell"},
+      "revision": 1,
+      "element_tags": [
+        "A1",
+        "A2",
+        "A3",
+        "A4",
+        "A5",
+        "B1",
+        "B2",
+        "B3",
+        "B4",
+        "B5",
+        "C1",
+        "C2",
+        "C3",
+        "C4",
+        "C5",
+        "D1",
+        "D2",
+        "D3",
+        "D4",
+        "D5",
+        "E1",
+        "E2",
+        "E3",
+        "E4",
+        "E5",
+        "RM-1",
+        "RM-2",
+        "RF-1A",
+        "RF-1B",
+        "RF-2A",
+        "RF-2B",
+        "SL-1",
+        "SL-R"
+      ]
+    },
+    {
+      "id": "services",
+      "schema_id": "IFC4X3_ADD2",
+      "author": "Heating engineer",
+      "author_label": {"en": "Heating engineer · teaching role", "de": "Heizungsplanung · Lehrrolle"},
+      "name": {"en": "Services model", "de": "Haustechnikmodell"},
+      "revision": 1,
+      "element_tags": ["BL-1", "RAD-1", "DR-1", "DR-2", "DR-3", "DR-4", "DP-1", "DP-2", "DP-3", "DP-4", "PS-1", "PS-2", "PS-3"]
+    }
+  ],
+  "loads": {
+    "finishes": {"first": {"value": 1.5, "unit": "kN/m²", "basis": "assumed"}},
+    "imposed": {
+      "first": {"value": 2.0, "unit": "kN/m²", "basis": "assumed"},
+      "roof_planted": {"value": 1.0, "unit": "kN/m²", "basis": "assumed"},
+      "solarium": {"value": 2.0, "unit": "kN/m²", "basis": "assumed"}
+    }
+  },
+  "car": {
+    "name": {"en": "Assumed car of 1929", "de": "Angenommenes Auto von 1929"},
+    "length": {"value": 4.6, "unit": "m", "basis": "assumed"},
+    "width": {"value": 1.75, "unit": "m", "basis": "assumed"},
+    "turning_radius": {"value": 5.5, "unit": "m", "basis": "assumed"},
+    "wall_clearance": {"value": 0.25, "unit": "m", "basis": "assumed"},
+    "min_side_margin": {"value": 0.5, "unit": "m", "basis": "assumed"}
+  },
+  "rules": {
+    "clearance": [
+      {
+        "id": "RULE-RAINWATER-PILOTI",
+        "name": {"en": "Rainwater pipe keeps away from a piloti", "de": "Regenfallrohr hält Abstand zur Stütze"},
+        "a_class": "IfcPipeSegment",
+        "a_system": "rainwater",
+        "b_class": "IfcColumn",
+        "required": {"value": 0.25, "unit": "m", "basis": "assumed"}
+      }
+    ],
+    "ids": [
+      {
+        "id": "IDS-COLUMN-LOADBEARING",
+        "name": {
+          "en": "Every column states whether it is load-bearing",
+          "de": "Jede Stütze gibt an, ob sie tragend ist"
+        },
+        "entity": "IfcColumn",
+        "pset": "Pset_ColumnCommon",
+        "property": "LoadBearing",
+        "cardinality": "required"
+      }
+    ]
+  },
+  "demo_events": {
+    "sill": {"type": "OpeningResized", "object_guid": "1b9ulVlcPLiO2Z50WzfaEJ", "sill": 0.7, "head": 2.0},
+    "roof_soil": {
+      "type": "LayerThicknessChanged",
+      "object_guid": "2DXklET1jK3AZcJz_ZtAN9",
+      "layer": "soil",
+      "value": 0.3,
+      "unit": "m"
+    },
+    "roof_soil_alt": {
+      "type": "LayerThicknessChanged",
+      "object_guid": "2DXklET1jK3AZcJz_ZtAN9",
+      "layer": "soil",
+      "value": 0.2,
+      "unit": "m"
+    }
+  },
+  "translation": {
+    "id": "TR-STRUCT",
+    "source_schema": "IFC4X3_ADD2",
+    "target_schema": "IFC4X3_ADD2 Structural Analysis Domain",
+    "target_domain": "IfcStructuralAnalysisDomain",
+    "mesh": {
+      "x_lines": [0.0, 1.25, 6.0, 10.75, 15.5, 20.25, 21.5],
+      "y_lines": "grid",
+      "surface_source": "SL-1",
+      "node_level": "mid-surface"
+    },
+    "boundary": {
+      "id": "fixed",
+      "class": "IfcBoundaryNodeCondition",
+      "en": "fixed (all degrees of freedom restrained)",
+      "de": "eingespannt (alle Freiheitsgrade gebunden)",
+      "basis": "assumed"
+    },
+    "mapping": [
+      {
+        "source_class": "IfcColumn",
+        "target_class": "IfcStructuralCurveMember",
+        "kind": "curve",
+        "en": "Piloti becomes a vertical line member from the base to the slab mid-surface",
+        "de": "Piloti wird zum vertikalen Stabelement vom Fuß bis zur Plattenmittelfläche"
+      },
+      {
+        "source_class": "IfcSlab",
+        "source_predefined": "FLOOR",
+        "target_class": "IfcStructuralSurfaceMember",
+        "kind": "surface",
+        "en": "First-floor slab becomes a surface member meshed into shells on the grid lines",
+        "de": "Geschossdecke wird zum Flächenelement, auf den Rasterlinien in Schalen unterteilt"
+      },
+      {
+        "source_class": "IfcColumn",
+        "target_class": "IfcStructuralPointConnection",
+        "kind": "support",
+        "en": "Piloti foot becomes a support node with a boundary condition",
+        "de": "Pilotifuß wird zum Lagerknoten mit Randbedingung"
+      }
+    ],
+    "assumptions": [
+      {
+        "id": "support-fixed",
+        "en": "Every piloti foot is fixed.",
+        "de": "Jeder Pilotifuß ist eingespannt.",
+        "basis": "assumed"
+      },
+      {
+        "id": "mid-surface",
+        "en": "The slab is idealised at its mid-surface; the thickness is an attribute of the surface member.",
+        "de": "Die Decke ist an ihrer Mittelfläche idealisiert; die Dicke ist ein Attribut des Flächenelements.",
+        "basis": "assumed"
+      },
+      {
+        "id": "mesh-grid",
+        "en": "Shells follow the grid lines and the façade edges: {shells} shells, {slab_nodes} slab nodes and {base_nodes} base nodes.",
+        "de": "Die Schalen folgen den Rasterlinien und Fassadenkanten: {shells} Schalen, {slab_nodes} Deckenknoten und {base_nodes} Fußknoten.",
+        "basis": "assumed"
+      },
+      {
+        "id": "load-path",
+        "en": "Roof loads reach the pilotis straight down through an assumed continuous frame and act as point loads at the slab nodes.",
+        "de": "Dachlasten erreichen die Pilotis über einen angenommenen durchgehenden Rahmen und wirken als Punktlasten an den Deckenknoten.",
+        "basis": "assumed"
+      },
+      {
+        "id": "material",
+        "en": "All members are reinforced concrete of 25 kN/m³.",
+        "de": "Alle Bauteile sind Stahlbeton mit 25 kN/m³.",
+        "basis": "assumed"
+      },
+      {
+        "id": "ramp-void",
+        "en": "The ramp void of the slab is not meshed; the analysis slab is larger than the built one.",
+        "de": "Die Rampenöffnung der Decke ist nicht vernetzt; die Analysedecke ist größer als die gebaute.",
+        "basis": "assumed"
+      }
+    ],
+    "losses": [
+      {
+        "applies_to": {"class": "IfcWindow"},
+        "property": "element",
+        "en": "Ribbon window: opening and glazing are not modelled",
+        "de": "Bandfenster: Öffnung und Verglasung sind nicht modelliert"
+      },
+      {
+        "applies_to": {"class": "IfcOpeningElement"},
+        "property": "element",
+        "en": "Ribbon opening: void in the wall is not modelled",
+        "de": "Bandfensteröffnung: Aussparung in der Wand ist nicht modelliert"
+      },
+      {
+        "applies_to": {"class": "IfcWall", "predefined_type": "STANDARD"},
+        "property": "element",
+        "en": "Infill wall: carries no load, not part of the analysis",
+        "de": "Ausfachungswand: trägt keine Last, nicht Teil der Berechnung"
+      },
+      {
+        "applies_to": {"class": "IfcWall", "predefined_type": "STANDARD"},
+        "property": "material.layer.render",
+        "en": "Render colour (white) is not kept",
+        "de": "Putzfarbe (weiß) bleibt nicht erhalten"
+      },
+      {
+        "applies_to": {"class": "IfcCurtainWall"},
+        "property": "element",
+        "en": "Curved glass wall: geometry and glazing are not modelled",
+        "de": "Gebogene Glaswand: Geometrie und Verglasung sind nicht modelliert"
+      },
+      {
+        "applies_to": {"class": "IfcWall", "predefined_type": "SOLIDWALL"},
+        "property": "element",
+        "en": "Solarium screen: not part of the analysis",
+        "de": "Solarium-Windschutzwand: nicht Teil der Berechnung"
+      },
+      {
+        "applies_to": {"class": "IfcRamp"},
+        "property": "element",
+        "en": "Ramp: not modelled as a member",
+        "de": "Rampe: nicht als Bauteil modelliert"
+      },
+      {
+        "applies_to": {"class": "IfcRampFlight"},
+        "property": "element",
+        "en": "Ramp flight: not modelled as a member",
+        "de": "Rampenlauf: nicht als Bauteil modelliert"
+      },
+      {
+        "applies_to": {"class": "IfcSpace"},
+        "property": "element",
+        "en": "Room: spaces have no structural meaning",
+        "de": "Raum: Räume haben keine statische Bedeutung"
+      },
+      {
+        "applies_to": {"class": "IfcSlab", "predefined_type": "ROOF"},
+        "property": "element",
+        "en": "Roof slab: replaced by point loads at the pilotis",
+        "de": "Dachdecke: durch Punktlasten an den Pilotis ersetzt"
+      },
+      {
+        "applies_to": {"class": "IfcSlab", "predefined_type": "FLOOR"},
+        "property": "voids",
+        "en": "Ramp void in the slab is not kept",
+        "de": "Rampenöffnung in der Decke bleibt nicht erhalten"
+      },
+      {
+        "applies_to": {"class": "IfcColumn"},
+        "property": "Pset_ColumnCommon.FireRating",
+        "en": "Fire rating is not an analysis property",
+        "de": "Feuerwiderstand ist keine Berechnungseigenschaft"
+      },
+      {
+        "applies_to": {"class": "IfcColumn"},
+        "property": "Pset_ColumnCommon.IsExternal",
+        "en": "External flag is not an analysis property",
+        "de": "Außenbauteil-Kennzeichen ist keine Berechnungseigenschaft"
+      }
+    ]
+  },
+  "links": [
+    {
+      "id": "LK-SLAB",
+      "model": "analysis",
+      "kind": "slab-load",
+      "object_guid": "0pGEEBTyDTuRFhzLBoa7lM",
+      "source_revision": 1,
+      "used": {"thickness": 0.25, "area_load": 9.75, "total_reaction": 3709.095}
+    },
+    {
+      "id": "LK-ROOF",
+      "model": "analysis",
+      "kind": "roof-load",
+      "object_guid": "2DXklET1jK3AZcJz_ZtAN9",
+      "source_revision": 1,
+      "used": {
+        "area_load": 9.112753784,
+        "planted_area_load": 9.32,
+        "solarium_area_load": 8.52,
+        "total_reaction": 2462.3572,
+        "reaction_A1": 80.239375,
+        "reaction_A2": 105.14125,
+        "reaction_A3": 105.14125,
+        "reaction_A4": 105.14125,
+        "reaction_A5": 80.239375,
+        "reaction_B1": 153.91625,
+        "reaction_B2": 170.905525,
+        "reaction_B3": 73.22025,
+        "reaction_B4": 80.79275,
+        "reaction_B5": 69.835925,
+        "reaction_C1": 148.60375,
+        "reaction_C2": 161.24825,
+        "reaction_C3": 22.135,
+        "reaction_C4": 0.0,
+        "reaction_C5": 13.281,
+        "reaction_D1": 153.91625,
+        "reaction_D2": 183.184625,
+        "reaction_D3": 106.30625,
+        "reaction_D4": 94.07375,
+        "reaction_D5": 79.132625,
+        "reaction_E1": 80.239375,
+        "reaction_E2": 105.14125,
+        "reaction_E3": 105.14125,
+        "reaction_E4": 105.14125,
+        "reaction_E5": 80.239375
+      }
+    },
+    {
+      "id": "LK-PILOTI",
+      "model": "analysis",
+      "kind": "piloti-section",
+      "object_guid": "3Jo9irrVrUeveTP_aY7quZ",
+      "source_revision": 1,
+      "used": {"diameter": 0.3, "height": 3.25, "cross_section_area": 0.07068583470577035}
+    }
+  ]
+}

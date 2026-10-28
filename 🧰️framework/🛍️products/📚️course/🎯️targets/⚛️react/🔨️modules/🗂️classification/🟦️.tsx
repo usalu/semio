@@ -23,6 +23,7 @@
 
 import { useId, type ReactElement } from "react";
 import type { Category, ClassificationAnswer, Hint, SheetClassificationTask, SheetItem, Slug } from "@semio-tech/course";
+import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
 import { RadarChart, type RadarAxis } from "../🕸️radar/🟦️.tsx";
 import { IconLabel, LiveRegion, useAnnouncement } from "../🪟️chrome/🟦️.tsx";
@@ -136,6 +137,7 @@ export function ClassificationTaskView(props: TaskViewProps<SheetClassificationT
             </option>
           ))}
         </select>
+        <ItemMockup item={item} locale={locale} />
       </li>
     );
   };

@@ -103,7 +103,7 @@ export class CourseSession {
     this.play = new RunPlay(this.state, this.link, this.outbox, routing, this.deputising, this.reads);
     this.settlement = new Settlement(this.state, this.link, this.outbox, routing, this.reads, this.deputising);
     this.adoption = new Adoption(this.state, options.store, overlay, this.deputising, this.reads);
-    this.attention = new Attention(this.state, this.reads);
+    this.attention = new Attention(this.state, this.reads, clock);
     this.refreshCourse = this.reads.refreshCourse;
     this.refreshLearner = this.reads.refreshLearner;
     this.refreshLeaderboard = this.reads.refreshLeaderboard;

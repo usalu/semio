@@ -1,0 +1,53 @@
+{
+  "body_values": [
+    50,
+    80,
+    120,
+    160
+  ],
+  "boundary_value": 32,
+  "publication_races": [
+    "media",
+    "render",
+    "clock"
+  ],
+  "chapters": [
+    {
+      "clip": "physical_fundamentals",
+      "scene": "PhysicalFundamentals_FullSection",
+      "position": 1,
+      "index": 0
+    },
+    {
+      "clip": "ventilation",
+      "scene": "Ventilation_01_WarumLueften",
+      "position": 2,
+      "index": 1
+    }
+  ],
+  "negative_controls": [
+    "body-overlay",
+    "sparse-body-overlay",
+    "clock-mismatch",
+    "boundary-mismatch",
+    "chapter-order",
+    "missing-frame",
+    "stale-source",
+    "stale-record",
+    "stale-owner",
+    "stale-loaded-helper"
+  ],
+  "status_retry": {
+    "hold_seconds": 0.12,
+    "attempts": 50,
+    "content": "retained"
+  },
+  "clock_readiness_controls": [
+    "pending",
+    "committed",
+    "completed-wrong",
+    "dead-writer",
+    "old-epoch",
+    "stale-owner"
+  ]
+}

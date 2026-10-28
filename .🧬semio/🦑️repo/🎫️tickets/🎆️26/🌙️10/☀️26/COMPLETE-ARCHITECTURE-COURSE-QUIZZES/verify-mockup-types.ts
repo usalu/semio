@@ -1,0 +1,15 @@
+import { resolve } from "node:path";
+import { createRequire } from "node:module";
+const root = resolve("🧰️framework/🛍️products/📚️course");
+const require = createRequire(resolve(root, "📦️packages/🟦️typescript/package.json"));
+const ts = require("typescript");
+const paths = ["🧬️schema/🟦️.ts", "🔨️modules/✅️validation/🟦️.ts", "🔨️modules/🃏️sheet/🟦️.ts", "🧪️tests/🖥️mockups/🟦️.ts", "🧪️tests/🖥️mockups/🟦️.tsx", "🎯️targets/⚛️react/🔨️modules/🖥️mockup/🟦️.tsx", "🎯️targets/⚛️react/🔨️modules/🗂️classification/🟦️.tsx", "🎯️targets/⚛️react/🔨️modules/↕️sorting/🟦️.tsx", "🎯️targets/⚛️react/🔨️modules/🃏️matching/🟦️.tsx"].map((name) => resolve(root, name));
+const teaching = resolve("🎓️teaching/🏛️architecture/📚️course");
+for (const name of ["🧪️tests/🧩️curriculum/🟦️.ts", "🧪️tests/🎯️quiz-runs/🟦️.ts", "🧪️tests/🗣️both-languages/🟦️.ts", "🧪️tests/🥞️layered-home/🟦️.ts"]) paths.push(resolve(teaching, name));
+const options = { noEmit: true, target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler, jsx: ts.JsxEmit.ReactJSX, allowImportingTsExtensions: true, resolveJsonModule: true, esModuleInterop: true, strict: true, noUncheckedIndexedAccess: true, skipLibCheck: true, baseUrl: root, paths: { "@semio-tech/course": ["📦️packages/🟦️typescript/🟦️.ts"], "@semio-tech/course-react": ["🎯️targets/⚛️react/📦️packages/🟦️typescript/🟦️.tsx"], "@semio-tech/course-react/stylesheet": ["🎯️targets/⚛️react/📦️packages/🟦️typescript/🎨️stylesheet/🟦️.ts"], "@semio-tech/course-react/modules/run/.tsx": ["🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx"] } };
+const program = ts.createProgram(paths, options);
+const owned = new Set(paths.map((name) => name.replaceAll("\\", "/")));
+const diagnostics = ts.getPreEmitDiagnostics(program).filter((row: any) => row.file && owned.has(row.file.fileName.replaceAll("\\", "/")));
+for (const diagnostic of diagnostics) console.log(ts.formatDiagnosticsWithColorAndContext([diagnostic], { getCurrentDirectory: () => root, getCanonicalFileName: (name: string) => name, getNewLine: () => "\n" }));
+console.log(JSON.stringify({ files: paths.length, ownedDiagnostics: diagnostics.length, status: diagnostics.length ? "failed" : "passed" }));
+if (diagnostics.length) process.exitCode = 1;

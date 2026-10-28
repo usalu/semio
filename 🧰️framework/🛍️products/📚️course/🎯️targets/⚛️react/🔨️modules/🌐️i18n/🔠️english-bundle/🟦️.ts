@@ -6,6 +6,7 @@ import { phrase } from "../🏷️phrase/🟦️.ts";
 /** 📚️ English chrome of the course client. */
 export const COURSE_BUNDLE_EN = {
   course: {
+    access: { locked: phrase("Not available yet"), opens: phrase("Unlocks {{date}}") },
     app: {
       skip: phrase("Skip to main content"),
       loading: phrase("Loading…"),

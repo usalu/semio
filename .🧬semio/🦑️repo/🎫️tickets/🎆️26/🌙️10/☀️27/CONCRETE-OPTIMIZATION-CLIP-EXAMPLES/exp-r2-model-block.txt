@@ -1,0 +1,42 @@
+    def _term_rows(self, trackers):
+        """🧾 The bilinear prediction with the live coded levels substituted, parts printed so that they add up to the printed total."""
+        c = FACTORIAL["coefficients"]
+        sign = lambda value: ("+" if round(value) > 0 else "") + self.number(value, 0)
+        coded = lambda value: ("+" if round(value, 2) > 0 else "") + self.number(value, 1 if abs(value - round(value)) > .05 else 0)
+
+        def rows(design, found):
+            a, b = self._coded_of(trackers)
+            terms = [c[0], c[1] * a, c[2] * b, c[3] * a * b]
+            shown = _room.apportion(terms, 0, sum(terms))
+            return [[(self.tr("constant", "Konstante"), COOL), (self.tr("window", "Fenster"), DESIGN), (self.tr("overhang", "Vordach"), SHADED), ("A·B", MIXED), (self.tr("cooling", "Kühlung"), COOL)],
+                    [(self.number(round(c[0])), COOL), (sign(round(c[1])), DESIGN), (sign(round(c[2])), SHADED), (sign(round(c[3])), MIXED), ("kWh/a", MUTED)],
+                    [("×", MUTED), (f"× A ({coded(a)})", DESIGN), (f"× B ({coded(b)})", SHADED), (f"× A·B ({coded(a * b)})", MIXED), ("→", MUTED)],
+                    [(self.number(shown[0]), COOL), (sign(shown[1]), DESIGN), (sign(shown[2]), SHADED), (sign(shown[3]), MIXED), (f"= {self.number(sum(shown))} kWh/a", COOL)]]
+
+        return rows
+
+    def _model_fit(self):
+        """📏 The bilinear model, one room that follows the coded levels and its prediction as a waterfall and a substituted formula."""
+        coefficients, effects = FACTORIAL["coefficients"], FACTORIAL["effects"]
+        self.trackers_model = self.study_trackers(RUNS[3]["design"])
+        terms = [(self.tr("Cooling =", "Kühlstrom ="), MUTED), (self.number(coefficients[0]), COOL)] + [(f"{'+' if value > 0 else '−'} {self.number(abs(value))}·{name}", color) for value, name, color in zip(coefficients[1:], ("A", "B", "A·B"), (DESIGN, SHADED, MIXED))] + [("kWh/a", MUTED)]
+        formula = _mn.VGroup(*[self._t(text, (0, 0, 0), 22, color, 6) for text, color in terms]).arrange(RIGHT, buff=.16).move_to((.9, 2.5, 0))
+        room = self._live_section(self.trackers_model, MODEL_ORIGIN, MODEL_S, labels=True, person=False, daylight=True)
+        waterfall = self._waterfall(self.trackers_model)
+        readout = self._live(lambda: self._t(f"A {self._sign(self._coded_of(self.trackers_model)[0], 1)} · B {self._sign(self._coded_of(self.trackers_model)[1], 1)}", (WF_X + WF_PITCH * 2, -2.17, 0), 16, INK, 2.4))
+        rows = self._formula_rows(self._term_rows(self.trackers_model), (MODEL_X, 1.05, 0), size=15, width=5.0, trackers=self.trackers_model)
+        run4 = self._chip(f"{self.tr('simulation 4', 'Simulation 4')}: WWR {self._wwr(.7)} · {self._depth(1.0)} → {self._kwh(SHOWN[3])}", (MODEL_X, -.35, 0), 15, COOL, 5.0)
+        t = self.trackers_model
+        tour = _mn.Succession(t["wwr"].animate.set_value(LOW_WWR), t["wwr"].animate.set_value(HIGH_WWR), t["overhang"].animate.set_value(LOW_D), t["overhang"].animate.set_value(HIGH_D))
+        fades = _mn.AnimationGroup(_mn.FadeOut(self.cleanup), _mn.FadeOut(self._everything(self.cards)), _mn.FadeOut(self.chart), _mn.FadeOut(_mn.VGroup(*self.marks)), _mn.FadeIn(formula), _mn.FadeIn(room),
+                                   _mn.FadeIn(waterfall), _mn.FadeIn(readout), _mn.FadeIn(rows), _mn.FadeIn(run4), run_time=1.0)
+        self.step("model", _mn.Succession(fades, tour), seconds=9)
+        centre = FACTORIAL["centre"]["design"]
+        mean_chip = self._chip(f"{self.tr('plan centre', 'Planmitte')}: WWR {self._wwr(centre['wwr'])} · {self._depth(centre['overhang'])} → {self.tr('mean of 4', 'Mittel der 4')} {self._kwh(coefficients[0])}", (MODEL_X, -.35, 0), 15, COOL, 5.0)
+        self.step("model_2", self.set_design(self.trackers_model, {"wwr": centre["wwr"], "overhang": centre["overhang"]}, 3), _mn.ReplacementTransform(run4, mean_chip), seconds=4)
+        halves = self._lines((f"{self.tr('window', 'Fenster')}: {self._sign(effects['a'], 1)} ÷ 2 = {self._sign(coefficients[1], 1)}", DESIGN, 17),
+                             (f"{self.tr('overhang', 'Vordach')}: {self._sign(effects['b'], 1)} ÷ 2 = {self._sign(coefficients[2], 1)}", SHADED, 17),
+                             (f"A·B: {self._sign(effects['ab'], 1)} ÷ 2 = {self._sign(coefficients[3], 1)}", MIXED, 17),
+                             (self.tr("kWh/a per coded step", "kWh/a je kodiertem Schritt"), MUTED, 15), top=-.95, x=MODEL_X, width=5.0)
+        self.step("model_3", _mn.FadeOut(mean_chip), _mn.FadeIn(halves), seconds=3)
+        self.model_view = _mn.VGroup(formula, room, waterfall, readout, rows, halves)

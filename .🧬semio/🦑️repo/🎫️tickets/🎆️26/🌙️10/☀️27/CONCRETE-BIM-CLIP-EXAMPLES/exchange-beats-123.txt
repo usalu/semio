@@ -1,0 +1,89 @@
+    def _beat_semantic(self, f, left, right):
+        """🧬 Class, place and stable identity: the IfcColumn line, the plan and two exports of the same piloti."""
+        x, y, radius = f.b3["x"], f.b3["y"], f.b3["radius"]
+        scale = 0.2
+        plan = self.villa_plan("ground", (2.3, 0.45, 0), scale, model=f.m, highlight=(TAG,), grid=True, labels=True)
+        centre = plan.at(x, y, 0)
+        halo = _engine.Circle(radius=radius * scale + 0.1, color=DATA, stroke_width=3).move_to(centre)
+        needles = ("IFCCOLUMN(", f"IFCCARTESIANPOINT(({x:g}")
+        panel_a = self.step_panel(_pick(f.excerpt, *needles), (-4.1, 1.4, 0), width=5.3)
+        tag_a = self.label("file A", "Datei A", (-6.7, panel_a.frame.get_top()[1] + 0.2, 0), size=S_SMALL, color=MUTED, anchor="l")
+        panel_b = self.step_panel(_pick(f.renumbered, *needles), (-4.1, -0.55, 0), width=5.3)
+        tag_b = self.label("file B (next export)", "Datei B (nächster Export)", (-6.7, panel_b.frame.get_top()[1] + 0.2, 0), size=S_SMALL, color=MUTED, anchor="l")
+        klass, place = _run(panel_a, "IFCCOLUMN(", "class"), _run(panel_a, "IFCCARTESIANPOINT(", "placement")
+        guid_a, guid_b = _run(panel_a, "IFCCOLUMN(", "guid"), _run(panel_b, "IFCCOLUMN(", "guid")
+        ref_a, ref_b = _run(panel_a, "IFCCOLUMN(", "number"), _run(panel_b, "IFCCOLUMN(", "number")
+        chip_class = self.badge("IfcColumn · COLUMN", (5.75, -0.95, 0), color=ARCH, filled=False)
+        modelling = self.label("(our modelling choice)", "(unsere Modellierung)", (5.75, -1.3, 0), size=S_SMALL, color=MUTED)
+        chip_guid = self.badge("GlobalId", (5.75, 0.15, 0), color=DATA, filled=False)
+        dim_x = self.dimension(plan.at(0, 0, 0), plan.at(x, 0, 0), self.quantity(x, "m"), offset=-0.6, color=INK)
+        dim_y = self.dimension(plan.at(0, 0, 0), plan.at(0, y, 0), self.quantity(y, "m"), offset=0.3, color=INK)
+        local = self.label("instance number: local to this file", "Instanznummer: nur lokal in dieser Datei", (-4.1, -1.65, 0), size=S_SMALL, color=WARN)
+        same = self.label("GlobalId: the same in both files", "GlobalId: in beiden Dateien gleich", (-4.1, -2.1, 0), size=S_SMALL, color=GOOD)
+        rings = [_ring(klass, ARCH), _ring(place, INK), _ring(guid_a, DATA), _ring(guid_b, DATA), _ring(ref_a, WARN), _ring(ref_b, WARN)]
+        leads = [self.leader(chip_class, centre, color=ARCH), self.leader(chip_guid, centre, color=DATA)]
+        self.step("semantic",
+                  _seq((_engine.FadeOut(left), _engine.FadeOut(right), _engine.FadeOut(self._carry), _in(plan), _engine.FadeIn(panel_a), _engine.FadeIn(tag_a)),
+                       (_engine.Create(halo), _engine.Create(rings[0]), _engine.FadeIn(chip_class), _engine.FadeIn(modelling), _engine.Create(leads[0])),
+                       (_engine.Create(rings[1]), _engine.Create(dim_x), _engine.Create(dim_y)),
+                       (_engine.Create(rings[2]), _engine.FadeIn(chip_guid), _engine.Create(leads[1])),
+                       (_engine.FadeIn(panel_b), _engine.FadeIn(tag_b)),
+                       (_engine.Create(rings[3]), ref_a.animate.set_color(WARN), ref_b.animate.set_color(WARN), _engine.Create(rings[4]), _engine.Create(rings[5]),
+                        _engine.FadeIn(local), _engine.FadeIn(same))),
+                  seconds=7.0)
+        self._s = SimpleNamespace(plan=plan, off=[halo, panel_a, tag_a, panel_b, tag_b, chip_class, modelling, chip_guid, dim_x, dim_y, local, same, *rings, *leads])
+
+    def _beat_properties(self, f):
+        """🧱 Type, LoadBearing flag, material, profile radius and extrusion depth, each tied to the drawn piloti."""
+        s = self._s
+        panel = self.step_panel(_pick(f.excerpt, "IFCCOLUMN(", "IFCPROPERTYSET(", "'LoadBearing'", "IFCMATERIAL(", "IFCCIRCLEPROFILEDEF(", "IFCEXTRUDEDAREASOLID("),
+                                (-4.1, 0.65, 0), width=5.3)
+        thumb = self.villa_plan("ground", (5.9, 2.3, 0), 0.07, model=f.m, highlight=(TAG,), grid=False, labels=False)
+        grow = _engine.ValueTracker(0)
+        detail = self.live(lambda: self.piloti_detail((3.4, -0.2, 0), 0.62, model=f.m, dims=True, grow=grow.get_value()), key=lambda: round(grow.get_value(), 3))
+        tokens = {name: _run(panel, needle, role) for name, needle, role in (
+            ("type", "IFCCOLUMN(", "predefined"), ("pset", "IFCPROPERTYSET(", "pset"), ("load", "'LoadBearing'", "value"),
+            ("material", "IFCMATERIAL(", "material"), ("profile", "IFCCIRCLEPROFILEDEF(", "profile"), ("depth", "IFCEXTRUDEDAREASOLID(", "depth"))}
+        rings = {name: _ring(token, GOOD if name in ("pset", "load") else STRUCT if name in ("type", "material") else INK) for name, token in tokens.items()}
+        flag = f.element["psets"]["Pset_ColumnCommon"]["LoadBearing"]["value"]
+        flag_text = "TRUE" if flag else "FALSE"
+        diameter = f.diameter
+        notes = {
+            "type": self.label("type COLUMN", "Typ COLUMN", (0.15, 2.75, 0), size=S_SMALL, color=STRUCT, anchor="l"),
+            "load": self.label(f"LoadBearing = {flag_text} (teaching value)", f"LoadBearing = {flag_text} (Lehrwert)", (0.15, 2.4, 0), size=S_SMALL, color=GOOD, anchor="l"),
+            "meant": self.label("meant to carry loads", "soll Lasten tragen", (0.15, 2.1, 0), size=S_SMALL, color=MUTED, anchor="l"),
+            "material": self.label(self._text(f.element["material"]["name"]), None, (0.15, 1.75, 0), size=S_SMALL, color=STRUCT, anchor="l"),
+            "profile": self.label(f"circle, Ø {self.quantity(diameter['value'], 'm')} ({self._basis(diameter)})", f"Kreis, Ø {self.quantity(diameter['value'], 'm')} ({self._basis(diameter)})",
+                                  (0.15, -2.25, 0), size=S_SMALL, color=INK, anchor="l"),
+        }
+        self.step("properties",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], _engine.ReplacementTransform(s.plan, thumb), _engine.FadeIn(panel), _engine.FadeIn(detail)),
+                       (_engine.Create(rings["type"]), _engine.FadeIn(notes["type"])),
+                       (_engine.Create(rings["pset"]), _engine.Create(rings["load"]), _engine.FadeIn(notes["load"]), _engine.FadeIn(notes["meant"])),
+                       (_engine.Create(rings["material"]), _engine.FadeIn(notes["material"])),
+                       (_engine.Create(rings["profile"]), _engine.FadeIn(notes["profile"])),
+                       (_engine.Create(rings["depth"]), _to(grow, 1, 2.0))),
+                  seconds=7.0)
+        self._s = SimpleNamespace(panel=panel, tokens=tokens, off=[detail, thumb, *rings.values(), *notes.values()])
+
+    def _beat_mesh(self, f):
+        """🔺 The same piloti as triangles: finer and finer tessellation, while class, identity, property and material are struck out."""
+        s = self._s
+        seg = _engine.ValueTracker(6)
+        current = lambda: int(round(seg.get_value()))
+        side = self.live(lambda: self.mesh_view(TAG, (1.5, 0.3, 0), 0.75, view="side", segments=current(), counts=False, model=f.m), key=current)
+        top = self.live(lambda: self.mesh_view(TAG, (4.6, 0.8, 0), 6.0, view="top", segments=current(), counts=False, model=f.m), key=current)
+        final = _model.mesh(TAG, 16, f.m)
+        count = self.live_label(lambda: self.tr("{} vertices · {} triangles", "{} Punkte · {} Dreiecke").format(*[_model.mesh(TAG, current(), f.m)[k] for k in ("vertex_count", "triangle_count")]),
+                                (3.1, -1.75, 0), size=S_LABEL, color=DATA)
+        kept = self.label("kept: " + ", ".join(self._text(i) for i in final["kept"]), "bleibt: " + ", ".join(self._text(i) for i in final["kept"]), (-6.7, -1.15, 0),
+                          size=S_SMALL, color=GOOD, anchor="l")
+        lost = [self.badge(self._text(item), (-6.7 + 3.4 * (i % 2), -1.55 - 0.36 * (i // 2), 0), color=WARN, filled=False, anchor="l") for i, item in enumerate(final["lost"])]
+        strikes = [_strike(_run(s.panel, "IFCCOLUMN(", "class")), _strike(_run(s.panel, "IFCCOLUMN(", "guid")), _strike(s.tokens["load"]), _strike(s.tokens["material"])]
+        self.step("mesh",
+                  _seq((*[_engine.FadeOut(m) for m in s.off], s.panel.animate.set_opacity(0.45), _engine.FadeIn(side), _engine.FadeIn(top), _engine.FadeIn(count), _engine.FadeIn(kept)),
+                       (_to(seg, 16, 2.6), _engine.LaggedStart(*[_engine.Create(line) for line in strikes], lag_ratio=0.5, run_time=2.6)),
+                       tuple(_engine.FadeIn(chip) for chip in lost)),
+                  seconds=6.5)
+        self._s = SimpleNamespace(off=[s.panel, side, top, count, kept, *lost, *strikes])
+

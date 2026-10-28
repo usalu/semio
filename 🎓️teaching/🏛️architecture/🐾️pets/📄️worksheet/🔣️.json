@@ -10,7 +10,11 @@
     "de": "Arbeitsblatt"
   },
   "grounds": [
-    "topic/excel"
+    "topic/excel",
+    "excel-workbook",
+    "excel-workbook/workbook-terminology",
+    "excel-workbook/spreadsheet-commands",
+    "excel-workbook/copying-references"
   ],
   "size": {
     "width": 60,

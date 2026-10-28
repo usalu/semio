@@ -1,0 +1,99 @@
+    def _term_rows(self, trackers):
+        """🧾 The bilinear prediction with the live coded levels substituted, parts printed so that they add up to the printed total."""
+        c = FACTORIAL["coefficients"]
+        sign = lambda value: ("+ " if round(value) >= 0 else "− ") + self.number(abs(value), 0)
+        coded = lambda value: ("+" if round(value, 2) > 0 else "") + self.number(value, 1 if abs(value - round(value)) > .05 else 0)
+
+        def rows(design, found):
+            a, b = self._coded_of(trackers)
+            terms = [c[0], c[1] * a, c[2] * b, c[3] * a * b]
+            shown = _room.apportion(terms, 0, sum(terms))
+            return [[(self.number(round(c[0])), COOL), (f"{sign(round(c[1]))} × A ({coded(a)})", DESIGN), (f"{sign(round(c[2]))} × B ({coded(b)})", OPEN), (f"{sign(round(c[3]))} × A·B ({coded(a * b)})", MIXED), ("kWh/a", MUTED)],
+                    [("=", MUTED), (self.number(shown[0]), COOL), (sign(shown[1]), DESIGN), (sign(shown[2]), OPEN), (sign(shown[3]), MIXED), (f"= {self.number(sum(shown))} kWh/a", COOL)]]
+
+        return rows
+
+    def _model_fit(self):
+        """📏 The bilinear model, one room that follows the coded levels and its prediction as a waterfall and a substituted formula."""
+        coefficients, effects = FACTORIAL["coefficients"], FACTORIAL["effects"]
+        self.trackers_model = self.study_trackers(RUNS[3]["design"])
+        terms = [(self.tr("Cooling =", "Kühlstrom ="), MUTED), (self.number(coefficients[0]), COOL)] + [(f"{'+' if value > 0 else '−'} {self.number(abs(value))}·{name}", color) for value, name, color in zip(coefficients[1:], ("A", "B", "A·B"), (DESIGN, OPEN, MIXED))] + [("kWh/a", MUTED)]
+        formula = _mn.VGroup(*[self._t(text, (0, 0, 0), 22, color, 6) for text, color in terms]).arrange(RIGHT, buff=.16).move_to((.9, 2.62, 0))
+        room = self._live_section(self.trackers_model, MODEL_ORIGIN, MODEL_S, labels=True, person=False, daylight=True)
+        waterfall = self._waterfall(self.trackers_model)
+        level = lambda value: self._sign(value, 0 if abs(value - round(value)) < .05 else 1) if round(value, 1) else "0"
+        readout = self._live(lambda: self._t(f"A {level(self._coded_of(self.trackers_model)[0])} · B {level(self._coded_of(self.trackers_model)[1])}", (WF_X + WF_PITCH * 2, -2.17, 0), 16, INK, 2.4))
+        rows = self._formula_rows(self._term_rows(self.trackers_model), (2.4, 1.75, 0), size=20, width=8.4, trackers=self.trackers_model)
+        run4 = self._chip(f"{self.tr('simulation 4', 'Simulation 4')}: WWR {self._wwr(.7)} · {self._depth(1.0)}\n→ {self._kwh(SHOWN[3])}", (MODEL_X, .45, 0), 15, COOL, 4.4)
+        t = self.trackers_model
+        tour = _mn.Succession(t["wwr"].animate.set_value(LOW_WWR), t["wwr"].animate.set_value(HIGH_WWR), t["overhang"].animate.set_value(LOW_D), t["overhang"].animate.set_value(HIGH_D))
+        fades = _mn.AnimationGroup(_mn.FadeOut(self.cleanup), _mn.FadeOut(self._everything(self.cards)), _mn.FadeOut(self.chart), _mn.FadeOut(_mn.VGroup(*self.marks)), _mn.FadeIn(formula), _mn.FadeIn(room),
+                                   _mn.FadeIn(waterfall), _mn.FadeIn(readout), _mn.FadeIn(rows), _mn.FadeIn(run4), *self._head("Bilinear model from four simulations", "Bilineares Modell aus vier Simulationen"), run_time=1.0)
+        self.step("model", _mn.Succession(fades, tour), seconds=9)
+        centre = FACTORIAL["centre"]["design"]
+        mean_chip = self._chip(f"{self.tr('plan centre', 'Planmitte')}: WWR {self._wwr(centre['wwr'])} · {self._depth(centre['overhang'])}\n{self.tr('mean of 4 runs, unrounded', 'Mittel der 4 Läufe, ungerundet')} {self._kwh(coefficients[0])}", (MODEL_X, .45, 0), 15, COOL, 4.4)
+        self.step("model_2", self.set_design(self.trackers_model, {"wwr": centre["wwr"], "overhang": centre["overhang"]}, 3), _mn.ReplacementTransform(run4, mean_chip), seconds=4)
+        halves = self._lines((f"{self.tr('window', 'Fenster')}: {self._sign(effects['a'], 1)} ÷ 2 = {self._sign(coefficients[1], 1)}", DESIGN, 18),
+                             (f"{self.tr('overhang', 'Vordach')}: {self._sign(effects['b'], 1)} ÷ 2 = {self._sign(coefficients[2], 1)}", OPEN, 18),
+                             (f"A·B: {self._sign(effects['ab'], 1)} ÷ 2 = {self._sign(coefficients[3], 1)}", MIXED, 18),
+                             (self.tr("kWh/a per coded step", "kWh/a je kodiertem Schritt"), MUTED, 15), top=-.45, x=MODEL_X, width=4.4)
+        self.step("model_3", _mn.FadeOut(mean_chip), _mn.FadeIn(halves), seconds=3)
+        self.model_view = _mn.VGroup(formula, room, waterfall, readout, rows, halves)
+
+    def _curvature(self):
+        """🌀 Two levels cannot see curvature; each plotted end has its room, the centre run tests the straight prediction along the overhang depth."""
+        centre, coefficients = FACTORIAL["centre"], FACTORIAL["coefficients"]
+        low, high = coefficients[0] - coefficients[2], coefficients[0] + coefficients[2]
+        chart = self._chart(x_range=(-.2, 1.2, .1), x_ticks=(0, .5, 1.0), x_label=self.tr("Overhang depth (m)", "Vordachtiefe (m)"), y_max=500, y_step=100, x_digits=1)
+        axes = self.axes_
+        german = self.language() == "de"
+        straight = _mn.DashedLine(axes.c2p(0, low), axes.c2p(1, high), color=MUTED, stroke_width=2.6)
+        self.lines_.append([axes.c2p(0, low), axes.c2p(1, high)])
+        ends = _mn.VGroup(*[_mn.Circle(radius=.09, color=INK, stroke_width=2.4).move_to(axes.c2p(x, y)) for x, y in ((0, low), (1, high))])
+        simulated = [(depth, self._cooling({**centre["design"], "overhang": depth})) for depth in (LOW_D, HIGH_D)]
+        dots = _mn.VGroup(*[_mn.Dot(axes.c2p(depth, value), radius=.06, color=DATA) for depth, value in simulated])
+        key_x, key_y = axes.c2p(.45, 500)[0], axes.c2p(.45, 500)[1] + .06
+        key_straight = _mn.VGroup(_room.dashed((key_x, key_y, 0), (key_x + .4, key_y, 0), MUTED, 2.6), self._at(self.tr("straight line (model), two levels", "Gerade (Modell), zwei Stufen"), (key_x + .5, key_y, 0), 14, MUTED, 2.7))
+        key_dots = _mn.VGroup(_mn.Dot((key_x + .2, key_y - .22, 0), radius=.06, color=DATA), self._at(self.tr("simulated room", "simulierter Raum"), (key_x + .5, key_y - .22, 0), 14, DATA, 2.4))
+        key_true = _mn.VGroup(_mn.Line((key_x, key_y - .22, 0), (key_x + .4, key_y - .22, 0), color=DATA, stroke_width=3), self._at(self.tr("simulated, 50 % window", "simuliert, 50 % Fenster"), (key_x + .5, key_y - .22, 0), 14, DATA, 2.4))
+        end_tags = _mn.VGroup(self._near(self._tag((0, 0, 0), low, MUTED), axes.c2p(0, low), ("upright", "up", "right"), gap=.3), self._near(self._tag((0, 0, 0), high, MUTED), axes.c2p(1, high), ("upright", "up", "right"), gap=.3),
+                              self._near(self._tag((0, 0, 0), simulated[1][1], DATA), axes.c2p(1, simulated[1][1]), ("downleft", "down", "left"), gap=.3))
+        rooms = _mn.VGroup()
+        for (depth, value), x_c in zip(simulated, (2.75, 5.65)):
+            layers, _ = self._section({**centre["design"], "overhang": depth}, (x_c - .15, 1.4, 0), .27, person=False)
+            marker = _mn.Circle(radius=.07, color=INK, stroke_width=2).set_fill(DATA, opacity=1)
+            label = _mn.VGroup(marker, _room.text([*_room.parts(depth, "m", 1, german), "·", *_room.parts(value, "kWh/a", 1, german)], (0, 0, 0), size=15, color=INK)).arrange(RIGHT, buff=.1).move_to((x_c, 3.0, 0))
+            rooms.add(self._merge(layers), label)
+        self.centre = self.study_trackers(centre["design"])
+        grow = _mn.ValueTracker(0)
+        self.ghost_depth = _mn.ValueTracker(0)
+        big = _mn.VGroup(self._live_section(self.centre, BIG_ORIGIN, BIG_S, labels=True, ghost=lambda: self.ghost_depth.get_value(), reach=2.4, demand=lambda: grow.get_value() > .02, daylight=True),
+                         self._bar(BIG_BAR, lambda: self._cooling(_room.values(self.centre)), grow, height=BIG_HEIGHT, width=.46, size=16),
+                         self._t(self.tr("Cooling electricity", "Kühlstrom"), (BIG_BAR[0], BIG_BAR[1] - .55, 0), 14, COOL, 2.1))
+        ghost = _mn.VGroup(self._ghost_bar(BIG_BAR, centre["predicted"], height=BIG_HEIGHT, width=.46),
+                           self._t(self.tr("model", "Modell") + " " + self.number(centre["predicted"], 1), np.array(BIG_BAR) + UP * (centre["predicted"] * BIG_HEIGHT / YMAX + .27), 15, MUTED, 1.4))
+        self.model_view.clear_updaters()
+        fading = _mn.VGroup(self.model_view).clear_updaters()
+        self.step("curvature", _mn.FadeOut(fading), _mn.FadeIn(big), _mn.FadeIn(ghost), _mn.FadeIn(chart), *self._head("Confirm the middle: is the model straight?", "Mitte bestätigen: ist das Modell gerade?"),
+                  _mn.Succession(_mn.AnimationGroup(_mn.Create(straight), _mn.FadeIn(ends), _mn.FadeIn(rooms), _mn.FadeIn(dots), _mn.FadeIn(end_tags), _mn.FadeIn(key_straight), _mn.FadeIn(key_dots), run_time=1.6)), seconds=5)
+        self.big = big
+        actual = _mn.Dot(axes.c2p(.5, centre["actual"]), radius=.1, color=DATA)
+        hollow = _mn.Circle(radius=.11, color=MUTED, stroke_width=2.4).move_to(axes.c2p(.5, centre["predicted"]))
+        confirm_tags = _mn.VGroup(self._near(self._tag((0, 0, 0), centre["predicted"], MUTED), hollow.get_center(), ("upright", "up", "right"), gap=.3), self._near(self._tag((0, 0, 0), centre["actual"], DATA), actual.get_center(), ("downleft", "down", "left"), gap=.3))
+        self.step("confirm", _mn.FadeIn(hollow), grow.animate.set_value(1), _mn.FadeIn(actual), _mn.FadeIn(confirm_tags), seconds=3)
+        gap = _mn.Line(hollow.get_center() + DOWN * .12, actual.get_center() + UP * .12, color=ALERT, stroke_width=3)
+        unit = BIG_HEIGHT / YMAX
+        segment = _mn.Rectangle(width=.46, height=(centre["predicted"] - centre["actual"]) * unit, stroke_width=0, fill_color=ALERT, fill_opacity=.6).move_to(np.array(BIG_BAR) + UP * (centre["actual"] + centre["predicted"]) / 2 * unit)
+        percent = self.number(centre["curvature"] * 100, 1)
+        gap_note = _mn.VGroup(self._chip(f"{self.tr('model', 'Modell')} {self.number(centre['predicted'], 1)} · {self.tr('simulation', 'Simulation')} {self.number(centre['actual'], 1)} kWh/a ({percent} %)", (axes.c2p(.5, 0)[0], -1.05, 0), 15, ALERT, 4.3),
+                              self._t(f"{self.number(centre['predicted'], 1)} + {self.number(coefficients[1], 1)}·0 − {self.number(abs(coefficients[2]), 1)}·0 − {self.number(abs(coefficients[3]), 1)}·0·0 = {self.number(centre['predicted'], 1)} kWh/a", (axes.c2p(.5, 0)[0], -1.45, 0), 14, INK, 4.3))
+        gap_label = self._at(f"{self.number(centre['actual'] - centre['predicted'], 1)} kWh/a", np.array(BIG_BAR) + np.array([.3, (centre["actual"] + centre["predicted"]) / 2 * unit, 0]), 14, ALERT, 1.2)
+        self.step("confirm_2", _mn.Create(gap), _mn.FadeIn(gap_note), _mn.FadeIn(segment), _mn.FadeIn(gap_label), _mn.Indicate(actual, color=INK, scale_factor=1.8), seconds=2.5)
+        saving = FACTORIAL["centre_savings"]
+        share_note = _mn.VGroup(self._chip(self._depth(.5) + self.tr(" already delivers ", " liefert schon ") + self.number(saving["share"] * 100) + " % " + self.tr("of the saving of ", "der Einsparung von ") + self._depth(HIGH_D), (axes.c2p(.5, 0)[0], -1.05, 0), 15, SHADED, 4.3),
+                                self._t(f"{self.number(saving['half'], 1)} {self.tr('of', 'von')} {self.number(saving['full'], 1)} kWh/a ({self.tr('50 % window', '50 % Fenster')})", (axes.c2p(.5, 0)[0], -1.45, 0), 14, SHADED, 4.3))
+        true = self._curve(axes, lambda x: self._cooling({**centre["design"], "overhang": x}), 0, 1, color=DATA)
+        trace = self.live_marker(axes, self.centre, lambda d: d["overhang"], lambda d: self._cooling(d), color=DATA, drops=False, readout=False)
+        sweep = _mn.Succession(self.centre["overhang"].animate.set_value(LOW_D), _mn.AnimationGroup(self.centre["overhang"].animate.set_value(HIGH_D), _mn.Create(true, rate_func=_mn.linear), self.ghost_depth.animate.set_value(HIGH_D), run_time=3), self.centre["overhang"].animate.set_value(.5))
+        self.step("confirm_3", _mn.FadeOut(gap_note), _mn.FadeOut(segment), _mn.FadeOut(gap_label), _mn.FadeIn(share_note), _mn.FadeIn(trace), _mn.ReplacementTransform(key_dots, key_true), sweep, seconds=6)
+        self.stage_end = _mn.VGroup(share_note, true, trace, key_true)

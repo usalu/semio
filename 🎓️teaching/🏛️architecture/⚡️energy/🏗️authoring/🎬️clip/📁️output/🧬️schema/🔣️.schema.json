@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Clip Output Environment",
+  "type": "object",
+  "properties": {
+    "SEMIO_TEACHING_CACHE_ROOT": {"type": "string", "minLength": 1, "description": "Workspace-relative or absolute cache directory; defaults to .🧬semio/🎓️teaching/⚡️cache."},
+    "SEMIO_TEACHING_OUTPUT_ROOT": {"type": "string", "minLength": 1, "description": "Workspace-relative or absolute output directory; overrides the cache videos directory."},
+    "SEMIO_TEACHING_SPEECH_ROOT": {"type": "string", "minLength": 1, "description": "Narration directory shared by render subprocesses; defaults to speech inside the output root."}
+  },
+  "additionalProperties": false
+}

@@ -1,3 +1,4 @@
+import { withCourseAssignmentPdfsV1 } from "../../🏗️builder/🌐️vite/📦️assignments/🟦️.ts";
 /** 🌐️ The `publish` verb: the site built with the proctor origin baked in, the CDN artifact verified (entry points, sealed document, hashed assets, no development leftovers, size budget) and staged with `_headers`.
  * @see ../🟦️.ts — the constants, tools and drift check shared by the operator verbs */
 
@@ -79,6 +80,11 @@ export function siteArtifactProblems(dist: string, proctorOrigin: string): strin
   const files = siteFiles(dist, STAGED_DIRECTORIES);
   const text = (path: string): string => readFileSync(join(dist, path), "utf8");
   for (const required of ["index.html", "404.html", ".nojekyll", "CNAME", "robots.txt", "manifest.webmanifest", "favicon.svg"]) if (!files.includes(required)) problems.push(`${required} is missing`);
+  for (const assignment of course.assignments) for (const document of Object.values(assignment.documents)) {
+    const path = "assignments/" + document.file;
+    if (!files.includes(path)) problems.push(path + " is missing");
+    else if (readFileSync(join(dist, path)).subarray(0, 5).toString() !== "%PDF-") problems.push(path + " is not a PDF");
+  }
   if (files.includes("CNAME") && text("CNAME").trim() !== COURSE_SITE_HOST) problems.push(`CNAME names ${JSON.stringify(text("CNAME").trim())}, not ${COURSE_SITE_HOST}`);
   if (files.includes("index.html")) {
     const html = text("index.html");
@@ -115,7 +121,7 @@ export function courseSiteBuildPlan(repoRoot: string, bundleRoot: string, mode: 
 /** 🔨️ Builds the site for the original caller's mode under the plan's owner. The product lives in the products store behind a store receipt, so a warm `build` is a cache hit and never reaches here. */
 export async function buildCourseSite(repoRoot: string, bundleRoot: string, invocation: ScriptInvocation): Promise<void> {
   const mode = courseOriginalBuildModeV1(invocation, "dev");
-  await buildViteArtifact({ ...courseSiteBuildPlan(repoRoot, bundleRoot, mode), invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-site", 0), signal: invocation.control.signal, timeoutMs: courseBudgetMs(invocation) });
+  await withCourseAssignmentPdfsV1(repoRoot, invocation, runtimeChannels => buildViteArtifact({ ...courseSiteBuildPlan(repoRoot, bundleRoot, mode), runtimeChannels, invocation, control: scriptCompilerAdmissionControlV1(invocation, "vite:course-site", 0), signal: invocation.control.signal, timeoutMs: courseBudgetMs(invocation) }));
 }
 
 /** 🚚️ Reads the release site `build` published, under immutable custody, and exports a separately validated CDN artifact. It builds nothing: the cached `build` task is its prerequisite. */

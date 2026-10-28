@@ -13,7 +13,8 @@
         "sourceRoot",
         "texPath",
         "sources",
-        "dark"
+        "dark",
+        "producer"
       ],
       "properties": {
         "version": {
@@ -26,7 +27,8 @@
           "enum": [
             "print",
             "report",
-            "probe"
+            "probe",
+            "course"
           ]
         },
         "id": {
@@ -60,6 +62,50 @@
         },
         "dark": {
           "type": "boolean"
+        },
+        "producer": {
+          "type": "string",
+          "maxLength": 160,
+          "pattern": "^@[a-z][a-z0-9-]*/[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+        },
+        "resources": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "name",
+              "format",
+              "width",
+              "sha256"
+            ],
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 224
+              },
+              "name": {
+                "type": "string",
+                "pattern": "^[a-zA-Z0-9/-]+\\.png$",
+                "maxLength": 160
+              },
+              "format": {
+                "const": "svg-png"
+              },
+              "width": {
+                "type": "integer",
+                "minimum": 1,
+                "maximum": 4096
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[a-f0-9]{64}$"
+              }
+            }
+          }
         }
       }
     },
@@ -125,7 +171,8 @@
         "source",
         "namespace",
         "id",
-        "dark"
+        "dark",
+        "producer"
       ],
       "properties": {
         "version": {
@@ -172,7 +219,8 @@
           "enum": [
             "print",
             "report",
-            "probe"
+            "probe",
+            "course"
           ]
         },
         "id": {
@@ -182,6 +230,11 @@
         },
         "dark": {
           "type": "boolean"
+        },
+        "producer": {
+          "type": "string",
+          "maxLength": 160,
+          "pattern": "^@[a-z][a-z0-9-]*/[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
         }
       }
     }
@@ -206,7 +259,7 @@
         "maximumResources": 64,
         "maximumDataDepth": 4,
         "maximumDataNodes": 8192,
-        "maximumDataFields": 8,
+        "maximumDataFields": 10,
         "maximumDataArray": 4096,
         "maximumDataBytes": 4194304
       }

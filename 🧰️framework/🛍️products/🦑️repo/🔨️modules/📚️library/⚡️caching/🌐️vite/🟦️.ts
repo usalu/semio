@@ -36,6 +36,7 @@ import { runtimeExecutableForV1, runtimeKeyV1 } from "../../../../../../📦️p
 import type { RuntimeIdV1 } from "../../../../../../📦️packages/🟦️typescript/⚙️runtime/📋️contract/🟦️.ts";
 
 export type ViteArtifactBuild = {
+  readonly runtimeChannels?: readonly ViteRuntimeChannelV1[];
   readonly configLoader?: ViteConfigLoaderV1;
   readonly invocation: ScriptInvocation;
   readonly control: CompilerAdmissionControl;
@@ -53,7 +54,7 @@ export type ViteArtifactBuild = {
 
 /** 🌐️ Bundles one site and publishes its complete deliverable only after Vite succeeds. */
 export async function buildViteArtifact(options: ViteArtifactBuild): Promise<string> {
-  requireIssuedResourceControlInvocationV1(options.control,options.invocation);const authoredEnvironment=withoutViteRuntimeEnvironmentV1({...options.environment},process.platform),phase = createRequestedIssuedResourceControlV1(options.control,options.timeoutMs ?? 600_000,options.signal);
+  requireIssuedResourceControlInvocationV1(options.control,options.invocation);const runtimeChannels=readViteRuntimeChannelsV1(options.runtimeChannels??[]),authoredEnvironment=withoutViteRuntimeEnvironmentV1({...options.environment},process.platform),phase = createRequestedIssuedResourceControlV1(options.control,options.timeoutMs ?? 600_000,options.signal);
   phase.signal.throwIfAborted();
   if(options.args?.length)throw Error("Vite build arguments must be authored in the owned configuration");
   const mode = options.mode ?? readBuildMode(options.environment?.SEMIO_BUILD_MODE ?? readNativeCallerAuthorityV1(options.invocation.capabilities).original.buildMode);requireViteBuildIntentV1(options.invocation,mode,options.workspace);const require = createRequire(join(options.workspace, "package.json"));
@@ -66,7 +67,7 @@ export async function buildViteArtifact(options: ViteArtifactBuild): Promise<str
       requireNativeStoragePathV1(store.root,directory);await store.recheck();const cli = join(dirname(require.resolve("vite/package.json")), "bin/vite.js");
       console.log(`Bundling ${options.owner}`);
       try {
-        await runOwnedCommand(process.execPath, [cli, "build", "--mode", mode, "--minify", mode === "release" ? "esbuild" : "false", ...(mode === "prototype" ? ["--sourcemap"] : []), "--config", options.config, "--configLoader", readViteConfigLoaderV1(options.configLoader), "--outDir", temporary, "--emptyOutDir", ...(options.args ?? [])], options.root, `vite:${options.owner}`, compilerAdmissionBudgetV1(control), { env: { ...buildModeEnvironment(mode, compilerEnvironment), SEMIO_VITE_CACHE_DIRECTORY: directory }, signal: control.signal });
+        await runOwnedCommand(process.execPath, [cli, "build", "--mode", mode, "--minify", mode === "release" ? "esbuild" : "false", ...(mode === "prototype" ? ["--sourcemap"] : []), "--config", options.config, "--configLoader", readViteConfigLoaderV1(options.configLoader), "--outDir", temporary, "--emptyOutDir", ...(options.args ?? [])], options.root, `vite:${options.owner}`, compilerAdmissionBudgetV1(control), { env: { ...buildModeEnvironment(mode, compilerEnvironment), SEMIO_VITE_CACHE_DIRECTORY: directory, ...viteRuntimeEnvironmentV1(runtimeChannels) }, signal: control.signal });
       } catch (error) { control.signal.throwIfAborted(); throw new Error(`Vite build failed for ${options.owner}`, { cause: error }); }
       const files = await collectArtifactFiles(temporary, control.signal);let bytes=0;for(const path of files.values()){requireNativeStoragePathV1(store.root,path);bytes+=(await lstat(path)).size;}if(files.size>storageSchema.definitions.Protocol.const.maximumOutputFiles||bytes>storageSchema.definitions.Protocol.const.maximumOutputBytes)throw Error("Vite deliverable exceeds finite output boundary");await store.recheck();
       await withRepositoryArtifactDestinationV1({workspace:options.workspace,invocation:options.invocation,storage:store.storage,control:store.control,phaseControl:control,directory:layout.output},destination=>stageRepositoryArtifacts(destination,options.owner,files));

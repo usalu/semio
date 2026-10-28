@@ -1,0 +1,295 @@
+{
+  "quiz": "grasshopper-data",
+  "tasks": [
+    {
+      "id": "canvas-terminology",
+      "kind": "classification"
+    },
+    {
+      "id": "type-casting",
+      "kind": "classification"
+    },
+    {
+      "id": "tree-operations",
+      "kind": "classification"
+    },
+    {
+      "id": "list-matching",
+      "kind": "classification"
+    }
+  ],
+  "terminology": {
+    "param-number": "parameter",
+    "component-add": "component",
+    "input-a": "input",
+    "output-r": "output",
+    "slider-width": "slider",
+    "panel-values": "panel",
+    "tree-floors": "tree",
+    "branch-floor": "branch",
+    "plugin-facade": "plugin"
+  },
+  "casts": {
+    "cast-integer": "conversion",
+    "cast-text": "conversion",
+    "cast-point-vector": "conversion",
+    "cast-nonnumeric": "failure",
+    "cast-point-mesh": "failure"
+  },
+  "trees": {
+    "tree-flatten": "flatten",
+    "tree-graft": "graft",
+    "tree-simplify": "simplify"
+  },
+  "matching": {
+    "match-longest": "longest",
+    "match-shortest": "shortest",
+    "match-cross": "cross"
+  },
+  "cases": [
+    {
+      "id": "flatten",
+      "operation": "flatten",
+      "input": {
+        "{0;0}": [
+          10,
+          20
+        ],
+        "{0;1}": [
+          30
+        ]
+      },
+      "expected": {
+        "{0}": [
+          10,
+          20,
+          30
+        ]
+      }
+    },
+    {
+      "id": "graft",
+      "operation": "graft",
+      "input": {
+        "{0}": [
+          10,
+          20
+        ]
+      },
+      "expected": {
+        "{0;0}": [
+          10
+        ],
+        "{0;1}": [
+          20
+        ]
+      }
+    },
+    {
+      "id": "simplify",
+      "operation": "simplify",
+      "input": {
+        "{0;0}": [
+          10,
+          20
+        ],
+        "{0;1}": [
+          30
+        ]
+      },
+      "expected": {
+        "{0}": [
+          10,
+          20
+        ],
+        "{1}": [
+          30
+        ]
+      }
+    },
+    {
+      "id": "longest",
+      "operation": "longest-repeat-last",
+      "a": [
+        1,
+        2,
+        3
+      ],
+      "b": [
+        10,
+        20
+      ],
+      "expected": [
+        [
+          1,
+          10
+        ],
+        [
+          2,
+          20
+        ],
+        [
+          3,
+          20
+        ]
+      ]
+    },
+    {
+      "id": "shortest",
+      "operation": "shortest-trim-end",
+      "a": [
+        1,
+        2,
+        3
+      ],
+      "b": [
+        10,
+        20
+      ],
+      "expected": [
+        [
+          1,
+          10
+        ],
+        [
+          2,
+          20
+        ]
+      ]
+    },
+    {
+      "id": "cross",
+      "operation": "cartesian-product",
+      "a": [
+        1,
+        2,
+        3
+      ],
+      "b": [
+        10,
+        20
+      ],
+      "expected": [
+        [
+          1,
+          10
+        ],
+        [
+          1,
+          20
+        ],
+        [
+          2,
+          10
+        ],
+        [
+          2,
+          20
+        ],
+        [
+          3,
+          10
+        ],
+        [
+          3,
+          20
+        ]
+      ]
+    }
+  ],
+  "classifications": {
+    "canvas-terminology": {
+      "param-number": "parameter",
+      "param-point": "parameter",
+      "param-curve": "parameter",
+      "param-integer": "parameter",
+      "param-boolean": "parameter",
+      "component-add": "component",
+      "component-multiply": "component",
+      "component-point": "component",
+      "component-move": "component",
+      "component-circle": "component",
+      "input-a": "input",
+      "input-b": "input",
+      "input-x": "input",
+      "input-g": "input",
+      "input-r": "input",
+      "output-r": "output",
+      "output-product": "output",
+      "output-point": "output",
+      "output-geometry": "output",
+      "output-circle": "output",
+      "slider-width": "slider",
+      "slider-height": "slider",
+      "slider-bays": "slider",
+      "slider-spacing": "slider",
+      "slider-angle": "slider",
+      "panel-values": "panel",
+      "panel-messages": "panel",
+      "panel-areas": "panel",
+      "panel-names": "panel",
+      "panel-indices": "panel",
+      "plugin-facade": "plugin",
+      "plugin-energy": "plugin",
+      "plugin-structure": "plugin",
+      "plugin-export": "plugin",
+      "plugin-material": "plugin",
+      "tree-floors": "tree",
+      "tree-rooms": "tree",
+      "tree-facades": "tree",
+      "tree-panels": "tree",
+      "tree-zones": "tree",
+      "branch-floor": "branch",
+      "branch-room": "branch",
+      "branch-facade": "branch",
+      "branch-panel": "branch",
+      "branch-zone": "branch"
+    },
+    "type-casting": {
+      "cast-integer": "conversion",
+      "cast-text": "conversion",
+      "cast-point-vector": "conversion",
+      "cast-vector-point": "conversion",
+      "cast-number-text": "conversion",
+      "cast-nonnumeric": "failure",
+      "cast-point-mesh": "failure",
+      "cast-roof-number": "failure",
+      "cast-room-integer": "failure",
+      "cast-door-number": "failure"
+    },
+    "tree-operations": {
+      "tree-flatten": "flatten",
+      "tree-flatten-2": "flatten",
+      "tree-flatten-3": "flatten",
+      "tree-flatten-4": "flatten",
+      "tree-flatten-5": "flatten",
+      "tree-graft": "graft",
+      "tree-graft-2": "graft",
+      "tree-graft-3": "graft",
+      "tree-graft-4": "graft",
+      "tree-graft-5": "graft",
+      "tree-simplify": "simplify",
+      "tree-simplify-2": "simplify",
+      "tree-simplify-3": "simplify",
+      "tree-simplify-4": "simplify",
+      "tree-simplify-5": "simplify"
+    },
+    "list-matching": {
+      "match-longest": "longest",
+      "match-longest-2": "longest",
+      "match-longest-3": "longest",
+      "match-longest-4": "longest",
+      "match-longest-5": "longest",
+      "match-shortest": "shortest",
+      "match-shortest-2": "shortest",
+      "match-shortest-3": "shortest",
+      "match-shortest-4": "shortest",
+      "match-shortest-5": "shortest",
+      "match-cross": "cross",
+      "match-cross-2": "cross",
+      "match-cross-3": "cross",
+      "match-cross-4": "cross",
+      "match-cross-5": "cross"
+    }
+  }
+}

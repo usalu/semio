@@ -1,0 +1,43 @@
+{
+  "languages": [
+    "en",
+    "de"
+  ],
+  "minimum_gap": 0.15,
+  "content_bounds": [
+    -6.6,
+    6.6
+  ],
+  "y": -2.3,
+  "sizes": {
+    "counter": 21.0,
+    "label": 17.0
+  },
+  "extremes": [
+    [
+      0,
+      0
+    ],
+    [
+      9,
+      9
+    ],
+    [
+      10,
+      10
+    ],
+    [
+      82,
+      13
+    ]
+  ],
+  "model_counts": [
+    82,
+    13
+  ],
+  "sweep_each_integer": true,
+  "pixel_size": [
+    480,
+    270
+  ]
+}

@@ -1,0 +1,83 @@
+{
+  "quiz": "parametric-design",
+  "tasks": [
+    {
+      "id": "parameter-domains",
+      "kind": "classification"
+    },
+    {
+      "id": "input-output-consistency",
+      "kind": "classification"
+    },
+    {
+      "id": "complexity-layers",
+      "kind": "classification"
+    },
+    {
+      "id": "design-tool-profiles",
+      "kind": "classification"
+    },
+    {
+      "id": "automation-levels",
+      "kind": "classification"
+    }
+  ],
+  "classifications": {
+    "parameter-domains": {
+      "floor-count": "discrete",
+      "facade-angle": "continuous"
+    },
+    "input-output-consistency": {
+      "box-volume-output": "consistent",
+      "four-fixed-box-values": "overdetermined",
+      "height-from-volume": "consistent"
+    },
+    "complexity-layers": {
+      "panel-dependencies": "intrinsic",
+      "plugin-version-chain": "infrastructure"
+    },
+    "design-tool-profiles": {
+      "compact-pavilion-generator": "profile-a",
+      "redundant-box-controls": "profile-b",
+      "custom-simulation-network": "profile-c",
+      "guided-cloud-configurator": "profile-d"
+    },
+    "automation-levels": {
+      "manual-panel-drawing": "manual",
+      "automatic-panel-generation": "automated",
+      "reviewed-panel-generation": "semi-automated"
+    }
+  },
+  "axes": [
+    "versatility",
+    "internal-complexity",
+    "usability",
+    "external-dependency"
+  ],
+  "profiles": {
+    "profile-a": {
+      "versatility": 5,
+      "internal-complexity": 2,
+      "usability": 4,
+      "external-dependency": 1
+    },
+    "profile-b": {
+      "versatility": 1,
+      "internal-complexity": 4,
+      "usability": 1,
+      "external-dependency": 1
+    },
+    "profile-c": {
+      "versatility": 5,
+      "internal-complexity": 5,
+      "usability": 2,
+      "external-dependency": 5
+    },
+    "profile-d": {
+      "versatility": 2,
+      "internal-complexity": 3,
+      "usability": 5,
+      "external-dependency": 5
+    }
+  }
+}

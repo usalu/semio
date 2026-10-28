@@ -1,0 +1,18 @@
+{
+  "width": 480,
+  "height": 270,
+  "fps": 4,
+  "clauses": 113,
+  "bim_sources": 6,
+  "columns": 3,
+  "rows_per_page": 6,
+  "row_height": 296,
+  "optimization": {
+    "ordinal": 122,
+    "clip_id": "optimization_experiments",
+    "scene": "Beat3_FactorialExperiments",
+    "keys": ["model", "curvature", "confirm_3"],
+    "phases": ["early", "settled", "late"]
+  },
+  "controls": ["exact-native-samples", "modified-sheet", "wrong-native-clock", "missing-clause", "duplicate-stage"]
+}

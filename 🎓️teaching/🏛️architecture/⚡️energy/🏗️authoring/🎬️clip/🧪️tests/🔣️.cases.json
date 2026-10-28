@@ -5,16 +5,39 @@
       "ventilation",
       "heating",
       "cooling",
-      "energy_balance"
+      "energy_balance",
+      "bim_information",
+      "bim_objects",
+      "bim_representations",
+      "bim_models",
+      "bim_exchange",
+      "bim_consistency",
+      "optimization_extrema",
+      "optimization_sampling",
+      "optimization_experiments",
+      "optimization_index",
+      "optimization_pareto",
+      "optimization_algorithms"
     ],
     "chapter_counts": [
       1,
       6,
       6,
       6,
-      7
+      7,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1,
+      1
     ],
-    "intro_count": 5,
     "segment_counts": [
       [
         8
@@ -38,7 +61,7 @@
       [
         3,
         5,
-        3,
+        4,
         5,
         2,
         3
@@ -51,16 +74,89 @@
         4,
         3,
         3
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
+      ],
+      [
+        1
       ]
     ],
-    "render_segment_count": 117,
-    "logical_clip_count": 31,
+    "render_segment_count": 125,
+    "logical_clip_count": 38,
     "first_segment_ordinals": [
       1,
-      10,
-      33,
-      69,
-      91
+      9,
+      31,
+      66,
+      88,
+      114,
+      115,
+      116,
+      117,
+      118,
+      119,
+      120,
+      121,
+      122,
+      123,
+      124,
+      125
+    ]
+  },
+  "physics_power_first": {
+    "scenes": [
+      "Beat1_Leistung",
+      "Beat2_EnergieImAlltag",
+      "Beat3_Energieerhaltung",
+      "Beat4_Waermepumpe",
+      "Beat5_Strahlung",
+      "Beat6_ThermischeMasse",
+      "Beat7_SensibelLatent",
+      "Beat8_Zusammenfassung"
+    ],
+    "opening_clauses": [
+      "rate",
+      "unit",
+      "area"
+    ],
+    "recap_clauses": [
+      "power",
+      "energy"
+    ],
+    "audio_tracks": [
+      "beat_1_audio.mp3",
+      "beat_2_audio.mp3"
     ]
   },
   "intro_asset_changed": {
@@ -148,7 +244,7 @@
   },
   "segment_integration": {
     "frames_per_segment": 3,
-    "chapter_frames": 6,
+    "chapter_frames": 9,
     "movie_frames": 9,
     "dominant_channels": [
       1,
@@ -206,7 +302,6 @@
     "fonts": "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️",
     "visuals": "🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️",
     "kind_leaf": "🐍️.py",
-    "intro_pdf": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🏰️institution/📕️.pdf",
     "timing": "⏱️timing/🔣️.json"
   },
   "trace_facets": {
@@ -235,5 +330,128 @@
         2
       ]
     }
+  },
+  "partial_reuse": {
+    "marks": {
+      "first": {
+        "start": 0,
+        "window": 0.2
+      },
+      "middle": {
+        "start": 0.2,
+        "window": 0.2
+      },
+      "last": {
+        "start": 0.4,
+        "window": 0.2
+      }
+    },
+    "selection": {
+      "first": "middle",
+      "last": "last"
+    },
+    "interval": [
+      0.2,
+      0.6
+    ],
+    "invalid": [
+      [
+        "missing",
+        "last"
+      ],
+      [
+        "last",
+        "first"
+      ]
+    ],
+    "source_ordinals": [
+      1
+    ],
+    "occurrence_sources": [
+      1,
+      1
+    ],
+    "frames_per_clause": 3,
+    "selected_frames": 6,
+    "channels": [
+      0,
+      2
+    ],
+    "audio_rate": 48000,
+    "curriculum_unique_sources": 117,
+    "composed_frames": 15,
+    "composed_channels": [
+      0,
+      0,
+      0,
+      2,
+      2,
+      2,
+      1,
+      1,
+      1,
+      0,
+      0,
+      0,
+      2,
+      2,
+      2
+    ],
+    "removed_sources": [
+      {
+        "script": "🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+        "scenes": [
+          "Beat6_Waermespeicherung",
+          "Beat7_SpeichermasseFormel"
+        ]
+      },
+      {
+        "script": "❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
+        "scenes": [
+          "Beat2_TimeLag"
+        ]
+      },
+      {
+        "script": "📊️demand/🎬️clip/♨️system-losses/🐍️.py",
+        "scenes": [
+          "Beat1_Verlustkette"
+        ]
+      },
+      {
+        "script": "❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
+        "scenes": [
+          "Beat2_FrameFactor",
+          "Beat3_ShadingFactor",
+          "Beat4_GlassTransmittance"
+        ]
+      }
+    ],
+    "solar_example": {
+      "area": 1.92,
+      "glass_share": 0.7,
+      "glass_transmittance": 0.6,
+      "shading": 0.15,
+      "irradiance": 800,
+      "load": 96.768
+    },
+    "clause_frequencies": [
+      440,
+      880,
+      1320
+    ],
+    "composed_frequencies": [
+      880,
+      1320,
+      440,
+      880,
+      1320
+    ]
+  },
+  "shared_render_dependency": {
+    "module": "🎓️teaching.🏛️architecture.⚡️energy.🔥️heating.🎬️clip.☀️solar-gains.🐍️",
+    "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+    "profile": "🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json",
+    "before": "{\"figure\":1}",
+    "after": "{\"figure\":2}"
   }
 }

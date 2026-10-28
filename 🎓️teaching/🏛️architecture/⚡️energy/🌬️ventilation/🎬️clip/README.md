@@ -1,9 +1,7 @@
 # Ventilation — Full Video
 
-Plays the **Ventilation series** in curriculum order, prepended with the series
-intro card ``Demo_Intro_Lueftung`` from ``🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py``:
+Presents the **Ventilation series** inside the shared virtual semio UI. The navbar and footer stay visible while its lesson window zooms in from the five-window canvas and returns to the identical overview.
 
-0. Intro — Lüftung
 1. Kapitel 1 — Warum lüften?
 2. Kapitel 2 — Wie viel Luft?
 3. Kapitel 3 — Was die Luft trägt
@@ -71,16 +69,16 @@ DIN 1946-4, DIN 1946-6, DIN EN 16798-1, DIN 4108-2, VDI 2078.
 From the workspace root, the repository entry provisions the pinned Python environment:
 
 ```sh
-repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video ventilation --quality l --jobs 4 --output-root ./videos --no-play
+repo tools exec bun -- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --language de --video ventilation --quality l --jobs 4 --output-root ./videos --no-play
 ```
 
-Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs every authored beat independently, assembles ordered chapters, and joins the institutional intro and all chapters into the complete silent lesson. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled.
+Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs each canonical source beat once, selects the declared narration sequences, assembles ordered chapters, and presents the complete lesson inside its virtual window. Video and optional source audio use identical cut boundaries; silent zoom transitions pad both ends. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled. Add `--chapter <chapter-identifier>` to render a selected chapter inside the same virtual window. Pass --language en for English chrome; the authored teaching content retains its recorded language. Chapter identifiers are declared in the curriculum JSON; lesson entry files expose `compose(language="de", chapters=[...], **settings)`.
 
-The final low-quality movie is `<output-root>/rendered/Full_Ventilation_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
+The final low-quality movie is `<output-root>/rendered/Full_Ventilation_de_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
 
-## Chapter Scenes and Beats
+## Chapter Identifiers and Beats
 
-| Scene class | Content |
+| Chapter identifier | Content |
 |-------------|---------|
 | `Ventilation_01_WarumLueften` | Kapitel 1 |
 | `Ventilation_02_Luftmenge` | Kapitel 2 |

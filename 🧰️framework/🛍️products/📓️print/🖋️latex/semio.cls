@@ -13,12 +13,28 @@
 
 \DeclareStringOption[report]{type}
 \DeclareStringOption[light]{theme}
-\DeclareStringOption[de]{language}
+\DeclareStringOption[]{language}
 \DeclareStringOption[numeric]{citestyle}
 \ProcessKeyvalOptions*
 
 \ExplSyntaxOn
+\tl_if_blank:VTF \semio@language {
+  \str_if_eq:VnTF \semio@type { assignment }
+    { \ClassError { semio } { Assignment~language~is~required } { Select~language=en~or~language=de. } }
+    { \tl_set:Nn \semio@language { de } }
+} { }
+\str_if_eq:VnT \semio@type { assignment } {
+  \str_case:VnF \semio@language { { en } { } { de } { } }
+    { \ClassError { semio } { Unsupported~assignment~language } { Select~language=en~or~language=de. } }
+}
+\ExplSyntaxOff
+
+\ExplSyntaxOn
 \str_case:VnF \semio@type {
+  { assignment } {
+    \providecommand { \semio@page@margin } { 2cm }
+    \RequirePackage[paper=a4paper,margin=2cm]{geometry}
+  }
   { flyer } {
     \providecommand { \semio@page@margin } { 1.2cm }
     \RequirePackage[paper=a4paper,landscape,margin=1.2cm]{geometry}
@@ -42,6 +58,7 @@
   \RequirePackage[paper=a4paper,margin=2.5cm,twoside,bindingoffset=8mm]{geometry}
 }
 \str_case:VnF \semio@type {
+  { assignment } { \LoadClass[twoside=false]{scrartcl} }
   { report } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
   { phd } { \LoadClass[twoside=true,open=right,cleardoublepage=empty]{scrreprt} }
   { paper } { \LoadClass[twoside=true,open=any]{scrartcl} }
@@ -85,6 +102,7 @@
 \RequirePackage{semio-window}
 \RequirePackage{semio-components}
 \RequirePackage{semio-phd}
+\RequirePackage{semio-assignment}
 \RequirePackage{semio-graph}
 \RequirePackage{semio-tree}
 \RequirePackage{semio-viz}

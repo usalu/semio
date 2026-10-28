@@ -19,6 +19,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -28,19 +31,17 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_chip = _manim_module.window_chip
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -75,7 +76,7 @@ ripples = _manim_module.ripples
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -87,10 +88,10 @@ TITLE_DE = "Was die Luft trägt"
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
-    Same size, colour, opacity and corner as ``_din_ref`` in the Heating and Cooling series: a dim ``P_TEAL``
+    Same size, colour, opacity and corner as ``_din_ref`` in the Heating and Cooling series: a dim ``P_PRIMARY``
     footnote that never competes with the diagram.
     """
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -116,7 +117,7 @@ Q_SENS_S = V_DOT * C_LUFT * (THETA_E_S - THETA_I_S)
 Q_LAT = RHO_AIR * R_LAT * D_X / 1000.0 * Q_V_R * 1000.0
 W_WINTER, W_SUMMER, W_LATENT = (round(v, -1) for v in (Q_SENS_W, Q_SENS_S, Q_LAT))
 
-AIR = "#60A5FA"
+AIR = semio_color("secondary")
 SENS = P_RED
 LATENT = P_CYAN
 HEIZUNG = P_ORANGE
@@ -249,9 +250,8 @@ def _season_chip(season: str):
 def _handover_chip(prefix: str, src: str, color: str):
     """🔗 Hand-over chip with a typeset quantity — names what the later video takes from this chapter."""
     parts = VGroup(body_text(prefix, font_size=LABEL_FONT_SIZE + 2, color=color),
-                   math_label(src, size=LABEL_FONT_SIZE + 2, color=color)).arrange(RIGHT, buff=0.12)
-    box = SurroundingRectangle(parts, color=color, corner_radius=0.1, buff=0.1, stroke_width=1.8)
-    return VGroup(box, parts)
+                   math_label(src, size=LABEL_FONT_SIZE + 2, color=color)).arrange(RIGHT, buff=_theme_module.UI_SPACING)
+    return window_chip(parts, color=color)
 #endregion
 #endregion
 
@@ -288,9 +288,7 @@ class Beat1_Luftwaerme(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Wärmekapazität der Luft", title)
+        subtitle = section_heading("Wärmekapazität der Luft")
         din = _din_ref("DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "cube"))
@@ -301,7 +299,7 @@ class Beat1_Luftwaerme(Scene):
         cube = _cube_faces(c_center, 1.0, P_BLUE, warm=False)
         cube_label = math_label(r"1\,\mathrm{m^{3}}", size=BODY_FONT_SIZE).move_to(cube[0].get_center() + UP * 0.15)
         self.play(FadeIn(cube, shift=UP * 0.3), FadeIn(cube_label), run_time=2.0)
-        hold_for(self, N, "cube", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 2.0)
+        hold_for(self, N, "cube", used=BEAT_SUBTITLE_FADE + 0.3 + 2.0)
         #endregion
 
         #region mass
@@ -320,7 +318,7 @@ class Beat1_Luftwaerme(Scene):
 
         #region coil and warming
         caption = swap_caption(self, caption, subtitle_text(N, "coil"))
-        coil = radiator([0, -0.84, 0], color=P_RED).scale(1.05)
+        coil = radiator([0, -0.84, 0], color=P_RED).stretch_to_fit_width(0.97).stretch_to_fit_height(0.60)
         coil_label = body_text("Heizelement", font_size=LABEL_FONT_SIZE, color=P_RED).next_to(coil, DOWN, buff=0.1)
         heat_spots = [np.array([x, coil.get_top()[1] + 0.03, 0]) for x in (-0.36, 0.0, 0.36)]
         rise = [smooth_path([np.array([s * x0, y0, 0]), np.array([s * (x0 - 0.08), 0.15, 0]), np.array([s * x0, y1, 0])])
@@ -457,9 +455,7 @@ class Beat2_SensibleWaerme(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Sensible Wärme", title)
+        subtitle = section_heading("Sensible Wärme")
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -591,7 +587,7 @@ class Beat3_LatenteLast(Scene):
          "Summer air carries more than heat: the humid outdoor air brings water vapour into the room.",
          "Sommerluft trägt mehr als Wärme: Die feuchte Außenluft bringt Wasserdampf in den Raum."),
         ("dx",
-         "At 32 degrees and 50 percent, outdoor air holds 15 grams of water per kilogram, the room at 26 degrees and 50 percent only 10.5 — delta x is 4.5 grams per kilogram.",
+         "Outdoor air at 32 °C and 50% holds 15 g/kg; the room at 26 °C and 50% holds 10.5 g/kg. Thus Δx = 4.5 g/kg.",
          "Bei 32 °C und 50 % enthält die Außenluft 15 g Wasser je kg, die Raumluft bei 26 °C und 50 % nur 10,5 g — Delta-x beträgt 4,5 g/kg."),
         ("formula",
          "The latent ventilation load is density times latent heat r times delta x times volume flow.",
@@ -601,7 +597,7 @@ class Beat3_LatenteLast(Scene):
          "Je Kubikmeter sind das 1,2 mal 4,5, also 5,4 Gramm Wasser, die kondensiert werden müssen."),
         ("r",
          "Changing phase involves energy: r is about 2450 kilojoules per kilogram — condensing releases it, and it must be removed again.",
-         "Der Phasenwechsel braucht Energie: r beträgt etwa 2450 Kilojoule je Kilogramm — beim Kondensieren wird sie frei und muss abgeführt werden."),
+         "Der Phasenwechsel benötigt r ≈ 2450 kJ/kg. Kondensation setzt diese Energie frei; sie muss abgeführt werden."),
         ("qv",
          "The air flow of 220 cubic metres per hour is 0.061 cubic metres per second.",
          "Der Luftstrom von 220 Kubikmetern pro Stunde sind 0,061 Kubikmeter pro Sekunde."),
@@ -614,9 +610,7 @@ class Beat3_LatenteLast(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Latente Last durch Feuchte", title)
+        subtitle = section_heading("Latente Last durch Feuchte")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -640,7 +634,7 @@ class Beat3_LatenteLast(Scene):
         col_h, y_b, cx_o, cx_i, bx = 2.1, -0.95, -0.2, 4.2, 1.55
 
         def column(cx):
-            return RoundedRectangle(corner_radius=0.1, width=0.9, height=col_h, color=P_WHITE, stroke_width=2).move_to(
+            return Rectangle(width=0.9, height=col_h, color=P_WHITE, stroke_width=_theme_module.CHROME_BORDER).move_to(
                 np.array([cx, y_b + col_h / 2, 0.0]))
 
         def level(g):
@@ -787,9 +781,7 @@ class Beat4_WinterUndSommer(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Dieselbe Formel, zwei Jahreszeiten", title)
+        subtitle = section_heading("Dieselbe Formel, zwei Jahreszeiten")
         din = _din_ref("DIN EN 12831-1 · VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))

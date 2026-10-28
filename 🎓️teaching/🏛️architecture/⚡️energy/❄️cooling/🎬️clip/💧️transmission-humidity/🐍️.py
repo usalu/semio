@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,19 +19,17 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_chip = _manim_module.window_chip
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -59,7 +60,7 @@ load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -76,11 +77,11 @@ def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
     Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
     that never competes with the diagram. The formula panel sits on the
     bottom edge, so this corner is clear in every beat.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -104,7 +105,7 @@ Q_LAT = RHO_AIR * R_LAT * D_X * Q_V_R
 W_OPAQUE, W_SENS, W_LAT = (round(v, -1) for v in (UA_OPAQUE * D_THETA_EQ, Q_SENS, Q_LAT))
 W_SENS_WRG = round(Q_SENS * (1.0 - ETA_WRG), -1)
 
-AIR = "#60A5FA"
+AIR = semio_color("secondary")
 SENS = P_RED
 LATENT = P_CYAN
 OPAQUE = P_YELLOW
@@ -116,7 +117,7 @@ OPAQUE = P_YELLOW
 def _build_house(center=ORIGIN, scale: float = 1.0):
     """🏠 The Physical Fundamentals section house, keyed for the opaque-envelope beats.
 
-    ``envelope`` holds the outer wall and roof lines that heat up; ``air`` tints the interior.
+    ``envelope`` is a separate wall and roof heat overlay; ``air`` tints the interior.
     """
     h = house_section(np.array(center, dtype=float) + UP * 0.05, scale)
     t = 0.1
@@ -126,9 +127,11 @@ def _build_house(center=ORIGIN, scale: float = 1.0):
         stroke_width=0, fill_color=P_RED, fill_opacity=0.0,
     )
     air.set_z_index(-1)
+    envelope = VGroup(h["walls"][0], h["wall_right"], h["roof"][0]).copy().set_fill(P_RED, opacity=0)
+    h["group"].add(envelope)
     return {
         "house": h["group"], "air": air, "windows": h["windows"],
-        "envelope": VGroup(*h["walls"][:4], h["roof"][0]), "roof": h["roof"][0],
+        "envelope": envelope, "material": h["material"], "roof": h["roof"][0],
         "bl": h["bottom_left"], "br": h["bottom_right"], "tl": h["top_left"], "tr": h["top_right"],
         "roof_peak": h["roof_peak"], "center": h["center"],
     }
@@ -189,9 +192,8 @@ def _back_chip(prefix: str, src: str | None = None):
     parts = [body_text(prefix, font_size=LABEL_FONT_SIZE + 1, color=AIR)]
     if src:
         parts.append(math_label(src, size=LABEL_FONT_SIZE + 1, color=AIR))
-    content = VGroup(*parts).arrange(RIGHT, buff=0.12)
-    box = SurroundingRectangle(content, color=AIR, corner_radius=0.1, buff=0.1, stroke_width=1.8)
-    return VGroup(box, content)
+    content = VGroup(*parts).arrange(RIGHT, buff=_theme_module.UI_SPACING)
+    return window_chip(content, color=AIR)
 #endregion
 
 #endregion
@@ -224,9 +226,7 @@ class Beat1_TransmissionOpaque(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_OPAQUE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Opake Bauteile unter Sommerstrahlung", title)
+        subtitle = section_heading("Opake Bauteile unter Sommerstrahlung")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -237,7 +237,7 @@ class Beat1_TransmissionOpaque(Scene):
         hc = LEFT * 0.35 + CONTENT_CENTER
         h = _build_house(hc)
         self.play(Create(h["house"]), run_time=1.5)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.5)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.5)
 
         sun_pos = RIGHT * 4.0 + UP * 1.4
         sun_group = _build_sun(sun_pos)
@@ -273,7 +273,7 @@ class Beat1_TransmissionOpaque(Scene):
         self.play(LaggedStart(*[Create(r, rate_func=linear) for r in rays], lag_ratio=0.15), run_time=1.5)
         self.play(
             opaque_borders.animate.set_color(P_RED),
-            h["envelope"].animate.set_color(P_RED),
+            h["envelope"].animate.set_fill(P_RED, opacity=0.35),
             h["air"].animate.set_fill(P_RED, opacity=0.12),
             *surface_heat(2.0),
             run_time=2.0,
@@ -346,107 +346,6 @@ class Beat1_TransmissionOpaque(Scene):
 #endregion
 
 
-#region Beat 2 – Thermal mass & time lag
-
-class Beat2_TimeLag(Scene):
-    NARRATION = [
-        ("intro",
-         "Because materials like concrete and brick have high thermal mass, they store this heat.",
-         "Beton und Ziegel speichern Wärme — sie haben eine hohe thermische Masse."),
-        ("clock",
-         "They soak it up during the day and slowly release it into the room hours later.",
-         "Tagsüber nehmen sie Wärme auf und geben sie erst Stunden später an den Raum ab."),
-        ("peak",
-         "So the thermal mass shifts the peak cooling load later — typically into the late afternoon, rarely as late as the evening.",
-         "Deshalb verschiebt die Speichermasse die Spitzenkühllast nach hinten — typisch in den späten Nachmittag, selten erst in den Abend."),
-    ]
-
-    def construct(self):
-        apply_scene_style(self)
-
-        title = scene_title(TITLE_OPAQUE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Phasenverschiebung (Time Lag)", title)
-        din = _din_ref("DIN EN ISO 13786")
-        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
-
-        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
-        self.play(FadeIn(caption), run_time=0.3)
-
-        hc = LEFT * 0.35 + CONTENT_CENTER
-        h = _build_house(hc)
-        h["envelope"].set_color(P_RED)
-
-        row, box, items = math_panel([
-            ("qt", r"\dot{Q}_{T}", P_WHITE), (None, "=", P_WHITE),
-            ("u", "U", P_ORANGE), (None, r"\cdot", P_WHITE),
-            ("a", "A", P_CYAN), (None, r"\cdot", P_WHITE),
-            ("dt", r"\Delta\theta_{eq}", P_BLUE),
-            (None, r"\;[\mathrm{W}]", P_WHITE),
-        ])
-
-        sun_pos = RIGHT * 4.0 + UP * 1.4
-        sun_group = _build_sun(sun_pos)
-        self.add(h["air"], h["house"], row, box, sun_group)
-        wall_spots = [h["tl"] + (h["bl"] - h["tl"]) * f + RIGHT * 0.12 for f in (0.3, 0.7)] + \
-                     [h["tr"] + (h["br"] - h["tr"]) * f + LEFT * 0.12 for f in (0.3, 0.7)]
-        wall_dirs = [0.0, 0.0, PI, PI]
-
-        def stored_heat(rt, r_max=0.35):
-            cyc = max(1.0, rt / 1.4)
-            return [ripples([c], r_max=r_max, rings=2, color=P_ORANGE, facing=f, cycles=cyc)
-                    for c, f in zip(wall_spots, wall_dirs)]
-
-        hold_for(self, self.NARRATION, "intro", during=stored_heat)
-
-        clock = clock_glyph(np.array([-4.6, 1.3, 0.0]), r=0.48, color=P_ORANGE)
-        clock_center = clock["center"]
-        clock_group = clock["group"]
-
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "clock"))
-        self.play(Create(clock_group), run_time=1.0)
-
-        dt_ring = highlight_param(items, "dt", color=P_ORANGE)
-        self.play(Create(dt_ring), run_time=0.5)
-
-        # Five hours on the dial: one hand turn per hour of time lag.
-        self.play(
-            Rotate(clock["hand"], angle=-TAU * 5, about_point=clock_center),
-            sun_group.animate.shift(DOWN * 2.0 + RIGHT * 1.1).set_opacity(0.35),
-            *stored_heat(3.0, r_max=0.45),
-            run_time=3.0,
-            rate_func=linear,
-        )
-        # 🕔 Five hours from noon lands at 17:00 — late afternoon, not evening.
-        peak_tag = VGroup(
-            Text("17 Uhr", font_size=BODY_FONT_SIZE, color=P_ORANGE),
-            Text("später Nachmittag", font_size=LABEL_FONT_SIZE, color=P_ORANGE),
-        ).arrange(DOWN, buff=0.06).next_to(clock_group, DOWN, buff=0.14)
-        late_tag = Text("21 Uhr Abend", font_size=LABEL_FONT_SIZE, color=P_TEAL)
-        late_tag.set_opacity(0.38).next_to(peak_tag, DOWN, buff=0.08)
-        self.play(FadeIn(peak_tag), FadeIn(late_tag), run_time=0.5)
-        hold_for(self, self.NARRATION, "clock", during=lambda rt: stored_heat(rt, r_max=0.5))
-
-        caption = swap_caption(self, caption, subtitle_text(self.NARRATION, "peak"))
-        self.play(
-            dt_ring.animate.set_stroke(width=4),
-            h["air"].animate.set_fill(opacity=0.25), *stored_heat(1.4, r_max=0.7),
-            run_time=1.4,
-        )
-        self.play(h["air"].animate.set_fill(opacity=0.4), *stored_heat(1.3, r_max=0.85), run_time=1.3)
-        self.play(
-            h["air"].animate.set_fill(opacity=0.5),
-            dt_ring.animate.set_stroke(width=5, color=P_RED), *stored_heat(1.3, r_max=0.95),
-            run_time=1.3,
-        )
-        hold_for(self, self.NARRATION, "peak", during=lambda rt: stored_heat(rt, r_max=0.95))
-
-        self.play(FadeOut(dt_ring), FadeOut(caption), run_time=0.4)
-        self.wait(0.5)
-
-#endregion
-
-
 #region Beat 3 – Lüftungslast im Sommer (bridge to the Lüftung video)
 
 class Beat3_LueftungslastImSommer(Scene):
@@ -458,10 +357,10 @@ class Beat3_LueftungslastImSommer(Scene):
 
     NARRATION = [
         ("intro",
-         "The opaque envelope delivers about 680 watts here: 68 watts per kelvin times 10 kelvin. In summer the air adds a second load, explained in the ventilation video.",
+         "Opaque envelope: 68 W/K × 10 K ≈ 680 W. Summer airflow adds another load, covered in the ventilation video.",
          "Die opake Hülle liefert hier rund 680 W (68 W/K mal 10 K).\nIm Sommer kommt die Luft als zweite Last hinzu."),
         ("sens",
-         "A short reminder from the ventilation video: 220 cubic metres per hour at 6 kelvin bring about 450 watts of sensible heat in through the reversed openings.",
+         "From ventilation: 220 m³/h at 6 K adds about 450 W of sensible heat through the now-reversed openings.",
          "Kurz zur Erinnerung aus dem Lüftungsvideo: 220 m³/h bei 6 K\nbringen rund 450 W sensible Wärme herein."),
         ("lat",
          "The moisture of the outdoor air adds about 810 watts of latent load.",
@@ -478,9 +377,7 @@ class Beat3_LueftungslastImSommer(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_LAST_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Die Luft als zweite Last", title)
+        subtitle = section_heading("Die Luft als zweite Last")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -549,13 +446,13 @@ class Beat3_LueftungslastImSommer(Scene):
         self.add(h["air"], bar)
         self.play(
             LaggedStart(*[Create(r, rate_func=linear) for r in rays], lag_ratio=0.2),
-            h["envelope"].animate.set_color(P_RED), h["air"].animate.set_fill(P_RED, opacity=0.12),
+            h["envelope"].animate.set_fill(P_RED, opacity=0.35), h["air"].animate.set_fill(P_RED, opacity=0.12),
             _ramp(t_op, 0.4 * W_OPAQUE, rate_func=rush_into), *roof_heat(2.2), run_time=2.2,
         )
         self.add(read_op)
         self.play(_ramp(t_op, W_OPAQUE, rate_func=rush_from), *roof_heat(1.0), run_time=1.0)
         self.play(FadeIn(sub_op), *roof_heat(0.4), run_time=0.4)
-        hold_for(self, N, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 2.2 + 1.0 + 0.4, during=roof_heat)
+        hold_for(self, N, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 2.2 + 1.0 + 0.4, during=roof_heat)
         #endregion
 
         #region sensible load — reminder from the Lüftung video

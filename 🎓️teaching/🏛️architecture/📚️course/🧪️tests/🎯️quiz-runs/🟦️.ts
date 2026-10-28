@@ -5,11 +5,12 @@
  * partial credit, strictly between nothing and everything, and no badge.
  * @see ../../🎭️e2e/🚶️learner/🟦️.ts — the learner these specs drive
  * @see ../../🔣️.json — the course and its badges */
-import { COURSE, PAR, openGrid, openQuizGrid, QUIZZES, answerRun, badgesFor, card, enter, expect, expectFeedback, expectNothingRevealed, goHome, handle, pane, playQuiz, primary, quizOf, screen, shownBest, shownItems, startClock, openTaskById, expectSaved, submitRun, test } from "../../🎭️e2e/🚶️learner/🟦️.ts";
+import { COURSE, PAR, authorPreview, openGrid, openQuizGrid, QUIZZES, answerRun, badgesFor, card, enter, expect, expectFeedback, expectNothingRevealed, goHome, handle, pane, playQuiz, primary, quizOf, screen, shownBest, shownItems, startClock, openTaskById, expectSaved, submitRun, test } from "../../🎭️e2e/🚶️learner/🟦️.ts";
 
 test("every quiz is playable to a perfect score, and the perfect runs earn every badge of the course", async ({ device }) => {
   const learner = await device("en");
   await enter(learner, { kind: "pseudonym", handle: handle("Perfect Player") });
+  await authorPreview(learner);
   const played: string[] = [];
   for (const quiz of QUIZZES) {
     await playQuiz(learner, quiz.id);
@@ -48,6 +49,7 @@ for (const id of ["physics", "demand"]) {
     const quiz = quizOf(id);
     const learner = await device("de");
     await enter(learner, { kind: "pseudonym", handle: handle("Partial Player") });
+    await authorPreview(learner);
     await playQuiz(learner, quiz.id);
     await answerRun(learner, quiz, "flawed");
     await expectNothingRevealed(learner, quiz);
@@ -74,6 +76,7 @@ for (const quiz of QUIZZES) {
   test(`balanced pools rotate ${quiz.id} and preserve individual answers`, async ({ device }) => {
     const learner = await device("en");
     await enter(learner, { kind: "pseudonym", handle: handle("Pool Player") });
+    await authorPreview(learner);
     const seen = new Map<string, Set<string>>();
     for (const challenge of ["easy", "medium", "hard", "expert"] as const) {
       await playQuiz(learner, quiz.id, challenge);
@@ -116,3 +119,32 @@ for (const quiz of QUIZZES) {
     }
   });
 }
+
+/** 🧑‍💻️ Real authored software previews remain keyboard reachable beside the authoritative answer controls. */
+for (const locale of ["en", "de"] as const) test(`software mockups render and grade in ${locale}`, async ({ device }) => {
+  const learner = await device(locale);
+  await enter(learner, { kind: "anonymous" });
+  await authorPreview(learner);
+  for (const [id, task, kind] of [["excel-workbook", "workbook-terminology", "excel"], ["grasshopper-data", "canvas-terminology", "grasshopper"]] as const) {
+    const quiz = quizOf(id);
+    await playQuiz(learner, id);
+    await openTaskById(learner, task);
+    const preview = screen(learner.page, "task").locator(`figure[data-mockup="${kind}"]`);
+    await expect(preview.first()).toBeVisible();
+    const region = preview.first().getByRole("region");
+    await region.focus();
+    await expect(region).toBeFocused();
+    await expect(region).toHaveAttribute("aria-labelledby", /.+/u);
+    if (kind === "excel") await expect(preview.first().getByRole("table")).toBeVisible();
+    else {
+      await expect(preview.first().locator(".course-graph-node").first()).toBeVisible();
+      await openTaskById(learner, "tree-operations");
+      await preview.first().locator("summary").click();
+      await expect(preview.first().locator(".course-graph-relations")).toContainText(locale === "en" ? "Connections" : "Verbindungen");
+    }
+    await answerRun(learner, quiz, "perfect");
+    await submitRun(learner);
+    expect((await expectFeedback(learner, quiz, "perfect")).score).toBe(100);
+    await goHome(learner);
+  }
+});

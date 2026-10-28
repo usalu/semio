@@ -402,6 +402,14 @@ export async function enter(device: Device, identity: Identity, atRest = false):
   await identify(device, identity, atRest);
 }
 
+/** 🗝️ Explicitly enables the author URL preview for content journeys while release-gating journeys keep ordinary URLs. */
+export async function authorPreview(device: Device): Promise<void> {
+  const url = new URL(device.page.url());
+  url.searchParams.set("preview", "1");
+  await device.page.goto(url.href);
+  await expect(activeOverview(device.page)).toBeVisible();
+}
+
 /** 🧑‍🎓️ The learner's name as the overview shows it. */
 export async function shownName(device: Device): Promise<string> {
   return (await card(device.page, "learner").getByRole("heading").innerText()).trim();

@@ -6,9 +6,15 @@
       "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📊️visualization-gallery/**/*"
     ],
     "testEnv": [
-      { "env": "SEMIO_TEST_LEVEL" },
-      { "env": "SEMIO_TEST_BUDGET_MS" },
-      { "env": "SEMIO_BUILD_BUDGET_MS" }
+      {
+        "env": "SEMIO_TEST_LEVEL"
+      },
+      {
+        "env": "SEMIO_TEST_BUDGET_MS"
+      },
+      {
+        "env": "SEMIO_BUILD_BUDGET_MS"
+      }
     ]
   },
   "$schema": "../../../🦑️repo/🔨️modules/📚️library/🏗️build/🧬️schema/📋️project/🔣️.json",
@@ -63,7 +69,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       }
     },
@@ -83,7 +93,9 @@
         "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
         "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts",
         "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
-        { "runtime": "repo tools exec --light bun -- --version" }
+        {
+          "runtime": "repo tools exec --light bun -- --version"
+        }
       ],
       "outputs": []
     },
@@ -95,7 +107,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "managed-output", "reason": "outputs-in-managed-store" }
+          "cache": {
+            "version": 1,
+            "class": "managed-output",
+            "reason": "outputs-in-managed-store"
+          }
         }
       },
       "cache": false,
@@ -122,7 +138,9 @@
       "inputs": [
         "production",
         "^production",
-        { "dependentTasksOutputFiles": "**/*" }
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ],
       "outputs": [],
       "options": {
@@ -132,7 +150,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       },
       "dependsOn": [
@@ -163,10 +185,14 @@
         "^default",
         "testEnv",
         "reads",
-        { "dependentTasksOutputFiles": "**/*" }
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ],
       "outputs": [],
-      "dependsOn": ["build"],
+      "dependsOn": [
+        "build"
+      ],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test"
@@ -220,7 +246,9 @@
       "inputs": [
         "production",
         "^production",
-        { "dependentTasksOutputFiles": "**/*" }
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ],
       "cache": false,
       "options": {
@@ -230,7 +258,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "aggregate", "reason": "orders-prerequisites" }
+          "cache": {
+            "version": 1,
+            "class": "aggregate",
+            "reason": "orders-prerequisites"
+          }
         }
       },
       "dependsOn": [
@@ -302,7 +334,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -341,7 +377,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-host-store" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-host-store"
+          }
         }
       }
     },
@@ -421,7 +461,9 @@
         "^default",
         "testEnv",
         "reads",
-        { "dependentTasksOutputFiles": "**/*" }
+        {
+          "dependentTasksOutputFiles": "**/*"
+        }
       ],
       "outputs": [],
       "cache": true,
@@ -450,7 +492,11 @@
       },
       "metadata": {
         "semio": {
-          "cache": { "version": 1, "class": "side-effecting", "reason": "mutates-workspace" }
+          "cache": {
+            "version": 1,
+            "class": "side-effecting",
+            "reason": "mutates-workspace"
+          }
         }
       },
       "cache": false
@@ -470,6 +516,20 @@
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "repo ./📜️script.ts test measurement",
         "forwardAllArgs": false
+      }
+    },
+    "test-assignment": {
+      "executor": "repo:script",
+      "cache": true,
+      "inputs": [
+        "default",
+        "^default",
+        "reads"
+      ],
+      "outputs": [],
+      "options": {
+        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
+        "command": "repo ./📜️script.ts test assignment"
       }
     }
   },

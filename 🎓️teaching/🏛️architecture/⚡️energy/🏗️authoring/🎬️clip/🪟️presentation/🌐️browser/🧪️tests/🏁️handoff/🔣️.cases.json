@@ -1,0 +1,169 @@
+{
+  "schema": "semio-presentation-handoff-cases/v1",
+  "viewport": {
+    "width": 32,
+    "height": 18
+  },
+  "cursor": {
+    "point": [
+      1572,
+      840
+    ],
+    "kind": "arrow",
+    "pressed": false
+  },
+  "hierarchy": {
+    "opened_path": [],
+    "revealed_path": [],
+    "camera": {
+      "x": 0.9825,
+      "y": 0.9629629629629629
+    }
+  },
+  "eligibility": [
+    {
+      "id": "explicit-courses",
+      "change": {},
+      "eligible": true
+    },
+    {
+      "id": "implicit-overview",
+      "change": {
+        "canonical_overview": false
+      },
+      "eligible": false
+    },
+    {
+      "id": "open-menu",
+      "change": {
+        "menu_open": true
+      },
+      "eligible": false
+    },
+    {
+      "id": "source-media",
+      "change": {
+        "media": [
+          {
+            "id": "PhysicalFundamentals_FullSection",
+            "body_image": "owned.png"
+          }
+        ]
+      },
+      "eligible": false
+    },
+    {
+      "id": "pressed",
+      "change": {
+        "cursor": {
+          "pressed": true
+        }
+      },
+      "eligible": false
+    },
+    {
+      "id": "course-topics",
+      "change": {
+        "hierarchy": {
+          "opened_path": [
+            "architecture"
+          ]
+        }
+      },
+      "eligible": true
+    },
+    {
+      "id": "topic-clips",
+      "change": {
+        "hierarchy": {
+          "opened_path": [
+            "architecture",
+            "energy"
+          ]
+        }
+      },
+      "eligible": true
+    },
+    {
+      "id": "clip-chapters",
+      "change": {
+        "hierarchy": {
+          "opened_path": [
+            "architecture",
+            "energy",
+            "ventilation"
+          ]
+        }
+      },
+      "eligible": true
+    },
+    {
+      "id": "opened-chapter",
+      "change": {
+        "hierarchy": {
+          "opened_path": [
+            "architecture",
+            "energy",
+            "ventilation",
+            "Ventilation_01_WarumLueften"
+          ]
+        }
+      },
+      "eligible": false
+    },
+    {
+      "id": "revealed-course",
+      "change": {
+        "hierarchy": {
+          "revealed_path": [
+            "architecture"
+          ]
+        }
+      },
+      "eligible": false
+    },
+    {
+      "id": "revealed-chapter",
+      "change": {
+        "hierarchy": {
+          "opened_path": [
+            "architecture",
+            "energy",
+            "ventilation"
+          ],
+          "revealed_path": [
+            "architecture",
+            "energy",
+            "ventilation",
+            "Ventilation_01_WarumLueften"
+          ]
+        }
+      },
+      "eligible": false
+    }
+  ],
+  "identityVariants": [
+    "catalog",
+    "language",
+    "viewport",
+    "ui-code",
+    "ui-membership",
+    "camera",
+    "cursor"
+  ],
+  "prefixes": [
+    [],
+    [
+      "architecture"
+    ],
+    [
+      "architecture",
+      "energy"
+    ],
+    [
+      "architecture",
+      "energy",
+      "ventilation"
+    ]
+  ]
+}

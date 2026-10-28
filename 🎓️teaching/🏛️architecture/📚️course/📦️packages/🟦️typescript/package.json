@@ -30,7 +30,10 @@
     "vite": "^7.3.1",
     "vitest": "^4.0.17",
     "yaml": "2.9.0",
-    "@semio-tech/process": "workspace:*"
+    "@semio-tech/process": "workspace:*",
+    "@semio-tech/print": "workspace:*",
+    "d3-array": "3.2.4",
+    "mathjs": "14.0.0"
   },
   "license": "AGPL-3.0-or-later",
   "repository": {

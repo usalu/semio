@@ -16,19 +16,16 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 SUBTITLE_FONT_SIZE = _manim_module.SUBTITLE_FONT_SIZE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -59,7 +56,7 @@ load_vo_timing = _manim_module.load_vo_timing
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -78,11 +75,11 @@ def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
     Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
     that never competes with the diagram. The formula panel sits on the
     bottom edge, so this corner is clear in every beat.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -123,8 +120,8 @@ def _internal_gains(house):
     floor_y = bl[1]
     mid_y = house["level_1"].get_center()[1]
 
-    person = person_glyph(ORIGIN, scale=1.1)
-    person.move_to(np.array([-0.75, floor_y + 0.02 + person.height / 2, 0.0]))
+    person = person_glyph(ORIGIN).set(height=0.7 * house["w_height"] / 2)
+    person.move_to(np.array([-0.75, floor_y + person.height / 2, 0.0]))
 
     counter = Rectangle(width=0.8, height=0.34, color=P_WHITE, stroke_width=1.5)
     counter.move_to(np.array([1.1, floor_y + 0.17, 0.0]))
@@ -139,10 +136,8 @@ def _internal_gains(house):
         Line(np.array([0.3, desk_y, 0.0]), np.array([0.3, mid_y, 0.0]), color=P_WHITE, stroke_width=1.5),
         Line(np.array([1.0, desk_y, 0.0]), np.array([1.0, mid_y, 0.0]), color=P_WHITE, stroke_width=1.5),
     )
-    laptop = VGroup(
-        Line(np.array([0.45, desk_y + 0.02, 0.0]), np.array([0.75, desk_y + 0.02, 0.0]), color=P_CYAN, stroke_width=1.8),
-        Line(np.array([0.75, desk_y + 0.02, 0.0]), np.array([0.69, desk_y + 0.26, 0.0]), color=P_CYAN, stroke_width=1.8),
-    )
+    laptop = VGroup(_manim_module.object_silhouette("laptop", color=P_CYAN, width=0.34))
+    laptop.move_to([0.6, desk_y + 0.02 + laptop.height / 2, 0])
     device = VGroup(desk, laptop)
 
     lamp_low = lamp_glyph(np.array([0.15, mid_y, 0.0]), drop=0.18)
@@ -151,7 +146,7 @@ def _internal_gains(house):
         (roof_x - house["top_left"][0]) / (house["roof_peak"][0] - house["top_left"][0]))
     lamp_up = lamp_glyph(np.array([roof_x, roof_y, 0.0]), drop=0.5)
 
-    warm = [person.get_center() + UP * 0.12, laptop[1].get_center(), pot.get_top()]
+    warm = [person.get_center() + UP * 0.12, laptop.get_center(), pot.get_top()]
     bulbs = [lamp_low["bulb"].get_center(), lamp_up["bulb"].get_center()]
     return {
         "person": person, "device": device, "kitchen": kitchen, "lamps": VGroup(lamp_low["group"], lamp_up["group"]),
@@ -222,10 +217,10 @@ def _build_ahu(house: dict):
         Text("Fortluft", font_size=LABEL_FONT_SIZE, color=P_ORANGE).next_to(
             np.array([extract_pts[-1][0], extract_pts[-1][1], 0.0]), LEFT, buff=0.2),
     )
-    unit_label = Text("Lüftungsgerät\nmit Kühlregister", font_size=LABEL_FONT_SIZE, color=P_TEAL, line_spacing=0.8)
+    unit_label = Text("Lüftungsgerät\nmit Kühlregister", font_size=LABEL_FONT_SIZE, color=P_PRIMARY, line_spacing=0.8)
     unit_label.move_to(np.array([-5.3, unit.get_top()[1] + 0.35, 0.0]))
     unit_leader = Line(unit_label.get_right() + RIGHT * 0.1, unit.get_corner(UL) + DOWN * 0.12,
-                       color=P_TEAL, stroke_width=1.4, stroke_opacity=0.7)
+                       color=P_PRIMARY, stroke_width=1.4, stroke_opacity=0.7)
     return {
         "unit": VGroup(unit, fan_ring, fan_blades, coil), "fan_blades": fan_blades, "fan_center": fan_center,
         "supply_paths": supply_paths, "extract_paths": extract_paths,
@@ -256,9 +251,7 @@ class Beat1_WinterGains(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Im Winter: Erwünschte kostenlose Wärme", title)
+        subtitle = section_heading("Im Winter: Erwünschte kostenlose Wärme")
         din = _din_ref("DIN V 18599-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -267,7 +260,7 @@ class Beat1_WinterGains(Scene):
         house = _house()
         self.add(house["air"])
         self.play(FadeIn(house["group"]), run_time=1.4)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4)
+        hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.4)
 
         solar = _solar(house)
         solar_label = Text("Solare Gewinne", font_size=BODY_FONT_SIZE, color=P_YELLOW)
@@ -326,9 +319,7 @@ class Beat2_SummerOverheat(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Im Sommer: Überhitzung hinter Glas", title)
+        subtitle = section_heading("Im Sommer: Überhitzung hinter Glas")
         din = _din_ref("DIN 4108-2")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -398,9 +389,7 @@ class Beat3_CoolingSystem(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Kühllast als abzuführende Leistung", title)
+        subtitle = section_heading("Die Kühllast als abzuführende Leistung")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 

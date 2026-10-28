@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,19 +19,17 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -51,19 +52,19 @@ ripples = _manim_module.ripples
 droplets = _manim_module.droplets
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 TITLE_DE = "Von der Nutzenergie zur Endenergie"
 
-NUTZ_BLUE = "#38BDF8"
-UEBER_RED = "#EF4444"
-VERT_ORANGE = "#FB923C"
-SPEI_YELLOW = "#FACC15"
-ERZ_AMBER = "#F59E0B"
-END_RED = "#DC2626"
-AMBIENT_GREEN = "#22C55E"
+NUTZ_BLUE = semio_color("secondary")
+UEBER_RED = semio_color("primary")
+VERT_ORANGE = semio_color("tertiary")
+SPEI_YELLOW = semio_color("warning")
+ERZ_AMBER = semio_color("tertiary")
+END_RED = semio_color("danger")
+AMBIENT_GREEN = semio_color("success")
 
 # The one worked example the rest of the series keeps quoting: 100 kWh/(m²·a)
 # of useful heat, delivered once by a gas boiler and once by a heat pump. Every
@@ -112,7 +113,7 @@ LEVELS = tuple(Q_NUTZ + sum(LOSS[:k]) for k in range(5))  # 100, 104, 112, 119, 
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -295,12 +296,10 @@ def _stand(room, x: float, color=P_ORANGE):
 
 
 def _flame(center, color=P_ORANGE):
-    """🔥 Single burner flame."""
-    c = np.array(center, dtype=float)
-    pts = [(0.0, -0.20), (0.12, -0.07), (0.08, 0.09), (0.0, 0.26), (-0.08, 0.10), (-0.12, -0.06), (0.0, -0.20)]
-    flame = VMobject(color=color, stroke_width=1.5)
-    flame.set_points_smoothly([c + np.array([x, y, 0.0]) for x, y in pts])
-    return flame.set_fill(color, opacity=0.85)
+    """🔥 A filled, forked burner tongue from the shared ink profile."""
+    profile = _manim_module.object_silhouette("flame", color=color, width=0.24)
+    profile.stretch_to_fit_height(0.46)
+    return profile.move_to(np.array(center, dtype=float) + UP * 0.03)
 
 
 def _boiler(center, color=ERZ_AMBER, w: float = 0.80, h: float = 1.0):
@@ -493,21 +492,21 @@ def _plant(*, with_person: bool = True):
     exactly one stage's loss at each node walking upstream.
     """
     room = room_section(ROOM_C, w=ROOM_W, h=ROOM_H)
-    style = dict(color=P_WHITE, stroke_width=2, fill_color=P_WHITE, fill_opacity=0.14)
     under_slab = room["y_f"] - room["slab"]
     cellar_h = under_slab - GROUND_Y
-    cellar_walls = VGroup(*[Rectangle(width=0.2, height=cellar_h, **style).move_to(
+    cellar_walls = VGroup(*[section_material(Rectangle(width=0.2, height=cellar_h)).move_to(
         np.array([x, under_slab - cellar_h / 2, 0.0])) for x in (room["x_l"] - 0.1, room["x_r"] + 0.1)])
     cellar_air = Rectangle(width=ROOM_W, height=cellar_h, stroke_width=0, fill_color=P_BLUE, fill_opacity=0.05).move_to(
         np.array([ROOM_C[0], under_slab - cellar_h / 2, 0.0]))
-    ground = Line(np.array([room["x_l"] - 0.5, GROUND_Y, 0.0]), np.array([1.3, GROUND_Y, 0.0]), color=P_TEAL,
+    ground = Line(np.array([room["x_l"] - 0.5, GROUND_Y, 0.0]), np.array([1.3, GROUND_Y, 0.0]), color=P_PRIMARY,
                   stroke_width=2.2)
     hatches = VGroup(*[Line(ground.point_from_proportion(u), ground.point_from_proportion(u) + np.array([-0.07, -0.1, 0.0]),
-                            color=P_TEAL, stroke_width=1.1) for u in np.linspace(0.03, 0.97, 24)])
+                            color=P_PRIMARY, stroke_width=1.1) for u in np.linspace(0.03, 0.97, 24)])
     shell = VGroup(room["group"], cellar_air, cellar_walls, ground, hatches)
 
-    rad_c = np.array([RAD_X, room["y_f"] + 0.285, 0.0])
-    rad = radiator(rad_c, color=UEBER_RED)
+    metre = room["h"] / 2.5
+    rad_c = np.array([RAD_X, room["y_f"] + (0.12 + 0.65 / 2) * metre, 0.0])
+    rad = radiator(rad_c, color=UEBER_RED, height=0.65 * metre, width=1.3 * metre)
     person = _stand(room, PERSON_X) if with_person else None
     tank = _tank(np.array([TANK_X, PIPE_Y - 0.14, 0.0]))
     boiler = _boiler(np.array([BOILER_X, PIPE_Y - 0.14, 0.0]))
@@ -521,11 +520,11 @@ def _plant(*, with_person: bool = True):
               "z4e": LOSS[3], "z4w": WP_STROM, "flue": LOSS[3], "env": WP_UMWELT}
     half = 0.5 * Q_NUTZ * FLOW_UNIT
     cols = (NUTZ_BLUE, UEBER_RED, VERT_ORANGE, SPEI_YELLOW, ERZ_AMBER)
-    rad_out = rad_c + RIGHT * 0.50
+    rad_out = rad.get_right()
     z0 = _Stream([rad_out, np.array([-4.2, rad_out[1], 0.0]), np.array([-3.1, rad_out[1], 0.0])],
                  [(v["z0n"], cols[0], False)], start=-half, cap=Q_NUTZ, seed=1)
     z2 = _Stream([np.array([TANK_X - 0.40, PIPE_Y, 0.0]), np.array([RAD_X, PIPE_Y, 0.0]),
-                  np.array([RAD_X, room["y_f"] + 0.07, 0.0])],
+                  rad.get_bottom()],
                  [(v["z2n"], cols[0], False), (v["z2u"], cols[1], False), (v["z2v"], cols[2], True)],
                  start=-half, cap=LEVELS[2], seed=2)
     z3 = _Stream([np.array([BOILER_X - 0.40, PIPE_Y, 0.0]), np.array([TANK_X + 0.40, PIPE_Y, 0.0])],
@@ -573,161 +572,6 @@ def _grow(plant, names, run_time: float = 1.4, rate=smooth):
 #endregion
 
 
-#region Beat 1 – Die Verlustkette vom Raum zum Zähler
-
-class Beat1_Verlustkette(Scene):
-    NARRATION = [
-        ("intro",
-         "So far every kilowatt-hour has been heat inside the room.",
-         "Bisher war jede Kilowattstunde Wärme im Raum."),
-        ("verkauf",
-         "Nobody sells that — it has to be produced.",
-         "Die verkauft niemand — sie muss erst erzeugt werden."),
-        ("nutz",
-         "Start from the demand we calculated: a hundred kilowatt-hours per square metre and year of useful heat.",
-         "Wir starten beim berechneten Bedarf: hundert Kilowattstunden je Quadratmeter und Jahr Nutzenergie."),
-        ("stufen",
-         "Between that room and the gas meter sit four stages, each needing extra energy.",
-         "Zwischen Raum und Gaszähler liegen vier Stufen, jede braucht zusätzliche Energie."),
-        ("uebergabe",
-         "Emission: the radiator hands heat to the room and needs slightly more energy than it delivers.",
-         "Übergabe: Der Heizkörper gibt Wärme an den Raum ab und braucht dafür etwas mehr Energie, als er liefert."),
-        ("verteilung",
-         "Distribution: pipes lose heat on the way — where that happens decides how it is counted.",
-         "Verteilung: Die Rohre verlieren unterwegs Wärme — wo das geschieht, entscheidet, wie sie zählt."),
-        ("speicherung",
-         "Storage: the tank keeps heat ready and loses some of it while it waits.",
-         "Speicherung: Der Speicher hält Wärme bereit und verliert dabei einen Teil davon."),
-        ("erzeugung",
-         "Generation: the boiler loses the most — heat leaves through the flue.",
-         "Erzeugung: Der Kessel verliert am meisten — Wärme entweicht durch den Schornstein."),
-        ("ende",
-         "The energy billed at the building boundary is counted as final energy.",
-         "Die am Gebäude bezogene Energie wird als Endenergie bilanziert."),
-        ("mehr",
-         "Here that is roughly forty percent more than the room ever received.",
-         "Hier sind das rund vierzig Prozent mehr, als der Raum je bekommen hat."),
-    ]
-
-    def construct(self):
-        apply_scene_style(self)
-
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Die Verlustkette vom Raum zum Zähler", title)
-        din = _din_ref("DIN V 18599-5:2018-09")
-        self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
-
-        caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
-        revision_note = note_line(
-            "Seit 2025 als DIN/TS 18599-5:2025-10 fortgeschrieben — GEG nutzt weiterhin 2018",
-            color=P_TEAL,
-        )
-        self.play(FadeIn(caption), FadeIn(revision_note), run_time=0.3)
-
-        P = _plant()
-        room, v = P["room"], P["v"]
-        active: list = []
-
-        def live(rt, *heat):
-            return [_flow(active, rt), *[P["heat"](n, rt) for n in heat]]
-
-        def step(caption, key, *heat):
-            return _swap(self, caption, subtitle_text(self.NARRATION, key), lambda rt: live(rt, *heat))
-
-        q_h = _readout(lambda: rf"Q_{{h}}={de_num(v['z0n'].get_value())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
-                           np.array([ROOM_C[0], 1.42, 0.0]), size=BODY_FONT_SIZE, color=NUTZ_BLUE, edge="center")
-        q_e = _readout(lambda: rf"Q_{{E}}={de_num(P['z4'].total())}\,\mathrm{{kWh/(m^{{2}}\cdot a)}}",
-                           np.array([0.78, -1.10, 0.0]), size=BODY_FONT_SIZE, color=END_RED, edge="left")
-        gas_tag = body_text("Gaszähler", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(
-            np.array([METER_X + 0.36, -0.13, 0.0]))
-
-        self.play(Create(P["shell"]), run_time=1.4)
-        self.play(FadeIn(P["radiator"]), FadeIn(P["person"]),
-                  room["air"].animate.set_fill(P_ORANGE, opacity=0.10), *live(1.0, "rad", "person"), run_time=1.0)
-        hold_for(self, self.NARRATION, "intro", used=TITLE_RUN_TIME + BEAT_SUBTITLE_FADE + 0.3 + 1.4 + 1.0,
-                 during=lambda rt: live(rt, "rad", "person"))
-
-        caption = step(caption, "verkauf", "rad", "person")
-        self.play(FadeIn(P["boiler"]), FadeIn(P["chimney"]), *live(1.6, "rad", "person"), run_time=1.6)
-        hold_for(self, self.NARRATION, "verkauf", during=lambda rt: live(rt, "rad", "person"))
-
-        caption = step(caption, "nutz", "rad", "person")
-        self.add(P["z0"].ribbons, q_h)
-        active[:] = [P["z0"]]
-        self.play(FadeOut(revision_note), *_grow(P, ["z0n"], 2.0), *live(2.0, "rad", "person"), run_time=2.0)
-        hold_for(self, self.NARRATION, "nutz", during=lambda rt: live(rt, "rad", "person"))
-
-        bar_x, bar_base, unit = 4.9, -1.2, 0.0165
-        bar = stacked_bar([("Nutzenergie", Q_NUTZ, NUTZ_BLUE)] + [(n, val, c) for n, val, c in STAGES],
-                          base=np.array([bar_x, bar_base, 0.0]), width=1.0, unit=unit)
-        legend = VGroup()
-        leaders = VGroup()
-        rows = {0: -0.35, 1: 0.35, 2: 0.78, 3: 1.21, 4: 1.64}
-
-        def legend_row(k, text, colour):
-            label = body_text(text, font_size=LABEL_FONT_SIZE - 2, color=colour)
-            label.move_to(np.array([bar_x - 0.78, rows[k], 0.0]), aligned_edge=RIGHT)
-            leader = Line(label.get_right() + RIGHT * 0.08, np.array([bar_x - 0.5, bar["anchors"][k][1], 0.0]),
-                          color=colour, stroke_width=1.4, stroke_opacity=0.6)
-            legend.add(label)
-            leaders.add(leader)
-            return label, leader
-
-        caption = step(caption, "stufen")
-        active[:] = []
-        label, leader = legend_row(0, f"Nutzenergie  {round(Q_NUTZ)} kWh", NUTZ_BLUE)
-        self.play(FadeIn(P["meter"]), FadeIn(gas_tag), GrowFromEdge(bar["bars"][0], DOWN), FadeIn(label),
-                  Create(leader), run_time=1.6)
-        hold_for(self, self.NARRATION, "stufen")
-
-        def stage(caption, key, k, name, colour, hit, grow, heat_names, streams, ribbons=(), extra=(), still_of=None,
-                  run=2.0):
-            caption = step(caption, key)
-            self.add(*ribbons)
-            active[:] = streams
-            label, leader = legend_row(k + 1, f"{name}  + {round(LOSS[k])} kWh", colour)
-            self.play(Circumscribe(hit, color=colour, buff=0.1, stroke_width=3, fade_out=True), *grow, *extra,
-                      *live(run, *heat_names), run_time=run)
-            source = _still(still_of)
-            self.add(source)
-            self.play(ReplacementTransform(source, bar["bars"][k + 1]), FadeIn(label), Create(leader),
-                      *live(1.4, *heat_names), run_time=1.4)
-            hold_for(self, self.NARRATION, key, during=lambda rt: live(rt, *heat_names))
-            return caption
-
-        caption = stage(caption, "uebergabe", 0, "Übergabe", UEBER_RED, P["radiator"], _grow(P, ["z2n", "z2u"]),
-                        ("rad", "ue"), [P["z2"]], [P["z2"].ribbons], still_of=P["z2"].ribbons[1])
-        caption = stage(caption, "verteilung", 1, "Verteilung", VERT_ORANGE, P["z2"].ribbons, _grow(P, ["z2v"]),
-                        ("ve",), [P["z2"]], still_of=P["z2"].ribbons[2])
-        caption = stage(caption, "speicherung", 2, "Speicherung", SPEI_YELLOW, P["tank"]["group"],
-                        [FadeIn(P["tank"]["group"]), *_grow(P, ["z3n", "z3u", "z3v", "z3s"])], ("sp",), [P["z3"]],
-                        [P["z3"].ribbons, P["tank"]["fill"]], still_of=P["z3"].ribbons[3])
-        caption = stage(caption, "erzeugung", 3, "Erzeugung", ERZ_AMBER, P["boiler"],
-                        _grow(P, ["z4n", "z4u", "z4v", "z4s", "z4e", "flue"]), (), [P["z4"], P["flue"]],
-                        [P["z4"].ribbons, P["flue"].ribbons], still_of=P["flue"].ribbons[0])
-
-        caption = step(caption, "ende")
-        active[:] = [P["z0"], P["z2"], P["z3"], P["z4"], P["flue"]]
-        self.add(q_e)
-        self.play(Indicate(P["meter"], color=END_RED), *live(2.0), run_time=2.0)
-        hold_for(self, self.NARRATION, "ende", during=lambda rt: live(rt))
-
-        caption = step(caption, "mehr")
-        top_n = bar["base"] + UP * Q_NUTZ * unit
-        extra_arrow = dim_arrow(top_n + RIGHT * 0.75, bar["top"] + RIGHT * 0.75, color=END_RED)
-        extra_label = math_label(rf"\approx +{de_num((Q_E_GAS / Q_NUTZ - 1) * 100)}\,\%",
-                                 np.array([bar_x + 0.95, (top_n[1] + bar["top"][1]) / 2, 0.0]),
-                                 size=BODY_FONT_SIZE, color=END_RED, edge="left")
-        self.play(Create(extra_arrow), FadeIn(extra_label), *live(1.6), run_time=1.6)
-        hold_for(self, self.NARRATION, "mehr", during=lambda rt: live(rt))
-
-        self.play(FadeOut(caption), run_time=0.6)
-        self.wait(0.4)
-
-#endregion
-
-
 #region Beat 2 – Übergabe, Verteilung, Speicherung
 
 class Beat2_UebergabeVerteilungSpeicherung(Scene):
@@ -764,9 +608,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Übergabe, Verteilung, Speicherung", title)
+        subtitle = section_heading("Übergabe, Verteilung, Speicherung")
         din = _din_ref("DIN V 18599-5:2018-09 · -6")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -785,9 +627,9 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
             return _swap(self, caption, subtitle_text(self.NARRATION, key), lambda rt: live(rt, *heat))
 
         envelope = DashedVMobject(
-            Rectangle(width=ROOM_W + 0.64, height=ROOM_H + 0.26 + 0.12 + 0.26, color=P_TEAL, stroke_width=2.4).move_to(
+            Rectangle(width=ROOM_W + 0.64, height=ROOM_H + 0.26 + 0.12 + 0.26, color=P_PRIMARY, stroke_width=2.4).move_to(
                 np.array([ROOM_C[0], P["under_slab"] + (ROOM_H + 0.64) / 2, 0.0])), num_dashes=70)
-        shell_tag = body_text("beheizte Hülle", font_size=LABEL_FONT_SIZE - 3, color=P_TEAL).move_to(
+        shell_tag = body_text("beheizte Hülle", font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY).move_to(
             np.array([0.45, 1.80, 0.0]), aligned_edge=LEFT)
         cellar_tag = body_text("unbeheizter Keller", font_size=LABEL_FONT_SIZE - 3, color=P_WHITE).move_to(
             np.array([ROOM_C[0], GROUND_Y - 0.30, 0.0]))
@@ -871,7 +713,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         hold_for(self, self.NARRATION, "woche", during=lambda rt: live(rt, "sp"))
 
         caption = step(caption, "kennzahl", "sp")
-        keep = (title, subtitle, din, caption)
+        keep = (subtitle, din, caption)
         self.play(*[FadeOut(m) for m in list(self.mobjects) if all(m is not k for k in keep)], run_time=1.2)
         active[:] = []
         final = {k: _stage_row(name, sym, colour, y, loss, out, x0=-3.2, tick_label=True)
@@ -884,7 +726,7 @@ class Beat2_UebergabeVerteilungSpeicherung(Scene):
         hold_for(self, self.NARRATION, "kennzahl")
 
         caption = step(caption, "einheit")
-        gt_note = note_line("alle Aufwandszahlen > 1", color=P_TEAL)
+        gt_note = note_line("alle Aufwandszahlen > 1", color=P_PRIMARY)
         eq, eq_box, items = math_panel([
             ("eu", r"e_{ü}\approx 1{,}04", UEBER_RED), (None, r"\cdot", P_WHITE),
             ("ed", r"e_{d}\approx 1{,}08", VERT_ORANGE), (None, r"\cdot", P_WHITE),
@@ -951,9 +793,7 @@ class Beat3_Erzeugung(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Erzeugung: Wirkungsgrad oder Arbeitszahl", title)
+        subtitle = section_heading("Erzeugung: Wirkungsgrad oder Arbeitszahl")
         din = _din_ref("DIN V 18599-5 · VDI 4650-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1176,9 +1016,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Die Anlagenaufwandszahl e_p", title)
+        subtitle = section_heading("Die Anlagenaufwandszahl e_p")
         din = _din_ref("DIN V 18599-5:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1239,7 +1077,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3 + 1.2 + 0.8 + 2.4, during=live)
 
         caption = step(caption, "faktoren", live)
-        keep = (title, subtitle, din, caption)
+        keep = (subtitle, din, caption)
         self.play(*[FadeOut(m) for m in list(self.mobjects) if all(m is not k for k in keep)], run_time=1.2)
         active[:] = []
         for k in keys:
@@ -1249,7 +1087,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
 
         caption = step(caption, "produkt")
         schematic_note = note_line("Schematische Darstellung — DIN/TS 18599-5 rechnet deutlich detaillierter",
-                                   color=P_TEAL)
+                                   color=P_PRIMARY)
         self.play(FadeIn(product["group"]), FadeIn(schematic_note), lift.animate(run_time=1.4).set_value(1.0),
                   run_time=1.4)
         self.add(product["readout"])
@@ -1371,7 +1209,7 @@ class Beat4_Anlagenaufwandszahl(Scene):
         hold_for(self, self.NARRATION, "brueck")
 
         caption = step(caption, "weiter")
-        bridge_note = note_line("1 kWh Strom ≠ 1 kWh Gas", color=P_TEAL)
+        bridge_note = note_line("1 kWh Strom ≠ 1 kWh Gas", color=P_PRIMARY)
         self.play(FadeIn(bridge_note), run_time=1.0)
         hold_for(self, self.NARRATION, "weiter")
 

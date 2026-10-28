@@ -24,6 +24,7 @@
 
 import { useId, type ReactElement } from "react";
 import type { CompareHint, Hint, MatchingAnswer, SheetDimension, SheetMatchingTask, SheetItem, Slug } from "@semio-tech/course";
+import { ItemMockup } from "../🖥️mockup/🟦️.tsx";
 import { localized } from "../🌐️i18n/🟦️.ts";
 import { formatQuantity } from "../📏️quantity/🟦️.ts";
 import { DragGrip, GuessField, HintNote, ICON_BUTTON_CLASS, LockedNote, SELECT_ANNOUNCEMENT_DELAY_MS, SELECT_CLASS, compareText, describedBy, elementId, hintName, useHintAnnouncement, type TaskViewProps } from "../🧩️task/🟦️.tsx";
@@ -123,7 +124,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                       <span className="course-value-state text-xs text-muted-foreground" title={state}>
                         {state}
                       </span>
-                    </li>
+                  </li>
                   );
                 })}
               </ul>
@@ -184,6 +185,7 @@ export function MatchingTaskView(props: TaskViewProps<SheetMatchingTask, Matchin
                         </button>
                       </>
                     )}
+                    <ItemMockup item={item} locale={locale} />
                   </li>
                 );
               })}

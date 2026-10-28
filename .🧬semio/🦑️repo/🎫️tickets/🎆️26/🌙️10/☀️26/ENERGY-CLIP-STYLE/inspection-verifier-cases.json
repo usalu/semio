@@ -1,0 +1,54 @@
+{
+  "publication": [
+    {
+      "name": "missing",
+      "marker": null,
+      "future": false,
+      "pass": false
+    },
+    {
+      "name": "incomplete-count",
+      "marker": {
+        "state": "complete",
+        "videos": 16,
+        "sources": 117,
+        "chapters": 38
+      },
+      "future": false,
+      "pass": false
+    },
+    {
+      "name": "incomplete-state",
+      "marker": {
+        "state": "running",
+        "videos": 17,
+        "sources": 117,
+        "chapters": 38
+      },
+      "future": false,
+      "pass": false
+    },
+    {
+      "name": "stale-marker",
+      "marker": {
+        "state": "complete",
+        "videos": 17,
+        "sources": 117,
+        "chapters": 38
+      },
+      "future": true,
+      "pass": false
+    },
+    {
+      "name": "current-complete",
+      "marker": {
+        "state": "complete",
+        "videos": 17,
+        "sources": 117,
+        "chapters": 38
+      },
+      "future": false,
+      "pass": true
+    }
+  ]
+}

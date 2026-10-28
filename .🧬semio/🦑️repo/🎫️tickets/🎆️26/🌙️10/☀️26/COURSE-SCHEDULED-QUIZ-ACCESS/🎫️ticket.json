@@ -1,0 +1,190 @@
+{
+  "title": "Course Scheduled Quiz Access",
+  "emoji": "🔓",
+  "status": "closed",
+  "description": "Implement date-based unlocks for course quizzes and questions end to end. Locked items must remain visible as previews behind a tint, cannot open through pointer/keyboard UI or ordinary deep links, and may be opened only by a hidden URL argument. Current architecture course unlocks Energy only; all other quizzes remain locked. Add schema-first language-neutral cases, independent library validation and end-to-end tests. Preserve concurrent work; no modifying Git commands or worktrees.",
+  "summary": "Implemented schema-first scheduled topic, quiz and question access with TypeScript/Rust mirrors, inert tinted previews, localized status, exact-date timers, sleeping-tab rechecks, session/navigation/saved-run guards and hidden ?preview=1 author access. Energy is unlocked and all other course topics remain locked, including their new concurrent quiz content. Core: 563 passing tests; focused UI/course regressions: 339 passing tests; final access UI: 9 passing tests. Current-source TypeScript check and real browser scenarios at desktop/phone widths, deep links, author preview and automatic topic/question releases passed against the expanded 10-quiz course. Standard source admission still prevents Rust/proctor full-stack verification with missing .cache/b/l/fixed.dir; workspace publication drift is documented with reproducible diagnostic configurations in verification.md. Concurrent edits preserved; no Git modifications or worktrees. See summary.md and verification.md for results and limits.",
+  "goal": "RUNNING-FRAMEWORK/RUNNING-PRODUCTS",
+  "sessions": [
+    "7313bed2-37c8-4006-8779-f89a0b92480c"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-26 19:40:03",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Implement date-based unlocks for course quizzes and questions end to end. Locked items must remain visible as previews behind a tint, cannot open through pointer/keyboard UI or ordinary deep links, and may be opened only by a hidden URL argument. Current architecture course unlocks Energy only; all other quizzes remain locked. Add schema-first language-neutral cases, independent library validation and end-to-end tests. Preserve concurrent work; no modifying Git commands or worktrees.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 20:19:03",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "summary": "Implemented schema-first scheduled topic, quiz and question access with TypeScript/Rust mirrors, inert tinted previews, localized status, exact-date timers, sleeping-tab rechecks, session/navigation/saved-run guards and hidden ?preview=1 author access. Energy is unlocked and all other course topics remain locked, including their new concurrent quiz content. Core: 563 passing tests; focused UI/course regressions: 339 passing tests; final access UI: 9 passing tests. Current-source TypeScript check and real browser scenarios at desktop/phone widths, deep links, author preview and automatic topic/question releases passed against the expanded 10-quiz course. Standard source admission still prevents Rust/proctor full-stack verification with missing .cache/b/l/fixed.dir; workspace publication drift is documented with reproducible diagnostic configurations in verification.md. Concurrent edits preserved; no Git modifications or worktrees. See summary.md and verification.md for results and limits.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🥞️layered-home/🟦️.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/📚️course/🧪️tests/🧪️course/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/README.md"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/📦️packages/🟦️typescript/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/📦️packages/🦀️rust/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧬️schema/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧬️schema/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧬️schema/📚️quiz-documents/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧬️schema/👁️read-views/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/✅️validation/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/✅️validation/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/✅️validation/🧪️tests/🔬️unit/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/👁️views/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/👁️views/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/🔓️access/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🔨️modules/🔓️access/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🔓️access/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🔓️access/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧪️tests/🧷️companion-support/🧾️lifecycle/🦀️.rs"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🧫️fixtures/🔓️access/🔣️.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/📦️packages/🟦️typescript/tsconfig.json"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🧪️tests/🎚️config/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/▶️run/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏁️results/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🏠️home/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📇️profile/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📖️quiz-page/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/📚️app/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🔓️access/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🚏️navigation/🟦️.tsx"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔠️english-bundle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🌐️i18n/🔡️german-bundle/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧭️session/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧭️session/🔭️attention/🟦️.ts"
+        },
+        {
+          "path": "🧰️framework/🛍️products/📚️course/🎯️targets/⚛️react/🔨️modules/🧭️session/🎯️run-play/🟦️.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/aliases.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/browser-check.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/browser.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/check.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/guards.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/schema.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/ui.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/vite.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/vitest.ts"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/COURSE-SCHEDULED-QUIZ-ACCESS/🎫️ticket.json"
+        }
+      ]
+    }
+  ]
+}

@@ -28,7 +28,8 @@
     "./testing/inferred-layer-pipeline": "./🧪️testing/🧮️inferred-layer-pipeline/🟦️.ts",
     "./testing/render-scene": "./🧪️testing/🎬️render-scene/🟦️.ts",
     "./testing/render-scene/legend": "./🧪️testing/🎬️render-scene/🧭️legend/🟦️.ts",
-    "./artifacts": "./📦️artifacts/🟦️.ts"
+    "./artifacts": "./📦️artifacts/🟦️.ts",
+    "./template/assignment": "./🧾️template/📝️assignment/🟦️.ts"
   },
   "license": "LGPL-3.0-or-later",
   "semio": {

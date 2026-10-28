@@ -12,7 +12,7 @@ use course_schema::{Challenge, MatchingAnswer, SheetDimension, SheetItem, SheetS
 const POWER: [f64; 5] = [1.0, 60.0, 2000.0, 1.0e6, 1.0e9];
 
 fn items(ids: &[&str]) -> Vec<SheetItem> {
-    ids.iter().map(|id| SheetItem { id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
+    ids.iter().map(|id| SheetItem { mockup: None, id: (*id).to_string(), label: text(id), short: None, icon: None }).collect()
 }
 
 fn ladder(task: &SortingTask, ids: &[&str]) -> Vec<f64> {

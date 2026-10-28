@@ -10,6 +10,7 @@
  * @see https://www.w3.org/WAI/ARIA/apg/patterns/toolbar/ — controls that stay focusable while unavailable
  */
 
+import { clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { useEffect, useLayoutEffect, useMemo, useRef, type ReactElement } from "react";
 import { Icon, cn, overviewCardChipClass, type IconName } from "@semio-tech/ui-react/chrome";
 import { localized, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
@@ -47,9 +48,13 @@ const WAY_LABELS: { readonly [W in Exclude<NavigationWay, "overview">]: { readon
 };
 
 /** 🛤️ Where each way leads from `state`; nothing where it leads nowhere. */
-export function navigationWays(state: CourseState): { readonly [W in NavigationWay]: CourseStep | undefined } {
+export function navigationWays(state: CourseState, at = Date.now()): { readonly [W in NavigationWay]: CourseStep | undefined } {
   const atOverview = state.step.screen === "home" && state.step.page === undefined;
-  return { overview: atOverview ? undefined : { screen: "home" }, back: stepBefore(state), forward: stepAfter(state), up: stepAbove(state) };
+  const allowed = (step: CourseStep | undefined): CourseStep | undefined => {
+    const page = step?.screen === "home" ? step.page : step?.screen === "run" || step?.screen === "results" ? state.runs[step.run]?.quiz : undefined;
+    return page === undefined || clientAccess(state.course, page, at) ? step : undefined;
+  };
+  return { overview: atOverview ? undefined : { screen: "home" }, back: allowed(stepBefore(state)), forward: allowed(stepAfter(state)), up: allowed(stepAbove(state)) };
 }
 
 /** 🎛️ The ways of the navbar as one group of buttons: each an icon and its word (Overview, Back, Forward, Up), and
@@ -57,7 +62,8 @@ export function navigationWays(state: CourseState): { readonly [W in NavigationW
  * place and in the tab order and says that it is unavailable; Escape is named as Up's key while a home page is open. */
 export function NavigationControls(props: { readonly session: CourseSession; readonly state: CourseState; readonly locale: CourseLocale; readonly text: CourseText }): ReactElement {
   const { session, state, locale, text } = props;
-  const ways = navigationWays(state);
+  const at = useReleaseClock(state.course);
+  const ways = navigationWays(state, at);
   const go: { readonly [W in NavigationWay]: () => void } = { overview: () => session.open({ screen: "home" }), back: () => session.back(), forward: () => session.forward(), up: () => session.up() };
   const caption = (way: NavigationWay): string => (way === "overview" ? text("course.nav.home") : text(WAY_LABELS[way].bare));
   const label = (way: NavigationWay): string => {
@@ -115,7 +121,7 @@ export function useAddress(session: CourseSession, state: CourseState): void {
   const { step } = state;
   useLayoutEffect(() => {
     if (pages === undefined) return;
-    const named = addressPage(window.location.hash, pages);
+    const named = addressPage(window.location.hash, pages.filter(page => clientAccess(course, page, Date.now())));
     const shown = session.getSnapshot().state.step;
     if (!arrived.current) {
       arrived.current = true;

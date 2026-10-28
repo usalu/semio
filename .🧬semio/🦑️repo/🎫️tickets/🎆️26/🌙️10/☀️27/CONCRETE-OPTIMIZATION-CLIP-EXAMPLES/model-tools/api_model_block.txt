@@ -1,0 +1,60 @@
+```python
+load_study() -> dict                          # the authored 🔣️.json (fresh copy); "sun": {latitude, winter_altitude, summer_altitude,
+                                              #  low_summer_altitude, winter_azimuth, summer_azimuth}, "weights": {balanced, cost_heavy}
+Design = dict(orientation=180.0, wwr=0.45, overhang=0.6, insulation=0.16)   # degrees, ratio, m, m (unknown keys / impossible values -> ValueError)
+evaluate(design: dict) -> dict                # missing keys fall back to study["baseline"]
+# keys: window_area m², wall_area m², u_wall W/m²K,
+#       heating_demand, cooling_demand          kWh/a useful heat/cold
+#       heating, cooling, lighting, electricity kWh/a electricity (heating/COP, cooling/EER, lighting)
+#       intensity kWh/(m²·a) = electricity / floor area
+#       solar_winter, solar_summer kWh/a admitted gains
+#       shading_winter, shading_summer 0..1 = beam-weighted share of the window height in the overhang's shadow,
+#         per hourly solstice sun position clamp((d·tan(profile) − 0.3 m gap above the window) / window height, 0, 1),
+#         window height = min(WWR·3 m, 2.65 m), head at 2.7 m (same as the toolkit room drawing); 0 when no direct sun reaches the façade
+#       sun_winter, sun_summer 0..1 irradiance on this bearing relative to the best bearing of the season
+#       daylight % mean daylight factor; autonomy 0..1
+#       cost CHF; carbon kg CO₂e
+sun_samples(orientation, season) -> list[dict]   # hourly solstice sun positions (noon ± 4 h, altitude ≥ 3°) shining on the façade:
+                               #  [{"hour","bearing","altitude","across" (angle to the façade normal),"profile" (angle in section),"weight" (cos alt · cos across)}]
+sun_state(orientation, season) -> dict           # the single sun-path point nearest to the façade bearing {"bearing","altitude","across","profile","front"}
+                                                 #  (identical to the toolkit's sun_state)
+orientation_study() -> dict    # {"design" (wwr, overhang, insulation; orientation is the variable), "range":[90,450],
+                               #  "local_minima":[180,360], "local_minima_electricity", "local_maxima":[..], "local_maxima_electricity",
+                               #  "global_minimum":θ, "constraint":[270,450], "feasible_minimum":θ, "reference":90, "reference_electricity",
+                               #  "tariff": CHF/kWh, "samples":[[θ, electricity], ... every 1°], "savings":[[θ, kWh/a, CHF/a], ...],
+                               #  "start":315, "neighbour_step":5, "descent":[{"theta","electricity","neighbours":[{theta,electricity}]}],
+                               #  "sun": {winter_altitude, summer_altitude, low_summer_altitude, winter_azimuth, summer_azimuth, ...}}
+surface(n=41) -> dict          # {"design", "wwr":[...], "overhang":[...], "electricity":[[...]] indexed [wwr][overhang], "minimum":{design,electricity}}
+levels() -> dict               # {"wwr":[3], "overhang":[3], "orientation":[90,180,270,360], "insulation":[3]}
+lhs_strata() -> dict           # {"count":9, "wwr":[10 edges], "overhang":[10 edges], "index":[[i, j], ...]}
+samples(kind) -> list[dict]    # kind in grid|random|lhs (9 each); each {"wwr","overhang", **evaluate}; lhs items also {"strata_index":[i, j]}
+sampling_diagnostics(kind="random") -> dict   # {"largest_empty_box":{"wwr":[lo,hi],"overhang":[lo,hi]}, "area" (share of the domain),
+                                              #  "closest_pair":[i, j, distance on range-normalized axes], "closest_delta":{"wwr","overhang"}}
+factorial() -> dict            # {"factors", "response":"cooling", "runs":[{"id":"r1".."r4","coded":[a,b],"design","response", **evaluate}] in the order
+                               #  (A-,B-),(A-,B+),(A+,B-),(A+,B+), "effects":{"a","b","ab"} (mean high - mean low), "coefficients":[b0,b1,b2,b12] (= effects/2),
+                               #  "centre":{"design","predicted"(=b0),"actual","curvature","result"}, "centre_savings":{"half","full","share"}}
+fractional() -> dict           # {"generator":"C=AB", "factors":[wwr, overhang, insulation 10/30 cm], "runs":[{"coded":[a,b,c],"design","response"}] (4),
+                               #  "alias_contrast", "true":{"ab","c","sum"} from the full 2³ (also "full":[8 runs])}
+variants(extra=False) -> list[dict]  # [{"id","title":{"en","de"},"design", **evaluate}]; extra=True appends the dearer sixth ("extra": True)
+criteria() -> list[dict]       # [{"id","key","direction","unit","title":{"en","de"}}] in the order electricity, cost, daylight, carbon
+reweigh(weights, criterion, share) -> dict   # that criterion gets `share`, the others keep their old proportions
+index(weights, ids=None) -> list[dict]       # [{"id","raw":{..},"normalized":{..} (0 best … 1 worst),"score" (lower is better),"rank" (1 = lowest score)}]
+                                             #  weights by criterion id (study["weights"]); min–max range from the compared ids only
+pareto() -> dict               # {"designs":[{"id","design","cost","electricity","heating","cooling","lighting","daylight"}], "front":[ids sorted by cost],
+                               #  "dominated_example":{"winner","loser"}, "step":{"from","to","cost","electricity"},
+                               #  "steps":[{"from","to","cost","electricity"(<0),"saved","ratio" CHF per kWh/a,"payback","payback_hi" years}],
+                               #  "tariff","tariff_hi","service_life", "knee":{"tariff":id,"tariff_hi":id},
+                               #  "refinement":{"member","design","cost","electricity","dominates":[ids]},
+                               #  "third_example":{"dominated_2d","dominator"}, "front3":[ids], "picks":[{"weight","id"}]}
+weighted_pick(weight) -> id    # share of electricity 0..1 in a weighted sum of min–max normalized cost and electricity over the front
+gradient_path() -> list[dict]  # [{"design","electricity","gradient":{"wwr" per 1.0, "overhang" per m},"slope":{"wwr" per %-point,"overhang" per m},
+                               #  "step":{"wwr","overhang"} moved to get here,"probes":[{"direction":"wwr-|wwr+|overhang-|overhang+","design","electricity"}],
+                               #  "runs":5,"evaluations":cumulative}]
+pattern_path() -> list[dict]   # [{"design","electricity","step":{wwr,overhang} used in this round,"probes":[{"direction","design","electricity"}] (4),
+                               #  "moved":bool,"evaluations":cumulative}]
+genetic() -> dict              # {"generations":[{"population":[{"id","design","electricity"}], "parents":[[id,id],...],
+                               #  "tournaments":[[id,id,winner],...], "elites":[ids], "survivors":[ids], "evaluations":cumulative,
+                               #  "children":[{"id","from":[id,id],"genes":{"wwr":id,"overhang":id},"mutation":{"wwr":Δ,"overhang":Δ},"design","electricity"}],
+                               #  "best":{"id","design","electricity"}}], "lcg": {seed, multiplier, increment, modulus}}
+convergence() -> dict          # {"budget":50, "map_minimum", "runs_map":1681, "series":{"gradient"|"pattern"|"genetic": [[runs, best_so_far], ...]}}
+```

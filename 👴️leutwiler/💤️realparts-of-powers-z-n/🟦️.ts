@@ -68,7 +68,7 @@ export async function prepareLeanDependencies(root: string, repoRoot: string): P
 /** 🏗️ Checks the Lean proof (`lean`) or typesets one document (`📯️notes`, `🏆️proof`) under an ASCII job name, because TeX cannot carry an emoji `\jobname`. */
 export async function buildLean(root:string,repoRoot:string):Promise<void>{runCmd(await prepareLean(repoRoot),["build"],{cwd:join(root,"🧘️lean"),env:leanEnvironment(repoRoot),budgetMs:0});}
 /** 📄️ Publishes a declared TeX document through the same managed Print compiler and readers. */
-export async function buildPrintDocument(execution:PrintExecutionV1,target:string):Promise<void>{if(!documents.includes(target))throw Error("Declared Leutwiler document required");await publishPrintArtifact(execution,{version:1,kind:"document",namespace:"report",id:"leutwiler-"+(target==="📯️notes"?"notes":"proof"),sourceRoot:"👴️leutwiler/💤️realparts-of-powers-z-n/"+target,texPath:"📐️.tex",sources:["📐️.tex"],dark:false});}
+export async function buildPrintDocument(execution:PrintExecutionV1,target:string):Promise<void>{if(!documents.includes(target))throw Error("Declared Leutwiler document required");await publishPrintArtifact(execution,{version:1,kind:"document",namespace:"report",producer:"@leutwiler/realparts-of-powers-z-n:build-"+(target==="📯️notes"?"notes":"proof"),id:"leutwiler-"+(target==="📯️notes"?"notes":"proof"),sourceRoot:"👴️leutwiler/💤️realparts-of-powers-z-n/"+target,texPath:"📐️.tex",sources:["📐️.tex"],dark:false});}
 
 /** ⚖️ Fails when a main theorem depends on anything but the three standard axioms. */
 export async function verifyAxioms(root: string, repoRoot: string): Promise<void> {

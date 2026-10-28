@@ -1,0 +1,668 @@
+{
+  "schema": "energy-clip-style/v1",
+  "silhouettes": [
+    {
+      "id": "plain-default-inset",
+      "input": {
+        "width": 120,
+        "height": 80
+      },
+      "outline": [
+        [
+          1,
+          1
+        ],
+        [
+          119,
+          1
+        ],
+        [
+          119,
+          79
+        ],
+        [
+          1,
+          79
+        ]
+      ],
+      "regions": [
+        [
+          1,
+          1,
+          119,
+          79
+        ]
+      ]
+    },
+    {
+      "id": "fused-title",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            0,
+            40
+          ]
+        ],
+        "inset": 0
+      },
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          40,
+          0
+        ],
+        [
+          40,
+          12
+        ],
+        [
+          120,
+          12
+        ],
+        [
+          120,
+          80
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "regions": [
+        [
+          0,
+          12,
+          120,
+          80
+        ],
+        [
+          0,
+          0,
+          40,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "separated-top-chips",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            20,
+            40
+          ],
+          [
+            70,
+            100
+          ]
+        ],
+        "inset": 0
+      },
+      "outline": [
+        [
+          0,
+          12
+        ],
+        [
+          20,
+          12
+        ],
+        [
+          20,
+          0
+        ],
+        [
+          40,
+          0
+        ],
+        [
+          40,
+          12
+        ],
+        [
+          70,
+          12
+        ],
+        [
+          70,
+          0
+        ],
+        [
+          100,
+          0
+        ],
+        [
+          100,
+          12
+        ],
+        [
+          120,
+          12
+        ],
+        [
+          120,
+          80
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "regions": [
+        [
+          0,
+          12,
+          120,
+          80
+        ],
+        [
+          20,
+          0,
+          40,
+          12
+        ],
+        [
+          70,
+          0,
+          100,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "clamped-and-merged-chips",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "top_chips": [
+          [
+            95,
+            150
+          ],
+          [
+            30.25,
+            60
+          ],
+          [
+            -5,
+            30
+          ],
+          [
+            80,
+            79
+          ],
+          [
+            0.1,
+            0.2
+          ]
+        ],
+        "inset": 0
+      },
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          60,
+          0
+        ],
+        [
+          60,
+          12
+        ],
+        [
+          95,
+          12
+        ],
+        [
+          95,
+          0
+        ],
+        [
+          120,
+          0
+        ],
+        [
+          120,
+          80
+        ],
+        [
+          0,
+          80
+        ]
+      ],
+      "regions": [
+        [
+          0,
+          12,
+          120,
+          80
+        ],
+        [
+          0,
+          0,
+          60,
+          12
+        ],
+        [
+          95,
+          0,
+          120,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "top-and-bottom-chips",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "bottom_depth": 16,
+        "top_chips": [
+          [
+            0,
+            40
+          ]
+        ],
+        "bottom_chips": [
+          [
+            80,
+            120
+          ]
+        ],
+        "inset": 0
+      },
+      "outline": [
+        [
+          0,
+          0
+        ],
+        [
+          40,
+          0
+        ],
+        [
+          40,
+          12
+        ],
+        [
+          120,
+          12
+        ],
+        [
+          120,
+          80
+        ],
+        [
+          80,
+          80
+        ],
+        [
+          80,
+          64
+        ],
+        [
+          0,
+          64
+        ]
+      ],
+      "regions": [
+        [
+          0,
+          12,
+          120,
+          64
+        ],
+        [
+          0,
+          0,
+          40,
+          12
+        ],
+        [
+          80,
+          64,
+          120,
+          80
+        ]
+      ]
+    },
+    {
+      "id": "empty-chip-bands",
+      "input": {
+        "width": 120,
+        "height": 80,
+        "top_depth": 12,
+        "bottom_depth": 10,
+        "inset": 0
+      },
+      "outline": [
+        [
+          0,
+          12
+        ],
+        [
+          120,
+          12
+        ],
+        [
+          120,
+          70
+        ],
+        [
+          0,
+          70
+        ]
+      ],
+      "regions": [
+        [
+          0,
+          12,
+          120,
+          70
+        ]
+      ]
+    }
+  ],
+  "palette": {
+    "P_DEEP_DARK": "dark",
+    "P_WHITE": "light",
+    "P_CYAN": "secondary",
+    "P_TEAL": "secondary",
+    "P_ORANGE": "tertiary",
+    "P_YELLOW": "warning",
+    "P_RED": "primary",
+    "P_BLUE": "secondary",
+    "P_GREEN": "success",
+    "P_PRIMARY": "primary",
+    "P_SECONDARY": "secondary"
+  },
+  "type_scale": {
+    "TITLE_FONT_SIZE": "text2xlPx",
+    "SUBTITLE_FONT_SIZE": "textBasePx",
+    "BODY_FONT_SIZE": "textBasePx",
+    "LABEL_FONT_SIZE": "textSmPx",
+    "FORMULA_FONT_SIZE": "text2xlPx",
+    "CAPTION_FONT_SIZE": "textLgPx"
+  },
+  "type_multiplier": 1.5,
+  "chrome": {
+    "frame": {
+      "width": 4,
+      "height": 2,
+      "title_width": 1.5,
+      "title_depth": 0.4
+    },
+    "frame_vertices": [
+      [
+        -2,
+        1
+      ],
+      [
+        -0.5,
+        1
+      ],
+      [
+        -0.5,
+        0.6
+      ],
+      [
+        2,
+        0.6
+      ],
+      [
+        2,
+        -1
+      ],
+      [
+        -2,
+        -1
+      ]
+    ],
+    "chip_text": "Heat · Wärme",
+    "card": {
+      "caption": "Power · Leistung",
+      "value": "1200 W"
+    }
+  },
+  "accents": {
+    "primary": {
+      "token": "primary",
+      "hex": "#ff344f"
+    },
+    "secondary": {
+      "token": "secondary",
+      "hex": "#34d1bf"
+    },
+    "defaults": [
+      {
+        "helper": "window_frame",
+        "args": [
+          4,
+          2
+        ],
+        "path": [],
+        "channel": "stroke"
+      },
+      {
+        "helper": "window_chip",
+        "args": [
+          {
+            "shape": "rectangle",
+            "width": 1,
+            "height": 0.4
+          }
+        ],
+        "path": [
+          0
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "chip",
+        "args": [
+          "Heat · Wärme"
+        ],
+        "path": [
+          0
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "chip",
+        "args": [
+          "Heat · Wärme"
+        ],
+        "path": [
+          1
+        ],
+        "channel": "fill"
+      },
+      {
+        "helper": "meter",
+        "args": [
+          "Power · Leistung"
+        ],
+        "path": [
+          "fill"
+        ],
+        "channel": "fill"
+      },
+      {
+        "helper": "note_line",
+        "args": [
+          "Heat · Wärme"
+        ],
+        "path": [],
+        "channel": "fill"
+      },
+      {
+        "helper": "window_card",
+        "args": [
+          {
+            "shape": "rectangle",
+            "width": 1,
+            "height": 0.4
+          },
+          {
+            "shape": "rectangle",
+            "width": 1,
+            "height": 0.4
+          }
+        ],
+        "path": [
+          0
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "stat_card",
+        "args": [
+          "Power · Leistung",
+          "1200 W"
+        ],
+        "path": [
+          0
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "stat_card",
+        "args": [
+          "Power · Leistung",
+          "1200 W"
+        ],
+        "path": [
+          1,
+          1
+        ],
+        "channel": "fill"
+      },
+      {
+        "helper": "card_grid",
+        "args": [
+          [
+            [
+              "Power · Leistung",
+              "1200 W"
+            ]
+          ]
+        ],
+        "path": [
+          0,
+          0
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "formula_panel",
+        "args": [
+          {
+            "shape": "rectangle",
+            "width": 1,
+            "height": 0.4
+          }
+        ],
+        "path": [
+          1
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "math_panel",
+        "args": [
+          [
+            [
+              "q",
+              "Q",
+              null
+            ]
+          ]
+        ],
+        "path": [
+          1
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "clock_glyph",
+        "args": [
+          [
+            0,
+            0,
+            0
+          ]
+        ],
+        "path": [
+          "hand"
+        ],
+        "channel": "stroke"
+      },
+      {
+        "helper": "highlight_param",
+        "args": [
+          {
+            "q": {
+              "shape": "rectangle",
+              "width": 1,
+              "height": 0.4
+            }
+          },
+          "q"
+        ],
+        "path": [],
+        "channel": "stroke"
+      },
+      {
+        "helper": "watt_anchor",
+        "args": [
+          60
+        ],
+        "path": [
+          0
+        ],
+        "channel": "stroke"
+      }
+    ],
+    "typography": [
+      {
+        "helper": "section_heading",
+        "args": [
+          "Heat · Wärme"
+        ],
+        "path": [
+          0
+        ],
+        "channel": "stroke",
+        "role": "primary"
+      },
+      {
+        "helper": "section_heading",
+        "args": [
+          "Heat · Wärme"
+        ],
+        "path": [
+          1
+        ],
+        "channel": "fill",
+        "role": "primary"
+      }
+    ]
+  },
+  "tab_geometry": {
+    "sectionLeftSpacing": 3,
+    "sectionTopSpacing": 2
+  }
+}

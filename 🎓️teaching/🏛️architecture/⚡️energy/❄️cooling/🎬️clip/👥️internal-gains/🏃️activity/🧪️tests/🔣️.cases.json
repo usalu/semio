@@ -1,0 +1,48 @@
+{
+  "reference_size": 1.205,
+  "scales": [
+    0.75,
+    1.6
+  ],
+  "body_index": 0,
+  "body_contours": 1,
+  "fill_opacity": 1,
+  "connected_components": 1,
+  "maximum_hole_pixels": 4,
+  "minimum_coverage": 0.025,
+  "poses": [
+    {
+      "kind": "sleep",
+      "axis": "width",
+      "bottom": 0.18,
+      "heat": [
+        -0.1,
+        0.27
+      ]
+    },
+    {
+      "kind": "walk",
+      "axis": "height",
+      "bottom": 0,
+      "heat": [
+        0,
+        0.8
+      ]
+    },
+    {
+      "kind": "sprint",
+      "axis": "height",
+      "bottom": 0,
+      "heat": [
+        -0.1,
+        0.75
+      ]
+    }
+  ],
+  "metabolic_watts": [
+    80,
+    100,
+    200,
+    800
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "feature": "Assignment matrix numbering independent from optional title",
+  "cases": [
+    {
+      "name": "Empty title retains right number and connected border",
+      "context": "AssignmentTable",
+      "title": "",
+      "leftChip": false,
+      "rightChip": true,
+      "border": true
+    },
+    {
+      "name": "Named title retains existing two chips",
+      "context": "AssignmentTable",
+      "title": "Named",
+      "leftChip": true,
+      "rightChip": true,
+      "border": true
+    },
+    {
+      "name": "Unwrapped matrix retains plain border",
+      "context": "none",
+      "title": "",
+      "leftChip": false,
+      "rightChip": false,
+      "border": true
+    }
+  ]
+}

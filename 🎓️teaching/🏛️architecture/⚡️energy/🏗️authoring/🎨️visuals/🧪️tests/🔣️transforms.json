@@ -1,0 +1,92 @@
+{
+  "tank": {
+    "center": [
+      -2.3,
+      -1.45,
+      0
+    ],
+    "width": 0.55,
+    "height": 0.8,
+    "scale": 0.85,
+    "target": [
+      -3,
+      -1.8,
+      0
+    ],
+    "levels": [
+      1,
+      0.5,
+      0
+    ],
+    "transforms": [
+      {
+        "stretch": [
+          1,
+          1
+        ],
+        "fill_width": 0.3655,
+        "fill_heights": [
+          0.578,
+          0.289,
+          0.0017
+        ],
+        "base_inset": 0.051
+      },
+      {
+        "stretch": [
+          0.6,
+          1.4
+        ],
+        "fill_width": 0.2193,
+        "fill_heights": [
+          0.8092,
+          0.4046,
+          0.00238
+        ],
+        "base_inset": 0.0714
+      }
+    ]
+  },
+  "overview_visibility": {
+    "pixels": [
+      1600,
+      900
+    ],
+    "fps": 6,
+    "house_center": [
+      3.3,
+      0.2,
+      0
+    ],
+    "house_scale": 0.9,
+    "wait_before": 0.3,
+    "open_seconds": 1,
+    "wait_after": 0.7,
+    "material_probes": [
+      [
+        3.3,
+        2.2
+      ],
+      [
+        4.857,
+        0.4
+      ],
+      [
+        3.4,
+        0.2
+      ],
+      [
+        3.4,
+        -0.934
+      ]
+    ],
+    "minimum_material_channel": 100,
+    "window_region": [
+      1.75,
+      2.2,
+      -0.6,
+      -0.05
+    ],
+    "minimum_window_pixels": 5
+  }
+}

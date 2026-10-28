@@ -1,0 +1,305 @@
+{
+  "schema": "semio.chapter-presentation-tests/v1",
+  "viewport": {
+    "width": 1600,
+    "height": 900
+  },
+  "chrome": {
+    "navbarHeight": 28.8,
+    "footerHeight": 28.8,
+    "titleHeight": 22.4,
+    "inset": 3.2
+  },
+  "focus": {
+    "x": 6.4,
+    "y": 57.6,
+    "width": 1587.2,
+    "height": 807.2
+  },
+  "crop": {
+    "left": 0,
+    "top": 0,
+    "right": 1,
+    "bottom": 1
+  },
+  "timing": {
+    "topicTravel": 0.4,
+    "topicReveal": 0.6,
+    "topicPress": 0.3,
+    "topicHold": 0.1,
+    "videoTravel": 0.5,
+    "videoReveal": 0.6,
+    "videoPress": 0.3,
+    "focusHold": 0.2
+  },
+  "resolutions": [
+    [
+      1600,
+      900
+    ],
+    [
+      320,
+      180
+    ],
+    [
+      1920,
+      1080
+    ]
+  ],
+  "smoke": {
+    "width": 320,
+    "height": 180,
+    "fps": 4,
+    "contentSeconds": 2,
+    "toneHz": 440,
+    "sampleRate": 48000,
+    "maxMeanRgbError": 10,
+    "cursorIntervals": [
+      {
+        "start": 0.5,
+        "end": 1.5
+      }
+    ]
+  },
+  "boundary": {
+    "pixelSpace": "decoded-rgb24",
+    "firstEqualsLast": false,
+    "adjacentEquals": true
+  },
+  "contentCamera": {
+    "bodyViewport": {
+      "x": 0,
+      "y": 0,
+      "width": 1600,
+      "height": 900
+    },
+    "bodyChromeVisible": false,
+    "bodyPointerVisible": false,
+    "focusEndpoint": 1,
+    "restoreStart": 1,
+    "restoreBeforePress": 0,
+    "maxEdgeMeanRgbError": 10,
+    "maxHandoffMeanRgbError": 10,
+    "duration": 0.6,
+    "samples": [
+      {
+        "phase": "focus",
+        "seconds": 5.8,
+        "progress": 0
+      },
+      {
+        "phase": "focus",
+        "seconds": 6.1,
+        "progress": 0.5
+      },
+      {
+        "phase": "focus",
+        "seconds": 6.4,
+        "progress": 1
+      },
+      {
+        "phase": "restore",
+        "seconds": 0,
+        "progress": 1
+      },
+      {
+        "phase": "restore",
+        "seconds": 0.3,
+        "progress": 0.5
+      },
+      {
+        "phase": "restore",
+        "seconds": 0.6,
+        "progress": 0
+      },
+      {
+        "phase": "restore",
+        "seconds": 1.1,
+        "progress": 0
+      },
+      {
+        "phase": "restore",
+        "seconds": 1.36,
+        "progress": 0
+      }
+    ]
+  },
+  "topics": [
+    {
+      "id": "energy",
+      "videos": [
+        {
+          "id": "physical_fundamentals",
+          "title": {
+            "en": "Physical Fundamentals",
+            "de": "Physikalische Grundlagen"
+          }
+        },
+        {
+          "id": "ventilation",
+          "title": {
+            "en": "Ventilation",
+            "de": "Lüftung"
+          }
+        },
+        {
+          "id": "heating",
+          "title": {
+            "en": "Heating",
+            "de": "Heizen"
+          }
+        },
+        {
+          "id": "cooling",
+          "title": {
+            "en": "Cooling",
+            "de": "Kühlen"
+          }
+        },
+        {
+          "id": "energy_balance",
+          "title": {
+            "en": "Energy Balance",
+            "de": "Energiebilanz"
+          }
+        }
+      ]
+    },
+    {
+      "id": "parametric",
+      "videos": []
+    },
+    {
+      "id": "bim",
+      "videos": [
+        {
+          "id": "bim_information",
+          "title": {
+            "en": "Data and Information",
+            "de": "Daten und Information"
+          }
+        },
+        {
+          "id": "bim_objects",
+          "title": {
+            "en": "Object Orientation",
+            "de": "Objektorientierung"
+          }
+        },
+        {
+          "id": "bim_representations",
+          "title": {
+            "en": "Object Representations",
+            "de": "Repräsentationen von Objekten"
+          }
+        },
+        {
+          "id": "bim_models",
+          "title": {
+            "en": "Partial Models and Translation",
+            "de": "Teilmodelle und Modellübersetzungen"
+          }
+        },
+        {
+          "id": "bim_exchange",
+          "title": {
+            "en": "Interfaces and Model Translation",
+            "de": "Schnittstellen und Modellübersetzung"
+          }
+        },
+        {
+          "id": "bim_consistency",
+          "title": {
+            "en": "Consistency across Models",
+            "de": "Konsistenz über Modelle hinweg"
+          }
+        }
+      ]
+    },
+    {
+      "id": "grasshopper",
+      "videos": []
+    },
+    {
+      "id": "excel",
+      "videos": []
+    },
+    {
+      "id": "optimization",
+      "videos": [
+        {
+          "id": "optimization_extrema",
+          "title": {
+            "en": "Minimization and Maximization",
+            "de": "Minimierung und Maximierung"
+          }
+        },
+        {
+          "id": "optimization_sampling",
+          "title": {
+            "en": "Sampling the Design Space",
+            "de": "Sampling des Entwurfsraums"
+          }
+        },
+        {
+          "id": "optimization_experiments",
+          "title": {
+            "en": "Design of Experiments",
+            "de": "Design of Experiments"
+          }
+        },
+        {
+          "id": "optimization_index",
+          "title": {
+            "en": "Multiple Criteria and Indices",
+            "de": "Multikriteriell und Index"
+          }
+        },
+        {
+          "id": "optimization_pareto",
+          "title": {
+            "en": "Pareto Fronts",
+            "de": "Pareto-Fronten"
+          }
+        },
+        {
+          "id": "optimization_algorithms",
+          "title": {
+            "en": "Optimization Algorithms",
+            "de": "Optimierungsalgorithmen"
+          }
+        }
+      ]
+    }
+  ],
+  "restoreTiming": {
+    "topicTravel": 0.35,
+    "topicReveal": 0.15,
+    "topicPress": 0.25,
+    "topicHold": 0.05,
+    "videoTravel": 0.35,
+    "videoReveal": 0.1,
+    "videoPress": 0.25,
+    "focusHold": 1.5
+  },
+  "frameRateConversion": {
+    "sourceFps": 4,
+    "outputFps": 2,
+    "sourceIndices": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "maxHandoffMeanRgbError": 2
+  },
+  "editedSource": {
+    "fps": 8,
+    "sourceSeconds": 2,
+    "seekSeconds": 0.125,
+    "trimSeconds": 1.5,
+    "packetSamples": 13,
+    "decodedFrames": 12,
+    "paddingFrames": 2
+  }
+}

@@ -56,6 +56,8 @@ function sortedRecord<T>(record: Readonly<Record<string, T>>): Record<string, T>
 export function courseView(course: Course, quizzes: readonly Quiz[]): CourseView {
   return {
     id: course.id,
+    ...(course.assignments === undefined ? {} : { assignments: course.assignments }),
+    ...(course.unlocks === undefined ? {} : { unlocks: sortedRecord(course.unlocks) }),
     title: course.title,
     short: course.short,
     introduction: course.introduction,

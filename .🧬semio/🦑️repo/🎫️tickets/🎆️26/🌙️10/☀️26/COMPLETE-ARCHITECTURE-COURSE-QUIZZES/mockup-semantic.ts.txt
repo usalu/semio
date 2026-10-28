@@ -1,0 +1,42 @@
+/** 🖥️ The normative shape plus cross-references and grid bounds of given workspace data. */
+function mockup(value: unknown, path: string, report: Report): void {
+  let valid = true;
+  mockupCheck(value, path, (pointer, code) => { valid = false; report(pointer, code); });
+  if (!valid) return;
+  const preview = value as Mockup;
+  if (preview.kind === "excel") {
+    if (preview.activeSheet >= preview.sheets.length) report(at(path, "activeSheet"), "value-invalid");
+    preview.rows.forEach((row, index) => { if (row.length !== preview.columns.length) report(at(at(path, "rows"), index), "value-invalid"); });
+    const selectionPath = at(path, "selection");
+    const selected = preview.selection;
+    for (const [key, index, size] of [["row", selected.row, preview.rows.length], ["rowEnd", selected.rowEnd, preview.rows.length], ["column", selected.column, preview.columns.length], ["columnEnd", selected.columnEnd, preview.columns.length]] as const) {
+      if (index !== undefined && index >= size) report(at(selectionPath, key), "value-invalid");
+    }
+    if (selected.rowEnd !== undefined && selected.rowEnd < selected.row) report(at(selectionPath, "rowEnd"), "value-invalid");
+    if (selected.columnEnd !== undefined && selected.columnEnd < selected.column) report(at(selectionPath, "columnEnd"), "value-invalid");
+    return;
+  }
+  const nodesPath = at(path, "nodes");
+  uniqueIds(preview.nodes, nodesPath, report);
+  preview.nodes.forEach((node, index) => {
+    uniqueIds(node.inputs, at(at(nodesPath, index), "inputs"), report);
+    uniqueIds(node.outputs, at(at(nodesPath, index), "outputs"), report);
+  });
+  const endpoint = (nodeId: string | undefined, portId: string | undefined, pointer: string, input: boolean): void => {
+    const node = preview.nodes.find((node) => node.id === nodeId);
+    if (!(input ? node?.inputs : node?.outputs)?.some((port) => port.id === portId)) report(pointer, "value-invalid");
+  };
+  preview.wires.forEach((wire, index) => {
+    endpoint(wire.from.node, wire.from.port, at(at(at(path, "wires"), index), "from"), false);
+    endpoint(wire.to.node, wire.to.port, at(at(at(path, "wires"), index), "to"), true);
+  });
+  const target = preview.target;
+  const targetPath = at(path, "target");
+  if (target.kind === "node" || target.kind === "input" || target.kind === "output") {
+    if (!preview.nodes.some((node) => node.id === target.node)) report(at(targetPath, "node"), "value-invalid");
+    else if (target.kind !== "node") endpoint(target.node, target.port, targetPath, target.kind === "input");
+  } else {
+    const count = target.kind === "wire" ? preview.wires.length : target.kind === "branch" ? preview.tree.length : target.kind === "item" ? preview.tree[0]?.values.length ?? 0 : undefined;
+    if (count !== undefined && target.index >= count) report(at(targetPath, "index"), "value-invalid");
+  }
+}

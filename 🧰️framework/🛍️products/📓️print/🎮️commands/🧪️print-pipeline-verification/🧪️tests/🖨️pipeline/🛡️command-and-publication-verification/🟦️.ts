@@ -78,7 +78,7 @@ export async function verifyPrintDocumentCatalog(): Promise<void> {
   assert.ok(validate(catalog), JSON.stringify(validate.errors));
   const api = await import(join(root, modulePath, "🟦️.ts"));
   assert.deepEqual(api.printLibrarySources(), catalog.librarySources);
-  assert.deepEqual(api.printLibrarySources(), ["🖋️latex", "🔨️modules/🕸️graph/📐️.tex"]);
+  assert.deepEqual(api.printLibrarySources(), ["🖋️latex", "🖼️assets/🪧️logo", "🔨️modules/🕸️graph/📐️.tex"]);
   const plugin = await import(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🕸️graph/📥️inference/🟨️.mjs"));
   const gallery = JSON.parse(readFileSync(join(root, product, "🎮️commands/🧪️print-pipeline-verification/🧪️tests/🧫️fixtures/🗺️gallery-identities.json"), "utf8"));
   const documents = api.printDocuments();
@@ -137,10 +137,10 @@ export async function verifyPrintApiPublication(context:PrintPipelineVerificatio
       const work = join(root, language), tex = `viz-api-${language}.tex`;
       mkdirSync(work, { recursive: true });
       const selectedSource = source.replace(/(\\documentclass\[[^\]]*)language=de/, `$1language=${language}`);
-      const id=`api-publication-${language}`;await publishPrintArtifact(execution,{version:1,kind:"generated-document",namespace:"print",id,name:tex,source:selectedSource,dark:true,resources:[]});
-      await withPublishedPrintDocumentV1(execution,"print",id,async artifact=>{
+      const id=`api-publication-${language}`;await publishPrintArtifact(execution,{version:1,kind:"generated-document",namespace:"print",id,producer:`@semio-tech/print:build-${id}`,name:tex,source:selectedSource,dark:true,resources:[]});
+      await withPublishedPrintDocumentV1(execution,"print",id,`@semio-tech/print:build-${id}`,async artifact=>{
       for (const theme of control.themes) {
-        const path=join(artifact.path,printTemplatePdfNames(tex)[theme]),pdfBytes=await readPrintMaterialFileV1(path,67108864,artifact.control),pdf=await openPrintPdf(context,pdfBytes,artifact.control),initialFailures=failures.length;
+        const path=join(artifact.path,printTemplatePdfNames(id+".tex")[theme]),pdfBytes=await readPrintMaterialFileV1(path,67108864,artifact.control),pdf=await openPrintPdf(context,pdfBytes,artifact.control),initialFailures=failures.length;
         type Item=PrintPdfTextV1;
         type Caption = { page: number; y: number; title: string; gap: number; titleBands: number[][]; badgeHeight: number };
         const sameRow = (item: Item, anchor: Item): boolean => Math.max(item.transform[5]!, anchor.transform[5]!) < Math.min(item.transform[5]! + item.height, anchor.transform[5]! + anchor.height);
@@ -193,7 +193,7 @@ export async function verifyPrintApiPublication(context:PrintPipelineVerificatio
           });
           const rendered:string[]=[],selected=[...images].filter(number=>number<=pdf.numPages).sort((a,b)=>a-b),scope=pipelineScope(context),rasters=await rasterPrintPdfV1({operation:scope.execution.operation,phaseControl:artifact.control},scope.destination,pdfBytes,selected,control.renderScale);
           for(const image of rasters){checkResourceLeaseControl(artifact.control);const name=`api-publication/${language}/${theme}/pages/page-${String(image.page).padStart(3,"0")}.png`;rendered.push(await writePipelineEvidence(context,name,image.png,artifact.control));}
-          receipts.push({ language, theme, document:id,file:printTemplatePdfNames(tex)[theme],sha256:digest(path), pageCount: pdf.numPages, captions, actualDefaults: actual, rendered, failures: failures.slice(initialFailures) });
+          receipts.push({ language, theme, document:id,file:printTemplatePdfNames(id+".tex")[theme],sha256:digest(path), pageCount: pdf.numPages, captions, actualDefaults: actual, rendered, failures: failures.slice(initialFailures) });
           await writePipelineEvidence(context,`api-publication/${language}/${theme}/measurements.json`,JSON.stringify(receipts),artifact.control);
         } finally { await pdf.destroy(); }
       }

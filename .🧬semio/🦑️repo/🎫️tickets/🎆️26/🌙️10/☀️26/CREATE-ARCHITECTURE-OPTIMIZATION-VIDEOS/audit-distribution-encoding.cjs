@@ -1,0 +1,10 @@
+const fs=require('fs'),cp=require('child_process'),path=require('path');
+const ticket='.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CREATE-ARCHITECTURE-OPTIMIZATION-VIDEOS',out=ticket+'/🗑️generated/encoding',env={...process.env,SEMIO_TOOL_FFMPEG:path.resolve('.🧬semio/🎓️teaching/⚡️cache/python/Lib/site-packages/imageio_ffmpeg/binaries/ffmpeg-win-x86_64-v7.1.exe')};
+function run(args,log){const r=cp.spawnSync('repo',['tools','exec','--light','ffmpeg','--',...args],{shell:true,encoding:'utf8',env,maxBuffer:10*1024*1024});fs.writeFileSync(out+'/'+log,r.stdout+r.stderr);if(r.status!==0)throw Error(log+' exit '+r.status);return r.stdout+r.stderr;}
+const topic=process.argv[2],name='Optimization_'+topic+'_speaker_de_1080p30.mp4',dist=ticket+'/🗑️generated/delivery/'+name,master='.🧬semio/🎓️teaching/⚡️cache/videos/de/speaker/rendered/'+name;
+const t=run(['-hide_banner','-i',dist,'-f','null','-'],'distribution-'+topic+'.log'),m=fs.readFileSync(out+'/'+topic+'.log','utf8');
+function parse(s){return {duration:s.match(/Duration: ([\d:.]+)/)?.[1],frames:[...s.matchAll(/frame=\s*(\d+)/g)].at(-1)?.[1],video:s.match(/Stream.*Video:[^\r\n]+/)?.[0],audio:s.match(/Stream.*Audio:[^\r\n]+/)?.[0]};}
+const d=parse(t),o=parse(m),dh=run(['-v','error','-i',dist,'-map','0:1','-acodec','copy','-f','hash','-'],'distribution-'+topic+'-audio.log').match(/SHA256=([a-f0-9]+)/)?.[1],mh=run(['-v','error','-i',master,'-map','0:1','-acodec','copy','-f','hash','-'],'master-'+topic+'-audio.log').match(/SHA256=([a-f0-9]+)/)?.[1];
+const pass=d.duration===o.duration&&d.frames===o.frames&&/Video: h264 \(High\)/.test(d.video)&&/yuv420p/.test(d.video)&&/1920x1080/.test(d.video)&&/30 fps/.test(d.video)&&d.audio===o.audio&&!!dh&&dh===mh;
+const result={topic,name,bytes:fs.statSync(dist).size,...d,audioSHA256:dh,masterAudioSHA256:mh,masterDuration:o.duration,masterFrames:o.frames,pass};
+fs.writeFileSync(out+'/distribution-'+topic+'.json',JSON.stringify(result,null,2));console.log(result);if(!pass)process.exit(1);

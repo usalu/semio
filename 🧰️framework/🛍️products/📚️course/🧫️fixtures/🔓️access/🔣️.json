@@ -1,0 +1,23 @@
+{
+  "urls": [
+    { "search": "", "preview": false },
+    { "search": "?preview", "preview": false },
+    { "search": "?preview=0", "preview": false },
+    { "search": "?preview=true", "preview": false },
+    { "search": "?unlock=1", "preview": false },
+    { "search": "?preview=1", "preview": true },
+    { "search": "?lang=de&preview=1", "preview": true }
+  ],
+  "cases": [
+    { "name": "unscheduled course", "unlocks": {}, "page": "physics", "at": 1000, "allowed": true },
+    { "name": "awaiting schedule", "unlocks": { "parametric": null }, "page": "parametric", "at": 1000, "allowed": false },
+    { "name": "before topic release", "unlocks": { "energy": 1000 }, "page": "physics", "at": 999, "allowed": false },
+    { "name": "exact topic release", "unlocks": { "energy": 1000 }, "page": "physics", "at": 1000, "allowed": true },
+    { "name": "quiz after topic", "unlocks": { "energy": 1000, "physics": 2000 }, "page": "physics", "at": 1000, "allowed": false },
+    { "name": "topic still locked", "unlocks": { "energy": null, "physics": 0 }, "page": "physics", "at": 1000, "allowed": false },
+    { "name": "question scheduled", "unlocks": { "physics/powers": 2000 }, "page": "physics", "task": "powers", "at": 1999, "allowed": false },
+    { "name": "question release", "unlocks": { "physics/powers": 2000 }, "page": "physics", "task": "powers", "at": 2000, "allowed": true },
+    { "name": "another question", "unlocks": { "physics/powers": null }, "page": "physics", "task": "energies", "at": 1000, "allowed": true },
+    { "name": "general pages", "unlocks": { "energy": null }, "page": "quizzes", "at": 1000, "allowed": true }
+  ]
+}

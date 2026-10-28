@@ -958,3 +958,19 @@ code, in code point order.
 | `quiz-outside-run` | a place names a quiz on a screen other than the quiz page, a run or its results |
 | `task-without-run` | a place names a task on a screen other than a run |
 | `too-many` | a draft with more than `THINKING_LIMIT` (64) tasks, or an assignment map, order, guesses map, values map or dimension with more than 64 entries |
+# Scheduled Access
+
+The course's optional `unlocks` map schedules topics, quizzes and individual questions (`quiz-id/task-id`) in Unix milliseconds. A missing key adds no restriction; `null` keeps an item locked until its date is authored. A child opens only after every applicable ancestor date. The solution-free course view carries the same map in both implementations.
+
+```json
+{ "unlocks": { "energy": 0, "parametric": null, "physics/powers": 1793041200000 } }
+```
+
+Locked content remains rendered behind a tint with localized status. Its controls, links, deep links, history destinations and saved-run actions are unavailable. Release timers wake at the next date and recheck when a tab regains attention. Author preview uses the hidden URL argument `?preview=1`, followed by the ordinary page hash (for example `?preview=1#parametric`). Preview is a UI access override, not an authentication mechanism.
+## Workspace Previews
+
+Classification, sorting and matching items may carry a solution-free `mockup`, projected unchanged to `SheetItem` at every challenge. The preview contains given reference data only; categories, expected numeric results, explanations and familiarity stay on the authored item and never enter its sheet projection.
+
+The normative `Mockup` union supports Excel workbooks with localized tabs, cell grids, selections and a formula bar, and Grasshopper graphs with identified input/output ports, directed wires and indexed data-tree branches. `MockupNode.widget` distinguishes parameter capsules, components, numeric sliders, panels and plugin components. The owned validators check bounded workspace sizes, rectangular grids, selections, port references and slider ranges. All content carries English and German, including empty localized cell values where blank cells are meaningful.
+
+React renders reference tables and workspace figures beside each item's existing answer controls. The figures expose keyboard-scrollable regions, semantic row/column headers, highlighted targets, indexed tree values and explicit textual output-to-input relations. The palette follows the learner's theme and forced-color settings. The shared `🧫️fixtures/🖥️mockups/🔣️.json` vectors exercise both typed cores, the AJV structural oracle and sheet preservation across all challenges.

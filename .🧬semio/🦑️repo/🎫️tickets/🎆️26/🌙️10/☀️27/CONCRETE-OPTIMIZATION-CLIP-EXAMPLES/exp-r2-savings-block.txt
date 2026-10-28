@@ -1,0 +1,65 @@
+    def _saving(self, low, high, *, side, fraction):
+        """💚 Ghost bar and plot arrow for two runs that differ only in the overhang; the two-line value label stands left or right of the arrow."""
+        unit, saving, german = BAR_HEIGHT / YMAX, SHOWN[low] - SHOWN[high], self.language() == "de"
+        base = np.array(self.cards[high]["base"])
+        segment = _mn.Rectangle(width=.3, height=saving * unit, stroke_width=0, fill_color=SHADED, fill_opacity=.6).move_to(base + UP * (SHOWN[high] + saving / 2) * unit)
+        card = _mn.VGroup(self._ghost_bar(base, SHOWN[low]), segment)
+        top, bottom = self._spot(RUNS[low]), self._spot(RUNS[high])
+        arrow = _mn.Arrow(top + DOWN * .1, bottom + UP * .1, buff=0, color=SHADED, stroke_width=4, tip_length=.15, max_tip_length_to_length_ratio=.6)
+        label = _mn.VGroup(_room.text(_room.parts(-saving, "", 1, german), (0, 0, 0), size=15, color=SHADED), _room.text("kWh/a", (0, 0, 0), size=14, color=SHADED)).arrange(DOWN, buff=.04)
+        anchor = bottom + (top - bottom) * fraction
+        self.lines_.append([top, bottom])
+        note = self._near(label, anchor, (side, "left" if side == "right" else "right"), gap=.32)
+        return card, _mn.VGroup(arrow, note)
+
+    def _chain(self, low, high):
+        """⛓️ Sun beam stopped, cooling load removed and cooling electricity saved: every printed step follows from the model."""
+        shade = RUNS[high]["shading_summer"]
+        stopped = RUNS[low]["solar_summer"] - RUNS[high]["solar_summer"]
+        rays = len(_geometry(RUNS[high]["design"])[2])
+        loads = (round(RUNS[low]["cooling_demand"], 1), round(RUNS[high]["cooling_demand"], 1))
+        return self._lines((f"{self.tr('Beam stopped', 'Strahl gestoppt')}: {rays} {self.tr('rays', 'Strahlen')} × {self._kwh(RAY_BEAM)} × {self.number(shade, 3)} = {self._kwh(stopped, 0)}", _room.SUN, 16),
+                           (f"{self.tr('Cooling load', 'Kühllast')}: {self.number(loads[0], 1)} → {self._kwh(loads[1])} ({self.number(loads[1] - loads[0], 1)})", COOL, 16),
+                           (f"÷ EER {self.number(EER, 1)}: {self.tr('electricity', 'Strom')} {self.number(SHOWN[low], 1)} → {self._kwh(SHOWN[high])} ({self.number(SHOWN[high] - SHOWN[low], 1)})", SHADED, 16), top=2.5, width=6.3)
+
+    def _convention(self):
+        """⚖️ One sign convention for every effect."""
+        return self._chip(self.tr("Effect = high level − low level · negative = saves cooling electricity", "Effekt = hohe Stufe − niedrige Stufe · negativ = spart Kühlstrom"), (PANEL_X, 1.45, 0), 15, MUTED, 6.5)
+
+    def _savings(self):
+        """🧮 The overhang saves little at the small window and much more at the large one."""
+        veil_large, veil_small = _mn.VGroup(*[self._veil(self.cards[i]) for i in (2, 3)]), _mn.VGroup(*[self._veil(self.cards[i]) for i in (0, 1)])
+        card_small, arrow_small = self._saving(0, 1, side="left", fraction=.5)
+        card_large, arrow_large = self._saving(2, 3, side="right", fraction=.78)
+        chain_small, chain_large = self._chain(0, 1), self._chain(2, 3)
+        blocked_small, blocked_large = self.cards[1]["refs"]["blocked"], self.cards[3]["refs"]["blocked"]
+        self.convention = self._convention()
+        self.step("saving_30", _mn.FadeIn(veil_large), _mn.FadeIn(card_small), _mn.FadeIn(chain_small), _mn.FadeIn(self.convention), _mn.GrowFromEdge(arrow_small, UP), _mn.Indicate(blocked_small, color=ALERT, scale_factor=1.12), seconds=3.5)
+        self.step("saving_70", _mn.FadeOut(veil_large), _mn.FadeIn(veil_small), _mn.FadeIn(card_large), _mn.ReplacementTransform(chain_small, chain_large), _mn.GrowFromEdge(arrow_large, UP),
+                  _mn.Indicate(blocked_large, color=ALERT, scale_factor=1.08), seconds=3.5)
+        stopped = (RUNS[2]["solar_summer"] - RUNS[3]["solar_summer"], RUNS[0]["solar_summer"] - RUNS[1]["solar_summer"])
+        saved = (SHOWN[2] - SHOWN[3], SHOWN[0] - SHOWN[1])
+        rays = (len(_geometry(RUNS[3]["design"])[2]), len(_geometry(RUNS[1]["design"])[2]))
+        ratios = self._lines((f"{self.tr('rays', 'Strahlen')} {rays[0]} ÷ {rays[1]} = {self.number(rays[0] / rays[1], 1)} · {self.tr('beam stopped', 'Strahl gestoppt')} {self.number(stopped[0])} ÷ {self.number(stopped[1])} = {self.number(stopped[0] / stopped[1], 1)}", _room.SUN, 16),
+                             (f"{self.tr('cooling electricity saved', 'Kühlstrom gespart')} {self.number(saved[0], 1)} ÷ {self.number(saved[1], 1)} = {self.number(saved[0] / saved[1], 1)}", SHADED, 16), top=2.5, width=6.3)
+        self.savings, self.gain = _mn.VGroup(card_small, card_large, arrow_small, arrow_large), chain_large
+        start = self._at_plot(RUNS[1]["design"]["wwr"] * 100, SHOWN[1])
+        slope = SHOWN[2] - SHOWN[0]
+        end_value = SHOWN[1] + slope
+        parallel = _mn.DashedLine(start, self._at_plot(70, end_value), color=OPEN, stroke_width=2.4)
+        self.lines_.append([start, self._at_plot(70, end_value)])
+        gap_x = self._at_plot(70, 0)[0] + .5
+        top_end, bottom_end = self._at_plot(70, end_value), self._spot(RUNS[3])
+        gap_label = _mn.VGroup(self._t(self.tr("difference", "Differenz"), (0, 0, 0), 14, MIXED, 1.2), self._t(self._kwh(end_value - SHOWN[3]), (0, 0, 0), 14, MIXED, 1.2)).arrange(DOWN, buff=.04, aligned_edge=LEFT)
+        _room.place(gap_label, (gap_x + .12, (top_end[1] + bottom_end[1]) / 2, 0), "left")
+        gap = _mn.VGroup(_mn.Line((gap_x, top_end[1], 0), (gap_x, bottom_end[1], 0), color=MIXED, stroke_width=3), _mn.Line((gap_x - .08, top_end[1], 0), (gap_x + .08, top_end[1], 0), color=MIXED, stroke_width=3),
+                         _mn.Line((gap_x - .08, bottom_end[1], 0), (gap_x + .08, bottom_end[1], 0), color=MIXED, stroke_width=3), gap_label)
+        key = self._at("┄ " + self.tr("if the lines were parallel", "wenn die Linien parallel wären"), (self._at_plot(10, YMAX)[0] + .2, self._at_plot(10, YMAX)[1] - .7, 0), 15, OPEN, 2.9)
+        self.parallel = _mn.VGroup(parallel, gap, key)
+        change = self._chip(f"{self.tr('Overhang effect', 'Vordach-Effekt')}: {self._kwh(SHOWN[1] - SHOWN[0], sign=True)} {self.tr('at 30 %', 'bei 30 %')} · {self._kwh(SHOWN[3] - SHOWN[2], sign=True)} {self.tr('at 70 %', 'bei 70 %')}", (PANEL_X, 2.5, 0), 16, MIXED, 6.3)
+        rule = self._t(self.tr("depends on the window share = interaction", "hängt vom Fensteranteil ab = Wechselwirkung"), (PANEL_X, 2.05, 0), 16, MIXED, 6.3)
+        self.step("interaction", _mn.FadeOut(veil_small), _mn.FadeOut(self.legend), _mn.ReplacementTransform(chain_large, ratios), _mn.Create(parallel), _mn.FadeIn(gap), _mn.FadeIn(key), seconds=2.5)
+        self.step("interaction_2", _mn.ReplacementTransform(ratios, _mn.VGroup(change, rule)), _mn.Indicate(blocked_small, color=ALERT, scale_factor=1.12), _mn.Indicate(blocked_large, color=ALERT, scale_factor=1.08), seconds=2)
+        self.rule = _mn.VGroup(change, rule)
+        self.gain = _mn.VGroup()
+

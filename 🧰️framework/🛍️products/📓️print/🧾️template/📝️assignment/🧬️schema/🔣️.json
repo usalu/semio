@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/print/assignment.schema.json",
+  "title": "Assignment",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "language",
+    "theme",
+    "title"
+  ],
+  "properties": {
+    "language": {
+      "enum": [
+        "en",
+        "de"
+      ]
+    },
+    "theme": {
+      "enum": [
+        "light",
+        "dark"
+      ]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subtitle": {
+      "type": "string"
+    },
+    "author": {
+      "type": "string"
+    },
+    "date": {
+      "type": "string"
+    },
+    "course": {
+      "type": "string"
+    },
+    "institution": {
+      "type": "string"
+    },
+    "duration": {
+      "type": "string"
+    },
+    "submission": {
+      "type": "string"
+    }
+  }
+}

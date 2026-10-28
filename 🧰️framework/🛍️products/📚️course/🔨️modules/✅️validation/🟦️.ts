@@ -13,7 +13,7 @@
  * @see https://www.unicode.org/reports/tr15/ — Unicode normalization forms
  * @see ./🦀️.rs — the Rust twin
  */
-import { COURSE_ROOT_IDS, CHALLENGES, MAX_TIMESTAMP, MOTIONS, SCALES, SCREENS, SHORT_LENGTH, TASK_KINDS, type Answer, type Command, type Query, type Quiz, type Rejection, type Scale, type SheetMatchingTask, type SheetTask, type Timestamp } from "../../🧬️schema/🟦️.ts";
+import { COURSE_ROOT_IDS, CHALLENGES, MAX_TIMESTAMP, MOTIONS, SCALES, SCREENS, SHORT_LENGTH, TASK_KINDS, type Mockup, type Answer, type Command, type Query, type Quiz, type Rejection, type Scale, type SheetMatchingTask, type SheetTask, type Timestamp } from "../../🧬️schema/🟦️.ts";
 import CONTRACT from "../../🧬️schema/🔣️.json" with { type: "json" };
 
 /** 🩺️ One finding: where (JSON pointer) and what (kebab-case code). */
@@ -210,6 +210,7 @@ function quantity(value: unknown, path: string, report: Report): string | undefi
 
 /** 🪧️ The shared head of an item: id, label and optional short label, icon and explanation. */
 function itemHead(json: Json, path: string, report: Report): void {
+  if (Object.hasOwn(json, "mockup")) mockup(json.mockup, at(path, "mockup"), report);
   if (Object.hasOwn(json, "id")) slug(json.id, at(path, "id"), report);
   if (Object.hasOwn(json, "label")) text(json.label, at(path, "label"), report);
   short(json, path, report);
@@ -275,7 +276,7 @@ function classificationTask(json: Json, path: string, report: Report): void {
   const categoryIds = uniqueIds(categories, at(path, "categories"), report);
   const items = Object.hasOwn(json, "items")
     ? array(json.items, at(path, "items"), report, 2, (entry, entryPath) => {
-        const item = object(entry, entryPath, report, ["id", "label", "category"], ["short", "icon", "explanation"]);
+        const item = object(entry, entryPath, report, ["id", "label", "category"], ["short", "icon", "explanation", "mockup"]);
         if (!item) return;
         itemHead(item, entryPath, report);
         if (Object.hasOwn(item, "category") && slug(item.category, at(entryPath, "category"), report) && categories && !categoryIds.has(item.category)) report(at(entryPath, "category"), "category-unknown");
@@ -290,7 +291,7 @@ function sortingTask(json: Json, path: string, report: Report): void {
   const scale = Object.hasOwn(json, "quantity") ? quantity(json.quantity, at(path, "quantity"), report) : undefined;
   const items = Object.hasOwn(json, "items")
     ? array(json.items, at(path, "items"), report, 2, (entry, entryPath) => {
-        const item = object(entry, entryPath, report, ["id", "label", "value"], ["short", "icon", "familiar", "explanation"]);
+        const item = object(entry, entryPath, report, ["id", "label", "value"], ["short", "icon", "familiar", "explanation", "mockup"]);
         if (!item) return;
         itemHead(item, entryPath, report);
         familiar(item, entryPath, report);
@@ -316,7 +317,7 @@ function matchingTask(json: Json, path: string, report: Report): void {
   uniqueIds(dimensions, at(path, "dimensions"), report);
   const items = Object.hasOwn(json, "items")
     ? array(json.items, at(path, "items"), report, 2, (entry, entryPath) => {
-        const item = object(entry, entryPath, report, ["id", "label", "values"], ["short", "icon", "familiar", "explanation"]);
+        const item = object(entry, entryPath, report, ["id", "label", "values"], ["short", "icon", "familiar", "explanation", "mockup"]);
         if (!item) return;
         itemHead(item, entryPath, report);
         familiar(item, entryPath, report);
@@ -442,10 +443,48 @@ function topicGroups(value: unknown, quizIds: ReadonlySet<string>, report: Repor
   if (topics && [...quizIds].some((id) => !assigned.has(id))) report("/topics", "quiz-count-mismatch");
 }
 
-/** 📰️ Every issue of the course a client adopts from its cache or proctor, including topic identity and ownership. */
+/** 🗓️ Validates release keys and nullable Unix millisecond timestamps. */
+function unlocks(value: unknown, report: Report): void {
+  if (!isObject(value)) return report("/unlocks", "type-invalid");
+  for (const [key, instant] of Object.entries(value)) {
+    const path = at("/unlocks", key);
+    const parts = key.split("/");
+    if (parts.length > 2 || parts.some((part) => !isSlug(part))) report(path, "value-invalid");
+    if (instant !== null && !isTimestamp(instant)) report(path, "value-invalid");
+  }
+}
+
+/** 📝️ Validates localized printable artifacts and their topic ownership without a schema dependency. */
+function assignments(value: unknown, topics: unknown, report: Report): void {
+  const topicIds = new Set(Array.isArray(topics) ? topics.filter(isObject).map((topic) => topic.id) : []);
+  const entries = array(value, "/assignments", report, 0, (entry, path) => {
+    const assignment = object(entry, path, report, ["id", "topic", "emoji", "title", "description", "documents"]);
+    if (!assignment) return;
+    if (Object.hasOwn(assignment, "id")) slug(assignment.id, at(path, "id"), report);
+    if (Object.hasOwn(assignment, "topic") && slug(assignment.topic, at(path, "topic"), report) && !topicIds.has(assignment.topic)) report(at(path, "topic"), "value-invalid");
+    if (Object.hasOwn(assignment, "emoji")) string(assignment.emoji, at(path, "emoji"), report, 1, 16);
+    for (const key of ["title", "description"]) if (Object.hasOwn(assignment, key)) text(assignment[key], at(path, key), report);
+    if (!Object.hasOwn(assignment, "documents")) return;
+    const documents = object(assignment.documents, at(path, "documents"), report, ["en", "de"]);
+    if (!documents) return;
+    for (const language of ["en", "de"]) {
+      if (!Object.hasOwn(documents, language)) continue;
+      const pointer = at(at(path, "documents"), language);
+      const document = object(documents[language], pointer, report, ["namespace", "id", "file", "producer"]);
+      if (!document) continue;
+      if (Object.hasOwn(document, "namespace") && document.namespace !== "course") report(at(pointer, "namespace"), "value-invalid");
+      if (Object.hasOwn(document, "producer") && string(document.producer, at(pointer, "producer"), report, 1, 160) && !/^@[a-z][a-z0-9-]*\/[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$/u.test(document.producer)) report(at(pointer, "producer"), "value-invalid");
+      if (Object.hasOwn(document, "id")) slug(document.id, at(pointer, "id"), report);
+      if (Object.hasOwn(document, "file") && string(document.file, at(pointer, "file"), report, 1, 128) && !/^[a-z0-9]+(?:-[a-z0-9]+)*\.pdf$/u.test(document.file)) report(at(pointer, "file"), "value-invalid");
+    }
+  });
+  uniqueIds(entries, "/assignments", report);
+}
+
+/** 📰️ Validates the solution-free course, including authored release times. */
 export function courseViewIssues(value: unknown): ValidationIssue[] {
   return collect((report) => {
-    const json = object(value, "", report, ["id", "title", "introduction", "quizzes", "badges"], ["short", "topics"]);
+    const json = object(value, "", report, ["id", "title", "introduction", "quizzes", "badges"], ["short", "topics", "unlocks", "assignments"]);
     if (!json) return;
     if (Object.hasOwn(json, "id")) slug(json.id, "/id", report);
     if (Object.hasOwn(json, "title")) text(json.title, "/title", report);
@@ -474,6 +513,8 @@ export function courseViewIssues(value: unknown): ValidationIssue[] {
       uniqueIds(tasks, at(path, "tasks"), report);
     }) : undefined;
     const quizIds = uniqueIds(quizzes, "/quizzes", report);
+    if (json.assignments !== undefined) assignments(json.assignments, json.topics, report);
+    if (json.unlocks !== undefined) unlocks(json.unlocks, report);
     if (json.topics !== undefined) topicGroups(json.topics, quizIds, report);
     const badges = Object.hasOwn(json, "badges") ? array(json.badges, "/badges", report, 0, (entry, path) => {
       const badge = object(entry, path, report, ["id", "emoji", "label", "description"]);
@@ -490,7 +531,7 @@ export function courseViewIssues(value: unknown): ValidationIssue[] {
 /** 📚️ Every issue of a course document given its quizzes in course order: structure per the schema, unique paths, quiz ids and badge ids, and badge rules that reference existing quizzes and select at least one task. */
 export function courseIssues(course: unknown, quizzes: readonly Quiz[]): ValidationIssue[] {
   return collect((report) => {
-    const json = object(course, "", report, ["schema", "id", "title", "introduction", "quizzes", "badges"], ["$schema", "short", "topics"]);
+    const json = object(course, "", report, ["schema", "id", "title", "introduction", "quizzes", "badges"], ["$schema", "short", "topics", "unlocks", "assignments"]);
     if (!json) return;
     if (Object.hasOwn(json, "$schema")) string(json.$schema, "/$schema", report);
     if (Object.hasOwn(json, "schema") && json.schema !== COURSE_SCHEMA) report("/schema", "value-invalid");
@@ -517,6 +558,8 @@ export function courseIssues(course: unknown, quizzes: readonly Quiz[]): Validat
       if (RESERVED_COURSE_IDS.has(quiz.id)) report(at("/quizzes", index), "value-invalid");
       quizIds.add(quiz.id);
     });
+    if (json.assignments !== undefined) assignments(json.assignments, json.topics, report);
+    if (json.unlocks !== undefined) unlocks(json.unlocks, report);
     if (Object.hasOwn(json, "topics")) topicGroups(json.topics, quizIds, report);
     const badges = Object.hasOwn(json, "badges")
       ? array(json.badges, "/badges", report, 0, (entry, path) => {
@@ -724,6 +767,7 @@ function contractCheck(schema: Contract): ContractCheck {
   };
 }
 
+const mockupCheck = contractCheck(CONTRACT_DEFINITIONS.Mockup!);
 const presentationCheck = contractCheck(CONTRACT_DEFINITIONS.PresencePresentation!);
 
 /** 🧳️ The largest encoded public presentation, leaving room for its roster envelope in the proctor's 128 KiB state budget. */
@@ -911,5 +955,50 @@ export function answerComplete(sheetTask: SheetTask, answer?: Answer): boolean {
     }
     case "matching":
       return sheetTask.kind === "matching" && sheetTask.dimensions.every((dimension) => everyItem(dimension.cards === undefined ? answer.guesses : answer.assignments, dimension.id, sheetTask));
+  }
+}
+
+/** 🖥️ The normative shape plus cross-references and grid bounds of given workspace data. */
+function mockup(value: unknown, path: string, report: Report): void {
+  let valid = true;
+  mockupCheck(value, path, (pointer, code) => { valid = false; report(pointer, code); });
+  if (!valid) return;
+  const preview = value as Mockup;
+  if (preview.kind === "excel") {
+    if (preview.activeSheet >= preview.sheets.length) report(at(path, "activeSheet"), "value-invalid");
+    preview.rows.forEach((row, index) => { if (row.length !== preview.columns.length) report(at(at(path, "rows"), index), "value-invalid"); });
+    const selectionPath = at(path, "selection");
+    const selected = preview.selection;
+    for (const [key, index, size] of [["row", selected.row, preview.rows.length], ["rowEnd", selected.rowEnd, preview.rows.length], ["column", selected.column, preview.columns.length], ["columnEnd", selected.columnEnd, preview.columns.length]] as const) {
+      if (index !== undefined && index >= size) report(at(selectionPath, key), "value-invalid");
+    }
+    if (selected.rowEnd !== undefined && selected.rowEnd < selected.row) report(at(selectionPath, "rowEnd"), "value-invalid");
+    if (selected.columnEnd !== undefined && selected.columnEnd < selected.column) report(at(selectionPath, "columnEnd"), "value-invalid");
+    return;
+  }
+  const nodesPath = at(path, "nodes");
+  uniqueIds(preview.nodes, nodesPath, report);
+  preview.nodes.forEach((node, index) => {
+    const widget = node.widget;
+    if (widget?.kind === "slider" && (widget.max <= widget.min || widget.value < widget.min || widget.value > widget.max)) report(at(at(nodesPath, index), "widget"), "value-invalid");
+    uniqueIds(node.inputs, at(at(nodesPath, index), "inputs"), report);
+    uniqueIds(node.outputs, at(at(nodesPath, index), "outputs"), report);
+  });
+  const endpoint = (nodeId: string | undefined, portId: string | undefined, pointer: string, input: boolean): void => {
+    const node = preview.nodes.find((node) => node.id === nodeId);
+    if (!(input ? node?.inputs : node?.outputs)?.some((port) => port.id === portId)) report(pointer, "value-invalid");
+  };
+  preview.wires.forEach((wire, index) => {
+    endpoint(wire.from.node, wire.from.port, at(at(at(path, "wires"), index), "from"), false);
+    endpoint(wire.to.node, wire.to.port, at(at(at(path, "wires"), index), "to"), true);
+  });
+  const target = preview.target;
+  const targetPath = at(path, "target");
+  if (target.kind === "node" || target.kind === "input" || target.kind === "output") {
+    if (!preview.nodes.some((node) => node.id === target.node)) report(at(targetPath, "node"), "value-invalid");
+    else if (target.kind !== "node") endpoint(target.node, target.port, targetPath, target.kind === "input");
+  } else {
+    const count = target.kind === "wire" ? preview.wires.length : target.kind === "branch" ? preview.tree.length : target.kind === "item" ? preview.tree[0]?.values.length ?? 0 : undefined;
+    if (count !== undefined && target.index >= count) report(at(targetPath, "index"), "value-invalid");
   }
 }

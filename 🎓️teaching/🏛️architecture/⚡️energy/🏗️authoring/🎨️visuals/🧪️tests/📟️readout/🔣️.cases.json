@@ -1,0 +1,16 @@
+{
+  "schema": "math-readout-template-cache-tests/v1",
+  "capacity": 32,
+  "fontSize": 24,
+  "sources": ["V = 440\\,\\mathrm{m^{3}}", "\\frac{Q}{t} = 50\\,\\mathrm{W}"],
+  "colors": ["#FFFFFF", "#FF344F", "#FFFFFF80"],
+  "anchors": ["left", "center", "right"],
+  "positions": [[0, 0, 0], [1, 0.5, 0]],
+  "canvas": [[480, 270], [640, 360]],
+  "frameWidth": [14.222222222222221, 16],
+  "renderer": ["cairo", "opengl"],
+  "namespace": ["font-theme-a", "font-theme-b"],
+  "kerning": [60, 80],
+  "minimumCanvas": [[854, 480], [1024, 576]],
+  "mutations": {"shift": [3, 1, 0], "color": "#FF344F", "opacity": 0.2, "strokeWidth": 10}
+}

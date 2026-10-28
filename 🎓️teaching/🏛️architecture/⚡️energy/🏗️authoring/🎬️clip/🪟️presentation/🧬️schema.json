@@ -1,0 +1,490 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Course Topic Clip and Chapter Navigation",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "viewport",
+    "locales",
+    "identity",
+    "chrome",
+    "focus",
+    "sourceCrop",
+    "timing",
+    "topics",
+    "labels",
+    "restoreTiming",
+    "contentCamera"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "version": {
+      "const": 1
+    },
+    "viewport": {
+      "$ref": "#/$defs/size"
+    },
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "brand",
+        "subject",
+        "section"
+      ],
+      "properties": {
+        "brand": {
+          "const": "semio"
+        },
+        "subject": {
+          "$ref": "#/$defs/localized"
+        },
+        "section": {
+          "$ref": "#/$defs/localized"
+        }
+      }
+    },
+    "chrome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "navbarHeight",
+        "footerHeight",
+        "titleHeight",
+        "inset"
+      ],
+      "properties": {
+        "navbarHeight": {
+          "const": 28.8
+        },
+        "footerHeight": {
+          "const": 28.8
+        },
+        "titleHeight": {
+          "const": 22.4
+        },
+        "inset": {
+          "const": 3.2
+        }
+      }
+    },
+    "focus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "rect",
+        "viewport"
+      ],
+      "properties": {
+        "rect": {
+          "$ref": "#/$defs/rect"
+        },
+        "viewport": {
+          "$ref": "#/$defs/rect"
+        }
+      }
+    },
+    "sourceCrop": {
+      "const": {
+        "left": 0,
+        "top": 0,
+        "right": 1,
+        "bottom": 1
+      }
+    },
+    "timing": {
+      "$ref": "#/$defs/timing"
+    },
+    "labels": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "view",
+        "topics",
+        "videos",
+        "empty",
+        "overview"
+      ],
+      "properties": {
+        "view": {
+          "$ref": "#/$defs/localized"
+        },
+        "topics": {
+          "$ref": "#/$defs/localized"
+        },
+        "videos": {
+          "$ref": "#/$defs/localized"
+        },
+        "empty": {
+          "$ref": "#/$defs/localized"
+        },
+        "overview": {
+          "$ref": "#/$defs/localized"
+        },
+        "courses": {
+          "$ref": "#/$defs/localized"
+        },
+        "clips": {
+          "$ref": "#/$defs/localized"
+        },
+        "chapters": {
+          "$ref": "#/$defs/localized"
+        }
+      }
+    },
+    "topics": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "icon",
+          "cell",
+          "videos"
+        ],
+        "properties": {
+          "id": {
+            "enum": [
+              "energy",
+              "parametric",
+              "bim",
+              "grasshopper",
+              "excel",
+              "optimization"
+            ]
+          },
+          "title": {
+            "$ref": "#/$defs/localized"
+          },
+          "icon": {
+            "type": "string",
+            "minLength": 1
+          },
+          "cell": {
+            "$ref": "#/$defs/cell"
+          },
+          "videos": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/video"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "restoreTiming": {
+      "$ref": "#/$defs/timing"
+    },
+    "contentCamera": {
+      "type": "object",
+      "required": [
+        "duration"
+      ],
+      "properties": {
+        "duration": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "courses": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "icon",
+          "symbol",
+          "cell",
+          "topics"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "$ref": "#/$defs/localized"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "symbol": {
+            "type": "string"
+          },
+          "cell": {
+            "$ref": "#/$defs/cell"
+          },
+          "topics": {
+            "type": "array",
+            "minItems": 6,
+            "maxItems": 6,
+            "items": {
+              "type": "object",
+              "required": [
+                "id",
+                "title",
+                "icon",
+                "cell",
+                "videos"
+              ],
+              "properties": {
+                "id": {
+                  "enum": [
+                    "energy",
+                    "parametric",
+                    "bim",
+                    "grasshopper",
+                    "excel",
+                    "optimization"
+                  ]
+                },
+                "title": {
+                  "$ref": "#/$defs/localized"
+                },
+                "icon": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "cell": {
+                  "$ref": "#/$defs/cell"
+                },
+                "videos": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/$defs/video"
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "$defs": {
+    "size": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "width",
+        "height"
+      ],
+      "properties": {
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "rect": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "x",
+        "y",
+        "width",
+        "height"
+      ],
+      "properties": {
+        "x": {
+          "type": "number",
+          "minimum": 0
+        },
+        "y": {
+          "type": "number",
+          "minimum": 0
+        },
+        "width": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "height": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    "localized": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "cell": {
+      "type": "object",
+      "required": [
+        "column",
+        "row"
+      ],
+      "properties": {
+        "column": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "row": {
+          "type": "integer",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "video": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "icon",
+        "symbol",
+        "cell"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "$ref": "#/$defs/localized"
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "enum": [
+            "physics",
+            "air",
+            "heat",
+            "cool",
+            "balance",
+            "bim",
+            "optimization"
+          ]
+        },
+        "cell": {
+          "$ref": "#/$defs/cell"
+        },
+        "chapters": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/chapter"
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "timing": {
+      "type": "object",
+      "required": [
+        "topicTravel",
+        "topicReveal",
+        "topicPress",
+        "topicHold",
+        "videoTravel",
+        "videoReveal",
+        "videoPress",
+        "focusHold"
+      ],
+      "properties": {
+        "topicTravel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "topicReveal": {
+          "type": "number",
+          "minimum": 0
+        },
+        "topicPress": {
+          "type": "number",
+          "minimum": 0
+        },
+        "topicHold": {
+          "type": "number",
+          "minimum": 0
+        },
+        "videoTravel": {
+          "type": "number",
+          "minimum": 0
+        },
+        "videoReveal": {
+          "type": "number",
+          "minimum": 0
+        },
+        "videoPress": {
+          "type": "number",
+          "minimum": 0
+        },
+        "focusHold": {
+          "type": "number",
+          "minimum": 0
+        }
+      },
+      "additionalProperties": false
+    },
+    "chapter": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "icon",
+        "symbol",
+        "cell"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "$ref": "#/$defs/localized"
+        },
+        "icon": {
+          "type": "string",
+          "minLength": 1
+        },
+        "symbol": {
+          "type": "string"
+        },
+        "cell": {
+          "$ref": "#/$defs/cell"
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

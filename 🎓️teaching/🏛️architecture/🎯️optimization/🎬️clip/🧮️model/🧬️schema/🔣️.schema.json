@@ -1,0 +1,1224 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://semio.tech/schemas/architecture/optimization-teaching.json",
+  "$defs": {
+    "bilingual": {
+      "type": "object",
+      "required": [
+        "en",
+        "de"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "en": {
+          "type": "string",
+          "minLength": 1
+        },
+        "de": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "quantity": {
+      "type": "object",
+      "required": [
+        "value",
+        "unit",
+        "note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "value": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    },
+    "design": {
+      "type": "object",
+      "required": [
+        "orientation",
+        "wwr",
+        "overhang",
+        "insulation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "orientation": {
+          "type": "number"
+        },
+        "wwr": {
+          "type": "number"
+        },
+        "overhang": {
+          "type": "number"
+        },
+        "insulation": {
+          "type": "number"
+        }
+      }
+    },
+    "designPartial": {
+      "type": "object",
+      "required": [
+        "wwr",
+        "overhang",
+        "insulation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "wwr": {
+          "type": "number"
+        },
+        "overhang": {
+          "type": "number"
+        },
+        "insulation": {
+          "type": "number"
+        }
+      }
+    },
+    "point": {
+      "type": "object",
+      "required": [
+        "wwr",
+        "overhang"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "wwr": {
+          "type": "number"
+        },
+        "overhang": {
+          "type": "number"
+        }
+      }
+    },
+    "range": {
+      "type": "object",
+      "required": [
+        "min",
+        "max",
+        "unit",
+        "title"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "min": {
+          "type": "number"
+        },
+        "max": {
+          "type": "number"
+        },
+        "unit": {
+          "type": "string",
+          "minLength": 1
+        },
+        "title": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    }
+  },
+  "type": "object",
+  "required": [
+    "schema",
+    "languages",
+    "title",
+    "note",
+    "parameters",
+    "ranges",
+    "sun",
+    "baseline",
+    "orientation",
+    "surface",
+    "sampling",
+    "factorial",
+    "weights",
+    "brief",
+    "criteria",
+    "variants",
+    "pareto",
+    "algorithms"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "semio.architecture.optimization/v2"
+    },
+    "languages": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "title": {
+      "$ref": "#/$defs/bilingual"
+    },
+    "note": {
+      "$ref": "#/$defs/bilingual"
+    },
+    "parameters": {
+      "type": "object",
+      "required": [
+        "room",
+        "climate",
+        "envelope",
+        "daylight",
+        "systems",
+        "lighting",
+        "prices",
+        "economics",
+        "carbon"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "room": {
+          "type": "object",
+          "required": [
+            "width",
+            "depth",
+            "height",
+            "head"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "width": {
+              "$ref": "#/$defs/quantity"
+            },
+            "depth": {
+              "$ref": "#/$defs/quantity"
+            },
+            "height": {
+              "$ref": "#/$defs/quantity"
+            },
+            "head": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "climate": {
+          "type": "object",
+          "required": [
+            "heating_degree_hours",
+            "cooling_degree_hours",
+            "winter_irradiance_mean",
+            "winter_irradiance_cos1",
+            "winter_irradiance_cos2",
+            "summer_irradiance_mean",
+            "summer_irradiance_cos1",
+            "summer_irradiance_cos2",
+            "direct_share_winter",
+            "direct_share_summer",
+            "beam_reference",
+            "internal_gains_winter",
+            "internal_gains_summer",
+            "utilization_exponent_heating",
+            "utilization_exponent_cooling"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "heating_degree_hours": {
+              "$ref": "#/$defs/quantity"
+            },
+            "cooling_degree_hours": {
+              "$ref": "#/$defs/quantity"
+            },
+            "winter_irradiance_mean": {
+              "$ref": "#/$defs/quantity"
+            },
+            "winter_irradiance_cos1": {
+              "$ref": "#/$defs/quantity"
+            },
+            "winter_irradiance_cos2": {
+              "$ref": "#/$defs/quantity"
+            },
+            "summer_irradiance_mean": {
+              "$ref": "#/$defs/quantity"
+            },
+            "summer_irradiance_cos1": {
+              "$ref": "#/$defs/quantity"
+            },
+            "summer_irradiance_cos2": {
+              "$ref": "#/$defs/quantity"
+            },
+            "direct_share_winter": {
+              "$ref": "#/$defs/quantity"
+            },
+            "direct_share_summer": {
+              "$ref": "#/$defs/quantity"
+            },
+            "beam_reference": {
+              "allOf": [
+                {
+                  "$ref": "#/$defs/quantity"
+                },
+                {
+                  "type": "object",
+                  "properties": {
+                    "value": {
+                      "type": "number",
+                      "exclusiveMinimum": 0
+                    }
+                  }
+                }
+              ]
+            },
+            "internal_gains_winter": {
+              "$ref": "#/$defs/quantity"
+            },
+            "internal_gains_summer": {
+              "$ref": "#/$defs/quantity"
+            },
+            "utilization_exponent_heating": {
+              "$ref": "#/$defs/quantity"
+            },
+            "utilization_exponent_cooling": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "envelope": {
+          "type": "object",
+          "required": [
+            "r_si",
+            "r_se",
+            "r_masonry",
+            "conductivity_insulation",
+            "u_window",
+            "h_other",
+            "g_value"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "r_si": {
+              "$ref": "#/$defs/quantity"
+            },
+            "r_se": {
+              "$ref": "#/$defs/quantity"
+            },
+            "r_masonry": {
+              "$ref": "#/$defs/quantity"
+            },
+            "conductivity_insulation": {
+              "$ref": "#/$defs/quantity"
+            },
+            "u_window": {
+              "$ref": "#/$defs/quantity"
+            },
+            "h_other": {
+              "$ref": "#/$defs/quantity"
+            },
+            "g_value": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "daylight": {
+          "type": "object",
+          "required": [
+            "transmittance",
+            "sky_angle",
+            "sky_angle_loss",
+            "overhang_half_depth",
+            "surface_area",
+            "reflectance",
+            "reference_factor",
+            "max_autonomy",
+            "orientation_gain"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "transmittance": {
+              "$ref": "#/$defs/quantity"
+            },
+            "sky_angle": {
+              "$ref": "#/$defs/quantity"
+            },
+            "sky_angle_loss": {
+              "$ref": "#/$defs/quantity"
+            },
+            "overhang_half_depth": {
+              "$ref": "#/$defs/quantity"
+            },
+            "surface_area": {
+              "$ref": "#/$defs/quantity"
+            },
+            "reflectance": {
+              "$ref": "#/$defs/quantity"
+            },
+            "reference_factor": {
+              "$ref": "#/$defs/quantity"
+            },
+            "max_autonomy": {
+              "$ref": "#/$defs/quantity"
+            },
+            "orientation_gain": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "systems": {
+          "type": "object",
+          "required": [
+            "cop",
+            "eer"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "cop": {
+              "$ref": "#/$defs/quantity"
+            },
+            "eer": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "lighting": {
+          "type": "object",
+          "required": [
+            "power_density",
+            "hours"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "power_density": {
+              "$ref": "#/$defs/quantity"
+            },
+            "hours": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "prices": {
+          "type": "object",
+          "required": [
+            "fixed",
+            "wall",
+            "window",
+            "insulation_per_cm",
+            "overhang"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "fixed": {
+              "$ref": "#/$defs/quantity"
+            },
+            "wall": {
+              "$ref": "#/$defs/quantity"
+            },
+            "window": {
+              "$ref": "#/$defs/quantity"
+            },
+            "insulation_per_cm": {
+              "$ref": "#/$defs/quantity"
+            },
+            "overhang": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "economics": {
+          "type": "object",
+          "required": [
+            "tariff",
+            "tariff_hi",
+            "service_life"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "tariff": {
+              "$ref": "#/$defs/quantity"
+            },
+            "tariff_hi": {
+              "$ref": "#/$defs/quantity"
+            },
+            "service_life": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        },
+        "carbon": {
+          "type": "object",
+          "required": [
+            "wall",
+            "window",
+            "insulation_per_cm",
+            "overhang"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "wall": {
+              "$ref": "#/$defs/quantity"
+            },
+            "window": {
+              "$ref": "#/$defs/quantity"
+            },
+            "insulation_per_cm": {
+              "$ref": "#/$defs/quantity"
+            },
+            "overhang": {
+              "$ref": "#/$defs/quantity"
+            }
+          }
+        }
+      }
+    },
+    "ranges": {
+      "type": "object",
+      "required": [
+        "orientation",
+        "wwr",
+        "overhang",
+        "insulation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "orientation": {
+          "$ref": "#/$defs/range"
+        },
+        "wwr": {
+          "$ref": "#/$defs/range"
+        },
+        "overhang": {
+          "$ref": "#/$defs/range"
+        },
+        "insulation": {
+          "$ref": "#/$defs/range"
+        }
+      }
+    },
+    "sun": {
+      "type": "object",
+      "required": [
+        "latitude",
+        "declination",
+        "minimum_altitude",
+        "hours",
+        "winter_altitude",
+        "summer_altitude",
+        "low_summer_altitude",
+        "winter_azimuth",
+        "summer_azimuth",
+        "note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "latitude": {
+          "type": "number"
+        },
+        "declination": {
+          "type": "number"
+        },
+        "minimum_altitude": {
+          "type": "number"
+        },
+        "hours": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "winter_altitude": {
+          "type": "number"
+        },
+        "summer_altitude": {
+          "type": "number"
+        },
+        "low_summer_altitude": {
+          "type": "number"
+        },
+        "winter_azimuth": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "summer_azimuth": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    },
+    "baseline": {
+      "$ref": "#/$defs/design"
+    },
+    "orientation": {
+      "type": "object",
+      "required": [
+        "note",
+        "range",
+        "design",
+        "constraint",
+        "reference",
+        "start",
+        "neighbour_step"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        },
+        "range": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "design": {
+          "$ref": "#/$defs/designPartial"
+        },
+        "constraint": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "integer"
+          }
+        },
+        "reference": {
+          "type": "integer"
+        },
+        "start": {
+          "type": "integer"
+        },
+        "neighbour_step": {
+          "type": "integer",
+          "minimum": 1
+        }
+      }
+    },
+    "surface": {
+      "type": "object",
+      "required": [
+        "note",
+        "design",
+        "wwr",
+        "overhang"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        },
+        "design": {
+          "$ref": "#/$defs/design"
+        },
+        "wwr": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "overhang": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "sampling": {
+      "type": "object",
+      "required": [
+        "levels",
+        "random",
+        "latin_permutation"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "levels": {
+          "type": "object",
+          "required": [
+            "wwr",
+            "overhang",
+            "orientation",
+            "insulation"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "wwr": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "overhang": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "orientation": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "insulation": {
+              "type": "array",
+              "minItems": 2,
+              "items": {
+                "type": "number"
+              }
+            }
+          }
+        },
+        "random": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 1
+            }
+          }
+        },
+        "latin_permutation": {
+          "type": "array",
+          "minItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "factorial": {
+      "type": "object",
+      "required": [
+        "note",
+        "design",
+        "response",
+        "factors",
+        "third"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        },
+        "design": {
+          "$ref": "#/$defs/design"
+        },
+        "response": {
+          "enum": [
+            "heating",
+            "cooling",
+            "lighting",
+            "electricity"
+          ]
+        },
+        "factors": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "object",
+            "required": [
+              "id",
+              "levels",
+              "unit",
+              "title"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "id": {
+                "enum": [
+                  "wwr",
+                  "overhang",
+                  "insulation"
+                ]
+              },
+              "levels": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 2,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "unit": {
+                "type": "string",
+                "minLength": 1
+              },
+              "title": {
+                "$ref": "#/$defs/bilingual"
+              }
+            }
+          }
+        },
+        "third": {
+          "type": "object",
+          "required": [
+            "id",
+            "levels",
+            "unit",
+            "title"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "id": {
+              "enum": [
+                "wwr",
+                "overhang",
+                "insulation"
+              ]
+            },
+            "levels": {
+              "type": "array",
+              "minItems": 2,
+              "maxItems": 2,
+              "items": {
+                "type": "number"
+              }
+            },
+            "unit": {
+              "type": "string",
+              "minLength": 1
+            },
+            "title": {
+              "$ref": "#/$defs/bilingual"
+            }
+          }
+        }
+      }
+    },
+    "brief": {
+      "type": "object",
+      "required": [
+        "budget_chf",
+        "note"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "budget_chf": {
+          "type": "number",
+          "exclusiveMinimum": 0
+        },
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        }
+      }
+    },
+    "weights": {
+      "type": "object",
+      "required": [
+        "balanced",
+        "cost_heavy"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "balanced": {
+          "type": "object",
+          "required": [
+            "electricity",
+            "cost",
+            "daylight",
+            "carbon"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "electricity": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "daylight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "carbon": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        },
+        "cost_heavy": {
+          "type": "object",
+          "required": [
+            "electricity",
+            "cost",
+            "daylight",
+            "carbon"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "electricity": {
+              "type": "number",
+              "minimum": 0
+            },
+            "cost": {
+              "type": "number",
+              "minimum": 0
+            },
+            "daylight": {
+              "type": "number",
+              "minimum": 0
+            },
+            "carbon": {
+              "type": "number",
+              "minimum": 0
+            }
+          }
+        }
+      }
+    },
+    "criteria": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "key",
+          "direction",
+          "unit",
+          "title"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "direction": {
+            "enum": [
+              "min",
+              "max"
+            ]
+          },
+          "unit": {
+            "type": "string",
+            "minLength": 1
+          },
+          "title": {
+            "$ref": "#/$defs/bilingual"
+          }
+        }
+      }
+    },
+    "variants": {
+      "type": "array",
+      "minItems": 2,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "title",
+          "design"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "extra": {
+            "type": "boolean"
+          },
+          "title": {
+            "$ref": "#/$defs/bilingual"
+          },
+          "design": {
+            "$ref": "#/$defs/design"
+          }
+        }
+      }
+    },
+    "pareto": {
+      "type": "object",
+      "required": [
+        "note",
+        "design",
+        "wwr",
+        "insulation",
+        "overhang",
+        "weights",
+        "dominated_example",
+        "step",
+        "refinement"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "note": {
+          "$ref": "#/$defs/bilingual"
+        },
+        "design": {
+          "$ref": "#/$defs/design"
+        },
+        "wwr": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "insulation": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "overhang": {
+          "type": "array",
+          "minItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "weights": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "dominated_example": {
+          "type": "object",
+          "required": [
+            "winner",
+            "loser"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "winner": {
+              "type": "string",
+              "minLength": 1
+            },
+            "loser": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "step": {
+          "type": "object",
+          "required": [
+            "from",
+            "to"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "from": {
+              "type": "string",
+              "minLength": 1
+            },
+            "to": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "refinement": {
+          "type": "object",
+          "required": [
+            "member"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "member": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "algorithms": {
+      "type": "object",
+      "required": [
+        "budget",
+        "start",
+        "gradient",
+        "pattern",
+        "genetic"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "budget": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "start": {
+          "$ref": "#/$defs/point"
+        },
+        "gradient": {
+          "type": "object",
+          "required": [
+            "difference",
+            "learning_rate",
+            "iterations"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "difference": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "learning_rate": {
+              "type": "number",
+              "exclusiveMinimum": 0
+            },
+            "iterations": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "pattern": {
+          "type": "object",
+          "required": [
+            "step",
+            "contraction",
+            "tolerance",
+            "iterations"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "step": {
+              "$ref": "#/$defs/point"
+            },
+            "contraction": {
+              "type": "number",
+              "exclusiveMinimum": 0,
+              "exclusiveMaximum": 1
+            },
+            "tolerance": {
+              "type": "number",
+              "minimum": 0
+            },
+            "iterations": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "genetic": {
+          "type": "object",
+          "required": [
+            "population",
+            "generations",
+            "elite",
+            "tournament",
+            "mutation",
+            "lcg"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "population": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "generations": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "elite": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "tournament": {
+              "type": "integer",
+              "minimum": 2
+            },
+            "mutation": {
+              "type": "object",
+              "required": [
+                "probability",
+                "wwr",
+                "overhang"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "probability": {
+                  "type": "number",
+                  "minimum": 0,
+                  "maximum": 1
+                },
+                "wwr": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                },
+                "overhang": {
+                  "type": "number",
+                  "exclusiveMinimum": 0
+                }
+              }
+            },
+            "lcg": {
+              "type": "object",
+              "required": [
+                "seed",
+                "multiplier",
+                "increment",
+                "modulus",
+                "note"
+              ],
+              "additionalProperties": false,
+              "properties": {
+                "seed": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "multiplier": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "increment": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "modulus": {
+                  "type": "integer",
+                  "minimum": 2
+                },
+                "note": {
+                  "$ref": "#/$defs/bilingual"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

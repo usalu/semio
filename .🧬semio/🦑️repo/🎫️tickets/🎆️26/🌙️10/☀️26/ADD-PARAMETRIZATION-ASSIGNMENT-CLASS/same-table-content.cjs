@@ -1,0 +1,34 @@
+const fs=require("fs");
+const crypto=require("crypto");
+const path=require("path");
+const root="C:/git/semio";
+const ticket="C:/git/semio/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ADD-PARAMETRIZATION-ASSIGNMENT-CLASS";
+const base=path.join(root,"🧰️framework/🛍️products/📓️print/🧾️template/📝️assignment");
+const generated=path.join(ticket,"🗑️generated");
+fs.mkdirSync(generated,{recursive:true});
+const hash=value=>crypto.createHash("sha256").update(value).digest("hex");
+const results=[];
+for(const [language,title] of [["de","Beispiel"],["en","Example"]]){
+  const file=path.join(base,"parametrization-"+language+".content.tex");
+  const before=fs.readFileSync(file);
+  const source=before.toString("utf8");
+  const lines=source.split("\r\n");
+  const tables=lines.filter(line=>line.startsWith("\\AssignmentWorkedExampleTable"));
+  if(tables.length!==1)throw Error("Expected one worked table in "+language);
+  const call=tables[0];
+  if(source.includes("\\begin{AssignmentTable}{"+title+"}"))throw Error("Example already wrapped");
+  const wrapper="\\begin{AssignmentTable}{"+title+"}\r\n"+call+"\r\n\\end{AssignmentTable}";
+  const changed=source.replace(call,wrapper);
+  if(changed.replace(wrapper,call)!==source)throw Error("Full content preservation failed");
+  const staged=path.join(generated,"same-table-"+language+".content.tex");
+  fs.writeFileSync(staged,changed,"utf8");
+  const authored=fs.readFileSync(staged);
+  if(!fs.readFileSync(file).equals(before))throw Error("Concurrent source change: "+language);
+  fs.renameSync(staged,file);
+  const actual=fs.readFileSync(file);
+  if(!actual.equals(authored))throw Error("Readback mismatch: "+language);
+  results.push({language,file,before:hash(before),after:hash(actual),bytes:actual.length,preserved:true});
+}
+const report="# Same Table Content\n\nBoth example tables use the same AssignmentTable environment as the capsule task tables. The existing seven-argument worked-table calls, bilingual introductory text, all six graph captions, cycle statements, three criteria, capsule matrices, and remaining content are byte-for-byte preserved after removal of the two wrapper lines. Source CRLF line endings are preserved.\n\nThe only source changes are a localized example wrapper around each existing worked-table call. Sources are frozen at the following SHA-256 hashes before native compilation.\n\n"+results.map(r=>"## "+r.language.toUpperCase()+"\n\n- Before: "+r.before+"\n- Frozen: "+r.after+"\n- Readback: "+r.bytes+" bytes; full original content preserved.\n").join("\n");
+fs.writeFileSync(path.join(ticket,"same-table-content.md"),report,"utf8");
+console.log(JSON.stringify(results,null,2));

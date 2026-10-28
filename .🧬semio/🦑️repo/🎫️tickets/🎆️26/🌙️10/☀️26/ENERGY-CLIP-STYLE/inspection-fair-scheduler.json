@@ -1,0 +1,74 @@
+{
+  "version": 1,
+  "workers": [
+    1,
+    4
+  ],
+  "initial": [
+    "a",
+    "b",
+    "c",
+    "d",
+    "e",
+    "f",
+    "g",
+    "h"
+  ],
+  "outcomes": {
+    "a": [
+      "retry",
+      "retry",
+      "completed"
+    ],
+    "b": [
+      "waiting",
+      "completed"
+    ],
+    "c": [
+      "waiting",
+      "completed"
+    ],
+    "d": [
+      "retry",
+      "completed"
+    ],
+    "e": [
+      "completed"
+    ],
+    "f": [
+      "completed"
+    ],
+    "g": [
+      "completed"
+    ],
+    "h": [
+      "completed"
+    ]
+  },
+  "release_after": [
+    "g",
+    "h"
+  ],
+  "attempt_seconds": 0.005,
+  "retry_seconds": 0.005,
+  "poll_seconds": 0.003,
+  "expected_attempts": {
+    "a": 3,
+    "b": 2,
+    "c": 2,
+    "d": 2,
+    "e": 1,
+    "f": 1,
+    "g": 1,
+    "h": 1
+  },
+  "laws": [
+    "all_initial_attempts_before_any_retry",
+    "waiting_jobs_hold_no_worker",
+    "active_identity_is_unique",
+    "worker_bound_is_respected",
+    "owner_failure_cancels_active_jobs",
+    "duplicate_input_is_rejected",
+    "owner_guard_preserves_original_product_state"
+  ]
+}

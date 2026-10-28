@@ -1,0 +1,14 @@
+{
+  "schema": "inspection-math-cache-benchmark/v1",
+  "repetitions": 3,
+  "readoutUpdates": 4,
+  "cacheCapacity": 32,
+  "fontSize": 24,
+  "color": "#FFFFFF",
+  "position": [0, 0, 0],
+  "cases": [
+    {"id": "volume", "source": "V = 440\\,\\mathrm{m^{3}}"},
+    {"id": "fresh", "source": "V_{\\mathrm{frisch}} = V \\cdot n \\cdot t = 220\\,\\mathrm{m^{3}}"},
+    {"id": "percentage", "source": "50\\,\\%\\;\\text{der Raumluft getauscht}"}
+  ]
+}

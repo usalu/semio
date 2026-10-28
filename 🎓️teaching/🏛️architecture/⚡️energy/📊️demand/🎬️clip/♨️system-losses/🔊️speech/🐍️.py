@@ -15,13 +15,14 @@ import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
-SPEECH_DIR = Path(__file__).resolve().parent
 WORKSPACE_ROOT = next(parent for parent in BASE_DIR.parents if (parent / "🧰️framework").is_dir())
 if str(WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(WORKSPACE_ROOT))
 
+_output = import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
+SPEECH_DIR = _output.speech_root(BASE_DIR)
+
 _scene = import_module("🎓️teaching.🏛️architecture.⚡️energy.📊️demand.🎬️clip.♨️system-losses.🐍️")
-Beat1_Verlustkette = _scene.Beat1_Verlustkette
 Beat2_UebergabeVerteilungSpeicherung = _scene.Beat2_UebergabeVerteilungSpeicherung
 Beat3_Erzeugung = _scene.Beat3_Erzeugung
 Beat4_Anlagenaufwandszahl = _scene.Beat4_Anlagenaufwandszahl
@@ -39,17 +40,16 @@ synthesize_clause_audio = _speech.synthesize_clause_audio
 write_vo_timing_manifest = _speech.write_vo_timing_manifest
 
 BEATS = [
-    Beat1_Verlustkette,
     Beat2_UebergabeVerteilungSpeicherung,
     Beat3_Erzeugung,
     Beat4_Anlagenaufwandszahl,
 ]
 
 SCENE_FILE = BASE_DIR / "🐍️.py"
-TIMING_MANIFEST = BASE_DIR / "⏱️timing" / "🔣️.json"
+TIMING_MANIFEST = SPEECH_DIR / "timing.json"
 TRACE_OWNER = sha256(BASE_DIR.relative_to(WORKSPACE_ROOT).as_posix().encode()).hexdigest()[:10]
-OUTPUT_ROOT = Path(os.environ["SEMIO_TEACHING_OUTPUT_ROOT"]) if os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT") else SPEECH_DIR
-TRACE_MANIFEST = OUTPUT_ROOT / "trace" / TRACE_OWNER if os.environ.get("SEMIO_TEACHING_OUTPUT_ROOT") else BASE_DIR / "📍️trace" / "🔣️.json"
+OUTPUT_ROOT = _output.output_root()
+TRACE_MANIFEST = OUTPUT_ROOT / "trace" / TRACE_OWNER
 TRACE_MEDIA_DIR = OUTPUT_ROOT / "trace-media" / TRACE_OWNER
 CLAUSE_GAP = 0.25
 

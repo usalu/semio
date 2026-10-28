@@ -1,0 +1,310 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Portable Chapter Collection Coverage Cases",
+  "type": "object",
+  "required": [
+    "version",
+    "course",
+    "locales",
+    "counts",
+    "clips",
+    "boundaries",
+    "topics",
+    "media_probe",
+    "cancellation",
+    "encoder"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "course": {
+      "const": "architecture"
+    },
+    "locales": {
+      "const": [
+        "en",
+        "de"
+      ]
+    },
+    "counts": {
+      "type": "object",
+      "required": [
+        "topics",
+        "clips",
+        "chapters",
+        "canonical_sources",
+        "segment_occurrences",
+        "clause_selections"
+      ],
+      "properties": {
+        "topics": {
+          "const": 6
+        },
+        "clips": {
+          "const": 17
+        },
+        "chapters": {
+          "const": 38
+        },
+        "canonical_sources": {
+          "const": 117
+        },
+        "segment_occurrences": {
+          "const": 125
+        },
+        "clause_selections": {
+          "const": 8
+        }
+      },
+      "additionalProperties": false
+    },
+    "clips": {
+      "type": "array",
+      "minItems": 17,
+      "maxItems": 17,
+      "items": {
+        "type": "object",
+        "required": [
+          "id",
+          "topic",
+          "chapters"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "topic": {
+            "type": "string",
+            "minLength": 1
+          },
+          "chapters": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "object",
+              "required": [
+                "scene",
+                "segments"
+              ],
+              "properties": {
+                "scene": {
+                  "type": "string",
+                  "minLength": 1
+                },
+                "segments": {
+                  "type": "array",
+                  "minItems": 1,
+                  "items": {
+                    "type": "object",
+                    "required": [
+                      "script",
+                      "scene"
+                    ],
+                    "properties": {
+                      "script": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "scene": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "clauses": {
+                        "type": "object",
+                        "required": [
+                          "first",
+                          "last"
+                        ],
+                        "properties": {
+                          "first": {
+                            "type": "string"
+                          },
+                          "last": {
+                            "type": "string"
+                          }
+                        },
+                        "additionalProperties": false
+                      }
+                    },
+                    "additionalProperties": false
+                  }
+                }
+              },
+              "additionalProperties": false
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "boundaries": {
+      "type": "array",
+      "minItems": 39,
+      "maxItems": 39,
+      "items": {
+        "type": "object",
+        "required": [
+          "left",
+          "right",
+          "path",
+          "level"
+        ],
+        "properties": {
+          "left": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "right": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "path": {
+            "type": "array",
+            "maxItems": 3,
+            "items": {
+              "type": "string"
+            }
+          },
+          "level": {
+            "enum": [
+              "courses",
+              "topics",
+              "clips",
+              "chapters"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "topics": {
+      "type": "array",
+      "minItems": 6,
+      "maxItems": 6,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "media_probe": {
+      "type": "object",
+      "required": [
+        "width",
+        "height",
+        "fps",
+        "frames",
+        "color",
+        "measurements"
+      ],
+      "properties": {
+        "width": {
+          "const": 480
+        },
+        "height": {
+          "const": 270
+        },
+        "fps": {
+          "const": 4
+        },
+        "frames": {
+          "const": 5
+        },
+        "color": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 255
+          }
+        },
+        "measurements": {
+          "const": [
+            5,
+            5
+          ]
+        }
+      },
+      "additionalProperties": false
+    },
+    "cancellation": {
+      "type": "object",
+      "required": [
+        "before",
+        "during",
+        "preserve_movie",
+        "preserve_certificate"
+      ],
+      "properties": {
+        "before": {
+          "const": "before-ports"
+        },
+        "during": {
+          "const": "after-render-before-publication"
+        },
+        "preserve_movie": {
+          "const": "existing movie"
+        },
+        "preserve_certificate": {
+          "const": "existing certificate"
+        }
+      },
+      "additionalProperties": false
+    },
+    "encoder": {
+      "type": "object",
+      "required": [
+        "focus_frames",
+        "restore_frames",
+        "body_values",
+        "focus_color",
+        "restore_color",
+        "frames"
+      ],
+      "properties": {
+        "focus_frames": {
+          "const": 26
+        },
+        "restore_frames": {
+          "const": 15
+        },
+        "body_values": {
+          "const": [
+            40,
+            70,
+            100,
+            130,
+            160
+          ]
+        },
+        "focus_color": {
+          "const": [
+            10,
+            10,
+            10
+          ]
+        },
+        "restore_color": {
+          "const": [
+            220,
+            220,
+            220
+          ]
+        },
+        "frames": {
+          "const": 46
+        }
+      },
+      "additionalProperties": false
+    }
+  }
+}

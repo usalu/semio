@@ -1,0 +1,40 @@
+\title{Finger Exercise: Parametrization}
+\author{Architecture}
+\date{}
+\SemioAssignmentSetup{course={Architecture and Technology},institution={Semio}}
+\SemioHeaderSetup{left={Architecture and Technology},center={Finger Exercise},right={Parametrization}}
+\footerlogos{🖼️assets/🪧️logo/🎓️luh/☀️logo.png}
+\begin{document}
+\section{Finger Exercise: Parametrization}
+\subsection{Example}
+\begin{AssignmentTable}{}
+\AssignmentWorkedExampleTable{Length $L$}{Width $B$}{Height $H$}{Form}{Box}{Pyramid}{elliptic cylinder}
+\end{AssignmentTable}
+\begin{Diagram}[title={},break=false]
+\AssignmentWorkedExampleGraph
+\end{Diagram}
+\begin{Transitions}[title={},break=false]
+\AssignmentWorkedExampleLedger
+  {Box $\to$ Pyramid}
+  {Pyramid $\to$ Box}
+  {L+1; B+1; H+1; Pyramid $\to$ elliptic cylinder}
+  {L-1; B-1; H-1; elliptic cylinder $\to$ Pyramid}
+  {L+1; B+1; H+1; Box $\to$ elliptic cylinder}
+  {L-1; B-1; H-1; elliptic cylinder $\to$ Box}
+\end{Transitions}
+\clearpage
+\subsection{Dwelling Capsules}
+\begin{AssignmentTable}{}
+\AssignmentExerciseTable{One}
+\end{AssignmentTable}
+\begin{AssignmentTable}{}
+\AssignmentExerciseTable{Two}
+\end{AssignmentTable}
+\clearpage
+\begin{Diagram}[title={},break=false]
+\AssignmentCompleteGraph
+\end{Diagram}
+\begin{Transitions}[title={},break=false]
+\AssignmentSelectedLedger
+\end{Transitions}
+\end{document}

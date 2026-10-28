@@ -26,6 +26,7 @@
  * @see https://www.w3.org/WAI/WCAG22/Understanding/timing-adjustable.html
  */
 
+import { AccessGate, clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { memo, useCallback, useEffect, useId, useRef, useState, type CSSProperties, type ReactElement } from "react";
 import { answerComplete, challengeRules, thinkingScope, type Answer, type Hint, type Id, type RunView, type SheetTask, type Slug } from "@semio-tech/course";
 import { TASK_KIND_LABELS, localized, type CourseLabelKey, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
@@ -359,6 +360,7 @@ function TaskBody(props: { readonly session: CourseSession; readonly view: RunVi
 export function RunScreen(props: { readonly session: CourseSession; readonly state: CourseState; readonly run: Id; readonly text: CourseText; readonly locale: CourseLocale; readonly others?: OthersChoice; readonly readOnly?: boolean }): ReactElement | null {
   const { session, state, run, text, locale } = props;
   const scope = useId();
+  const at = useReleaseClock(state.course);
   const now = useCallback(() => session.now(), [session]);
   const [current, setCurrent] = useState(0);
   const followed = usePresenceFollow();
@@ -399,8 +401,12 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
   const index = Math.min(shownCurrent, tasks.length - 1);
   const task = tasks[index];
   const go = (target: number): void => {
+    const direction = target < index ? -1 : 1;
+    let next = target;
+    while (next >= 0 && next < tasks.length && !clientAccess(state.course, view.quiz, at, tasks[next]!.id)) next += direction;
+    if (next < 0 || next >= tasks.length) return;
     moved.current = true;
-    setCurrent(Math.max(0, Math.min(tasks.length - 1, target)));
+    setCurrent(next);
   };
   const close = (): void => setSubmission(undefined);
   const submit = (): void => {
@@ -422,6 +428,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
   const emoji = state.course?.quizzes.find((quiz) => quiz.id === view.quiz)?.emoji;
 
   return (
+    <AccessGate course={state.course} page={view.quiz} at={at} locale={locale} text={text}>
     <div className="course-run flex flex-col gap-double">
       <CourseCard
         id={`${scope}-title`}
@@ -443,11 +450,12 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
           <nav aria-label={text("course.run.tasks")} className="min-w-0">
             <ol role="list" className="course-steps m-0 list-none p-0">
               {tasks.map((entry, position) => (
-                <li key={entry.id}>
+                <li key={entry.id}><AccessGate course={state.course} page={view.quiz} task={entry.id} at={at} locale={locale} text={text}>
                   <button
                     type="button"
                     data-icon-host=""
                     aria-current={position === index ? "step" : undefined}
+                    disabled={!clientAccess(state.course, view.quiz, at, entry.id)}
                     onClick={() => go(position)}
                     className={cn(
                       "course-step course-target min-w-0 cursor-pointer border border-normal px-double py-single text-left text-sm transition-colors",
@@ -465,7 +473,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
                       {entry.seconds === undefined ? null : <> · {clockOf(entry)}</>}
                     </span>
                   </button>
-                </li>
+                </AccessGate></li>
               ))}
             </ol>
           </nav>
@@ -483,6 +491,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
         {timed && view.status === "open" ? <ClockWatch tasks={tasks} opened={view.opened} shown={task?.id} now={now} text={text} /> : null}
       </CourseCard>
       {task === undefined ? null : (
+        <AccessGate course={state.course} page={view.quiz} task={task.id} at={at} locale={locale} text={text}>
         <CourseCard
           id={`${scope}-task`}
           card="task"
@@ -511,6 +520,7 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
             <TaskFigures task={task} title={localized(task.title, locale)} crowd={state.crowds[view.quiz]} thinking={state.course === undefined ? [] : thinking.get(thinkingScope(state.course.id, view.quiz))} answer={view.answers[task.id]} text={text} locale={locale} />
           ) : null}
         </CourseCard>
+        </AccessGate>
       )}
       {submission === undefined ? null : (
         <Dialog
@@ -576,5 +586,6 @@ export function RunScreen(props: { readonly session: CourseSession; readonly sta
         </Dialog>
       )}
     </div>
+    </AccessGate>
   );
 }

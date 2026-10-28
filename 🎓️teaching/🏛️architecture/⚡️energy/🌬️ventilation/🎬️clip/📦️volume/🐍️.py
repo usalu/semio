@@ -19,6 +19,9 @@ if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
 
 
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -28,9 +31,7 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 SUBTITLE_FONT_SIZE = _manim_module.SUBTITLE_FONT_SIZE
@@ -38,6 +39,10 @@ BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+section_material = _manim_module.section_material
+section_assembly = _manim_module.section_assembly
+window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -67,6 +72,7 @@ room_section = _manim_module.room_section
 window_glyph = _manim_module.window_glyph
 open_window = _manim_module.open_window
 radiator = _manim_module.radiator
+window_opening = _manim_module.window_opening
 person_glyph = _manim_module.person_glyph
 seated_person_glyph = _manim_module.seated_person_glyph
 lamp_glyph = _manim_module.lamp_glyph
@@ -76,7 +82,7 @@ ripples = _manim_module.ripples
 
 # 🗣️ Timing follows German captions (reading floor in hold_for).
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -94,7 +100,7 @@ def _din_ref(text: str):
     DIN EN 12831-1 (Φ_V = V · n · c_Luft · Δθ); the systems beat cites DIN 1946-6.
     Beats whose diagram already prints the standard in full get no corner chip.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -224,59 +230,70 @@ def _house_section(wall: float = 0.35, slab: float = 0.30, decke: float = 0.22, 
 
 
 def _pf_house(house, origin, scale: float, *, eave_m: float = 0.5):
-    """🏡 The example house in the Physical Fundamentals line style — outer and inner wall faces, eaves, hatched ground
-    and a sash in each wall of both storeys; the outline stays the gross-volume polygon.
-    """
+    """🏡 Closed construction from the physical house model, cut around recessed glazing."""
     o, s, w = np.array(origin, dtype=float), scale, house["w"]
     slope = (house["ridge"] - house["eave"]) / (w / 2)
     outline = Polygon(*_to_scene(house["outer"], o, s), color=P_WHITE, stroke_width=1.8)
-    inner = VGroup(*[Polygon(*_to_scene(r, o, s), color=P_WHITE, stroke_width=1.2, stroke_opacity=0.8)
-                     for r in house["rooms"]])
-    eaves = VGroup(*[Line(*_to_scene([(x0, house["eave"]), (x0 + d * eave_m, house["eave"] - slope * eave_m)], o, s),
-                          color=P_WHITE, stroke_width=1.8) for x0, d in ((0.0, -1.0), (w, 1.0))])
-    ground = Line(o + LEFT * 0.4, o + RIGHT * (w * s + 0.2), color=P_TEAL, stroke_width=2.2)
-    hatch = VGroup(*[Line(p, p + DOWN * 0.1 + LEFT * 0.07, color=P_TEAL, stroke_width=1.1)
+    inner = VGroup(*[Polygon(*_to_scene(r, o, s), color=P_WHITE, stroke_width=1.2) for r in house["rooms"]])
+    material, eaves = VGroup(), VGroup()
+    openings = ((1.2, 2.5), (4.1, 5.3))
+    for name, points in house["pieces"].items():
+        if name.startswith("wall_"):
+            intervals = ((house["slab"], openings[0][0]), (openings[0][1], openings[1][0]),
+                         (openings[1][1], house["eave"]))
+            for lo, hi in intervals:
+                cut = _clip_below(_clip_above(points, lo), hi)
+                if len(cut) >= 3:
+                    material.add(section_material(_poly(cut, o, s)))
+        elif name.startswith("roof_"):
+            points = [(x - eave_m if x == 0 else x + eave_m if x == w else x,
+                       y - slope * eave_m if x in (0, w) else y) for x, y in points]
+            piece = section_material(_poly(points, o, s))
+            material.add(piece)
+            eaves.add(piece)
+        else:
+            material.add(section_material(_poly(points, o, s)))
+    ground = Line(o + LEFT * 0.4, o + RIGHT * (w * s + 0.2), color=P_PRIMARY, stroke_width=2.2)
+    hatch = VGroup(*[Line(p, p + (DOWN * 0.27 + LEFT * 0.19) * s, color=P_PRIMARY, stroke_width=1.1)
                      for p in [ground.point_from_proportion(u) for u in np.linspace(0.06, 0.94, 11)]])
-    windows, masks = [], VGroup()
-    for side, x_m in (("l", house["wall"] / 2), ("r", w - house["wall"] / 2)):
-        for sill_m, lintel_m in ((1.2, 2.5), (4.1, 5.3)):
+    windows = []
+    for inward, x_m in ((1, house["wall"] / 2), (-1, w - house["wall"] / 2)):
+        for sill_m, lintel_m in openings:
             x, sill, lintel = o[0] + x_m * s, o[1] + sill_m * s, o[1] + lintel_m * s
-            masks.add(Rectangle(width=house["wall"] * s + 0.04, height=lintel - sill, stroke_width=0,
-                                fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to([x, (sill + lintel) / 2, 0]))
-            win = window_glyph(x, sill, lintel, depth=0.8 * (lintel - sill), color=P_CYAN)
-            win["side"] = side
-            windows.append(win)
-    group = VGroup(ground, hatch, outline, inner, eaves, masks, *[win["group"] for win in windows])
-    return {"outline": outline, "inner": inner, "eaves": eaves, "ground": VGroup(ground, hatch), "windows": windows,
-            "group": group, "x_l": o[0], "x_r": o[0] + w * s}
+            windows.append(window_glyph(x, sill, lintel, depth=0.8 * (lintel - sill),
+                                        wall=house["wall"] * s, inward=inward, color=P_CYAN))
+    material = section_assembly(*material)
+    group = VGroup(ground, hatch, material, *[win["group"] for win in windows])
+    return {"outline": outline, "inner": inner, "eaves": eaves, "material": material,
+            "ground": VGroup(ground, hatch), "windows": windows, "group": group,
+            "x_l": o[0], "x_r": o[0] + w * s}
 
 
 def _open_sash(window, *, run_time: float = 0.9, close: bool = False):
-    """🚪 Swing a ``window_glyph`` sash into the room — rightwards in a left wall, leftwards in a right wall."""
-    angle = (-PI / 2 if window.get("side", "l") == "l" else PI / 2) * (-1 if close else 1)
-    return Rotate(window["sash"], angle=angle, axis=UP, about_point=window["hinge"], run_time=run_time)
+    """🚪 Project the shared sash open or closed around its recessed hinge."""
+    return open_window(window, run_time=run_time, close=close)
 #endregion
 
 
 #region People, rooms and hand-over chips
-def _room(center, width, height, color=P_WHITE, t: float = 0.16):
-    """🏠 Physical Fundamentals room section — ceiling slab and side walls, then the floor slab, centred on the outline."""
-    cx, cy = float(center[0]), float(center[1])
-    style = dict(color=color, stroke_width=2, fill_color=color, fill_opacity=0.14)
-    ceiling = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy + height / 2, 0.0]))
-    walls = VGroup(*[
-        Rectangle(width=t, height=height - t, **style).move_to(np.array([cx + s * width / 2, cy, 0.0]))
-        for s in (-1, 1)
-    ])
-    floor = Rectangle(width=width + t, height=t, **style).move_to(np.array([cx, cy - height / 2, 0.0]))
-    return VGroup(VGroup(ceiling, walls), floor)
+def _room(center, width, height, color=P_WHITE, t: float = 0.16, *,
+          window_side="none", window_y=None, window_h=1.15):
+    """🏠 Closed room material around declared openings, with slabs centred on the outline."""
+    inner_h = height - t
+    floor_y = float(center[1]) - inner_h / 2
+    mid = float(center[1]) if window_y is None else window_y
+    opening = (0.30, 0.88) if window_side == "none" else ((mid - window_h / 2 - floor_y) / inner_h, (mid + window_h / 2 - floor_y) / inner_h)
+    section = room_section(center, w=width - t, h=inner_h, wall=t, slab=t,
+                           window=opening, window_side=window_side)
+    body = VGroup(section["ceiling"], *[m for m in section["shell"] if m is not section["floor"] and m is not section["ceiling"]])
+    return section_material(VGroup(body, section["floor"]))
 
 
 def _stand(room_c, room_h, x, color=P_ORANGE, t: float = 0.16):
-    """🧍 Occupant at true scale — 1.75 m in a 2.5 m room, feet on the floor slab's top edge at ``x``."""
+    """🧍 A 1.75 m occupant in a 2.5 m clear room, anchored to the slab top."""
     height = 0.7 * (room_h - t)
-    scale = height / 0.66
-    return person_glyph(np.array([x, float(room_c[1]) - room_h / 2 + t / 2 + height / 2, 0.0]), color=color, scale=scale)
+    floor_y = float(room_c[1]) - room_h / 2 + t / 2
+    return person_glyph([x, floor_y + height / 2, 0], color=color, scale=height / 0.66)
 
 
 def _dim(mob, factor: float, **kwargs):
@@ -290,7 +307,7 @@ def _dim(mob, factor: float, **kwargs):
 def _handover_chip(src: str, color, size: float = BODY_FONT_SIZE):
     """🔖 Hand-over chip with a typeset quantity — names what the next video takes from this chapter."""
     label = math_label(src, size=size, color=color)
-    return VGroup(SurroundingRectangle(label, color=color, corner_radius=0.1, buff=0.14, stroke_width=1.8), label)
+    return window_chip(label, color=color)
 
 
 def _amount(value: float) -> str:
@@ -300,7 +317,7 @@ def _amount(value: float) -> str:
 
 
 #region Instrument glyphs
-def _clock(center, r: float, minutes, *, color=P_CYAN):
+def _clock(center, r: float, minutes, *, color=P_PRIMARY):
     """🕐 Physical Fundamentals ``clock_glyph`` whose minute hand follows ``minutes`` (a ``ValueTracker``) — one turn is one hour."""
     dial = clock_glyph(center, r=r, color=color)
     face = dial["face"].set_fill(P_DEEP_DARK, opacity=0.9)
@@ -328,10 +345,10 @@ def _n_scale(x: float, y_lo: float, y_hi: float, *, lo: float = 0.1, hi: float =
             return y_lo - zero_drop
         return y_lo + (np.log10(value) - np.log10(lo)) / span * (y_hi - y_lo)
 
-    axis = Line([x, y_lo, 0], [x, y_hi, 0], color=P_TEAL, stroke_width=3)
-    stub = Line([x, y_lo - zero_drop, 0], [x, y_lo - 0.55 * zero_drop, 0], color=P_TEAL, stroke_width=3)
+    axis = Line([x, y_lo, 0], [x, y_hi, 0], color=P_PRIMARY, stroke_width=3)
+    stub = Line([x, y_lo - zero_drop, 0], [x, y_lo - 0.55 * zero_drop, 0], color=P_PRIMARY, stroke_width=3)
     gap = y_lo - 0.36 * zero_drop
-    brk = VGroup(*[Line([x - 0.11, gap + dy - 0.05, 0], [x + 0.11, gap + dy + 0.05, 0], color=P_TEAL, stroke_width=2)
+    brk = VGroup(*[Line([x - 0.11, gap + dy - 0.05, 0], [x + 0.11, gap + dy + 0.05, 0], color=P_PRIMARY, stroke_width=2)
                    for dy in (-0.05, 0.05)])
     ticks, labels = VGroup(), VGroup()
     values = [d * 10.0 ** e for e in (-1, 0, 1) for d in range(1, 10)] + [20.0, 30.0]
@@ -346,7 +363,7 @@ def _n_scale(x: float, y_lo: float, y_hi: float, *, lo: float = 0.1, hi: float =
     ticks.add(Line([x - 0.17, y_of(0), 0], [x, y_of(0), 0], color=P_WHITE, stroke_width=2.0))
     labels.add(math_label("0", np.array([x - 0.26, y_of(0) - 0.07, 0]), size=LABEL_FONT_SIZE, edge="right"))
     title = math_label(r"n\;[\mathrm{h^{-1}}]", np.array([x + 0.1, y_hi + 0.22, 0]), size=LABEL_FONT_SIZE,
-                       color=P_TEAL, edge="right")
+                       color=P_PRIMARY, edge="right")
     return {"y_of": y_of, "x": x, "group": VGroup(axis, stub, brk, ticks, labels, title)}
 
 
@@ -378,7 +395,7 @@ def _scale_marks(scale, entries, *, x_text: float, gap: float = 0.08, bottom: fl
 
 def _mini_room(color, w: float = 1.6, h: float = 1.1, t: float = 0.1):
     """🏛️ Physical Fundamentals room in miniature — ceiling and floor slabs between two side walls."""
-    style = dict(color=color, stroke_width=1.8, fill_color=color, fill_opacity=0.14)
+    style = dict(color=color, stroke_width=1.8, fill_color=color, fill_opacity=1)
     return VGroup(*[Rectangle(width=w + 2 * t, height=t, **style).move_to([0, sy * (h + t) / 2, 0]) for sy in (1, -1)],
                   *[Rectangle(width=t, height=h, **style).move_to([sx * (w + t) / 2, 0, 0]) for sx in (-1, 1)])
 
@@ -404,7 +421,7 @@ def _use_glyph(kind: str, color):
         parts.add(Line(unit.get_left(), [-0.8, 0.36, 0], color=P_BLUE, stroke_width=2.4),
                   Line(unit.get_right(), [0.8, 0.36, 0], color=P_ORANGE, stroke_width=2.4),
                   unit, _fan(unit.get_center(), P_GREEN, radius=0.08),
-                  person_glyph([0.35, fy + 0.3, 0], color=P_ORANGE, scale=0.9))
+                  person_glyph([0.35, fy + 0.385, 0], color=P_ORANGE, scale=0.77 / 0.66))
         air = [path((-0.3, 0.22), (-0.55, -0.05), (-0.35, -0.4)), path((0.65, -0.4), (0.62, 0.02), (0.1, 0.22))]
     elif kind == "buero":
         parts.add(Line([-0.08, -0.12, 0], [0.66, -0.12, 0], color=GREY_B, stroke_width=3),
@@ -413,7 +430,7 @@ def _use_glyph(kind: str, color):
                   seated_person_glyph([-0.42, fy, 0], color=color, scale=1.15, chair_color=GREY_B)["group"])
         air = [path((-0.72, y), (0.0, y - 0.04), (0.72, y)) for y in (0.36, 0.46)]
     elif kind == "klasse":
-        parts.add(Rectangle(width=1.0, height=0.3, color=P_GREEN, stroke_width=2).set_fill("#163a2a", 0.9)
+        parts.add(Rectangle(width=1.0, height=0.3, color=P_GREEN, stroke_width=2).set_fill(semio_color("dark-7-9"), 0.9)
                   .move_to([0, 0.32, 0]),
                   *[seated_person_glyph([cx, fy, 0], color=color, scale=0.72, chair_color=GREY_B)["group"]
                     for cx in (-0.6, -0.12, 0.36)])
@@ -480,9 +497,7 @@ class Beat1_Innenvolumen(Scene):
         N = self.NARRATION
         H = HOUSE
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Bruttovolumen und Nettovolumen", title)
+        subtitle = section_heading("Bruttovolumen und Nettovolumen")
         din = _din_ref("DIN V 18599-1 · DIN EN 12831-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "intro"))
@@ -646,7 +661,7 @@ class Beat1_Innenvolumen(Scene):
         caption = swap_caption(self, caption, subtitle_text(N, "ratio"))
         ratio = H["V"] / H["V_e"]
         bx, blen = 1.05, 3.9
-        bar_e = Rectangle(width=blen, height=0.22, color="#8A9BA8", stroke_width=1.6).set_fill("#8A9BA8", 0.25)
+        bar_e = Rectangle(width=blen, height=0.22, color=semio_color("light-5-9"), stroke_width=1.6).set_fill(semio_color("light-5-9"), 0.25)
         bar_e.move_to([bx + blen / 2, -1.0, 0])
         bar_v = Rectangle(width=blen * ratio, height=0.22, color=P_ORANGE, stroke_width=1.6).set_fill(P_ORANGE, 0.6)
         bar_v.move_to([bx + blen * ratio / 2, -1.36, 0])
@@ -731,9 +746,7 @@ class Beat2_Luftwechselrate(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Luftwechselrate n", title)
+        subtitle = section_heading("Luftwechselrate n")
         din = _din_ref("DIN EN 12831-1 · DIN 1946-4")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "volume"))
@@ -750,9 +763,9 @@ class Beat2_Luftwechselrate(Scene):
             return _level_for([outer], frac.get_value()) if frac.get_value() > 1e-3 else -1.0
 
         warm = always_redraw(lambda: _poly(_clip_above(outer, fill_y()), O, S, stroke_width=0, fill_color=P_ORANGE,
-                                           fill_opacity=0.32))
+                                           fill_opacity=0.32).set_z_index(-1))
         fresh = always_redraw(lambda: _poly(_clip_below(outer, fill_y()), O, S, stroke_width=0, fill_color=P_BLUE,
-                                            fill_opacity=0.45))
+                                            fill_opacity=0.45).set_z_index(-1))
         v_lbl = math_label(rf"V = {de_num(V_NET)}\,\mathrm{{m^{{3}}}}", np.array([O[0] + 5 * S, O[1] + 6.1 * S, 0]),
                            size=BODY_FONT_SIZE, color=P_WHITE)
         self.add(fresh)
@@ -879,6 +892,7 @@ class Beat2_Luftwechselrate(Scene):
             self.add(val)
             self.play(count.animate.set_value(value), minutes.animate.set_value(60.0), *room_air(1.2), run_time=1.2,
                       rate_func=linear)
+            glyph.clear_updaters()
             val.clear_updaters()
             self.play(ReplacementTransform(glyph, dots[idx]), ReplacementTransform(VGroup(top, val), labels[idx]),
                       Create(leaders[idx]), run_time=1.0)
@@ -933,9 +947,7 @@ class Beat3_Volumenstrom(Scene):
         apply_scene_style(self)
         N = self.NARRATION
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Volumenstrom: ein Luftstrom, zwei Schreibweisen", title)
+        subtitle = section_heading("Volumenstrom: ein Luftstrom, zwei Schreibweisen")
         din = _din_ref("DIN EN 12831-1 · DIN EN 16798-1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
         caption = caption_bar(subtitle_text(N, "area"))
@@ -1032,7 +1044,7 @@ class Beat3_Volumenstrom(Scene):
                                          n_read, flow_fill, t_read, dv_read, old_panel)], run_time=0.8)
 
         def card(head: str, symbol: str, value: str, color, cx: float):
-            frame = RoundedRectangle(width=4.4, height=2.5, corner_radius=0.12, color=color, stroke_width=2)
+            frame = RoundedRectangle(width=4.4, height=2.5, corner_radius=0, color=color, stroke_width=2)
             lines = VGroup(body_text(head, font_size=LABEL_FONT_SIZE, color=color),
                            math_label(symbol, size=FORMULA_FONT_SIZE + 6, color=P_WHITE),
                            math_label(value, size=BODY_FONT_SIZE, color=color)).arrange(DOWN, buff=0.3)
@@ -1109,7 +1121,7 @@ class Beat3_Volumenstrom(Scene):
         self.play(TransformFromCopy(lbl_p, items3["p"]), TransformFromCopy(lbl_n, items3["n"]),
                   FadeIn(VGroup(*[m for m in row3 if m not in items3.values()])), Create(box3), run_time=1.0)
         self.play(GrowFromCenter(reserve), FadeIn(reserve_lbl), FadeOut(lbl_n), FadeOut(lbl_p),
-                  _dim(VGroup(room, room_lbl, *persons), 0.25), run_time=0.8)
+                  _dim(VGroup(room_lbl, *persons), 0.25), run_time=0.8)
         chips = VGroup(_handover_chip(r"\to\;\text{Heizung:}\;V \cdot n", P_ORANGE, LABEL_FONT_SIZE),
                        _handover_chip(r"\to\;\text{Kühlung:}\;q_{v,\mathrm{R}}", P_CYAN, LABEL_FONT_SIZE)).arrange(RIGHT, buff=0.5)
         chips.move_to([0.0, -1.25, 0])

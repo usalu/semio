@@ -1,0 +1,16 @@
+const fs = require("node:fs");
+const assert = require("node:assert/strict");
+const path = require("node:path");
+const root = path.resolve("🧰️framework/🛍️products/📓️print");
+const geometry = fs.readFileSync(path.join(root, "🧾️template/📝️assignment/parametrization-geometry.tex"), "utf8");
+const style = fs.readFileSync(path.join(root, "🖋️latex/semio-assignment.sty"), "utf8");
+for (const macro of ["AssignmentWorkedBoxTable", "AssignmentWorkedBoxGraph", "AssignmentWorkedBoxLedger"]) assert.ok(geometry.includes("\\newcommand{\\" + macro + "}"), macro);
+assert.ok(style.includes("\\NewExpandableDocumentCommand \\AssignmentParameterMatrixRow { m m }"));
+assert.ok(style.includes("{ O{} m +m +b }"));
+assert.ok(geometry.includes("\\AssignmentGraphRadiusY=32mm"));
+assert.ok(geometry.includes("\\AssignmentSelectedEdges{\\AssignmentSelectedGraphEdge}"));
+assert.ok(geometry.includes("\\AssignmentParameterMatrixRow{#1}{2,3,3}"));
+assert.ok(geometry.includes("\\AssignmentParameterMatrixRow{#2}{1,1,2}"));
+assert.ok(geometry.includes("\\AssignmentParameterMatrixRow{#3}{1,1,1}"));
+for (const tuple of ["(+1,0,0)", "(0,+1,0)", "(+1,+1,0)"]) assert.ok(geometry.includes(tuple), tuple);
+console.log("Concise geometry source contracts passed.");

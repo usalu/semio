@@ -1,0 +1,712 @@
+{
+  "title": "Configure Clip Output Paths",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Fix clip outputs generated in incorrect repository paths and accidentally versioned, including media/texts/00d073c42770ab53.svg. Audit all clip output and cache paths, use canonical ignored generated roots, remove tracked generated artifacts from the working tree without modifying the shared Git index, and add language-neutral regression cases with third-party validation. Preserve concurrent edits; no AGENTS edits, modifying Git commands, worktrees or IDE/dashboard.",
+  "summary": "Configured clip outputs and narration under the ignored teaching cache. Removed 128 misplaced untracked Pango SVGs and 11 tracked timing/trace outputs as working-tree deletions; shared index unchanged. Added portable schema/cases, aligned all narration readers and cache fingerprints. Final focused regression: 53 tests successful, one existing Windows symlink skip; real Manim/Pango, FFmpeg, Git, fontTools and AJV validation. Temporary output removed; reports and input scripts retained.",
+  "goal": "R26-02/UPDATED-DOCS/UPDATED-USER-DOCS/UPDATED-TUTORIALS",
+  "sessions": [
+    "415b7c9d-12e7-4109-a0dc-4e7f314bda2e"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-26 19:43:11",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Fix clip outputs generated in incorrect repository paths and accidentally versioned, including media/texts/00d073c42770ab53.svg. Audit all clip output and cache paths, use canonical ignored generated roots, remove tracked generated artifacts from the working tree without modifying the shared Git index, and add language-neutral regression cases with third-party validation. Preserve concurrent edits; no AGENTS edits, modifying Git commands, worktrees or IDE/dashboard.",
+      "llm": "gpt-5"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 19:57:27",
+      "author": "Ueli Saluz <ueli@semio-tech.com>",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "summary": "Configured clip outputs and narration under the ignored teaching cache. Removed 128 misplaced untracked Pango SVGs and 11 tracked timing/trace outputs as working-tree deletions; shared index unchanged. Added portable schema/cases, aligned all narration readers and cache fingerprints. Final focused regression: 53 tests successful, one existing Windows symlink skip; real Manim/Pango, FFmpeg, Git, fontTools and AJV validation. Temporary output removed; reports and input scripts retained.",
+      "files": [
+        {
+          "path": ".gitignore"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/callers.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/files.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/removed.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/test.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/validate.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/CONFIGURE-CLIP-OUTPUT-PATHS/🎫️ticket.json"
+        },
+        {
+          "path": "media/texts/00d073c42770ab53.svg"
+        },
+        {
+          "path": "media/texts/015ea41f734881cf.svg"
+        },
+        {
+          "path": "media/texts/026c84283ac64859.svg"
+        },
+        {
+          "path": "media/texts/03481cf09ce87655.svg"
+        },
+        {
+          "path": "media/texts/0431c7accdaf0a03.svg"
+        },
+        {
+          "path": "media/texts/0b1ba03baee950ce.svg"
+        },
+        {
+          "path": "media/texts/0c9cb220e8b65b5c.svg"
+        },
+        {
+          "path": "media/texts/0f1546402f6a4af5.svg"
+        },
+        {
+          "path": "media/texts/102f2b80e374920c.svg"
+        },
+        {
+          "path": "media/texts/103e20a158ef514d.svg"
+        },
+        {
+          "path": "media/texts/122de62b5d617845.svg"
+        },
+        {
+          "path": "media/texts/130f0675ac0fdb43.svg"
+        },
+        {
+          "path": "media/texts/13e6152782fcc96e.svg"
+        },
+        {
+          "path": "media/texts/14d49a52b89bd202.svg"
+        },
+        {
+          "path": "media/texts/1511f94981f412f4.svg"
+        },
+        {
+          "path": "media/texts/179832d0d76582f4.svg"
+        },
+        {
+          "path": "media/texts/18abb172c451d4da.svg"
+        },
+        {
+          "path": "media/texts/1923b7335be4b371.svg"
+        },
+        {
+          "path": "media/texts/1cb402d66c285044.svg"
+        },
+        {
+          "path": "media/texts/1cf0cda31eb85bfd.svg"
+        },
+        {
+          "path": "media/texts/1f83111c58dc0ccf.svg"
+        },
+        {
+          "path": "media/texts/203f77d6adb06368.svg"
+        },
+        {
+          "path": "media/texts/2087bc060e69f84f.svg"
+        },
+        {
+          "path": "media/texts/26d407da2e006d23.svg"
+        },
+        {
+          "path": "media/texts/27d17c5a2b5b6160.svg"
+        },
+        {
+          "path": "media/texts/2f0ace1b075d28bc.svg"
+        },
+        {
+          "path": "media/texts/310ef0b88f6a791e.svg"
+        },
+        {
+          "path": "media/texts/365379e915a4d31f.svg"
+        },
+        {
+          "path": "media/texts/36896c984013d44f.svg"
+        },
+        {
+          "path": "media/texts/387fc3b3ba998f0b.svg"
+        },
+        {
+          "path": "media/texts/3910981039522c88.svg"
+        },
+        {
+          "path": "media/texts/3a19da5c2239f6a8.svg"
+        },
+        {
+          "path": "media/texts/3ed116b718ca038d.svg"
+        },
+        {
+          "path": "media/texts/3f677fdf0f3656ac.svg"
+        },
+        {
+          "path": "media/texts/3fa0754b610c7252.svg"
+        },
+        {
+          "path": "media/texts/401db17187a54c39.svg"
+        },
+        {
+          "path": "media/texts/416bd81a660efa71.svg"
+        },
+        {
+          "path": "media/texts/41a48c58afef0edb.svg"
+        },
+        {
+          "path": "media/texts/441993ebac253680.svg"
+        },
+        {
+          "path": "media/texts/46bd21db0361fb52.svg"
+        },
+        {
+          "path": "media/texts/46beb3db12536458.svg"
+        },
+        {
+          "path": "media/texts/4c750908acabf4a9.svg"
+        },
+        {
+          "path": "media/texts/4ce683566160644b.svg"
+        },
+        {
+          "path": "media/texts/4ddebb9795a3e5be.svg"
+        },
+        {
+          "path": "media/texts/501cf2235195112b.svg"
+        },
+        {
+          "path": "media/texts/51f0d25d1e1da097.svg"
+        },
+        {
+          "path": "media/texts/52576fc4ed89e63c.svg"
+        },
+        {
+          "path": "media/texts/52debf04eaa05f3d.svg"
+        },
+        {
+          "path": "media/texts/55bc0669b249efc8.svg"
+        },
+        {
+          "path": "media/texts/57c1224cb592b1f9.svg"
+        },
+        {
+          "path": "media/texts/590084acf1cd5df4.svg"
+        },
+        {
+          "path": "media/texts/5c589b97eed62b76.svg"
+        },
+        {
+          "path": "media/texts/5d85894d2f02ebc6.svg"
+        },
+        {
+          "path": "media/texts/5e41c12d725b10bc.svg"
+        },
+        {
+          "path": "media/texts/6070ba34583d093d.svg"
+        },
+        {
+          "path": "media/texts/610b3064e4e75f15.svg"
+        },
+        {
+          "path": "media/texts/61e28a56d53a19dc.svg"
+        },
+        {
+          "path": "media/texts/62f72eb658bc09cf.svg"
+        },
+        {
+          "path": "media/texts/656a6b3be50420bb.svg"
+        },
+        {
+          "path": "media/texts/676868d0ffa0de3b.svg"
+        },
+        {
+          "path": "media/texts/69a578ae8369b630.svg"
+        },
+        {
+          "path": "media/texts/69adcd5b887d399f.svg"
+        },
+        {
+          "path": "media/texts/6cbb42bce30d3c59.svg"
+        },
+        {
+          "path": "media/texts/6dd5fbe8a713c528.svg"
+        },
+        {
+          "path": "media/texts/6e0bb553bef38aed.svg"
+        },
+        {
+          "path": "media/texts/6e6e5e29122c6b8c.svg"
+        },
+        {
+          "path": "media/texts/71c579e6199ef601.svg"
+        },
+        {
+          "path": "media/texts/7224f3817c048406.svg"
+        },
+        {
+          "path": "media/texts/738dd4256bd56f4f.svg"
+        },
+        {
+          "path": "media/texts/787f14ba5c010286.svg"
+        },
+        {
+          "path": "media/texts/7b7218b5d6b5663d.svg"
+        },
+        {
+          "path": "media/texts/7f02d6a0df467dd0.svg"
+        },
+        {
+          "path": "media/texts/857d091faa76915a.svg"
+        },
+        {
+          "path": "media/texts/85c3bcc819c4767b.svg"
+        },
+        {
+          "path": "media/texts/860d45993a30068d.svg"
+        },
+        {
+          "path": "media/texts/88bdfd297a07fb84.svg"
+        },
+        {
+          "path": "media/texts/8a2df377299ae48f.svg"
+        },
+        {
+          "path": "media/texts/8abf8fa5f25b85ca.svg"
+        },
+        {
+          "path": "media/texts/8afb1efbd999e8ae.svg"
+        },
+        {
+          "path": "media/texts/8d68f12fd7c2ae5e.svg"
+        },
+        {
+          "path": "media/texts/91351d79d345c835.svg"
+        },
+        {
+          "path": "media/texts/921e8c84137c3a2d.svg"
+        },
+        {
+          "path": "media/texts/94a3111a348205bc.svg"
+        },
+        {
+          "path": "media/texts/94d259291381e05a.svg"
+        },
+        {
+          "path": "media/texts/95ba96ad489e0577.svg"
+        },
+        {
+          "path": "media/texts/96e3327d2ae16e2b.svg"
+        },
+        {
+          "path": "media/texts/97bd538d3955d721.svg"
+        },
+        {
+          "path": "media/texts/9d8b9d850af31542.svg"
+        },
+        {
+          "path": "media/texts/a5b01a62a46ae65f.svg"
+        },
+        {
+          "path": "media/texts/a843b160e4734cbd.svg"
+        },
+        {
+          "path": "media/texts/abb16fe4abf38829.svg"
+        },
+        {
+          "path": "media/texts/b2439a19a60f5b25.svg"
+        },
+        {
+          "path": "media/texts/b288786f1445d320.svg"
+        },
+        {
+          "path": "media/texts/b5834521e052aef1.svg"
+        },
+        {
+          "path": "media/texts/b6533453246c7ff7.svg"
+        },
+        {
+          "path": "media/texts/b836eee18c04f09e.svg"
+        },
+        {
+          "path": "media/texts/b8a82707fa2042b9.svg"
+        },
+        {
+          "path": "media/texts/bd793a76b1c3afac.svg"
+        },
+        {
+          "path": "media/texts/c149dce3044b4e76.svg"
+        },
+        {
+          "path": "media/texts/c25aae21eb4b6134.svg"
+        },
+        {
+          "path": "media/texts/c39cbc87419dd71e.svg"
+        },
+        {
+          "path": "media/texts/c412e63812dc0f02.svg"
+        },
+        {
+          "path": "media/texts/c6f03808d5371aa7.svg"
+        },
+        {
+          "path": "media/texts/c7554515d758601b.svg"
+        },
+        {
+          "path": "media/texts/d1f5ffbe1f0569b2.svg"
+        },
+        {
+          "path": "media/texts/d387292402358f54.svg"
+        },
+        {
+          "path": "media/texts/d3c2c824799929d5.svg"
+        },
+        {
+          "path": "media/texts/d4447dff40aee91d.svg"
+        },
+        {
+          "path": "media/texts/dad226e7845de9dc.svg"
+        },
+        {
+          "path": "media/texts/dbcb409783f140f9.svg"
+        },
+        {
+          "path": "media/texts/dc03aa802640495a.svg"
+        },
+        {
+          "path": "media/texts/dc54e574ea9f2670.svg"
+        },
+        {
+          "path": "media/texts/e1067b906411f9de.svg"
+        },
+        {
+          "path": "media/texts/e2c8af499ca43734.svg"
+        },
+        {
+          "path": "media/texts/e523b5138cf4e30c.svg"
+        },
+        {
+          "path": "media/texts/eaf2407c10ef2c77.svg"
+        },
+        {
+          "path": "media/texts/ee5f3b5cb118c4cc.svg"
+        },
+        {
+          "path": "media/texts/f08fd0ea9f1d0410.svg"
+        },
+        {
+          "path": "media/texts/f090e84548863dcc.svg"
+        },
+        {
+          "path": "media/texts/f359d66da2c835a2.svg"
+        },
+        {
+          "path": "media/texts/f5d0c9d0d2a423f4.svg"
+        },
+        {
+          "path": "media/texts/f7cb4252265a212d.svg"
+        },
+        {
+          "path": "media/texts/f8c5f016ae9aba79.svg"
+        },
+        {
+          "path": "media/texts/f9ac67c7e11b086c.svg"
+        },
+        {
+          "path": "media/texts/fc1a7b9bc327a057.svg"
+        },
+        {
+          "path": "media/texts/fd81887fe4ed0b08.svg"
+        },
+        {
+          "path": "media/texts/fdd8e949254e936a.svg"
+        },
+        {
+          "path": "media/texts/fe1b204eb0598987.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🤝️handoff/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/📁️output/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🌬️convection/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🔊️speech/🐍️.py"
+        }
+      ]
+    }
+  ]
+}

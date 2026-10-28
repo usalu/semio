@@ -8,6 +8,7 @@
  * @see https://www.w3.org/WAI/WCAG22/Understanding/error-prevention-legal-financial-data.html — confirm what cannot be undone
  */
 
+import { clientAccess, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { useId, useState, type ReactElement } from "react";
 import { challengeRules, learnerTag, roomScope, type RunSummary } from "@semio-tech/course";
 import { localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
@@ -131,9 +132,10 @@ export function LearnerCard(props: LearnerProps & { readonly revealed: boolean; 
 
 const STATUS = { open: "course.learner.statusOpen", submitted: "course.learner.statusSubmitted", voided: "course.learner.statusVoided" } as const;
 
-function RunRow(props: LearnerProps & { readonly run: RunSummary; readonly busy: boolean; readonly act: Act }): ReactElement {
+function RunRow(props: LearnerProps & { readonly run: RunSummary; readonly busy: boolean; readonly act: Act; readonly at: number }): ReactElement {
   const { session, state, text, locale, run, busy, act } = props;
   const quiz = state.course?.quizzes.find((candidate) => candidate.id === run.quiz);
+  const available = clientAccess(state.course, run.quiz, props.at);
   const cell = "border-b border-normal px-single py-single text-left align-top";
   return (
     <tr {...TABLE.row}>
@@ -160,9 +162,9 @@ function RunRow(props: LearnerProps & { readonly run: RunSummary; readonly busy:
       </td>
       <td {...TABLE.cell} data-cell="lead" className={cn(cell, "course-nowrap")}>
         {run.status === "submitted" ? (
-          <CardAction onClick={() => session.open({ screen: "results", run: run.run })}>{text("course.learner.viewResult")}</CardAction>
+          <CardAction disabled={!available} onClick={() => session.open({ screen: "results", run: run.run })}>{text("course.learner.viewResult")}</CardAction>
         ) : run.status === "open" ? (
-          <CardAction primary disabled={busy} onClick={() => act((signal) => session.resumeRun(run.run, signal))}>
+          <CardAction primary disabled={busy || !available} onClick={() => act((signal) => session.resumeRun(run.run, signal))}>
             {text("course.home.resume", { challenge: text(CHALLENGE_LABELS[run.challenge]) })}
           </CardAction>
         ) : null}
@@ -174,6 +176,7 @@ function RunRow(props: LearnerProps & { readonly run: RunSummary; readonly busy:
 /** 📇️ The learner's profile page behind the card: totals and rank, the runs newest first, and the badges earned. */
 export function LearnerPage(props: LearnerProps & { readonly view: PaneView; readonly busy: boolean; readonly act: Act }): ReactElement | null {
   const { state, text, locale } = props;
+  const at = useReleaseClock(state.course);
   const id = useId();
   const shown = totals(props, usePresenceFollow().following);
   if (shown === undefined) return <PageFrame page={HOME_PAGES.learner}><LearnerCard {...props} revealed onOpen={() => props.session.open({ screen: "identity" })} /></PageFrame>;
@@ -211,7 +214,7 @@ export function LearnerPage(props: LearnerProps & { readonly view: PaneView; rea
               </thead>
               <tbody {...TABLE.group}>
                 {runs.map((run) => (
-                  <RunRow key={run.run} {...props} run={run} />
+                  <RunRow key={run.run} {...props} run={run} at={at} />
                 ))}
               </tbody>
             </table>

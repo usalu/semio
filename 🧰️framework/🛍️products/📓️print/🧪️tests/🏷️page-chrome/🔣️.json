@@ -1,0 +1,84 @@
+{
+  "stroke": 0.75,
+  "padding": 1.44,
+  "rowHeight": 7.2,
+  "cases": [
+    {
+      "name": "Header shares its bottom border",
+      "bar": "navbar",
+      "side": "bottom",
+      "bodyHeight": 10.08,
+      "openHeight": 10.83,
+      "totalHeight": 11.58
+    },
+    {
+      "name": "Footer shares its top border",
+      "bar": "footer",
+      "side": "top",
+      "bodyHeight": 10.08,
+      "openHeight": 10.83,
+      "totalHeight": 11.58
+    }
+  ],
+  "footerLogo": {
+    "position": "left",
+    "width": 444,
+    "height": 131,
+    "images": [
+      {
+        "theme": "light",
+        "source": "♻️mit-bestand/📋️bericht/📋️zwischenbericht/🖼️asset/🪧️logo/🎓️luh/☀️logo.png",
+        "asset": "🖼️assets/🪧️logo/🎓️luh/☀️logo.png"
+      },
+      {
+        "theme": "dark",
+        "source": "♻️mit-bestand/📋️bericht/📋️zwischenbericht/🖼️asset/🪧️logo/🎓️luh/🌙️logo-dark.png",
+        "asset": "🖼️assets/🪧️logo/🎓️luh/🌙️logo-dark.png"
+      }
+    ]
+  },
+  "projectChip": {
+    "emblemWidth": 7.2,
+    "cases": [
+      {
+        "language": "en",
+        "label": "Sample Course",
+        "labelWidth": 24,
+        "borders": 1,
+        "width": 37.02
+      },
+      {
+        "language": "de",
+        "label": "Beispielkurs",
+        "labelWidth": 24,
+        "borders": 1,
+        "width": 37.02
+      },
+      {
+        "language": "en",
+        "label": "",
+        "labelWidth": 0,
+        "borders": 1,
+        "width": 11.58
+      }
+    ]
+  },
+  "headers": [
+    {
+      "language": "en",
+      "labels": {
+        "left": "Sample Course",
+        "center": "Exercise",
+        "right": "Topic"
+      }
+    },
+    {
+      "language": "de",
+      "labels": {
+        "left": "Beispielkurs",
+        "center": "Übung",
+        "right": "Thema"
+      }
+    }
+  ]
+}

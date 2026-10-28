@@ -1,0 +1,747 @@
+{
+  "version": 18,
+  "graph": {
+    "vertices": 16,
+    "edges": 240,
+    "crossTableEdges": 128,
+    "numbering": "table-A-1-8-table-B-9-16",
+    "layout": "horizontal-ellipse",
+    "fullTextWidth": true,
+    "verticalRadiusMm": 53,
+    "ledgerRows": 10,
+    "ledgerColumns": 2,
+    "ledgerRowHeightMm": 6.3,
+    "vertexMapping": [
+      {
+        "vertex": 1,
+        "table": "A",
+        "column": 1,
+        "image": "resources/metabolism-capsule-backslash.png"
+      },
+      {
+        "vertex": 2,
+        "table": "A",
+        "column": 2,
+        "image": "resources/metabolism-ellipsoid-capsule-backslash.png"
+      },
+      {
+        "vertex": 3,
+        "table": "A",
+        "column": 3,
+        "image": "resources/metabolism-capsule-slash.png"
+      },
+      {
+        "vertex": 4,
+        "table": "A",
+        "column": 4,
+        "image": "resources/metabolism-ellipsoid-capsule-slash.png"
+      },
+      {
+        "vertex": 5,
+        "table": "A",
+        "column": 5,
+        "image": "resources/metabolism-capsule-q.png"
+      },
+      {
+        "vertex": 6,
+        "table": "A",
+        "column": 6,
+        "image": "resources/metabolism-ellipsoid-capsule-q.png"
+      },
+      {
+        "vertex": 7,
+        "table": "A",
+        "column": 7,
+        "image": "resources/metabolism-capsule-p.png"
+      },
+      {
+        "vertex": 8,
+        "table": "A",
+        "column": 8,
+        "image": "resources/metabolism-ellipsoid-capsule-p.png"
+      },
+      {
+        "vertex": 9,
+        "table": "B",
+        "column": 1,
+        "image": "resources/metabolism-capsule-J.png"
+      },
+      {
+        "vertex": 10,
+        "table": "B",
+        "column": 2,
+        "image": "resources/metabolism-ellipsoid-capsule-J.png"
+      },
+      {
+        "vertex": 11,
+        "table": "B",
+        "column": 3,
+        "image": "resources/metabolism-capsule-L.png"
+      },
+      {
+        "vertex": 12,
+        "table": "B",
+        "column": 4,
+        "image": "resources/metabolism-ellipsoid-capsule-L.png"
+      },
+      {
+        "vertex": 13,
+        "table": "B",
+        "column": 5,
+        "image": "resources/metabolism-capsule-z.png"
+      },
+      {
+        "vertex": 14,
+        "table": "B",
+        "column": 6,
+        "image": "resources/metabolism-ellipsoid-capsule-z.png"
+      },
+      {
+        "vertex": 15,
+        "table": "B",
+        "column": 7,
+        "image": "resources/metabolism-capsule-s.png"
+      },
+      {
+        "vertex": 16,
+        "table": "B",
+        "column": 8,
+        "image": "resources/metabolism-ellipsoid-capsule-s.png"
+      }
+    ],
+    "ledgerEntries": 20,
+    "selectionSeed": 20261027,
+    "ringEdges": [
+      "1-2",
+      "2-3",
+      "3-4",
+      "4-5",
+      "5-6",
+      "6-7",
+      "7-8",
+      "8-9",
+      "9-10",
+      "10-11",
+      "11-12",
+      "12-13",
+      "13-14",
+      "14-15",
+      "15-16",
+      "16-1"
+    ],
+    "chords": [
+      "1-5",
+      "5-10",
+      "10-13",
+      "13-1"
+    ],
+    "selectedEdges": [
+      "1-2",
+      "2-3",
+      "3-4",
+      "4-5",
+      "5-6",
+      "6-7",
+      "7-8",
+      "8-9",
+      "9-10",
+      "10-11",
+      "11-12",
+      "12-13",
+      "13-14",
+      "14-15",
+      "15-16",
+      "16-1",
+      "1-5",
+      "5-10",
+      "10-13",
+      "13-1"
+    ],
+    "chordMinimumCyclicDistance": 3,
+    "chordMaximumCyclicDistance": 5,
+    "directed": true,
+    "inDegree": 15,
+    "outDegree": 15,
+    "cycleVertices": [
+      1,
+      5,
+      10,
+      13
+    ],
+    "selectionKind": "seeded-clockwise-four-vertex-cycle",
+    "selectionAttempts": 19
+  },
+  "languages": [
+    "en",
+    "de"
+  ],
+  "pages": 3,
+  "exercise": {
+    "id": "dwelling-capsules",
+    "strategy": "shared",
+    "tables": [
+      {
+        "id": "One",
+        "types": [
+          {
+            "family": "capsule",
+            "variant": "backslash",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/↘️backslash/🖋️capsule_backslash.svg",
+            "image": "resources/metabolism-capsule-backslash.png",
+            "sha256": "abe21a23f6a9901fb92c3130969d409f9c33be8f8ded291f70f4712edaf0a148",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99916
+            ],
+            "paths": 77
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "backslash",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/↘️backslash/🖋️ellipsoid-capsule_backslash.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-backslash.png",
+            "sha256": "dd2ae08f8a33e97888417c33cd3e04af9543611228d2412c820014cfa9043f3f",
+            "viewBox": [
+              0,
+              0,
+              444.39638,
+              355.68911
+            ],
+            "paths": 15
+          },
+          {
+            "family": "capsule",
+            "variant": "slash",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/↗️slash/🖋️capsule_slash.svg",
+            "image": "resources/metabolism-capsule-slash.png",
+            "sha256": "c2668df4c66a4205ed116993c8c36fe24f3d45aaf4f2a56444a713aca78876c2",
+            "viewBox": [
+              0,
+              0,
+              131.84558,
+              128.99913
+            ],
+            "paths": 77
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "slash",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/↗️slash/🖋️ellipsoid-capsule_slash.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-slash.png",
+            "sha256": "2e2a4ca8dae28fb257bbaa362496db7f296a7a7bc0cc49c041d0b380c1986f9b",
+            "viewBox": [
+              0,
+              0,
+              408.42202,
+              395.64803
+            ],
+            "paths": 19
+          },
+          {
+            "family": "capsule",
+            "variant": "q",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🔎️q/🖋️capsule_q.svg",
+            "image": "resources/metabolism-capsule-q.png",
+            "sha256": "bd179ed56e88b85e7605ae617721edcd046cf448366e508c0da0b61e1ca6aca2",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99912
+            ],
+            "paths": 81
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "q",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🔎️q/🖋️ellipsoid-capsule_q.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-q.png",
+            "sha256": "40299398550a07a56d9bc68fcb0b1b639531f36c0cda91e359f208463561ada6",
+            "viewBox": [
+              0,
+              0,
+              444.41488,
+              355.68136
+            ],
+            "paths": 40
+          },
+          {
+            "family": "capsule",
+            "variant": "p",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🅿️p/🖋️capsule_p.svg",
+            "image": "resources/metabolism-capsule-p.png",
+            "sha256": "8c86b9959ce5c46eb57e5f02c238c0d5dc8b0d2c6ce16e98d4504e46d77d1207",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99912
+            ],
+            "paths": 78
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "p",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🅿️p/🖋️ellipsoid-capsule_p.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-p.png",
+            "sha256": "115a69d2224f6247f97bcbd326e34e2c9fe9475a1331e831f7780c6f67e0278e",
+            "viewBox": [
+              0,
+              0,
+              410.12273,
+              397.34102
+            ],
+            "paths": 18
+          }
+        ],
+        "label": "A"
+      },
+      {
+        "id": "Two",
+        "types": [
+          {
+            "family": "capsule",
+            "variant": "J",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🪝️j/🖋️capsule_J.svg",
+            "image": "resources/metabolism-capsule-J.png",
+            "sha256": "fa8e122422ff12eac9614b726088a6cf548bf5c58aea6de904f2af7a38ed3928",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99915
+            ],
+            "paths": 77
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "J",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🪝️j/🖋️ellipsoid-capsule_J.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-J.png",
+            "sha256": "3ce4dc7e020a92bb93cc9a6c0d546c798e7c4199e37504d9b7759ae720a488af",
+            "viewBox": [
+              0,
+              0,
+              408.37225,
+              395.64025
+            ],
+            "paths": 18
+          },
+          {
+            "family": "capsule",
+            "variant": "L",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/📐️l/🖋️capsule_L.svg",
+            "image": "resources/metabolism-capsule-L.png",
+            "sha256": "25ff9b497694795026e130c631e695ec8af82bfe2263b4c0e1f4ddf8d234cf71",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99916
+            ],
+            "paths": 50
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "L",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/📐️l/🖋️ellipsoid-capsule_L.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-L.png",
+            "sha256": "ccb46dd068d4b5438c34495cc64aa6d3d1eea3680fe1803c5cb743753004e741",
+            "viewBox": [
+              0,
+              0,
+              442.72152,
+              338.31404
+            ],
+            "paths": 14
+          },
+          {
+            "family": "capsule",
+            "variant": "z",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/⚡️z/🖋️capsule_z.svg",
+            "image": "resources/metabolism-capsule-z.png",
+            "sha256": "afdf3527c095324ad23259821d0b79bb99d9557a11c165fedc7891dfe8c2852b",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99916
+            ],
+            "paths": 77
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "z",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/⚡️z/🖋️ellipsoid-capsule_z.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-z.png",
+            "sha256": "81eec67e24c3a8e519f7fce325dad2d2d9ba33a4207a6a368fb14073688b06fc",
+            "viewBox": [
+              0,
+              0,
+              410.12273,
+              397.34099
+            ],
+            "paths": 20
+          },
+          {
+            "family": "capsule",
+            "variant": "s",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/💊️capsules/🐍️s/🖋️capsule_s.svg",
+            "image": "resources/metabolism-capsule-s.png",
+            "sha256": "f40685eb8466a82830645eb5c02ea44a9641952b9012091868bba1f8a2645427",
+            "viewBox": [
+              0,
+              0,
+              131.84559,
+              128.99913
+            ],
+            "paths": 53
+          },
+          {
+            "family": "ellipsoid-capsule",
+            "variant": "s",
+            "icon": "🧰️framework/🔨️modules/🖼️assets/🌱️metabolism/🔣️icons/🥚️ellipsoids/🐍️s/🖋️ellipsoid-capsule_s.svg",
+            "image": "resources/metabolism-ellipsoid-capsule-s.png",
+            "sha256": "2bf2b5f1ac6bf6b3ed694a642e8a630e836288d0b344a98b7be46f16f0ee9ef1",
+            "viewBox": [
+              0,
+              0,
+              444.41488,
+              340.03018
+            ],
+            "paths": 45
+          }
+        ],
+        "label": "B"
+      }
+    ]
+  },
+  "matrix": {
+    "totalRows": 9,
+    "totalColumns": 9,
+    "headerRows": 1,
+    "labelColumns": 1,
+    "parameterRows": 8,
+    "typeColumns": 8,
+    "orientation": "types-across-columns",
+    "emptyParameterNames": true,
+    "emptyParameterValues": true,
+    "writingLinesPerRow": 1,
+    "rowHeightMm": 6
+  },
+  "pageOrder": [
+    "worked-example",
+    "tables-A-B",
+    "complete-graph-20-selected-changes-reflection"
+  ],
+  "content": {
+    "en": {
+      "exerciseHeading": "Dwelling Capsules",
+      "tableLabels": [
+        "",
+        ""
+      ],
+      "footerLogos": [
+        "🖼️assets/🪧️logo/🎓️luh/☀️logo.png"
+      ]
+    },
+    "de": {
+      "exerciseHeading": "Wohnkapseln",
+      "tableLabels": [
+        "",
+        ""
+      ],
+      "footerLogos": [
+        "🖼️assets/🪧️logo/🎓️luh/☀️logo.png"
+      ]
+    }
+  },
+  "headings": {
+    "de": [
+      "Fingerübung Parametrisierung",
+      "Beispiel",
+      "Wohnkapseln"
+    ],
+    "en": [
+      "Finger Exercise: Parametrization",
+      "Example",
+      "Dwelling Capsules"
+    ]
+  },
+  "workedExample": {
+    "columns": 3,
+    "parameterRows": [
+      "L",
+      "B",
+      "H",
+      "Form"
+    ],
+    "domains": {
+      "L": "positive-real",
+      "B": "positive-real",
+      "H": "positive-real",
+      "Form": [
+        "box",
+        "pyramid",
+        "elliptical-cylinder"
+      ]
+    },
+    "points": [
+      {
+        "dimensions": [
+          2.5,
+          1.5,
+          2
+        ],
+        "form": "box"
+      },
+      {
+        "dimensions": [
+          2.5,
+          1.5,
+          2
+        ],
+        "form": "pyramid"
+      },
+      {
+        "dimensions": [
+          3.5,
+          2.5,
+          3
+        ],
+        "form": "elliptical-cylinder"
+      }
+    ],
+    "values": [
+      [
+        2.5,
+        2.5,
+        3.5
+      ],
+      [
+        1.5,
+        1.5,
+        2.5
+      ],
+      [
+        2,
+        2,
+        3
+      ]
+    ],
+    "forms": [
+      "box",
+      "pyramid",
+      "elliptical-cylinder"
+    ],
+    "edges": [
+      {
+        "from": 1,
+        "to": 2,
+        "numeric": [
+          0,
+          0,
+          0
+        ],
+        "category": [
+          "box",
+          "pyramid"
+        ]
+      },
+      {
+        "from": 2,
+        "to": 1,
+        "numeric": [
+          0,
+          0,
+          0
+        ],
+        "category": [
+          "pyramid",
+          "box"
+        ]
+      },
+      {
+        "from": 2,
+        "to": 3,
+        "numeric": [
+          1,
+          1,
+          1
+        ],
+        "category": [
+          "pyramid",
+          "elliptical-cylinder"
+        ]
+      },
+      {
+        "from": 3,
+        "to": 2,
+        "numeric": [
+          -1,
+          -1,
+          -1
+        ],
+        "category": [
+          "elliptical-cylinder",
+          "pyramid"
+        ]
+      },
+      {
+        "from": 1,
+        "to": 3,
+        "numeric": [
+          1,
+          1,
+          1
+        ],
+        "category": [
+          "box",
+          "elliptical-cylinder"
+        ]
+      },
+      {
+        "from": 3,
+        "to": 1,
+        "numeric": [
+          -1,
+          -1,
+          -1
+        ],
+        "category": [
+          "elliptical-cylinder",
+          "box"
+        ]
+      }
+    ],
+    "cycle": [
+      1,
+      2,
+      3,
+      1
+    ],
+    "wrongDirectNumeric": [
+      2,
+      1,
+      1
+    ],
+    "oneHot": [
+      [
+        1,
+        0,
+        0
+      ],
+      [
+        0,
+        1,
+        0
+      ],
+      [
+        0,
+        0,
+        1
+      ]
+    ],
+    "titleBanner": false,
+    "directed": true,
+    "edgeLabels": "separate-shared-ledger",
+    "separateLedger": true,
+    "matrix": {
+      "parameterRows": 8,
+      "filledRows": 4,
+      "blankRows": 4,
+      "totalColumns": 4,
+      "totalRows": 9,
+      "headerHeightMm": 16,
+      "rowHeightMm": 6,
+      "paddingMm": 2,
+      "labelWidthMm": 27,
+      "headerShapeScale": 0.5,
+      "headerNumbered": false,
+      "tableChrome": true,
+      "blankRowComponent": "AssignmentParameterMatrixBlankRows",
+      "textVerticalAlignment": "glyph-ink-center",
+      "maxInkCenterOffsetMm": 0.25,
+      "centeredFilledCells": 16
+    },
+    "ledger": {
+      "rows": 3,
+      "columns": 2,
+      "entries": 6,
+      "rowHeightMm": 6.3,
+      "valueFontPt": 9,
+      "numericNotation": "named-nonzero-semicolon-separated",
+      "dimensionNames": [
+        "L",
+        "B",
+        "H"
+      ],
+      "zeroNumericChanges": "omitted",
+      "ruleWidthFractionOfColumn": 0.76,
+      "ruleWidthBasis": "native-inner-linewidth"
+    }
+  },
+  "tableChrome": {
+    "titleVisibleName": false,
+    "rightAutomaticChip": true,
+    "connectedOutline": true,
+    "wrappedTables": 3
+  },
+  "silhouettes": {
+    "diagrams": 2,
+    "transitions": 2,
+    "titleVisibleName": false,
+    "rightAutomaticChip": true,
+    "connectedOutline": true,
+    "breakable": false,
+    "pages": 3,
+    "diagramNumbers": [
+      "1.1.b",
+      "1.2.c"
+    ],
+    "transitionNumbers": [
+      "1.1.c",
+      "1.2.d"
+    ],
+    "kindLabels": {
+      "en": {
+        "Diagram": "Diagram",
+        "Transitions": "Transitions"
+      },
+      "de": {
+        "Diagram": "Diagramm",
+        "Transitions": "Übergänge"
+      }
+    }
+  },
+  "ownership": {
+    "sourceRoot": "🎓️teaching/🏛️architecture/📐️parametric/📝️assignment",
+    "files": [
+      "en.tex",
+      "de.tex",
+      "en.content.tex",
+      "de.content.tex",
+      "geometry.tex",
+      "icons.json"
+    ],
+    "documentNamespace": "course",
+    "assignment": "parametrization",
+    "topic": "parametric",
+    "documents": {
+      "en": {
+        "namespace": "course",
+        "id": "architecture-parametric-parametrization-en",
+        "producer": "@teaching/architecture-course:build-parametrization-en",
+        "file": "architecture-parametric-parametrization-en.pdf"
+      },
+      "de": {
+        "namespace": "course",
+        "id": "architecture-parametric-parametrization-de",
+        "producer": "@teaching/architecture-course:build-parametrization-de",
+        "file": "architecture-parametric-parametrization-de.pdf"
+      }
+    }
+  }
+}

@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,20 +19,18 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-play_scene_title = _manim_module.play_scene_title
-TITLE_RUN_TIME = _manim_module.TITLE_RUN_TIME
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 body_text = _manim_module.body_text
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_card = _manim_module.window_card
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
-P_TEAL = _manim_module.P_TEAL
 P_ORANGE = _manim_module.P_ORANGE
 P_YELLOW = _manim_module.P_YELLOW
 P_RED = _manim_module.P_RED
@@ -64,18 +65,18 @@ set_vo_language = _manim_module.set_vo_language
 load_vo_timing = _manim_module.load_vo_timing
 
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
 TITLE_DE = "Primärenergie & das GEG"
 
-NUTZ_BLUE = "#38BDF8"
-END_RED = "#DC2626"
-PRIM_VIOLET = "#A78BFA"
-AMBIENT_GREEN = "#22C55E"
-GAS_AMBER = "#F59E0B"
-WOOD_BROWN = "#D9A066"
+NUTZ_BLUE = semio_color("secondary")
+END_RED = semio_color("danger")
+PRIM_VIOLET = semio_color("info")
+AMBIENT_GREEN = semio_color("success")
+GAS_AMBER = semio_color("tertiary")
+WOOD_BROWN = semio_color("info")
 
 # The schematic worked example carried over from Chapter 4. The plant factors
 # mirror ``4_system_losses/scene_4.py`` (E_UEBERGABE · E_VERTEILUNG ·
@@ -113,7 +114,7 @@ def _eq(product: float) -> str:
 #region DIN citation
 def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner."""
-    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = body_text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -138,7 +139,7 @@ def _furnish(hs, s, person_dx, rad_dx, *, person=True):
     """🛋️ Ground-floor occupant and radiator inside a ``house_section`` — returns both and their warm spot."""
     floor_y, cx = float(hs["bottom_left"][1]), float(hs["center"][0])
     heater = radiator(np.array([cx + rad_dx, floor_y, 0.0]))
-    heater.scale(0.75 * s)
+    heater.set(height=0.26 * hs["w_height"] / 2)
     heater.move_to(np.array([cx + rad_dx, floor_y + heater.height / 2 + 0.02, 0.0]))
     figure = _stand(floor_y, 1.2 * s, cx + person_dx) if person else VGroup()
     return {"person": figure, "radiator": heater, "warm": heater.get_top() + UP * 0.03,
@@ -148,7 +149,7 @@ def _furnish(hs, s, person_dx, rad_dx, *, person=True):
 def _envelope(hs, s, off=0.09):
     """🧥 Thick thermal-envelope outline hugging the house section — the building shell."""
     bl, br, tl, tr, peak = hs["bottom_left"], hs["bottom_right"], hs["top_left"], hs["top_right"], hs["roof_peak"]
-    return VMobject(color=P_TEAL, stroke_width=6, stroke_opacity=0.85).set_points_as_corners([
+    return VMobject(color=P_PRIMARY, stroke_width=6, stroke_opacity=0.85).set_points_as_corners([
         bl + LEFT * off, tl + LEFT * off, tl + LEFT * (0.26 * s + off) + UP * 0.02, peak + UP * off,
         tr + RIGHT * (0.26 * s + off) + UP * 0.02, tr + RIGHT * off, br + RIGHT * off,
     ])
@@ -156,9 +157,9 @@ def _envelope(hs, s, off=0.09):
 
 def _ground(x0, x1, y):
     """🟫 Ground line with a few hatches."""
-    line = Line(np.array([x0, y, 0.0]), np.array([x1, y, 0.0]), color=P_TEAL, stroke_width=2.2)
+    line = Line(np.array([x0, y, 0.0]), np.array([x1, y, 0.0]), color=P_PRIMARY, stroke_width=2.2)
     hatches = VGroup(*[
-        Line(p, p + (DOWN * 0.09 + LEFT * 0.06), color=P_TEAL, stroke_width=1.0)
+        Line(p, p + (DOWN * 0.09 + LEFT * 0.06), color=P_PRIMARY, stroke_width=1.0)
         for p in [line.point_from_proportion(u) for u in np.linspace(0.02, 0.98, int((x1 - x0) / 0.33))]
     ])
     return VGroup(line, hatches)
@@ -166,7 +167,7 @@ def _ground(x0, x1, y):
 
 def _ring(x0, x1, y0, y1, color, *, dashed=True):
     """⭕ One balance boundary — the dashed motif Chapter 1 drew around the house."""
-    box = RoundedRectangle(corner_radius=0.16, width=x1 - x0, height=y1 - y0, color=color, stroke_width=2.6)
+    box = RoundedRectangle(corner_radius=0, width=x1 - x0, height=y1 - y0, color=color, stroke_width=2.6)
     box.move_to(np.array([(x0 + x1) / 2, (y0 + y1) / 2, 0.0]))
     return DashedVMobject(box, num_dashes=60, dashed_ratio=0.55) if dashed else box
 #endregion
@@ -197,12 +198,10 @@ def _derrick(base, h=0.85):
 
 
 def _power_plant(base, w=0.9, h=0.5):
-    """🏭 Conversion plant — hall with two stacks standing on ``base``."""
-    b = _pt(base)
-    hall = Rectangle(width=w, height=h).move_to(b + UP * h / 2)
-    stacks = [Rectangle(width=0.13, height=h * 1.55).move_to(b + RIGHT * (w / 2 - 0.12 - 0.22 * k) + UP * h * 0.775)
-              for k in (0, 1)]
-    return _outline(hall, *stacks)
+    """🏭 Filled industrial elevation with sawtooth halls and tapered stacks."""
+    profile = _manim_module.object_silhouette("factory", color=P_WHITE, width=w)
+    profile.stretch_to_fit_height(h * 1.55)
+    return VGroup(profile.move_to(_pt(base) + UP * profile.height / 2))
 
 
 def _pump(center, r=0.17):
@@ -215,21 +214,17 @@ def _pump(center, r=0.17):
 
 
 def _flame(center, h=0.5, color=P_ORANGE):
-    """🔥 Flame drop."""
-    c = _pt(center)
-    pts = [(0.0, h / 2), (0.3 * h, 0.05 * h), (0.24 * h, -0.34 * h), (0.0, -h / 2), (-0.24 * h, -0.34 * h),
-           (-0.3 * h, 0.05 * h), (0.0, h / 2)]
-    flame = VMobject(color=color, stroke_width=1.8).set_points_smoothly([c + np.array([x, y, 0.0]) for x, y in pts])
-    return flame.set_fill(color, opacity=0.55)
+    """🔥 An irregular ink tongue with a tapered split tip."""
+    profile = _manim_module.object_silhouette("flame", color=color)
+    profile.scale(h / profile.height)
+    return profile.move_to(_pt(center))
 
 
 def _tree(base, h=0.5):
-    """🌲 Wood carrier — trunk and crown."""
-    b = _pt(base)
-    trunk = Rectangle(width=0.07, height=0.16).move_to(b + UP * 0.08)
-    crown = Polygon(b + UP * 0.14 + LEFT * 0.22, b + UP * 0.14 + RIGHT * 0.22, b + UP * h)
-    _outline(trunk, crown, color=WOOD_BROWN)
-    return VGroup(trunk, crown)
+    """🌳 Architectural tree entourage with a tapering trunk and natural branch forks."""
+    profile = _manim_module.object_silhouette("tree", color=WOOD_BROWN)
+    profile.scale(h / profile.height)
+    return VGroup(profile.move_to(_pt(base) + UP * h / 2))
 
 
 def _boiler(center):
@@ -363,14 +358,9 @@ def _ghost(x, base_y, value, *, width=0.62, unit=0.01, color=P_WHITE):
 
 
 def _card(caption, value, color, *, width=None):
-    """🪧 Framed caption over a typeset value."""
-    cap = body_text(caption, font_size=LABEL_FONT_SIZE, color=P_TEAL)
-    body = VGroup(cap, value).arrange(DOWN, buff=0.08)
-    frame = RoundedRectangle(
-        width=width if width is not None else body.width + 0.36, height=body.height + 0.28, corner_radius=0.1,
-        color=color, stroke_width=1.8, fill_color=P_DEEP_DARK, fill_opacity=0.82,
-    ).move_to(body)
-    return VGroup(frame, body)
+    """🪧 Fuse the named quantity and its typeset value into the shared window card."""
+    heading = body_text(caption, font_size=LABEL_FONT_SIZE, color=P_WHITE)
+    return window_card(heading, value, color=color, width=width)
 #endregion
 
 
@@ -438,16 +428,14 @@ class Beat1_DreiBilanzgrenzen(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        play_scene_title(self, title)
-        subtitle = beat_subtitle("Drei Bilanzgrenzen", title)
+        subtitle = section_heading("Drei Bilanzgrenzen")
         din = _din_ref("DIN V 18599-1:2018-09 · GEG § 20")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
         revision_note = note_line(
             "Seit 2025 als DIN/TS 18599-1:2025-10 fortgeschrieben — GEG § 20 nutzt weiterhin 2018",
-            color=P_TEAL,
+            color=P_PRIMARY,
         )
         self.play(FadeIn(caption), FadeIn(revision_note), run_time=0.3)
 
@@ -557,13 +545,13 @@ class Beat1_DreiBilanzgrenzen(Scene):
             for x0, x1 in ((-2.55, -1.45), (1.45, 2.55))
         ]
         hop_names = VGroup(
-            body_text("Anlage", font_size=LABEL_FONT_SIZE - 2, color=P_TEAL).move_to(np.array([-2.0, 1.05, 0.0])),
+            body_text("Anlage", font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY).move_to(np.array([-2.0, 1.05, 0.0])),
             math_label(r"f_{p}", np.array([2.0, 1.1, 0.0]), size=LABEL_FONT_SIZE, color=P_YELLOW),
         )
         row, box, items = math_panel([
             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
-            ("fp", r"f_{p}", P_YELLOW), ("cap", r"\;\text{← vom GEG begrenzt}", P_TEAL),
+            ("fp", r"f_{p}", P_YELLOW), ("cap", r"\;\text{← vom GEG begrenzt}", P_PRIMARY),
         ])
         rings = {}
         scenery = (hs["group"], ground, inside["group"], meter_glyph, derrick, plant, pump, pipe_up, ring_source,
@@ -640,9 +628,7 @@ class Beat2_Primaerenergiefaktor(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Der nicht erneuerbare Primärenergiefaktor", title)
+        subtitle = section_heading("Der nicht erneuerbare Primärenergiefaktor")
         din = _din_ref("GEG Anlage 4")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -679,7 +665,7 @@ class Beat2_Primaerenergiefaktor(Scene):
         ref_line = DashedLine(np.array([X_BAR + UNIT_LEN, -1.4, 0.0]), np.array([X_BAR + UNIT_LEN, 1.8, 0.0]),
                               color=P_WHITE, stroke_width=1.8, stroke_opacity=0.6)
         ref_label = math_label(r"Q_{E}=1\,\mathrm{kWh}", np.array([X_BAR + UNIT_LEN - 0.1, 1.84, 0.0]),
-                               size=LABEL_FONT_SIZE, color=P_TEAL, edge="right")
+                               size=LABEL_FONT_SIZE, color=P_PRIMARY, edge="right")
         bar_axis = Line(np.array([X_BAR, -1.4, 0.0]), np.array([X_BAR, 1.8, 0.0]), color=P_WHITE, stroke_width=2,
                         stroke_opacity=0.5)
 
@@ -692,7 +678,7 @@ class Beat2_Primaerenergiefaktor(Scene):
                 np.array([X_BAR + UNIT_LEN + 0.7, y + 0.46, 0.0]))
             return VGroup(box, tag)
 
-        fixed_tag = body_text("im GEG festgelegt (Anlage 4)", font_size=LABEL_FONT_SIZE - 2, color=P_TEAL)
+        fixed_tag = body_text("im GEG festgelegt (Anlage 4)", font_size=LABEL_FONT_SIZE - 2, color=P_PRIMARY)
         fixed_tag.move_to(np.array([X_NAME + 0.35, YS["strom"] - 0.4, 0.0]))
 
         trackers = {k: ValueTracker(0.0) for k in FP}
@@ -811,14 +797,14 @@ class Beat2_Primaerenergiefaktor(Scene):
         row2, box2, items2 = math_panel([
             ("qp", r"Q_{P}", PRIM_VIOLET), ("eq", "=", P_WHITE),
             ("qe", r"Q_{E}", END_RED), ("dot", r"\cdot", P_WHITE),
-            ("fp", r"f_{p,\mathrm{n.\,ern.}}", P_YELLOW), ("unit", rf"\;[{UNIT}]", P_TEAL),
+            ("fp", r"f_{p,\mathrm{n.\,ern.}}", P_YELLOW), ("unit", rf"\;[{UNIT}]", P_PRIMARY),
         ])
         say("erneuerbar",
             (1.0, unlane("umwelt")),
             (1.4, [Create(box2), *[ReplacementTransform(items[k], items2[k]) for k in ("qp", "eq", "qe", "dot", "fp")],
                    FadeIn(items2["unit"]), Indicate(VGroup(*reads.values()), color=P_YELLOW, scale_factor=1.06)]))
 
-        note = note_line("f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert", color=P_TEAL)
+        note = note_line("f_p nach GEG Anlage 4: nicht erneuerbarer Anteil — festgelegter Rechenwert", color=P_PRIMARY)
         ring = highlight_param(items2, "fp", color=P_YELLOW)
         say("rechenwert", (1.2, [FadeIn(note), Create(ring)]))
 
@@ -957,20 +943,18 @@ class Beat3_Rechenbeispiel(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Ein Gebäude, zwei Anlagen", title)
+        subtitle = section_heading("Ein Gebäude, zwei Anlagen")
         din = _din_ref("GEG § 20 · DIN V 18599:2018-09")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
         caption = caption_bar(subtitle_text(self.NARRATION, "intro"))
-        schematic_note = note_line("Vereinfachtes Rechenbeispiel — keine vollständige DIN/GEG-Berechnung", color=P_TEAL)
+        schematic_note = note_line("Vereinfachtes Rechenbeispiel — keine vollständige DIN/GEG-Berechnung", color=P_PRIMARY)
         self.play(FadeIn(caption), FadeIn(schematic_note), run_time=0.3)
 
         gas, wp = _plant_panel(-6.85, "gas"), _plant_panel(0.1, "wp")
         panels = (gas, wp)
 
-        legend_unit = math_label(rf"[{UNIT}]", size=LABEL_FONT_SIZE, color=P_TEAL)
+        legend_unit = math_label(rf"[{UNIT}]", size=LABEL_FONT_SIZE, color=P_PRIMARY)
         words = {key: body_text(text, font_size=LABEL_FONT_SIZE, color=colour)
                  for key, text, colour in (("nutz", "Nutzwärme", NUTZ_BLUE), ("loss", "Anlagenverlust", P_ORANGE),
                                            ("env", "Umweltwärme", AMBIENT_GREEN), ("chain", "Vorkette", PRIM_VIOLET))}
@@ -1093,9 +1077,9 @@ class Beat3_Rechenbeispiel(Scene):
         streams.clear()
 
         rings = VGroup(
-            SurroundingRectangle(VGroup(gas["static"]["q"]["num"]), color=P_RED, buff=0.08, corner_radius=0.05,
+            SurroundingRectangle(VGroup(gas["static"]["q"]["num"]), color=P_RED, buff=_theme_module.UI_SPACING, corner_radius=0,
                                  stroke_width=2.6),
-            SurroundingRectangle(VGroup(wp["static"]["q"]["num"]), color=AMBIENT_GREEN, buff=0.08, corner_radius=0.05,
+            SurroundingRectangle(VGroup(wp["static"]["q"]["num"]), color=AMBIENT_GREEN, buff=_theme_module.UI_SPACING, corner_radius=0,
                                  stroke_width=2.6),
         )
         ghost_q = _ghost(wp["xs"]["q"], G3, Q_PRIM_GAS, unit=U3)
@@ -1114,7 +1098,7 @@ class Beat3_Rechenbeispiel(Scene):
             ("g_qp", de_num(Q_PRIM_GAS), PRIM_VIOLET), (None, r"\quad", P_WHITE),
             ("w_qe", de_num(Q_END_WP), END_RED), ("w_dot", r"\cdot", P_WHITE),
             ("w_fp", de_num(F_P_STROM, 1), P_YELLOW), ("w_eq", _eq(Q_END_WP * F_P_STROM), P_WHITE),
-            ("w_qp", de_num(Q_PRIM_WP), PRIM_VIOLET), ("unit", rf"\;{UNIT}", P_TEAL),
+            ("w_qp", de_num(Q_PRIM_WP), PRIM_VIOLET), ("unit", rf"\;{UNIT}", P_PRIMARY),
         ]
         row, box, items = math_panel(parts)
         copies = []
@@ -1185,9 +1169,7 @@ class Beat4_Referenzgebaeude(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Der Grenzwert: das Referenzgebäude", title)
+        subtitle = section_heading("Der Grenzwert: das Referenzgebäude")
         din = _din_ref("GEG §§ 15–17 · § 71 · Anlage 1")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -1210,9 +1192,9 @@ class Beat4_Referenzgebaeude(Scene):
         dims_d, dims_r = dims(design), dims(reference)
         envelope_d, envelope_r = _envelope(design, S4), _envelope(reference, S4)
         tag_d = body_text("Ihr Entwurf", font_size=LABEL_FONT_SIZE, color=P_CYAN).move_to(np.array([-5.25, -0.95, 0.0]))
-        tag_r = body_text("Referenzgebäude", font_size=LABEL_FONT_SIZE, color=P_TEAL).move_to(
+        tag_r = body_text("Referenzgebäude", font_size=LABEL_FONT_SIZE, color=P_PRIMARY).move_to(
             np.array([-1.95, -0.95, 0.0]))
-        spec = chip("Anlage 1", P_TEAL, font_size=LABEL_FONT_SIZE).move_to(np.array([-1.95, G4 + 1.1, 0.0]))
+        spec = chip("Anlage 1", P_PRIMARY, font_size=LABEL_FONT_SIZE).move_to(np.array([-1.95, G4 + 1.1, 0.0]))
 
         SHIFT, x_ref, x_wp, x_gas = 3.85, -3.4, -0.9, 1.6
         ox = ValueTracker(SHIFT)
@@ -1328,7 +1310,7 @@ class Beat4_Referenzgebaeude(Scene):
                  name_wp, num_ref, num_gas, num_wp, double_line, double_tag, verdict)
         house_d = VGroup(design["group"], design_in["group"], envelope_d)
         house_d.shift(RIGHT * 5.25)
-        row, box, items = math_panel([("ht", r"H′_{T}", P_CYAN), ("ht_ref", r"\text{(§ 16)}", P_TEAL)])
+        row, box, items = math_panel([("ht", r"H′_{T}", P_CYAN), ("ht_ref", r"\text{(§ 16)}", P_PRIMARY)])
         ring_ht = highlight_param(items, "ht", color=P_CYAN)
         say("huelle",
             (1.2, [FadeOut(m) for m in chart]),
@@ -1339,7 +1321,7 @@ class Beat4_Referenzgebaeude(Scene):
             (0.5, [Create(ring_ht)]))
 
         row2, box2, items2 = math_panel([
-            ("ee", r"65\,\%", AMBIENT_GREEN), ("ee_text", r"\text{erneuerbar für neue Heizungen (§ 71)}", P_TEAL),
+            ("ee", r"65\,\%", AMBIENT_GREEN), ("ee_text", r"\text{erneuerbar für neue Heizungen (§ 71)}", P_PRIMARY),
         ])
         frozen = {}
 

@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "language": "de",
+  "contract": "Canonical Live Sun",
+  "drawables": 1,
+  "cases": [
+    {
+      "level": 0,
+      "fill_opacity": 0.1
+    },
+    {
+      "level": 0.5,
+      "fill_opacity": 0.25
+    },
+    {
+      "level": 1,
+      "fill_opacity": 0.4
+    }
+  ],
+  "oracle": "Native Manim Cairo silhouette and FadeIn"
+}

@@ -1,0 +1,14 @@
+\errorcontextlines=999
+\documentclass[theme=dark,language=de]{assignment}
+\ExplSyntaxOn
+\iow_term:x{[DEBUG]~logos=\clist_use:Nn\l_semio_footer_logos_clist{,}}
+\ExplSyntaxOff
+\footerlogos{}
+\title{Resource Probe}
+\author{Architecture}
+\SemioHeaderSetup{left={Architecture},center={Probe},right={Resource}}
+\begin{document}
+\typeout{[DEBUG] raw-bmp-start}
+\includegraphics[height=10pt]{assets/logo/luh/☀️logo.png}
+\typeout{[DEBUG] raw-bmp-end}
+\end{document}

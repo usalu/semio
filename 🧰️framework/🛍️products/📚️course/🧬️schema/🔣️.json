@@ -30,7 +30,7 @@
     },
     "WireVersion": {
       "type": "integer",
-      "const": 8,
+      "const": 10,
       "description": "The version of this contract on the wire: the `version` of every framework envelope of a quiz command or query, and the version a proctor declares for each quiz kind it serves. It is raised with every change of this contract beyond its prose (descriptions and titles), so a proctor and a client of different contracts never take each other's commands, events or views for their own: a client meeting another version treats the proctor as away. The fingerprint of the contract without its prose is pinned to the version by the wire-version case."
     },
     "Score": {
@@ -325,6 +325,9 @@
         },
         "explanation": {
           "$ref": "#/$defs/Text"
+        },
+        "mockup": {
+          "$ref": "#/$defs/Mockup"
         }
       }
     },
@@ -363,6 +366,9 @@
         },
         "explanation": {
           "$ref": "#/$defs/Text"
+        },
+        "mockup": {
+          "$ref": "#/$defs/Mockup"
         }
       }
     },
@@ -409,6 +415,9 @@
         },
         "explanation": {
           "$ref": "#/$defs/Text"
+        },
+        "mockup": {
+          "$ref": "#/$defs/Mockup"
         }
       }
     },
@@ -878,6 +887,15 @@
           "items": {
             "$ref": "#/$defs/Badge"
           }
+        },
+        "unlocks": {
+          "$ref": "#/$defs/Unlocks"
+        },
+        "assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Assignment"
+          }
         }
       }
     },
@@ -1151,6 +1169,9 @@
         },
         "icon": {
           "$ref": "#/$defs/Icon"
+        },
+        "mockup": {
+          "$ref": "#/$defs/Mockup"
         }
       }
     },
@@ -2265,6 +2286,15 @@
         },
         "short": {
           "$ref": "#/$defs/ShortText"
+        },
+        "unlocks": {
+          "$ref": "#/$defs/Unlocks"
+        },
+        "assignments": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/Assignment"
+          }
         }
       }
     },
@@ -3834,6 +3864,547 @@
           "type": "integer",
           "minimum": 0,
           "maximum": 65535
+        }
+      }
+    },
+    "Unlocks": {
+      "description": "Release times in Unix milliseconds, keyed by topic, quiz or quiz/task. Null awaits scheduling; absent keys add no restriction. All ancestors apply.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^(?=.{1,64}(?:/|$))[a-z0-9]+(?:-[a-z0-9]+)*(?:/(?=.{1,64}$)[a-z0-9]+(?:-[a-z0-9]+)*)?$"
+      },
+      "additionalProperties": {
+        "oneOf": [
+          {
+            "$ref": "#/$defs/Timestamp"
+          },
+          {
+            "type": "null"
+          }
+        ]
+      },
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ]
+    },
+    "MockupText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "type": "string",
+          "maxLength": 256
+        },
+        "de": {
+          "type": "string",
+          "maxLength": 256
+        }
+      }
+    },
+    "MockupSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "row",
+        "column"
+      ],
+      "properties": {
+        "row": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "column": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "rowEnd": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "columnEnd": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        }
+      }
+    },
+    "ExcelTarget": {
+      "type": "string",
+      "enum": [
+        "cell",
+        "range",
+        "row",
+        "column",
+        "worksheet",
+        "workbook",
+        "formula",
+        "name-box"
+      ]
+    },
+    "ExcelMockup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "caption",
+        "workbook",
+        "sheets",
+        "activeSheet",
+        "columns",
+        "rows",
+        "selection",
+        "formula",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "excel"
+        },
+        "caption": {
+          "$ref": "#/$defs/Text"
+        },
+        "workbook": {
+          "$ref": "#/$defs/Text"
+        },
+        "sheets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/Text"
+          }
+        },
+        "activeSheet": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "columns": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 16,
+          "items": {
+            "type": "string",
+            "pattern": "^[A-Z]{1,2}$"
+          }
+        },
+        "rows": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 16,
+            "items": {
+              "$ref": "#/$defs/MockupText"
+            }
+          }
+        },
+        "selection": {
+          "$ref": "#/$defs/MockupSelection"
+        },
+        "formula": {
+          "$ref": "#/$defs/MockupText"
+        },
+        "target": {
+          "$ref": "#/$defs/ExcelTarget"
+        }
+      }
+    },
+    "MockupPort": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "label": {
+          "$ref": "#/$defs/Text"
+        }
+      }
+    },
+    "MockupNode": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "label",
+        "inputs",
+        "outputs"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "label": {
+          "$ref": "#/$defs/Text"
+        },
+        "inputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/MockupPort"
+          }
+        },
+        "outputs": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/MockupPort"
+          }
+        },
+        "widget": {
+          "$ref": "#/$defs/MockupWidget"
+        }
+      }
+    },
+    "MockupEndpoint": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "node",
+        "port"
+      ],
+      "properties": {
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "port": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "MockupWire": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "from",
+        "to"
+      ],
+      "properties": {
+        "from": {
+          "$ref": "#/$defs/MockupEndpoint"
+        },
+        "to": {
+          "$ref": "#/$defs/MockupEndpoint"
+        }
+      }
+    },
+    "MockupBranch": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "path",
+        "values"
+      ],
+      "properties": {
+        "path": {
+          "type": "string",
+          "pattern": "^\\{[0-9]+(?:;[0-9]+)*\\}$",
+          "maxLength": 64
+        },
+        "values": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/MockupText"
+          }
+        }
+      }
+    },
+    "GrasshopperTargetKind": {
+      "type": "string",
+      "enum": [
+        "node",
+        "input",
+        "output",
+        "wire",
+        "tree",
+        "branch",
+        "item"
+      ]
+    },
+    "MockupTarget": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "index"
+      ],
+      "properties": {
+        "kind": {
+          "$ref": "#/$defs/GrasshopperTargetKind"
+        },
+        "index": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 31
+        },
+        "node": {
+          "$ref": "#/$defs/Slug"
+        },
+        "port": {
+          "$ref": "#/$defs/Slug"
+        }
+      }
+    },
+    "GrasshopperMockup": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "kind",
+        "caption",
+        "nodes",
+        "wires",
+        "tree",
+        "target"
+      ],
+      "properties": {
+        "kind": {
+          "const": "grasshopper"
+        },
+        "caption": {
+          "$ref": "#/$defs/Text"
+        },
+        "nodes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "$ref": "#/$defs/MockupNode"
+          }
+        },
+        "wires": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 24,
+          "items": {
+            "$ref": "#/$defs/MockupWire"
+          }
+        },
+        "tree": {
+          "type": "array",
+          "minItems": 0,
+          "maxItems": 12,
+          "items": {
+            "$ref": "#/$defs/MockupBranch"
+          }
+        },
+        "target": {
+          "$ref": "#/$defs/MockupTarget"
+        }
+      }
+    },
+    "Mockup": {
+      "description": "A solution-free software workspace preview. Only given reference data belongs here; grading truth stays on the authored item.",
+      "oneOf": [
+        {
+          "$ref": "#/$defs/ExcelMockup"
+        },
+        {
+          "$ref": "#/$defs/GrasshopperMockup"
+        }
+      ]
+    },
+    "MockupWidget": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "parameter"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind"
+          ],
+          "properties": {
+            "kind": {
+              "const": "component"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "min",
+            "max",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "slider"
+            },
+            "min": {
+              "type": "number"
+            },
+            "max": {
+              "type": "number"
+            },
+            "value": {
+              "type": "number"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "lines"
+          ],
+          "properties": {
+            "kind": {
+              "const": "panel"
+            },
+            "lines": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 8,
+              "items": {
+                "$ref": "#/$defs/MockupText"
+              }
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "label"
+          ],
+          "properties": {
+            "kind": {
+              "const": "plugin"
+            },
+            "label": {
+              "$ref": "#/$defs/Text"
+            }
+          }
+        }
+      ]
+    },
+    "AssignmentDocument": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "description": "A course-owned published PDF identified by its catalog id, filename and explicit build producer.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "namespace",
+        "id",
+        "file",
+        "producer"
+      ],
+      "properties": {
+        "namespace": {
+          "const": "course"
+        },
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "file": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*\\.pdf$",
+          "maxLength": 128
+        },
+        "producer": {
+          "type": "string",
+          "maxLength": 160,
+          "pattern": "^@[a-z][a-z0-9-]*/[a-z][a-z0-9-]*:[a-z][a-z0-9-]*$"
+        }
+      }
+    },
+    "Assignment": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "description": "An ungraded printable exercise belonging to one course topic, with a PDF for every supported language.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "topic",
+        "emoji",
+        "title",
+        "description",
+        "documents"
+      ],
+      "properties": {
+        "id": {
+          "$ref": "#/$defs/Slug"
+        },
+        "topic": {
+          "$ref": "#/$defs/Slug"
+        },
+        "emoji": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 16
+        },
+        "title": {
+          "$ref": "#/$defs/Text"
+        },
+        "description": {
+          "$ref": "#/$defs/Text"
+        },
+        "documents": {
+          "$ref": "#/$defs/AssignmentDocuments"
+        }
+      }
+    },
+    "AssignmentDocuments": {
+      "x-semio-formats": [
+        "🔣️jsonschema",
+        "🦀️rust",
+        "🟦️typescript"
+      ],
+      "description": "A printable artifact for every supported language; no default language is assumed.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "en",
+        "de"
+      ],
+      "properties": {
+        "en": {
+          "$ref": "#/$defs/AssignmentDocument"
+        },
+        "de": {
+          "$ref": "#/$defs/AssignmentDocument"
         }
       }
     }

@@ -10,7 +10,13 @@
     "de": "Kontinuierlicher Parameter"
   },
   "grounds": [
-    "topic/parametric"
+    "topic/parametric",
+    "parametric-design",
+    "parametric-design/parameter-domains",
+    "parametric-design/input-output-consistency",
+    "parametric-design/complexity-layers",
+    "parametric-design/design-tool-profiles",
+    "parametric-design/automation-levels"
   ],
   "size": {
     "width": 60,

@@ -1,6 +1,7 @@
 //! 📘️ The authored quiz documents: scalars and limits, quizzes with their tasks, and the course with its badges.
 
 use std::collections::BTreeMap;
+use super::Mockup;
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Scalars
@@ -25,7 +26,7 @@ pub const MAX_TIMESTAMP: Timestamp = (1 << 53) - 1;
 pub type WireVersion = u32;
 
 /// 📡️ The wire version of this contract (`$defs/WireVersion`).
-pub const WIRE_VERSION: WireVersion = 8;
+pub const WIRE_VERSION: WireVersion = 10;
 
 /// 💯️ A score or credit in `[0, 1]`.
 pub type Score = f64;
@@ -162,6 +163,8 @@ pub struct Category {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ClassificationItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mockup: Option<Mockup>,
     pub id: Slug,
     pub label: Text,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -178,6 +181,8 @@ pub struct ClassificationItem {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct SortingItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mockup: Option<Mockup>,
     pub id: Slug,
     pub label: Text,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -196,6 +201,8 @@ pub struct SortingItem {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct MatchingItem {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mockup: Option<Mockup>,
     pub id: Slug,
     pub label: Text,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -395,11 +402,18 @@ pub struct Topic {
     pub quizzes: Vec<Slug>,
 }
 
+/// 🗓️ Release times by topic, quiz or quiz/task; null awaits scheduling and absent keys add no restriction.
+pub type Unlocks = BTreeMap<String, Option<Timestamp>>;
+
 /// 📚️ The quizzes one site offers, its introduction and the badges spanning its quizzes. Quiz paths
 /// are relative to the course file.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Course {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub assignments: Option<Vec<Assignment>>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub unlocks: Option<Unlocks>,
     #[serde(rename = "$schema", default, skip_serializing_if = "Option::is_none")]
     pub json_schema: Option<String>,
     pub schema: String,
@@ -414,3 +428,33 @@ pub struct Course {
     pub badges: Vec<Badge>,
 }
 //#endregion 🔖️Course
+
+/// 🖨️ A course-owned published artifact with an explicit build producer.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AssignmentDocument {
+    pub namespace: String,
+    pub id: Slug,
+    pub file: String,
+    pub producer: String,
+}
+
+/// 🌍️ A PDF artifact for every supported course language.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct AssignmentDocuments {
+    pub en: AssignmentDocument,
+    pub de: AssignmentDocument,
+}
+
+/// ✍️ An ungraded printable exercise associated with a course topic.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct Assignment {
+    pub id: Slug,
+    pub topic: Slug,
+    pub emoji: String,
+    pub title: Text,
+    pub description: Text,
+    pub documents: AssignmentDocuments,
+}

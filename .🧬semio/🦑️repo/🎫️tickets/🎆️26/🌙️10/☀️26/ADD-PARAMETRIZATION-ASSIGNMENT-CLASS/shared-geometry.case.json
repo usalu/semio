@@ -1,0 +1,22 @@
+{
+  "shapes": [
+    {
+      "macro": "AssignmentBox",
+      "L": 2.5,
+      "B": 1.5,
+      "H": 2
+    },
+    {
+      "macro": "AssignmentPyramid",
+      "L": 2.5,
+      "B": 1.5,
+      "H": 2
+    },
+    {
+      "macro": "AssignmentEllipticalCylinder",
+      "L": 3.5,
+      "B": 2.5,
+      "H": 3
+    }
+  ]
+}

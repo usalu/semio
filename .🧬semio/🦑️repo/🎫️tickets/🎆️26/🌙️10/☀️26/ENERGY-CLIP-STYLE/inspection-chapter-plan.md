@@ -1,0 +1,5 @@
+# Chapter Window Collection
+
+The active goal requires four navigation levels: the actual Architecture and Technology course, its six topics,17 declared clips and38 authored chapters. Each chapter is independently playable, with the preceding and following chapter joined at a deterministic shared ancestor overview. Adjacent chapters in a clip use its chapter grid; neighboring clips in one topic use the clip grid; topic changes use the course topic grid. The collection opens and closes at the course grid. Full lessons are ordered concatenations of these exact chapter movies.
+
+Native authored body caches stay unchanged. Window-only contract, browser and compositor changes are kept outside runtime.py, interaction sources and the raw catalog, whose current hashes participate in all117 body certificates. A separate source-only production refresh owns canonical bodies while the UI and portable tests are developed in parallel. No current artifact is accepted merely from a historical status file.

@@ -4,22 +4,17 @@
     {
       "id": "physical_fundamentals",
       "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py",
-      "playlist": "PHYSICAL_FUNDAMENTALS_PLAYLIST",
-      "intro": {
-        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
-        "scene": "Demo_Intro_PhysikalischeGrundlagen"
-      },
       "chapters": [
         {
           "scene": "PhysicalFundamentals_FullSection",
           "segments": [
             {
               "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
-              "scene": "Beat1_EnergieImAlltag"
+              "scene": "Beat1_Leistung"
             },
             {
               "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
-              "scene": "Beat2_Leistung"
+              "scene": "Beat2_EnergieImAlltag"
             },
             {
               "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
@@ -53,11 +48,6 @@
     {
       "id": "ventilation",
       "script": "🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py",
-      "playlist": "VENTILATION_PLAYLIST",
-      "intro": {
-        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
-        "scene": "Demo_Intro_Lueftung"
-      },
       "chapters": [
         {
           "scene": "Ventilation_01_WarumLueften",
@@ -183,11 +173,6 @@
     {
       "id": "heating",
       "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py",
-      "playlist": "HEATING_PLAYLIST",
-      "intro": {
-        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
-        "scene": "Demo_Intro_Heizlast"
-      },
       "chapters": [
         {
           "scene": "Heating_01_Introduction",
@@ -317,12 +302,20 @@
               "scene": "Beat5_Verschattung"
             },
             {
-              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
-              "scene": "Beat6_Waermespeicherung"
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat6_ThermischeMasse",
+              "clauses": {
+                "first": "store",
+                "last": "room"
+              }
             },
             {
-              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
-              "scene": "Beat7_SpeichermasseFormel"
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat6_ThermischeMasse",
+              "clauses": {
+                "first": "winter",
+                "last": "winter"
+              }
             },
             {
               "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
@@ -365,11 +358,6 @@
     {
       "id": "cooling",
       "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py",
-      "playlist": "COOLING_PLAYLIST",
-      "intro": {
-        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
-        "scene": "Demo_Intro_Kuehllast"
-      },
       "chapters": [
         {
           "scene": "Cooling_01_HeatingVsCooling",
@@ -421,8 +409,20 @@
               "scene": "Beat1_TransmissionOpaque"
             },
             {
-              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
-              "scene": "Beat2_TimeLag"
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat6_ThermischeMasse",
+              "clauses": {
+                "first": "day",
+                "last": "lag"
+              }
+            },
+            {
+              "script": "🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py",
+              "scene": "Beat6_ThermischeMasse",
+              "clauses": {
+                "first": "summer",
+                "last": "summer"
+              }
             },
             {
               "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py",
@@ -438,16 +438,28 @@
               "scene": "Beat1_SolarIrradiance"
             },
             {
-              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
-              "scene": "Beat2_FrameFactor"
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat2_BestrahlungUndFlaeche",
+              "clauses": {
+                "first": "a",
+                "last": "ff"
+              }
             },
             {
-              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
-              "scene": "Beat3_ShadingFactor"
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat5_Verschattung",
+              "clauses": {
+                "first": "unshaded",
+                "last": "reduced"
+              }
             },
             {
-              "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
-              "scene": "Beat4_GlassTransmittance"
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py",
+              "scene": "Beat3_GWert",
+              "clauses": {
+                "first": "split",
+                "last": "gval"
+              }
             },
             {
               "script": "🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py",
@@ -491,11 +503,6 @@
     {
       "id": "energy_balance",
       "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py",
-      "playlist": "ENERGY_BALANCE_PLAYLIST",
-      "intro": {
-        "script": "🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py",
-        "scene": "Demo_Intro_Energiebilanz"
-      },
       "chapters": [
         {
           "scene": "EnergyBalance_01_Energiebilanz",
@@ -564,8 +571,12 @@
           "scene": "EnergyBalance_04_NutzZuEndenergie",
           "segments": [
             {
-              "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
-              "scene": "Beat1_Verlustkette"
+              "script": "🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py",
+              "scene": "AnlagenVerluste",
+              "clauses": {
+                "first": "chain",
+                "last": "sum"
+              }
             },
             {
               "script": "🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py",
@@ -638,6 +649,198 @@
         }
       ],
       "output": "Full_EnergyBalance"
+    },
+    {
+      "id": "bim_information",
+      "script": "🏛️architecture/🏗️bim/📊️information/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "BIM_01_Information",
+          "segments": [
+            {
+              "script": "🏛️architecture/🏗️bim/🎬️clip/📊️information/🐍️.py",
+              "scene": "Beat1_DataToInformation"
+            }
+          ]
+        }
+      ],
+      "output": "BIM_information"
+    },
+    {
+      "id": "bim_objects",
+      "script": "🏛️architecture/🏗️bim/🧬️objects/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "BIM_02_Objects",
+          "segments": [
+            {
+              "script": "🏛️architecture/🏗️bim/🎬️clip/🧬️objects/🐍️.py",
+              "scene": "Beat2_ObjectOrientation"
+            }
+          ]
+        }
+      ],
+      "output": "BIM_objects"
+    },
+    {
+      "id": "bim_representations",
+      "script": "🏛️architecture/🏗️bim/👁️representations/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "BIM_03_Representations",
+          "segments": [
+            {
+              "script": "🏛️architecture/🏗️bim/🎬️clip/👁️representations/🐍️.py",
+              "scene": "Beat3_SameObject"
+            }
+          ]
+        }
+      ],
+      "output": "BIM_representations"
+    },
+    {
+      "id": "bim_models",
+      "script": "🏛️architecture/🏗️bim/🧩️models/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "BIM_04_Models",
+          "segments": [
+            {
+              "script": "🏛️architecture/🏗️bim/🎬️clip/🧩️models/🐍️.py",
+              "scene": "Beat4_PartialModels"
+            }
+          ]
+        }
+      ],
+      "output": "BIM_models"
+    },
+    {
+      "id": "bim_exchange",
+      "script": "🏛️architecture/🏗️bim/🔌️exchange/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "BIM_05_Exchange",
+          "segments": [
+            {
+              "script": "🏛️architecture/🏗️bim/🎬️clip/🔌️exchange/🐍️.py",
+              "scene": "Beat5_Interfaces"
+            }
+          ]
+        }
+      ],
+      "output": "BIM_exchange"
+    },
+    {
+      "id": "bim_consistency",
+      "script": "🏛️architecture/🏗️bim/🔗️consistency/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "BIM_06_Consistency",
+          "segments": [
+            {
+              "script": "🏛️architecture/🏗️bim/🎬️clip/🔗️consistency/🐍️.py",
+              "scene": "Beat6_Consistency"
+            }
+          ]
+        }
+      ],
+      "output": "BIM_consistency"
+    },
+    {
+      "id": "optimization_extrema",
+      "script": "🏛️architecture/🎯️optimization/📉️extrema/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Optimization_Extrema",
+          "segments": [
+            {
+              "script": "🏛️architecture/🎯️optimization/🎬️clip/📉️extrema/🐍️.py",
+              "scene": "Beat1_LocalGlobalExtrema"
+            }
+          ]
+        }
+      ],
+      "output": "Optimization_Extrema"
+    },
+    {
+      "id": "optimization_sampling",
+      "script": "🏛️architecture/🎯️optimization/🎲️sampling/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Optimization_Sampling",
+          "segments": [
+            {
+              "script": "🏛️architecture/🎯️optimization/🎬️clip/🎲️sampling/🐍️.py",
+              "scene": "Beat2_GridRandomSampling"
+            }
+          ]
+        }
+      ],
+      "output": "Optimization_Sampling"
+    },
+    {
+      "id": "optimization_experiments",
+      "script": "🏛️architecture/🎯️optimization/🧪️experiments/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Optimization_Experiments",
+          "segments": [
+            {
+              "script": "🏛️architecture/🎯️optimization/🎬️clip/🧪️experiments/🐍️.py",
+              "scene": "Beat3_FactorialExperiments"
+            }
+          ]
+        }
+      ],
+      "output": "Optimization_Experiments"
+    },
+    {
+      "id": "optimization_index",
+      "script": "🏛️architecture/🎯️optimization/⚖️index/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Optimization_Index",
+          "segments": [
+            {
+              "script": "🏛️architecture/🎯️optimization/🎬️clip/⚖️index/🐍️.py",
+              "scene": "Beat4_NormalizedIndex"
+            }
+          ]
+        }
+      ],
+      "output": "Optimization_Index"
+    },
+    {
+      "id": "optimization_pareto",
+      "script": "🏛️architecture/🎯️optimization/🏆️pareto/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Optimization_Pareto",
+          "segments": [
+            {
+              "script": "🏛️architecture/🎯️optimization/🎬️clip/🏆️pareto/🐍️.py",
+              "scene": "Beat5_ParetoFront"
+            }
+          ]
+        }
+      ],
+      "output": "Optimization_Pareto"
+    },
+    {
+      "id": "optimization_algorithms",
+      "script": "🏛️architecture/🎯️optimization/🧬️algorithms/🎬️clip/🐍️.py",
+      "chapters": [
+        {
+          "scene": "Optimization_Algorithms",
+          "segments": [
+            {
+              "script": "🏛️architecture/🎯️optimization/🎬️clip/🧬️algorithms/🐍️.py",
+              "scene": "Beat6_EvolutionarySearch"
+            }
+          ]
+        }
+      ],
+      "output": "Optimization_Algorithms"
     }
   ]
 }

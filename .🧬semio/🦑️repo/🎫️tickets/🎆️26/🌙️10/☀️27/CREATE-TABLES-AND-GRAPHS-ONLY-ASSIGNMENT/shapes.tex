@@ -1,0 +1,64 @@
+\tikzset{
+  minimal-shape/.style={x=6mm,y=6mm,baseline=-.5ex,line width=.5pt,draw=semio-chrome-foreground,line cap=butt,line join=miter},
+  minimal-hidden/.style={dash pattern=on 1.6pt off 1.2pt}
+}
+\newcommand{\MinimalShapePoint}[3]{({#1+.45*#2},{#3+.35*#2})}
+\renewcommand{\AssignmentBox}[3]{
+  \begin{tikzpicture}[minimal-shape]
+    \draw[minimal-hidden] \MinimalShapePoint{0}{0}{0} -- \MinimalShapePoint{0}{#2}{0} -- \MinimalShapePoint{#1}{#2}{0};
+    \draw[minimal-hidden] \MinimalShapePoint{0}{#2}{0} -- \MinimalShapePoint{0}{#2}{#3};
+    \draw \MinimalShapePoint{0}{0}{0} -- \MinimalShapePoint{#1}{0}{0} -- \MinimalShapePoint{#1}{0}{#3} -- \MinimalShapePoint{0}{0}{#3} -- cycle;
+    \draw \MinimalShapePoint{0}{0}{#3} -- \MinimalShapePoint{0}{#2}{#3} -- \MinimalShapePoint{#1}{#2}{#3} -- \MinimalShapePoint{#1}{0}{#3};
+    \draw \MinimalShapePoint{#1}{0}{0} -- \MinimalShapePoint{#1}{#2}{0} -- \MinimalShapePoint{#1}{#2}{#3};
+  \end{tikzpicture}
+}
+\renewcommand{\AssignmentPyramid}[3]{
+  \begin{tikzpicture}[minimal-shape]
+    \coordinate (minimalapex) at ({#1/2+#2*.225},{#3+#2*.175});
+    \draw[minimal-hidden] \MinimalShapePoint{0}{0}{0} -- \MinimalShapePoint{0}{#2}{0} -- \MinimalShapePoint{#1}{#2}{0};
+    \draw[minimal-hidden] \MinimalShapePoint{0}{#2}{0} -- (minimalapex);
+    \draw \MinimalShapePoint{0}{0}{0} -- \MinimalShapePoint{#1}{0}{0} -- \MinimalShapePoint{#1}{#2}{0} -- (minimalapex) -- cycle;
+    \draw \MinimalShapePoint{#1}{0}{0} -- (minimalapex);
+  \end{tikzpicture}
+}
+\newcommand{\MinimalCylinderArc}[6]{
+  plot[domain=#4:#5,samples=#6,smooth,variable=\x]
+    ({#1/2+#2*.225+#1/2*cos(\x)+#2*.225*sin(\x)},{#3+#2*.175+#2*.175*sin(\x)})
+}
+\renewcommand{\AssignmentEllipticalCylinder}[3]{
+  \begin{tikzpicture}[minimal-shape]
+    \pgfmathsetmacro{\MinimalCylinderTangent}{atan(.45*#2/#1)}
+    \draw[minimal-hidden] \MinimalCylinderArc{#1}{#2}{0}{\MinimalCylinderTangent}{\MinimalCylinderTangent+180}{33};
+    \draw \MinimalCylinderArc{#1}{#2}{0}{\MinimalCylinderTangent+180}{\MinimalCylinderTangent+360}{33};
+    \foreach \side in {0,180}{
+      \draw \MinimalShapePoint{#1/2*(1+cos(\MinimalCylinderTangent+\side))}{#2/2*(1+sin(\MinimalCylinderTangent+\side))}{0}
+        -- \MinimalShapePoint{#1/2*(1+cos(\MinimalCylinderTangent+\side))}{#2/2*(1+sin(\MinimalCylinderTangent+\side))}{#3};
+    }
+    \draw \MinimalCylinderArc{#1}{#2}{#3}{0}{360}{65};
+  \end{tikzpicture}
+}
+
+\renewcommand{\AssignmentWorkedExampleShape}[1]{
+  \ifcase#1\or
+    \AssignmentBox{2.5}{1.5}{2}
+  \or
+    \AssignmentPyramid{2.5}{1.5}{2}
+  \or
+    \AssignmentEllipticalCylinder{3.5}{2.5}{3}
+  \fi
+}
+\renewcommand{\AssignmentWorkedExampleHeader}[1]{
+  \shortstack{\scalebox{.6}{\AssignmentWorkedExampleShape{#1}}\\[-.5mm]\scriptsize #1}
+}
+\renewcommand{\AssignmentWorkedExampleTable}[7]{
+  \begin{AssignmentParameterMatrix}[type-columns=3,parameter-rows=4,header-height=20mm,row-height=6mm,padding=2mm,label-width=27mm]{Parameter}{
+    \AssignmentWorkedExampleHeader{1} &
+    \AssignmentWorkedExampleHeader{2} &
+    \AssignmentWorkedExampleHeader{3}
+  }
+    \AssignmentParameterMatrixRow{#1}{2.5,2.5,3.5}
+    \AssignmentParameterMatrixRow{#2}{1.5,1.5,2.5}
+    \AssignmentParameterMatrixRow{#3}{2,2,3}
+    \AssignmentParameterMatrixRow{#4}{#5,#6,#7}
+  \end{AssignmentParameterMatrix}
+}

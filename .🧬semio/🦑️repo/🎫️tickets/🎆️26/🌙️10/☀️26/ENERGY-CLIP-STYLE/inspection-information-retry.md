@@ -1,0 +1,19 @@
+# Information Source Retry Audit
+
+Read-only checkpoint of the current source114 closure and the three latest native attempts. No runtime, dependency discovery, body, or publisher edits were made.
+
+The current information body has 49 hashed bindings. None is a test fixture, test loader, authoring test registration, or ticket script. The source-state implementation explicitly excludes assets beneath 🧪️tests; its Python source traversal follows literal dependencies. The test registration file authoring/📜️script.ts is absent. Our selector fixture/TypeScript driver and High's retirement test loader therefore cannot directly invalidate this source.
+
+The attempt beginning 1793137123.504 and ending 1793137899.010 spans the intentional model schema repair at 1793137846.821. Its current bound schema is f292973a7c3fc1e15f24a3ca6a55b4b02a1c34a5734df122905b6415e0ca900d, replacing fae97e70aa506791d254fd3bd2b03ed4b8a4f9afdabbc1cbd9d7ca366f9018bc. That is an expected legitimate input invalidation.
+
+The next attempt began 1793137904.433 and ended 1793138611.212 with native exit0 but failed the authored-source guard. Its exact pre-attempt source map was held only in render_segment's local variable; unsuccessful attempts do not persist that map and remove the previous certificate. Thus the exact historical before/after delta cannot be reconstructed from retained attempt metadata. No current file modification timestamp falls in that window, but a later save overwrites an earlier timestamp; that is not proof of no change.
+
+The active attempt began 1793138617.799. The current information leaf was changed at 1793138769.694, inside that attempt. Relative to the retained successful schema preflight snapshot, its SHA changed from afc6cebb472930f76ab202dcac16c5829706c9a76ff30488a91cf92bbdb8bca9 to 6283c0f86effc9cea6baa907db76a94f94cd97340b13720139a3612cdde032e4. All other overlapping retained preflight bindings are identical. This is concrete authored-leaf drift; the active attempt is expected to require another normal guarded retry if it started with the earlier bytes.
+
+The generated checkpoint ip/information-current-bindings.json retains all49 current hashes, attempt windows, and the retained-preflight delta. It can identify subsequent exact changes against this checkpoint. No conservative closure change is warranted by this evidence.
+
+Later read-only checkpoint: information.py was authored again at 1793139764.3215854 with SHA f063939fb21fe33c87d7ec418c69f21949ccc927cd3249d1f594299b43b24458, inside native attempt4. It is the only binding changed against the saved49-source audit checkpoint; ongoing source invalidation remains attributable to the actual authored leaf, not test registration.
+
+A one-shot read-only input, inspection-source-drift.py, now checkpoints the current source maps for114/119/120/121 under generated/ip/native-current-bindings.json. This is a mid-attempt observation, not a reconstructed render-start state or certificate. Subsequent invocations report exact hash deltas against the preceding observation. It starts no renderer and creates no second persistent observer. The first launch lacked the workspace sys.path entry; corrected ticket-only setup then completed.
+
+Subsequent exact observed hash deltas (checkpoint 1793142372.5293615, relative to 1793140055.4170623): shared BIM model/exchange Python changed cecec361…→7ea9015d… in both114and119 closures; consistency leaf changed3fe0eb11…→43af24c2…. Shared optimization visuals/room Python changed a6f6a47f…→6c435719… in both120and121, plus their actual extrema/sampling leaves changed. No test fixture, loader, registration or ticket input appears in these deltas. These are real authored/provider changes and must be handled by normal currentness refresh. The complete exact paths/hashes remain in native-current-bindings.json.

@@ -1,0 +1,97 @@
+{
+  "version": 1,
+  "material": {
+    "color": "light",
+    "fill_opacity": 1,
+    "stroke_width": 0,
+    "stroke_opacity": 0
+  },
+  "raster": {
+    "pixels": 900,
+    "frame_size": 6,
+    "interior_pixels": 3,
+    "maximum_channel_error": 1
+  },
+  "house": {
+    "width": 3.6,
+    "height": 2.4,
+    "wall": 0.14,
+    "deck": 0.1,
+    "floor": 0.12,
+    "eave": 0.26,
+    "roof_rise": 1.1,
+    "roof_depth": 0.14,
+    "window_height": 0.55,
+    "scales": [
+      0.83,
+      1,
+      1.17
+    ]
+  },
+  "room": {
+    "width": 3.6,
+    "height": 2.4,
+    "wall": 0.2,
+    "slab": 0.26,
+    "window": [
+      0.3,
+      0.88
+    ],
+    "sides": [
+      "left",
+      "right",
+      "both",
+      "none"
+    ]
+  },
+  "assembly": {
+    "initial": [
+      [
+        -1,
+        0,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        1
+      ]
+    ],
+    "overlap": [
+      [
+        -1,
+        1,
+        0,
+        1
+      ],
+      [
+        0,
+        1,
+        0,
+        1
+      ]
+    ],
+    "partial_fraction": 0.5,
+    "move": [
+      1,
+      0,
+      0
+    ],
+    "replacement": [
+      0.4,
+      1.2,
+      -0.7,
+      -0.1
+    ],
+    "transform": {
+      "scale": 0.83,
+      "shift": [
+        0.013,
+        0.017,
+        0
+      ]
+    }
+  }
+}

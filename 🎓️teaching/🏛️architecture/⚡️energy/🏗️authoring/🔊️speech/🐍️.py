@@ -39,6 +39,7 @@ concat_videos = _video_module.concat_videos
 ffmpeg_command = _video_module.ffmpeg_command
 manim_command = _video_module.manim_command
 run_command = _video_module.run_command
+_output = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️")
 
 Clause = tuple[str, str, str]
 
@@ -135,6 +136,7 @@ def assemble_aligned_track(
     *,
     total_duration: float,
     min_gap: float = 0.08,
+    session=None,
 ) -> Optional[Path]:
     """🧩 Mix each clause's speech in at its own start time, padded to ``total_duration``.
 
@@ -180,7 +182,7 @@ def assemble_aligned_track(
         "-map", "[out]", "-c:a", "libmp3lame", "-q:a", "3",
         str(output_path),
     ]
-    run_command(cmd)
+    run_command(cmd, session=session)
     if not output_path.is_file():
         raise RuntimeError("ffmpeg did not create the aligned track")
     return output_path
@@ -380,8 +382,8 @@ def build_section_video(base_dir: Path, scenes: list[tuple[Path, str, Path]], ou
 
     root = teaching_root(base_dir)
     section_id = sha256(base_dir.relative_to(root).as_posix().encode("utf-8")).hexdigest()[:10]
-    output_root = os.getenv("SEMIO_TEACHING_OUTPUT_ROOT")
-    output_dir = Path(output_root).resolve() / f"b{section_id}" if output_root else base_dir / "rendered" / "hq"
+    output_root = _output.output_root()
+    output_dir = output_root / f"b{section_id}"
     media_dir = output_dir / "m"
     config = render_config(media_dir)
     clips = []

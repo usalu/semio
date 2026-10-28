@@ -1,0 +1,78 @@
+{
+  "physical_classes": [
+    "IfcColumn",
+    "IfcSlab",
+    "IfcWall",
+    "IfcWindow",
+    "IfcOpeningElement",
+    "IfcCurtainWall",
+    "IfcRamp",
+    "IfcRampFlight",
+    "IfcBoiler",
+    "IfcSpaceHeater",
+    "IfcWasteTerminal",
+    "IfcPipeSegment"
+  ],
+  "physical_type_classes": [
+    "IfcColumnType",
+    "IfcWindowType",
+    "IfcWallType"
+  ],
+  "cases": [
+    {
+      "id": "authored-room-loss-selector",
+      "scope": "selector",
+      "from": [
+        "translation",
+        "losses",
+        8,
+        "applies_to",
+        "class"
+      ],
+      "value": "IfcSpace",
+      "valid": true
+    },
+    {
+      "id": "physical-loss-selector",
+      "scope": "selector",
+      "value": "IfcColumn",
+      "valid": true
+    },
+    {
+      "id": "known-physical-type",
+      "scope": "type",
+      "value": "IfcColumnType",
+      "valid": true
+    },
+    {
+      "id": "unknown-loss-selector",
+      "scope": "selector",
+      "value": "IfcInvented",
+      "valid": false
+    },
+    {
+      "id": "unrelated-spatial-selector",
+      "scope": "selector",
+      "value": "IfcProject",
+      "valid": false
+    },
+    {
+      "id": "room-is-not-physical-element",
+      "scope": "element",
+      "value": "IfcSpace",
+      "valid": false
+    },
+    {
+      "id": "room-is-not-physical-type",
+      "scope": "type",
+      "value": "IfcSpace",
+      "valid": false
+    },
+    {
+      "id": "room-type-not-physical-type",
+      "scope": "type",
+      "value": "IfcSpaceType",
+      "valid": false
+    }
+  ]
+}

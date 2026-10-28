@@ -1,0 +1,22 @@
+import fs from "node:fs";
+import path from "node:path";
+import {fileURLToPath,pathToFileURL} from "node:url";
+const ticket=path.dirname(fileURLToPath(import.meta.url));
+let root=ticket;
+while(!fs.existsSync(path.join(root,"🧰️framework/🛍️products/📓️print"))){const parent=path.dirname(root);if(parent===root)throw Error("Repository print product required");root=parent;}
+const print=path.join(root,"🧰️framework/🛍️products/📓️print");
+const {printSourceReferenceMapV1,printSourceReferenceTextV1}=await import(pathToFileURL(path.join(print,"🔨️modules/📥️source-staging/🟦️.ts")).href);
+const target=path.join(ticket,"🗑️generated/compiler-input");
+const original=path.join(print,"🖼️assets/🪧️logo/🎓️luh");
+const alias=path.join(target,"assets/logo/luh");
+fs.mkdirSync(path.dirname(alias),{recursive:true});
+if(!fs.existsSync(alias))fs.symlinkSync(original,alias,process.platform==="win32"?"junction":"dir");
+if(!fs.lstatSync(alias).isSymbolicLink()||fs.realpathSync(alias)!==fs.realpathSync(original))throw Error("Unexpected image directory alias");
+const image=path.join(original,"☀️logo.png");
+if(fs.statSync(image).nlink!==1)throw Error("Original resource link count changed");
+const names=printSourceReferenceMapV1(["🖼️assets/🪧️logo/🎓️luh"]);
+const authored=fs.readFileSync(path.join(print,"🖋️latex/semio-core.sty"),"utf8");
+const derived=printSourceReferenceTextV1(authored,names);
+if(derived===authored||!derived.includes("assets/logo/luh/☀️logo.png"))throw Error("Expected canonical directory projection");
+fs.writeFileSync(path.join(target,"semio-core.sty"),derived);
+console.log(JSON.stringify({target,alias,sourceLinkCount:fs.statSync(image).nlink,derivedReference:"assets/logo/luh/☀️logo.png"}));

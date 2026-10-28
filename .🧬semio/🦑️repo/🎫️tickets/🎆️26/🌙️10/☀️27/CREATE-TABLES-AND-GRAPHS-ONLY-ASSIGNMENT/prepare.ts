@@ -1,0 +1,23 @@
+import fs from "node:fs";
+import path from "node:path";
+import crypto from "node:crypto";
+import {fileURLToPath,pathToFileURL} from "node:url";
+const ticket=path.dirname(fileURLToPath(import.meta.url));
+let root=ticket;
+while(!fs.existsSync(path.join(root,"🧰️framework/🛍️products/📓️print"))){const up=path.dirname(root);if(up===root)throw Error("Print product missing");root=up;}
+const print=path.join(root,"🧰️framework/🛍️products/📓️print");
+const {printSourceReferenceMapV1,printSourceReferenceTextV1}=await import(pathToFileURL(path.join(print,"🔨️modules/📥️source-staging/🟦️.ts")).href);
+const input=path.join(ticket,"🗑️generated/compiler-input");
+const logos=path.join(print,"🖼️assets/🪧️logo/🎓️luh");
+const alias=path.join(input,"assets/logo/luh");
+fs.mkdirSync(path.dirname(alias),{recursive:true});
+if(!fs.existsSync(alias))fs.symlinkSync(logos,alias,process.platform==="win32"?"junction":"dir");
+if(!fs.lstatSync(alias).isSymbolicLink()||fs.realpathSync(alias)!==fs.realpathSync(logos))throw Error("Unexpected alias");
+const source=fs.readFileSync(path.join(print,"🖋️latex/semio-core.sty"),"utf8");
+const projected=printSourceReferenceTextV1(source,printSourceReferenceMapV1(["🖼️assets/🪧️logo/🎓️luh"]));
+if(projected===source)throw Error("Expected product reference projection");
+fs.writeFileSync(path.join(input,"semio-core.sty"),projected);
+fs.mkdirSync(path.join(ticket,"🗑️generated/compiled"),{recursive:true});
+const geometry=path.join(print,"🧾️template/📝️assignment/parametrization-geometry.tex");
+fs.writeFileSync(path.join(ticket,"🗑️generated/input-hash.json"),JSON.stringify({geometry:crypto.createHash("sha256").update(fs.readFileSync(geometry)).digest("hex")}));
+console.log(input);

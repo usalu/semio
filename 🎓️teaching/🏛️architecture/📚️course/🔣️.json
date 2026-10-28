@@ -13,8 +13,8 @@
     },
     "paragraphs": [
       {
-        "en": "These quizzes train your feeling for the numbers behind energy-efficient architecture: power and energy, U-values, heating and cooling loads, air change rates and energy demands. Each quiz consists of a few tasks in which you classify, sort or match.",
-        "de": "Diese Quizze trainieren dein Gefühl für die Zahlen hinter energieeffizienter Architektur: Leistung und Energie, U-Werte, Heiz- und Kühllasten, Luftwechselraten und Energiebedarfe. Jedes Quiz besteht aus wenigen Aufgaben, in denen du klassifizierst, sortierst oder zuordnest."
+        "en": "These quizzes train architectural thinking across energy, parametric design, Grasshopper, Excel, Building Information Modelling and optimization. Classify concepts, read spreadsheet and node graph mockups, sort quantities and match relationships.",
+        "de": "Diese Quizze trainieren architektonisches Denken zu Energie, parametrischem Entwerfen, Grasshopper, Excel, Building Information Modelling und Optimierung. Klassifiziere Konzepte, lies Tabellen- und Knotengraph-Mockups, sortiere Größen und ordne Zusammenhänge zu."
       },
       {
         "en": "Every run picks and shuffles the items afresh, so no two runs look the same. Answer the tasks, then submit; on expert you may submit before every task is answered. Your answers are saved as you go, and you may repeat a quiz as often as you like; your run with the most points counts.",
@@ -43,15 +43,84 @@
     "../⚡️energy/🌬️ventilation/❓️quiz/🔣️.json",
     "../⚡️energy/🔥️heating/❓️quiz/🔣️.json",
     "../⚡️energy/❄️cooling/❓️quiz/🔣️.json",
-    "../⚡️energy/📊️demand/❓️quiz/🔣️.json"
+    "../⚡️energy/📊️demand/❓️quiz/🔣️.json",
+    "../📐️parametric/❓️quiz/🔣️.json",
+    "../🦗️grasshopper/❓️quiz/🔣️.json",
+    "../📊️excel/❓️quiz/🔣️.json",
+    "../🏗️bim/❓️quiz/🔣️.json",
+    "../🎯️optimization/❓️quiz/🔣️.json"
   ],
   "topics": [
-    { "id": "energy", "emoji": "⚡", "title": { "en": "Energy", "de": "Energie" }, "quizzes": ["physics", "ventilation", "heating", "cooling", "demand"] },
-    { "id": "parametric", "emoji": "📐", "title": { "en": "Parametrics", "de": "Parametrik" }, "quizzes": [] },
-    { "id": "grasshopper", "emoji": "🦗", "title": { "en": "Grasshopper", "de": "Grasshopper" }, "quizzes": [] },
-    { "id": "excel", "emoji": "📊", "title": { "en": "Excel", "de": "Excel" }, "quizzes": [] },
-    { "id": "bim", "emoji": "🏗️", "title": { "en": "Building Information Modelling", "de": "Building Information Modelling" }, "quizzes": [] },
-    { "id": "optimization", "emoji": "🎯", "title": { "en": "Optimization", "de": "Optimierung" }, "quizzes": [] }
+    {
+      "id": "energy",
+      "emoji": "⚡",
+      "title": {
+        "en": "Energy",
+        "de": "Energie"
+      },
+      "quizzes": [
+        "physics",
+        "ventilation",
+        "heating",
+        "cooling",
+        "demand"
+      ]
+    },
+    {
+      "id": "parametric",
+      "emoji": "📐",
+      "title": {
+        "en": "Parametrics",
+        "de": "Parametrik"
+      },
+      "quizzes": [
+        "parametric-design"
+      ]
+    },
+    {
+      "id": "grasshopper",
+      "emoji": "🦗",
+      "title": {
+        "en": "Grasshopper",
+        "de": "Grasshopper"
+      },
+      "quizzes": [
+        "grasshopper-data"
+      ]
+    },
+    {
+      "id": "excel",
+      "emoji": "📊",
+      "title": {
+        "en": "Excel",
+        "de": "Excel"
+      },
+      "quizzes": [
+        "excel-workbook"
+      ]
+    },
+    {
+      "id": "bim",
+      "emoji": "🏗️",
+      "title": {
+        "en": "Building Information Modelling",
+        "de": "Building Information Modelling"
+      },
+      "quizzes": [
+        "bim-concepts"
+      ]
+    },
+    {
+      "id": "optimization",
+      "emoji": "🎯",
+      "title": {
+        "en": "Optimization",
+        "de": "Optimierung"
+      },
+      "quizzes": [
+        "optimization-decisions"
+      ]
+    }
   ],
   "badges": [
     {
@@ -187,10 +256,132 @@
       "rule": {
         "kind": "completed-quizzes"
       }
+    },
+    {
+      "id": "parametric-design-expert",
+      "emoji": "📐",
+      "label": {
+        "en": "Parametrics Expert",
+        "de": "Parametrik-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in this quiz on medium or harder.",
+        "de": "100 % in diesem Quiz auf Mittel oder schwerer erreicht."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "parametric-design",
+        "challenge": "medium"
+      }
+    },
+    {
+      "id": "grasshopper-data-expert",
+      "emoji": "🦗",
+      "label": {
+        "en": "Grasshopper Expert",
+        "de": "Grasshopper-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in this quiz on medium or harder.",
+        "de": "100 % in diesem Quiz auf Mittel oder schwerer erreicht."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "grasshopper-data",
+        "challenge": "medium"
+      }
+    },
+    {
+      "id": "excel-workbook-expert",
+      "emoji": "📊",
+      "label": {
+        "en": "Excel Expert",
+        "de": "Excel-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in this quiz on medium or harder.",
+        "de": "100 % in diesem Quiz auf Mittel oder schwerer erreicht."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "excel-workbook",
+        "challenge": "medium"
+      }
+    },
+    {
+      "id": "bim-concepts-expert",
+      "emoji": "🏗️",
+      "label": {
+        "en": "BIM Expert",
+        "de": "BIM-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in this quiz on medium or harder.",
+        "de": "100 % in diesem Quiz auf Mittel oder schwerer erreicht."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "bim-concepts",
+        "challenge": "medium"
+      }
+    },
+    {
+      "id": "optimization-decisions-expert",
+      "emoji": "🎯",
+      "label": {
+        "en": "Optimization Expert",
+        "de": "Optimierungs-Profi"
+      },
+      "description": {
+        "en": "Scored 100% in this quiz on medium or harder.",
+        "de": "100 % in diesem Quiz auf Mittel oder schwerer erreicht."
+      },
+      "rule": {
+        "kind": "perfect-quiz",
+        "quiz": "optimization-decisions",
+        "challenge": "medium"
+      }
     }
   ],
   "short": {
     "en": "A&T",
     "de": "A&T"
-  }
+  },
+  "unlocks": {
+    "energy": 0,
+    "parametric": null,
+    "grasshopper": null,
+    "excel": null,
+    "bim": null,
+    "optimization": null
+  },
+  "assignments": [
+    {
+      "id": "parametrization",
+      "topic": "parametric",
+      "emoji": "📐",
+      "title": {
+        "en": "Finger Exercise: Parametrization",
+        "de": "Fingerübung Parametrisierung"
+      },
+      "description": {
+        "en": "Explore unique, consistent and minimal parameters, then describe transformations.",
+        "de": "Untersuche eindeutige, konsistente und minimale Parameter und beschreibe Transformationen."
+      },
+      "documents": {
+        "en": {
+          "namespace": "course",
+          "id": "architecture-parametric-parametrization-en",
+          "producer": "@teaching/architecture-course:build-parametrization-en",
+          "file": "architecture-parametric-parametrization-en.pdf"
+        },
+        "de": {
+          "namespace": "course",
+          "id": "architecture-parametric-parametrization-de",
+          "producer": "@teaching/architecture-course:build-parametrization-de",
+          "file": "architecture-parametric-parametrization-de.pdf"
+        }
+      }
+    }
+  ]
 }

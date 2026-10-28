@@ -1,0 +1,52 @@
+{
+  "graph": {
+    "vertexCount": 3,
+    "directedEdges": [
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        1
+      ],
+      [
+        2,
+        3
+      ],
+      [
+        3,
+        2
+      ],
+      [
+        1,
+        3
+      ],
+      [
+        3,
+        1
+      ]
+    ],
+    "captionCount": 0,
+    "yRadiusMm": 32
+  },
+  "ledger": {
+    "columns": 2,
+    "ruleStart": 0.18,
+    "ruleEnd": 0.94,
+    "columnWidthMm": 85,
+    "rowPitchMm": 6.3,
+    "taskRowsPerColumn": 10,
+    "exampleRowsPerColumn": 3,
+    "exampleArgumentOrder": [
+      1,
+      3,
+      6,
+      2,
+      4,
+      5
+    ],
+    "valueFontPt": 9,
+    "minimumNativeFontPt": 8.5
+  }
+}

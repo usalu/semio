@@ -1,9 +1,7 @@
 # EnergyBalance — Full Video
 
-Plays the **EnergyBalance series** in curriculum order, prepended with the
-series intro card ``Demo_Intro_Energiebilanz`` from ``🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py``:
+Presents the **EnergyBalance series** inside the shared virtual semio UI. The navbar and footer stay visible while its lesson window zooms in from the five-window canvas and returns to the identical overview.
 
-0. Intro — Energiebilanz
 1. Kapitel 1 — Die Energiebilanz des Gebäudes
 2. Kapitel 2 — Regelwerk & Klimadaten
 3. Kapitel 3 — Bedarf vs. Leistung
@@ -37,7 +35,7 @@ the next one a number:
 The building blocks of `Q_V` (airflow `V̇ = V·n`, `c_Luft`, `Δθ`, `η_WRG`) come
 from the Lüftung video (`2_ventilation/`); Kapitel 1 only sums them into the loss side.
 
-One schematic worked example runs through Kapitel 4 to 7 unchanged, so the
+After the introductory excerpt from the earlier heating calculation, one schematic worked example runs through Kapitel 4 to 7 unchanged, so the
 numbers on screen stay the same building throughout:
 
 ```
@@ -50,7 +48,7 @@ Where each number lives, so a change is made once:
 
 | Value | Source of truth | Mirrored in |
 |-------|-----------------|-------------|
-| `e_ü`, `e_d`, `e_s`, `e_g` and `Q_E` | `♨️system-losses/🐍️.py` (`E_*`, `Q_E_GAS`, `Q_E_WP`) — Beat 1's staircase is derived from the same factors | `🏭️primary-energy/🐍️.py` (`E_P_*`) |
+| `e_ü`, `e_d`, `e_s`, `e_g` and `Q_E` | `♨️system-losses/🐍️.py` (`E_*`, `Q_E_GAS`, `Q_E_WP`) | `🏭️primary-energy/🐍️.py` (`E_P_*`) |
 | `f_p` (GEG Anlage 4), `Q_P`, example GEG limit | `🏭️primary-energy/🐍️.py` | `🧪️practice/🐍️.py` (`CHAIN_*`) |
 | displayed `Q_E` and the efficiency class | `🏷️certificate/🐍️.py` (`GAS_END`, `WP_END`, `_class_letter`) | `🧪️practice/🐍️.py` |
 
@@ -71,16 +69,16 @@ VDI 3807, VDI 4645, VDI 4650-1:2024, VOB/C DIN 18380.
 From the workspace root, the repository entry provisions the pinned Python environment:
 
 ```sh
-repo 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --video energy_balance --quality l --jobs 4 --output-root ./videos --no-play
+repo tools exec bun -- 🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts render --language de --video energy_balance --quality l --jobs 4 --output-root ./videos --no-play
 ```
 
-Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs every authored beat independently, assembles ordered chapters, and joins the institutional intro and all chapters into the complete silent lesson. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled.
+Use `--quality m` for 720p30 or `--quality h` for 1080p60. The renderer constructs each canonical source beat once, selects the declared narration sequences, assembles ordered chapters, and presents the complete lesson inside its virtual window. Video and optional source audio use identical cut boundaries; silent zoom transitions pad both ends. Source-aware complete-clip caches support cancellation and restarting; Manim partial caches stay disabled. Add `--chapter <chapter-identifier>` to render a selected chapter inside the same virtual window. Pass --language en for English chrome; the authored teaching content retains its recorded language. Chapter identifiers are declared in the curriculum JSON; lesson entry files expose `compose(language="de", chapters=[...], **settings)`.
 
-The final low-quality movie is `<output-root>/rendered/Full_EnergyBalance_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
+The final low-quality movie is `<output-root>/rendered/Full_EnergyBalance_de_480p15.mp4`. Private raw segment media and logical chapter clips stay under the chosen output root.
 
-## Chapter Scenes and Beats
+## Chapter Identifiers and Beats
 
-| Scene class | Content |
+| Chapter identifier | Content |
 |-------------|---------|
 | `EnergyBalance_01_Energiebilanz` | Kapitel 1 |
 | `EnergyBalance_02_RegelwerkKlima` | Kapitel 2 |
@@ -104,7 +102,7 @@ The final low-quality movie is `<output-root>/rendered/Full_EnergyBalance_480p15
 | 3 | `Beat2_Normheizlast` | DIN EN 12831-1, Gewinne bewusst ignoriert |
 | 3 | `Beat3_Jahresdauerlinie` | Spitze, Fläche, Vollbenutzungsstunden |
 | 3 | `Beat4_RichtigAuslegen` | Unter- und Überdimensionierung, Takten |
-| 4 | `Beat1_Verlustkette` | vier Stufen vom Raum zum Zähler |
+| 4 | `AnlagenVerluste`, clauses `chain`–`sum` | excerpt from the earlier heating calculation |
 | 4 | `Beat2_UebergabeVerteilungSpeicherung` | Vorlauftemperatur, Rohr- und Speicherverluste |
 | 4 | `Beat3_Erzeugung` | Wirkungsgrad, Brennwert, Jahresarbeitszahl |
 | 4 | `Beat4_Anlagenaufwandszahl` | `e_p = e_ü · e_d · e_s · e_g` |

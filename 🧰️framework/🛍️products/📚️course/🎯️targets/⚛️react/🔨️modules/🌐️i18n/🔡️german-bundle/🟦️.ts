@@ -7,6 +7,7 @@ import { COURSE_BUNDLE_EN } from "../🔠️english-bundle/🟦️.ts";
 /** 📚️ German chrome of the course client — the same keys as {@link COURSE_BUNDLE_EN}, enforced by its type. */
 export const COURSE_BUNDLE_DE: typeof COURSE_BUNDLE_EN = {
   course: {
+    access: { locked: phrase("Noch nicht freigeschaltet"), opens: phrase("Freigeschaltet ab {{date}}") },
     app: {
       skip: phrase("Zum Hauptinhalt springen"),
       loading: phrase("Wird geladen…"),

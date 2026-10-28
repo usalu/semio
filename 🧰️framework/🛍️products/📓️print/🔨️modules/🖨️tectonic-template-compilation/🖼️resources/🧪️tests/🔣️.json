@@ -1,0 +1,26 @@
+{
+  "cases": [
+    {
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 20 10\"><rect width=\"20\" height=\"10\" fill=\"#ff0000\"/></svg>",
+      "width": 80,
+      "height": 40,
+      "pixel": [
+        255,
+        0,
+        0,
+        255
+      ]
+    },
+    {
+      "svg": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"999999pt\" height=\"999999pt\" viewBox=\"0 0 20 10\"><rect width=\"20\" height=\"10\" fill=\"#ff0000\"/></svg>",
+      "width": 80,
+      "height": 40,
+      "pixel": [
+        255,
+        0,
+        0,
+        255
+      ]
+    }
+  ]
+}

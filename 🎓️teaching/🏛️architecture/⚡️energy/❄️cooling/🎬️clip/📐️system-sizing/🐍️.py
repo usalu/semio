@@ -7,6 +7,9 @@ from pathlib import Path
 _WORKSPACE_ROOT = next(p for p in Path(__file__).resolve().parents if (p / "🧰️framework").is_dir())
 if str(_WORKSPACE_ROOT) not in sys.path:
     sys.path.insert(0, str(_WORKSPACE_ROOT))
+_theme_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️theme.🐍️")
+semio_color = _theme_module.color
+
 import numpy as np
 from manim import *
 
@@ -16,14 +19,15 @@ import sys as _sys
 
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🔤️fonts.🐍️")
 apply_scene_style = _manim_module.apply_scene_style
-scene_title = _manim_module.scene_title
-beat_subtitle = _manim_module.beat_subtitle
+section_heading = _manim_module.section_heading
 BEAT_SUBTITLE_FADE = _manim_module.BEAT_SUBTITLE_FADE
 body_text = _manim_module.body_text
 BODY_FONT_SIZE = _manim_module.BODY_FONT_SIZE
 LABEL_FONT_SIZE = _manim_module.LABEL_FONT_SIZE
 FORMULA_FONT_SIZE = _manim_module.FORMULA_FONT_SIZE
 _manim_module = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎨️visuals.🐍️")
+P_PRIMARY = _manim_module.P_PRIMARY
+window_chip = _manim_module.window_chip
 P_DEEP_DARK = _manim_module.P_DEEP_DARK
 P_WHITE = _manim_module.P_WHITE
 P_CYAN = _manim_module.P_CYAN
@@ -51,7 +55,7 @@ set_meter = _manim_module.set_meter
 
 # 🗣️ VO reads the German subtitles; measured clause durations live in vo_timing.json.
 set_vo_language("de")
-_VO_TIMING = _Path(__file__).resolve().parent / "⏱️timing" / "🔣️.json"
+_VO_TIMING = importlib.import_module("🎓️teaching.🏛️architecture.⚡️energy.🏗️authoring.🎬️clip.📁️output.🐍️").speech_root(_Path(__file__).resolve().parent) / "timing.json"
 if _VO_TIMING.is_file():
     load_vo_timing(_VO_TIMING)
 
@@ -67,11 +71,11 @@ def _din_ref(text: str):
     """📖 Standards citation for the beat, pinned to the empty top-right corner.
 
     Exact size, colour, opacity and corner of ``_din_ref`` in the Heating
-    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_TEAL`` footnote
+    series (``3_heating/2_conduction/scene_2.py``): a dim ``P_PRIMARY`` footnote
     that never competes with the diagram. The formula panel sits on the
     bottom edge, so this corner is clear in every beat.
     """
-    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_TEAL)
+    ref = Text(text, font_size=LABEL_FONT_SIZE - 3, color=P_PRIMARY)
     ref.set_opacity(0.72)
     ref.to_corner(UR, buff=0.30)
     return ref
@@ -93,7 +97,7 @@ FACTOR = Q_V_R_SOLAR / Q_V_R_HYGIENE
 A_HYGIENE, A_SOLAR = Q_V_R_HYGIENE / V_M, Q_V_R_SOLAR / V_M
 R_HYGIENE, R_SOLAR = (float(np.sqrt(a / np.pi)) for a in (A_HYGIENE, A_SOLAR))
 
-AIR = "#60A5FA"
+AIR = semio_color("secondary")
 #endregion
 
 
@@ -106,7 +110,7 @@ def _build_room(center=CONTENT_CENTER, width=7.4, height=3.55):
     return r
 
 
-def _vent_unit(pos, color=P_TEAL, width=1.55, height=0.3):
+def _vent_unit(pos, color=P_PRIMARY, width=1.55, height=0.3):
     """🔧 Ceiling grille seen in section — a slotted strip hanging from the slab."""
     body = Rectangle(width=width, height=height, color=color, stroke_width=1.8,
                      fill_color=P_DEEP_DARK, fill_opacity=1.0).move_to(pos)
@@ -159,9 +163,8 @@ def _back_chip(prefix: str, src: str | None = None, color: str = AIR):
     parts = [body_text(prefix, font_size=LABEL_FONT_SIZE + 1, color=color)]
     if src:
         parts.append(math_label(src, size=LABEL_FONT_SIZE + 1, color=color))
-    content = VGroup(*parts).arrange(RIGHT, buff=0.12)
-    box = SurroundingRectangle(content, color=color, corner_radius=0.1, buff=0.1, stroke_width=1.8)
-    return VGroup(box, content)
+    content = VGroup(*parts).arrange(RIGHT, buff=_theme_module.UI_SPACING)
+    return window_chip(content, color=color)
 
 
 def _name(src: str, word: str, color: str):
@@ -205,7 +208,7 @@ class Beat2_VolumeFlowEquation(Scene):
          "The balanced supply and exhaust system from chapter 5 of the ventilation video removes the load with cooled supply air.",
          "Die Zu-/Abluftanlage aus Lüftung Kapitel 5 führt die Last mit gekühlter Zuluft ab."),
         ("formula",
-         "Q-dot V equals air density times specific heat capacity times the temperature difference between cool supply air and the warm room, times q v R—the required room airflow volume.",
+         "Q-dot V = air density × specific heat capacity × Δθ (room − supply) × required airflow q v R.",
          "Q Punkt V ist gleich Rho a mal c p a mal Delta Theta mal q v R."),
         ("air",
          "Density and heat capacity are the air properties you know from the ventilation video.",
@@ -221,9 +224,7 @@ class Beat2_VolumeFlowEquation(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Konvektive Kühlleistung der Zuluft", title)
+        subtitle = section_heading("Konvektive Kühlleistung der Zuluft")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -239,7 +240,7 @@ class Beat2_VolumeFlowEquation(Scene):
             math_label(r"18\,\mathrm{°C}", size=BODY_FONT_SIZE, color=P_CYAN),
         ).arrange(DOWN, buff=0.06)
         t_supply = VGroup(
-            SurroundingRectangle(t_supply, color=P_CYAN, corner_radius=0.1, buff=0.12, stroke_width=1.8),
+            SurroundingRectangle(t_supply, color=P_CYAN, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER),
             t_supply,
         ).next_to(room, DOWN, buff=0.15).shift(LEFT * 1.0)
 
@@ -248,18 +249,18 @@ class Beat2_VolumeFlowEquation(Scene):
             math_label(r"25\,\mathrm{°C}", size=BODY_FONT_SIZE, color=P_ORANGE),
         ).arrange(DOWN, buff=0.06)
         t_room = VGroup(
-            SurroundingRectangle(t_room, color=P_ORANGE, corner_radius=0.1, buff=0.12, stroke_width=1.8),
+            SurroundingRectangle(t_room, color=P_ORANGE, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER),
             t_room,
         ).next_to(room, DOWN, buff=0.15).shift(RIGHT * 1.0)
 
         delta_line = math_label(r"25-18=7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE)
         delta_line.set_opacity(0)
         delta_body = VGroup(
-            Text("Temperaturhub", font_size=LABEL_FONT_SIZE, color=P_TEAL),
+            Text("Temperaturhub", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
             delta_line,
         ).arrange(DOWN, buff=0.06)
         delta_card = VGroup(
-            SurroundingRectangle(delta_body, color=P_BLUE, corner_radius=0.1, buff=0.12, stroke_width=1.8),
+            SurroundingRectangle(delta_body, color=P_BLUE, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER),
             delta_body,
         ).next_to(room, UP, buff=0.20).set_x(room_c[0])
         delta_tr = ValueTracker(0.0)
@@ -293,24 +294,24 @@ class Beat2_VolumeFlowEquation(Scene):
             ("cp", r"c_{p,a}", P_GREEN), (None, r"\cdot", P_WHITE),
             ("dth", r"Δθ", P_BLUE), (None, r"\cdot", P_WHITE),
             ("qvr", r"q_{v,R}", P_YELLOW),
-            (None, r"\;[\mathrm{W}]", P_TEAL),
+            (None, r"\;[\mathrm{W}]", P_PRIMARY),
         ])
 
         card_bodies = [
             VGroup(
-                Text("Luftdichte", font_size=LABEL_FONT_SIZE, color=P_TEAL),
+                Text("Luftdichte", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
                 math_label(r"\rho_{a} = 1{,}2\,\mathrm{kg/m^{3}}", size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
-                Text("spez. Wärmekapazität", font_size=LABEL_FONT_SIZE, color=P_TEAL),
+                Text("spez. Wärmekapazität", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
                 math_label(r"c_{p,a} = 1{,}0\,\mathrm{kJ/(kg\,K)}", size=BODY_FONT_SIZE, color=P_GREEN),
             ).arrange(DOWN, buff=0.06),
             VGroup(
-                Text("Temperaturdifferenz", font_size=LABEL_FONT_SIZE, color=P_TEAL),
+                Text("Temperaturdifferenz", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
                 math_label(r"Δθ = 7\,\mathrm{K}", size=BODY_FONT_SIZE, color=P_BLUE),
             ).arrange(DOWN, buff=0.06),
             VGroup(
-                Text("Volumenstrom", font_size=LABEL_FONT_SIZE, color=P_TEAL),
+                Text("Volumenstrom", font_size=LABEL_FONT_SIZE, color=P_PRIMARY),
                 math_label(r"q_{v,R}\;[\mathrm{m^{3}/s}]", size=BODY_FONT_SIZE, color=P_YELLOW),
             ).arrange(DOWN, buff=0.06),
         ]
@@ -321,8 +322,8 @@ class Beat2_VolumeFlowEquation(Scene):
         cards = VGroup()
         for body in card_bodies:
             frame = RoundedRectangle(
-                width=card_w, height=card_h, corner_radius=0.1,
-                color=P_TEAL, stroke_width=1.8,
+                width=card_w, height=card_h, corner_radius=0,
+                color=P_PRIMARY, stroke_width=_theme_module.CHROME_BORDER,
             )
             body.move_to(frame.get_center())
             cards.add(VGroup(frame, body))
@@ -367,10 +368,10 @@ class Beat3_IsolateAirflow(Scene):
          "We size the supply airflow so its cooling capacity matches the solar cooling load through the glazing from the last part.",
          "Wir legen den Zuluftstrom so aus, dass seine Kühlleistung der solaren Kühllast durch die Verglasung entspricht."),
         ("substitute",
-         "Because Q-dot V equals Q-dot S,tr, we replace the left side and rearrange: q v R moves alone to the left, and the load sits over density, heat capacity and Delta theta.",
+         "Q-dot V = Q-dot S,tr: replace the left side, then isolate q v R. Divide the load by density × heat capacity × Δθ.",
          "Weil Q Punkt V gleich Q Punkt S t r ist, stellen wir um: q v R nach links, die Last geteilt durch Rho a mal c p a mal Delta Theta."),
         ("qvr",
-         "On the left stands the unknown we are solving for: the required volume flow, in cubic metres per second — the same q v R that sat on the right of the first equation.",
+         "The unknown on the left is required airflow q v R in m³/s, previously on the first equation’s right side.",
          "Links steht die gesuchte Größe q v R — dieselbe wie rechts in der ersten Formel."),
         ("qstr",
          "In the numerator sits Q-dot S,tr — it replaces Q-dot V because equilibrium made them equal.",
@@ -385,11 +386,11 @@ class Beat3_IsolateAirflow(Scene):
          "That flow rate is the sizing target for the ventilation system.",
          "Dieser Volumenstrom ist der Auslegungswert der Lüftung."),
         ("load",
-         "From part 4 we know the load: 30 square metres of glazing times 0.49 times 0.15 times 0.60 times 800 watts per square metre give about 1060 watts.",
+         "Part 4: 30 m² of glazing × 0.49 × 0.15 × 0.60 × 800 W/m² ≈ 1060 W.",
          "Aus Teil 4 kennen wir die Last: 30 m² Verglasung mal 0,49 mal 0,15\nmal 0,60 mal 800 W/m² ergeben rund 1060 W."),
         ("compare",
          "That needs 0.126 cubic metres per second, about twice the hygiene airflow of 0.061 cubic metres per second from the ventilation video.",
-         "Dafür braucht es 0,126 m³/s — gut doppelt so viel wie der Hygieneluftstrom\nvon 0,061 m³/s aus dem Lüftungsvideo."),
+         "Nötig sind 0,126 m³/s: gut doppelt so viel wie 0,061 m³/s Hygieneluftstrom aus dem Lüftungsvideo."),
         ("duct",
          "The duct follows exactly as in chapter 5: A equals q v R over v m, 0.0505 square metres instead of 0.0244 — the same method, only bigger.",
          "Der Kanal folgt wie in Kapitel 5: A gleich q v R durch v m, also 0,0505 m²\nstatt 0,0244 m² — dieselbe Methode, nur größer."),
@@ -398,9 +399,7 @@ class Beat3_IsolateAirflow(Scene):
     def construct(self):
         apply_scene_style(self)
 
-        title = scene_title(TITLE_DE)
-        self.add(title)
-        subtitle = beat_subtitle("Gleichgewicht: Kühlleistung = Kühllast", title)
+        subtitle = section_heading("Gleichgewicht: Kühlleistung = Kühllast")
         din = _din_ref("VDI 2078")
         self.play(FadeIn(subtitle), FadeIn(din), run_time=BEAT_SUBTITLE_FADE)
 
@@ -408,13 +407,13 @@ class Beat3_IsolateAirflow(Scene):
         self.play(FadeIn(caption), run_time=0.3)
 
         beam = Line(LEFT * 2.8, RIGHT * 2.8, color=P_WHITE, stroke_width=4).move_to(UP * 1.15)
-        pivot = Triangle(color=P_TEAL, fill_opacity=1).scale(0.18).rotate(PI).next_to(beam, DOWN, buff=0)
+        pivot = Triangle(color=P_PRIMARY, fill_opacity=1).scale(0.18).rotate(PI).next_to(beam, DOWN, buff=0)
         left_pan = RoundedRectangle(
-            width=2.2, height=0.9, corner_radius=0.1,
+            width=2.2, height=0.9, corner_radius=0,
             color=P_CYAN, stroke_width=2.5, fill_color=P_CYAN, fill_opacity=0.12,
         ).next_to(beam.get_left(), DOWN, buff=0.35).shift(RIGHT * 0.9)
         right_pan = RoundedRectangle(
-            width=2.2, height=0.9, corner_radius=0.1,
+            width=2.2, height=0.9, corner_radius=0,
             color=P_YELLOW, stroke_width=2.5, fill_color=P_YELLOW, fill_opacity=0.12,
         ).next_to(beam.get_right(), DOWN, buff=0.35).shift(LEFT * 0.9)
         left_txt = VGroup(
@@ -434,7 +433,7 @@ class Beat3_IsolateAirflow(Scene):
             ("cp", r"c_{p,a}", P_GREEN), (None, r"\cdot", P_WHITE),
             ("dth", r"Δθ", P_BLUE), (None, r"\cdot", P_WHITE),
             ("qvr", r"q_{v,R}", P_YELLOW),
-            (None, r"\;[\mathrm{W}]", P_TEAL),
+            (None, r"\;[\mathrm{W}]", P_PRIMARY),
         ], color=P_CYAN)
         start_panel = VGroup(start_box, start_eq)
 
@@ -444,7 +443,7 @@ class Beat3_IsolateAirflow(Scene):
              rf"\frac{{\textcolor{{{P_YELLOW}}}{{\dot{{Q}}_{{S,tr}}}}}}"
              rf"{{\textcolor{{{P_GREEN}}}{{\rho_{{a}} \cdot c_{{p,a}}}} \cdot \textcolor{{{P_BLUE}}}{{Δθ}}}}",
              P_WHITE),
-            (None, r"\;[\mathrm{m^{3}/s}]", P_TEAL),
+            (None, r"\;[\mathrm{m^{3}/s}]", P_PRIMARY),
         ]
 
         hold_for(self, self.NARRATION, "intro", used=BEAT_SUBTITLE_FADE + 0.3)
@@ -465,7 +464,7 @@ class Beat3_IsolateAirflow(Scene):
 
         bridge = VGroup(
             math_label(r"\dot{Q}_{V} = \dot{Q}_{S,tr}", size=BODY_FONT_SIZE, color=P_YELLOW),
-            math_label(r"↓\;\text{umstellen nach}\;q_{v,R}", size=LABEL_FONT_SIZE, color=P_TEAL),
+            math_label(r"↓\;\text{umstellen nach}\;q_{v,R}", size=LABEL_FONT_SIZE, color=P_PRIMARY),
         ).arrange(DOWN, buff=0.12)
         bridge.next_to(start_panel, DOWN, buff=0.28)
 
@@ -538,7 +537,7 @@ class Beat3_IsolateAirflow(Scene):
             math_label(rf"\frac{{{de_num(Q_V_R_SOLAR, 3)}}}{{{de_num(Q_V_R_HYGIENE, 3)}}} \approx {de_num(FACTOR, 1)}",
                        size=BODY_FONT_SIZE, color=P_ORANGE),
         )
-        factor_box = SurroundingRectangle(factor, color=P_ORANGE, corner_radius=0.1, buff=0.14, stroke_width=1.8)
+        factor_box = SurroundingRectangle(factor, color=P_ORANGE, corner_radius=0, buff=_theme_module.UI_SPACING, stroke_width=_theme_module.CHROME_BORDER)
         factor_group = VGroup(factor_box, factor).move_to(np.array([2.6, (y_h + y_s) / 2, 0.0]))
         num_eq, num_box, _ = math_panel([
             ("qvr", r"q_{v,R}", P_CYAN), (None, "=", P_WHITE),

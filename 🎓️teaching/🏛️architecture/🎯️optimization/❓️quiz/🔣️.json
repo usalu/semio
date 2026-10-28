@@ -1,0 +1,667 @@
+{
+  "$schema": "../../../../🧰️framework/🛍️products/📚️course/🧬️schema/🔣️.json#/$defs/Quiz",
+  "schema": "semio.quiz/v1",
+  "id": "optimization-decisions",
+  "emoji": "🎯",
+  "title": {
+    "en": "Objectives and Pareto",
+    "de": "Ziele und Pareto"
+  },
+  "short": {
+    "en": "Optimization",
+    "de": "Optimierung"
+  },
+  "description": {
+    "en": "Distinguish objectives from constraints and recognize dominance, trade-offs and equal objective values.",
+    "de": "Unterscheide Ziele von Bedingungen und erkenne Dominanz, Zielkonflikte und gleiche Zielwerte."
+  },
+  "tasks": [
+    {
+      "kind": "classification",
+      "id": "optimization-objectives",
+      "title": {
+        "en": "One objective or several?",
+        "de": "Ein Ziel oder mehrere?"
+      },
+      "prompt": {
+        "en": "Classify the optimization formulation. Count the objective functions, distinguishing objectives from mandatory feasibility constraints. A fixed weighted scalar counts as one objective.",
+        "de": "Ordne die Optimierungsformulierung ein. Zähle die Zielfunktionen und unterscheide Ziele von zwingenden Zulässigkeitsbedingungen. Eine feste gewichtete skalare Funktion zählt als ein Ziel."
+      },
+      "icon": {
+        "emoji": "🎯",
+        "motion": "pulse"
+      },
+      "categories": [
+        {
+          "id": "single",
+          "label": {
+            "en": "Single objective",
+            "de": "Einkriteriell"
+          },
+          "description": {
+            "en": "Exactly one scalar objective is optimized; any number of constraints may restrict feasibility.",
+            "de": "Genau ein skalares Ziel wird optimiert; beliebig viele Bedingungen können die Zulässigkeit einschränken."
+          },
+          "icon": {
+            "emoji": "1️⃣",
+            "motion": "pulse"
+          }
+        },
+        {
+          "id": "multi",
+          "label": {
+            "en": "Multiple objectives",
+            "de": "Multikriteriell"
+          },
+          "description": {
+            "en": "At least two separate objective functions are improved, potentially with trade-offs.",
+            "de": "Mindestens zwei getrennte Zielfunktionen werden verbessert, gegebenenfalls mit Zielkonflikten."
+          },
+          "icon": {
+            "emoji": "⚖️",
+            "motion": "sway"
+          }
+        }
+      ],
+      "draw": 2,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "cost-with-height-limit",
+            "energy-with-budget-limit",
+            "area-fixed-brief",
+            "carbon-code-compliant",
+            "weighted-score"
+          ],
+          [
+            "cost-and-carbon",
+            "daylight-and-glare",
+            "area-and-energy",
+            "comfort-and-cost",
+            "structure-and-carbon"
+          ]
+        ]
+      },
+      "items": [
+        {
+          "id": "cost-with-height-limit",
+          "short": {
+            "en": "Cost with height limit",
+            "de": "Kosten mit Höhenlimit"
+          },
+          "label": {
+            "en": "Minimize construction cost; the building must be no higher than 18 m.",
+            "de": "Minimiere die Baukosten; das Gebäude darf höchstens 18 m hoch sein."
+          },
+          "category": "single",
+          "icon": {
+            "emoji": "💶",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Height is a feasibility constraint, not a second objective. Only construction cost is optimized.",
+            "de": "Die Höhe ist eine Zulässigkeitsbedingung und kein zweites Ziel. Optimiert werden nur die Baukosten."
+          }
+        },
+        {
+          "id": "energy-with-budget-limit",
+          "short": {
+            "en": "Energy within budget",
+            "de": "Energie im Budget"
+          },
+          "label": {
+            "en": "Minimize annual energy demand subject to a fixed maximum construction budget.",
+            "de": "Minimiere den jährlichen Energiebedarf bei festem maximalem Baubudget."
+          },
+          "category": "single",
+          "icon": {
+            "emoji": "⚡",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "The budget filters feasible designs. The only objective is annual energy demand.",
+            "de": "Das Budget begrenzt die zulässigen Entwürfe. Das einzige Ziel ist der jährliche Energiebedarf."
+          }
+        },
+        {
+          "id": "area-fixed-brief",
+          "short": {
+            "en": "Area under a fixed brief",
+            "de": "Fläche bei festem Raumprogramm"
+          },
+          "label": {
+            "en": "Maximize usable floor area while meeting a fixed room schedule and setback rules.",
+            "de": "Maximiere die Nutzfläche bei festem Raumprogramm und einzuhaltenden Abstandsflächen."
+          },
+          "category": "single",
+          "icon": {
+            "emoji": "📏",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Room and setback requirements are constraints; usable floor area is the one optimized quantity.",
+            "de": "Raumprogramm und Abstandsflächen sind Bedingungen; nur die Nutzfläche wird optimiert."
+          }
+        },
+        {
+          "id": "carbon-code-compliant",
+          "short": {
+            "en": "Carbon with code compliance",
+            "de": "CO₂ mit Normerfüllung"
+          },
+          "label": {
+            "en": "Minimize embodied carbon while all structural safety limits must be satisfied.",
+            "de": "Minimiere das gebundene CO₂ bei einzuhaltenden Grenzwerten der Tragwerkssicherheit."
+          },
+          "category": "single",
+          "icon": {
+            "emoji": "🌿",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Safety limits decide feasibility. They are not objectives to trade against carbon in this formulation.",
+            "de": "Sicherheitsgrenzen entscheiden über die Zulässigkeit. In dieser Formulierung werden sie nicht gegen CO₂ abgewogen."
+          }
+        },
+        {
+          "id": "weighted-score",
+          "short": {
+            "en": "Fixed weighted score",
+            "de": "Feste gewichtete Zielfunktion"
+          },
+          "label": {
+            "en": "Minimize one fixed scalar score: normalized cost × 0.6 + normalized carbon × 0.4.",
+            "de": "Minimiere einen festen skalaren Wert: normierte Kosten × 0,6 + normiertes CO₂ × 0,4."
+          },
+          "category": "single",
+          "icon": {
+            "emoji": "⚖️",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Fixed weighting scalarizes the original criteria into one objective. A single weighting generally reveals only part of a Pareto front.",
+            "de": "Die feste Gewichtung fasst die ursprünglichen Kriterien zu einem Ziel zusammen. Eine einzige Gewichtung zeigt im Allgemeinen nur einen Teil der Pareto-Front."
+          }
+        },
+        {
+          "id": "cost-and-carbon",
+          "short": {
+            "en": "Cost and embodied carbon",
+            "de": "Kosten und gebundenes CO₂"
+          },
+          "label": {
+            "en": "Minimize cost and embodied carbon as separate objectives without fixed weights.",
+            "de": "Minimiere Kosten und gebundenes CO₂ als getrennte Ziele ohne feste Gewichtung."
+          },
+          "category": "multi",
+          "icon": {
+            "emoji": "🏗️",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Both quantities remain separate objectives. Their trade-offs are evaluated rather than hidden in a fixed scalar score.",
+            "de": "Beide Größen bleiben getrennte Ziele. Ihre Zielkonflikte werden untersucht und nicht in einer festen skalaren Funktion verborgen."
+          }
+        },
+        {
+          "id": "daylight-and-glare",
+          "short": {
+            "en": "Daylight and glare",
+            "de": "Tageslicht und Blendung"
+          },
+          "label": {
+            "en": "Maximize useful daylight and minimize glare as two separate objectives.",
+            "de": "Maximiere nutzbares Tageslicht und minimiere Blendung als zwei getrennte Ziele."
+          },
+          "category": "multi",
+          "icon": {
+            "emoji": "☀️",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "The formulation simultaneously improves two different criteria, which can conflict.",
+            "de": "Die Formulierung verbessert gleichzeitig zwei verschiedene Kriterien, die in Konflikt stehen können."
+          }
+        },
+        {
+          "id": "area-and-energy",
+          "short": {
+            "en": "Area and energy demand",
+            "de": "Fläche und Energiebedarf"
+          },
+          "label": {
+            "en": "Maximize usable floor area and minimize annual energy demand as separate objectives.",
+            "de": "Maximiere Nutzfläche und minimiere jährlichen Energiebedarf als getrennte Ziele."
+          },
+          "category": "multi",
+          "icon": {
+            "emoji": "🏢",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "There are two objective functions with different preferred directions. More area can increase energy demand.",
+            "de": "Es gibt zwei Zielfunktionen mit unterschiedlichen Verbesserungsrichtungen. Mehr Fläche kann den Energiebedarf erhöhen."
+          }
+        },
+        {
+          "id": "comfort-and-cost",
+          "short": {
+            "en": "Comfort and cost",
+            "de": "Komfort und Kosten"
+          },
+          "label": {
+            "en": "Maximize thermal comfort and minimize investment cost; neither criterion is fixed as a constraint.",
+            "de": "Maximiere thermischen Komfort und minimiere Investitionskosten; keines der Kriterien ist als Bedingung fixiert."
+          },
+          "category": "multi",
+          "icon": {
+            "emoji": "🌡️",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Both comfort and cost are actively optimized; a Pareto set can describe the available compromises.",
+            "de": "Komfort und Kosten werden beide aktiv optimiert; eine Pareto-Menge kann die möglichen Kompromisse beschreiben."
+          }
+        },
+        {
+          "id": "structure-and-carbon",
+          "short": {
+            "en": "Deflection and carbon",
+            "de": "Durchbiegung und CO₂"
+          },
+          "label": {
+            "en": "Minimize structural deflection and embodied carbon as separate objectives.",
+            "de": "Minimiere Tragwerksdurchbiegung und gebundenes CO₂ als getrennte Ziele."
+          },
+          "category": "multi",
+          "icon": {
+            "emoji": "🧱",
+            "motion": "pulse"
+          },
+          "explanation": {
+            "en": "Both quantities are objectives. An admissible limit alone would instead be a constraint.",
+            "de": "Beide Größen sind Ziele. Ein allein einzuhaltender Grenzwert wäre dagegen eine Bedingung."
+          }
+        }
+      ]
+    },
+    {
+      "kind": "classification",
+      "id": "pareto-dominance",
+      "title": {
+        "en": "Pareto dominance",
+        "de": "Pareto-Dominanz"
+      },
+      "prompt": {
+        "en": "Evaluate each card independently against just one reference design: cost 100 thousand € and embodied carbon 50 t CO₂. Both objectives are minimized and both designs are feasible. Is the card Pareto-optimal within this pair, or dominated by the reference? Do not compare different cards with one another.",
+        "de": "Vergleiche jede Karte einzeln mit genau einem Referenzentwurf: Kosten 100 Tausend € und gebundenes CO₂ 50 t. Beide Ziele werden minimiert und beide Entwürfe sind zulässig. Ist die Karte innerhalb dieses Paares Pareto-optimal oder von der Referenz dominiert? Vergleiche die Karten nicht untereinander."
+      },
+      "icon": {
+        "emoji": "📉",
+        "motion": "sway"
+      },
+      "categories": [
+        {
+          "id": "pareto",
+          "label": {
+            "en": "Pareto-optimal within pair",
+            "de": "Pareto-optimal im Paar"
+          },
+          "description": {
+            "en": "No alternative in this pair is at least as good in every objective and strictly better in at least one. Equal values do not dominate.",
+            "de": "Keine Alternative dieses Paares ist in allen Zielen mindestens gleich gut und in mindestens einem strikt besser. Gleiche Werte dominieren nicht."
+          },
+          "icon": {
+            "emoji": "⭐",
+            "motion": "pulse"
+          }
+        },
+        {
+          "id": "dominated",
+          "label": {
+            "en": "Dominated by reference",
+            "de": "Von Referenz dominiert"
+          },
+          "description": {
+            "en": "The reference is no worse in both objectives and strictly better in at least one.",
+            "de": "Die Referenz ist in beiden Zielen nicht schlechter und in mindestens einem strikt besser."
+          },
+          "icon": {
+            "emoji": "⬇️",
+            "motion": "bounce"
+          }
+        }
+      ],
+      "items": [
+        {
+          "id": "cheap-carbon-heavy",
+          "label": {
+            "en": "Design with cost 80 thousand € and embodied carbon 70 t CO₂.",
+            "de": "Entwurf mit Kosten von 80 Tausend € und gebundenem CO₂ von 70 t."
+          },
+          "short": {
+            "en": "Low cost and high carbon",
+            "de": "Niedrige Kosten und viel CO₂"
+          },
+          "icon": {
+            "emoji": "🏠",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "One objective improves and the other worsens. Neither design dominates the other, so both are Pareto-optimal within this pair.",
+            "de": "Ein Ziel verbessert sich und das andere verschlechtert sich. Kein Entwurf dominiert den anderen; beide sind innerhalb dieses Paares Pareto-optimal."
+          }
+        },
+        {
+          "id": "costly-carbon-light",
+          "label": {
+            "en": "Design with cost 120 thousand € and embodied carbon 30 t CO₂.",
+            "de": "Entwurf mit Kosten von 120 Tausend € und gebundenem CO₂ von 30 t."
+          },
+          "short": {
+            "en": "High cost and low carbon",
+            "de": "Hohe Kosten und wenig CO₂"
+          },
+          "icon": {
+            "emoji": "🏡",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "One objective improves and the other worsens. Neither design dominates the other, so both are Pareto-optimal within this pair.",
+            "de": "Ein Ziel verbessert sich und das andere verschlechtert sich. Kein Entwurf dominiert den anderen; beide sind innerhalb dieses Paares Pareto-optimal."
+          }
+        },
+        {
+          "id": "small-cost-tradeoff",
+          "label": {
+            "en": "Design with cost 95 thousand € and embodied carbon 55 t CO₂.",
+            "de": "Entwurf mit Kosten von 95 Tausend € und gebundenem CO₂ von 55 t."
+          },
+          "short": {
+            "en": "Small cost advantage",
+            "de": "Kleiner Kostenvorteil"
+          },
+          "icon": {
+            "emoji": "🏘️",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "One objective improves and the other worsens. Neither design dominates the other, so both are Pareto-optimal within this pair.",
+            "de": "Ein Ziel verbessert sich und das andere verschlechtert sich. Kein Entwurf dominiert den anderen; beide sind innerhalb dieses Paares Pareto-optimal."
+          }
+        },
+        {
+          "id": "small-carbon-tradeoff",
+          "label": {
+            "en": "Design with cost 105 thousand € and embodied carbon 45 t CO₂.",
+            "de": "Entwurf mit Kosten von 105 Tausend € und gebundenem CO₂ von 45 t."
+          },
+          "short": {
+            "en": "Small carbon advantage",
+            "de": "Kleiner CO₂-Vorteil"
+          },
+          "icon": {
+            "emoji": "🏢",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "One objective improves and the other worsens. Neither design dominates the other, so both are Pareto-optimal within this pair.",
+            "de": "Ein Ziel verbessert sich und das andere verschlechtert sich. Kein Entwurf dominiert den anderen; beide sind innerhalb dieses Paares Pareto-optimal."
+          }
+        },
+        {
+          "id": "large-tradeoff",
+          "label": {
+            "en": "Design with cost 50 thousand € and embodied carbon 100 t CO₂.",
+            "de": "Entwurf mit Kosten von 50 Tausend € und gebundenem CO₂ von 100 t."
+          },
+          "short": {
+            "en": "Large cost trade-off",
+            "de": "Großer Kostenkompromiss"
+          },
+          "icon": {
+            "emoji": "🏣",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "One objective improves and the other worsens. Neither design dominates the other, so both are Pareto-optimal within this pair.",
+            "de": "Ein Ziel verbessert sich und das andere verschlechtert sich. Kein Entwurf dominiert den anderen; beide sind innerhalb dieses Paares Pareto-optimal."
+          }
+        },
+        {
+          "id": "worse-both",
+          "label": {
+            "en": "Design with cost 120 thousand € and embodied carbon 70 t CO₂.",
+            "de": "Entwurf mit Kosten von 120 Tausend € und gebundenem CO₂ von 70 t."
+          },
+          "short": {
+            "en": "Higher cost and carbon",
+            "de": "Mehr Kosten und CO₂"
+          },
+          "icon": {
+            "emoji": "🏤",
+            "motion": "float"
+          },
+          "category": "dominated",
+          "explanation": {
+            "en": "The reference is no worse in either minimized objective and strictly better in at least one. It dominates this design.",
+            "de": "Die Referenz ist in keinem der beiden zu minimierenden Ziele schlechter und in mindestens einem strikt besser. Sie dominiert diesen Entwurf."
+          }
+        },
+        {
+          "id": "same-cost-more-carbon",
+          "label": {
+            "en": "Design with cost 100 thousand € and embodied carbon 70 t CO₂.",
+            "de": "Entwurf mit Kosten von 100 Tausend € und gebundenem CO₂ von 70 t."
+          },
+          "short": {
+            "en": "Same cost and more carbon",
+            "de": "Gleiche Kosten und mehr CO₂"
+          },
+          "icon": {
+            "emoji": "🏥",
+            "motion": "float"
+          },
+          "category": "dominated",
+          "explanation": {
+            "en": "The reference is no worse in either minimized objective and strictly better in at least one. It dominates this design.",
+            "de": "Die Referenz ist in keinem der beiden zu minimierenden Ziele schlechter und in mindestens einem strikt besser. Sie dominiert diesen Entwurf."
+          }
+        },
+        {
+          "id": "more-cost-same-carbon",
+          "label": {
+            "en": "Design with cost 120 thousand € and embodied carbon 50 t CO₂.",
+            "de": "Entwurf mit Kosten von 120 Tausend € und gebundenem CO₂ von 50 t."
+          },
+          "short": {
+            "en": "More cost and same carbon",
+            "de": "Mehr Kosten und gleiches CO₂"
+          },
+          "icon": {
+            "emoji": "🏦",
+            "motion": "float"
+          },
+          "category": "dominated",
+          "explanation": {
+            "en": "The reference is no worse in either minimized objective and strictly better in at least one. It dominates this design.",
+            "de": "Die Referenz ist in keinem der beiden zu minimierenden Ziele schlechter und in mindestens einem strikt besser. Sie dominiert diesen Entwurf."
+          }
+        },
+        {
+          "id": "much-worse-both",
+          "label": {
+            "en": "Design with cost 200 thousand € and embodied carbon 100 t CO₂.",
+            "de": "Entwurf mit Kosten von 200 Tausend € und gebundenem CO₂ von 100 t."
+          },
+          "short": {
+            "en": "Large losses in both goals",
+            "de": "Große Nachteile in beiden Zielen"
+          },
+          "icon": {
+            "emoji": "🏨",
+            "motion": "float"
+          },
+          "category": "dominated",
+          "explanation": {
+            "en": "The reference is no worse in either minimized objective and strictly better in at least one. It dominates this design.",
+            "de": "Die Referenz ist in keinem der beiden zu minimierenden Ziele schlechter und in mindestens einem strikt besser. Sie dominiert diesen Entwurf."
+          }
+        },
+        {
+          "id": "slightly-worse-both",
+          "label": {
+            "en": "Design with cost 101 thousand € and embodied carbon 51 t CO₂.",
+            "de": "Entwurf mit Kosten von 101 Tausend € und gebundenem CO₂ von 51 t."
+          },
+          "short": {
+            "en": "Small losses in both goals",
+            "de": "Kleine Nachteile in beiden Zielen"
+          },
+          "icon": {
+            "emoji": "🏪",
+            "motion": "float"
+          },
+          "category": "dominated",
+          "explanation": {
+            "en": "The reference is no worse in either minimized objective and strictly better in at least one. It dominates this design.",
+            "de": "Die Referenz ist in keinem der beiden zu minimierenden Ziele schlechter und in mindestens einem strikt besser. Sie dominiert diesen Entwurf."
+          }
+        },
+        {
+          "id": "equal-objectives",
+          "label": {
+            "en": "Design with cost 100 thousand € and embodied carbon 50 t CO₂.",
+            "de": "Entwurf mit Kosten von 100 Tausend € und gebundenem CO₂ von 50 t."
+          },
+          "short": {
+            "en": "Identical objective values",
+            "de": "Identische Zielwerte"
+          },
+          "icon": {
+            "emoji": "🏫",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "Equal objective values do not establish strict dominance. Both designs are Pareto-optimal in this two-design comparison.",
+            "de": "Gleiche Zielwerte begründen keine strikte Dominanz. Beide Entwürfe sind in diesem Zweiervergleich Pareto-optimal."
+          }
+        },
+        {
+          "id": "better-both",
+          "label": {
+            "en": "Design with cost 80 thousand € and embodied carbon 30 t CO₂.",
+            "de": "Entwurf mit Kosten von 80 Tausend € und gebundenem CO₂ von 30 t."
+          },
+          "short": {
+            "en": "Lower cost and carbon",
+            "de": "Weniger Kosten und CO₂"
+          },
+          "icon": {
+            "emoji": "🏬",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "This design is no worse than the reference in either objective and improves at least one. It is Pareto-optimal and dominates the reference.",
+            "de": "Dieser Entwurf ist in keinem Ziel schlechter als die Referenz und verbessert mindestens eines. Er ist Pareto-optimal und dominiert die Referenz."
+          }
+        },
+        {
+          "id": "same-cost-less-carbon",
+          "label": {
+            "en": "Design with cost 100 thousand € and embodied carbon 30 t CO₂.",
+            "de": "Entwurf mit Kosten von 100 Tausend € und gebundenem CO₂ von 30 t."
+          },
+          "short": {
+            "en": "Same cost and less carbon",
+            "de": "Gleiche Kosten und weniger CO₂"
+          },
+          "icon": {
+            "emoji": "🏭",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "This design is no worse than the reference in either objective and improves at least one. It is Pareto-optimal and dominates the reference.",
+            "de": "Dieser Entwurf ist in keinem Ziel schlechter als die Referenz und verbessert mindestens eines. Er ist Pareto-optimal und dominiert die Referenz."
+          }
+        },
+        {
+          "id": "less-cost-same-carbon",
+          "label": {
+            "en": "Design with cost 80 thousand € and embodied carbon 50 t CO₂.",
+            "de": "Entwurf mit Kosten von 80 Tausend € und gebundenem CO₂ von 50 t."
+          },
+          "short": {
+            "en": "Less cost and same carbon",
+            "de": "Weniger Kosten und gleiches CO₂"
+          },
+          "icon": {
+            "emoji": "🏯",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "This design is no worse than the reference in either objective and improves at least one. It is Pareto-optimal and dominates the reference.",
+            "de": "Dieser Entwurf ist in keinem Ziel schlechter als die Referenz und verbessert mindestens eines. Er ist Pareto-optimal und dominiert die Referenz."
+          }
+        },
+        {
+          "id": "much-better-both",
+          "label": {
+            "en": "Design with cost 50 thousand € and embodied carbon 10 t CO₂.",
+            "de": "Entwurf mit Kosten von 50 Tausend € und gebundenem CO₂ von 10 t."
+          },
+          "short": {
+            "en": "Large gains in both goals",
+            "de": "Große Vorteile in beiden Zielen"
+          },
+          "icon": {
+            "emoji": "🏰",
+            "motion": "float"
+          },
+          "category": "pareto",
+          "explanation": {
+            "en": "This design is no worse than the reference in either objective and improves at least one. It is Pareto-optimal and dominates the reference.",
+            "de": "Dieser Entwurf ist in keinem Ziel schlechter als die Referenz und verbessert mindestens eines. Er ist Pareto-optimal und dominiert die Referenz."
+          }
+        }
+      ],
+      "draw": 3,
+      "pool": {
+        "seconds": 300,
+        "slots": [
+          [
+            "cheap-carbon-heavy",
+            "costly-carbon-light",
+            "small-cost-tradeoff",
+            "small-carbon-tradeoff",
+            "large-tradeoff"
+          ],
+          [
+            "worse-both",
+            "same-cost-more-carbon",
+            "more-cost-same-carbon",
+            "much-worse-both",
+            "slightly-worse-both"
+          ],
+          [
+            "equal-objectives",
+            "better-both",
+            "same-cost-less-carbon",
+            "less-cost-same-carbon",
+            "much-better-both"
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1101 @@
+{
+  "title": "Architectural Energy Clips",
+  "emoji": "🏛️",
+  "status": "closed",
+  "description": "Turn energy clips into consistent, clean, realistically scaled architectural videos: solid recognizable silhouettes, connected filled building geometry, credible wall thickness and opening windows, coherent people and radiator scale, canonical partial clip reuse for repeated thermal mass and system losses. Implement and audit with parallel agents while preserving concurrent edits. Actual requested model is GPT 6.1 Sol; repository model catalogue lacks it.",
+  "summary": "# Architectural Silhouette Update\n\nThe energy clips now use architectural entourage and physical profiles throughout shared artwork and chapter-specific call sites. Standing, walking and running use curated natural contours; seated and sleeping profiles are hand-authored. Equipment uses solid elevations, the sun and moon use single filled contours, and architectural annotations replace thought bubbles. The ventilation roadmap shows a projected open sash. Industrial and tree cues use an industrial elevation and a branching tree silhouette.\n\nThe original standing, seated and activity sizes and floor anchors remain intact. The running heat origin was moved into the new torso. Metabolic values remain 80, 100, 200 and 800 W. Sources and CC0 attribution are in `silhouette-sources.md` and the silhouette library README.\n\n## Implementation\n\nPortable JSON contracts and acceptance cases preceded implementation. The first tests failed against geometric figures and outline equipment. Curved geometry and independent raster checks caught a crossed calf, a wrist loop and a misplaced running heat origin; these were corrected. The shared renderer reads local Bezier coordinates, and chapter activity assets remain local SVG. No new runtime dependency was added.\n\nActual scene execution exposed a room fade failure: the material compositor discarded its geometry while the starting animation copy was transparent, changing the animation family and point counts. It now retains the hidden contour while no opaque material is present. A failing real Manim FadeIn regression preceded this fix.\n\n## Verification\n\n- Final focused suite: **42 tests passed in 13.867 s** after the final artwork changes. This covers silhouettes, actual fade animation, architectural dimensions, activity heat origins, connected masks and section consumers.\n- Broader visual suite: **77 tests passed in 429.862 s**. It completed before the final natural-contour curation; the subsequent 42-test gate covers those changed paths.\n- AJV independently validated both the architectural drawing profile and silhouette-library JSON schemas.\n- All **105 canonical source scenes imported**. Five selected production scene portions executed at 640×360 and yielded **26 settled narration frames with no errors** after the final changes.\n- Visual inspection covered the complete 17-item artwork sheet and production contact sheets for physics, ventilation, heating, cooling and primary energy. The open-window roadmap and revised branch/industrial silhouettes were checked again after their final changes.\n- Manim supplies independent dimension and raster results; SciPy component labelling and hole filling validate the local component count. The actual activity scene verifies heat attachment points.\n- The exploratory full authoring aggregate was cancelled while its native-presentation fixture was still encoding. No aggregate pass or complete final-video encode is claimed. This task verifies source artwork and settled production frames.\n\nThe exact file inventory is in `silhouette-files.md`. Reproduction inputs remain in this ticket: `silhouette-run.mjs`, `silhouette-preview.py`, `silhouette-scenes.py`, `silhouette-schema.mjs` and `silhouette-ticket.mjs`. All commands enter through repo; no modifying Git command, worktree, IDE, dashboard or AGENTS.md edit was used. Native Windows execution is verified; the sources and scripts use portable paths and the managed Python environment. Other operating systems were not executed in this session.\n\n## Review Outputs\n\nTemporary review images, downloaded candidate vectors, logs, caches and incomplete aggregate fixtures are removed from the owned generated directory after verification. Source art, portable tests, provenance, reproduction inputs and this report remain.\n\nCleanup completed: the owned generated directory and its empty parent were removed. Retained inputs, source attribution and verification notes are listed in silhouette-files.md.\n",
+  "goal": "animate",
+  "sessions": [
+    "b22388e4-9621-4c9e-a054-a36bbd0fe09d",
+    "044298b9-31d2-4ebe-8735-57daa93b9557",
+    "932a8f3c-b59f-42d6-9861-7ab10f665453",
+    "3928a2fb-2708-4aac-8bf7-fd614a5c7689"
+  ],
+  "interactions": [
+    {
+      "kind": "ticket.open",
+      "date": "2026-10-26 11:57:01",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Turn energy clips into consistent, clean, realistically scaled architectural videos: solid recognizable silhouettes, connected filled building geometry, credible wall thickness and opening windows, coherent people and radiator scale, canonical partial clip reuse for repeated thermal mass and system losses. Implement and audit with parallel agents while preserving concurrent edits. Actual requested model is GPT 6.1 Sol; repository model catalogue lacks it.",
+      "llm": "codex",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 17:14:51",
+      "author": "ueli",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "summary": "Rebuilt the energy curriculum around connected filled architectural sections and recognizable human silhouettes, realistic construction and equipment dimensions, recessed projected window openings, and consistent physical overview scale. Repeated thermal-mass, plant-loss and solar-factor explanations now reuse exact semantic excerpts from earlier canonical clips through the manifest/runtime.\n\nThe final canonical authoring aggregate completed 90 tests in 529.889 seconds, exit 0, with one existing Windows symlink skip. All five verification movies rendered at 640×360 and nominal 6 fps; full decoding verified 46,187 final-movie frames and 44,931 source frames across 110 current canonical sources. Independent sampled visual acceptance covers every source; all identified architectural, scale, caption, transform and activity findings are resolved. The coordinator independently rehashed all 115 binaries before cleanup with exact agreement.\n\nPortable schema-first cases use existing Manim, Pango, SciPy, NumPy, PyAV and FFmpeg oracles. No new runtime dependency, Git mutation, worktree, IDE/dashboard or AGENTS.md edit was introduced. Native Windows execution and cross-platform source audit are recorded separately. The existing corpus has no authored narration; silence is preserved and available-audio integration is verified with real fixtures.\n\nAll generated verification media/logs/caches were removed after acceptance. Source, tests, profiles, SVG assets, input scripts, reproduction commands, final hashes, per-source provenance, visual audit and changed-file inventory remain in the ticket. See summary.md, completion-audit.md, full-render.md, source-verification.md, full-render-audit.md and files.md.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/activity-poses.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/activity-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/architecture-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/architecture.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/artifact-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/audit-addendum.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/audit-final.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/cancel-full.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-edit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-regression.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-regression.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-repairs.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-semantics.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/cleanup-generated.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/cleanup-project-env.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/close-ticket.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/closing-summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/completion-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/explorer-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/explorer-callsites.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/files-reuse.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/files.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render-events.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render-review.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/integrate-envelope.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/integrate-scenes.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/inventory-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/overview-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/overview-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/pango-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/pango-once-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/plant-equipment.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/portability-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/reuse-design.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/reuse-results.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/scale.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/scene-integration.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke-performance.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/source-review.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/source-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/tank-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/transform.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation-edit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation-smoke.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/verify-full.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/verify-sources.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/🎫️ticket.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/📌️important/📝️.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🏃️sprint/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/😴️sleep/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🚶️walk/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️integration.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️scenes.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️transforms.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️scenes.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️transforms.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-26 18:58:04",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Make all architectural sections fully opaque, uniform single-color fills with no extra outlines, seams, hatching or double edges. Apply across shared house/room/plant section material and local consumers; add portable style/raster tests before the fix, inspect actual previews and preserve concurrent work.",
+      "llm": "codex",
+      "effort": "high"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 19:46:01",
+      "author": "Ueli Saluz \u003cueli@semio-tech.com\u003e",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "summary": "Power-first physics follow-up complete: Leistung precedes Arbeit/Energie across curriculum, source roster, section composition, speech numbering, intro, recap and concepts. Portable regression validated with existing Manim and NumPy. Final clip contract: 31 tests, 6 existing opt-in skips, zero failures. Complete temporary beat renders decoded 356/374/167 frames at 640x360, nominal 2 fps. Fixed static house fades exposed by rendering. Owned generated media/caches removed; concurrent work preserved. See power-first.md and power-first-render.md; reproduction input power-first-check.py retained. Full curriculum movie was not assembled or published.",
+      "files": [
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/👋️intro/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📖️concepts/📝️.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/power-first.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/power-first-render.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/power-first-check.py"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-26 19:47:04",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Record the already verified uniform section correction after another concurrent owner completed its ticket interaction. No new source work is assigned.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 19:47:04",
+      "author": "ueli",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "summary": "Completed the uniform architectural section correction: one opaque theme-light material with zero stroke width/opacity across shared house/room and thirteen scene consumers. Cached live closed-contour fills remove internal antialias seams while preserving geometric references, copying, fades, movement and real window animation. Cut hatching, masonry seams, obsolete decorative placeholders and base-material recoloring are removed; thermal analysis uses separate overlays. Concurrent silhouette refinements were preserved.\n\nThe canonical sweep ran 109 tests in 1177.106 seconds and found five older single-polygon assumptions. Those checks now prove closed subpaths and actual empty window pixels. All 23 affected material, consumer and ventilation tests pass through the canonical entry in 7.601 seconds, exit 0. The sweep's other checks had no failures, with one existing skip. A fresh final consumer selection passed 9 tests in 11.983 seconds. Changed-source global and assembly/index audits are clean. The complete sweep was not repeated after test-only contour corrections.\n\nCurrent-profile preview 62efe597fff3 has two 1600×900 movies, fully decoded 44 frames, independently accepted at six endpoints and twelve intermediate samples. Hashes, test scope and reproduction inputs remain in sections.md, sections-media.md and sections-audit.md. Earlier full-curriculum hashes are explicitly historical; this correction does not claim a new complete-curriculum render.\n\nAll generated outputs owned by this correction were removed. An unrelated active power-first/silhouette worker recreated the shared output directory; its files and process are preserved. Record this section completion, then retain the shared ticket open for that existing work and its final cleanup. Source, portable cases, tests, schemas, input scripts and Markdown evidence remain. No new runtime dependency, Git mutation, worktree, IDE or AGENTS.md edit was introduced.",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/activity-poses.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/activity-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/architecture-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/architecture.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/artifact-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/audit-addendum.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/audit-final.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/cancel-full.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-edit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-regression.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-regression.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-repairs.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/caption-semantics.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/cleanup-generated.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/cleanup-project-env.ps1"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/close-ticket.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/closing-summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/completion-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/edit_section_consumers.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/explorer-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/explorer-callsites.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/files-reuse.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/files.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render-events.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render-review.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/full-render.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/integrate-envelope.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/integrate-scenes.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/inventory-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/overview-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/overview-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/pango-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/pango-once-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/plan.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/plant-equipment.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/portability-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/power-first-check.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/power-first-render.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/power-first.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/reuse-design.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/reuse-results.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/scale.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/scene-integration.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/section-consumers.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/section-material.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-globals.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-globals.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-handoff.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-media.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-motion-audit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/sections.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouettes.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke-diagnostic.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke-performance.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/smoke.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/source-review.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/source-verification.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/summary.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/tank-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/transform.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation-edit.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation-smoke.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/ventilation.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/verify-full.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/verify-sections.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/verify-sources.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/🎫️ticket.json"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/📌️important/📝️.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/☀️solar-radiation/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🏃️sprint/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/😴️sleep/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🚶️walk/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/⏱️timing/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/💧️transmission-humidity/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📍️trace/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/📐️system-sizing/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/⚙️mechanical/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🌡️heat-flow/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/📦️volume/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🧪️architecture/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/🪟️natural/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🎬️clip/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️integration.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️scenes.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️section_consumers.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️sections.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️transforms.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️integration.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️scenes.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️section_consumers.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️sections.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️transforms.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/⚙️runtime/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🖌️render/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎬️clip/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🔤️fonts/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚡️demand-power/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏷️certificate/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🏗️composition/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🔊️speech/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧱️conduction/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧲️fundamentals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        }
+      ]
+    },
+    {
+      "kind": "ticket.reopen",
+      "date": "2026-10-26 19:47:04",
+      "author": "",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "",
+      "prompt": "Uniform section correction is complete and verified; see sections.md. Keep this shared ticket open for the already active power-first and silhouette verification work. Its generated outputs were recreated after section-output cleanup and remain preserved for their owner. No new task is being assigned; final shared-output cleanup belongs to the existing worker when it finishes.",
+      "llm": "codex"
+    },
+    {
+      "kind": "ticket.close",
+      "date": "2026-10-26 20:21:10",
+      "author": "ueli",
+      "system": "windows",
+      "client": "codex",
+      "checkpoint": "ec6b0673e3512d52ff878a28c5f82e1fad9b4618",
+      "summary": "# Architectural Silhouette Update\n\nThe energy clips now use architectural entourage and physical profiles throughout shared artwork and chapter-specific call sites. Standing, walking and running use curated natural contours; seated and sleeping profiles are hand-authored. Equipment uses solid elevations, the sun and moon use single filled contours, and architectural annotations replace thought bubbles. The ventilation roadmap shows a projected open sash. Industrial and tree cues use an industrial elevation and a branching tree silhouette.\n\nThe original standing, seated and activity sizes and floor anchors remain intact. The running heat origin was moved into the new torso. Metabolic values remain 80, 100, 200 and 800 W. Sources and CC0 attribution are in `silhouette-sources.md` and the silhouette library README.\n\n## Implementation\n\nPortable JSON contracts and acceptance cases preceded implementation. The first tests failed against geometric figures and outline equipment. Curved geometry and independent raster checks caught a crossed calf, a wrist loop and a misplaced running heat origin; these were corrected. The shared renderer reads local Bezier coordinates, and chapter activity assets remain local SVG. No new runtime dependency was added.\n\nActual scene execution exposed a room fade failure: the material compositor discarded its geometry while the starting animation copy was transparent, changing the animation family and point counts. It now retains the hidden contour while no opaque material is present. A failing real Manim FadeIn regression preceded this fix.\n\n## Verification\n\n- Final focused suite: **42 tests passed in 13.867 s** after the final artwork changes. This covers silhouettes, actual fade animation, architectural dimensions, activity heat origins, connected masks and section consumers.\n- Broader visual suite: **77 tests passed in 429.862 s**. It completed before the final natural-contour curation; the subsequent 42-test gate covers those changed paths.\n- AJV independently validated both the architectural drawing profile and silhouette-library JSON schemas.\n- All **105 canonical source scenes imported**. Five selected production scene portions executed at 640×360 and yielded **26 settled narration frames with no errors** after the final changes.\n- Visual inspection covered the complete 17-item artwork sheet and production contact sheets for physics, ventilation, heating, cooling and primary energy. The open-window roadmap and revised branch/industrial silhouettes were checked again after their final changes.\n- Manim supplies independent dimension and raster results; SciPy component labelling and hole filling validate the local component count. The actual activity scene verifies heat attachment points.\n- The exploratory full authoring aggregate was cancelled while its native-presentation fixture was still encoding. No aggregate pass or complete final-video encode is claimed. This task verifies source artwork and settled production frames.\n\nThe exact file inventory is in `silhouette-files.md`. Reproduction inputs remain in this ticket: `silhouette-run.mjs`, `silhouette-preview.py`, `silhouette-scenes.py`, `silhouette-schema.mjs` and `silhouette-ticket.mjs`. All commands enter through repo; no modifying Git command, worktree, IDE, dashboard or AGENTS.md edit was used. Native Windows execution is verified; the sources and scripts use portable paths and the managed Python environment. Other operating systems were not executed in this session.\n\n## Review Outputs\n\nTemporary review images, downloaded candidate vectors, logs, caches and incomplete aggregate fixtures are removed from the owned generated directory after verification. Source art, portable tests, provenance, reproduction inputs and this report remain.\n\nCleanup completed: the owned generated directory and its empty parent were removed. Retained inputs, source attribution and verification notes are listed in silhouette-files.md.\n",
+      "files": [
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-files.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-reference-preview.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-run.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-scene-audit.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-scenes.py"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-schema.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-sources.md"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouette-ticket.mjs"
+        },
+        {
+          "path": ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️26/ARCHITECTURAL-ENERGY-CLIPS/silhouettes.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/⚖️heating-comparison/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/🌤️summer-strategy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🏃️sprint/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/😴️sleep/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🚶️walk/🖼️.svg"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🏃️activity/🧪️tests/🔣️.cases.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/❄️cooling/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🌬️ventilation/🎬️clip/❓️need/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🐍️silhouettes.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🧪️tests/🔣️silhouettes.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/README.md"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/🔣️.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/🎨️visuals/🫟️silhouettes/🧬️schema/🔣️.schema.json"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🏗️authoring/📜️script.ts"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/♨️system-losses/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/⚖️regulations/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🏭️primary-energy/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🔁️recap/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/📊️demand/🎬️clip/🧪️practice/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/☀️solar-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/👥️internal-gains/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🔥️heating/🎬️clip/🧮️calculation/🐍️.py"
+        },
+        {
+          "path": "🎓️teaching/🏛️architecture/⚡️energy/🧲️physics/🎬️clip/🧲️fundamentals/🐍️.py"
+        }
+      ]
+    }
+  ]
+}

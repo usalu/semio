@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Canonical Anta CSS Text Metrics",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "font_size",
+    "advance",
+    "ascent",
+    "descent",
+    "ink_left",
+    "ink_right",
+    "ink_top",
+    "ink_bottom",
+    "units_per_em"
+  ],
+  "properties": {
+    "font_size": {
+      "type": "number"
+    },
+    "advance": {
+      "type": "number"
+    },
+    "ascent": {
+      "type": "number"
+    },
+    "descent": {
+      "type": "number"
+    },
+    "ink_left": {
+      "type": "number"
+    },
+    "ink_right": {
+      "type": "number"
+    },
+    "ink_top": {
+      "type": "number"
+    },
+    "ink_bottom": {
+      "type": "number"
+    },
+    "units_per_em": {
+      "type": "number"
+    }
+  }
+}

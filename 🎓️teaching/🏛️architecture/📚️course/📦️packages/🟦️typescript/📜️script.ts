@@ -1,4 +1,6 @@
 #!/usr/bin/env repo
+import { buildCourseAssignmentV1 } from "../../🏗️builder/📖️assignments/🟦️.ts";
+import { withCourseAssignmentPdfsV1 } from "../../🏗️builder/🌐️vite/📦️assignments/🟦️.ts";
 import {scriptCompilerAdmissionControlV1} from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🏗️build/🎟️capacity/🟦️.ts";
 import { typecheckRepositoryProjectV1 } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🏗️build/🟦️typescript/🟦️.ts";
 import { createIssuedResourceControlV1 } from "../../../../../🧰️framework/🔨️modules/🏃️process/📦️packages/🟦️typescript/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
@@ -52,13 +54,34 @@ class DevScript extends BundleScript {
  * `PROCTOR_PORT`. */
 class DevSiteScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels: [], config: VITE_CONFIG, portEnv: playgroundPortEnv("architecture-course"), defaultPort: playgroundDevPortString("architecture-course"), fixedPort: true });
+    await withCourseAssignmentPdfsV1(this.repoRoot, this.invocation, runtimeChannels => runViteBunxDev(this.invocation, scriptCompilerAdmissionControlV1(this.invocation,"vite:entry",0), this.root, segments, { runtimeChannels, config: VITE_CONFIG, portEnv: playgroundPortEnv("architecture-course"), defaultPort: playgroundDevPortString("architecture-course"), fixedPort: true }));
+  }
+}
+/** 📝️ Publishes the English course assignment. */
+class BuildAssignmentEnScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Assignment build accepts no arguments");
+    await buildCourseAssignmentV1(this.repoRoot, this.invocation, "en");
+  }
+}
+/** 🗒️ Publishes the German course assignment. */
+class BuildAssignmentDeScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Assignment build accepts no arguments");
+    await buildCourseAssignmentV1(this.repoRoot, this.invocation, "de");
   }
 }
 class BuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Course build accepts no arguments");
     await buildCourseSite(this.repoRoot, this.root, this.invocation);
+  }
+}
+/** 🧮️ Runs the localized assignment semantics and published PDF transport contract. */
+class TestAssignmentScript extends BundleScript {
+  async run(args: string[]): Promise<void> {
+    if (args.length) throw Error("Assignment test accepts no arguments");
+    await runVitest(this.root, ["--configLoader", "native", "🧪️tests/📖️assignment-pdfs/🟦️.ts"], "../../🧪️tests/🎚️config/🟦️.ts");
   }
 }
 class TestScript extends BundleScript {
@@ -128,6 +151,6 @@ class DeployCheckScript extends BundleScript {
   }
 }
 
-const router = new ScriptRouter(import.meta.dir).register("dev", DevScript).register("dev-site", DevSiteScript).register("build", BuildScript).register("test", TestScript).register("test-e2e", TestEndToEndScript).register("typecheck", TypecheckScript).register("check", CheckScript).register("publish", PublishScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("docker-image-publish", DockerImagePublishScript).register("docker-stack-check", DockerStackCheckScript).register("docker-stack-bundle", DockerStackBundleScript).register("deploy-check", DeployCheckScript).register("preflight", PreflightScript).register("ci-browser-prepare", CiBrowserPrepareScript);
+const router = new ScriptRouter(import.meta.dir).register("build-parametrization-en", BuildAssignmentEnScript).register("build-parametrization-de", BuildAssignmentDeScript).register("dev", DevScript).register("dev-site", DevSiteScript).register("build", BuildScript).register("test", TestScript).register("test-assignment", TestAssignmentScript).register("test-e2e", TestEndToEndScript).register("typecheck", TypecheckScript).register("check", CheckScript).register("publish", PublishScript).register("docker-image-build", DockerImageBuildScript).register("docker-image-check", DockerImageCheckScript).register("docker-image-publish", DockerImagePublishScript).register("docker-stack-check", DockerStackCheckScript).register("docker-stack-bundle", DockerStackBundleScript).register("deploy-check", DeployCheckScript).register("preflight", PreflightScript).register("ci-browser-prepare", CiBrowserPrepareScript);
 
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original }));

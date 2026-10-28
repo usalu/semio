@@ -19,6 +19,11 @@ the proctor, and one site per subject; each site offers a course of quizzes whos
   🛂️proctor/                         API for every site (semio.iek.uni-hannover.de)
   🏛️architecture/                    site architektur-und-technologie.de
     📚️course/🔣️.json                 course "architecture": introduction, quiz paths, badges
+    📐️parametric/❓️quiz/🔣️.json     Parametrics / Parametrik
+    🦗️grasshopper/❓️quiz/🔣️.json    Grasshopper
+    📊️excel/❓️quiz/🔣️.json          Excel
+    🏗️bim/❓️quiz/🔣️.json            Building Information Modelling
+    🎯️optimization/❓️quiz/🔣️.json   Optimization / Optimierung
     ⚡️energy/                         domain
       🧲️physics/   ❓️quiz  🎬️clip    Physical Understanding / Physikalisches Verständnis
       🔥️heating/   ❓️quiz  🎬️clip    Heating / Heizen

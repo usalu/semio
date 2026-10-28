@@ -10,7 +10,12 @@
     "de": "Farbkreis"
   },
   "grounds": [
-    "topic/grasshopper"
+    "topic/grasshopper",
+    "grasshopper-data",
+    "grasshopper-data/canvas-terminology",
+    "grasshopper-data/type-casting",
+    "grasshopper-data/tree-operations",
+    "grasshopper-data/list-matching"
   ],
   "size": {
     "width": 60,

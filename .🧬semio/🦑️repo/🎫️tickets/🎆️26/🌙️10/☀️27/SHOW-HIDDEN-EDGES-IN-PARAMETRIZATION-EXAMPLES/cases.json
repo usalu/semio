@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "macro": "AssignmentBox",
+      "paths": 2,
+      "segments": [
+        2,
+        1
+      ]
+    },
+    {
+      "macro": "AssignmentPyramid",
+      "paths": 2,
+      "segments": [
+        2,
+        1
+      ]
+    },
+    {
+      "macro": "AssignmentEllipticalCylinder",
+      "paths": 1,
+      "domain": "\\AssignmentCylinderTangent:\\AssignmentCylinderTangent+180"
+    }
+  ]
+}

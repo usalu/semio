@@ -21,6 +21,7 @@
  * @see ../../🎨️.css — `.course-records`, `.course-result`, `.course-summary`, `.course-miss`
  */
 
+import { AccessGate, useReleaseClock } from "../🔓️access/🟦️.tsx";
 import { useEffect, useId, useState, type ReactElement, type ReactNode } from "react";
 import { reach, type Answer, type CrowdView, type Icon, type Id, type MatchingTaskResult, type Quantity, type SheetClassificationTask, type SheetMatchingTask, type SheetSortingTask, type SheetTask, type Slug, type SortingTaskResult, type TaskResult, type Text, type Challenge, type ClassificationTaskResult } from "@semio-tech/course";
 import { TASK_KIND_LABELS, localized, type CourseLocale, type CourseText } from "../🌐️i18n/🟦️.ts";
@@ -346,6 +347,7 @@ function RetryAction(props: {
 export function ResultsScreen(props: { readonly session: CourseSession; readonly state: CourseState; readonly run: Id; readonly text: CourseText; readonly locale: CourseLocale; readonly others?: OthersChoice }): ReactElement | null {
   const { session, state, run, text, locale } = props;
   const scope = useId();
+  const at = useReleaseClock(state.course);
   const [pending, setPending] = useState<AbortController | undefined>(undefined);
   const [problem, setProblem] = useState<Problem | undefined>(undefined);
   useEffect(() => () => pending?.abort(), [pending]);
@@ -429,7 +431,8 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
         const task = view.sheet.tasks.find((candidate) => candidate.id === taskResult.task);
         if (task === undefined) return null;
         return (
-          <CourseCard key={taskResult.task} id={`${scope}-${taskResult.task}`} card="task-result" anchor={PRESENCE_ANCHORS.result(taskResult.task)} icon={<TaskGlyph task={task} />} title={`${index + 1}. ${localized(task.title, locale)}`}>
+          <AccessGate key={taskResult.task} course={state.course} page={view.quiz} task={taskResult.task} at={at} locale={locale} text={text}>
+          <CourseCard id={`${scope}-${taskResult.task}`} card="task-result" anchor={PRESENCE_ANCHORS.result(taskResult.task)} icon={<TaskGlyph task={task} />} title={`${index + 1}. ${localized(task.title, locale)}`}>
             <p className="m-0 text-xs text-muted-foreground">
               {text(TASK_KIND_LABELS[task.kind])} · {text("course.results.taskScore", { score: formatScore(taskResult.score, locale) })}
             </p>
@@ -437,6 +440,7 @@ export function ResultsScreen(props: { readonly session: CourseSession; readonly
               <TaskResultView name={`${scope}-${taskResult.task}`} title={localized(task.title, locale)} task={task} result={taskResult} answer={view.answers[taskResult.task]} crowd={shown ? (crowd ?? null) : undefined} text={text} locale={locale} />
             </PetTopic>
           </CourseCard>
+          </AccessGate>
         );
       })}
     </div>

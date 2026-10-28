@@ -1,0 +1,31 @@
+{
+  "removed_apis": [
+    "scene_title",
+    "play_scene_title",
+    "beat_subtitle"
+  ],
+  "heading": {
+    "samples": [
+      {
+        "language": "en",
+        "text": "What ventilation must achieve"
+      },
+      {
+        "language": "de",
+        "text": "Was Lüftung leisten muss"
+      }
+    ],
+    "left_spacing": 3,
+    "top_spacing": 2,
+    "max_text_width": 13.0
+  },
+  "actual_header": {
+    "module": "🎓️teaching.🏛️architecture.⚡️energy.🌬️ventilation.🎬️clip.❓️need.🐍️",
+    "scene": "Beat1_Lueftungsbedarf",
+    "instruction": "Was Lüftung leisten muss",
+    "forbidden": "TITLE_DE"
+  },
+  "instructional_exceptions": [
+    "Die Hauptgleichung des Heizwärmebedarfs (DIN V 18599)"
+  ]
+}

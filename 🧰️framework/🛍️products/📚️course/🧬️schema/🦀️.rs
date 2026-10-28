@@ -18,7 +18,7 @@ use std::collections::BTreeMap;
 
 #[path = "📚️quiz-documents/🦀️.rs"]
 mod documents;
-pub use documents::{Axis, Badge, BadgeRule, CHALLENGES, COURSE_ROOT_IDS, Course, Category, Challenge, ClassificationItem, ClassificationTask, Dimension, Handle, Icon, Id, Introduction, MAX_TIMESTAMP, MatchingItem, MatchingTask, Motion, Profile, Quantity, QuestionPool, Quiz, SHORT_LENGTH, Scale, Score, ShortText, Slug, SortingItem, SortingTask, Task, TaskKind, Text, Timestamp, Topic, WIRE_VERSION, WireVersion};
+pub use documents::{Assignment, AssignmentDocument, AssignmentDocuments, Axis, Badge, BadgeRule, CHALLENGES, COURSE_ROOT_IDS, Course, Category, Challenge, ClassificationItem, ClassificationTask, Dimension, Handle, Icon, Id, Introduction, MAX_TIMESTAMP, MatchingItem, MatchingTask, Motion, Profile, Quantity, QuestionPool, Quiz, SHORT_LENGTH, Scale, Score, ShortText, Slug, SortingItem, SortingTask, Task, TaskKind, Text, Timestamp, Topic, Unlocks, WIRE_VERSION, WireVersion};
 
 #[path = "🃏️sheets-and-results/🦀️.rs"]
 mod sheets_and_results;
@@ -51,3 +51,7 @@ pub mod testkit;
 mod tests;
 
 //#endregion 🧪️Tests
+
+#[path = "🖥️mockups/🦀️.rs"]
+mod mockups;
+pub use mockups::*;
